@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: ice-basic
 created: '2026-08-17T23:00:52Z'
-updated: '2026-08-17T23:05:39Z'
+updated: '2026-08-17T23:20:51Z'
 generated_by: claude-sonnet
 workflow_run: 32078213910
 issue: 5238
@@ -12,52 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Correct ICE plot semantics: one translucent line per observation (alpha 0.18)
-    plus a bold, opaque PDP overlay showing the average effect — exactly the ''individual
-    detail behind the average'' distinction the spec calls for'
-  - Deterministic in-memory data generation via a fixed-seed LCG, with a physically
-    plausible per-house saturation model (quality-driven decay) that produces genuinely
-    heterogeneous curve shapes rather than parallel copies
-  - 'Theme-adaptive chrome correctly threaded through title, legend, ticks, axis titles
-    and gridlines via window.ANYPLOT_TOKENS; first data series is the mandated #009E73
-    and is identical between light and dark renders'
-  - Canvas gate passes (3200x1800 landscape), no clipping/overflow on either render,
-    legend duplicate labels correctly suppressed via the filter callback
-  - Y-axis uses a clean $Xk currency callback; both axis titles are descriptive with
-    units implied
+  - 'Both flagged weaknesses from Attempt 1 are cleanly fixed: the x-axis is now a
+    linear scale fed by {x, y} point data (round auto-generated ticks instead of the
+    arbitrary grid-point labels from the category scale), and ICE lines are color-coded
+    by house-quality tercile, directly surfacing the interaction/subgroup story the
+    spec''s Applications section calls for'
+  - 'The tercile color-coding is a genuine data-storytelling win: the green (lower-quality),
+    lavender (mid), and blue (higher-quality) bundles visibly diverge in the upper-right
+    of the chart, showing exactly the heterogeneous, subgroup-specific saturation
+    behavior an ICE plot exists to reveal, while the bold PDP overlay still anchors
+    the average trend'
+  - 'Legend correctly stays at 4 entries despite 70 individual line datasets via the
+    tier-based label-once + filter pattern; first legend swatch/series is still the
+    mandated #009E73 brand green'
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white / near-black
+    backgrounds, all title/axis/tick/legend text readable, PDP line correctly flips
+    ink token (black on light, white on dark), no clipping at any canvas edge (verified
+    via pixel crops of all four borders)'
+  - Deterministic in-memory data via fixed-seed LCG with a physically plausible per-house
+    saturation model; clean $Xk y-axis currency formatting; canvas gate passes at
+    3200x1800
   weaknesses:
-  - 'None of the three optional-but-suggested enhancements from the spec notes were
-    implemented: a centered ICE (c-ICE) variant, a rug plot of observed feature values
-    along the x-axis, or color-coding lines by a second feature to reveal interaction
-    effects — the last one is directly relevant since the spec''s ''Applications''
-    section calls out detecting subgroup/interaction effects, and this implementation
-    already has a natural second feature (house quality) that could have driven line
-    color'
-  - X-axis uses a category scale fed by a `labels` array of raw grid values instead
-    of a linear scale with {x, y} point data; this produces non-round, slightly awkward
-    tick labels (800, 1180, 1559, 1939, 2319, 2698, 3078, 3458) instead of clean round
-    numbers a linear scale would auto-generate
-  - Styling is fairly close to defaults beyond the alpha hierarchy — no custom typography,
-    spacing, or additional refinement distinguishing it as highly polished beyond
-    the theme tokens
-  - Library usage is competent but not distinctive — a 70-line-plus-1 line chart doesn't
-    showcase any Chart.js-specific capability (e.g. scriptable per-point styling,
-    custom tooltip callbacks, gradient fills) beyond the legend filter trick
+  - Visual styling beyond the tier-color choice stays close to Chart.js defaults --
+    standard grid, standard legend box, no additional refinement (spacing, grid treatment,
+    typography variation) that would push Design Excellence higher
+  - Neither of the other two spec-suggested enhancements (centered/c-ICE variant,
+    rug plot of observed feature_value positions along the x-axis) is implemented
+    -- optional, but a rug plot in particular would cheaply reinforce where the observed
+    data actually concentrates versus the extrapolated tail beyond ~3000 sqft
+  - Library usage, while now idiomatic (linear scale + point data), still doesn't
+    showcase a Chart.js-distinctive capability beyond the per-dataset legend-filter
+    dedup trick -- the chart could be reproduced with only minor syntax changes in
+    most other line-chart-capable libraries
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Title "ice-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top, fully legible. Legend below title with two entries ("Individual houses (ICE)" with a faint pale-green swatch, "Average effect (PDP)" with a bold dark swatch) — both labels clearly readable. X-axis title "Square Footage" and Y-axis title "Predicted Sale Price" in dark ink, both legible. Tick labels (x: 800-3458; y: $100k-$550k) in medium-gray ink, clearly visible against the light background. Grid lines are light gray, subtle but visible.
-      Data: ~70 translucent green (#009E73 at low alpha) individual ICE curves fanning from a tight cluster near ($800, $170k) out to a wide spread near ($3600, $440k-$510k), overlaid by one bold black PDP curve tracing the average trend through the middle of the bundle. Data clearly distinguishable from background and from each other via the alpha blending.
-      Legibility verdict: PASS — no light-on-light or illegible text anywhere.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "ice-basic · javascript · chartjs · anyplot.ai" in bold dark ink, centered top. Legend row directly below with 4 entries: "Lower-quality houses (ICE)" (pale green line swatch), "Mid-quality houses (ICE)" (pale lavender), "Higher-quality houses (ICE)" (pale blue), "Average effect (PDP)" (bold black line). Axis titles "Square Footage" (x) and "Predicted Sale Price" (y) in dark ink; tick labels ($100k-$550k, 800-3,600 sqft) in medium-gray ink. All text confirmed fully visible with no clipping at any of the four canvas edges (checked via pixel crops of top/bottom/left/right borders).
+      Data: 70 translucent individual ICE curves (alpha ~0.22), color-coded by house-quality tercile -- green, lavender, blue -- fanning from a tight cluster near ($800, $170k) to a wide, visibly diverging spread near ($3,600, $440k-$510k) where the tier colors separate out (green bundle saturates first/lowest, blue bundle keeps climbing highest). One bold black PDP curve traces the average trend through the bundle.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Title and legend text rendered in light/white ink, clearly legible against the dark background. Legend swatches flip appropriately (ICE swatch reads as a darker teal-on-dark box, PDP swatch as a light outlined box). Axis titles and tick labels are light gray/white, clearly readable against the dark background — no dark-on-dark failures observed. Grid lines are a subtle dark gray, visible without dominating.
-      Data: Same ~70 individual curves in the same green hue (#009E73, low alpha) as the light render — confirmed the data color is unchanged, only the chrome (background, text, grid, legend frame) flipped. The bold PDP overlay flips to white/light ink for contrast against the dark plot background, tracing the same average trend shape as in the light render.
-      Legibility verdict: PASS — all text is clearly legible with light-on-dark contrast; brand green data lines remain visible and consistent with the light render.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, legend, and axis text all render in light/white ink, clearly legible against the dark surface. Legend swatches and layout are identical to the light render. No dark-on-dark failures observed anywhere -- checked title, both axis titles, both tick label sets, and all 4 legend entries.
+      Data: Data colors are pixel-identical to the light render -- same green/lavender/blue tercile hues at the same alpha for the individual curves. Only the PDP overlay's ink color flips (black -> white/near-white) to preserve contrast against the dark background, as expected since it uses the theme-adaptive `t.ink` token. Same divergence pattern visible in the upper-right of the chart.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,73 +69,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor deduction for the non-round
-          x-tick label values
+        comment: All font sizes explicitly set (title 22px, legend 16px, ticks 14px,
+          axis titles 16px); readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No overlap between title, legend, axes, ticks, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Low alpha (0.18) on 70 individual lines correctly balances density
-          visibility against a clearly distinguishable bold PDP overlay
+        comment: 70 lines at alpha 0.22 with borderWidth 1.5 read as a dense-but-legible
+          bundle; bold width-4 PDP line is unambiguous
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green + black/white contrast, no red-green reliance
+        comment: Green/lavender/blue tercile colors plus black/white PDP are CVD-safe
+          and distinguishable without relying on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at 3200x1800; no clipping or overflow
+        comment: Plot fills ~85-90% of canvas width with balanced margins; verified
+          no clipping at any edge via pixel crops
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles, $Xk formatted y-ticks
+        comment: Descriptive axis titles; y-axis ticks carry $ units via the currency
+          callback
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series = #009E73, identical between themes; backgrounds match
-          FAF8F1/1A1A17'
+        comment: 'First series is #009E73; tier colors follow Imprint canonical order;
+          backgrounds theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Intentional alpha-based hierarchy is a genuine design choice, but
-          overall styling stays close to defaults otherwise
+        passed: true
+        comment: Tercile color-coding is a genuine, data-driven design choice clearly
+          above a plain single-color default, though overall chrome otherwise stays
+          close to library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clean chrome and subtle grid via theme tokens, but no additional
-          refinement beyond defaults
+        comment: Standard Chart.js grid and legend box with no additional refinement
+          (spacing, grid treatment) beyond theme-token application
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bold PDP line against a translucent bundle creates a strong, immediately
-          legible focal point that is exactly the ICE-plot narrative
+        comment: Tercile divergence + bold PDP overlay makes the heterogeneous-effect
+          insight immediately visible -- the exact story an ICE plot exists to tell
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,51 +147,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct ICE plot: one line per observation plus PDP average overlay'
+        comment: 'Correct ICE plot: one line per observation plus PDP overlay'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Core alpha + PDP overlay present; all three suggested enhancements
-          (c-ICE, rug plot, interaction color-coding) omitted
+        passed: true
+        comment: Low-alpha individual lines, bold PDP overlay, and now subgroup color-coding
+          by a second feature (quality) as the spec's Notes suggest
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=square footage, Y=predicted price, full range shown
+        comment: x=feature_value (sqft), y=prediction (price), correctly mapped with
+          linear scale
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match data
+        comment: Title matches mandated format exactly; legend labels match the tier/PDP
+          data
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Core ICE+PDP shown but misses the interaction/subgroup story the
-          spec's Applications section highlights (no second-feature color-coding,
-          no rug, no c-ICE)
+        passed: true
+        comment: Now shows individual-level variance, average PDP trend, AND subgroup/interaction
+          divergence -- all core ICE-plot aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral real-estate ML scenario (GradientBoostingRegressor
-          house price prediction)
+        comment: House price vs. square footage from a GradientBoostingRegressor is
+          a real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible sqft (800-3600) and price ($140k-$550k) ranges
+        comment: Price range ($140k-$510k) over 800-3,600 sqft is plausible for a
+          US residential market
     code_quality:
       score: 10
       max: 10
@@ -196,7 +203,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; flat script with small helper functions
+        comment: Small helper functions (lcg, predictPrice, hexToRgba, tierIndexFor)
+          are proportionate to the data-generation and grouping needs, no over-abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,38 +216,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses provided globals only
+        comment: No unused imports; Chart is the only external global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the physical model
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false set, no filesystem writes
+        comment: 'Mount-node contract followed correctly; animation: false set'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Mostly idiomatic; category scale fed by a labels array (instead of
-          a linear scale with {x,y} points) is the less idiomatic choice for continuous
-          numeric x-data and causes non-round ticks
+        comment: 'Fixed from Attempt 1: now uses a linear x-scale with {x, y} point
+          data instead of a category scale, the idiomatic Chart.js pattern for continuous
+          numeric x-data'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Legend filter callback is a nice touch, otherwise a generic multi-dataset
-          line chart with no distinctive Chart.js capability showcased
+        passed: true
+        comment: Per-dataset legend-filter dedup across 70+3 datasets is a Chart.js-specific
+          pattern (its per-dataset legend model), but the overall chart could still
+          be approximated in most other line-chart libraries with minor changes
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -248,6 +257,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
