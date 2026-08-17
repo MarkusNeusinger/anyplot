@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: area-stacked
 created: '2026-08-17T12:44:38Z'
-updated: '2026-08-17T12:49:28Z'
+updated: '2026-08-17T13:03:45Z'
 generated_by: claude-sonnet
 workflow_run: 32031021606
 issue: 2022
@@ -12,51 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Correct idiomatic ECharts stacked-area pattern: type: "line", stack: "total",
-    areaStyle, boundaryGap: false'
-  - 'Imprint palette in canonical order with first series #009E73, identical data
-    colors across light/dark renders'
-  - Y-axis baseline fixed at 0 (no misleading proportions) and series ordered largest-to-smallest
-    bottom-to-top per spec
-  - Semi-transparent area fills (opacity 0.82) keep stacked bands readable without
-    hiding the boundary lines
-  - Y-axis label includes units ("Electricity Consumption (TWh)"); theme-adaptive
-    chrome correctly threaded through ANYPLOT_TOKENS
-  - Deterministic, hard-coded data; clean KISS top-to-bottom structure with no functions/classes
+  - Correct Imprint palette in canonical order (green → lavender → blue → ochre) with
+    theme-correct chrome (background, text, grid) in both light and dark renders
+  - Largest-to-smallest stacking order (Residential > Commercial > Industrial > Transportation)
+    matches the spec's readability guidance
+  - 'Effective data storytelling: the ''EV adoption accelerates'' markLine annotation
+    at 2018 combined with a bolder stroke on the Transportation band draws the eye
+    to the ~23x EV-charging growth story'
+  - 'Baseline correctly anchored at zero (yAxis min: 0), avoiding misleading proportions
+    per spec notes'
+  - Explicit font sizing throughout (title 28px, axis names 16px, tick/legend 14px)
+    with a clean, balanced layout — no overlap or clipping in either theme
   weaknesses:
-  - 'Design storytelling is generic: every series shares identical line width/opacity,
-    so the standout Transportation growth trend (8 -> 156 TWh) isn''t visually emphasized
-    despite being the most interesting insight in the data — consider a bolder stroke,
-    callout, or subtle highlight on that series.'
-  - 'Data proportions drift from real-world US EIA sector figures: Industrial is shown
-    as the largest sector and Residential second, but in reality Residential and Commercial
-    are typically the top two US electricity-consuming sectors; total consumption
-    (~1,470 TWh by 2024) is well below the real US total (~3,900-4,000 TWh); Transportation
-    reaching 156 TWh by 2024 is far above real EV-charging load (~30-40 TWh) — rescale
-    toward real EIA sector totals or reframe as a clearly-labeled regional/illustrative
-    subset.'
-  - Title occupies only ~28% of the plot width at fontSize 22 — well under the comfortable
-    50-70% range — a modest fontsize increase would give it more visual presence without
-    risking overflow.
-  - 'Library Mastery is only lightly distinctive: emphasis.focus:"series" and smooth
-    interpolation are nice but generic touches — a dataZoom slider, markLine/markArea
-    milestone, or visualMap would better showcase ECharts-specific strengths in the
-    interactive HTML view.'
+  - '"Regional utility service area" framing sits awkwardly against ~2,100 TWh total
+    by 2024 — that magnitude reads closer to a small country''s total consumption
+    than a single region''s; either scale the values down or adjust the narrative
+    framing'
+  - Data trends are directionally similar (all sectors flat-to-rising) apart from
+    Transportation; a touch more variation (e.g. a dip in one sector during a downturn
+    year) would strengthen DQ-01 feature coverage
+  - 'LM-02: uses one distinctive ECharts feature (markLine) but is otherwise a fairly
+    standard stacked-line-as-area configuration; leaning further into ECharts-specific
+    capabilities would raise library mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "area-stacked · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. X-axis "Year" and Y-axis "Electricity Consumption (TWh)" labels are dark and legible. Tick labels (years 2010-2024, values 0/300/600/900/1200/1500) are in a softer dark grey, all readable. A subtle horizontal grid line sits only at the 1,500 gridline area (light, non-competing). Legend at the bottom (Industrial, Residential, Commercial, Transportation) with colored line+dot swatches, readable dark-grey text.
-      Data: Four stacked area bands from bottom to top: Industrial (brand green #009E73, largest and flattest ~480-512 TWh), Residential (lavender #C475FD, second largest ~385-430 TWh), Commercial (blue #4467A3, third ~310-372 TWh, growing steadily), Transportation (ochre/amber #BD8233, smallest but expanding dramatically from ~8 to ~156 TWh, visibly widening toward the right edge). First series is confirmed brand green.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "area-stacked · javascript · echarts · anyplot.ai" is dark and centered at top; x-axis "Year" and y-axis "Electricity Consumption (TWh)" labels are dark and clearly legible; tick labels are soft dark gray; horizontal gridlines are faint/subtle; legend at bottom (Residential, Commercial, Industrial, Transportation) with colored line+circle swatches is fully legible.
+      Data: Four stacked bands from bottom to top: brand green Residential (#009E73), lavender Commercial, blue Industrial, ochre Transportation. A dashed ochre vertical markLine at 2018 with rotated label "EV adoption accelerates" sits cleanly in the whitespace above the stack, not overlapping any other element.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, tick labels, and legend text all rendered in light/off-white tones, clearly legible against the dark background. No dark-on-dark text found. Grid line at 1,500 is faint but visible against the dark background.
-      Data: Same four stacked bands in identical colors to the light render — Industrial green, Residential lavender, Commercial blue, Transportation ochre — confirming data colors are unchanged between themes; only the chrome (background/text/grid) flipped.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark failures observed.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Title, axis names, and tick labels all render in light off-white/soft-gray tones, clearly visible against the dark background; gridlines are faint light lines; legend text is light-colored and fully readable.
+      Data: Same four band colors as the light render (green/lavender/blue/ochre) — confirmed identical, only chrome flipped. The "EV adoption accelerates" annotation renders in light ink, readable against the dark background — no dark-on-dark failure observed anywhere (title, axis labels, ticks, legend, annotation all pass).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,73 +59,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes, no overlap/overflow;
-          title fills only ~28% of width (below the comfortable 50-70% range)
+        comment: All font sizes explicitly set (title 28px, axis names 16px, ticks/legend
+          14px), well-proportioned in both themes; annotation text at 12px is the
+          smallest element but still legible at full res
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: markLine annotation sits cleanly in whitespace above the stack; no
+          collisions with title, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area fills with 2px boundary lines are clearly visible and appropriate
-          for 15 time points; no markers needed for a stacked area chart
+        comment: Line/area widths and opacities well-adapted; bolder Transportation
+          stroke (3.5px) vs. others (2px) reads clearly against 15 time points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue/ochre stack is CVD-safe, no red-green-only signal
+        comment: Boundary lines between bands provide edge definition beyond hue alone;
+          good contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the canvas well with balanced margins, nothing cut
-          off, legend anchored near the plot
+        comment: Balanced margins, plot fills a large majority of the canvas, no cut-off
+          elements
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (TWh); X-axis descriptive (Year)
+        comment: Y-axis has units (TWh); X-axis 'Year' is adequately descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for remaining series,
-          theme-correct backgrounds and chrome in both renders'
+        comment: 'Imprint palette in canonical order, first series #009E73, identical
+          data colors across themes, theme-correct chrome and backgrounds in both
+          renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default; smooth curves and opacity are nice
-          but not exceptional
+        passed: true
+        comment: Thoughtful stroke-width contrast and per-series opacity tuning beyond
+          default config, though not fully publication-level polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Y-axis grid only (x split lines hidden), y-axis spine removed, generous
-          margins — some genuine refinement
+        passed: true
+        comment: Y-axis line hidden, grid restricted to subtle horizontal lines, generous
+          whitespace; x-axis line still shown so not maximal refinement
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: All series share identical styling; the Transportation growth trend,
-          the most interesting insight, isn't visually emphasized — viewer must find
-          the story themselves
+        passed: true
+        comment: markLine annotation + bolder Transportation stroke create a clear
+          focal point around the EV-adoption growth story
     spec_compliance:
       score: 15
       max: 15
@@ -143,28 +138,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart via idiomatic stack+areaStyle
+        comment: Correct stacked area implementation via line+stack+areaStyle
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct harmonious colors, largest-at-bottom ordering, legend, semi-transparent
-          fills, zero baseline — all present
+        comment: Largest-at-bottom ordering, legend, semi-transparent fills, zero
+          baseline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=years, Y=consumption, all data visible
+        comment: X=Year, Y=stacked TWh consumption, axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match series names
+        comment: Title matches mandated format exactly; legend labels match series
+          names
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -172,23 +168,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows varied growth behaviors across sectors (flat, mildly growing,
-          and rapidly growing series)
+        comment: Shows composition + differing growth rates (flat/growing sectors
+          vs. exponential Transportation); no declining sector for added contrast
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral business/energy scenario (US electricity consumption
-          by sector)
+        comment: Neutral, plausible electricity-by-sector scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Sector ranking and magnitudes diverge from real EIA figures: Industrial
-          shown largest instead of Residential/Commercial, total ~1,470 TWh vs real
-          ~3,900-4,000 TWh, Transportation at 156 TWh vs real ~30-40 TWh'
+        passed: true
+        comment: Internally consistent ratios, but ~2,100 TWh total by 2024 reads
+          large for a 'regional' utility service area
     code_quality:
       score: 10
       max: 10
@@ -198,7 +192,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear data -> init -> option flow
+        comment: No functions/classes, linear structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,44 +204,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports, uses the echarts global only
+        comment: No extraneous imports; only ANYPLOT_TOKENS and echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake UI
+        comment: Clean, appropriately complex, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, animation:false, current ECharts 6 API
+        comment: Correct mount-node contract, animation:false, current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Textbook idiomatic ECharts stacked-area recipe (stack+areaStyle+boundaryGap:false)
+        comment: Idiomatic line+stack+areaStyle stacked-area pattern, correct high-level
+          API usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: emphasis.focus:"series" and smooth interpolation are ECharts touches
-          but fairly generic; no dataZoom/markLine/visualMap to showcase deeper library
-          strengths
-  verdict: REJECTED
+        passed: true
+        comment: Uses markLine annotation (ECharts-distinctive) plus emphasis.focus='series';
+          otherwise fairly standard configuration
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - stacked-area
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
