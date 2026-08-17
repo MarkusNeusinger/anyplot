@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked: Stacked Area Chart
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 94/100 | Updated: 2026-08-17
@@ -104,8 +104,6 @@ area_chart = (
                 rowPadding=6,
                 labelColor=INK_SOFT,
                 titleColor=INK,
-                fillColor=ELEVATED_BG,
-                strokeColor=INK_SOFT,
             ),
         ),
         opacity=alt.Opacity("Category:N", scale=alt.Scale(domain=category_order, range=opacities), legend=None),
@@ -140,7 +138,7 @@ decline_point = (
 )
 decline_text = (
     alt.Chart(annotation_df)
-    .mark_text(align="right", dx=-10, dy=-6, fontSize=10, fontWeight="bold", color=INK)
+    .mark_text(align="right", dx=-10, dy=-38, fontSize=10, fontWeight="bold", color=INK)
     .encode(x="Month:T", y="Total:Q", text="Label:N")
 )
 
