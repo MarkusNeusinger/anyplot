@@ -1,0 +1,273 @@
+library: ggplot2
+language: r
+specification_id: donut-nested
+created: '2026-08-18T07:00:34Z'
+updated: '2026-08-18T07:16:01Z'
+generated_by: claude-sonnet
+workflow_run: 32108862523
+issue: 2015
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Consistent color families per parent business unit — each parent's children are
+    tinted from the same base hue via colour_ramp(), directly satisfying the spec's
+    'same hue, varying lightness' requirement
+  - 'Clear data-driven hierarchy: parent segments carry bold, larger percentage labels
+    while children use smaller regular labels, giving the chart an immediate focal
+    point without extra annotation'
+  - Ring segments are aligned by cumulative sum so child wedges line up precisely
+    with their parent wedge, with a radial gap plus background-colored stroke separating
+    the two rings cleanly
+  - Legend built for below-threshold children via an invisible geom_point + scale_color_manual/override.aes
+    trick — a genuinely idiomatic ggplot2 solution to a problem the library has no
+    native shortcut for
+  - 'Both light and dark renders are fully theme-correct: warm off-white/near-black
+    backgrounds, all chrome readable, and Imprint data colors identical across themes'
+  weaknesses:
+  - 'Label/data overlap: the ''State/Local'' child label (Public Sector ring, upper-left)
+    is partially covered by the SMB ring segment above it — the trailing ''l'' is
+    obscured behind the ochre wedge. Labels near the 12 o''clock position are horizontally
+    centered rather than angle-aware, so part of the text swings back over the ring;
+    nudge CHILD_LABEL_X outward or angle-adjust labels near the top of the circle.'
+  - Legend entries render as bare child names ('Europe', 'Latin America') even though
+    the source builds legend_label = paste(level_1, level_2, sep = ' · '), which should
+    produce 'SMB · Europe' / 'Consumer · Latin America'. Either the reviewed PNGs
+    are stale relative to this commit or the prefix is being dropped at render time
+    — re-generate the images from this exact script to confirm, since a bare 'Europe'
+    legend entry is ambiguous against the already-labeled Enterprise-Europe wedge
+    on the same chart.
+  - 'Vertical whitespace is unbalanced: the gap between the title and the top of the
+    donut is noticeably larger than the gap between the ring and the legend below
+    it — tightening the top margin would let the donut read as more centered and use
+    the canvas more confidently.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Revenue by Business Unit · donut-nested · r · ggplot2 · anyplot.ai" in dark ink, clearly visible at top-left. Parent-ring labels (e.g. "Enterprise 34%") are bold dark ink; child-ring labels (e.g. "North America") are lighter gray-brown, both fully readable against the light background. Legend box "Smaller segments" at bottom has a thin dark border with legible dark text and two color swatches labeled "Europe" and "Latin America".
+      Data: Nested donut — inner ring shows 4 parent business units (Enterprise green #009E73, Consumer lavender, Public Sector blue, SMB ochre), outer ring shows regional children in lighter tints of the same parent hue. First categorical series (Enterprise, largest share) is confirmed #009E73. Segments are separated by thin cream-colored strokes matching the page background.
+      Legibility verdict: PASS, with one localized defect — the "State/Local" child label (upper-left, Public Sector ring) has its trailing characters partially covered by the adjacent SMB ring segment, a text/data overlap rather than a legibility-against-background failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in light cream/off-white ink, clearly legible against the dark background. Parent labels are bold light text, child labels are lighter gray, both readable — no dark-on-dark failures observed. Legend box uses an elevated dark fill (#242420-like) with a lighter border and light text, fully legible. Ring separator strokes switch from cream to near-black, still providing clean segment separation.
+      Data: Colors are identical to the light render — Enterprise green #009E73, Consumer lavender, Public Sector blue, SMB ochre, with the same lightness-tinted children per parent family. No hue or saturation drift between themes.
+      Legibility verdict: PASS. Same "State/Local" label/ring overlap present as in the light render (a data-layout issue, not a theme-adaptation issue) — no additional dark-mode-specific problems.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (theme_void base_size=8, explicit
+          element_text sizes, geom_text sizes 2.7-3.4); all text readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: '''State/Local'' child label is partially covered by the adjacent
+          SMB ring segment near the 12 o''clock position; rest of the chart is overlap-free'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ring segments are well-sized and clearly visible; low segment count
+          (4 parents, 2-4 children each) needs no density-based sizing adjustment
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Same-hue tint families distinguish children by lightness rather than
+          hue alone; cream/black edge strokes add contrast between adjacent wedges
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Donut + labels + legend use a healthy share of the square canvas,
+          but the gap between title and donut is noticeably larger than the gap between
+          donut and legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a polar donut chart; title is descriptive
+          with the mandated spec-id/lang/lib/anyplot.ai suffix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Parent colors follow Imprint canonical order (largest share = #009E73
+          first); backgrounds are #FAF8F1/#1A1A17; data colors identical across themes;
+          chrome fully theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom per-parent tint families and a deliberate bold/regular typographic
+          hierarchy go clearly above a configured default, though the label overlap
+          and legend inconsistency keep it short of publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome, cream/black edge strokes cleanly separate
+          wedges, but top/bottom whitespace is unbalanced
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold, large percentage labels on parent segments let the viewer immediately
+          read relative business-unit share without hunting through a legend
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct nested/multi-ring donut chart via geom_rect + coord_polar
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent hue families, aligned parent/child boundaries, labels-on-large
+          + legend-for-small, ring spacing, and exactly 2 hierarchy levels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Values aggregate correctly from children to parents; both rings show
+          all data
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format is exactly correct; legend labels match the child category
+          names but render without the parent-disambiguating prefix the source code
+          computes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 parents (within 3-6) with 2-4 children each (within 2-5); varied
+          segment sizes exercise both the labeled and legend-only code paths
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible business-revenue-by-region scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue magnitudes and relative business-unit/region proportions
+          are all plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> data -> plot -> save flow; the single tint_family() helper
+          is a justified small utility, not over-abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is otherwise deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tibble, scales, ragg are all actually used (tribble,
+          colour_ramp, agg_png)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, no over-engineering; appropriate complexity for a nested-ring
+          construction
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
+          and current ggplot2 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_rect + coord_polar is the canonical ggplot2 pattern for donut/pie
+          charts; scale_fill_identity used correctly for precomputed hex colors
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Synthesizing a legend from an invisible geom_point layer with guide
+          override.aes, plus scales::colour_ramp() for hue-family tints, are ggplot2-specific
+          techniques not trivially portable to other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - edge-highlighting
+  - publication-ready
