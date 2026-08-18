@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 85/100 | Updated: 2026-08-18
+Quality: 88/100 | Updated: 2026-08-18
 """
 
 import os
