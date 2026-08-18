@@ -1,0 +1,264 @@
+library: muix
+language: javascript
+specification_id: bar-stacked-percent
+created: '2026-08-18T15:13:14Z'
+updated: '2026-08-18T15:24:44Z'
+generated_by: claude-sonnet
+workflow_run: 32152153725
+issue: 2008
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Correct 100% stacked-bar semantics: series use stack: "total" with values pre-normalized
+    to percentages, and the y-axis is fixed to 0-100% with a % formatter.'
+  - Bars are now sorted descending by renewables share (Norway -> Brazil -> Germany
+    -> China -> France -> USA), creating a clear visual gradient that reinforces the
+    subtitle's narrative -- directly addresses the attempt-1 weakness about arbitrary
+    bar order.
+  - Axis line and grid strokes now use the softer t.grid token instead of MUI X's
+    default full-ink stroke (via sx targeting .MuiChartsAxis-line / .MuiChartsGrid-line),
+    producing a more refined chrome treatment -- directly addresses the attempt-1
+    DE-02 weakness.
+  - Thoughtful per-segment label contrast (LABEL_ON_LIGHT_FILL / LABEL_ON_DARK_FILL
+    chosen per series fill, not per page theme) keeps every in-bar percentage legible
+    on both themes.
+  - Threshold-based label suppression (barLabel only renders when value >= 6%) avoids
+    cramming unreadable text into narrow slivers, e.g. Brazil's ~2% nuclear sliver
+    and France's ~1% coal sliver.
+  - Canonical Imprint palette order (green, lavender, blue, ochre) with data colors
+    pixel-identical between light and dark renders; only chrome (background, text,
+    gridlines) flips.
+  - 'Idiomatic, rich use of the community BarChart API: xAxis/yAxis valueFormatter,
+    categoryGapRatio, slotProps for legend and barLabel styling, disableTicks, and
+    a documented tickFontSize trick to offset the y-axis label from the ''100%'' tick
+    text.'
+  weaknesses:
+  - A visible gap remains between the last bar (USA) and the legend column on the
+    right -- tightened relative to attempt 1 but could be trimmed further for balance.
+  - Sorting by renewables share slightly dilutes the subtitle's Norway-vs-China anchor,
+    since China now sits mid-pack rather than at a visual extreme (USA and France
+    have even lower renewables shares) -- the coal-specific claim still holds (China's
+    58% is the highest coal share of any bar), but a reader skimming bar position
+    alone may not immediately connect it to 'leans on coal'.
+  - Design excellence is solid but not exceptional -- beyond the new axis-line refinement
+    and existing label-contrast logic, there are no further distinctive touches (e.g.
+    no accent/callout on the Norway or China bar to underline the subtitle's claim).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "bar-stacked-percent · javascript · muix · anyplot.ai" in dark ink, top-left; a dark-gray subtitle below it ("Norway's grid runs almost entirely on renewables, while China still leans on coal"); y-axis "Share (%)" and x-axis "Country" labels in dark ink; tick labels (0%-100%, country names) in a softer gray; subtle horizontal gridlines and a now-lighter (grid-weight) axis line; vertical legend on the right listing Renewables/Nuclear/Natural Gas/Coal with color swatches. All text is clearly readable against the light background -- no light-on-light issues.
+      Data: Six vertical bars, now sorted descending by renewables share (Norway 100%, Brazil 86%, Germany 54%, China 34%, France 25%, USA 22%), each stacked to 100% with up to four components. First series (Renewables) is brand green #009E73, followed by lavender (Nuclear), blue (Natural Gas), and ochre (Coal) -- matching canonical Imprint order. In-bar percentage labels use dark text on the green/lavender/ochre segments and light text on the blue segment, all legible against their respective fills. Tiny segments (e.g. Brazil's ~2% nuclear sliver, France's ~1% coal sliver) correctly omit a label to avoid clutter.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and subtitle now in light ink/soft light-gray, axis labels and tick labels flipped to light tones, gridlines and axis line still subtle but visible against the dark surface, legend text light gray. No dark-on-dark failures observed -- all chrome text is clearly visible against the near-black background.
+      Data: Segment colors (green, lavender, blue, ochre) are pixel-identical to the light render -- only the chrome (background, text, gridlines, axis line) flipped. In-bar percentage label colors are unchanged (still chosen per-segment fill, not per page background) and remain legible on both themes since they sit on the colored bar fills rather than the page background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22px, subtitle 14px, axis 15px,
+          ticks 14px, bar labels 13px); readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; labels suppressed under a 6% threshold to
+          avoid crowding narrow segments.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 categories x up to 4 components -- well within density where all
+          segments and labels stay distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-segment label fill chosen for contrast against each bar color;
+          no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; good proportions, nothing clipped or
+          overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Country'' and ''Share (%)'' axis labels are descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; canonical Imprint order; correct theme
+          backgrounds; data colors identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Per-segment label contrast logic, documented tickFontSize offset
+          trick, and renewables-share sort show above-baseline polish; composition
+          is refined but not fully distinctive.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis and grid lines now use the softer grid-weight stroke instead
+          of MUI X defaults, addressing the attempt-1 weakness; a small gap between
+          the last bar and legend remains.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars now sorted descending by renewables share, forming a clear visual
+          gradient (Norway -> USA) that reinforces the subtitle's narrative -- directly
+          fixes the attempt-1 weakness.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'True 100% stacked bar via stack: "total" with percent-normalized
+          values and a fixed 0-100% axis.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, clear legend, in-segment percentage labels, consistent
+          component order across bars.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = country, Y = share (%); all components sum to 100% per bar.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format; legend labels match component
+          names exactly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 categories, 4 components -- within the spec's recommended range,
+          exercising the full percent-stack feature set.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral illustrative electricity-generation-mix data by
+          country.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values normalized sensibly to 0-100%.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single functional component, no unnecessary classes or abstractions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded, deterministic in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart, Box, and Typography imported, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Renders via export default into the harness mount, skipAnimation
+          set, current MUI X API used.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Full use of xAxis/yAxis config, valueFormatter, slotProps, categoryGapRatio,
+          disableTicks -- idiomatic community-surface usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Per-series label-color mapping via slotProps.barLabel, the tickFontSize
+          axis-offset trick, and targeted sx overrides on internal MUI X classes (.MuiChartsAxis-line/.MuiChartsGrid-line)
+          show real library familiarity.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - publication-ready
