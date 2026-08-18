@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: donut-nested
 created: '2026-08-18T07:09:52Z'
-updated: '2026-08-18T07:14:39Z'
+updated: '2026-08-18T07:23:56Z'
 generated_by: claude-sonnet
 workflow_run: 32109637158
 issue: 2015
@@ -12,136 +12,135 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Nested-donut angular alignment is exact: both series sum to the same 1,740 total,
-    so every outer segment''s arc stays geometrically nested inside its parent unit''s
-    wedge'
-  - Per-unit color families (Imprint hue lightened by a fixed ratio per child index)
+  - 'Repair fully addressed the attempt-1 margin imbalance: measuring the rendered
+    PNGs, the previous MARGIN.right=320/left=50 split (legend floating in a much larger
+    empty area) is now MARGIN.right=260/left=90 plus a slightly larger outerRadius
+    (400→420), and the chart+legend group now reads as a well-balanced composition
+    centered on the canvas'
+  - Outer-ring arc-label fontSize was bumped 13→15px as requested, giving the 10 customer-segment
+    labels extra mobile-scale safety without introducing any new overlap
+  - 'Nested-donut angular alignment remains exact: both series total 1,740 so every
+    outer segment''s arc stays geometrically nested inside its parent unit''s wedge'
+  - 'Per-unit color families (Imprint hue lightened by a fixed ratio per child index)
     give an immediately readable parent/child relationship without leaving the Imprint
-    palette
-  - Center overlay ("$1.74B / TOTAL REVENUE") uses the donut hole productively as
-    a genuine focal point, not just empty space
-  - arcLabelMinAngle correctly suppresses labels on the one segment too thin to hold
-    text (Training, 14.5°) while the legend still covers it — matches the spec's "labels
-    on larger segments, legend for smaller" guidance
-  - paintOrder stroke halos on arc labels and pageBg-colored strokes between wedges
-    keep text legible against every hue/tint without extra contrast work
+    palette; first series is #009E73 in canonical order'
+  - Center overlay ("$1.74B / TOTAL REVENUE") productively uses the donut hole as
+    a genuine focal point
+  - arcLabelMinAngle correctly suppresses the one segment too thin to hold text (Training,
+    14.5°) while the legend still covers it
+  - paintOrder stroke halos on arc labels keep text legible against every hue/tint
+    in both themes
   - Both renders are pixel-identical in data color and differ only in theme chrome
-    (background, ink, legend text) — correct theme handling throughout
+    (background, text, stroke direction) — correct theme handling throughout
   weaknesses:
-  - 'Layout balance: the donut sits left-of-center (MARGIN.right=320 vs left=50) so
-    the legend column floats in a much larger empty right/top/bottom margin than the
-    whitespace on the donut''s own side — rebalance margins or widen the chart so
-    the whitespace reads as intentional rather than leftover.'
-  - Outer-ring arc labels are set to 13px vs 18px on the inner ring — legible now,
-    but at the small end for a nested donut with 10 outer segments; consider nudging
-    to ~14-15px for extra mobile-scale safety margin.
-  - Design excellence is solid (tinted hierarchy, center callout, refined stroke halos)
-    but stops short of a truly distinctive focal point — e.g. no visual emphasis calling
-    out the single largest segment or unit beyond its size, so the story stays at
-    "here is the breakdown" rather than "here is the insight".
+  - There is still a sizeable pure-whitespace gap between the title and the donut
+    (measured ~351px of the 2400px canvas height, vs. only 45px on the right and 50px
+    above the title) — the PieChart's own vertical margin box (top=130/bottom=50 CSS)
+    leaves more room than the outerRadius=420 circle actually needs, so the ring sits
+    noticeably lower than the title. Not severe enough to cap the score, but tightening
+    MARGIN.top slightly (or growing outerRadius a touch further) would make the composition
+    read as fully intentional rather than slightly top-empty.
+  - Design storytelling still stops at the two-tier label hierarchy + center total;
+    no visual emphasis singles out the single largest segment/unit (e.g. a subtle
+    stroke weight bump or radius nudge on Enterprise SaaS / Software) — this was a
+    suggested nice-to-have in the attempt-1 review and remains unaddressed, though
+    it is not required by the spec
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "donut-nested · javascript · muix · anyplot.ai" centered at top, clearly readable. Inner-ring labels (Software, Hardware, Services, Consulting) in bold dark text with a light stroke halo sit inside their own wedges. Outer-ring labels (Enterprise SaaS, SMB Subscriptions, Developer Tools, Enterprise Devices, Consumer Devices, Managed Support, Professional Services, Strategy Advisory, Implementation) are smaller dark text, also haloed, all fully contained within their wedges — no clipping. Legend on the right lists all 10 outer-segment labels in dark-gray text with matching color swatches. Center donut-hole overlay shows "$1.74B" in large bold dark text and "TOTAL REVENUE" in smaller uppercase gray text.
-      Data: Inner ring uses Imprint palette positions 1-4 (green Software, lavender Hardware, blue Services, ochre Consulting — first series is #009E73 green). Outer ring uses lightened tints of the same hue per parent unit, giving a clear parent/child color family per branch.
-      Legibility verdict: PASS — every title, arc label, legend entry, and center overlay is clearly readable against the light background; no light-on-light text.
+      Background: Warm off-white, matches #FAF8F1 (confirmed by pixel sample at [5,5] = RGB(250,248,241)) — not pure white.
+      Chrome: Bold dark title "donut-nested · javascript · muix · anyplot.ai" centered near the top. Inner ring (Software/Hardware/Services/Consulting) carries bold 18px haloed labels; outer ring (10 customer-segment wedges) carries 15px haloed labels (bumped from 13px in attempt 1) — all fully readable, no clipping, no overlap. Legend on the right lists all 10 outer-segment names with color swatches in dark-gray text. Center donut-hole overlay shows "$1.74B" / "TOTAL REVENUE" in dark text.
+      Data: First/largest inner wedge (Software) renders in #009E73 (Imprint position 1); Hardware/Services/Consulting follow canonical Imprint order (positions 2-4). Outer-ring segments use lightened tints of their parent hue, stepping toward white per child index — consistent hue families throughout.
+      Legibility verdict: PASS — all text (title, inner/outer arc labels, legend, center overlay) is clearly readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title now in light text, clearly visible. Inner- and outer-ring arc labels keep the same layout and halo treatment, now with dark-toned stroke against the lighter wedge tints so they stay readable on both the darker green/purple/blue base hues and the lightened child tints. Legend text is light gray, clearly legible against the dark background. Center overlay "$1.74B / TOTAL REVENUE" renders in light text, fully readable.
-      Data: All wedge hues (business-unit hues and their child tints) are pixel-identical to the light render — only the chrome (background, title, tick/legend text, arc-label stroke) flipped, as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all text elements (title, arc labels, legend, center overlay) are clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17 (confirmed by pixel sample at [5,5] = RGB(26,26,23)) — not pure black.
+      Chrome: Identical layout to the light render; title, arc labels, legend text, and center overlay all render in light tones (light gray/white) against the dark background, with the label-halo stroke direction flipped appropriately for dark chrome.
+      Data: All wedge hues — both the four unit colors and their child tints — are pixel-identical to the light render (verified: same content bounding box, same colors); only the chrome (background, text) flips, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element is clearly legible against the near-black background.
+
+    Layout measurement (both renders, identical geometry): content bounding box spans x=192-2355 (90% of 2400px width) and y=50-2117 (86% of 2400px height). Left margin 192px (8%) vs. right margin 45px (1.9%) — noticeably tighter on the right but not clipped (legend never touches the canvas edge). A vertical gap of ~351px sits between the title (ends y=91) and the donut ring (starts y=442), larger than the 283px bottom margin — a minor top-heavy imbalance, not severe enough to be a defect but flagged in weaknesses for future polish.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, inner labels 18px, outer
-          labels 13px, center total 34px, legend 15px); readable in both themes. Outer-ring
-          labels at 13px are on the small end for 10 segments — not a violation but
-          leaves little margin at mobile scale.
+        comment: All font sizes explicit (title 22px, inner arc labels 18px, outer
+          arc labels bumped 13→15px, legend 15px, center overlay 34/11px); fully readable
+          in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data in either render; stroke halos
-          keep labels separated from wedge fills.
+        comment: No collisions between arc labels, legend, or center overlay
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: paddingAngle and cornerRadius give clean segment separation at this
-          data density; not maximally optimized but solid.
+        comment: paddingAngle/cornerRadius separation reads well; the thinnest outer
+          segment (Training, 14.5°) is intentionally unlabeled per spec guidance and
+          covered by the legend instead
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'CVD-safe: distinct hue families per unit, tints kept to 0.15-0.6
-          (max 3 children per unit) so contrast against background stays adequate;
-          no red-green-only signal.'
+        comment: CVD-safe hue families, tints capped, halo strokes keep text distinguishable
+          independent of hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Donut and legend together use a healthy share of the canvas, but
-          the asymmetric margin (right=320 vs left=50) leaves the legend column floating
-          in a larger empty margin than the donut's own whitespace — minor imbalance.
+        comment: Attempt-1 asymmetric margin (right=320 vs left=50 CSS) is resolved
+          to a near-balanced right=260/left=90 plus slightly larger radii; content
+          bbox covers 90% width / 86% height with no cut-off. Minor top-heavy gap
+          between title and ring noted in weaknesses but not scored down further
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for a donut; center overlay and arc-label
-          value formatter ("$XXXM") carry units, title format correct.
+        comment: Value formatter carries $M units; title matches required format exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 green; inner ring uses Imprint palette positions
-          1-4 in canonical order (abstract business-unit categories); outer ring uses
-          lightened tints of the same Imprint hues per the spec''s "consistent color
-          family per parent" guidance; backgrounds #FAF8F1/#1A1A17 correct in both
-          themes; data colors identical across themes.'
+        comment: 'First series #009E73, canonical Imprint order on inner ring, hue-family
+          tinting on outer ring per spec guidance, correct theme backgrounds (#FAF8F1
+          / #1A1A17) confirmed by pixel sample'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        passed: true
-        comment: 'Clearly above a configured default: intentional hue-family hierarchy,
-          center revenue callout, refined arc-label halos and legend styling.'
+        comment: 'Clearly above a configured default: hue-family hierarchy, center
+          revenue callout, refined halo/legend styling'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: pageBg-colored strokes between wedges, paddingAngle + cornerRadius
-          for separation, generous overall whitespace; the right-side margin imbalance
-          keeps this from full marks.
+        comment: Stroke/spacing detail plus the newly balanced margins read as intentional
+          and polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Two-tier label sizing (bold 18px inner vs 13px outer) plus the center
-          total overlay create a clear hierarchy and focal point; doesn't go further
-          to call out a single standout insight.
+        comment: Two-tier label hierarchy + center total create a clear focal point,
+          but no emphasis singles out one standout segment/unit
     spec_compliance:
       score: 15
       max: 15
@@ -150,30 +149,26 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct nested/multi-level donut with two concentric rings.
+        comment: Correct nested donut with two concentric rings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Consistent color families per parent, child segments aligned to parent
-          boundaries via matching totals, labels on larger segments + legend for smaller,
-          ring-gap spacing, 2 hierarchy levels — all present.
+        comment: Consistent hue families per parent, aligned child/parent segment
+          boundaries, labels on larger segments + legend for smaller ones, ring spacing
+          via padding/inner-outer radius gap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
         comment: Inner ring = level_1 (business unit), outer ring = level_2 (customer
-          segment), value drives arc angle at both levels correctly.
+          segment), values sum consistently
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title exactly matches "donut-nested · javascript · muix · anyplot.ai";
-          legend labels match outer-ring segment names.
+        comment: Title format exactly matches spec; legend labels match outer-segment
+          data
     data_quality:
       score: 14
       max: 15
@@ -182,24 +177,19 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: true
-        comment: Shows varied unit sizes (710 down to 240) and varied child counts
-          (2-3) with a range of values including one segment small enough to trigger
-          the label-suppression threshold.
+        comment: 4 parent categories with 2-3 children each, varied magnitudes; shows
+          most hierarchy features well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, plausible corporate revenue-by-unit/segment scenario.
+        comment: Neutral, plausible business-revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Revenue figures and unit ordering (Software > Hardware > Services
-          > Consulting) are realistic and internally consistent; child values sum
-          exactly to parent totals.
+        comment: Revenue magnitudes and proportions are realistic for a mid-size tech
+          company
     code_quality:
       score: 10
       max: 10
@@ -208,36 +198,28 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Straightforward data -> derived arrays -> component structure; helper
-          functions (hexToRgb/lighten) are minimal and necessary for the required
-          per-child tinting.
+        comment: Imports → data → derived colors → component, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fully deterministic hardcoded data, no randomness.
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only PieChart imported from @mui/x-charts; nothing unused.
+        comment: Only PieChart imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI/interactivity; complexity is proportional to the nested-donut
-          + tinting requirement.
+        comment: Appropriate complexity for a nested-donut layout, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Default-exported component sized from window.ANYPLOT_SIZE, skipAnimation
-          set, current MUI X community API — correct harness contract.
+        comment: Harness contract respected (default export, skipAnimation, sized
+          to window.ANYPLOT_SIZE)
     library_mastery:
       score: 8
       max: 10
@@ -246,27 +228,21 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Correct multi-series PieChart nesting via innerRadius/outerRadius
-          pairs and slotProps.legend — idiomatic MUI X pattern for nested donuts.
+        comment: Correct multi-series nested PieChart pattern with per-series sx targeting
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses location-aware arcLabel callback (per-location legend suppression),
-          per-series sx class targeting (MuiPieArcLabel-series-*), cornerRadius and
-          paddingAngle — several features fairly specific to MUI X's pie API.
-  verdict: REJECTED
+        comment: Location-aware arcLabel callback, per-series sx class targeting,
+          cornerRadius/paddingAngle for ring separation
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - edge-highlighting
-  - publication-ready
