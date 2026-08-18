@@ -1,5 +1,7 @@
 """Request-scoped helpers shared across routers."""
 
+import ipaddress
+
 from fastapi import Request
 
 
@@ -54,9 +56,27 @@ def visitor_ip(request: Request) -> str:
     forwarded entry; then the socket peer.
     """
     cf_ip = request.headers.get("cf-connecting-ip", "").strip()
-    if cf_ip:
+    if _is_ip(cf_ip):
         return cf_ip
     for entry in request.headers.get("x-forwarded-for", "").split(","):
-        if entry.strip():
-            return entry.strip()
+        candidate = entry.strip()
+        if _is_ip(candidate):
+            return candidate
     return request.client.host if request.client else ""
+
+
+def _is_ip(value: str) -> bool:
+    """Whether the token is a real address.
+
+    Proxies do insert non-addresses — `unknown` is the classic — and Plausible
+    documents that it uses "the first **valid** IP address from the list".
+    Forwarding a non-address gets the event discarded or mis-located, so a
+    malformed entry is skipped rather than passed on.
+    """
+    if not value:
+        return False
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        return False
+    return True

@@ -545,3 +545,31 @@ class TestBotEventsUseANeutralAgent:
             call = mock_client.post.call_args[1]
             assert call["json"]["domain"] == DOMAIN
             assert call["headers"]["User-Agent"] == "Twitterbot/1.0"
+
+
+class TestVisitorIpValidation:
+    """Plausible uses "the first VALID IP address from the list" — so must we."""
+
+    @staticmethod
+    def _request(headers: dict[str, str]) -> MagicMock:
+        request = MagicMock()
+        request.headers = headers
+        request.client.host = "127.0.0.1"
+        return request
+
+    @pytest.mark.parametrize(
+        ("headers", "expected"),
+        [
+            # `unknown` is the classic proxy filler; skip it, do not forward it
+            ({"x-forwarded-for": "unknown, 84.75.12.9"}, "84.75.12.9"),
+            ({"cf-connecting-ip": "garbage", "x-forwarded-for": "84.75.12.9"}, "84.75.12.9"),
+            ({"x-forwarded-for": "2a02:1210::1, 10.0.0.1"}, "2a02:1210::1"),
+            # nothing usable anywhere: fall back to the socket peer
+            ({"x-forwarded-for": "nonsense"}, "127.0.0.1"),
+            ({}, "127.0.0.1"),
+        ],
+    )
+    def test_skips_tokens_that_are_not_addresses(self, headers: dict[str, str], expected: str) -> None:
+        from api.request_context import visitor_ip
+
+        assert visitor_ip(self._request(headers)) == expected
