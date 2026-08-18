@@ -898,7 +898,7 @@ Roughly five minutes from merge to live, per build.
 #### Checking whether something actually deployed
 
 The triggers are **regional, in `europe-west4`**, and regional builds do not
-appear in the global build list. Always pass `--region`:
+appear in the global build list. Always pass both `--region` and `--project`:
 
 ```bash
 gcloud builds list --region=europe-west4 --project=anyplot --limit=10 \
@@ -910,6 +910,17 @@ Omitting `--region` returns a handful of builds from early 2026 and nothing
 since — which reads as "nothing has deployed for months" and is simply the
 wrong list. That mistake has been made and had to be corrected by the repo
 owner.
+
+Omitting `--project` fails more quietly. A gcloud install whose default project
+is another one of the owner's projects returns *that* project's builds, and
+because those triggers carry the same names in the same region, the output looks
+entirely credible — a plausible list of `deploy-api` and `deploy-app` runs that
+simply stop a few days ago. There is no error to notice. Confirm the context
+before drawing a conclusion from it:
+
+```bash
+gcloud config get-value project    # must print: anyplot
+```
 
 `.github/workflows/notify-deployment.yml` only **records** a GitHub deployment;
 it does not deploy anything. A green run there says nothing about whether the
