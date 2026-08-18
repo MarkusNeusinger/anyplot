@@ -1,7 +1,7 @@
 // anyplot.ai
 // radar-multi: Multi-Series Radar Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-17
+// Quality: 91/100 | Updated: 2026-08-18
 //# anyplot-orientation: square
 
 // Only the core `highcharts` bundle is loaded (no highcharts-more), so the
