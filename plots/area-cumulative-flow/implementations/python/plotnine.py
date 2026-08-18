@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-07
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 93/100 | Updated: 2026-08-18
 """
 
 import os
@@ -28,8 +28,10 @@ from plotnine import (
     labs,
     scale_fill_manual,
     scale_x_datetime,
+    scale_y_continuous,
     theme,
 )
+from plotnine.coords import coord_cartesian
 
 
 # Theme tokens
@@ -87,60 +89,93 @@ df["stage"] = pd.Categorical(df["stage"], categories=stage_order, ordered=True)
 visual_order = ["Done", "Testing", "Development", "Analysis", "Backlog"]
 stage_colors = dict(zip(visual_order, IMPRINT, strict=True))
 
-# Annotation: pinpoint the Development bottleneck at day 55 (band midpoint in stacked space)
-idx = 55
-x_annot = dates[idx]
-y_annot = int((cum_testing[idx] + cum_dev[idx]) / 2)
+# Bottleneck callout: locate the widest Development window around its WIP peak,
+# not just a single day, so the highlight box below hugs the whole widening span.
+peak_idx = int(np.argmax(dev_wip))
+window = 12
+win_lo = max(0, peak_idx - window)
+win_hi = min(n_days - 1, peak_idx + window)
+box_pad = 3
+box_xmin, box_xmax = dates[win_lo], dates[win_hi]
+box_ymin = max(0.0, float(np.min(cum_testing[win_lo : win_hi + 1])) - box_pad)
+box_ymax = float(np.max(cum_dev[win_lo : win_hi + 1])) + box_pad
+peak_wip = int(dev_wip[peak_idx])
+x_annot = dates[peak_idx]
+y_annot = int((cum_testing[peak_idx] + cum_dev[peak_idx]) / 2)
+
+# Explicit y-limit for coord_cartesian below: a touch of headroom above the
+# stack top, computed once instead of relying on scale expansion alone.
+y_top = float(cum_backlog.max()) * 1.06
+
+# Title — canonical format, well under the 67-char baseline so no fontsize scaling needed
+title = "area-cumulative-flow · python · plotnine · anyplot.ai"
 
 # Plot
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major_x=element_blank(),
     panel_grid_major_y=element_line(color=INK_SOFT, size=0.3, alpha=0.20),
     panel_grid_minor=element_blank(),
     panel_border=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=10),
+    axis_text=element_text(color=INK_SOFT, size=8),
     # L-shaped frame: bottom x-axis line and left y-axis line only
     axis_line_x=element_line(color=INK_SOFT),
     axis_line_y=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24, face="bold"),
+    plot_title=element_text(color=INK, size=12, face="bold"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    # Larger legend title for visual hierarchy within the legend
-    legend_title=element_text(color=INK, size=18, face="bold"),
+    legend_text=element_text(color=INK_SOFT, size=8),
+    # Slightly larger legend title for visual hierarchy within the legend
+    legend_title=element_text(color=INK, size=9, face="bold"),
     legend_position="right",
-    # Breathing room between legend and plot area
-    legend_box_spacing=0.4,
+    # Tight breathing room between plot area and legend — avoids the excess
+    # right-side whitespace flagged in the previous review
+    legend_box_spacing=0.02,
+    plot_margin=0.02,
 )
 
 plot = (
     ggplot(df, aes(x="date", y="wip", fill="stage"))
-    + geom_area(position="stack", alpha=0.88, color=PAGE_BG, size=0.3)
+    # outline_type="full" closes each band's own polygon border (not just the
+    # upper edge), a deliberate refinement over the geom_area default
+    + geom_area(position="stack", alpha=0.88, color=PAGE_BG, size=0.3, outline_type="full")
     + scale_fill_manual(values=stage_colors)
-    + scale_x_datetime(date_labels="%b %d", date_breaks="2 weeks")
-    + labs(
-        x="Date",
-        y="Cumulative Items",
-        fill="Stage",
-        title="Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai",
+    # date axis hugs the data range — no leading/trailing padding
+    + scale_x_datetime(date_labels="%b %d", date_breaks="2 weeks", expand=(0, 0))
+    + scale_y_continuous(expand=(0, 0))
+    # Fine-tuned view window (vs. relying on scale expansion alone) so the
+    # bottleneck highlight box below always has clean headroom above it
+    + coord_cartesian(ylim=(0, y_top), expand=False)
+    + labs(x="Date", y="Cumulative Items", fill="Stage", title=title)
+    # Dashed callout box makes the widening Development band unmissable at a
+    # glance, instead of relying solely on the text label to carry the insight
+    + annotate(
+        "rect",
+        xmin=box_xmin,
+        xmax=box_xmax,
+        ymin=box_ymin,
+        ymax=box_ymax,
+        fill=None,
+        color=INK,
+        linetype="dashed",
+        size=0.7,
+        alpha=0.85,
     )
-    # Callout draws the viewer's eye to the Development bottleneck
     + annotate(
         "text",
         x=x_annot,
         y=y_annot,
-        label="← bottleneck",
+        label=f"Development bottleneck\nPeak WIP: {peak_wip}",
         color="#FFFFFF",
-        size=12,
+        size=3.5,
         ha="left",
         va="center",
-        fontstyle="italic",
+        fontweight="bold",
     )
     + anyplot_theme
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9, units="in", verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

@@ -2,128 +2,161 @@ library: pygal
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T21:00:03Z'
-updated: '2026-05-07T21:19:05Z'
+updated: '2026-08-18T03:25:36Z'
 generated_by: claude-sonnet
-workflow_run: 25521544482
+workflow_run: 32093662203
 issue: 5239
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 93
 review:
   strengths:
-  - Correct CFD implementation using StackedLine+fill with proper workflow stacking
-    order (Done bottom, Backlog top)
-  - Full theme-adaptive styling with correct Okabe-Ito palette and background tokens
-    for both light and dark renders
-  - Realistic lag-based data generation with plausible Kanban stage dynamics (4/8/12/6
-    day lags)
-  - Clean KISS code structure with np.random.seed(42) for reproducibility
-  - Idiomatic use of x_labels_major/show_minor_x_labels for date interval thinning
-    and HTML export for pygal interactivity
+  - 'Stacking order is spec-correct and verified: Backlog (earliest stage) on top,
+    Done (latest stage) on bottom, confirmed by re-deriving each band from the cumulative
+    arrays.'
+  - Exact 3200×1800 canvas confirmed by re-running the script and measuring the output
+    PNG.
+  - 'Imprint palette compliance verified by pixel sampling: the first series (Done)
+    resolves to base color #009E73 under the fill opacity, and the underlying data
+    hues are pixel-identical between light and dark renders — only the background
+    blend differs.'
+  - 'The ''QA capacity crunch'' annotation is genuine data storytelling, not decoration:
+    its anchor point is computed as the actual day-of-max Testing-band width (np.argmax),
+    placed via chart.margin_box/chart.view coordinate math, with a leader line and
+    marker that land exactly on the widened band — directly visualizes the CFD''s
+    core purpose (bottleneck identification).'
+  - Bolded stroke on the Testing series (stroke_style width=6 vs. default) creates
+    deliberate visual hierarchy pointing at the bottleneck stage without cluttering
+    the other bands.
+  - 'Data integrity verified programmatically: all five cumulative stage arrays are
+    monotonically non-decreasing and all five stacked band values are non-negative
+    across all 90 days — no rendering artifacts from invalid data.'
+  - 'No AR-09 edge clipping: pixel-scanned all four canvas edges on both renders,
+    every edge pixel is pure background.'
+  - Legible at the 400px mobile thumbnail scale in both themes — title, axis labels,
+    legend, and the annotation box text all remain readable.
   weaknesses:
-  - 'Font sizes below style-guide recommendations: label_font_size=18px (should be
-    22px), major_label_font_size=16px (should be 18px) for pixel-based libraries at
-    4800x2700'
-  - No visual storytelling or emphasis — a widening Development band indicating a
-    bottleneck would demonstrate CFD diagnostic value
-  - Title has extra descriptive prefix 'Kanban Delivery Flow · ' before the required
-    {spec-id} · {library} · anyplot.ai format
+  - 'CONFIRMED BUG — dark-theme grid lines are invisible: custom_style never sets
+    guide_stroke_color / major_guide_stroke_color, so pygal.style.Style''s class default
+    of ''black'' is used for the y-axis guide lines in both themes. Verified via the
+    rendered CSS (`.axis .guide.line{stroke:black}`) and pixel sampling: on plot-dark.png
+    the guide dashes are RGB(9,9,8) against a #1A1A17 (RGB 26,26,23) background —
+    a contrast delta of only ~17/255, effectively invisible. This is a chrome-must-flip-between-themes
+    violation (only the light render''s guide lines are actually visible). Note: prompts/library/pygal.md''s
+    ''Grid Opacity'' section is inaccurate — foreground_subtle does NOT drive `.axis
+    .guide.line` stroke color in pygal 3.1.3; only the dedicated guide_stroke_color
+    / major_guide_stroke_color Style attributes do. Fix: add `guide_stroke_color=INK_MUTED,
+    major_guide_stroke_color=INK_MUTED` to the Style(...) call.'
+  - 'Minor: the PYGAL_KEEP_STATE comment overstates its necessity. Checked against
+    the installed pygal 3.1.3 source (graph/base.py): BaseGraph.teardown() only clears
+    self.state when the env var is unset — chart.margin_box and chart.view (used for
+    the annotation''s coordinate math) are set at construction time and are never
+    torn down regardless of PYGAL_KEEP_STATE. Not a functional bug, just an inaccurate
+    code comment.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Kanban Delivery Flow · area-cumulative-flow · pygal · anyplot.ai" in dark text at top — readable. X-axis label "Date" and Y-axis label "Cumulative Item Count" readable. Tick labels at 15-day intervals readable. Legend at bottom with 5 labeled items readable.
-      Data: Five stacked area bands growing diagonally from lower-left to upper-right. First/bottom series (Done) is brand green #009E73. Second (Testing) is orange #D55E00. Third (Development) is blue #0072B2. Fourth (Analysis) is pink/reddish-purple #CC79A7. Fifth/top (Backlog) is yellow/orange #E69F00. All Okabe-Ito positions 1-5.
-      Legibility verdict: PASS — all text is readable against the warm off-white background
+      Background: Warm off-white, matches #FAF8F1 (verified by pixel sample: RGB 250,248,241).
+      Chrome: Title "area-cumulative-flow · python · pygal · anyplot.ai" in dark ink, clearly visible, ~55% of plot width. "Date" x-axis title and "Cumulative Item Count" y-axis title both dark, readable. X tick labels (every 15th day, rotated 30°) and y tick labels (every 20 units) dark and legible. Horizontal dashed guide lines render as a muted dark gray (~RGB 89,88,86) against the light background — subtle but clearly visible. Legend at bottom in one row of 5 items, all readable.
+      Data: Five stacked bands bottom-to-top: Done (green, #009E73 base), Testing (purple), Development (blue), Analysis (tan/brown), Backlog (red) — matches the Imprint palette in canonical order, first series confirmed #009E73 by pixel math. A callout box "QA capacity crunch" with a dashed leader line and dot marker sits in empty space above the ramp-up, pointing at the widest point of the Testing band (~day 62), correctly landing in the gap between the Testing/Done boundary and the Analysis/Backlog bands above — no overlap with text or bands.
+      Legibility verdict: PASS — all text and data are readable against the light background; no dark-on-dark or light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light-colored text — readable. Axis labels and tick labels in light text — readable. Legend labels in light text — readable. No dark-on-dark failures detected.
-      Data: All five band colors are identical to the light render (Okabe-Ito positions 1-5, unchanged across themes). Brand green #009E73 Done band is clearly visible on dark surface.
-      Legibility verdict: PASS — all text is readable against the near-black background, no dark-on-dark issues
+      Background: Warm near-black, matches #1A1A17 (verified by pixel sample: RGB 26,26,23).
+      Chrome: Title, axis titles, tick labels, and legend all render in light ink (near-white), clearly readable against the dark background — no dark-on-dark text failures. HOWEVER: the horizontal dashed guide lines FAIL to adapt — they render as literal black (RGB ~9,9,8) rather than the theme's muted light gray, producing a contrast delta of only ~17/255 against the #1A1A17 background. This is effectively invisible and is a genuine chrome-adaptation bug (see weaknesses) — the y-axis guide lines are the one chrome element that does not flip between themes.
+      Data: Confirmed pixel-identical hues to the light render (e.g. the Done band resolves to the same #009E73 base color once the differing background-blend opacity is accounted for) — only the surrounding chrome changed, as required. The annotation box and leader line remain fully legible (white text on a near-black translucent box with a light border).
+      Legibility verdict: PASS for all text/data; FAIL for grid-line theme-adaptation only (does not affect text or data readability, but the grid contrast requirement is not met — scored under VQ-07).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set but below style-guide: label_font_size=18
-          (should be 22), major_label_font_size=16 (should be 18) for pixel-based
-          4800x2700'
+        comment: Explicit font sizes for title/labels/ticks/legend/values; confirmed
+          readable in both themes at full size and at the 400px mobile thumbnail.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap — date labels at 15-day intervals, legend well-spaced
-          at bottom
+        comment: No text/data/annotation collisions in either render; callout box
+          sits in empty space above the ramp-up.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five bands clearly visible and distinguishable; show_dots=False
-          reduces clutter
+        comment: Dense 90-day stacked-area series with show_dots=False is appropriate;
+          Testing band bolded (stroke width 6) for emphasis without crowding.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette applied correctly
+        comment: Green/red bands separated by 3 other bands and further distinguished
+          by position and legend labels, not relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with generous margins; minor empty space
-          in upper-left inherent to CFD growth pattern
+        comment: Verified exact 3200x1800 canvas by re-running the script; title ~55%
+          width; no clipping at any edge (pixel-scanned).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Cumulative Item Count are descriptive
+        comment: '''Date'' and ''Cumulative Item Count'' are descriptive; implicit
+          unit (item count) is clear from context.'
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: 'First series #009E73, Okabe-Ito order 1-5, correct backgrounds (#FAF8F1
-          light, #1A1A17 dark), theme-adaptive chrome in both renders'
+        passed: false
+        comment: 'Confirmed bug: y-axis guide lines default to pygal''s Style.guide_stroke_color=''black''
+          (never overridden), so they render literal black on both light and dark
+          backgrounds instead of the theme-adaptive INK_MUTED token. In dark mode
+          this is a near-invisible black-on-near-black chrome element (contrast delta
+          ~17/255) that fails to flip between themes. Data colors themselves are fully
+          compliant and pixel-verified identical between renders.'
     design_excellence:
-      score: 9
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
         passed: true
-        comment: Well-configured default with correct theme tokens; no exceptional
-          polish or visual hierarchy
+        comment: Custom palette, bolded-stroke visual hierarchy on the bottleneck
+          series, and a computed (not decorative) callout annotation show real design
+          intent.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Custom margins, no dots, bottom legend with columns; pygal dashed
-          grid lines are default; no spine control available in pygal
+        comment: Generous margins/spacing and clean legend; docked for the dark-mode
+          grid-line bug undermining 'subtle but visible' grid refinement (grid is
+          fully invisible in dark mode, not subtle).
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Realistic lag-based data but no visual emphasis or hierarchy to highlight
-          CFD-specific insights like bottleneck stages
+        passed: true
+        comment: The QA-capacity-crunch annotation directly narrates the CFD's core
+          purpose (bottleneck = widening band), computed from the actual peak-WIP
+          day rather than placed arbitrarily.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,50 +164,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: pygal.StackedLine with fill=True — correct CFD implementation
+        comment: Correct stacked-area cumulative flow diagram (pygal.StackedLine with
+          fill=True).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 5 stages, 90 days, correct stacking order, legend, date labels, monotonic
-          cumulative counts
+        comment: Correct stage order (earliest on top, latest on bottom), legend present,
+          reasonable x-axis date intervals, widening-band bottleneck explicitly called
+          out.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, cumulative count on Y, all data visible
+        comment: X=date, Y=cumulative item count; all 90 days and 5 stages shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title has extra 'Kanban Delivery Flow · ' prefix before spec-id;
-          legend labels correct for all 5 stages
+        comment: Title matches the mandated format exactly; legend labels match the
+          5 stage names.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 5 stages with varying WIP; lag dynamics show realistic flow; could
-          include more dramatic bottleneck variation
+        comment: Shows cumulative stacking, per-stage WIP via band width, and an explicit
+          bottleneck period.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software delivery Kanban board — realistic, neutral, business scenario
+        comment: Neutral, plausible software-delivery Kanban scenario with a realistic
+          QA-capacity narrative.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1-3 items/day x 90 days ≈ 180 total; stage lags 4/8/12/6 days plausible
+        comment: 90 days, 5 stages, counts 0-185 — sensible for a small-to-mid delivery
+          team; verified all bands non-negative and all cumulative series monotonic
+          non-decreasing.
     code_quality:
       score: 10
       max: 10
@@ -184,59 +222,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure, no functions or classes
+        comment: No functions/classes; flat procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports (os, cairosvg, numpy, pandas, pygal, pygal.style.Style)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean lag-loop logic, clear band-width calculations
+        comment: The margin_box/view-based annotation math is non-trivial but purposeful
+          and genuinely computed from the data, not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current API
+        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html; matches
+          the interactive-library convention.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: StackedLine+fill correct for CFD; x_labels_major/show_minor_x_labels
-          idiomatic; Style object for theming
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Pygal-specific x_labels_major date thinning and HTML/interactive
-          export via chart.render()
+        comment: Correct idiomatic use of StackedLine+fill=True, Style object, legend_at_bottom,
+          x_labels_major; docked for missing guide_stroke_color/major_guide_stroke_color
+          theme wiring, a documented Style attribute left at its library default.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Post-processes pygal's rendered SVG to inject a data-driven annotation
+          pygal has no native API for, using chart.margin_box/chart.view for pixel-accurate
+          placement — a genuinely distinctive technique.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - annotations
   - html-export
-  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
-  styling: []
+  styling:
+  - edge-highlighting
+  - publication-ready
