@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-08
 """
 
 import os
@@ -23,7 +22,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - positions 1-4 for parent categories
+# Imprint palette - positions 1-4 for parent categories
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data: Regional budget allocation with expense categories
@@ -45,11 +44,26 @@ for r in regions:
 
 total_budget = sum(inner_values)
 
-# Set seaborn style with theme-adaptive colors
-sns.set_theme(style="white", rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "text.color": INK})
+# Set seaborn style with theme-adaptive colors (Imprint chrome mapping)
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-# Create figure (square for symmetric donut)
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Create figure (square for symmetric donut) — canonical 2400x2400 px
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Create outer colors - lighter shades of each parent category color
@@ -79,16 +93,17 @@ inner_wedges, inner_texts = ax.pie(
 )
 
 # Add center text
-ax.text(0, 0, f"Total Budget\n${total_budget}M", ha="center", va="center", fontsize=26, fontweight="bold", color=INK)
+ax.text(0, 0, f"Total Budget\n${total_budget}M", ha="center", va="center", fontsize=15, fontweight="bold", color=INK)
 
 # Add labels for inner ring (regions with values)
 cumsum = 0
 for region, val in zip(regions, inner_values, strict=True):
-    angle = 90 - (cumsum + val / 2) / total_budget * 360
+    # matplotlib pie() sweeps counterclockwise from startangle by default — match that direction
+    angle = 90 + (cumsum + val / 2) / total_budget * 360
     angle_rad = np.radians(angle)
     x = 0.45 * np.cos(angle_rad)
     y = 0.45 * np.sin(angle_rad)
-    ax.text(x, y, f"{region}\n${val}M", ha="center", va="center", fontsize=13, fontweight="bold", color="white")
+    ax.text(x, y, f"{region}\n${val}M", ha="center", va="center", fontsize=8, fontweight="bold", color="white")
     cumsum += val
 
 # Create legend for regions (inner ring)
@@ -96,7 +111,8 @@ region_patches = [
     Patch(facecolor=IMPRINT[i], label=f"{regions[i]}", edgecolor=INK_SOFT, linewidth=1) for i in range(len(regions))
 ]
 
-# Create legend for categories with sample colors
+# Create legend for categories, shown in the North America shade family
+# (each region's outer wedges use its own tint of the same 4 categories, in this order)
 category_patches = [
     Patch(
         facecolor=sns.light_palette(IMPRINT[0], n_colors=5, reverse=True)[:-1][i],
@@ -113,8 +129,8 @@ legend1 = ax.legend(
     title="Regions (Inner)",
     loc="upper left",
     bbox_to_anchor=(-0.15, 1.0),
-    fontsize=16,
-    title_fontsize=18,
+    fontsize=8,
+    title_fontsize=9,
     framealpha=0.95,
     edgecolor=INK_SOFT,
     facecolor=ELEVATED_BG,
@@ -122,18 +138,18 @@ legend1 = ax.legend(
 )
 for text in legend1.get_texts():
     text.set_color(INK)
-legend1.get_title().set_fontsize(18)
+legend1.get_title().set_fontsize(9)
 legend1.get_title().set_weight("bold")
 legend1.get_title().set_color(INK)
 ax.add_artist(legend1)
 
 legend2 = ax.legend(
     handles=category_patches,
-    title="Categories (Outer)",
+    title="Categories (Outer)\nshade family shown: N. America",
     loc="lower left",
     bbox_to_anchor=(-0.15, 0.0),
-    fontsize=16,
-    title_fontsize=18,
+    fontsize=8,
+    title_fontsize=9,
     framealpha=0.95,
     edgecolor=INK_SOFT,
     facecolor=ELEVATED_BG,
@@ -141,12 +157,12 @@ legend2 = ax.legend(
 )
 for text in legend2.get_texts():
     text.set_color(INK)
-legend2.get_title().set_fontsize(18)
+legend2.get_title().set_fontsize(9)
 legend2.get_title().set_weight("bold")
 legend2.get_title().set_color(INK)
 
 # Title
-ax.set_title("donut-nested · seaborn · anyplot.ai", fontsize=28, fontweight="bold", pad=30, color=INK)
+ax.set_title("donut-nested · seaborn · anyplot.ai", fontsize=14, fontweight="bold", pad=16, color=INK)
 
 ax.set_aspect("equal")
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
