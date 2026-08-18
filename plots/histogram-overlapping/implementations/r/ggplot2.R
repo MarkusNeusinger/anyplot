@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' histogram-overlapping: Overlapping Histograms
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 82/100 | Created: 2026-08-18
+#' Quality: 89/100 | Created: 2026-08-18
 
 library(ggplot2)
 library(ragg)

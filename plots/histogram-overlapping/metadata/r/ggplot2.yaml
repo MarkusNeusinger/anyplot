@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: histogram-overlapping
 created: '2026-08-18T10:54:13Z'
-updated: '2026-08-18T10:58:12Z'
+updated: '2026-08-18T11:07:01Z'
 generated_by: claude-sonnet
 workflow_run: 32128776504
 issue: 2010
@@ -12,42 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - 'Full spec fidelity: alpha=0.55 identity-position histograms with a single shared
-    binwidth computed over the combined data range, so bin edges/widths align across
-    all three groups exactly as the spec requires.'
-  - 'Correct Imprint palette usage in canonical order (#009E73 -> #C475FD -> #4467A3)
-    with theme-correct chrome on both light and dark renders - no dark-on-dark or
-    light-on-light issues.'
-  - Realistic, neutral data scenario (UI design A/B/C task-completion-time comparison)
-    with plausible seconds-scale values.
-  - Clean, minimal KISS code with explicit font sizing and a seeded RNG.
+  - 'Correct Imprint palette usage: Design A (first categorical series) is #009E73,
+    and the fill scale is applied consistently across both themes.'
+  - 'Effective data storytelling: the dashed vline plus the y=Inf annotate() callout
+    clearly highlights the fastest-average design, giving the chart a clear focal
+    point beyond raw distribution comparison.'
+  - Theme-adaptive chrome is correctly wired through Sys.getenv("ANYPLOT_THEME") —
+    backgrounds, text, and gridlines flip correctly between light (#FAF8F1) and dark
+    (#1A1A17) while data colors stay identical.
+  - 'Spec requirements are all met: semi-transparent fills (alpha=0.5), shared binwidth
+    so bin edges align across the three groups, and a clear legend identifying each
+    group.'
+  - 'Clean, idiomatic ggplot2: single geom_histogram(position="identity") call, tapply()-based
+    group-mean aggregation feeding the annotation, ragg::agg_png output at the correct
+    3200x1800 canvas.'
   weaknesses:
-  - library(dplyr) is imported but never used in the script - remove the unused import.
-  - 'Design Excellence is at ''well-configured default'' level: no visual hierarchy
-    or focal point calls out the key insight (e.g., the shift between Design C and
-    the other two groups); consider a subtle annotation, selective emphasis, or refined
-    typography contrast.'
-  - In the heaviest overlap region (~45-50s, all three series stacked), the blended
-    color reads as a fairly uniform dark teal/navy in both themes - a thin lighter
-    edge stroke or slightly reduced alpha in dense zones could preserve group distinguishability
-    there.
-  - Nothing in the implementation leverages a ggplot2-distinctive feature beyond the
-    standard grammar-of-graphics workflow (generic across libraries).
+  - In the densest overlap region (~44-52s), the top-drawn group (Design A) fully
+    paints over Design C's bars at a few bins rather than showing a visible alpha
+    blend — consider a slightly lower alpha (e.g. 0.4) or a consistent draw-order
+    strategy so all three groups stay legibly blended even in high-overlap bins.
+  - Legend key swatches render more saturated/opaque than the alpha-blended bars in
+    the plot body, a minor visual inconsistency between legend and data — cosmetic
+    only, does not affect readability.
+  - Only the single fastest-average group gets a reference line/annotation; showing
+    all three group means (even as a subtler set of vlines) would make the central-tendency
+    comparison the spec calls out more complete at a glance.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "histogram-overlapping · r · ggplot2 · anyplot.ai" in dark ink top-left, fully legible; axis titles "Task Completion Time (seconds)" and "Number of Users" in dark ink; tick labels in softer dark grey; subtle y-axis-only gridlines; legend "UI design" with three correctly colored, clearly labeled swatches (Design A/B/C) to the right of the plot.
-      Data: Three semi-transparent (alpha 0.55) histograms - Design A #009E73 (green), Design B #C475FD (lavender), Design C #4467A3 (blue) - first series is the mandated brand green. Overlapping bars blend into intermediate hues (teal, violet-blue) where distributions intersect, showing distribution shape and shift across the ~20-85s x-range.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-overlapping · r · ggplot2 · anyplot.ai" in dark ink at top-left, clearly readable. X-axis title "Task Completion Time (seconds)" and Y-axis title "Number of Users" are dark and legible. Tick labels (20/40/60/80 on x, 0/10/20/30 on y) are a softer dark gray, still clearly legible. Horizontal gridlines are subtle thin dark lines at 10/20/30. Legend "UI design" sits at right with Design A/B/C swatches, dark title and softer-gray labels, all readable.
+      Data: Three overlapping histograms — Design A (green, first series #009E73), Design B (lavender/purple), Design C (blue-gray) — semi-transparent (alpha 0.5) with a thin edge stroke, so overlap regions show visible color blending. A dashed purple vline marks Design B's mean (39s), with a bold purple annotation "Design B: fastest avg (39s)" placed above the tallest bar, not overlapping any other element.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, axis titles, and tick labels flipped to light tones (light ink / soft light grey) and remain fully legible; gridlines flipped to a subtle light tone; legend box also theme-correct and readable. No dark-on-dark issues found anywhere - all text is clearly visible against the near-black surface.
-      Data: Colors are identical to the light render (#009E73, #C475FD, #4467A3) - only chrome flipped, as required. Bar edge stroke matches the page background in both themes, producing a thin separating outline between stacked segments.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels have flipped to light ink/off-white and are clearly readable against the dark background. Gridlines are now light, subtle lines at 10/20/30. Legend title and labels are light-toned and legible against the dark legend area.
+      Data: Same three groups, same underlying hues (Design A green, Design B lavender/purple, Design C blue-gray) — the fill colors are identical to the light render; only the perceived blend against the darker background shifts slightly due to alpha compositing, which is expected and not a chrome/data-color violation. The dashed vline and bold annotation for Design B remain in the same bright purple, clearly visible on the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/legend text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,73 +62,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set via theme(); title fits comfortably within
-          panel width; readable in both themes.
+        comment: All text readable in both themes with sensible sizes; axis tick text
+          (8pt) is a touch small at mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/legend/data collisions.
+        comment: No collisions between title, axes, legend, annotation, or data.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Well-sized bars; heaviest triple-overlap region (~45-50s) blends
-          into a fairly uniform dark teal/navy, slightly reducing group distinguishability
-          there.
+        comment: Alpha blending mostly reveals overlap, but a few dense bins are fully
+          painted over by the top layer.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe green/lavender/blue combination, not red-green reliant.
+        comment: Green/lavender/blue-gray trio has adequate contrast and is CVD-safe;
+          no red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, legend adjacent to the
-          plot.
+        comment: Canvas gate passed (3200x1800); balanced title/axis proportions,
+          nothing clipped or overflowing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels are descriptive with units (seconds).
+        comment: Descriptive axis labels with units (seconds, Number of Users).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order 1->3, correct theme-adaptive
-          backgrounds on both renders.'
+        comment: 'First series = #009E73; backgrounds correctly #FAF8F1/#1A1A17; data
+          colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Correct palette and theming but reads as a well-configured default
-          rather than a distinctive design.
+        passed: true
+        comment: Custom palette plus an intentional annotated callout beyond default
+          styling.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid limited to y-axis and subtle, spines reduced to L-shape, legend
-          box removed - good but not maximal.
+        passed: true
+        comment: Panel border/spines removed, only subtle y-gridlines kept, generous
+          whitespace around the legend.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Overlap communicates distribution shift, but no explicit emphasis
-          or focal point highlights the key insight.
+        passed: true
+        comment: Dashed mean line and bold annotation give the chart a clear focal
+          point and narrative beyond raw overlap.
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct overlapping-histogram construction via position=identity
-          with alpha.
+        comment: Correct overlapping histogram via geom_histogram(position="identity").
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, clear legend, aligned bin
-          edges via a shared binwidth.
+        comment: Semi-transparent fills, distinct colors, legend, and shared binwidth
+          for aligned bin edges.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x = completion time, y = count, axes show full data range.
+        comment: X = completion time, Y = count; axes span the full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          data.
+        comment: Title matches mandated format; legend title/labels are semantically
+          correct.
     data_quality:
       score: 14
       max: 15
@@ -165,22 +168,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Three distributions with distinct means/spreads show clear overlap
-          and divergence.
+        comment: Distributions, overlap blending, mean line, and callout are shown;
+          only one of three means is annotated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral A/B-testing scenario.
+        comment: Task-completion-time-by-UI-design is plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic seconds-scale values, no impossible data.
+        comment: Completion times (~18-85s) are sensible for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -188,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward flow.
+        comment: No functions/classes; flat, linear script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42).
+        comment: set.seed(42) at top.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) is loaded but never used anywhere in the script.
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake functionality.
+        comment: Appropriate complexity, no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png, correct API.
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -222,21 +225,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_histogram(position="identity") + scale_fill_manual
-          + layered theme().
+        comment: 'Standard grammar-of-graphics layering: geom_histogram + scale_fill_manual
+          + theme composition.'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic grammar-of-graphics usage; nothing ggplot2-specific beyond
-          standard patterns.
-  verdict: REJECTED
+        passed: true
+        comment: Uses the y=Inf annotate() trick for a canvas-relative callout and
+          tapply()-driven mean overlay — beyond generic usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
+  - groupby-aggregation
   dataprep:
   - binning
   styling:
