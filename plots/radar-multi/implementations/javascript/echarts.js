@@ -1,3 +1,7 @@
+// anyplot.ai
+// radar-multi: Multi-Series Radar Chart
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 85/100 | Updated: 2026-08-18
 //# anyplot-orientation: square
 // anyplot.ai
 // radar-multi: Multi-Series Radar Chart
