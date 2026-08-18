@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:25Z'
-updated: '2026-08-18T14:50:51Z'
+updated: '2026-08-18T15:01:21Z'
 generated_by: claude-sonnet
 workflow_run: 32150061536
 issue: 2008
@@ -12,57 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - Idiomatic use of Vega-Lite's stack="normalize" — the canonical, declarative Altair
-    approach to a 100% stacked bar chart, plus a %-formatted y-axis.
-  - Correct Imprint palette in canonical order (Fossil Fuels=#009E73 brand green,
-    Nuclear=#C475FD, Renewables=#4467A3, Hydro=#BD8233); identical hues across light
-    and dark renders.
-  - 'Both renders are theme-correct: backgrounds match #FAF8F1/#1A1A17 exactly, chrome
-    tokens (title/axis/tick/legend/grid) are threaded through configure_view/configure_axis/configure_legend
+  - 'All three Attempt-1 weaknesses are fixed: title now reads "bar-stacked-percent
+    · python · altair · anyplot.ai" (language segment restored), the stack order (Fossil
+    Fuels/Nuclear/Renewables/Hydro bottom-to-top) now matches the legend''s top-to-bottom
+    order exactly, and in-segment white percentage labels were added for every segment
+    ≥10%.'
+  - 'Idiomatic Altair/Vega-Lite grammar: stack="normalize" for the 100% stack, a layered
+    mark_bar + mark_text composition with a precomputed segment-midpoint column for
+    label centering, and alt.Order tied to an explicit SourceOrder rank so stack position
+    is deterministic.'
+  - Correct Imprint categorical palette in canonical order (Fossil Fuels=#009E73 brand
+    green, Nuclear=#C475FD, Renewables=#4467A3, Hydro=#BD8233), identical hues in
+    both light and dark renders — only chrome flips.
+  - 'Both renders are fully theme-correct: backgrounds match #FAF8F1/#1A1A17 exactly,
+    and title/axis/tick/legend/grid tokens are threaded through configure_view/configure_axis/configure_legend
     with no dark-on-dark or light-on-light failures.'
-  - 'Realistic, neutral energy-mix dataset per country where each group of 4 values
-    sums exactly to 100 (verified: USA, China, Germany, Brazil, India all total 100).'
+  - Realistic, neutral energy-mix dataset by country where every 4-value group sums
+    exactly to 100 (verified for USA, China, Germany, Brazil, India).
   - 'Clean KISS script: no functions/classes, deterministic (no randomness), only
-    used imports (altair, pandas, PIL for the mandatory canvas pad), canvas padding
-    block present and correctly triggers no-op since the render already lands within
-    target.'
-  - 'Restrained, refined chrome: white 1px bar-segment strokes for definition, spineless
-    configure_view, subtle 15%-opacity gridlines.'
+    used imports (altair, pandas, PIL for the mandatory canvas pad), and the canonical
+    landscape canvas gate (3200×1800) passes.'
   weaknesses:
-  - 'Title is missing the mandated language segment: it renders as "bar-stacked-percent
-    · altair · anyplot.ai" but the required format is "{spec-id} · {language} · {library}
-    · anyplot.ai" — fix to "bar-stacked-percent · python · altair · anyplot.ai" (SC-04).
-    This also makes the title noticeably shorter than the ~67-char mandated string,
-    so it undershoots the expected ~50-70% width proportion for no good reason.'
-  - 'Stack segment order doesn''t match legend order: the legend lists Fossil Fuels,
-    Nuclear, Renewables, Hydro top-to-bottom, but the bars stack bottom-to-top as
-    Renewables, Nuclear, Hydro, Fossil Fuels — the two middle entries (Nuclear/Hydro)
-    are swapped relative to the legend, making it harder to trace a legend swatch
-    to its bar segment at a glance. Align alt.Order with the legend''s domain order
-    (or reverse the legend) so stack position and legend position agree.'
-  - No in-segment percentage labels even though most segments are wide enough (e.g.
-    Germany's Renewables at 38%, Fossil Fuels blocks at 40-72%) — the spec's optional
-    'consider adding percentage labels within segments when space permits' would strengthen
-    data storytelling for the larger segments (mark_text with stack="normalize" ordering)
-    while still omitting labels on the narrow Nuclear slivers.
+  - Legend still shows a visible box border (configure_legend strokeColor=INK_SOFT)
+    — the style guide's Decoration Removal Checklist recommends dropping box frames
+    around legends for a cleaner look; consider strokeColor=None or matching the plot
+    background.
+  - Composition is still a fairly standard 100%-stacked-bar layout — DE-01/DE-03 have
+    room to go further with a stronger focal point (e.g. highlighting one country,
+    or an annotation calling out the biggest hydro/fossil share) beyond the now-fixed
+    ordering and percentage labels.
+  - In-segment percentage label fontSize=9 is on the smaller side relative to the
+    10pt tick labels; still legible at full resolution and the current 4.0 scale_factor
+    renders it crisply, but it's worth keeping an eye on at the 400px mobile srcset.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold black title "bar-stacked-percent · altair · anyplot.ai" centered at top; y-axis title "Share of Energy Mix (%)" with 0-100% ticks in 10% steps; x-axis title "Country" with 5 category ticks (Brazil, China, Germany, India, USA); light vertical gridlines separating bar groups; legend box top-right titled "Energy Source" with 4 swatches (Fossil Fuels, Nuclear, Renewables, Hydro) in a light-frame box. All chrome text renders in dark ink and is clearly legible against the cream background.
-      Data: Five bars, each normalized to fill 0-100%, segmented bottom-to-top as Renewables (blue #4467A3), Nuclear (purple #C475FD), Hydro (ochre #BD8233), Fossil Fuels (green #009E73), each segment separated by a thin white stroke. Proportions vary sensibly by country (e.g. Brazil dominated by Hydro, Germany by Renewables+Fossil, India/China by Fossil Fuels).
-      Legibility verdict: PASS — no light-on-light text, all labels and ticks readable.
+      Chrome: Bold dark title "bar-stacked-percent · python · altair · anyplot.ai" centered at top (language segment now present); y-axis title "Share of Energy Mix (%)" with 0-100% ticks in 10% steps; x-axis title "Country" with 5 alphabetically-ordered category ticks (Brazil, China, Germany, India, USA); subtle vertical divider gridlines between bar groups; legend box top-right titled "Energy Source" with 4 swatches (Fossil Fuels, Nuclear, Renewables, Hydro) inside a light-frame elevated box. All chrome text renders in dark ink and is clearly legible against the cream background.
+      Data: Five bars, each normalized to fill 0-100%, segmented bottom-to-top as Fossil Fuels (green #009E73), Nuclear (purple #C475FD), Renewables (blue #4467A3), Hydro (ochre #BD8233) — this order now matches the legend top-to-bottom exactly. White bold percentage labels are centered within every segment ≥10% (e.g. Brazil Hydro 70%, India Fossil Fuels 72%, Germany Renewables 38%); the narrow Nuclear slivers (3-5%) are correctly left unlabeled. Segments separated by thin white strokes.
+      Legibility verdict: PASS — no light-on-light text, all labels, ticks, and in-segment percentage text are readable.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, tick labels and legend layout, all rendered in light cream/gray ink (title bright white-cream, tick/legend text a softer light gray) against the dark surface. Gridlines are faint light lines at low opacity. Legend box uses a dark elevated fill (#242420-like) with light text and border, clearly separated from the plot background.
-      Data: Identical four data colors and identical bar segment proportions/order as the light render (Renewables blue, Nuclear purple, Hydro ochre, Fossil Fuels green) — confirms Imprint categorical hues are held constant across themes; only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark text; all title/axis/tick/legend text is clearly visible against the near-black background.
+      Chrome: Same title, axis titles, tick labels, and legend layout as the light render, rendered in light cream/gray ink (title bright, tick/legend text a softer light gray) against the dark surface. Gridlines are faint light lines at low opacity. Legend box uses a dark elevated fill with light text and border, clearly separated from the plot background.
+      Data: Identical four data colors, identical stack order, and identical percentage labels as the light render — confirms Imprint categorical hues and the composition are held constant across themes; only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark text; all title/axis/tick/legend/in-segment text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,21 +69,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit; readable in both themes with no theme-adaptation
-          failures.
+        comment: All font sizes explicit; readable in both themes; in-segment percentage
+          labels are bold white and readable though slightly smaller than tick labels.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No literal text/data collisions, but stack order vs. legend order
-          mismatch (Nuclear/Hydro swapped) hurts at-a-glance tracing.
+        comment: 'Fixed from Attempt 1: legend order (Fossil Fuels, Nuclear, Renewables,
+          Hydro top-to-bottom) now exactly matches the stack order bottom-to-top;
+          no text/data collisions.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments and white strokes clearly visible; density appropriate
+        comment: Bar segments and white 1px strokes clearly visible; density appropriate
           for 5 categories x 4 series.
       - id: VQ-04
         name: Color Accessibility
@@ -94,11 +94,11 @@ review:
         comment: Imprint CVD-safe palette, no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, canvas gate passed; title undershoots
-          expected width because it's missing the language segment.
+        comment: Canvas gate passed (3200x1800 exact via pad-only block); title now
+          full mandated format at sensible fontsize, no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,34 +110,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, first series brand green, correct theme
-          backgrounds both renders.
+        comment: Canonical Imprint order, brand green first series, correct theme
+          backgrounds in both renders.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: White segment strokes and configured legend show intent, but overall
-          composition is still fairly standard for a stacked bar.
+        passed: true
+        comment: Custom Imprint palette, white segment strokes, and in-segment percentage
+          labels show real design intent; still a fairly standard stacked-bar composition
+          without a stronger differentiator.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Spineless view, subtle 15% gridlines, generous whitespace.
+        passed: true
+        comment: Spineless view, subtle 15% gridlines, generous whitespace; legend
+          retains a visible box border the style guide recommends dropping.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Composition story is legible but weakened by the legend/stack order
-          mismatch; no in-segment labels or highlighted focal point.
+        passed: true
+        comment: Order fix + percentage labels substantially strengthen the composition
+          story; each segment's share is now directly readable at a glance.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -151,8 +153,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Consistent component order across bars, clear legend, distinct harmonious
-          colors.
+        comment: Consistent component order across bars, clear legend, in-segment
+          percentage labels per spec's optional recommendation.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -161,22 +163,22 @@ review:
         comment: X=Country, Y=normalized Value, color=Source; all data shown.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title is missing the required language segment ("python"); legend
-          labels otherwise match data.
+        passed: true
+        comment: Title now exactly "bar-stacked-percent · python · altair · anyplot.ai";
+          legend labels match data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows composition and proportional-share aspects fully; optional
-          percentage labels omitted.
+        comment: Shows composition and proportional-share aspects fully, now including
+          the optional in-segment percentage labels.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -216,7 +218,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity.
+        comment: No fake functionality, appropriate complexity for the layered bars+labels
+          composition.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -225,7 +228,7 @@ review:
         comment: Saves plot-{THEME}.png (+padding) and plot-{THEME}.html; current
           Altair API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -234,23 +237,28 @@ review:
         max: 5
         passed: true
         comment: stack="normalize" is the canonical Altair/Vega-Lite pattern for 100%
-          stacked charts.
+          stacked charts; declarative encode/mark grammar throughout.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses normalize stacking, % axis format, and declarative alt.Order
-          — solid but not exhaustive use of Altair-specific capabilities.
-  verdict: REJECTED
+        passed: true
+        comment: Layered mark_bar + mark_text with a precomputed midpoint column for
+          label centering, explicit alt.Order rank, and % axis format — solid, though
+          not exhaustive, use of Altair-specific capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - html-export
+  - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  - groupby-aggregation
+  - cumulative-sum
+  dataprep:
+  - cumulative-sum
   styling:
   - edge-highlighting
   - grid-styling
