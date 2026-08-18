@@ -2,59 +2,68 @@ library: letsplot
 language: python
 specification_id: radar-multi
 created: '2025-12-25T19:07:21Z'
-updated: '2026-05-07T17:10:50Z'
-generated_by: claude-haiku
-workflow_run: 25510226133
+updated: '2026-08-17T17:08:47Z'
+generated_by: claude-sonnet
+workflow_run: 32047300382
 issue: 2026
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.15
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/letsplot/plot-dark.html
-quality_score: 99
+quality_score: 87
 review:
   strengths:
-  - Perfect theme-adaptive chrome implementation with correct INK and INK_SOFT values
-    in both light and dark renders
-  - Excellent data visualization with overlapping semi-transparent polygons (alpha
-    0.2) enabling clear comparison of all four products
-  - 'Strong design choices: square format optimal for radar symmetry, proper Okabe-Ito
-    palette compliance with brand green as first series'
-  - Sophisticated grid styling with dashed concentric circles and radial spokes at
-    appropriate opacity levels
-  - High-quality idiomatic letsplot code using proper layer composition, geom stacking,
-    and theme customization with element_* functions
-  - 'Comprehensive chart completeness: all axes labeled, gridlines at regular intervals
-    (20, 40, 60, 80, 100), legend with product names, title with spec identifier'
-  - 'Text legibility excellent in both themes: title (22pt), category labels (16pt),
-    grid labels (14pt), legend text (16pt) all clearly readable'
-  - Realistic, plausible data (smartphone products with sensible attribute ratings)
-    that effectively demonstrates radar comparison use case
-  - No text overlaps or collisions; generous whitespace and proper element positioning
-    throughout
-  - Proper coordinate transformation from polar to cartesian space with closed polygons
-    and correct angle calculations
+  - 'Grid-circle rendering artifact from attempt 1 is fully fixed: geom_path (instead
+    of dashed geom_line over 73-point circles) now renders clean, solid, subtle concentric
+    rings with no moiré/hash texture in either theme'
+  - Grid value labels (20/40/60/80/100) were relocated into the gap between the Performance
+    and Storage spokes and no longer overlap the spoke line or any product polygon
+  - Title now correctly reads 'Smartphone Comparison · radar-multi · python · letsplot
+    · anyplot.ai', matching the mandated format including the language segment
+  - New hero emphasis (thicker outline on the top-average-scoring product, OnePlus
+    12) adds a genuine focal point and visual hierarchy that was missing in attempt
+    1
+  - 'Imprint palette used correctly in canonical order (#009E73, #C475FD, #4467A3,
+    #BD8233), identical data colors across light/dark renders'
+  - 'Theme-adaptive chrome (backgrounds, ink, legend box) correctly flips between
+    #FAF8F1/dark-ink and #1A1A17/light-ink with no dark-on-dark or light-on-light
+    failures'
+  - Realistic, neutral smartphone-comparison dataset with plausible per-attribute
+    scores and real product trade-off patterns
+  - Clean KISS script, fully deterministic (no RNG), correct 2400x2400 canvas via
+    ggsize(600,600)+scale=4, no clipping at any canvas edge
   weaknesses:
-  - Title font size is 22pt instead of the recommended 24pt — minor deviation from
-    style guide (still fully readable)
-  - Grid circle dashes could be slightly more refined in appearance, though current
-    dashing is effective and readable
+  - Noticeable empty whitespace column below the legend on the right side of the square
+    canvas (legend ends around 45% of the canvas height, leaving a large blank block
+    beneath it) — canvas utilization could be tightened.
+  - The radial value labels (0-100) have no explicit unit/scale caption (e.g. 'Score
+    (0-100)') — they're self-explanatory from context but a small axis caption would
+    earn full VQ-06 credit.
+  - Vertex markers (size=3.5) are modest relative to the emphasized hero outline (size=2.2
+    line) and the tight Camera/Performance clusters where 3 of 4 products score within
+    a few points of each other — slightly larger markers would improve per-series
+    distinction in those crowded clusters.
+  - The outer panel border (thin rectangle) frames the whole square including the
+    empty legend-column space below the legend box, which visually stretches the 'frame'
+    further than the actual chart content — consider removing the panel border or
+    scoping the legend/whitespace differently.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correctly applied and readable
-      Chrome: Title "Smartphone Comparison · radar-multi · letsplot · anyplot.ai" rendered in dark INK color (#1A1A17) is clearly visible. Category labels (Battery, Camera, Display, Performance, Storage, Price Value) positioned at outer edges in dark text. Grid value labels (20, 40, 60, 80, 100) displayed in soft ink (#4A4A44). Legend shows all four products with clear labels. All text is legible against the light background.
-      Data: Four colored polygons with transparency (alpha 0.2) representing Galaxy S24 (#009E73 green — brand color), iPhone 15 (#D55E00 orange), Pixel 8 (#0072B2 blue), OnePlus 12 (#CC79A7 purple). Data points marked at each vertex with size 7 circles. Lines connecting vertices at size 2.5. Grid shows concentric dashed circles and radial spokes in soft ink with appropriate opacity.
-      Legibility verdict: PASS — All text is clearly readable against the light background with good contrast. No dark-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Smartphone Comparison · radar-multi · python · letsplot · anyplot.ai" is dark ink, fully readable at top-left with no clipping (verified by pixel crop of the top edge — full margin above and below the text). Six category axis labels (Performance, Display, Camera, Battery, Price Value, Storage) are dark ink and clearly readable at the outer edge of the hexagon. Grid value labels (20/40/60/80/100) are soft grey, cleanly placed in the gap between the Performance and Storage spokes — verified by pixel crop that they no longer touch the spoke line or any product polygon (fixed from attempt 1). Legend "Product" box sits to the right of the plot with an elevated off-white background and thin border, fully inside the canvas (verified by pixel crop of the right edge — no clipping); all four product names/swatches are dark ink and fully readable.
+      Data: First series (Galaxy S24) is #009E73 green as required; iPhone 15 is #C475FD purple, Pixel 8 is #4467A3 blue, OnePlus 12 is #BD8233 ochre/brown — matches the canonical Imprint order. Polygons are filled at low alpha with bold outlines and vertex markers; the OnePlus 12 (hero, highest average score) outline is visibly thicker than the other three, creating a clear focal point. The concentric grid rings render as clean, solid, subtle thin circles — the dense dashed moiré/hash texture from attempt 1 is completely gone.
+      Legibility verdict: PASS — all text is readable, no overlaps, no clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correctly applied and maintains theme consistency
-      Chrome: Title rendered in light INK color (#F0EFE8) and is clearly visible against the dark background. Category labels are in light text. Grid value labels in soft ink (#B8B7B0). Legend box has ELEVATED_BG fill (#242420) with light-colored text. All text is legible against the dark background.
-      Data: All four colored polygons are identical to light render — Galaxy S24 (#009E73), iPhone 15 (#D55E00), Pixel 8 (#0072B2), OnePlus 12 (#CC79A7). The data colors have not changed between themes; only the chrome (background, text, grid, legend box) has adapted. Grid circles and spokes are visible with appropriate opacity in light colors.
-      Legibility verdict: PASS — All text is clearly readable against the dark background. No dark-on-dark failures. Light text on dark background provides excellent contrast. The brand green (#009E73) is still visible and distinct.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis category labels, grid value labels, and legend contents all render in light ink (near-white/light grey) and are clearly readable against the dark background — no dark-on-dark failures found anywhere.
+      Data: Colors are identical to the light render (#009E73, #C475FD, #4467A3, #BD8233) — data colors do not shift between themes, only chrome flips as required. The hero (OnePlus 12) thicker-outline emphasis is equally visible on the dark background.
+      Legibility verdict: PASS — no dark-on-dark text, clean grid rendering matches the light render's fix.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -62,86 +71,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all clearly readable in both
-          light and dark themes. Font sizes appropriate (22pt title, 16pt labels,
-          14pt grid values).
+        comment: All font sizes explicitly set (title 16, legend_title 13, legend_text
+          12, geom_text 5.5/4.5mm), well-proportioned, readable in both themes, no
+          overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Semi-transparent polygons (alpha 0.2) allow visibility of overlapping
-          areas. Category labels positioned at outer edges with good spacing. No text
-          collisions.
+        comment: Value labels relocated to the Performance/Storage gap — no longer
+          overlap the spoke line or polygons (fixed from attempt 1)
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Grid lines subtle but visible (INK_SOFT color, alpha 0.2-0.3). Data
-          markers (size 7) and lines (size 2.5) clearly visible. All elements well-adapted
-          to data density.
+        comment: Markers/lines clearly visible; markers (3.5) are modest and points
+          cluster tightly at Camera/Performance where several products score within
+          a few points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses colorblind-safe Okabe-Ito palette. Good contrast between data
-          colors and backgrounds in both themes. No red-green sole signal.
+        comment: Four well-separated hues, good luminance spread, no red-green as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square format (3600×3600) optimal for symmetric radar chart. Nothing
-          cut off. Centered composition with good proportions.
+        comment: Radar and legend occupy a reasonable share of the square canvas,
+          but a sizable empty whitespace block remains below the legend column
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'Title descriptive: ''Smartphone Comparison · radar-multi · letsplot
-          · anyplot.ai''. All six category axis labels clear (Battery, Camera, Display,
-          Performance, Storage, Price Value). Grid value labels (20-100) provide scale
-          reference.'
+        comment: Category labels are descriptive; radial 0-100 value scale has no
+          explicit unit/scale caption
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (#009E73 green) is brand color. Multi-series follows
-          Okabe-Ito order (#009E73, #D55E00, #0072B2, #CC79A7). Background: #FAF8F1
-          light / #1A1A17 dark. Data colors identical between renders; only chrome
-          adapts.'
+        comment: 'First series #009E73, remaining series in canonical Imprint order,
+          identical across themes, correct theme-adaptive backgrounds'
     design_excellence:
-      score: 19
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Professional polish with intentional design hierarchy. Okabe-Ito
-          palette appropriately applied. Filled polygons with transparency demonstrate
-          sophisticated understanding of overlapping data. Square format deliberately
-          chosen for radar symmetry. Minor: title size 22pt instead of 24pt.'
+        comment: Custom Imprint palette, deliberate hero emphasis, and clean subtle
+          grid rendering push this clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Axes and spines properly removed (element_blank). Grid subtle (alpha
-          0.2-0.3). Generous whitespace. Legend has background box. Clean, minimal
-          aesthetic.
+        comment: Subtle low-alpha grid/spokes, generous spacing; a plain outer panel
+          border is kept, and whitespace distribution below the legend is uneven
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Radar chart naturally tells comparative story. Overlapping polygons
-          create visual comparison. Color differentiation guides viewer. Clear focal
-          point at center. Title immediately explains context.
+        comment: The hero polygon (OnePlus 12, highest average score) gets a visibly
+          thicker outline, creating a clear focal point that guides the viewer — fixes
+          attempt 1's flat, equal-weight rendering
     spec_compliance:
       score: 15
       max: 15
@@ -151,61 +152,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct multi-series radar chart implementation. All required elements:
-          filled polygons, overlapping series, legend. Proper polar-to-cartesian transformation.
-          Closed polygons.'
+        comment: Correct multi-series radar/spider chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled polygons with transparency (alpha ~0.2). Distinct colors for
-          each series. Legend identifying each by color. Gridlines at regular intervals
-          (20, 40, 60, 80, 100). Axis labels at outer edge. Polygon outline and fill.
+        comment: Filled polygons w/ alpha, distinct colors, legend, 20/40/60/80/100
+          gridlines, outer-edge axis labels, closed polygons, fill+outline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped from polar conversion. All 4 products mapped
-          to colors. All 6 categories represented as axes. Scale appropriate (0-100
-          with gridlines).
+        comment: Category/value mapping correct on all six axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''Smartphone Comparison · radar-multi · letsplot
-          · anyplot.ai''. Legend labels match data (Galaxy S24, iPhone 15, Pixel 8,
-          OnePlus 12). Legend title ''Product'' appropriate.'
+        comment: Title now includes the mandated 'python' language segment; legend
+          correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows all aspects of radar plot type. Multiple series (4 products).
-          Multiple dimensions (6 attributes). Proper scaling (0-100). Effectively
-          demonstrates overlay comparison.
+        comment: Good spread of strengths/weaknesses per product, though Performance/Display
+          scores are closely clustered (82-95) across all four
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Smartphone comparison is realistic and relevant. Real product names
-          (Galaxy S24, iPhone 15, Pixel 8, OnePlus 12). Plausible attributes (Battery,
-          Camera, Display, Performance, Storage, Price Value). Realistic values. Neutral
-          product selection.
+        comment: Real, neutral smartphone-comparison scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '0-100 scale is sensible for ratings. 4 products optimal for comparison
-          (spec: 2-5). 6 axes within spec range (5-8). Values well-distributed.'
+        comment: Plausible relative scores matching real-world product tradeoffs (e.g.
+          OnePlus price value, iPhone camera)
     code_quality:
       score: 10
       max: 10
@@ -215,74 +206,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Clean, straightforward structure. Data generation
-          simple and clear.
+        comment: Linear imports/data/plot/save script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded data (no random seed needed). Deterministic output. Environment
-          variable for theme selection properly used.
+        comment: Fully deterministic, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math, os, pandas, lets_plot components. No unused
-          imports. Appropriate import style.'
+        comment: Only used symbols imported from lets_plot, math, os, pandas
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Code readable and elegant. No fake UI or simulated interactivity
-          (AR-08 pass). Proper coordinate transformation. Good dataframe organization.
+        comment: Appropriately complex for a manually-constructed radar chart, no
+          fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Uses current ggsave
-          API. Proper scale=3 for 3600×3600 output.
+        comment: Saves plot-{THEME}.png and .html via ggsave with scale=4, current
+          API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot grammar. Proper layer composition with + operator.
-          Multiple geom layers. Correct aes() usage. Theme customization with element_*
-          functions. scale_color_manual and scale_fill_manual for colors. Proper ggsize()
-          and ggsave() calls.
+        comment: Proper ggplot-grammar layering with geom_path/geom_polygon/geom_point/geom_text;
+          radar built via manual polar-to-cartesian conversion rather than a native
+          polar coordinate system
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Leverages layer composition for complex radar. Uses element_blank()
-          and element_rect() for precise theme control. Proper linetype='dashed' for
-          grid. Multiple dataframes for complex structure. Theme-adaptive colors.
-          HTML export for interactivity.
-    summary:
-      total_score: 99
-      max_score: 100
-      verdict: APPROVED
-      score_caps_applied: None
+        comment: Leverages lets-plot's native interactive HTML export (ggsave to .html)
+          alongside scale_*_manual and theme customization
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   - html-export
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
