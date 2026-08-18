@@ -18,6 +18,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **Search Console API access, documented and reproducible** — `docs/reference/seo.md` gains a
+  "Search Console API access" section: the domain property (`sc-domain:anyplot.ai`), the
+  Application Default Credentials login that carries the `webmasters.readonly` scope, a
+  verification snippet, and the two failure modes that otherwise cost a session — the gcloud CLI
+  token can never hold the scope, and the localhost callback flow dies with `missing_code` on
+  WSL2 before you finish the consent screen. Machine-specific values move to `.env`
+  (`SEARCH_CONSOLE_PROPERTY`, `SEARCH_CONSOLE_ACCOUNT`, documented in `.env.example`), so a
+  second machine is one login away from full-mode audits.
+
 - **Three new verification skills** — `/verify-migrations` runs the Alembic chain against a
   throwaway Postgres (Docker, or a rootless `pgserver` fallback; single-head check,
   `upgrade head`, `alembic check` drift, downgrade roundtrip) so the shared prod DB never sees
@@ -187,6 +196,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   implementations were deleted. Unknown combinations now return 404, and the 404 is not cached so
   a later regen becomes visible immediately. The stale URLs are dropped rather than redirected:
   measured over 28 days they carry 4.4% of impressions and 10 clicks in total.
+- **`seo-auditor` could never reach Search Console** — its auth contract probed
+  `gcloud auth print-access-token`, which mints the gcloud CLI credential; that credential's
+  scope set is fixed and can never include `webmasters.readonly`, so every audit since the
+  command was written reported `Search Console mode: structural-only` (2026-04-26, 2026-05-05,
+  2026-07-08). It now probes Application Default Credentials. The same contract also forbade
+  every non-`GET` call while asking for query data — Search Analytics is a `POST` — so the
+  auditor was told to collect data it was simultaneously barred from fetching; read-ness is now
+  anchored to the `webmasters.readonly` scope rather than the HTTP verb, which additionally
+  unlocks `urlInspection`. Its Coverage guidance no longer asks for the page-indexing report
+  buckets, which have no API at all.
 
 - **Model↔migration index drift fixed before it could drop production indexes** — seven
   migration-created indexes (`ix_specs_issue`, `ix_specs_tags` GIN, `ix_impls_library_id`,
