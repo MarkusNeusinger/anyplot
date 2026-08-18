@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -87,8 +87,9 @@ n_bands = 3  # Number of positive/negative bands
 chart_width = 3200
 total_height = 1800
 LEGEND_HEIGHT = 150
-BASE_PANEL_HEIGHT = 215  # panels without an x-axis (all but the last row)
-LAST_PANEL_HEIGHT = 400  # bottom row reserves extra height for the x-axis stack
+BASE_PANEL_HEIGHT = 240  # panels without an x-axis (all but the last row)
+LAST_PANEL_HEIGHT = 450  # bottom row reserves extra height for the x-axis stack
+# LEGEND_HEIGHT + 5*BASE_PANEL_HEIGHT + LAST_PANEL_HEIGHT == total_height (1800), no dead strip
 
 # Imprint diverging ramp, sampled at 3 stops per pole (near-neutral -> saturated
 # pole) instead of hand-picked hex values — keeps the intensity bands on-brand
@@ -218,7 +219,9 @@ title = Title(
 plots[0].add_layout(title, "above")
 
 # Add subtitle with library and source attribution
-subtitle = Title(text="horizon-basic · bokeh · anyplot.ai", text_font_size="24pt", align="center", text_color=INK_SOFT)
+subtitle = Title(
+    text="horizon-basic · python · bokeh · anyplot.ai", text_font_size="24pt", align="center", text_color=INK_SOFT
+)
 plots[0].add_layout(subtitle, "above")
 
 # Create legend figure explaining color bands - refined styling with elevated background
