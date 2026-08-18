@@ -1,7 +1,7 @@
 """ anyplot.ai
 histogram-overlapping: Overlapping Histograms
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-08-18
+Library: plotly 6.9.0 | Python 3.13.15
+Quality: 88/100 | Updated: 2026-08-18
 """
 
 import os
