@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: area-cumulative-flow
 created: '2026-08-18T03:17:49Z'
-updated: '2026-08-18T03:24:38Z'
+updated: '2026-08-18T03:40:07Z'
 generated_by: claude-sonnet
 workflow_run: 32093779403
 issue: 5239
@@ -12,65 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-dark.html
-quality_score: 80
+quality_score: 85
 review:
   strengths:
-  - 'Correct chart construction: stacked area with `stacking: "normal"`, series ordered
-    Backlog→Done so Backlog lands on top and Done on the bottom of the stack, exactly
-    matching the spec''s required workflow order.'
-  - 'WIP-band math is genuinely correct: each series is `cumulative[stage] - cumulative[stage+1]`,
-    so stack height reconstructs true per-stage WIP rather than just re-plotting raw
-    cumulative counts.'
-  - The synthetic data intentionally engineers a Testing bottleneck (undersized exit
-    capacity vs. inflow) and it reads clearly in both renders — the Testing (ochre)
-    band visibly widens from ~36px to ~344px of vertical extent across the 90-day
-    window, which is exactly the story a CFD is supposed to tell.
-  - Theme tokens are threaded through every chrome element (title, axes, gridlines,
-    legend, tooltip) and both backgrounds measure exactly `#FAF8F1` / `#1A1A17` —
-    no hardcoded colors, no white background leaking through.
-  - 'First series is exactly `#009E73` and the full `colors: t.palette` array is used
-    canonically; data hues are pixel-identical between light and dark renders.'
-  - 'Clean, idiomatic Highcharts usage: `animation:false` on both `chart` and `plotOptions.series`,
-    `credits.enabled:false`, no explicit `chart.width/height`, deterministic in-memory
-    LCG data generation, no imports/CDN/fetch.'
+  - Development band is now solidly visible throughout the chart (6-72px thick, data
+    WIP min=2/max=60/mean=35) - a real, verified fix for the worst offender flagged
+    in attempt 1
+  - New dashed xAxis.plotLine with label 'Testing backlog tops 100 items', computed
+    from the actual simulated data, directly answers attempt 1's Design Excellence
+    feedback and gives the chart a clear narrative focal point
+  - 'Correct chart construction retained: stacked area with stacking:''normal'', series
+    ordered Backlog to Done so Backlog sits on top and Done on the bottom of the stack,
+    matching the spec''s required workflow order'
+  - 'WIP-band math remains correct: each series is cumulative[stage] - cumulative[stage+1],
+    correctly reconstructing per-stage WIP'
+  - 'Both backgrounds measure exactly #FAF8F1 / #1A1A17; first series exactly #009E73;
+    data hues pixel-identical between light and dark renders; no dark-on-dark or light-on-light
+    chrome failures'
+  - 'Clean, idiomatic Highcharts usage retained: animation:false on both chart and
+    plotOptions.series, credits.enabled:false, no explicit chart.width/height, deterministic
+    in-memory LCG data generation, no imports/CDN/fetch'
   weaknesses:
-  - 'Two of the five stage bands (Backlog and, especially, Development) are near-invisible
-    for almost the entire 90-day window. Simulated WIP: Backlog stays in the 0-13
-    item range and Development in the 0-8 item range against a y-axis scaled to ~1100
-    — pixel-measured band thickness for Development is 0px at most sampled x-positions
-    across the chart and never exceeds ~3px; Backlog tops out around 13-17px. The
-    Development legend entry is functionally undetectable in the plotted area for
-    most of the timeline. Fix by rebalancing CAPACITIES (e.g., tighten Analysis/Development
-    capacity relative to arrivals, or loosen Backlog''s unlimited capacity slightly)
-    so every stage retains a readable minimum WIP band (aim for each stage to be at
-    least ~20-30 units / ~25-35px tall at some point in the series) while still preserving
-    the intended Testing bottleneck.'
-  - Title renders at only ~37% of the plot width (measured bounding box) — well under
-    the 50-70% comfortable range from the style guide — because the shorter spec-id
-    (`area-cumulative-flow`, 59-char full title) is rendered at the same 22px fontsize
-    used for longer mandated titles. Not a hard violation (no overflow, generously
-    readable, correct absolute pixel height ~40px) but leaves a lot of unused whitespace
-    above the chart; consider it optional polish, not required for approval.
-  - 'Design Excellence is generic: default Highcharts area styling with token colors
-    swapped in, but no distinctive touch (e.g., no callout/annotation marking the
-    Testing bottleneck onset, no varied line weights to draw the eye to Done vs. the
-    upstream bands, no Highcharts-distinctive feature like a plotBand/plotLine flagging
-    the point where Testing WIP starts climbing).'
+  - 'The Backlog band fix is incomplete: Backlog has no explicit capacity (CAPACITIES[0]=Infinity)
+    and its inflow is capped only indirectly by Analysis''s capacity (11), which sits
+    barely above the mean daily arrival rate (~12) with real variance, so Backlog
+    WIP fully drains to 0 on 11 of 90 days and stays under 5 items on 32 of 90 days
+    (35% of the chart), overwhelmingly in the first ~65% of the timeline. Development
+    received the equivalent fix (tightened capacity relative to inflow) and is now
+    consistently visible - Backlog needs the same treatment: give it an explicit capacity
+    noticeably below the mean arrival rate (not Infinity), or clamp its daily net
+    change so it maintains a readable minimum WIP floor throughout.'
+  - 'Design Excellence beyond the new plotLine is still generic: default Highcharts
+    area styling with token colors swapped in, no other bespoke polish.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, measured pixel RGB (250,248,241) = exact #FAF8F1 match. Not pure white.
-      Chrome: Bold dark title "area-cumulative-flow · javascript · highcharts · anyplot.ai" centered near the top, comfortably clear of the canvas edge. Y-axis titled "Cumulative Items" with tick labels 0-1100 in steps of 100, rendered in soft dark gray. X-axis shows date labels (Jan 12, Jan 26, Feb 9, Feb 23, Mar 9, Mar 23) at 14-day intervals, also soft dark gray. Horizontal gridlines only (subtle, light gray, ~15% opacity) — no vertical gridlines, matching the "Y-axis grid only" guideline. Legend sits below the x-axis with 5 swatches: Backlog (green), Analysis (lavender), Development (blue), Testing (ochre), Done (red). All chrome text is dark-on-light and clearly legible; no clipping observed at any edge (verified by cropping title/left-axis/right-edge/legend regions).
-      Data: Five stacked area bands in workflow order top-to-bottom: Backlog (thin green sliver at the very top), Analysis (lavender, grows steadily), Development (blue, essentially a hairline — pixel-sampled column scans found 0px of blue at most x-positions and at most ~3px near the start), Testing (ochre, visibly widens over time — pixel-measured thickness grows from ~36px near the start to ~344px near the end, correctly depicting the intended bottleneck), Done (matte red, the largest band, growing steadily as the terminal cumulative count). First series (Backlog) is exactly #009E73. Data colors read clearly against the light background except for the Development band, which is too thin to perceive as a distinct region for most of the chart.
-      Legibility verdict: PASS (all chrome text legible; data-band visibility issue for Development/Backlog is a distinctness/scale problem, not a legibility/contrast problem).
+      Background: Measures exact #FAF8F1 (250,248,241) - warm off-white, not pure white.
+      Chrome: Bold dark title "area-cumulative-flow · javascript · highcharts · anyplot.ai" centered, no clipping (bbox spans px 1005-2192 of 3200, ~37% width). Y-axis "Cumulative Items" 0-1200; x-axis dates at 14-day intervals. New dashed vertical plotLine labeled "Testing backlog tops 100 items" marks the bottleneck onset day. Legend lists all 5 stages with matching swatches. All text dark-on-light and clearly readable.
+      Data: Five stacked bands top-to-bottom: Backlog (green #009E73), Analysis (purple), Development (blue), Testing (ochre), Done (red). Pixel-sampling across x=5%-97%: Development is now consistently visible (6-72px thick) - fixed vs. attempt 1. Backlog is markedly better in the back third (22-37px from ~day 65 on) but still collapses to 0px on 11/90 days and stays under 5 items on 32/90 days, mostly in the first two-thirds of the timeline. First series exactly #009E73.
+      Legibility verdict: PASS (all chrome text readable; residual issue is a data band, not text)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, measured pixel RGB (26,26,23) = exact #1A1A17 match. Not pure black.
-      Chrome: Same layout as the light render with all text flipped to light-on-dark (white/light-gray title, axis labels, tick labels, legend text) — all clearly readable, no dark-on-dark failures observed. Gridlines are light, subtle, and visible against the dark background without dominating.
-      Data: Same five stacked bands in the same order and same hex values as the light render — confirmed pixel-identical data colors (green/lavender/blue/ochre/red), only the chrome flipped. Same Development/Backlog thin-band visibility issue persists here as in the light render (it is a data-scale/design issue independent of theme).
-      Legibility verdict: PASS (no dark-on-dark text failures; brand green and the rest of the palette read clearly on the dark surface).
+      Background: Measures exact #1A1A17 (26,26,23) - warm near-black, not pure black.
+      Chrome: Same layout, all text flipped to light-on-dark - title, axis labels, tick labels, legend, and plotLine label all clearly legible. No dark-on-dark failures.
+      Data: Confirmed pixel-identical to light render (green/purple/blue/ochre/red match); only chrome flipped as expected. Same Backlog intermittent-zero-band issue present (data-scale issue, independent of theme).
+      Legibility verdict: PASS (no dark-on-dark text failures)
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -78,55 +66,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, legend all clearly readable in both
-          themes; correct absolute pixel sizing (~40px title height on the 3200px
-          canvas, consistent with the 22px CSS guideline).
+        comment: All text readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render; legend, axes, and title
-          all have clean separation.
+        comment: No collisions between text or data
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Backlog and Development bands are near-invisible for most of the
-          timeline (pixel-measured Development band width is 0px at most sampled columns;
-          Backlog tops out ~13-17px) because their simulated WIP (0-13 and 0-8 items
-          respectively) is tiny relative to the 0-1100 y-axis scale.
+        comment: Development now consistently visible (fixed); Backlog still 0px on
+          11/90 days, under 5 items on 32/90 days, mostly in first two-thirds of timeline
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette used throughout (CVD-optimized); no red-green-only
-          encoding; bands distinguished by hue, not just adjacency.
+        comment: Adequate contrast, CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No canvas-dimension gate failure; title/axis/legend all comfortably
-          within bounds with no clipping at any edge (verified via edge crops).
+        comment: Canvas gate passed, good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Cumulative Items'; x-axis dates are self-descriptive
-          and need no separate axis title.
+        comment: Descriptive Y-axis title with units, clear date axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series exactly #009E73; canonical palette order 1-5 used for
-          the 5 stages; backgrounds measured exactly #FAF8F1 / #1A1A17.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -134,23 +113,21 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clean token-driven styling but no custom polish beyond the standard
-          theme mapping; no bespoke touches beyond swapping in the Imprint palette.
+        comment: Clean token-driven styling, still no bespoke polish beyond theme
+          mapping and the new plotLine
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Y-axis-only subtle gridlines, no box frame, generous whitespace —
-          modestly refined but not distinctive.
+        comment: Good grid/whitespace restraint but not distinctive
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: The widening Testing band does tell the bottleneck story through
-          data design alone, but there's no explicit visual emphasis (annotation,
-          plotLine, color callout) pointing the viewer at it.
+        passed: true
+        comment: New dashed plotLine + label calling out the Testing bottleneck onset
+          gives a clear guided focal point
     spec_compliance:
       score: 15
       max: 15
@@ -160,58 +137,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct stacked-area CFD construction via Highcharts native `type:
-          "area"` + `stacking: "normal"`.'
+        comment: Correct stacked-area cumulative flow diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Workflow-ordered stacking (Backlog top / Done bottom), monotonic
-          cumulative counts, legend present, date x-axis at reasonable (14-day) intervals
-          — all spec requirements met.
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=stacked per-stage WIP; y-axis range (0-1100) covers the
-          full data range.
+        comment: X/Y correct, stages stacked in workflow order
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend labels match stage
-          names verbatim.
+        comment: Title matches mandated format, legend matches stages
     data_quality:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: All CFD mechanics are present (WIP bands, monotonic cumulative counts,
-          bottleneck emergence) but 2 of 5 stages are practically imperceptible in
-          the rendered chart, undercutting 'each band represents a stage' for those
-          two.
+        passed: true
+        comment: Four of five stages read clearly across nearly the whole chart; Backlog
+          readable mainly in final third
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral Kanban delivery-pipeline scenario with a realistic
-          stage sequence and arrival rate.
+        comment: Plausible Kanban delivery pipeline scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: false
-        comment: Overall item counts (0-~980 over 90 days) are sensible, but the per-stage
-          WIP dynamic range (8-13 vs. 267) is wide enough to make some stages sub-pixel
-          at this canvas scale.
+        comment: Backlog's dynamic range (0-35) against 0-1200 y-axis still periodically
+          drops to sub-pixel/zero height
     code_quality:
       score: 10
       max: 10
@@ -221,36 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; only a tiny deterministic LCG helper, straightforward
-          procedural flow.
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic.
+        comment: Deterministic fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the provided globals are used.
+        comment: No imports needed, Highcharts global used directly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; appropriately scoped complexity for the
-          WIP-reconstruction math.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: `Highcharts.chart("container", …)`,
-          no explicit width/height, `animation:false` on both chart and series, `credits.enabled:false`.'
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -258,21 +223,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct native stacked-area idiom (`type:"area"` + `plotOptions.series.stacking:"normal"`),
-          datetime x-axis, shared tooltip — solid idiomatic core-bundle usage.
+        comment: Correct native stacked-area idiom, datetime x-axis, shared tooltip
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No Highcharts-distinctive feature beyond a generic stacked area (e.g.,
-          no plotBands/plotLines, no data grouping, no custom dataLabels).
+        comment: New xAxis.plotLine with label is a genuine Highcharts-specific touch,
+          still modest
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
