@@ -5,7 +5,7 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 110, right: 260, bottom: 110, left: 130 };
+const margin = { top: 130, right: 260, bottom: 110, left: 130 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -39,15 +39,17 @@ for (const grp of groups) {
   }
 }
 
-// --- Shared bins across both groups ------------------------------------------
+// --- Shared bins across both groups, tightened to the actual data range -----
 const allValues = records.map((d) => d.value);
-const domainMin = 0;
-const domainMax = 100;
-const binCount = 22;
+const [dataMin, dataMax] = d3.extent(allValues);
+const binWidth = 5;
+const domainMin = Math.max(0, Math.floor(dataMin / binWidth) * binWidth - binWidth);
+const domainMax = Math.min(100, Math.ceil(dataMax / binWidth) * binWidth);
+const binCount = Math.round((domainMax - domainMin) / binWidth);
 const binner = d3
   .bin()
   .domain([domainMin, domainMax])
-  .thresholds(d3.range(binCount + 1).map((i) => domainMin + (i * (domainMax - domainMin)) / binCount));
+  .thresholds(d3.range(binCount + 1).map((i) => domainMin + i * binWidth));
 
 const binsByGroup = groups.map((grp) => ({
   label: grp.label,
@@ -102,6 +104,34 @@ for (const grp of binsByGroup) {
     .attr("stroke", color(grp.label))
     .attr("stroke-width", 1.5);
 }
+
+// --- Mean markers (data storytelling: highlights the Treatment-group shift) -
+const meansByGroup = groups.map((grp) => ({
+  label: grp.label,
+  mean: d3.mean(
+    records.filter((d) => d.group === grp.label),
+    (d) => d.value
+  ),
+}));
+const meanLine = d3.line();
+meansByGroup.forEach((gm, i) => {
+  const mx = x(gm.mean);
+  const topY = -(16 + (i % 2) * 24);
+  g.append("path")
+    .attr("d", meanLine([[mx, ih], [mx, topY]]))
+    .attr("fill", "none")
+    .attr("stroke", color(gm.label))
+    .attr("stroke-width", 2)
+    .attr("stroke-dasharray", "6,4");
+  g.append("text")
+    .attr("x", mx)
+    .attr("y", topY - 8)
+    .attr("text-anchor", "middle")
+    .attr("fill", color(gm.label))
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text(`${gm.label.replace(" group", "")} mean: ${gm.mean.toFixed(1)}`);
+});
 
 // --- Axis labels -------------------------------------------------------------
 g.append("text")
