@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -40,11 +40,6 @@ outcome_data["High Dose"] = np.append(outcome_data["High Dose"], [92, 88])
 outcome_data["Standard Care"] = np.append(outcome_data["Standard Care"], [-10])
 
 
-def median_and_notch_half_width(values):
-    q1, median, q3 = np.percentile(values, [25, 50, 75])
-    return median, 1.57 * (q3 - q1) / np.sqrt(len(values))
-
-
 # Plot
 fig = go.Figure()
 
@@ -60,10 +55,10 @@ for i, arm in enumerate(arms):
             notchwidth=0.4,
             whiskerwidth=0.6,
             quartilemethod="linear",
-            marker=dict(color=IMPRINT_PALETTE[i], size=9, opacity=0.8, line=dict(color=INK, width=1)),
+            marker=dict(color=IMPRINT_PALETTE[i], size=10, opacity=0.85, line=dict(color=INK, width=1)),
             line=dict(width=2),
             fillcolor=IMPRINT_PALETTE[i],
-            opacity=0.75,
+            opacity=0.82,
             hovertemplate=f"<b>{arm}</b><br>Pain reduction: %{{y:.1f}} pts<extra></extra>",
         )
     )
@@ -71,8 +66,10 @@ for i, arm in enumerate(arms):
 # Visual hypothesis test: annotate the Placebo vs. High Dose comparison with a
 # significance bracket whenever the notches (95% CI around the median) don't
 # overlap - the core reason a notched box plot exists.
-placebo_median, placebo_half = median_and_notch_half_width(outcome_data["Placebo"])
-high_dose_median, high_dose_half = median_and_notch_half_width(outcome_data["High Dose"])
+placebo_q1, placebo_median, placebo_q3 = np.percentile(outcome_data["Placebo"], [25, 50, 75])
+placebo_half = 1.57 * (placebo_q3 - placebo_q1) / np.sqrt(len(outcome_data["Placebo"]))
+high_dose_q1, high_dose_median, high_dose_q3 = np.percentile(outcome_data["High Dose"], [25, 50, 75])
+high_dose_half = 1.57 * (high_dose_q3 - high_dose_q1) / np.sqrt(len(outcome_data["High Dose"]))
 notches_overlap = (placebo_median + placebo_half) >= (high_dose_median - high_dose_half)
 
 if not notches_overlap:
@@ -111,7 +108,9 @@ fig.update_layout(
     autosize=False,
     width=800,
     height=450,
-    title=dict(text="box-notched · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"),
+    title=dict(
+        text="box-notched · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
+    ),
     xaxis=dict(
         title=dict(text="Treatment Arm", font=dict(size=12, color=INK)),
         tickmode="array",
