@@ -1,7 +1,7 @@
 """ anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 85/100 | Created: 2026-05-07
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-18
 """
 
 import os
@@ -22,12 +22,12 @@ from plotnine import (
     element_blank,
     element_rect,
     element_text,
-    geom_point,
+    geom_path,
     geom_segment,
     geom_text,
     ggplot,
     labs,
-    scale_color_cmap,
+    scale_color_gradient2,
     theme,
     theme_minimal,
 )
@@ -92,14 +92,22 @@ label_df = pd.DataFrame(
     }
 )
 
-# Year labels at Jan 1 of each revolution (top of spiral, left-aligned)
+# Year labels at Jan 1 of each revolution. The spiral's local radius barely
+# changes near the Jan boundary (the curve is nearly tangential there), so an
+# x-only offset at the same radius still sits on the ring. Nudge the label
+# radially inward into the empty gap between revolutions instead, plus a
+# small x offset to clear the Jan grid line.
 year_label_df = pd.DataFrame(
     {
-        "x": [-0.35] * n_years,
-        "y": [r_base + r_expand * yi for yi in range(n_years)],
+        "x": [-0.45] * n_years,
+        "y": [r_base + r_expand * yi - 0.55 * r_expand for yi in range(n_years)],
         "label": [str(start_year + yi) for yi in range(n_years)],
     }
 )
+
+# Symmetric plot bounds so the spiral sits centered rather than
+# drifting toward the year-label side
+extent = r_label + 0.7
 
 # Plot
 plot = (
@@ -112,22 +120,22 @@ plot = (
         alpha=0.35,
         inherit_aes=False,
     )
-    + geom_point(size=2.8, stroke=0)
-    + geom_text(data=label_df, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=5.5, inherit_aes=False)
+    + geom_path(size=1.3)
+    + geom_text(data=label_df, mapping=aes(x="x", y="y", label="label"), color=INK_SOFT, size=3.2, inherit_aes=False)
     + geom_text(
         data=year_label_df,
         mapping=aes(x="x", y="y", label="label"),
         color=INK_MUTED,
-        size=5,
+        size=2.8,
         ha="right",
         inherit_aes=False,
     )
-    + scale_color_cmap("viridis", name="Temp (°C)")
-    + coord_fixed(ratio=1)
-    + labs(title="spiral-timeseries · plotnine · anyplot.ai")
+    + scale_color_gradient2(low="#4467A3", mid=PAGE_BG, high="#AE3030", midpoint=13, name="Temp (°C)")
+    + coord_fixed(ratio=1, xlim=(-extent, extent), ylim=(-extent, extent))
+    + labs(title="spiral-timeseries · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(12, 12),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
@@ -137,13 +145,14 @@ plot = (
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
-        plot_title=element_text(color=INK, size=24),
+        plot_title=element_text(color=INK, size=13),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
-        legend_text=element_text(color=INK_SOFT, size=14),
-        legend_title=element_text(color=INK, size=16),
+        legend_text=element_text(color=INK_SOFT, size=8),
+        legend_title=element_text(color=INK, size=9),
         legend_position="right",
+        legend_box_margin=9,
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=12, height=12)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6)
