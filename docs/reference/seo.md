@@ -483,8 +483,9 @@ duplicate-content entries for Google.
 
 ### `lastmod` describes the page, not the row
 
-`lastmod` is the later of an implementation's own `updated` date and
-`TEMPLATE_LAST_CHANGED` in `api/routers/seo.py`. The two drift apart, and the
+`lastmod` is the later of the record's own `updated` date — `spec.updated` for a
+hub URL, `impl.updated` for an implementation URL — and `TEMPLATE_LAST_CHANGED`
+in `api/routers/seo.py`. The two drift apart, and the
 drift matters: on 2026-08-18 every implementation page gained the real render,
 both themes, the interactive version and a rewritten meta description, while no
 `updated` column moved. The sitemap accordingly told Google nothing had changed

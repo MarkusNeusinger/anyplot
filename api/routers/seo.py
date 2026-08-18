@@ -44,8 +44,9 @@ TEMPLATE_LAST_CHANGED = datetime(2026, 8, 18)
 def _lastmod(dt: datetime | None) -> str:
     """Format the later of the record's own date and the template's, as <lastmod>.
 
-    Empty when neither is known — an absent lastmod is honest, a wrong one is
-    not.
+    Always returns an element. A record without its own date still has a page,
+    and that page was last modified at least when its template was — emitting
+    nothing there was the same lost recrawl signal in a smaller form.
     """
     latest = max(dt, TEMPLATE_LAST_CHANGED) if dt else TEMPLATE_LAST_CHANGED
     return f"<lastmod>{latest.strftime('%Y-%m-%d')}</lastmod>"
