@@ -364,7 +364,7 @@ export function SpecPage() {
   }
 
   if (error === 'Spec not found' || (!error && !specData)) {
-    return <NotFoundPage />;
+    return <NotFoundPage source="spec_missing" />;
   }
   if (error) {
     return (

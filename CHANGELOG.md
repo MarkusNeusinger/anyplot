@@ -18,6 +18,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **Dead URLs are now visible in analytics** — a new `page_not_found` Plausible event fires when a
+  visitor reaches a URL the app cannot serve, carrying the requested `path` and a `source` that
+  separates the kinds of miss: `catch_all` (matches no route — usually a bad inbound link) from
+  `spec_missing` (the route resolved but the content is gone — the pattern a library migration
+  leaves behind), plus `language_params` and `route_error`. Instrumented once inside
+  `NotFoundPage.tsx`, which covers all four call sites, and read from `window.location` rather than
+  router context, because the same component is the fallback inside `RouteErrorBoundary` where that
+  context is what may have failed. The 161 stale highcharts URLs would have shown up here months
+  ago. Documented in `docs/reference/plausible.md` (#10453 covers the crawler-facing half; bots run
+  no JavaScript, so the two never overlap).
+
 - **Three new verification skills** — `/verify-migrations` runs the Alembic chain against a
   throwaway Postgres (Docker, or a rootless `pgserver` fallback; single-head check,
   `upgrade head`, `alembic check` drift, downgrade roundtrip) so the shared prod DB never sees

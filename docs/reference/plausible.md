@@ -143,6 +143,18 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `feedback_opened` | `path` | FeedbackWidget.tsx | User clicks the floating feedback FAB and the quick mini-stack of 👍 / 👎 / 💬 appears (issue #5662). `path` is `window.location.pathname + search` at open time. |
 | `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `mode` | FeedbackWidget.tsx | User submits a feedback entry. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea` (omitted if none selected). `mode` is `"quick"` for a one-tap 👍/👎 from the mini-stack, `"full"` for a submit from the detailed dialog. `has_contact` is `"true"`/`"false"` — the contact field is now a free-form name/email/handle, not strictly an email. `spec_id` is set when the current route resolves to a spec page. |
 
+### Diagnostics
+
+| Event | Properties | Source | Description |
+|-------|-----------|--------|-------------|
+| `page_not_found` | `path`, `source` | NotFoundPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname` at mount. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the route resolved but the spec or implementation does not exist), `language_params` (a `/{spec}/{language}` URL arrived without both segments), `route_error` (the router itself returned a 404 response). |
+
+Read `source` before `path`. A `catch_all` miss is usually a bad inbound link;
+a `spec_missing` miss is content that used to exist and no longer does, which is
+the pattern a library migration leaves behind. The bot-facing side of the same
+URLs answers HTTP 404 from `api/routers/seo.py`, but crawlers never run
+JavaScript, so nothing they do appears here — this event covers humans only.
+
 ### Landing page navigation (`nav_click`)
 
 A single event captures every clickable surface on the chrome and the new
