@@ -538,10 +538,7 @@ async def get_robots():
     first-match parsers would stop at `Disallow: /` and never see the
     exception — the same ordering rule `app/public/robots.txt` documents.
     """
-    return Response(
-        content="User-agent: *\nAllow: /og/\nDisallow: /\n",
-        media_type="text/plain",
-    )
+    return Response(content="User-agent: *\nAllow: /og/\nDisallow: /\n", media_type="text/plain")
 
 
 @router.get("/sitemap.xml")
