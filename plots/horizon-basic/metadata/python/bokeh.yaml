@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:17:43Z'
-updated: '2026-08-18T00:56:30Z'
+updated: '2026-08-18T01:04:08Z'
 generated_by: claude-sonnet
 workflow_run: 32085529907
 issue: 1877
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
+  - 'Canvas now fills exactly 3200x1800 with no dead strip: LEGEND_HEIGHT (150) +
+    5*BASE_PANEL_HEIGHT (240) + LAST_PANEL_HEIGHT (450) sums to 1800px precisely,
+    verified pixel-for-pixel against the saved PNG.'
+  - Mandated subtitle now reads the full correct string "horizon-basic · python ·
+    bokeh · anyplot.ai", including the previously-missing language segment.
   - 'Diverging color ramp is built by interpolating from the Imprint diverging poles
     (#AE3030 / #4467A3) toward the theme-adaptive page background, exactly matching
-    the library''s imprint_div guidance instead of hand-picked hexes.'
+    the imprint_div guidance instead of hand-picked hexes.'
   - Rows are ordered by peak volatility rather than alphabetically, and each row carries
-    a 'peak +/-X.X' readout — genuine data storytelling and visual hierarchy.
+    a "peak ±X.X" readout — genuine data storytelling and visual hierarchy.
   - 'Distinctive Bokeh interactivity: a shared Range1d x-range links pan/zoom across
     all six panels, plus HoverTool (vline mode) and CrosshairTool for precision reading
     — features a static library could not replicate.'
-  - Zebra-striped row backgrounds (alternating PAGE_BG/ELEVATED_BG) help trace a row
-    across the full chart width.
-  - Font sizes are explicitly set throughout (30pt row labels, 42/34pt axis text,
-    50pt title) and chrome is theme-correct in both renders — no dark-on-dark or light-on-light
-    text found.
+  - Font sizes are explicitly set throughout and chrome is theme-correct in both renders
+    — no dark-on-dark or light-on-light text found anywhere.
   weaknesses:
-  - 'Canvas underfilled at the bottom: summed layout heights are 150 (legend) + 5×215
-    (stacked rows) + 400 (last row) = 1625px, but the Selenium window/figure is fixed
-    at total_height=1800 — leaving an unbalanced ~175px blank strip below the x-axis
-    label in BOTH plot-light.png and plot-dark.png. Grow LAST_PANEL_HEIGHT (or all
-    panel heights) so the summed layout equals 1800px exactly.'
-  - 'The mandated title substring is missing the required language segment: it reads
-    ''horizon-basic · bokeh · anyplot.ai'' instead of ''horizon-basic · python · bokeh
-    · anyplot.ai''. Add ''python'' between the spec-id and the library name.'
-  - The bold server-name label and the 'peak +/-X.X' readout are layered directly
-    on top of the varea fills rather than beside them — still legible thanks to strong
-    ink contrast, but a subtle background chip/halo behind each label would read more
-    cleanly where a label crosses a saturated high-intensity band peak.
+  - The bold server-name label and the "peak ±X.X" readout are still layered directly
+    on top of the varea fills rather than beside them. Legible in both themes thanks
+    to strong ink contrast, but a subtle background chip/halo behind each label would
+    read more cleanly where a label crosses a saturated high-intensity band peak (minor,
+    not a legibility failure).
+  - The dense 6-panel stack (200 points x 6 series x 3 bands) still takes real effort
+    to parse at a glance beyond the peak call-outs and volatility ordering — a brief
+    inline note on how to read the folded bands (e.g. a tiny 'darker = further from
+    baseline' cue in the legend) would sharpen first-glance comprehension.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) on the page, with alternating slightly-lighter (~#FFFDF6) zebra stripes for every other row panel. Matches the required light background.
-      Chrome: Title "Server Metrics: Hourly Performance Across 24 Hours" (large, bold, dark ink) and subtitle "horizon-basic · bokeh · anyplot.ai" (smaller, muted ink) sit above the stack; the mandated subtitle is missing the "python" language segment. X-axis label "Hour of Day (0-24h)" and tick labels (0/5/10/15/20) render only under the bottom panel, in dark ink on the light background, clearly legible. Row labels ("Database", "Load Balancer", "API Gateway", "Cache Server", "Web Server 2", "Web Server 1", ordered by peak volatility) are bold dark-ink text layered over the data area, legible but sitting on top of the fill. A "peak +/-X.X" readout in muted ink sits near the right edge of each row, comfortably inside the canvas with no clipping.
-      Data: Six horizon-folded panels use a blue ramp for positive excursions and a red ramp for negative excursions, each in three intensity bands (light→saturated) built from the Imprint diverging poles #4467A3 (blue) and #AE3030 (red). A legend strip at the very top explains "Positive Values" / "Negative Values" with matching swatches and labels. There is a clearly visible blank strip (~175px) of plain background below the x-axis label at the bottom of the canvas, all on one side (not balanced).
-      Legibility verdict: PASS (all text readable; the missing bottom-margin fill and label-over-data layering are layout/polish issues, not legibility failures).
+      Background: Warm off-white, matches #FAF8F1, with alternating zebra-stripe row backgrounds (#FFFDF6 elevated rows) giving the stack subtle rhythm.
+      Chrome: Mandated subtitle "horizon-basic · python · bokeh · anyplot.ai" (now includes the language segment) sits above the bold descriptive title "Server Metrics: Hourly Performance Across 24 Hours", both in dark ink, fully legible. Legend strip at top ("Color Bands & Intensity Levels" + Positive/Negative swatch keys) is dark-on-light and clear. X-axis ticks/label ("Hour of Day (0-24h)") at the very bottom are dark-on-light and fully within the canvas, no clipping. Server-name labels (e.g. "Database") and "peak ±X.X" readouts are layered directly over the data fills but remain legible due to strong ink contrast.
+      Data: Six rows (Database, Load Balancer, API Gateway, Cache Server, Web Server 2, Web Server 1 — ordered by peak volatility) show blue/red diverging horizon bands built from the Imprint diverging poles (#4467A3 blue, #AE3030 red) interpolated toward the page background. Positive excursions render blue, negative render red, increasing in saturation with magnitude.
+      Legibility verdict: PASS — all title, subtitle, legend, axis, and per-row text is clearly readable against the light background; no light-on-light failures found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) on the page, with alternating slightly-lighter (~#242420) zebra stripes for every other row — matches the required dark background.
-      Chrome: Title and subtitle render in light ink (near-white / muted light gray) against the dark background — fully readable, no dark-on-dark failures found. X-axis tick labels and axis label are light-colored and legible. Row labels and peak readouts are light ink over the data area, same legibility profile as the light render.
-      Data: The blue/red diverging bands are visually IDENTICAL in hue/saturation to the light render (only the chrome — background, zebra stripe, text — flips), which is correct: data colors must not change between themes. The same unbalanced ~175px blank strip appears at the bottom of the canvas in this render too.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; same layout gap as the light render).
+      Background: Warm near-black, matches #1A1A17, with lighter zebra-stripe rows (#242420 elevated rows).
+      Chrome: Title, subtitle, axis label, tick labels, legend text, and per-row labels all render in light ink (#F0EFE8 / #B8B7B0) — clearly readable throughout. No dark-on-dark failures found anywhere, including where labels cross saturated band peaks.
+      Data: The blue/red diverging band colors are pixel-identical to the light render — confirmed only chrome (background, zebra stripe, text) flips between themes, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark or unreadable elements in either row labels, axis, legend, or title/subtitle.
+
+    Canvas fill check: Both PNGs measure exactly 3200x1800 (canvas gate passed). Panel-height budget (150 legend + 5*240 base rows + 450 last row = 1800px) now sums exactly to the canvas height — the ~175px unbalanced blank strip from the prior attempt is gone; a pixel scan down a mid-canvas column shows only local data-trough gaps (expected horizon-chart whitespace) and the intentional bottom axis-label reservation, not a systemic dead zone.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,49 +64,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit (30/34/42/50pt); readable in both themes;
-          minor deduction only because labels sit atop data fills
+        comment: All font sizes explicit (30/34/42/50pt), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap, but row-name and peak labels are layered
-          directly over the varea fills rather than beside them
+        comment: No text-on-text overlap, but row/peak labels are still layered directly
+          over data fills
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Horizon bands well-sized for 200-point series; folded areas clearly
-          distinguishable
+        comment: Bands well-sized for 200-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue/red poles differ in both hue and lightness across 3 bands each
-          — not red-green-only
+        comment: Blue/red poles differ in hue AND lightness across bands
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Panel heights sum to 1625px but canvas/window is 1800px tall — unbalanced
-          ~175px blank strip at the bottom in both renders
+        passed: true
+        comment: Panel-height budget now sums exactly to 1800px canvas height, no
+          dead strip; fixed from 88/100 attempt
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Hour of Day (0-24h)'' is descriptive with units'
+        comment: '"Hour of Day (0-24h)" descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Diverging bands derived from Imprint #AE3030/#4467A3 poles toward
-          theme background; identical data colors across themes; theme-correct chrome'
+        comment: 'Diverging bands correctly derived from Imprint #AE3030/#4467A3 poles;
+          identical across themes; theme-correct chrome'
     design_excellence:
       score: 14
       max: 20
@@ -114,47 +112,52 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Custom interpolated diverging ramp, zebra striping, ordered rows
-          — clearly above library defaults, short of full publication polish
+        passed: true
+        comment: Custom interpolated diverging ramp, zebra striping, volatility-ordered
+          rows — above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Spines/outline removed, grid hidden, zebra rhythm — refined, but
-          the unbalanced bottom margin keeps it from 'every detail polished'
+        passed: true
+        comment: Spines/grid removed, zebra rhythm, canvas now fully utilized
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Volatility-based row ordering plus peak call-outs create real hierarchy,
-          though the dense 6-panel stack still takes some effort to parse
+        passed: true
+        comment: Row ordering + peak call-outs create hierarchy; dense 6-panel stack
+          still takes effort to parse
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct horizon-chart folding technique via varea bands
+        passed: true
+        comment: Correct horizon-chart folding via varea bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: 3 mirrored positive/negative bands, intensity increases with magnitude,
-          zero baseline, per-row normalized scale — all spec notes satisfied
+        passed: true
+        comment: 3 mirrored +/- bands, intensity-by-magnitude, zero baseline, per-row
+          normalized scale
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X=hour of day, Y=folded value; all series/data visible
+        passed: true
+        comment: X=hour, Y=folded value, all series visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        comment: Mandated subtitle is missing the required language segment ('horizon-basic
-          · bokeh · anyplot.ai' instead of '...· python · bokeh ·...'); legend (band/intensity
-          key) is correct
+        passed: true
+        comment: Subtitle now reads the full "horizon-basic · python · bokeh · anyplot.ai";
+          legend correct
     data_quality:
       score: 14
       max: 15
@@ -163,20 +166,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: Both positive and negative excursions with varying volatility across
+        passed: true
+        comment: Both positive/negative excursions with varying volatility across
           all 6 servers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Server-metrics dashboard scenario — neutral, plausible business/tech
-          context
+        passed: true
+        comment: Neutral server-metrics dashboard scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Generic deviation-style metric values in a plausible range, no physically
-          impossible values
+        passed: true
+        comment: Plausible deviation-style values, nothing physically impossible
     code_quality:
       score: 10
       max: 10
@@ -185,28 +189,32 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Linear imports -> data -> plot -> save, no classes
+        passed: true
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: All imports used
+        passed: true
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for a multi-panel horizon chart, no fake UI
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via the documented Selenium
-          pattern
+        passed: true
+        comment: Saves plot-{THEME}.png + .html via the documented Selenium pattern
     library_mastery:
       score: 10
       max: 10
@@ -215,30 +223,30 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: figure(), ColumnDataSource, varea, column layout, Title/Label layouts
-          — idiomatic high-level Bokeh
+        passed: true
+        comment: figure(), ColumnDataSource, varea, column layout, Title/Label
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
-        comment: Shared Range1d linking pan/zoom across all panels, HoverTool + CrosshairTool
-          — genuinely Bokeh-specific
-  verdict: REJECTED
+        passed: true
+        comment: Shared Range1d linking pan/zoom across all 6 panels, HoverTool +
+          CrosshairTool — genuinely Bokeh-specific
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - annotations
   - html-export
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep:
-  - time-series
   - normalization
   styling:
-  - custom-colormap
   - alpha-blending
-  - publication-ready
+  - minimal-chrome
