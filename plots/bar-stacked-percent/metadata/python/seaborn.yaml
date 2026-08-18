@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:19Z'
-updated: '2026-08-18T14:52:01Z'
+updated: '2026-08-18T14:58:26Z'
 generated_by: claude-sonnet
 workflow_run: 32149438480
 issue: 2008
@@ -12,127 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Correct percent-stacking via seaborn's objects interface (so.Plot + so.Bar + so.Stack())
-    — idiomatic use of the modern seaborn API rather than manually normalizing and
-    hstacking
-  - Imprint palette applied in canonical order with the mandated brand green first
-    (Engineering=#009E73, Marketing=#C475FD, Operations=#4467A3, R&D=#BD8233), identical
-    across both themes
-  - Per-segment percentage labels pick black-vs-white text by computing the luminance
-    of each segment's own fixed hex, so contrast holds correctly on both the light
-    and dark backgrounds
-  - Thin PAGE_BG-colored edges between stacked segments (edgewidth=1.5) give clean
-    visual separation without adding a competing color
-  - All font sizes explicitly set (title 12pt, axis labels 10pt, ticks 8pt, legend
-    8pt, data labels 11pt bold) and canvas lands exactly on 3200x1800
-  - Custom legend order (Patch handles built manually) mirrors the bottom-to-top stacking
-    order for easy visual tracing
-  - Realistic, neutral business scenario (departmental budget allocation, 2019-2024)
-    with genuine variation — Engineering/R&D share rising while Marketing/Operations
-    share falls
+  - Correct percent-stacking via seaborn's objects interface (so.Plot/so.Bar/so.Stack)
+    with data properly normalized to sum to exactly 100% per year
+  - Segment percentage labels use luminance-derived text color per Imprint hue, keeping
+    contrast solid against every segment color in both themes
+  - Data-driven footnote narrates a real compositional insight (Engineering + R&D
+    share rising from 48% to 70%) instead of a generic caption — genuine data storytelling
+  - 'Full Imprint palette compliance: first series is #009E73, canonical color order
+    preserved, and chrome (background/text/grid) flips correctly between #FAF8F1 light
+    and #1A1A17 dark while data colors stay identical'
+  - Custom legend built with Patch handles in left-to-right order that mirrors the
+    bottom-to-top stack order, making the chart easy to scan
+  - Idiomatic modern seaborn usage — the objects interface's so.Stack() transform
+    is the correct high-level API for this chart type rather than a manual matplotlib
+    stack
   weaknesses:
-  - Legend uses a boxed frame (frameon=True, facecolor/edgecolor set) — the style
-    guide's Decoration Removal Checklist recommends removing box frames around legends
-    for a cleaner look; consider frameon=False or a borderless legend to lift Visual
-    Refinement
-  - No visual hierarchy or emphasis calls out the underlying story (e.g., Engineering+R&D
-    share rising from 47% to 71% of budget while Marketing+Operations falls) — data
-    is displayed but not interpreted; a subtle annotation or emphasized trend line
-    for one department would push Data Storytelling further
-  - np.random.seed(42) is set but never used — all values are hardcoded, so the seed
-    call is dead code; harmless but slightly untidy
+  - Aesthetic sophistication is already strong but stops at labels + footnote; a subtle
+    additional touch (e.g. a thin connector marking one department's trend, or a highlighted
+    focal year) could push Design Excellence further — not required for approval
+  - Bar width (0.65) leaves fairly wide gaps between the 6 yearly bars; a slightly
+    wider bar (~0.72-0.75) would tighten the layout marginally without crowding
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly not pure white.
-      Chrome: Title "bar-stacked-percent · python · seaborn · anyplot.ai" in dark ink, clearly legible, comfortably sized (~50% of plot width). "Fiscal Year" (x) and "Budget Share (%)" (y) axis labels are dark and readable. Tick labels (2019-2024, 0-100) are medium-grey and legible. Boxed legend above the plot with Engineering/Marketing/Operations/R&D swatches is fully readable. Grid lines are faint horizontal guides, visible but not competing with the data.
-      Data: Six bars (2019-2024), each stacked to 100%. Bottom-to-top: Engineering (brand green #009E73), Marketing (lavender #C475FD), Operations (blue #4467A3), R&D (ochre #BD8233). Each segment carries a bold percentage label whose color (white or near-black) is chosen per-segment for contrast, and all labels are readable.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-stacked-percent · python · seaborn · anyplot.ai" centered at top in dark ink, clearly legible; "Fiscal Year" x-axis label and "Budget Share (%)" y-axis label both dark and readable; tick labels (2019-2024, 0-100) in soft dark gray, legible; frameless legend above the plot area (Engineering/Marketing/Operations/R&D swatches) fully readable.
+      Data: 6 fully-stacked bars (one per fiscal year 2019-2024), each summing to 100%. Bottom-to-top segment order is Engineering (#009E73 green), Marketing (#C475FD purple), Operations (#4467A3 blue), R&D (#BD8233 amber) — matches canonical Imprint order with green first. Each segment has a bold percentage label whose color (dark or light) is chosen per-segment for contrast, and all labels are clearly readable. Italic footnote beneath the x-axis is fully visible and legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly not pure black.
-      Chrome: Title, axis labels, and tick labels flip to light ink/off-white and remain fully legible against the dark background. Legend box uses the dark elevated surface with light text and light swatches border — no dark-on-dark or light-on-light failures observed. Grid lines are faint and visible without dominating.
-      Data: Same four segment colors as the light render (Engineering green, Marketing lavender, Operations blue, R&D ochre) — confirmed identical across themes, only the chrome (background, text, legend box) flips. Percentage labels retain the same per-segment black/white choice as the light render (colors are fixed to segment hue, not page theme), and all remain legible.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title now rendered in light ink, clearly visible against the dark background; axis labels and tick labels are light/soft-light and legible; legend swatches and text fully readable; footnote text (light gray italic) legible at the bottom.
+      Data: Segment colors are pixel-identical to the light render (#009E73, #C475FD, #4467A3, #BD8233) — only chrome flipped, as required. Percentage labels retain the same per-segment adaptive text color as the light render (since that choice is based on the fixed data color's luminance, not the page theme), and every label remains clearly readable against its segment — no dark-on-dark or light-on-light failures found anywhere in the chart.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes and at proportional
-          scale; title fits at ~50% width without overflow
+        comment: All text (title, axes, ticks, legend, segment labels, footnote) explicitly
+          sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, legend, or data
+        comment: Legend, title, bars, labels, and footnote each have clear space;
+          no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments and percentage labels are clearly visible; sub-8% slivers
-          correctly skip labels to avoid clutter
+        comment: Bar segments and labels sized appropriately for 6 categories x 4
+          components; thin slivers correctly skip labels via the >8% guard
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Per-segment luminance-based label coloring ensures contrast; 4 series
-          with legend labels, no reliance on hue alone
+        comment: Green/purple/blue/amber combination avoids red-green-only signaling
+          and is CVD-distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800; plot fills a balanced share of the canvas
-          with generous but not wasted margins
+        comment: 3200x1800 canvas gate passed; title, axes, and footnote proportioned
+          well with no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ('Budget Share (%)', 'Fiscal Year')
+        comment: '"Fiscal Year" and "Budget Share (%)" are descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, brand green first, identical data colors
-          across themes, correct FAF8F1/1A1A17 backgrounds
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful touches (contrast-aware labels, segment edge separation)
-          but overall still a fairly standard stacked-bar composition, not fully publication-level
+        passed: true
+        comment: Custom Imprint palette, luminance-adaptive segment label color, edge-highlighted
+          segment boundaries, custom legend
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, subtle grid, generous whitespace, but legend frame
-          box contradicts the style guide's decoration-removal guidance
+        passed: true
+        comment: Spines removed via sns.despine, subtle y-axis grid, generous headroom/footroom,
+          frameless legend
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted — no annotation or emphasis
-          highlighting the shifting budget composition over time
+        passed: true
+        comment: Footnote calls out a specific, computed compositional shift (Engineering+R&D
+          share 48%->70%) rather than a generic caption
     spec_compliance:
       score: 15
       max: 15
@@ -142,21 +134,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar chart, every bar normalized to 100
+        comment: Correct 100% stacked bar chart via so.Stack() normalization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Percentage labels, clear legend, consistent component ordering all
-          present
+        comment: Distinct harmonious colors, clear legend, in-segment percentage labels,
+          consistent component order across bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category (year) on x-axis, share_pct stacked on y-axis, all data
-          visible
+        comment: X = fiscal year category, Y = normalized share_pct summing to 100
+          per bar
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -173,21 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Meaningful variation across years — some shares rise, some fall,
-          not a static composition
+        comment: 6 categories x 4 components with full proportional stacking and cumulative
+          labeling
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business scenario (departmental budget allocation)
+        comment: Departmental budget allocation over 6 fiscal years is plausible and
+          neutral (business domain)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget figures and share trends align with plausible real-world tech-company
-          patterns
+        comment: Budget values (millions) and resulting share trends are sensible
+          and smoothly evolving
     code_quality:
       score: 10
       max: 10
@@ -197,35 +190,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> plot -> save, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data (seed call is vestigial but harmless)
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, plt, np, pd, sns, so, Patch) are used
+        comment: All imports (os, plt, numpy, pandas, seaborn, seaborn.objects, Patch)
+          are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the manual legend + luminance-based label
-          coloring; no fake functionality
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=400, no bbox_inches='tight', current
-          API
+        comment: Saves plot-{THEME}.png with default bbox_inches, matches current
+          seaborn objects API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -234,27 +227,26 @@ review:
         max: 5
         passed: true
         comment: Uses seaborn's objects interface (so.Plot/so.Bar/so.Stack) — the
-          recommended high-level API for this kind of transform
+          recommended high-level API for percent-stacking
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: so.Stack() percent-stacking transform is a genuine seaborn-objects-specific
-          feature, though the overall chart type is common across libraries
-  verdict: REJECTED
+        passed: true
+        comment: so.Stack() transform and so.Nominal color scale are seaborn-objects-specific
+          features beyond the classic axes-level API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
-  - manual-ticks
+  - custom-legend
   patterns:
   - wide-to-long
   - explicit-figure
   dataprep:
-  - normalization
   - cumulative-sum
+  - normalization
   styling:
   - edge-highlighting
   - grid-styling
