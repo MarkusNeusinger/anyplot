@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 49/100 | Updated: 2026-08-18
@@ -15,6 +15,9 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
 import math  # noqa: E402
 
 import pandas as pd  # noqa: E402
+from matplotlib.font_manager import FontProperties  # noqa: E402
+from matplotlib.path import Path as MplPath  # noqa: E402
+from matplotlib.textpath import TextPath  # noqa: E402
 from plotnine import (  # noqa: E402
     aes,
     coord_fixed,
@@ -28,6 +31,7 @@ from plotnine import (  # noqa: E402
     labs,
     scale_color_identity,
     scale_fill_identity,
+    scale_size_identity,
     scale_x_continuous,
     scale_y_continuous,
     theme,
@@ -107,6 +111,40 @@ outer_ring_outer = 150  # Outer ring outer radius
 
 label_threshold = 100  # $M — outer segments below this get a legend entry instead
 
+# Coordinate-to-inch conversion for measuring real rendered text width: the
+# panel spans FIGURE_WIDTH_IN inches across X_RANGE_UNITS data units (see
+# scale_x_continuous below), so a font-metric extent in points converts to
+# data units via points -> inches -> data units.
+FIGURE_WIDTH_IN = 6
+X_RANGE_UNITS = 380  # matches scale_x_continuous limits=(-190, 190)
+UNITS_PER_INCH = X_RANGE_UNITS / FIGURE_WIDTH_IN
+
+
+def text_extents_units(text, font_size_pt, bold=False):
+    """Rendered (width, height) of a label in plot data-coordinate units,
+    from actual font metrics rather than a guessed char-count heuristic — so
+    label-fit checks match what will really be rasterized."""
+    prop = FontProperties(size=font_size_pt, weight="bold" if bold else "normal")
+    extents = TextPath((0, 0), text, size=font_size_pt, prop=prop).get_extents()
+    return (extents.width / 72) * UNITS_PER_INCH, (extents.height / 72) * UNITS_PER_INCH
+
+
+def label_fits(center_x, center_y, width, height, segment_path):
+    """Whether a horizontal label's bounding box stays inside a wedge polygon.
+
+    A wedge's angular sweep translates to horizontal room very unevenly: near
+    the top/bottom of the ring a wide angle gives lots of horizontal space,
+    but the same angle near the left/right of the ring gives almost none
+    (there the sweep is mostly vertical) — so comparing text width against
+    the tangential arc length alone is unreliable. Sampling the label's
+    bounding-box edges against the real polygon (inner/outer arcs and the two
+    radial edges) via matplotlib's point-in-path test catches that directly.
+    """
+    half_w, half_h = width / 2, height / 2
+    fracs = (-1, -0.5, 0, 0.5, 1)
+    corners = [(center_x + fx * half_w, center_y + fy * half_h) for fx in fracs for fy in fracs]
+    return bool(segment_path.contains_points(corners).all())
+
 
 def create_annular_segment(start_angle, end_angle, inner_radius, outer_radius, n_points=50):
     """Create polygon points for an annular (donut) segment."""
@@ -159,6 +197,18 @@ outer_rows = []
 outer_labels = []
 legend_entries = []
 
+# Font sizes tried in order (largest first), each checked at several radii
+# (outermost first, for maximum separation from the inner ring's labels)
+# before falling back to the legend. A label that doesn't fit at any
+# size/radius combination would either spill into a neighboring segment's
+# label (as seen with Asia Pacific's Consulting/Cloud Services collision) or
+# overflow its own wedge onto the page background — where, because
+# contrast_text_color picks ink from the wedge fill only, dark text chosen
+# for a light tint can land on the dark-theme page and become invisible (the
+# North America "Cloud Services" clipping seen in dark only).
+outer_label_font_sizes = [7, 6, 5.5, 5]
+outer_label_radius_candidates = list(range(outer_ring_outer - 5, outer_ring_inner + 5, -5)) + [outer_ring_inner + 6]
+
 for parent, children in data.items():
     parent_start, parent_end = parent_angles[parent]
     parent_total = parent_totals[parent]
@@ -179,15 +229,32 @@ for parent, children in data.items():
 
         if child_value >= label_threshold:
             mid_angle = (child_current_angle + child_end_angle) / 2
-            label_radius = (outer_ring_inner + outer_ring_outer) / 2
-            outer_labels.append(
-                {
-                    "x": label_radius * math.cos(mid_angle),
-                    "y": label_radius * math.sin(mid_angle),
-                    "label": child_name,
-                    "label_color": contrast_text_color(color),
-                }
-            )
+            segment_path = MplPath(points)
+
+            placement = None
+            for font_size in outer_label_font_sizes:
+                text_w, text_h = text_extents_units(child_name, font_size)
+                for radius in outer_label_radius_candidates:
+                    cx, cy = radius * math.cos(mid_angle), radius * math.sin(mid_angle)
+                    if label_fits(cx, cy, text_w, text_h, segment_path):
+                        placement = (cx, cy, font_size)
+                        break
+                if placement is not None:
+                    break
+
+            if placement is None:
+                legend_entries.append({"parent": parent, "child": child_name, "color": color})
+            else:
+                label_x, label_y, fitted_size = placement
+                outer_labels.append(
+                    {
+                        "x": label_x,
+                        "y": label_y,
+                        "label": child_name,
+                        "label_color": contrast_text_color(color),
+                        "size": fitted_size,
+                    }
+                )
         else:
             legend_entries.append({"parent": parent, "child": child_name, "color": color})
 
@@ -254,13 +321,19 @@ inner_name_small_df = inner_name_df_all[inner_name_df_all["small"]]
 inner_value_df = inner_value_df_all[~inner_value_df_all["small"]]
 inner_value_small_df = inner_value_df_all[inner_value_df_all["small"]]
 
-# Legend for outer-ring segments below label_threshold (spec: "use legend for
-# smaller ones") — a manually drawn swatch + text row per entry, placed in the
-# canvas margin below the donut.
+# Legend for outer-ring segments below label_threshold, or whose label didn't
+# fit its arc even at the smallest font (spec: "use legend for smaller ones")
+# — a manually drawn swatch + text row per entry, placed in the canvas margin
+# below the donut. Row height shrinks (down to a legible floor) instead of a
+# fixed 14 so the legend can grow to accommodate more fallback entries while
+# always staying within legend_bottom_y, matching the fixed y-axis limit below.
 legend_swatch_x = -165
 legend_text_x = -152
-legend_row_height = 14
 legend_start_y = -162
+legend_bottom_y = -196
+legend_row_height = (
+    min(14, (legend_start_y - legend_bottom_y) / (len(legend_entries) - 1)) if len(legend_entries) > 1 else 14
+)
 
 legend_swatch_rows = [
     {"x": legend_swatch_x, "y": legend_start_y - i * legend_row_height, "color": entry["color"]}
@@ -312,17 +385,21 @@ plot = (
     )
     # Outer ring labels (product line names for large-enough segments); text
     # color adapts per-wedge (contrast_text_color) rather than one fixed ink,
-    # since the palest tonal tints need dark text even in dark theme.
-    + geom_text(aes(x="x", y="y", label="label", color="label_color"), data=outer_label_df, size=7)
+    # since the palest tonal tints need dark text even in dark theme. Font
+    # size is per-row (shrunk to whatever fit the segment's arc — see
+    # outer_label_font_sizes above), mapped through scale_size_identity().
+    + geom_text(aes(x="x", y="y", label="label", color="label_color", size="size"), data=outer_label_df)
     # Legend for the outer-ring segments below label_threshold — swatch +
     # name, since scale_fill_identity() precludes an automatic ggplot legend.
     + geom_point(aes(x="x", y="y", color="color"), data=legend_swatch_df, size=4.5, shape="s")
     + geom_text(aes(x="x", y="y", label="label"), data=legend_text_df, size=5.5, color=INK_SOFT, ha="left", va="center")
-    # Use fill/color values directly (both scale_fill_identity for the
-    # polygons and scale_color_identity for the legend swatches + adaptive
-    # outer-ring label text)
+    # Use fill/color/size values directly (scale_fill_identity for the
+    # polygons, scale_color_identity for the legend swatches + adaptive
+    # outer-ring label text, scale_size_identity for the per-label fitted
+    # outer-ring font sizes)
     + scale_fill_identity()
     + scale_color_identity()
+    + scale_size_identity()
     # Fixed aspect ratio for proper circles
     + coord_fixed(ratio=1)
     # Axis limits — asymmetric y range reserves margin below the donut for
