@@ -2,46 +2,54 @@ library: bokeh
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:54:33Z'
-updated: '2026-05-07T22:49:49Z'
-generated_by: claude-haiku
-workflow_run: 25525868613
+updated: '2026-08-18T04:55:54Z'
+generated_by: claude-sonnet
+workflow_run: 32099939237
 issue: 2019
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.15
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 96
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both themes
-  - Perfect spec compliance with all notched box plot requirements correctly implemented
-  - Perfect data quality with realistic employee performance scenario and varied distributions
-  - Perfect code quality with clean, simple, deterministic code
-  - Correct theme adaptation preserving Okabe-Ito colors identically across light/dark
-    modes
-  - Creative use of bokeh geometric primitives for manual notched box construction
+  - Title now uses the mandated four-segment format "box-notched · python · bokeh
+    · anyplot.ai", fixing the attempt-1 gap.
+  - Outline fixed to the L-shaped spine convention (outline_line_color=None, bottom/left
+    axis lines only) instead of the previous full rectangular frame.
+  - New HoverTool with a formatted tooltip (Department, n, Q1, Median, Q3, Mean) driven
+    by an invisible whisker-to-whisker hover-target quad — turns the HTML export into
+    a genuinely useful interactive detail view and directly answers the prior Library
+    Mastery gap.
+  - Correct notch computation (±1.57 × IQR / √n) and all standard box-plot elements
+    (median, quartiles, 1.5×IQR whiskers, outliers) present and correctly rendered
+    in both themes.
+  - 'Distinctive design choices: box width scaled by √n signals notch reliability,
+    a hollow mean-diamond next to the median notch adds a mean-vs-median comparison,
+    and ranking categories by median turns the chart into a leaderboard.'
+  - 'Theme-adaptive chrome correctly threaded through both renders — Imprint palette
+    data colors are identical between light/dark, only chrome flips; first-ranked
+    category (Marketing) is #009E73.'
   weaknesses:
-  - 'Design excellence modest (9/20): relies on well-configured defaults without custom
-    aesthetic sophistication'
-  - Visual refinement limited to library defaults with minimal customization
-  - 'Data storytelling absent: plot displays data clearly but without visual hierarchy
-    or emphasis to create narrative insight'
+  - The _width_for_n helper function is a minor structural break from the flat-script
+    KISS convention (still a single small pure function, non-blocking).
+  - DE-01 aesthetic sophistication is strong but not maximal — typography and accent
+    choices remain fairly standard beyond the notch/diamond/ranking touches already
+    present.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "box-notched · bokeh · anyplot.ai" in dark 28pt text, axis labels "Department" and "Performance Score (0–100)" in 22pt, tick labels in 18pt — all clearly readable against light surface
-      Data: Five notched boxes in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, pink #CC79A7, yellow #E69F00), notches clearly visible as triangular cutouts, median lines dark and prominent, whiskers distinct, outlier circles hollow and visible
-      Grid: Subtle y-axis grid present, opacity ~10%, aids readability without competing
-      Legibility verdict: PASS — all text and data elements fully readable
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "box-notched · python · bokeh · anyplot.ai" top-left (now includes the python segment); italic dark axis labels ("Performance Score (0-100)" / "Department (ranked by median, n = sample size)"); soft-ink tick labels; horizontal "Median"/"Mean" legend top-right on an elevated cream box with a visible border. Only left/bottom axis lines are drawn (L-shaped spine convention, no full rectangular outline) with a subtle horizontal-only grid.
+      Data: Five notched boxes ranked by descending median — Marketing (green #009E73, first/highest-ranked), Engineering (lavender), HR (blue), Sales (ochre), Operations (matte red). Each box shows a bowtie notch around the median line, a hollow mean-diamond marker offset past the notch, I-beam whiskers with caps, and hollow outlier circles (HR has one, Sales has three, Operations none visible). Box widths vary proportionally with sample size (n=45-67).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in secondary light color (#B8B7B0) — all clearly readable against dark surface, no dark-on-dark failures
-      Data: Identical data colors to light render (same Okabe-Ito palette), notch outlines visible as light-colored strokes, median lines visible, whiskers distinct, outlier circles visible
-      Grid: Subtle y-axis grid in light color, opacity ~10%, visible against dark background
-      Legibility verdict: PASS — all text and data elements fully readable, no theme-adaptation failures
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout, now in light ink — white/off-white title, light soft-gray tick labels and axis labels, legend box uses the dark elevated fill with light border and light label text. No dark-on-dark failures; every title/label/tick is clearly legible against the dark surface.
+      Data: The five category colors, box widths, notch geometry, whisker/outlier positions, and mean-diamond placements are pixel-identical to the light render — confirms data colors are held constant across themes and only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,72 +60,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28pt, labels 22pt, ticks 18pt all explicitly set and perfectly
-          readable in both themes
+        comment: All title/axis/tick/legend text clearly readable in both themes;
+          balanced font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; category labels and tick labels well-spaced
+        comment: No text/data/legend collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Notched boxes, whiskers, outlier circles all clearly visible and
-          optimally sized
+        comment: Notch, whisker, mean-diamond, and outlier markers all appropriately
+          sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety with excellent contrast
+        comment: Imprint palette contrast is CVD-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas with balanced margins; excellent space
-          utilization
+        comment: Canvas gate passed (3200x1800); title ~45% width, nothing clipped
+          or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: Descriptive labels with units (0-100 scale, n annotated per category)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette correct; backgrounds #FAF8F1/#1A1A17; theme-adaptive
-          chrome correct in both renders'
+        comment: 'First-ranked category is #009E73; canonical Imprint order; correct
+          theme backgrounds both renders'
     design_excellence:
-      score: 9
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Well-configured defaults; professional appearance but no custom design
-          flourishes
+        passed: true
+        comment: sqrt(n)-scaled box width, hollow mean-diamond, leaderboard ranking
+          by median
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Minimal grid, decent whitespace; mostly library defaults without
-          extra customization
+        passed: true
+        comment: 'Fixed: L-shaped spine convention (outline_line_color=None), subtle
+          y-only grid, generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data displayed clearly but without visual hierarchy or narrative
-          emphasis
+        passed: true
+        comment: Median ranking + mean/median divergence gives a clear analytical
+          narrative
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot with all required elements
+        comment: Correct notched box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Notches at 95% CI, quartiles, whiskers, outliers, color differentiation
-          all present
+        comment: Notches at 95% CI, quartiles/whiskers/1.5xIQR/outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis departments, Y-axis performance scores; all data visible
+        comment: Department on x, performance score on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: box-notched · bokeh · anyplot.ai'
+        comment: 'Fixed: title now includes the python segment; legend labels match
+          (Median/Mean)'
     data_quality:
       score: 15
       max: 15
@@ -156,55 +164,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varied distributions, multiple outliers, varying notch sizes
+        comment: All box-plot elements plus notches, outliers, and mean marker shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance scenario is realistic and neutral
+        comment: Employee performance scores across departments, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and proportions are factually sensible
+        comment: 0-100 score range sensible; n=45-67 within the spec's 20-500 recommended
+          range
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports, theme, data, calculations, plot, save'
+        comment: One small helper function (_width_for_n)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random seed set (42); deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (numpy, bokeh, selenium, os, sys, pathlib) are used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake functionality
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -212,26 +221,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of figure, quad, patch, segment, scatter primitives; idiomatic
-          theme handling
+        comment: ColumnDataSource, categorical x_range, manual quad/patch box drawing
+          is the standard bokeh approach for notched boxes
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Creative manual notched box construction using geometric primitives
+        comment: 'Fixed: rich HoverTool tooltip (Department/n/Q1/Median/Q3/Mean) via
+          invisible hover-target quads'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - hover-tooltips
   - html-export
   - patches
-  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling

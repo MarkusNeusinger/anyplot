@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: box-notched
+created: '2026-08-18T05:03:14Z'
+updated: '2026-08-18T05:18:14Z'
+generated_by: claude-sonnet
+workflow_run: 32101053912
+issue: 2019
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Repair directly addressed attempt 1''s DE-03 weakness: a d3.cross/d3.greatest-computed
+    significance bracket now connects the most extreme non-overlapping notch pair
+    (Control vs NPK Blend) with an explicit ''non-overlapping notches → medians differ
+    significantly'' annotation, making the spec''s core ''quick visual hypothesis
+    testing'' insight explicit instead of leaving the reader to spot it'
+  - Correct notch formula (±1.57 × IQR / √n) with proper clamping to box bounds (notchTop/notchBottom
+    clipped to q3/q1), matching the specification exactly
+  - 'All required box plot elements present: median, quartiles, whiskers at 1.5×IQR,
+    capped whisker ends, hollow-circle outliers, and notched median confidence interval'
+  - 'Clean theme-adaptive chrome: spines/tick lines removed, subtle single-axis gridlines,
+    identical data colors between light and dark renders (only chrome and median-line
+    color flip)'
+  - 'Correct mandated title format and canonical Imprint palette order across all
+    5 categories (Control = #009E73 green, then lavender/blue/ochre/matte-red)'
+  - Deterministic LCG + Box-Muller PRNG for reproducible synthetic data, appropriate
+    sample sizes (n=42-60) matching the spec's n>20 reliability note
+  weaknesses:
+  - Significance-bracket annotation text is set at 13px italic, noticeably smaller
+    than the 16-18px used for axis/tick text — still legible on the 3200px canvas
+    but slightly under-weighted relative to how central this callout is to the plot's
+    message
+  - Notch geometry and PRNG remain hand-built via manual functions (uniform/normal/boxPath)
+    rather than d3-shape generators; justified by the browser having no seeded RNG
+    and D3 having no built-in notched-box shape, but keeps CQ-01/LM-01 just short
+    of a perfect score
+  - Design still reads as a well-executed standard notched box plot rather than a
+    highly bespoke composition — DE-01 has room for further visual distinction (e.g.
+    a subtle per-box sample-size label) beyond the bracket annotation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Grain Yield by Fertilizer Treatment · box-notched · javascript · d3 · anyplot.ai" centered at top, fully legible. X-axis title "Fertilizer Treatment" and Y-axis title "Grain Yield (bushels/acre)" both dark and legible. Tick labels (category names, y-axis numbers) dark gray, all readable. Subtle horizontal gridlines behind the boxes. A thin bracket connects Control and NPK Blend at the top of the plot with italic caption "non-overlapping notches → medians differ significantly," rendered in soft ink and clearly readable.
+      Data: Five notched boxes (Control, Nitrogen, Phosphorus, Potassium, NPK Blend) in the canonical Imprint hues with translucent fills (~28% opacity) and matching strokes — Control is #009E73 green as required, followed by lavender, blue, ochre, and matte red in canonical order. Each box pinches inward at the median with a solid black median line, capped whiskers at the 1.5×IQR fences, and two hollow green outlier circles below Control's lower whisker.
+      Legibility verdict: PASS — no light-on-light issues, no clipped text, all elements clearly visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title now rendered in light/white text, fully legible. Axis titles and tick labels in light gray, clearly readable against the dark surface. Gridlines remain subtle but visible. The significance bracket and its annotation text render in light ink and stay legible.
+      Data: Colors are identical to the light render (same green/lavender/blue/ochre/red hues at the same opacity) — only chrome flipped, including the median line switching from black to white and outlier circle fill switching to the dark page background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements read cleanly.
+
+    Both renders pass the theme-readability check; the significance bracket and annotation are correctly readable in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text readable in both themes; bracket annotation at 13px
+          is smaller than other text but still legible on the 3200px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, boxes, bracket, or outliers
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boxes, whiskers, median lines, and outlier circles all clearly visible
+          and appropriately sized for the data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct CVD-safe Imprint hues per category, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (bushels/acre)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, #009E73 first series, theme-correct backgrounds
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Alpha-blended notch fills, rounded joins, capped whiskers, and the
+          new significance bracket add real polish beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines and tick lines removed, subtle single-axis grid, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New bracket + annotation explicitly calls out the non-overlapping
+          notch pair, directly fixing attempt 1's flagged weakness and delivering
+          the spec's core hypothesis-testing insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct notched box plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median, quartiles, 1.5xIQR whiskers, outliers, and 95% CI notches
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, all groups shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; category axis
+          serves as the implicit legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows every notched box plot element required by the spec
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Grain yield across fertilizer treatments is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Yield values (100-220 bushels/acre) and sample sizes (n=42-60) are
+          sensible for the domain and satisfy the spec's n>20 note
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (LCG PRNG, boxPath, notchOverlaps) are justified
+          by browser having no seeded RNG and D3 needing a custom notch path, but
+          strict KISS deducts a point
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper scales, axis generators, and data joins
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.cross + d3.greatest for pairwise notch-overlap detection, d3.quantileSorted
+          for robust statistics, plus a custom SVG path generator for the notch geometry
+          — more distinctive than a typical bar/line submission
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending

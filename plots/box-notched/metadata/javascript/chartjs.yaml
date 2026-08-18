@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: box-notched
+created: '2026-08-18T05:04:45Z'
+updated: '2026-08-18T05:09:44Z'
+generated_by: claude-sonnet
+workflow_run: 32100929276
+issue: 2019
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correctly implements a notched box plot from scratch via Chart.js's public plugin
+    API (afterDatasetsDraw hook + scale.getPixelForValue), exactly the pattern the
+    library prompt recommends since Chart.js has no native box-plot type
+  - Notch math follows the spec formula precisely (±1.57×IQR/√n) and quartile/whisker
+    computation (1.5×IQR) is textbook-correct
+  - 'Data tells the intended statistical story: dose-response ordering across categories,
+    some notches overlapping (Placebo vs Low Dose) and others clearly separated (Placebo
+    vs High Dose/Combination), which is exactly what a notched box plot is meant to
+    demonstrate'
+  - Good outlier coverage (3 of 4 groups show individual outlier points) and varied
+    spreads across groups satisfy DQ-01 feature coverage
+  - 'First categorical series is #009E73 and the remaining three follow the canonical
+    Imprint order; data colors are identical between light and dark renders, only
+    chrome flips'
+  - 'Clean theme-adaptive chrome: title/axis/tick colors all pull from window.ANYPLOT_TOKENS,
+    subtle y-axis-only gridlines, no visible spines'
+  weaknesses:
+  - No legend is rendered; acceptable here since categories are labeled directly on
+    the x-axis, but a small explicit legend would reinforce the color-to-category
+    mapping for readers unfamiliar with the convention
+  - Median line and box outline use flat fills with no additional typographic or shadow
+    polish beyond the Chart.js default font — solid but stops short of full publication-level
+    refinement
+  - No explicit annotation or callout marks which notch comparisons are statistically
+    significant, leaving the viewer to infer overlap/non-overlap visually rather than
+    being guided to the insight
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "box-notched · javascript · chartjs · anyplot.ai" in bold dark ink at top-center, fully visible with no clipping. X-axis title "Treatment Arm" and Y-axis title "Symptom Improvement Score" (rotated) both in dark ink. Tick labels (category names, numeric Y ticks) in a softer dark-gray tone. Subtle horizontal gridlines only on the Y-axis; no visible chart spines.
+      Data: Four notched boxes for Placebo, Low Dose, High Dose, Combination. First series (Placebo) renders in Imprint green #009E73; Low Dose in light purple, High Dose in blue-gray, Combination in ochre/tan — matching the canonical Imprint categorical order. Each box shows a pinched "hourglass" notch around the black median line, whiskers with end caps, and colored outlier dots (2 for Placebo, 1 for High Dose, 1 for Combination) with a light stroke separating them from the page background.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all rendered in light/white tones, fully legible against the dark surface. Median line switches to white (theme-adaptive ink token) instead of black. Gridlines remain subtle but visible.
+      Data: Same four box colors as the light render (green, purple, blue-gray, ochre) — confirmed identical hues/positions, only the chrome (background, text, median-line, outlier stroke) flipped for the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
+          14-16px); readable in both themes; title occupies ~29% of canvas width,
+          proportionate for this shorter spec-id at the library-standard 22px title
+          size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Box widths, whisker caps, and 6px outlier markers are all clearly
+          visible and well-sized for the ~45-92 point sample sizes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette hues are CVD-safe and clearly distinguishable without
+          relying on hue alone (position + shape also differ)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area uses the large majority of the 3200x1800 canvas with balanced
+          margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Treatment Arm" and "Symptom Improvement Score" are descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining series follow canonical Imprint
+          order; both renders theme-correct; data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Fully custom-drawn notched box geometry (no native Chart.js box plot)
+          with intentional color/alpha choices; stops short of full publication polish
+          (default font, flat fills, no extra typographic refinement)
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle Y-only gridlines, no visible spines, generous whitespace,
+          clean whisker caps
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dose-response ordering plus overlapping vs. non-overlapping notches
+          create a clear visual hierarchy for hypothesis testing, though no explicit
+          annotation calls out the significant comparisons
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct notched box plot with all required geometry
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 95% CI notches (±1.57×IQR/√n), median/quartiles/1.5×IQR whiskers,
+          individual outlier points, per-category colors all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on X, value on Y, axis range covers all data with padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; no separate legend needed since
+          categories are labeled on the x-axis
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Outliers present in 3 of 4 groups, visibly different spreads/IQRs,
+          overlapping and non-overlapping notches both represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral clinical-trial dose-response scenario (Placebo/Low Dose/High
+          Dose/Combination)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Symptom-improvement scores and sample sizes (n=42-50) are plausible
+          and internally consistent with a dose-response trend
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions (quantile, rand/randNormal, hexToRgba) are
+          used, but each is a necessary, minimal building block for statistics/RNG
+          that a flat linear script can't avoid
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG RNG, deterministic across runs
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity is appropriate
+          for hand-rolling a box plot Chart.js doesn't natively support
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly; animation:false set; no
+          deprecated API usage
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Chart.js's documented public plugin API (afterDatasetsDraw +
+          scale.getPixelForValue) exactly as the library prompt recommends for chart
+          types with no native support
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The plugin-hook + scale-coordinate custom rendering approach is fairly
+          distinctive to Chart.js's architecture and not trivially portable to another
+          library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
