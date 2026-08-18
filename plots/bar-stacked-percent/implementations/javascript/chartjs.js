@@ -26,15 +26,61 @@ const shareByQuarter = revenueByQuarter.map((row) => {
   const total = row.reduce((sum, value) => sum + value, 0);
   return row.map((value) => (value / total) * 100);
 });
+const totalByQuarter = revenueByQuarter.map((row) => row.reduce((sum, value) => sum + value, 0));
 
-const datasets = providers.map((provider, i) => ({
-  label: provider,
-  data: shareByQuarter.map((row) => row[i]),
-  backgroundColor: provider === "Other" ? MUTED : t.palette[i],
-  borderWidth: 0,
-  categoryPercentage: 0.6,
-  barPercentage: 0.9,
-}));
+const datasets = providers.map((provider, i) => {
+  const isLeader = provider === "AWS";
+  return {
+    label: provider,
+    data: shareByQuarter.map((row) => row[i]),
+    backgroundColor: provider === "Other" ? MUTED : t.palette[i],
+    // Subtle page-bg seam between stacked segments (style guide "Bar edges"); the
+    // leader series gets an ink outline instead, calling out AWS's persistent lead.
+    borderColor: isLeader ? t.ink : t.pageBg,
+    borderWidth: isLeader ? 2 : 1,
+    borderSkipped: false,
+    categoryPercentage: 0.6,
+    barPercentage: 0.9,
+  };
+});
+
+// --- Segment percentage labels (custom Chart.js plugin) ---------------------
+// Draws a rounded percentage label centered in every segment tall enough to
+// hold it legibly, picking dark/light text per-segment from fill luminance
+// (YIQ) so labels stay readable across the whole palette in both themes.
+const DARK_TEXT = "#1A1A17";
+const LIGHT_TEXT = "#F0EFE8";
+const MIN_LABEL_HEIGHT = 28; // px; smaller segments skip the label to avoid clutter/overflow
+
+function textColorFor(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+  return yiq >= 128 ? DARK_TEXT : LIGHT_TEXT;
+}
+
+const segmentPercentLabels = {
+  id: "segmentPercentLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+    ctx.font = "600 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    chart.data.datasets.forEach((dataset, datasetIndex) => {
+      const meta = chart.getDatasetMeta(datasetIndex);
+      const labelColor = textColorFor(dataset.backgroundColor);
+      meta.data.forEach((bar, index) => {
+        const segmentHeight = Math.abs(bar.base - bar.y);
+        if (segmentHeight < MIN_LABEL_HEIGHT) return;
+        ctx.fillStyle = labelColor;
+        ctx.fillText(`${Math.round(dataset.data[index])}%`, bar.x, (bar.base + bar.y) / 2);
+      });
+    });
+    ctx.restore();
+  },
+};
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -44,6 +90,7 @@ document.getElementById("container").appendChild(canvas);
 new Chart(canvas, {
   type: "bar",
   data: { labels: quarters, datasets },
+  plugins: [segmentPercentLabels],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -62,6 +109,7 @@ new Chart(canvas, {
       },
       tooltip: {
         callbacks: {
+          title: (items) => `${items[0].label} — Total: $${totalByQuarter[items[0].dataIndex].toFixed(1)}B`,
           label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}%`,
         },
       },
