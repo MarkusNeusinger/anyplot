@@ -1,7 +1,7 @@
 """ anyplot.ai
 box-notched: Notched Box Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-07
+Library: matplotlib 3.11.1 | Python 3.13.15
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os
@@ -17,7 +17,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series is always brand green
+# Imprint palette - first series is always brand green
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data - Test success rates across different test suites
@@ -49,10 +49,12 @@ data = [unit_tests, integration_tests, system_tests, e2e_tests, load_tests]
 test_suites = ["Unit Tests", "Integration Tests", "System Tests", "E2E Tests", "Load Tests"]
 
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Create notched boxplot
+# Create notched boxplot; showmeans overlays a mean marker so viewers can
+# compare central tendency against the median line (useful for the
+# right-skewed E2E/Load suites, where outliers pull the mean off the median)
 bp = ax.boxplot(
     data,
     notch=True,
@@ -60,11 +62,19 @@ bp = ax.boxplot(
     tick_labels=test_suites,
     widths=0.6,
     showfliers=True,
-    flierprops={"marker": "o", "markerfacecolor": INK_SOFT, "markersize": 10, "alpha": 0.6},
+    showmeans=True,
+    flierprops={"marker": "o", "markerfacecolor": INK_SOFT, "markersize": 7, "alpha": 0.6},
     medianprops={"color": INK, "linewidth": 2.5},
-    whiskerprops={"color": INK_SOFT, "linewidth": 2},
-    capprops={"color": INK_SOFT, "linewidth": 2},
-    boxprops={"color": INK_SOFT, "linewidth": 1.5},
+    meanprops={
+        "marker": "D",
+        "markerfacecolor": PAGE_BG,
+        "markeredgecolor": INK,
+        "markeredgewidth": 1.5,
+        "markersize": 7,
+    },
+    whiskerprops={"color": INK_SOFT, "linewidth": 1.5},
+    capprops={"color": INK_SOFT, "linewidth": 1.5},
+    boxprops={"color": INK_SOFT, "linewidth": 1.25},
 )
 
 # Apply colors to boxes
@@ -72,29 +82,32 @@ for patch, color in zip(bp["boxes"], IMPRINT, strict=True):
     patch.set_facecolor(color)
     patch.set_alpha(0.75)
     patch.set_edgecolor(INK_SOFT)
-    patch.set_linewidth(1.5)
+    patch.set_linewidth(1.25)
 
 # Labels and styling
-ax.set_xlabel("Test Suite", fontsize=20, color=INK)
-ax.set_ylabel("Success Rate (%)", fontsize=20, color=INK)
-ax.set_title("box-notched · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.set_xlabel("Test Suite", fontsize=10, color=INK)
+ax.set_ylabel("Success Rate (%)", fontsize=10, color=INK)
+ax.set_title("box-notched · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.1, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
-# Add annotation explaining notches
+# Add annotation explaining notches; xytext uses axes-fraction coords so the
+# callout stays clear of the title above the axes regardless of data range
 ax.annotate(
     "Non-overlapping notches suggest\nsignificant median difference",
     xy=(1, 97),
-    xytext=(1.5, 105),
-    fontsize=14,
+    xycoords="data",
+    xytext=(0.2, 0.9),
+    textcoords="axes fraction",
+    fontsize=8,
     color=INK,
-    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2},
     bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.9},
 )
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)  # bbox_inches MUST stay default (None)
