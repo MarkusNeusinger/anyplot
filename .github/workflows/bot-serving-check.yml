@@ -65,7 +65,12 @@ jobs:
           }
 
           # Bot path: prerendered per-route HTML from the seo-proxy
-          check "$GOOGLEBOT"  "$ORIGIN/"                                "<title>anyplot.ai</title>"
+          # Prefix, not the full title: the copy changed to "anyplot.ai —
+          # AI-generated plot catalog for 15 libraries" and this check went red
+          # for ten consecutive days without anyone noticing. The prefix still
+          # separates the prerendered page from the SPA shell, whose title is
+          # "any.plot() — any library.", which is the property under test.
+          check "$GOOGLEBOT"  "$ORIGIN/"                                "<title>anyplot.ai"
           check "$GOOGLEBOT"  "$ORIGIN/scatter-basic"                   "<title>Basic Scatter Plot | anyplot.ai</title>"
           check "$TWITTERBOT" "$ORIGIN/scatter-basic/python/matplotlib" "<title>Basic Scatter Plot - Matplotlib | anyplot.ai</title>"
 
@@ -108,6 +113,12 @@ jobs:
           slash_target=$(curl -sS --max-time 30 -o /dev/null -A "$GOOGLEBOT" \
             -w '%{redirect_url}' "$ORIGIN/scatter-basic/")
           case "$slash_target" in
+            "")
+              # No redirect at all: %{redirect_url} is empty, which the previous
+              # form printed as "OK: trailing slash -> " and passed. Copilot
+              # raised this twice; it means the rewrite has disappeared.
+              echo "::error::trailing slash produced no redirect — the rewrite is gone"
+              fail=1 ;;
             *"/seo-proxy"*|http://*|*:8080/*)
               echo "::error::trailing-slash redirect leaks or downgrades: $slash_target"
               fail=1 ;;
