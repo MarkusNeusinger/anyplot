@@ -2,111 +2,119 @@ library: plotnine
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T21:04:58Z'
-updated: '2026-05-07T21:24:24Z'
+updated: '2026-08-18T03:12:20Z'
 generated_by: claude-sonnet
-workflow_run: 25521305570
+workflow_run: 32093541686
 issue: 5239
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 93
 review:
   strengths:
-  - Correct stacked area (CFD) with stages in proper workflow order (Done at bottom,
-    Backlog at top) using pd.Categorical for controlled ordering
-  - Okabe-Ito palette applied correctly — Done=#009E73 at the visual base, subsequent
-    stages following canonical order
-  - Bottleneck annotation with white italic text creates a clear focal point and elevates
-    the plot from display to storytelling
-  - L-shaped spine (panel_border removed, axis lines kept) with y-only subtle grid
-    is polished and uncluttered
-  - Theme-adaptive chrome fully implemented — both light (#FAF8F1) and dark (#1A1A17)
-    renders are legible with correct INK/INK_SOFT tokens throughout
-  - 'Perfect data quality: 90-day realistic Kanban workflow, monotonically non-decreasing
-    counts, visible bottleneck and throughput ramp patterns'
-  - All font sizes explicitly set (title=24, axis_title=20, axis_text=16, legend=16)
-    satisfying VQ-01 requirements
+  - 'The dashed callout box + explicit "Development bottleneck / Peak WIP: 23" text
+    directly addresses the prior review''s data-storytelling weakness — the widening
+    band is now unmissable at a glance, not just implied by a small annotation'
+  - coord_cartesian(ylim=..., expand=False) is used deliberately to give the callout
+    box clean headroom, and geom_area(outline_type="full") closes each band's own
+    polygon border — both are exactly the plotnine-specific refinements (coord_cartesian
+    tuning) the previous review asked for to earn Library Mastery credit
+  - Theme tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG) are threaded consistently through
+    plot/panel background, axis text, gridlines, legend box, and even the dashed box
+    color (INK) so the callout stays theme-correct in both renders
+  - 'Semantic color mapping (Done=Imprint green #009E73=''complete'', Backlog=red=''pending'')
+    reinforces the workflow story rather than following canonical palette order blindly,
+    and is applied consistently'
+  - 'Data tells a coherent Kanban story: cumulative counts are monotonically non-decreasing,
+    WIP bands genuinely widen/narrow over time (Development is the visible bottleneck),
+    and stage order matches the spec (earliest stage visually on top, latest on bottom)'
+  - Clean KISS structure, seeded RNG (np.random.seed(42)), only used imports, no functions/classes
   weaknesses:
-  - Title 'Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai' includes
-    a non-standard prefix and appears visually clipped on the left edge in both renders
-    — 'Sprint' is not visible in the output image; use the canonical '{spec-id} ·
-    {library} · anyplot.ai' title format without extra prefix text
-  - The right side of the canvas has excess whitespace (legend is positioned with
-    a large gap between chart area and canvas edge); consider reducing legend_box_spacing
-    or adjusting margins to better fill the 16:9 canvas
-  - 'LM-02: plot uses grammar-of-graphics idioms well but no plotnine-specific distinctive
-    feature beyond standard geom_area stacking; a faceted inset, stat_function layer,
-    or explicit theme function would demonstrate deeper library mastery'
+  - 'The bold annotation text inside the dashed callout box (''Development bottleneck
+    / Peak WIP: 23'') becomes essentially unreadable at the ~400px mobile preview
+    scale, even though the box itself remains visible as a hierarchy cue — a slightly
+    larger geom_text size would keep the number legible at small scale'
+  - 'Design Excellence is strong but still shy of full publication-ready polish: the
+    outline_type="full" band borders and tighter legend spacing are real improvements,
+    but the title/legend typographic hierarchy is unchanged from the prior attempt'
+  - 'Library Mastery credit is only partial: coord_cartesian tuning and outline_type="full"
+    are genuine plotnine-specific choices, but there is still no computed-aesthetic
+    (after_stat) or second distinct geom layer that would fully differentiate this
+    from a generic stacked-area implementation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correct, not pure white.
-      Chrome: Title reads "[Sprint ]Delivery · area-cumulative-flow · plotnine · anyplot.ai" — 'Sprint' prefix appears clipped at the left edge; remaining text is dark and readable. Y-axis label "Cumulative Items" and x-axis label "Date" are clear dark text. Tick labels (Dec 29 through Mar 22 on x; 0–125 on y) are readable in dark ink. Legend "Stage" has readable dark title and INK_SOFT labels for each stage.
-      Data: Five stacked bands from bottom to top — Done (#009E73, teal-green), Testing (#D55E00, orange-red), Development (#0072B2, blue), Analysis (#CC79A7, pink), Backlog (#E69F00, gold-yellow). White italic "← bottleneck" annotation sits in the Development band around day 55. Subtle horizontal y-grid lines; no x-grid; L-shaped spine (no panel border, axis lines only). Canvas well-utilized; right side has a moderate gap between chart and legend.
-      Legibility verdict: PASS (all text readable; minor title clipping on left edge is the only issue)
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "area-cumulative-flow · python · plotnine · anyplot.ai" at top, clearly readable against the light background (~58% plot width). Axis titles "Date" (x) and "Cumulative Items" (y) in dark ink, tick labels ("Jan 01"..."Mar 25", "0"..."125") in a softer dark gray — all legible. Only a bottom x-axis line and left y-axis line are drawn (L-shaped frame); a subtle horizontal-only grid is visible at low opacity. Legend box ("Stage": Backlog, Analysis, Development, Testing, Done) sits close to the plot on the right with a light elevated background and visible border, text fully readable.
+      Data: Five stacked bands from top to bottom — Backlog (red #AE3030), Analysis (gold/ochre #BD8233), Development (blue #4467A3), Testing (purple #C475FD), Done (green #009E73) — separated by thin page-background-colored closed-polygon strokes (outline_type="full"). A dark dashed rectangle highlights the Jan 18–Feb 9 window where the Development band visibly widens, with bold white text "Development bottleneck / Peak WIP: 23" inside the band. All cumulative boundaries rise monotonically left to right.
+      Legibility verdict: PASS — all chrome text is clearly readable, no dark-on-light or light-on-light failures, no clipping at any canvas edge. Minor caveat: the annotation text inside the callout box shrinks to near-illegible at 400px mobile preview scale, though the box itself still reads as a hierarchy cue.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correct, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light (#F0EFE8 / #B8B7B0) ink — clearly visible against the dark surface. Legend title "Stage" and legend item labels (Backlog, Analysis, Development, Testing, Done) are light-colored and readable. No dark-on-dark failures detected.
-      Data: All five Okabe-Ito band colors are identical to the light render — Done (#009E73), Testing (#D55E00), Development (#0072B2), Analysis (#CC79A7), Backlog (#E69F00). The white "← bottleneck" annotation remains visible against the Development band. Subtle y-grid lines visible against dark background.
-      Legibility verdict: PASS (full readability in dark theme; no dark-on-dark failures)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now rendered in light/off-white ink, clearly readable against the dark background. Axis titles and tick labels are in light gray tones, fully legible; the L-shaped axis frame and subtle grid persist at the same low opacity. Legend box now has a dark elevated background with a light border, text in light gray, fully readable — no dark-on-dark failures anywhere.
+      Data: Same five bands in the identical colors as the light render — Backlog red, Analysis gold, Development blue, Testing purple, Done green (#009E73) — confirming data colors are unchanged between themes; only the chrome (background, text, grid, legend box, dashed callout box) flipped to light-on-dark. The bottleneck annotation remains legible (white bold text on the unchanged blue Development band).
+      Legibility verdict: PASS — all text is clearly readable against the dark background, brand green #009E73 remains vivid and identical to the light render, no clipping at any canvas edge.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title=24, axis_title=20, axis_text=16,
-          legend=16); minor title clip at left edge reduces from 8
+        comment: 'All font sizes explicitly set via theme(); title, axis titles, tick
+          labels, and legend text are all readable in both themes with no overflow.
+          The bold callout annotation (''Peak WIP: 23'') shrinks to near-illegible
+          at 400px mobile scale, though the surrounding box remains visible.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; date labels spaced cleanly at 2-week intervals
+        comment: No overlapping text or data elements in either render; the new dashed
+          callout box does not collide with any label or the legend.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All five bands clearly visible; alpha=0.88 and distinct Okabe-Ito
-          colors provide excellent differentiation
+        comment: Five stacked bands are all clearly visible and distinct, separated
+          by thin closed-polygon page-background strokes (outline_type="full").
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; five bands are distinguishable without relying
-          on hue alone
+        comment: Five hues (green/purple/blue/gold/red) plus stroke separators give
+          strong contrast beyond hue alone; no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Acceptable layout; chart fills ~55% width with legend to right, but
-          some excess right-side whitespace
+        comment: Plot area fills the large majority of the canvas, legend sits close
+          to the plot, balanced margins, nothing cut off, canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Cumulative Items' and x-axis 'Date' are descriptive for the
-          domain
+        comment: '"Date" and "Cumulative Items" are descriptive; unit (item count)
+          is implicit in the label.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Done) = #009E73; full Okabe-Ito order; light bg=#FAF8F1,
-          dark bg=#1A1A17; chrome tokens correct in both renders'
+        comment: 'Imprint palette used throughout; Done=#009E73 is a deliberate, well-reasoned
+          semantic exception (green=complete) rather than canonical first-series order;
+          backgrounds are #FAF8F1/#1A1A17; chrome is theme-correct in both renders.'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -114,24 +122,27 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Intentional design choices: L-shaped spine, bg-matching band borders,
-          bold title, bottleneck annotation — clearly above configured defaults'
+        comment: Custom semantic palette, closed-polygon band outlines (outline_type="full"),
+          and a tightened legend spacing push this above the prior attempt's polish,
+          though title/legend typographic hierarchy is unchanged and still short of
+          full editorial distinctiveness.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Panel border removed, y-only subtle grid, generous whitespace, area
-          borders blend with background; near-perfect refinement
+        comment: L-shaped frame, subtle single-axis grid, tight but not cramped margins
+          — well above default.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bottleneck annotation creates strong focal point; data shows realistic
-          throughput ramp and narrowing backlog; viewer guided to the bottleneck
+        comment: 'The dashed callout box around the widening Development band plus
+          an explicit numeric "Peak WIP: 23" label make the bottleneck insight unmissable
+          at a glance, fully addressing the prior review''s weakness.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,30 +150,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area CFD with proper workflow stage ordering (Done
-          bottom, Backlog top)
+        comment: Correct stacked-area cumulative flow diagram.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Legend present, date x-axis at reasonable intervals, 5 stages, monotonically
-          non-decreasing counts, widening Dev band visible
+        comment: Correct stage stacking order, legend present, x-axis dates at reasonable
+          2-week intervals, WIP visible as band width.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=cumulative items (stacked WIP per stage), fill=stage —
-          all correct
+        comment: x=date, y=cumulative stacked wip, all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title includes spec-id, library, anyplot.ai but has non-standard
-          'Sprint Delivery · ' prefix and appears visually clipped; legend labels
-          correct
+        comment: Title matches canonical format exactly; legend labels match stage
+          names.
     data_quality:
       score: 15
       max: 15
@@ -172,22 +180,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows widening (bottleneck), narrowing (drain), throughput ramp,
-          decreasing backlog — all key CFD diagnostic patterns
+        comment: Monotonic cumulative counts with genuinely widening/narrowing WIP
+          bands (visible bottleneck) across all 5 stages.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software Kanban workflow with realistic stage names (Backlog, Analysis,
-          Development, Testing, Done) — neutral business domain
+        comment: Neutral, realistic software Kanban delivery pipeline scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 90 days, ~120 items completed, realistic WIP counts per stage, monotonically
-          non-decreasing boundaries
+        comment: ~90 items completed over 90 days with plausible WIP magnitudes per
+          stage.
     code_quality:
       score: 10
       max: 10
@@ -197,60 +204,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports→Data→Plot→Save structure, no functions or classes
+        comment: Linear imports → data → plot → save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys.path cleanup is environment-specific but appropriate
+        comment: Only used imports (os/sys used for the sys.path shadow fix).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; zip(strict=True) is elegant; no over-engineering
+        comment: Appropriate complexity, no fake UI or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi and dimensions
+        comment: Saves plot-{THEME}.png via plot.save with dpi=400, current plotnine
+          API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Full grammar of graphics idiom: ggplot+geom_area+scale_fill_manual+scale_x_datetime+annotate+theme;
-          pd.Categorical for ordered factor stacking'
+        comment: 'Proper grammar-of-graphics usage: ordered categorical + geom_area(position=''stack'')
+          + scale_fill_manual + scale_x_datetime + coord_cartesian + theme().'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_x_datetime for datetime handling and pd.Categorical for stage
-          ordering are plotnine-specific; but no unique features beyond standard geom_area
-          stacking
+        comment: coord_cartesian(ylim=..., expand=False) tuning and geom_area(outline_type="full")
+          are genuine plotnine-specific choices beyond basic stacking, directly responding
+          to the prior review's ask — but still no after_stat computed aesthetic or
+          second geom layer for full credit.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
   styling:
   - alpha-blending
+  - edge-highlighting
