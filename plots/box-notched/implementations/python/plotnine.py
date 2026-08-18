@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-07
+Library: plotnine 0.15.8 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os
@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
@@ -17,6 +18,7 @@ from plotnine import (
     ggplot,
     labs,
     scale_fill_manual,
+    stat_summary,
     theme,
     theme_minimal,
 )
@@ -57,25 +59,30 @@ df["group"] = pd.Categorical(df["group"], categories=groups, ordered=True)
 # Plot
 plot = (
     ggplot(df, aes(x="group", y="score", fill="group"))
-    + geom_boxplot(notch=True, notchwidth=0.5, outlier_size=3, outlier_alpha=0.7, size=0.9)
+    + geom_boxplot(notch=True, notchwidth=0.5, outlier_size=2.5, outlier_alpha=0.7, size=0.7)
+    # Mean markers (diamond) layered over the median-based box — a plotnine-native
+    # way to expose the mean-vs-median gap that notches alone don't show.
+    + stat_summary(fun_y=np.mean, geom="point", shape="D", size=2.5, color=INK, alpha=0.9)
     + scale_fill_manual(values=IMPRINT)
     + labs(x="Treatment Group", y="Clinical Score", title="box-notched · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
-        plot_title=element_text(size=24, color=INK),
+        figure_size=(8, 4.5),
+        text=element_text(size=7),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
+        # L-shaped spine (bottom + left only) instead of a full panel box —
+        # a leaner frame that keeps focus on the boxes/notches.
+        panel_border=element_blank(),
         axis_line=element_line(color=INK_SOFT),
         legend_position="none",
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
