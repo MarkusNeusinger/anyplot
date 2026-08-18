@@ -4,7 +4,6 @@
 #' Quality: 87/100 | Created: 2026-08-18
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -43,6 +42,10 @@ departments <- tibble::tibble(
   )
 )
 
+# Reorder departments by descending median salary so adjacent notches are
+# easier to compare visually — the core point of a notched box plot.
+departments$department <- reorder(departments$department, -departments$salary, FUN = median)
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(departments, aes(x = department, y = salary, fill = department)) +
   geom_boxplot(
@@ -55,11 +58,14 @@ p <- ggplot(departments, aes(x = department, y = salary, fill = department)) +
     outlier.alpha = 0.6
   ) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
-  scale_y_continuous(labels = scales::dollar_format(scale = 1e-3, suffix = "k")) +
+  scale_y_continuous(
+    breaks = scales::breaks_width(25000),
+    labels = scales::dollar_format(scale = 1e-3, suffix = "k")
+  ) +
   labs(
     title = "box-notched · r · ggplot2 · anyplot.ai",
     x = "Department",
-    y = "Annual Salary"
+    y = "Annual Salary (USD)"
   ) +
   theme_minimal(base_size = 8) +
   theme(
