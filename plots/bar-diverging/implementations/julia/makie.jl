@@ -1,7 +1,7 @@
 # anyplot.ai
 # bar-diverging: Diverging Bar Chart
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-08-18
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 91/100 | Created: 2026-08-18
 
 using CairoMakie
 using Colors
