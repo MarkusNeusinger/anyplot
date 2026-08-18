@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
-Quality: 88/100 | Updated: 2026-08-18
+Quality: 89/100 | Updated: 2026-08-18
 """
 
 import os
