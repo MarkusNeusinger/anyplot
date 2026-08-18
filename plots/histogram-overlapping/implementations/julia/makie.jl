@@ -1,7 +1,7 @@
 # anyplot.ai
 # histogram-overlapping: Overlapping Histograms
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 80/100 | Created: 2026-08-18
+# Quality: 90/100 | Created: 2026-08-18
 
 using CairoMakie
 using Colors
