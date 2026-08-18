@@ -56,10 +56,20 @@ const stats = groups.map((group) => {
   };
 });
 
+// --- Notch-overlap check — the entire point of a notched box plot: when two
+// notches don't overlap, the medians differ significantly (95% CI). Find the
+// most extreme non-overlapping pair to call out with a bracket annotation.
+const notchOverlaps = (a, b) => a.notchBottom <= b.notchTop && b.notchBottom <= a.notchTop;
+const nonOverlappingPairs = d3
+  .cross(stats, stats)
+  .filter(([a, b]) => a.label < b.label && !notchOverlaps(a, b));
+const sigPair = d3.greatest(nonOverlappingPairs, ([a, b]) => Math.abs(a.median - b.median));
+
 // --- Scales -------------------------------------------------------------
 const x = d3.scaleBand().domain(stats.map((d) => d.label)).range([0, iw]).padding(0.35);
 const allValues = stats.flatMap((d) => [d.whiskerLow, d.whiskerHigh, ...d.outliers]);
-const y = d3.scaleLinear().domain(d3.extent(allValues)).nice().range([ih, 0]);
+const annotationPad = sigPair ? 55 : 0;
+const y = d3.scaleLinear().domain(d3.extent(allValues)).nice().range([ih, annotationPad]);
 const color = d3.scaleOrdinal().domain(stats.map((d) => d.label)).range(t.palette);
 const boxWidth = x.bandwidth() * 0.7;
 const notchInset = boxWidth * 0.28;
@@ -189,6 +199,39 @@ boxGroups.each(function (d) {
     .attr("stroke", color(d.label))
     .attr("stroke-width", 1.75);
 });
+
+// --- Significance bracket — makes the "non-overlapping notches = significant
+// difference" insight explicit instead of relying on the reader to spot it ---
+if (sigPair) {
+  const [a, b] = sigPair;
+  const cx = (d) => x(d.label) + x.bandwidth() / 2;
+  const topExtent = (d) => d3.max([d.whiskerHigh, ...d.outliers]);
+  const bracketY = annotationPad - 22;
+  const xa = cx(a);
+  const xb = cx(b);
+
+  const bracket = d3.line().curve(d3.curveLinear);
+  g.append("path")
+    .datum([
+      [xa, y(topExtent(a)) - 10],
+      [xa, bracketY],
+      [xb, bracketY],
+      [xb, y(topExtent(b)) - 10],
+    ])
+    .attr("d", bracket)
+    .attr("fill", "none")
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1.5);
+
+  g.append("text")
+    .attr("x", (xa + xb) / 2)
+    .attr("y", bracketY - 8)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "13px")
+    .style("font-style", "italic")
+    .text("non-overlapping notches → medians differ significantly");
+}
 
 // --- Axis titles --------------------------------------------------------
 g.append("text")
