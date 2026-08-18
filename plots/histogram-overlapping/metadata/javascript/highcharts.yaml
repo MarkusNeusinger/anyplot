@@ -1,0 +1,264 @@
+library: highcharts
+language: javascript
+specification_id: histogram-overlapping
+created: '2026-08-18T10:51:27Z'
+updated: '2026-08-18T11:04:49Z'
+generated_by: claude-sonnet
+workflow_run: 32128437211
+issue: 2010
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Directly addresses attempt-1 feedback: dashed, color-matched mean-line annotations
+    for both groups (Control 485 ms, Treatment 425 ms) turn the mean-shift into an
+    explicit visual callout instead of leaving the viewer to find it unaided.'
+  - Subtitle states the finding outright ("n = 220 trials per group · treatment reacts
+    60 ms faster on average") — excellent, non-annotation-based data storytelling.
+  - 'Visual quality remains flawless in both themes: correct Imprint palette (brand
+    green first, lavender second, identical hex across themes), theme-correct chrome
+    (#FAF8F1 / #1A1A17 backgrounds, readable text), and explicit font sizing throughout
+    (22px title, 16px axis titles, 14px ticks/legend, 12px plot-line labels).'
+  - Gradient color-stop objects (Highcharts.color().setOpacity()) and xAxis.plotLines
+    with custom styled labels are more distinctive Highcharts-specific API usage than
+    the flat fills in attempt 1.
+  - 'Spec compliance, data quality, and code quality remain excellent: shared bin
+    edges (260–660, width 20) across both groups, deterministic fixed-seed LCG + Box-Muller
+    data generation, clean KISS structure.'
+  weaknesses:
+  - Column fills use a top-to-bottom linear-gradient opacity fade (0.75 → 0.4) that
+    encodes no data dimension — this is exactly the 'gradient fills for style' pattern
+    the style guide's Minimalism section forbids as chartjunk ('No embellishments
+    that don't encode data'). Revert to a single flat alpha (e.g. ~0.55, as in attempt
+    1) for both series.
+  - Beyond the new mean-line annotations and the (non-compliant) gradient, the chart's
+    spines/grid are still close to Highcharts column defaults — there is room for
+    further refinement (e.g. lighter/removed x-axis line, more deliberate plot-area
+    framing) before this reaches publication-grade polish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "histogram-overlapping · javascript · highcharts · anyplot.ai" at top; dark-gray subtitle stating "n = 220 trials per group · treatment reacts 60 ms faster on average"; x-axis titled "Reaction Time (ms)" (250-650, ticks every 25); y-axis titled "Number of Trials" (0-36); dashed vertical plot lines mark each group's mean, with color-matched labels ("Treatment mean 425 ms" in lavender, "Control mean 485 ms" in green) positioned near the top of the plot area without overlapping the subtitle or each other; legend with swatches ("Control group" green, "Treatment group" lavender) centered below the x-axis title. All chrome is clearly readable against the light background.
+      Data: Two overlaid column histograms with a subtle top-to-bottom opacity gradient per bar (green Control group right-shifted, peak ~460-500 ms; lavender Treatment group left-shifted, peak ~420-450 ms); the overlap region blends into a muted purple-blue. First series (Control) is Imprint palette position 1 (#009E73 brand green); second series (Treatment) is Imprint position 2 (lavender #C475FD) — correct canonical order.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (not pure black, not light).
+      Chrome: Title and subtitle flip to light text (white/light-gray); axis titles and tick labels are light gray; gridlines are faint light horizontal lines; the mean-line labels remain in the same green/lavender hues as light mode and stay fully legible against the dark background — no dark-on-dark failures anywhere.
+      Data: Identical underlying hex values to the light render (green #009E73 Control, lavender #C475FD Treatment) — the visual difference in the overlap blend is purely alpha compositing against the different page background, not a change in series color, which is expected and correct.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14px, plot-line labels 12px); readable in both themes; no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Mean-line labels are staggered (y offsets 14 / 32) and do not collide
+          with the subtitle, each other, or the legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 bins across 220 points/group is well-adapted density; bars are
+          clearly visible and distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender is CVD-safe; alpha keeps the overlap region legible
+          rather than muddy.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the large majority of the canvas with balanced margins;
+          legend sits close to the plot; canvas dimension gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Reaction Time (ms)" has units; "Number of Trials" is descriptive
+          (count doesn''t need a unit).'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Control) is #009E73; Treatment uses Imprint position
+          2; backgrounds theme-correct; data hues identical across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Color-matched mean-line annotations and typography are a clear step
+          up, but the decorative bar gradient works against a fully polished, restrained
+          look.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: borderRadius on columns, removed y-axis line, subtle grid, and staggered
+          annotation labels show real refinement; the non-data-encoding opacity gradient
+          on the bars is a style-guide violation ('no gradient fills for style') that
+          keeps this from a perfect score.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Subtitle states the finding outright, and dashed mean-lines with
+          labels pinpoint the exact values for each group — the viewer immediately
+          sees the insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct overlapping-histogram technique via column + grouping:false/pointRange
+          (core bundle has no dedicated histogram series).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, distinct contrasting colors, clear legend,
+          shared bin edges (260-660, width 20), matching bin width/count across groups.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction time, Y = trial count; both axes show the full data
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated pattern exactly; legend labels match series
+          names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear overlap region and a real mean shift (485 ms vs. 425 ms) are
+          visible; both distributions are roughly normal so shape/skew differences
+          aren't demonstrated, but that isn't required by the spec.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Control vs. treatment reaction-time A/B comparison is a real, neutral,
+          comprehensible scientific scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction-time values (~260-660 ms, means ~425-485 ms) are realistic
+          for human choice-reaction-time tasks.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward imports->data->chart flow; small helpers (LCG normal
+          sampler, histogram binning, mean) are necessary and appropriately scoped
+          for JS.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed deterministic LCG (seed = 42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the provided Highcharts global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart("container", ...) contract, animation:false
+          at both chart and series level, credits disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses the recommended column + grouping:false + pointRange workaround
+          idiomatically to build a histogram from the core bundle.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Highcharts.color().setOpacity() gradient color-stop objects plus
+          xAxis.plotLines with custom styled labels are meaningfully Highcharts-specific,
+          harder to replicate as-is in another bar-chart library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - gradient-fill
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - gradient-fill

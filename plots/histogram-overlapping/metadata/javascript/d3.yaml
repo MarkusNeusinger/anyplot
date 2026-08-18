@@ -1,0 +1,263 @@
+library: d3
+language: javascript
+specification_id: histogram-overlapping
+created: '2026-08-18T11:00:59Z'
+updated: '2026-08-18T11:15:31Z'
+generated_by: claude-sonnet
+workflow_run: 32129282591
+issue: 2010
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Aligned, shared bin edges (5-unit width) across both groups let bar heights be
+    directly compared, matching the spec's 'Align bin edges' requirement exactly.
+  - 'Mean-marker annotations (dashed vertical lines + color-matched labels) turn a
+    two-distribution comparison into an immediate story: the ~9-point shift between
+    Control (68.4) and Treatment (77.2) is visible without mental math.'
+  - 'Correct Imprint palette usage (#009E73 first series, #C475FD second, canonical
+    order) with theme-correct #FAF8F1/#1A1A17 backgrounds and fully adapted chrome
+    in both renders.'
+  - 'Clean, idiomatic D3: d3.bin() for shared binning, selection.data().join() for
+    the bars, d3.scaleOrdinal for color — no low-level workarounds.'
+  - L-shaped spine (top/right removed), y-axis-only subtle gridlines, tick marks removed
+    — matches the style guide's decoration-removal checklist.
+  weaknesses:
+  - 'On the light render, the ''Treatment mean: 77.2'' label and its dashed line use
+    lavender (#C475FD), one of the five Imprint hues that fall below the 3:1 WCAG
+    contrast threshold on the cream (#FAF8F1) background; per the style guide''s optional
+    outline pattern, a thin ink-colored stroke would help since the label carries
+    critical numeric information.'
+  - Control (sd=11) and Treatment (sd=10) distributions have nearly identical spread
+    and shape — the plot demonstrates the mean shift well but doesn't show the 'differences
+    in spread and shape' the spec calls out; a slightly wider sd gap or mild skew
+    on one group would better exercise feature coverage.
+  - Axis labels 'Test Score' and 'Number of Students' are descriptive but omit a units/scale
+    hint (e.g. '(0-100)') that would push axis-label scoring to a perfect mark.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "A/B Test Scores · histogram-overlapping · javascript · d3 · anyplot.ai" in dark bold text at top-center; "Test Score" x-axis label and rotated "Number of Students" y-axis label both in dark ink; tick labels in a slightly softer dark gray; subtle horizontal gridlines only. Legend box top-right with "Control group" / "Treatment group" swatches and dark text — all clearly readable.
+      Data: Two overlapping histograms with aligned 5-unit bins spanning ~30-100. Control group renders in brand green (#009E73, fill-opacity 0.55, matching stroke); Treatment group renders in lavender (#C475FD, fill-opacity 0.55, matching stroke); the overlap region blends into a muted purple-gray. Dashed vertical mean-marker lines with bold color-matched labels ("Control mean: 68.4", "Treatment mean: 77.2") sit above the bars.
+      Legibility verdict: PASS overall — every element is readable; the lavender "Treatment mean" label has a smaller contrast margin against the cream background than the green label (lavender is one of the palette hues below 3:1 WCAG contrast on light bg per the style guide), but remains legible thanks to bold weight and font size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink (#F0EFE8 primary / lighter gray secondary) — fully readable against the dark surface, no dark-on-dark failures. Gridlines remain subtle. Legend box top-right with light text, clearly legible.
+      Data: Identical underlying hex colors to the light render — Control in #009E73, Treatment in #C475FD, same fill-opacity 0.55 and stroke — confirming only chrome flipped, not data colors. The lavender-on-dark mean label reads comfortably (lavender clears contrast on the dark surface per the style guide, unlike on light).
+      Legibility verdict: PASS — all text, including both mean-marker labels, is clearly legible against the dark background; no dark-on-dark text found.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-16px axes, 13px mean labels, ~21px
+          title); readable in both themes. Lavender mean-label text on the light render
+          has a narrower contrast margin than the green label.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, mean labels, legend, and bars are all cleanly separated with
+          no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars are clearly visible with appropriate fill-opacity (0.55) for
+          the overlap; not a marker/line plot so density adaptation is less applicable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Green vs. lavender is CVD-distinguishable, but the lavender mean-label/line
+          falls below the 3:1 WCAG threshold on the cream background without the style
+          guide's optional ink-stroke treatment.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart occupies ~75% of canvas width/height with balanced margins;
+          legend sits near the plot, not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Test Score'' and ''Number of Students'' are descriptive; scores
+          are inherently unitless so no unit suffix is expected.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series #C475FD (canonical order), theme-correct
+          #FAF8F1/#1A1A17 backgrounds, chrome fully adapted in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Mean-marker annotations and color-matched dashed lines are a thoughtful
+          touch above a plain overlapping histogram, though overall composition stays
+          close to a well-configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spine, y-axis-only subtle gridlines, tick marks removed,
+          generous whitespace around the plot.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed mean lines with numeric labels give the viewer an immediate,
+          quantified focal point for the Control-vs-Treatment shift.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct overlapping-histogram type with semi-transparent fills.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills (0.55), distinct colors, legend, aligned bin
+          edges, matching bin widths/counts all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = test score, Y = count; axes show the full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; legend labels ('Control group', 'Treatment group') match
+          the data.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear central-tendency shift shown, but Control (sd=11) and Treatment
+          (sd=10) have nearly identical spread/shape, under-covering the spec's 'spread
+          and shape' callout.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: A/B test scores between Control and Treatment groups is a realistic,
+          neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores clipped to 0-100, means (68.4/77.2) and spreads (sd 10-11)
+          are plausible for test-score data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot flow; the only helper functions (makeLcg,
+          randomNormal) are the library-prompt-sanctioned deterministic RNG pattern
+          for D3, not app-style abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed (42) LCG makes data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 and window tokens are used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the visualization; no fake UI or simulated
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract (#container, ANYPLOT_SIZE); current
+          D3 v7 API throughout.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.bin(), selection.data().join(), d3.scaleOrdinal/scaleLinear, d3.mean/extent
+          — textbook idiomatic D3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Shared-domain d3.bin() binning plus hand-built SVG mean-marker annotations
+          via d3.line() are genuinely D3-specific, not trivially portable to a higher-level
+          charting library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
