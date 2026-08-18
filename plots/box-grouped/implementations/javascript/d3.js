@@ -177,19 +177,84 @@ group
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 3);
 
-// Outliers
+// Outliers — cluster near-duplicate values within the same box get a small
+// deterministic horizontal spread so individual points stay separable.
+const yDomainSpan = y.domain()[1] - y.domain()[0];
+const clusterThreshold = yDomainSpan * 0.01;
+function spreadOutliers(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const dx = new Array(sorted.length).fill(0);
+  let clusterStart = 0;
+  for (let i = 1; i <= sorted.length; i++) {
+    const closeToPrev = i < sorted.length && sorted[i] - sorted[i - 1] < clusterThreshold;
+    if (!closeToPrev) {
+      const clusterSize = i - clusterStart;
+      if (clusterSize > 1) {
+        for (let j = clusterStart; j < i; j++) {
+          dx[j] = (j - clusterStart - (clusterSize - 1) / 2) * 6;
+        }
+      }
+      clusterStart = i;
+    }
+  }
+  return sorted.map((value, i) => ({ value, dx: dx[i] }));
+}
+
 group
   .selectAll(".outlier")
-  .data((d) => d.outliers.map((v) => ({ value: v, age: d.age })))
+  .data((d) => spreadOutliers(d.outliers).map(({ value, dx }) => ({ value, dx, age: d.age })))
   .join("circle")
   .attr("class", "outlier")
-  .attr("cx", boxWidth / 2)
+  .attr("cx", (d) => boxWidth / 2 + d.dx)
   .attr("cy", (d) => y(d.value))
   .attr("r", 4.5)
   .attr("fill", (d) => color(d.age))
   .attr("fill-opacity", 0.85)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
+
+// --- Age-gap callout: highlight the task type with the largest Young→Older shift ---
+const youngAge = ageGroups[0];
+const olderAge = ageGroups[ageGroups.length - 1];
+const gapByTask = taskTypes.map((task) => {
+  const young = cells.find((c) => c.task === task && c.age === youngAge);
+  const older = cells.find((c) => c.task === task && c.age === olderAge);
+  return { task, young, older, gap: older.median - young.median };
+});
+const widestGap = gapByTask.reduce((a, b) => (b.gap > a.gap ? b : a));
+const gapYoungX = x0(widestGap.task) + x1(youngAge) + boxWidth / 2;
+const gapOlderX = x0(widestGap.task) + x1(olderAge) + boxWidth / 2;
+const gapY = Math.min(y(widestGap.young.q3), y(widestGap.older.q3)) - 16;
+
+const callout = g.append("g").attr("class", "age-gap-callout");
+callout
+  .append("line")
+  .attr("x1", gapYoungX)
+  .attr("x2", gapOlderX)
+  .attr("y1", gapY)
+  .attr("y2", gapY)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "3,2");
+for (const cx of [gapYoungX, gapOlderX]) {
+  callout
+    .append("line")
+    .attr("x1", cx)
+    .attr("x2", cx)
+    .attr("y1", gapY)
+    .attr("y2", gapY + 6)
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1);
+}
+callout
+  .append("text")
+  .attr("x", (gapYoungX + gapOlderX) / 2)
+  .attr("y", gapY - 7)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .style("font-style", "italic")
+  .text(`+${Math.round(widestGap.gap)} ms largest age gap`);
 
 // --- Legend ---------------------------------------------------------------------
 const legend = svg.append("g").attr("transform", `translate(0, 96)`);
