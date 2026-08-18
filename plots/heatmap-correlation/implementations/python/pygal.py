@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-18
@@ -6,8 +6,6 @@ Quality: 86/100 | Updated: 2026-08-18
 
 import os
 import sys
-
-import numpy as np
 
 
 # Temporarily remove current directory from path to avoid name collision
@@ -95,7 +93,7 @@ class CorrelationHeatmap(Graph):
 
         label_margin_left = row_label_width + y_title_block + 60
         label_margin_bottom = 25 + col_label_drop + x_title_block + 40
-        label_margin_top = 60
+        label_margin_top = 20
         label_margin_right = 320
 
         available_width = plot_width - label_margin_left - label_margin_right
@@ -257,8 +255,6 @@ class CorrelationHeatmap(Graph):
 
 
 # Data: Correlation matrix for molecular descriptors (cheminformatics QSAR feature set)
-np.random.seed(42)
-
 variables = [
     "Mol. Weight",
     "LogP",
@@ -271,20 +267,16 @@ variables = [
 ]
 n = len(variables)
 
-correlation_matrix = np.array(
-    [
-        [1.00, 0.45, 0.55, 0.25, 0.60, 0.70, 0.50, -0.55],
-        [0.45, 1.00, -0.75, -0.50, -0.35, 0.20, 0.40, -0.80],
-        [0.55, -0.75, 1.00, 0.80, 0.85, 0.15, -0.10, 0.50],
-        [0.25, -0.50, 0.80, 1.00, 0.45, 0.10, -0.15, 0.40],
-        [0.60, -0.35, 0.85, 0.45, 1.00, 0.25, 0.05, 0.35],
-        [0.70, 0.20, 0.15, 0.10, 0.25, 1.00, -0.20, -0.15],
-        [0.50, 0.40, -0.10, -0.15, 0.05, -0.20, 1.00, -0.35],
-        [-0.55, -0.80, 0.50, 0.40, 0.35, -0.15, -0.35, 1.00],
-    ]
-)
-
-matrix_data = correlation_matrix.tolist()
+matrix_data = [
+    [1.00, 0.45, 0.55, 0.25, 0.60, 0.70, 0.50, -0.55],
+    [0.45, 1.00, -0.75, -0.50, -0.35, 0.20, 0.40, -0.80],
+    [0.55, -0.75, 1.00, 0.80, 0.85, 0.15, -0.10, 0.50],
+    [0.25, -0.50, 0.80, 1.00, 0.45, 0.10, -0.15, 0.40],
+    [0.60, -0.35, 0.85, 0.45, 1.00, 0.25, 0.05, 0.35],
+    [0.70, 0.20, 0.15, 0.10, 0.25, 1.00, -0.20, -0.15],
+    [0.50, 0.40, -0.10, -0.15, 0.05, -0.20, 1.00, -0.35],
+    [-0.55, -0.80, 0.50, 0.40, 0.35, -0.15, -0.35, 1.00],
+]
 
 # Custom style with theme-adaptive colors
 custom_style = Style(
@@ -328,7 +320,7 @@ chart = CorrelationHeatmap(
     show_values=True,
     show_legend=False,
     margin=120,
-    margin_top=200,
+    margin_top=60,
     margin_bottom=100,
     show_x_labels=False,
     show_y_labels=False,
