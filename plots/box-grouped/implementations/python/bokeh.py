@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
 Library: bokeh 3.9.2 | Python 3.13.15
-Quality: 85/100 | Updated: 2026-08-18
+Quality: 91/100 | Updated: 2026-08-18
 """
 
 import os
