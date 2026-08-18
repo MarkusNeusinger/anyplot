@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-07
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -18,7 +18,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir and p != ""]
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, DatetimeTickFormatter, Legend, LegendItem
+from bokeh.models import ColumnDataSource, DatetimeTickFormatter, Legend, LegendItem, Title
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -31,7 +31,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — first series always #009E73
+# Imprint palette — first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
 # Data — 90-day Kanban board for a software delivery team
@@ -43,7 +43,9 @@ dates = pd.date_range("2024-01-15", periods=days, freq="D")
 daily_intake = np.random.poisson(3, days)
 backlog_cum = np.maximum.accumulate(np.cumsum(daily_intake) + 15)
 
-# Each downstream stage lags the upstream by a delay and has a throughput rate
+# Each downstream stage lags the upstream by a delay and has a throughput rate.
+# Development is deliberately throttled (lower rate, longer lag into Testing) so
+# the diagram tells a genuine bottleneck story through the data itself.
 analysis_cum = np.zeros(days, dtype=int)
 analysis_cum[5:] = (backlog_cum[:-5] * 0.88).astype(int)
 analysis_cum = np.maximum.accumulate(analysis_cum)
@@ -53,7 +55,7 @@ dev_cum[7:] = (analysis_cum[:-7] * 0.92).astype(int)
 dev_cum = np.maximum.accumulate(dev_cum)
 
 testing_cum = np.zeros(days, dtype=int)
-testing_cum[5:] = (dev_cum[:-5] * 0.95).astype(int)
+testing_cum[10:] = (dev_cum[:-10] * 0.75).astype(int)
 testing_cum = np.maximum.accumulate(testing_cum)
 
 done_cum = np.zeros(days, dtype=int)
@@ -75,18 +77,26 @@ source = ColumnDataSource(
 stages = ["done", "testing", "development", "analysis", "backlog"]
 labels = ["Done", "Testing", "Development", "Analysis", "Backlog"]
 
-# Plot
+# Plot — `width`/`height` are the total canvas; min_border_* reserve room for
+# the native-pixel tick + axis-label stack at this size.
 p = figure(
-    width=4800,
-    height=2700,
-    x_axis_type="datetime",
-    title="area-cumulative-flow · bokeh · anyplot.ai",
+    width=3200,
+    height=1800,
     tools="",
     toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
 # Stacked areas — each color corresponds to the matching stacker
-renderers = p.varea_stack(stackers=stages, x="date", color=IMPRINT, alpha=0.82, source=source)
+renderers = p.varea_stack(stackers=stages, x="date", color=IMPRINT, alpha=0.70, source=source)
+
+# Development is the throttled stage (see data comment above) — render it near-opaque
+# while the other bands stay dimmer, so the bottleneck reads as a focal point at a glance.
+for stage, renderer in zip(stages, renderers, strict=True):
+    renderer.glyph.fill_alpha = 0.95 if stage == "development" else 0.68
 
 # Subtle boundary lines at each stage transition
 cum_vals = np.zeros(days)
@@ -102,31 +112,48 @@ legend = Legend(
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
     label_text_color=INK_SOFT,
-    label_text_font_size="18pt",
+    label_text_font_size="34pt",
     padding=20,
     spacing=10,
 )
 p.add_layout(legend)
+
+# Title + subtitle — typographic hierarchy via a bold headline over a lighter,
+# smaller descriptive line (no data annotations — this is a "basic" spec variant).
+p.add_layout(
+    Title(
+        text="Five delivery stages, 90 days of cumulative Kanban flow",
+        text_font_size="26pt",
+        text_font_style="normal",
+        text_color=INK_SOFT,
+    ),
+    "above",
+)
+p.add_layout(
+    Title(
+        text="area-cumulative-flow · python · bokeh · anyplot.ai",
+        text_font_size="50pt",
+        text_font_style="bold",
+        text_color=INK,
+    ),
+    "above",
+)
 
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 
-p.title.text_color = INK
-p.title.text_font_size = "28pt"
-p.title.text_font_style = "normal"
-
 p.xaxis.axis_label = "Date"
 p.yaxis.axis_label = "Cumulative Items"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
@@ -143,7 +170,7 @@ p.xaxis.formatter = DatetimeTickFormatter(days="%b %d", months="%b %Y")
 output_file(f"plot-{THEME}.html")
 save(p)
 
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -157,6 +184,11 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Headless Chrome's --window-size sets the OUTER window, which still reserves a
+# phantom title-bar height even headless — pin the viewport exactly via CDP.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
