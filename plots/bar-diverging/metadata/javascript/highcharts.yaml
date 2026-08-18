@@ -1,0 +1,235 @@
+library: highcharts
+language: javascript
+specification_id: bar-diverging
+created: '2026-08-18T12:53:15Z'
+updated: '2026-08-18T13:05:16Z'
+generated_by: claude-sonnet
+workflow_run: 32138797406
+issue: 2009
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses were addressed directly: bars now carry a subtle borderColor:
+    t.pageBg edge stroke, and the subtitle explicitly spells out "green = above zero,
+    red = below zero", removing any residual ambiguity about the color convention.'
+  - negativeColor series option auto-splits bars into brand green (#009E73) above
+    zero and matte red (#AE3030, the style guide's semantic bad/loss anchor) below
+    zero — genuinely idiomatic use of a library feature purpose-built for diverging
+    bars.
+  - Zero baseline marked with an explicit plotLines rule at value 0, giving a clear,
+    unambiguous divergence axis.
+  - Categories pre-sorted ascending by value, matching the spec's "sort bars by value
+    to enhance pattern recognition" guidance.
+  - Direction is redundantly encoded three ways (bar position, hue, explicit +/- sign
+    in the data label) plus a text callout in the subtitle — never relies on hue alone.
+  - 'Both renders theme-correct: correct backgrounds, correct chrome tokens, data
+    colors pixel-identical between light and dark.'
+  - Clean, minimal code — no unused imports, no fake interactivity, deterministic
+    hardcoded data.
+  weaknesses:
+  - Visual hierarchy is solid but still fairly conservative — no additional emphasis
+    (e.g. a callout on the extreme values) to sharpen storytelling beyond sort order,
+    color, and the zero baseline. Minor, optional polish only.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "bar-diverging · javascript · highcharts · anyplot.ai" and a lighter subtitle explicitly stating "green = above zero, red = below zero". Ten category labels down the left side, subtle vertical gridlines. All readable against the light background.
+      Data: Six matte-red bars (negative, -61 to -12) extend left, four brand-green bars (positive, +34 to +66) extend right, from a bold black zero baseline. First categorical color is #009E73 (brand green); negative bars use the semantic matte-red anchor #AE3030. Subtle page-bg-colored edge stroke on each bar. Explicit signed data labels ("+34", "-61") next to each bar.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title/subtitle/category labels now in light ink tones, fully legible, no dark-on-dark issues. Gridlines and edge-stroke color flipped to the dark-theme tokens.
+      Data: Colors are pixel-identical to the light render (#009E73 green / #AE3030 red) — only chrome flipped, confirming data-color consistency.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, appropriately sized
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, labels, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible with defined edges
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green direction redundantly encoded via bar position and signed
+          labels, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct canvas size, good proportions, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive y-axis title 'Net Satisfaction Score'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, semantic red anchor for negative, correct
+          theme backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color choice, clean typography, defined bar edge
+          stroke
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal spines, subtle grid, generous whitespace, subtle page-bg
+          edge stroke on bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sorted order + zero baseline + redundant sign encoding + subtitle
+          callout create a clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Contrasting colors, zero baseline indicator, sorted by value
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category/value correctly mapped, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly omitted (single series,
+          redundant with labels)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full positive/negative range with 10 categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral product-category satisfaction data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values within spec's -100..+100 range, axis padded sensibly
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: negativeColor is the purpose-built Highcharts pattern for diverging
+          bars, paired with a clean edge stroke
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: negativeColor + zero plotLines + custom dataLabels formatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns: []
+  dataprep: []
+  styling:
+  - edge-highlighting
