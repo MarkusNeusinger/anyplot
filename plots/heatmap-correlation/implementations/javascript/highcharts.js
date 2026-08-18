@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-correlation: Correlation Matrix Heatmap
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-18
+// Quality: 88/100 | Created: 2026-08-18
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
