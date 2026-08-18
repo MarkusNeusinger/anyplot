@@ -178,6 +178,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Meta descriptions were three times too long to survive a search result** — every prerendered
+  page passed the full spec description straight into `<meta name="description">`. Measured across
+  40 live pages: median 424 characters, longest 801, and all 40 over Google's ~155-character
+  truncation point, so the sentence that decides the click was never the one being written. The
+  2026-05-05 audit recorded this and it had not moved since. The meta and OG tags now carry a trim
+  that ends on the last full sentence that fits (falling back to a word boundary), taking the same
+  sample to a median of 142 with none over the limit. Visible body copy and JSON-LD keep the full
+  description — the trim is for the snippet, not the content — and it runs on the raw text before
+  escaping, so it can never cut through an HTML entity.
+
 - **Model↔migration index drift fixed before it could drop production indexes** — seven
   migration-created indexes (`ix_specs_issue`, `ix_specs_tags` GIN, `ix_impls_library_id`,
   `ix_impls_quality_score`, `ix_impls_impl_tags` GIN, `ix_feedback_created_at` DESC,

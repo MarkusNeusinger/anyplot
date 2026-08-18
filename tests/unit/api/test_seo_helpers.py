@@ -11,12 +11,14 @@ from unittest.mock import MagicMock
 
 from api.routers.seo import (
     _HOME_JSONLD,
+    _META_DESCRIPTION_LIMIT,
     _build_home_body,
     _build_impl_html,
     _build_sitemap_xml,
     _build_spec_hub_html,
     _jsonld_script,
     _lastmod,
+    _meta_description,
     _render_bot_html,
     _spec_index_entries,
     _spec_links_html,
@@ -420,3 +422,61 @@ class TestDisplayNameMaps:
         from api.routers.seo import _LIBRARY_NAMES
 
         assert set(_LIBRARY_NAMES) == {lib["id"] for lib in LIBRARIES_METADATA}
+
+
+class TestMetaDescription:
+    """Trimming spec descriptions down to what a search result will display."""
+
+    def test_short_text_is_untouched(self) -> None:
+        text = "A vertical bar chart for categorical data."
+        assert _meta_description(text) == text
+
+    def test_none_and_empty_are_empty(self) -> None:
+        assert _meta_description(None) == ""
+        assert _meta_description("   ") == ""
+
+    def test_whitespace_is_normalised(self) -> None:
+        assert _meta_description("two\n\n  words") == "two words"
+
+    def test_long_text_fits_the_snippet(self) -> None:
+        text = "word " * 200
+        result = _meta_description(text)
+        assert len(result) <= _META_DESCRIPTION_LIMIT + 1  # +1 for the ellipsis
+
+    def test_prefers_a_sentence_boundary_in_range(self) -> None:
+        """Ends on the last full sentence that still fits, not the first."""
+        first = "A vertical bar chart that displays categorical data with rectangular bars."
+        second = "Heights are proportional to values."
+        text = f"{first} {second} " + "Detail that runs well past the snippet limit. " * 5
+        result = _meta_description(text)
+        assert result == f"{first} {second}"
+        assert len(result) <= _META_DESCRIPTION_LIMIT
+
+    def test_single_overlong_sentence_is_not_kept_whole(self) -> None:
+        """A sentence end past the limit must not be selected."""
+        text = "One enormous clause " * 20 + "and then a stop."
+        result = _meta_description(text)
+        assert len(result) <= _META_DESCRIPTION_LIMIT + 1
+        assert result.endswith("\u2026")
+
+    def test_falls_back_to_a_word_boundary(self) -> None:
+        text = "word " * 200  # no sentence punctuation anywhere
+        result = _meta_description(text)
+        assert result.endswith("\u2026")
+        assert not result.rstrip("\u2026").endswith(" ")
+        # never splits a word
+        assert all(chunk == "word" for chunk in result.rstrip("\u2026").split())
+
+    def test_never_cuts_a_dangling_separator(self) -> None:
+        text = "alpha beta gamma, " * 40
+        result = _meta_description(text)
+        assert ",\u2026" not in result
+
+    def test_runs_before_escaping_so_entities_stay_intact(self) -> None:
+        """The trim operates on raw text; escaping afterwards can't be cut mid-entity."""
+        import html as html_module
+
+        text = "Ampersands & angle brackets <like this> " * 20
+        escaped = html_module.escape(_meta_description(text))
+        # A truncated entity would leave a bare & followed by a non-entity run
+        assert re.search(r"&(?!amp;|lt;|gt;|quot;|#x27;)", escaped) is None
