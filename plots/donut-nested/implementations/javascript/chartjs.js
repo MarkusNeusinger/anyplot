@@ -109,6 +109,7 @@ const categoryValues = departments.flatMap((d) => d.children.map((c) => c.value)
 const categoryColors = departments.flatMap((d) =>
   d.children.map((c, i) => childShade(d.color, i, d.children.length)),
 );
+const grandTotal = departmentTotals.reduce((sum, v) => sum + v, 0);
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -140,10 +141,22 @@ const ringLabelsPlugin = {
       ctx.fillStyle = "#FFFFFF";
       ctx.fillText(departmentLabels[i], x, y - 14);
 
-      ctx.font = "400 17px sans-serif";
+      ctx.font = "400 20px sans-serif";
       ctx.strokeText(`$${departmentTotals[i]}M`, x, y + 14);
       ctx.fillText(`$${departmentTotals[i]}M`, x, y + 14);
     });
+
+    // Center label in the donut hole: the grand total ties the two rings
+    // together into one headline number rather than a plain breakdown.
+    const center = meta.data[0];
+    ctx.font = "400 17px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.strokeStyle = "transparent";
+    ctx.lineWidth = 0;
+    ctx.fillText("Total Budget", center.x, center.y - 16);
+    ctx.font = "700 30px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.fillText(`$${grandTotal}M`, center.x, center.y + 16);
     ctx.restore();
   },
 };
@@ -176,7 +189,10 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    cutout: "22%",
+    cutout: "34%",
+    layout: {
+      padding: { left: 50, right: 50, top: 10, bottom: 10 },
+    },
     plugins: {
       title: {
         display: true,
