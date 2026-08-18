@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:48:34Z'
-updated: '2026-08-18T10:46:16Z'
+updated: '2026-08-18T10:54:12Z'
 generated_by: claude-sonnet
 workflow_run: 32127756780
 issue: 2010
@@ -12,47 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Exact Imprint palette in canonical order (#009E73, #C475FD, #4467A3) with identical
-    data colors between light and dark renders'
-  - Fully theme-adaptive chrome (background, ink, grid, legend) using the standard
-    token set, readable in both themes
-  - All font sizes explicitly set (title 50pt, axis labels 42pt, ticks/legend 34pt)
-    with balanced X/Y proportions
-  - Bin edges and bin count aligned across all three groups via a single shared `bins`
-    array, exactly matching the spec's alignment requirement
-  - Legend placed top-left in genuinely empty canvas space, clear of the tallest histogram
-    peaks, with theme-correct box styling
+  - 'Title fixed to the exact required format: histogram-overlapping · python · bokeh
+    · anyplot.ai'
+  - Plot outline fully removed (outline_line_color=None), leaving a clean L-shaped
+    bottom/left frame instead of the boxed-in rectangle flagged in attempt 1
+  - Dashed per-group mean-latency Span markers add a genuine data-storytelling device
+    that directly answers the attempt-1 feedback, without cluttering the overlapping
+    bars
+  - Legend click_policy="mute" adds a real bokeh-native interaction (muting a region's
+    histogram on legend click) beyond a plain HoverTool
+  - 'Exact Imprint palette in canonical order (#009E73, #C475FD, #4467A3), pixel-identical
+    between light and dark renders — only chrome flips'
+  - 'Fully theme-adaptive chrome: backgrounds, ink, grid, and legend all correctly
+    tokenized and readable in both themes'
+  - Bin edges and bin count aligned across all three groups via one shared bins array,
+    exactly matching the spec's alignment requirement
   - Realistic, neutral dataset (cross-region network latency) with clearly separated
-    but partially overlapping distributions demonstrating the technique well
-  - 'Idiomatic bokeh pattern: ColumnDataSource + quad glyphs + a real HoverTool with
-    per-bin range/count tooltips that add genuine value in the HTML output'
+    but meaningfully overlapping distributions
+  - All font sizes explicitly set (title 50pt, axis labels 42pt, ticks/legend 34pt)
+    with balanced X/Y proportions and no clipping in either render
   weaknesses:
-  - 'Title omits the mandated language segment: current title is ''histogram-overlapping
-    · bokeh · anyplot.ai'' but the required format is ''{spec-id} · {language} · {library}
-    · anyplot.ai'' — should read ''histogram-overlapping · python · bokeh · anyplot.ai'''
-  - 'Design Excellence is at library-default level: no visual refinement beyond the
-    mandated theme tokens (e.g. the plot outline/border is still a full rectangle
-    instead of being softened or removed) and no data storytelling device (e.g. a
-    subtle mean marker or annotation calling out which region is fastest/slowest)'
-  - 'Library Mastery is generic: HoverTool with static tooltip text is basic bokeh
-    usage — no distinctive bokeh-only feature (CustomJS callback, linked crosshair,
-    range tool, etc.) that would set this apart from a simple 3-line port to another
-    interactive library'
+  - Legend click-to-mute is a modest LM-02 improvement but stops short of the suggested
+    CustomJS-driven crosshair/linked-selection — a genuinely bokeh-unique callback
+    would push Library Mastery further
+  - In the ~85-100 ms range, EU-West's tail and AP-South's rise blend into a muddy
+    purple-blue where all three groups partially overlap; not a defect but the toughest
+    region to read at a glance
+  - Data storytelling relies on a single device (mean markers); no explicit callout/annotation
+    naming which region is fastest/slowest, so the insight still requires the viewer
+    to read the dashed-line positions themselves
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "histogram-overlapping · bokeh · anyplot.ai" top-left, clearly readable dark-on-light. Italic "Latency (ms)" x-axis label and "Frequency" y-axis label, both dark and legible. Tick labels in a softer dark gray, fully readable. A subtle light-gray grid is visible but unobtrusive. A thin outline frames the whole plot area.
-      Data: Three semi-transparent, overlapping histograms sharing aligned bin edges — a green cluster (US-East) peaking around 35 ms, a lavender/purple cluster (EU-West) peaking around 63 ms, and a blue-gray cluster (AP-South) peaking around 92-102 ms. The first series is #009E73 as required. A legend box top-left (opaque cream background) lists all three groups with color swatches, sitting in empty canvas space clear of the tallest bars.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light text found.
+      Chrome: Bold dark title "histogram-overlapping · python · bokeh · anyplot.ai" top-left, fully visible with no clipping. Italic "Latency (ms)" x-axis label and "Frequency" y-axis label in dark ink, softer dark-gray tick labels. Grid lines are subtle (alpha ~0.15) but still discernible. No rectangular outline — only the bottom/left axis lines frame the plot, per the attempt-1 fix. Legend (US-East / EU-West / AP-South) sits top-left in an elevated off-white box with a soft border, clear of the tallest bars.
+      Data: Three semi-transparent, aligned-bin histograms — green US-East peaking ~35 ms, lavender EU-West peaking ~63 ms, blue-gray AP-South peaking ~92-102 ms. First series is #009E73 as required, in canonical Imprint order. A dashed vertical Span marks each group's mean latency in its own color.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now rendered in light/white text, clearly readable on the dark background. Axis labels and tick labels are light gray/white and legible. Grid lines are dark and subtle but still visible against the near-black background. The plot outline frame is present in a muted tone.
-      Data: The three histograms use the identical hex colors as the light render — green (#009E73), lavender/purple, and blue-gray — confirming the data palette does not shift between themes; only the chrome (background, text, grid, legend box) flips. Legend box now has a dark background with light text, still fully readable.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, and tick label is clearly visible against the near-black surface.
+      Chrome: Same title now rendered in light/off-white text, fully legible. Axis labels and tick labels are light gray/white and clearly readable. Grid lines remain subtle but visible against the dark surface. Outline is likewise absent, keeping only the bottom/left axis frame. Legend box has a dark elevated background with light text and a soft border.
+      Data: The three histograms use the identical hex colors as the light render (green/lavender/blue-gray) and identical dashed mean-marker positions — only the chrome (background, text, grid, legend) flips between themes, confirming palette parity.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick label, and legend entry is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -63,77 +66,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, balanced X/Y proportions, readable
-          in both themes
+        comment: All font sizes explicit; readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits in empty canvas space, clear of the tallest bars; no
-          text collisions
+        comment: Legend clear of tallest bars; mean-marker lines don't collide with
+          text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: alpha=0.5 fills with defined edges keep overlapping regions distinguishable
-          at this density
+        comment: Bar widths and alpha appropriate for ~220-point-per-group density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue-gray are distinguishable without relying on hue
-          alone, no red-green pairing
+        comment: Green/purple/blue-gray trio is CVD-distinguishable, not red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well, no cut-off content, legend near the plot
+        comment: 3200x1800 canonical canvas confirmed, no gate failure, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Latency (ms)" has units, "Frequency" is a self-explanatory count
-          axis'
+        comment: Latency (ms) and Frequency are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Exact Imprint canonical order, identical across themes, theme-correct
-          chrome
+        comment: 'Canonical Imprint order, #009E73 first series, theme-correct backgrounds'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured mandated defaults, no additional custom polish beyond
-          the standard tokens
+        comment: Improved via outline removal and mean markers, but still built mostly
+          from mandated tokens
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Rectangular outline removed for an L-shaped frame, subtle grid, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Grid subdued to alpha=0.15, outline softened to INK_SOFT, but the
-          full rectangular outline remains rather than being removed/thinned further
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Data choice naturally separates the three regions, but there is no
-          explicit hierarchy device (annotation, mean marker, emphasis) beyond raw
-          display
+        comment: Dashed mean markers add a real hierarchy device, but no explicit
+          callout naming the comparison insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct overlapping-histogram type with semi-transparent bars
+        comment: quad-based overlapping histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: Semi-transparent fills, distinct colors, legend, aligned bins, matching
-          bin widths/counts all present
+          widths/counts
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=latency, Y=frequency correctly assigned, full data range visible
+        comment: X=latency, Y=frequency, full data range shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels correct, but title is missing the mandated language
-          segment ('python')
+        passed: true
+        comment: 'Title now includes the language segment: histogram-overlapping ·
+          python · bokeh · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -171,21 +169,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three distinct distributions with different means/spreads, partial
-          overlap shown
+        comment: All overlapping-histogram aspects present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cross-region network latency — real, neutral, comprehensible scenario
+        comment: Cross-region network latency is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Latency ranges (US < EU < AP) are plausible relative real-world cloud
-          region distances
+        comment: 10-140ms latency range is domain-sensible
     code_quality:
       score: 10
       max: 10
@@ -195,35 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: Flat procedural script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.default_rng(7) is deterministic
+        comment: np.random.default_rng(7) seeded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used (numpy, bokeh io/models/plotting, selenium,
-          time, pathlib)
+        comment: Only used imports (numpy, bokeh, selenium, stdlib)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI elements
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png/html via the documented Selenium pattern (bokeh.io.export_png
-          is correctly avoided per library rules)
+        comment: Saves plot-{THEME}.png and .html via the Selenium contract
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -231,15 +225,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource + quad glyphs is the idiomatic bokeh histogram pattern
+        comment: ColumnDataSource + quad + HoverTool, idiomatic bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: false
-        comment: HoverTool with per-bin tooltips is a real bokeh feature but fairly
-          basic; no CustomJS or bokeh-unique interactivity
-  verdict: REJECTED
+        comment: Legend click-to-mute is genuinely bokeh-native but stops short of
+          a CustomJS callback
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -249,8 +243,9 @@ impl_tags:
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
