@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:21:10Z'
-updated: '2026-08-18T01:06:18Z'
+updated: '2026-08-18T01:17:30Z'
 generated_by: claude-sonnet
 workflow_run: 32086154973
 issue: 1877
@@ -12,57 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/letsplot/plot-dark.html
-quality_score: 71
+quality_score: 84
 review:
   strengths:
-  - 'Correct horizon-fold math: values are clipped per band to [0, band_size] with
-    mirrored positive/negative handling, which is the mathematically correct core
-    of the technique.'
-  - 'Band colors are principled tints interpolated from the Imprint brand anchors
-    (#009E73 positive, #AE3030 negative) toward white — theme-independent and semantically
-    anchored rather than arbitrary.'
-  - 'Distinctive lets-plot feature used well: custom layer_tooltips() with formatted
-    band/deviation lines, explicitly noted in comments as unavailable in plotnine.'
-  - Facets ordered by descending data volatility (groupby(...).std().sort_values)
-    — a thoughtful, data-driven presentation choice.
-  - Theme-adaptive chrome correctly threaded through PAGE_BG/INK/INK_SOFT tokens;
-    both renders pass the light/dark readability check with identical data colors.
-  - Clean, reproducible, KISS-structured script with correct canvas/export handling
-    (scale=4, HTML export, lets-plot-images cleanup).
+  - Noise amplitude reduced (sigma 1.5, down from 4) and a rolling-mean smoothing
+    pass make the folded bands read as clean intensity mountains instead of the prior
+    jagged sawtooth — directly resolves the previous VQ-03 weakness.
+  - Negative-band color switched from red to Imprint blue (#4467A3), removing the
+    red-green CVD-risk pairing flagged in the prior review while keeping brand green
+    (#009E73) for the positive direction.
+  - Layout switched from facet_wrap (multi-column grid) to facet_grid(y="series")
+    stacking all six servers as a single vertical column of strips — genuine structural
+    progress toward the horizon chart's defining compact-comparison layout.
+  - panel_border=element_blank() and tightened panel_spacing_y/strip_spacing_y=3 for
+    a cleaner strip look.
+  - Distinctive lets-plot layer_tooltips() with formatted band/deviation content retained
+    — a feature unavailable in plotnine.
+  - Facets still ordered by descending volatility (data-driven presentation choice).
+  - Both light and dark renders are theme-correct with identical data colors; no legibility
+    failures in either theme.
   weaknesses:
-  - The layout uses 6 full-sized facet_wrap panels (~300px tall each) instead of compact,
-    thin per-series strips — this defeats the horizon chart's defining purpose of
-    showing many series in minimal vertical space; at the spec's suggested 'dozens
-    of series' scale this layout would become enormous. Collapse each series into
-    a much shorter horizontal band/row so the compactness value proposition is actually
-    visible.
-  - Hour-to-hour noise (sigma=4) and frequent large spikes (20-35) make the folded
-    bands extremely jagged/serrated, overlapping in a way that's hard to read as smooth
-    intensity 'mountains' — reduce noise amplitude and/or apply light smoothing (e.g.
-    rolling mean) so band transitions read cleanly.
-  - Positive/negative bands use green vs. red, a red-green CVD-risk pairing; consider
-    brand blue (#4467A3) for the negative direction instead, per the spec's own suggestion
-    of blue/red as the more typical horizon-chart convention.
-  - Panel border box is visible around each facet from theme_minimal() defaults —
-    remove or lighten it for a more refined look consistent with the 'spines removed'
-    style guidance.
-  - The 6-entry 'Band Intensity' legend is fairly heavy chrome for what should be
-    a compact chart; consider condensing to a smaller intensity key.
+  - Even after the facet_grid switch, each of the 6 strips is still roughly 250px
+    tall (~14% of canvas height) — genuine horizon-chart strips are much thinner;
+    at the spec's higher end (dozens of series) this still would not compact well.
+    Shrink the per-series row height further (smaller ggsize height, tighter panel_spacing_y).
+  - Despite panel_border=element_blank(), a full box outline is still visible around
+    each strip (top/left/right lines from axis_line rendering on every facet edge)
+    — finish removing this for a true 'spines removed' look, or intentionally keep
+    only the bottom axis line.
+  - Y-axis label 'Folded Value (stacked bands)' explains the folding mechanic but
+    not what is actually being measured (CPU usage deviation per the code) — add a
+    units/domain hint so the axis is self-explanatory without reading the code.
+  - The pale '+Low'/'-Low' tints sit close in luminance, making the lowest band harder
+    to distinguish at a glance, especially under CVD simulation — consider slightly
+    increasing the minimum tint saturation for band 0.
+  - The 6-entry 'Band Intensity' legend remains sizable chrome for a technique whose
+    whole point is compactness — consider condensing to a smaller inline key.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), correct — not pure white, not dark.
-      Chrome: Title "horizon-basic · python · letsplot · anyplot.ai" bold dark text at top; 6 facet strip titles (Server B, C, F, D, E, A, ordered by descending volatility); Mon-Sun x-axis labels; "Folded Value (stacked bands)" y-axis label with sparse 0/10 ticks; "Band Intensity" legend (6 swatches) on the right. All readable, dark ink on light background, no light-on-light issues.
-      Data: 3 positive bands (teal tints toward #009E73) and 3 negative bands (pink/red tints toward #AE3030) overlaid per facet with alpha=0.85. First/brand color #009E73 correctly anchors the +High band. Data is very dense/jagged due to per-hour noise and spikes, making individual band transitions hard to trace despite colors being distinguishable.
+      Chrome: Bold dark title "horizon-basic · python · letsplot · anyplot.ai" at top-left; six vertically-stacked facet strips labeled "Server D, E, F, B, A, C" (ordered by descending volatility) on the right edge; "Day of Week" x-axis with Mon-Sun labels at the bottom; "Folded Value (stacked bands)" y-axis label with a sparse "0" tick per strip; "Band Intensity" legend (6 swatches: +Low, -Low, +Medium, -Medium, +High, -High) on the right. All text is dark ink on the light background and clearly readable; no light-on-light issues.
+      Data: Green tints (toward #009E73) for the 3 positive bands and blue tints (toward #4467A3) for the 3 negative bands, overlaid per strip with alpha=0.85. Compared to the prior attempt, the bands are now noticeably smoother — clean dome-shaped "mountains" with only occasional small spikes — instead of a jagged sawtooth. First/brand color #009E73 correctly anchors the positive direction.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), correct — not pure black, not light.
-      Chrome: Same title/strip titles/axis labels/legend, all correctly flipped to light ink (#F0EFE8 / #B8B7B0) on the dark background. No dark-on-dark failures found — all text clearly legible.
-      Data: Band fill colors are visually identical to the light render (only chrome flipped, as required). Same overplotted/jagged readability issue persists.
+      Chrome: Same title/strip labels/axis labels/legend, all correctly flipped to light ink (#F0EFE8 title/axis-title, #B8B7B0 tick/legend text) on the dark background. No dark-on-dark failures — every text element is clearly legible against the near-black surface.
+      Data: Band fill colors are visually identical to the light render (green/blue tints unchanged) — only chrome flipped, as required. Same smoothed, readable band shapes as the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -70,113 +70,118 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at correct sizes; strip titles compete
-          visually with dense chart content.
+        comment: All font sizes explicitly set (title 20, axis_title 14, axis_text
+          11/9, strip 10, legend 12/10); readable in both themes, no overflow.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions, but folded-band polygons overlap densely, obscuring
-          individual bands.
+        comment: No text collisions; translucent band overlap is the intended horizon-fold
+          visual language, not a defect.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bands distinguishable by color but the sawtooth density undermines
-          the intended smooth horizon read.
+        comment: Reduced noise + rolling smoothing produce clean, readable band mountains
+          — large improvement over the previous jagged render.
       - id: VQ-04
         name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue positive-negative pairing removes the prior red-green
+          CVD risk.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Compact single-column stack fills the canvas well, legend near plot;
+          strips are still taller than a true horizon-chart strip.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: Green vs. red positive/negative is a red-green CVD-risk pairing.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 2
-        max: 4
-        passed: false
-        comment: Canvas gate passed, but full-sized facet panels undercut the horizon-chart
-          compactness goal.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: Descriptive, unit-appropriate labels.
+        comment: Descriptive but 'Folded Value (stacked bands)' doesn't state the
+          underlying measured quantity/units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Backgrounds correct both themes, Imprint-anchor derived band colors,
-          identical data colors across themes.
+        comment: Brand green anchors positive bands, blue anchors negative (deliberate
+          CVD-safe semantic choice); backgrounds and chrome theme-correct in both
+          renders; identical data colors across themes.
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color ramp and ordering, but overall reads as visually
-          busy/messy.
+        passed: true
+        comment: Principled brand-anchored tint ramp, volatility-based ordering, and
+          smoothed bands read as a well-considered, above-default design.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid, but visible panel borders and non-compact layout.
+        comment: Subtle grid and tighter spacing, but a full box outline is still
+          visible around each strip despite panel_border=element_blank().
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Volatility ordering not visually communicated; no clear focal point
-          among 6 equally busy panels.
+        comment: Volatility-sorted facets add a data-driven hierarchy, though it isn't
+          visually called out (e.g., no annotation) for a casual viewer.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct fold math but layout doesn't demonstrate the technique's
-          compactness.
+        comment: Correct fold math and the switch to a single-column stacked layout
+          now demonstrates the technique's compactness better than before.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Bands, mirrored coloring, intensity, meaningful baseline all present;
-          vertical-space minimization absent.
+        comment: 3 mirrored positive/negative bands, intensity coloring, and a meaningful
+          zero baseline all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping and all series correctly shown.
+        comment: X/Y mapping correct; all series and bands visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches exactly; legend labels clear.
+        comment: Title matches the mandated format exactly; legend labels match band
+          data.
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Only 6 of the 5-50 series range used; compact-comparison value prop
-          not demonstrated at this scale/layout.
+        comment: All 6 bands (pos/neg x low/medium/high) are represented, plus occasional
+          spikes.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -185,11 +190,11 @@ review:
         comment: Plausible, neutral server-metrics scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plausible ranges but noise/spikes make series unrealistically jagged
-          for the technique.
+        comment: Smoothed values keep realistic, plausible magnitudes and daily/weekly
+          patterns.
     code_quality:
       score: 10
       max: 10
@@ -211,42 +216,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports.
+        comment: Only used imports (os, shutil, numpy, pandas, lets_plot).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity.
+        comment: No fake UI/functionality, appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png/.html output and file relocation.
+        comment: Correct plot-{THEME}.png/.html output and lets-plot-images relocation.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic facet_grid, scale_fill_manual, geom_area, and theme() usage.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of facet_wrap, geom_area, scale_fill_manual, theme().
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Custom layer_tooltips() is a genuine lets-plot-specific feature;
-          otherwise fairly standard.
-  verdict: REJECTED
+        comment: Custom layer_tooltips() with formatted band/deviation content is
+          a genuine lets-plot-specific feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - layer-composition
+  - manual-ticks
   - hover-tooltips
   patterns:
   - data-generation
@@ -254,7 +259,6 @@ impl_tags:
   - groupby-aggregation
   dataprep:
   - time-series
-  - binning
+  - rolling-window
   styling:
   - alpha-blending
-  - publication-ready
