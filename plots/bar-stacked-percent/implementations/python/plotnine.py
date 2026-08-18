@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -19,9 +19,11 @@ from plotnine import (  # noqa: E402
     element_rect,
     element_text,
     geom_bar,
+    geom_text,
     ggplot,
     labs,
     position_fill,
+    scale_color_identity,
     scale_fill_manual,
     scale_y_continuous,
     theme,
@@ -63,6 +65,38 @@ df["Company"] = pd.Categorical(df["Company"], categories=companies_ordered, orde
 # Color mapping: Apple/Samsung/Xiaomi in canonical Imprint order, Others muted
 color_map = {"Others": MUTED, "Xiaomi": IMPRINT[2], "Samsung": IMPRINT[1], "Apple": IMPRINT[0]}
 
+# In-segment percentage labels (DE-03): pick whichever ink extreme has higher
+# WCAG contrast against each segment's own fill color, so labels stay legible
+# on both the mid-tone brand hues and the theme-adaptive "Others" gray.
+LIGHT_INK = "#F0EFE8"
+DARK_INK = "#1A1A17"
+
+
+def _relative_luminance(hex_color):
+    r, g, b = (int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5))
+
+    def _linearize(c):
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = _linearize(r), _linearize(g), _linearize(b)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _contrast_ratio(l1, l2):
+    lighter, darker = max(l1, l2), min(l1, l2)
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def _label_color(fill_hex):
+    fill_l = _relative_luminance(fill_hex)
+    light_contrast = _contrast_ratio(fill_l, _relative_luminance(LIGHT_INK))
+    dark_contrast = _contrast_ratio(fill_l, _relative_luminance(DARK_INK))
+    return LIGHT_INK if light_contrast >= dark_contrast else DARK_INK
+
+
+df["Label"] = df["Share"].astype(str) + "%"
+df["LabelColor"] = df["Company"].map(color_map).map(_label_color)
+
 # Theme-adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -82,11 +116,13 @@ anyplot_theme = theme(
     figure_size=(8, 4.5),
 )
 
-# Create 100% stacked bar chart
+# Create 100% stacked bar chart with in-segment percentage labels
 plot = (
     ggplot(df, aes(x="Quarter", y="Share", fill="Company"))
     + geom_bar(stat="identity", position=position_fill(), width=0.7)
+    + geom_text(aes(label="Label", color="LabelColor"), position=position_fill(vjust=0.5), size=2.8, show_legend=False)
     + scale_fill_manual(values=color_map)
+    + scale_color_identity()
     + scale_y_continuous(labels=percent_format())
     + labs(title="bar-stacked-percent · python · plotnine · anyplot.ai", x="Quarter", y="Market Share", fill="Company")
     + theme_minimal()
