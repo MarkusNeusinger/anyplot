@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: area-cumulative-flow
 created: '2026-08-18T03:16:10Z'
-updated: '2026-08-18T03:21:42Z'
+updated: '2026-08-18T03:30:19Z'
 generated_by: claude-sonnet
 workflow_run: 32094426027
 issue: 5239
@@ -12,59 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 89
 review:
   strengths:
-  - Correct stage stacking order — earliest stage (Opened) renders as the topmost
-    band, latest stage (Resolved) at the bottom, exactly per the spec's ordering note
-  - Deterministic support-ticket data (seeded LCG, weekend-damped arrivals, per-stage
-    advance rates) that respects the monotonic-cumulative constraint between adjacent
-    stages
-  - 'Clean theme-adaptive chrome: y-axis-only subtle gridlines, L-shaped spine, consistent
-    explicit font sizing, and a title fontsize correctly scaled via the mandated `round(default
-    × 67/len)` formula for the long descriptive+mandated title string'
-  - Legend clearly lists all five workflow stages beside the plot with no overlap
-  - Both light and dark renders are fully theme-correct with identical data colors
-    across themes
+  - 'Semantic color fix: "Resolved" reassigned from matte red (position 5, the reserved
+    bad/error anchor) to lime (position 8, palette.Resolved), eliminating attempt
+    1''s color-semantic mismatch on the dominant, positive-outcome stage'
+  - Deliberate bottleneck ("In Progress" widens sharply days 35-49) and drain ("Waiting
+    on Customer" narrows days 60-72) now visibly demonstrate the CFD's signature bottleneck-spotting
+    use case called out in the spec
+  - Adopted d3.stack() with reversed key order for idiomatic band construction, replacing
+    attempt 1's manual y0/y1 boundary-math approach
+  - 'Clean theme-adaptive chrome retained: subtle y-axis-only gridlines, L-shaped
+    implicit frame, consistent explicit font sizing, title fontsize correctly scaled
+    via the mandated length formula'
+  - Both light and dark renders are fully theme-correct, all text legible, data colors
+    identical across themes, legend lists all five stages with no overlap
   weaknesses:
-  - 'VQ-07: The ''Resolved'' stage — the largest, dominant fill band representing
-    successfully completed tickets — is colored matte red (#AE3030, palette position
-    5) purely by canonical ordinal assignment. Matte red is the Imprint palette''s
-    reserved semantic anchor for bad/loss/error roles, so a reader''s first impression
-    of the chart is ''a huge wall of red = a huge pile of problems'' when it actually
-    represents successful resolutions. Reassign colors so the semantically-loaded
-    red slot doesn''t land on a positive-outcome stage — e.g. give ''Resolved'' a
-    non-red hue (such as lime #99B314) and use red for a different stage if at all,
-    or drop red from the assignment entirely since only 5 of 8 categorical slots are
-    needed.'
-  - 'DQ-01: The four upstream WIP bands (Opened, Triaged, In Progress, Waiting on
-    Customer) stay fairly uniform in thickness for most of the 90-day window and only
-    widen modestly in the final ~3 weeks. The spec explicitly calls out identifying
-    bottlenecks by ''spotting widening or narrowing bands'' as a primary application
-    of this chart type, and the current data doesn''t showcase that dynamic clearly.
-    Introduce a deliberate slowdown period (one stage''s advance rate drops for 1-2
-    weeks, visibly widening that band) and/or a drain period where a band visibly
-    narrows, so the chart demonstrates the CFD''s signature diagnostic use case.'
-  - 'LM-01/LM-02: Bands are built by manually computing cumulative boundary arrays
-    and feeding y0/y1 into d3.area(), rather than using d3-shape''s dedicated d3.stack()
-    (with a reversed key order for the top-to-bottom stage order) — the more canonical
-    high-level D3 tool for exactly this ''stacked bands over time'' pattern. Not a
-    correctness issue, but it doesn''t showcase D3''s purpose-built stacking module.'
+  - The widening/narrowing bottleneck dynamic, while now present and correctly directed,
+    is still visually subtle relative to the dominant "Resolved" band's height at
+    this scale — could be exaggerated further for an even clearer story
+  - DE-01 aesthetic sophistication remains largely default (canonical Imprint order
+    plus one semantic reassignment) — no additional emphasis technique (annotation
+    callout, gradient, curve interpolation) highlighting the bottleneck period itself
+  - LM-02 distinctive D3 usage is still modest — d3.stack() is the primary D3-specific
+    technique used; no other advanced d3-shape/d3-scale feature (curve interpolation,
+    gradient fill, brush) is present
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Support Ticket Pipeline · area-cumulative-flow · javascript · d3 · anyplot.ai" in bold dark text at top, correctly scaled to avoid overflow. "Date" x-axis label and rotated "Cumulative Ticket Count" y-axis label both in dark ink, fully readable. Tick labels (dates, counts) in a softer dark gray, all legible. Subtle horizontal gridlines only. L-shaped spine (left + bottom axis lines visible, top/right removed). Legend at top-right lists all five stages (Opened, Triaged, In Progress, Waiting on Customer, Resolved) with matching color swatches, dark readable labels, no overlap with the plot.
-      Data: Five stacked area bands from a 90-day time series, ordered top-to-bottom Opened (green) → Triaged (lavender) → In Progress (blue) → Waiting on Customer (ochre) → Resolved (matte red, dominant majority fill). First series is #009E73 as required. All bands grow monotonically left to right with mild widening of upstream bands near the right edge.
-      Legibility verdict: PASS — all text clearly readable against the light background, no overlaps, no clipping at any canvas edge.
+      Background: Warm off-white (#FAF8F1), not pure white — correct.
+      Chrome: Bold dark title "Support Ticket Pipeline · area-cumulative-flow · javascript · d3 · anyplot.ai" centered at top, correctly scaled, no overflow. "Date" x-axis label and rotated "Cumulative Ticket Count" y-axis label in dark ink, fully readable. Softer dark-gray tick labels on both axes. Subtle y-axis-only gridlines. Legend at top-right lists all five stages (Opened, Triaged, In Progress, Waiting on Customer, Resolved) with matching color swatches, no overlap with plot or title.
+      Data: Five stacked area bands over a ~90-day time series (May 03 - Jul 26+), stacked top-to-bottom Opened (brand green #009E73) -> Triaged (lavender) -> In Progress (blue) -> Waiting on Customer (ochre) -> Resolved (lime, dominant fill). First series is #009E73 as required. The "In Progress" (blue) band visibly widens roughly mid-June, and the "Waiting on Customer" (ochre) band visibly narrows roughly mid/late-July, correctly demonstrating the CFD's bottleneck/drain storytelling use case. "Resolved" is no longer matte red — the attempt-1 semantic mismatch is fixed.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/white text, clearly visible against the dark background — no dark-on-dark text anywhere. Gridlines remain subtle. L-shaped spine visible in light ink. Legend swatches and labels fully legible in light text on the dark surface.
-      Data: Colors are identical to the light render (green/lavender/blue/ochre/red bands in the same stacking order) — confirming only chrome flipped between themes, not data colors.
-      Legibility verdict: PASS — all text clearly readable against the dark background, no dark-on-dark failures, brand green and all other data colors read well on the dark surface.
+      Background: Warm near-black (#1A1A17), not pure black — correct.
+      Chrome: Same title, axis labels, and tick labels now render in light/white text, clearly visible against the dark surface — no dark-on-dark failures anywhere. Gridlines remain subtle. Legend swatches and labels are fully legible on the dark surface.
+      Data: Colors are pixel-identical to the light render (same green/lavender/blue/ochre/lime bands in the same stacking order and widening/narrowing pattern), confirming only chrome flipped between themes.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check; no dark-on-dark or light-on-light failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -72,52 +62,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title fontsize correctly scaled via
-          the length formula; all text readable in both themes
+        comment: All font sizes explicit, title fontsize correctly scaled via length
+          formula, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No collisions between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All five bands clearly distinguishable at full resolution; upstream
-          WIP bands are naturally thin given the data but remain visible
+        comment: All five bands clearly distinguishable at full resolution; thinner
+          bands (Triaged) still legible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; adjacent bands distinguishable without
-          relying on hue alone
+        comment: Imprint palette is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, legend near plot, no cut-off content, good canvas
-          utilization
+        comment: Balanced margins, legend near plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels (Date, Cumulative Ticket Count)
+        comment: Descriptive axis labels with units (ticket count)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73 and chrome is theme-correct in both
-          renders, but strict canonical ordinal assignment puts matte red (the semantic
-          bad/error anchor) on ''Resolved'' — the positive, dominant-fill stage —
-          a semantic mismatch'
+        passed: true
+        comment: 'Fixed: Resolved reassigned away from the matte-red semantic anchor
+          to lime; first series is #009E73; theme-correct backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -125,22 +111,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default using canonical Imprint order; no
-          exceptional custom hierarchy
+        comment: Well-configured with one deliberate semantic color reassignment,
+          but otherwise canonical Imprint order and no additional emphasis technique
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-only grid, L-shaped spine, generous whitespace — some refinement
-          beyond bare defaults
+        comment: Subtle y-only grid, generous whitespace, consistent typography
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size contrast between the dominant Resolved band and thin WIP ribbons
-          creates a natural focal point, though not deliberately narrated
+        comment: Deliberate widening (In Progress bottleneck) and narrowing (Waiting
+          on Customer drain) now clearly visible, directly demonstrating the spec's
+          bottleneck-spotting use case
     spec_compliance:
       score: 15
       max: 15
@@ -150,51 +136,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative flow diagram (stacked bands over time)
+        comment: Correct cumulative flow diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Workflow order, WIP band widths, monotonic cumulative counts, distinct
-          palette, legend, and reasonable date-axis intervals all present
+        comment: Workflow order, WIP band widths, monotonic counts, palette, legend,
+          date-axis intervals all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=cumulative count, bands correctly ordered and bounded
+        comment: X=date, Y=cumulative count, correctly bounded bands via d3.stack()
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          stage names exactly
+        comment: Title format correct, legend labels match stage names
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows the core CFD mechanics but bands stay fairly uniform in width
-          — doesn't dramatically demonstrate the bottleneck widening/narrowing use
-          case the spec highlights
+        comment: Now includes a clear bottleneck (widening band) and drain (narrowing
+          band), fully showcasing the CFD's bottleneck-spotting mechanics per the
+          spec
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral support-ticket pipeline scenario
+        comment: Realistic, neutral support-ticket scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible ticket volumes and stage-advance rates for a 90-day window
+        comment: Plausible ticket volumes and advance rates
     code_quality:
       score: 10
       max: 10
@@ -204,61 +189,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Top-down script; the tiny LCG helper is the library-prompt-recommended
-          idiom since JS has no seedable RNG
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no unused imports
+        comment: No unused imports; single d3 global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a 5-stage cumulative flow, no fake functionality
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current D3 7.9 API
+        comment: Correct mount-node contract, current d3 v7 API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic selection.data().join(), scales, axes, and area generator;
-          does not use d3-shape's d3.stack() module which is the more canonical tool
-          for this exact stacked-band pattern
+        comment: Now uses d3.stack() with reversed key order — the canonical d3-shape
+          tool for stacked bands — plus idiomatic data().join(), scales, and axes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses d3.area()'s y0/y1 accessors for manual band boundaries — a reasonable
-          D3-specific technique, but modest relative to the library's fuller feature
-          set
-  verdict: REJECTED
+        comment: d3.stack() plus d3.area()'s y0/y1 accessors are solid D3-specific
+          technique, but no further advanced feature (curve interpolation, gradient,
+          brush) is used
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - stacked-area
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
