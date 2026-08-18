@@ -1,7 +1,7 @@
 // anyplot.ai
 // radar-multi: Multi-Series Radar Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-17
+// Quality: 94/100 | Updated: 2026-08-18
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;

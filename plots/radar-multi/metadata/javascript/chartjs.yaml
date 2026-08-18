@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: radar-multi
 created: '2026-08-17T16:58:02Z'
-updated: '2026-08-17T17:02:57Z'
+updated: '2026-08-18T00:23:58Z'
 generated_by: claude-sonnet
 workflow_run: 32047811534
 issue: 2026
@@ -12,63 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-mul
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 94
 review:
   strengths:
+  - 'Clear visual hierarchy now: AuraSound Studio is drawn as an explicit focal point
+    (borderWidth 4 vs 2, pointRadius 6 vs 4, order: 0 so it renders on top), justified
+    by an in-code comment tying the emphasis to the two attributes buyers weigh most
+    (Sound Quality, Noise Cancelling) — directly resolves the prior DE-03 ''no focal
+    point'' weakness'
+  - Per-series pointStyle shapes (circle / triangle / rectRot) add a Chart.js-distinctive,
+    colorblind-friendly redundant encoding beyond hue alone, resolving the prior LM-02
+    'generic radar config' weakness
+  - hexToRgba helper removed — alpha-blended fill colors are now built with a plain
+    string-concat (color + '4D'/'33'), tightening the code back to a clean imports/data/mount/chart
+    KISS shape
   - 'Imprint palette used in exact canonical order (#009E73, #C475FD, #4467A3), identical
-    data colors across light and dark renders, with fully theme-correct chrome (backgrounds,
-    text, grid) in both themes'
-  - Fill alpha (0.25) sits precisely in the spec-recommended 0.2-0.3 range, and every
-    series uses both a filled polygon and a distinct outline as the spec suggests
-  - Point markers use the page-background color as their border, creating a clean
-    'cutout' effect where polygons overlap in both themes
-  - Gridlines and angle lines at regular 20-unit steps with category labels clearly
-    placed at the outer edge, matching the spec's gridline and labeling requirements
-  - 'Realistic, neutral data: three headphone models with plausible, differentiated
-    strength/weakness profiles (audio-focused, battery-focused, comfort-focused) rather
-    than generic or flat values'
-  - 'Deterministic, KISS-adjacent code that respects the JS mount-node contract exactly
-    (canvas appended to #container, animation: false, no fixed sizing)'
+    data colors across light and dark renders, with fully theme-correct chrome (background,
+    text, grid, legend) in both themes'
+  - Fill alpha (0.2–0.3 range via 33/4D hex alpha) matches the spec's transparency
+    guidance, and every series still uses both a filled polygon and a distinct outline
+  - Realistic, neutral wireless-headphone comparison data with plausible, differentiated
+    strength/weakness profiles across all six axes
+  - Point markers use the page-background color as their border, keeping series distinguishable
+    in the tightly-clustered Comfort-axis region in both themes
   weaknesses:
-  - 'DE-01: Aesthetic treatment is competent but generic — three equal-weight overlapping
-    polygons with palette defaults and no distinctive visual flourish beyond the required
-    tokens (e.g. no varied line/point treatment to add polish)'
-  - 'DE-02: Some refinement exists (transparent tick backdrop, page-bg point borders)
-    but the grid/angle lines use plain default weight and there''s no further whitespace
-    or chrome tuning beyond the baseline tokens'
-  - 'DE-03: No visual hierarchy or focal point — all three series are drawn with identical
-    line weight and z-order, so the chart shows raw comparison data without guiding
-    the viewer to an insight; consider emphasizing one series (e.g. thicker line/higher
-    opacity) or adding a brief callout on the standout attribute'
-  - 'LM-02: Radar-specific config (pointLabels, angleLines, stepped ticks) is fairly
-    generic — nothing here is distinctively Chart.js (e.g. no custom point-style shapes
-    per series, no plugin-based enhancement) that couldn''t be replicated easily in
-    another library'
-  - 'CQ-01: The hexToRgba helper function is a reasonable necessity for alpha-blended
-    fills, but it''s a deviation from the strict KISS ''imports -> data -> plot''
-    shape — inlining or precomputing the rgba strings would tighten this further'
+  - 'DE-02: Grid and angle-line styling still rely on plain token defaults (t.grid,
+    circular grid) with no additional chrome tuning beyond the baseline — e.g. no
+    varied opacity between the value gridlines and the angle spokes to add depth'
+  - 'LM-02: The pointStyle differentiation is a good step but still fairly subtle
+    at default marker sizes — a further push (e.g. a small custom plugin for per-axis
+    leader callouts, or dashed borders on secondary series) would make the Chart.js-specific
+    mastery even more evident'
+  - The featured-series narrative is only visible in a code comment, not in the chart
+    itself (e.g. no subtitle or annotation calling out why AuraSound Studio is emphasized)
+    — a viewer without the source can infer emphasis from line weight alone
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching the required #FAF8F1 surface — not pure white.
+      Background: Warm off-white, matching the required #FAF8F1 surface — not pure white, not dark.
       Chrome: Bold dark title "radar-multi · javascript · chartjs · anyplot.ai" centered at top; six category
         labels (Sound Quality, Battery Life, Comfort, Noise Cancelling, Build Quality, Value) in dark ink at the
         outer edge of the hexagonal grid; subtle light-gray radial gridlines at 20/40/60/80/100 with numeric
         tick labels; legend with colored swatches and model names centered below the plot. All text is clearly
-        readable against the light background.
-      Data: Three overlapping filled polygons — AuraSound Studio in brand green (#009E73), PulseWave Air in
-        lavender (#C475FD), EchoFit Sport in blue (#4467A3) — each with a solid outline, semi-transparent fill,
-        and circular point markers bordered in the page background color for a clean cutout look against
-        overlaps.
+        readable against the light background — no light-on-light failures.
+      Data: Three overlapping filled polygons — AuraSound Studio in brand green (#009E73) drawn with a visibly
+        thicker outline, larger circular point markers, and rendered on top of the other two series (clear focal
+        point); PulseWave Air in lavender (#C475FD) with triangle point markers; EchoFit Sport in blue (#4467A3)
+        with rotated-square (rectRot) point markers. Each polygon has a solid outline plus a semi-transparent fill,
+        and point markers are bordered in the page-background color for a clean "cutout" look where polygons
+        overlap (e.g. the tightly-clustered Comfort axis).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching the required #1A1A17 surface — not pure black.
-      Chrome: Same title and category labels now rendered in light/off-white ink, clearly legible against the
-        dark background; gridlines and angle-spokes remain subtle light gray at low opacity; legend text is
-        light-colored and fully readable; no dark-on-dark text anywhere.
-      Data: Identical green/lavender/blue polygon colors to the light render — confirmed unchanged data-color
-        identity, only the chrome (background, text, grid) flipped for the dark theme. Point borders now pick
-        up the dark page background for the same cutout effect.
+      Background: Warm near-black, matching the required #1A1A17 surface — not pure black, not light.
+      Chrome: Same title and category labels rendered in light/off-white ink, clearly legible against the dark
+        background; gridlines and angle-spokes remain subtle at low opacity; legend text is light-colored and
+        fully readable. No dark-on-dark text anywhere — every label, tick, and legend entry is easily distinguished
+        from the near-black surface. Brand green (#009E73) reads clearly against both surfaces.
+      Data: Identical green/lavender/blue polygon colors and identical per-series point-style shapes (circle /
+        triangle / rectRot) to the light render — confirmed unchanged data-color identity, only the chrome
+        (background, text, grid) flipped for the dark theme. Point borders now pick up the dark page background
+        for the same cutout effect, and AuraSound Studio retains the same bold-line, top-z-order emphasis.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -87,22 +90,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements, including the
-          tightly-clustered Comfort-axis points
+        comment: No text overlaps with other text or data elements; page-bg point
+          borders keep the tightly-clustered Comfort-axis markers distinguishable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Point markers (radius 5, hover 7) with contrasting page-bg borders
-          stay distinguishable even where polygons overlap
+        comment: Featured series (larger radius, order:0) stays visible on top of
+          overlapping fills; distinct point-style shapes aid separation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast and CVD-safe hues; page-bg point borders add redundant
-          definition beyond hue alone
+        comment: Good contrast, CVD-safe hues, and now redundant marker-shape encoding
+          beyond hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -125,30 +128,32 @@ review:
         comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3), identical across
           themes, theme-correct chrome in both renders'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured but generic radar look; no distinctive polish beyond
-          the required tokens
+        passed: true
+        comment: Featured-series treatment (bold outline, larger points, top z-order)
+          plus per-series point-style shapes add intentional, evidence-backed polish
+          beyond token defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Transparent tick backdrop and page-bg point borders show some refinement,
-          but grid/spokes use plain defaults
+        passed: true
+        comment: Transparent tick backdrop and page-bg point borders remain; grid/angle-line
+          styling is still plain default weight with no further chrome tuning
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Three series drawn with identical weight/z-order; no focal point
-          or emphasis guiding the viewer to an insight
+        passed: true
+        comment: Clear focal point via the featured series (bolder line, larger markers,
+          drawn on top), directly guiding the viewer's eye and resolving the prior
+          'no hierarchy' weakness
     spec_compliance:
       score: 15
       max: 15
@@ -204,16 +209,16 @@ review:
         comment: 0-100 scores plausible and internally consistent with each model's
           implied positioning
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly imports/data/plot shape, but includes a small hexToRgba helper
-          function
+        comment: hexToRgba helper removed; code is now a clean data/mount/chart shape
+          with no standalone functions
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -240,24 +245,25 @@ review:
         comment: 'Correctly appends canvas to #container, animation disabled, current
           API'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct high-level radar API usage, idiomatic map()-based dataset
+          construction, and order used to control draw z-index
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level radar API usage with idiomatic dataset construction
-          via map()
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Radar config (pointLabels, angleLines, backdropColor) is fairly generic,
-          little that is distinctively Chart.js
-  verdict: REJECTED
+        comment: Per-series pointStyle shapes (circle/triangle/rectRot) are a genuine
+          Chart.js-specific, non-trivial radar customization; a further custom-plugin
+          touch would push this to full marks
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
