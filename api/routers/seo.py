@@ -521,13 +521,24 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
 
 @router.get("/robots.txt")
 async def get_robots():
-    """
-    Serve robots.txt for API backend.
+    """Serve robots.txt for the API backend.
 
-    Blocks all crawlers - APIs should not be indexed by search engines.
-    Social media bots (WhatsApp, Twitter, etc.) are unaffected.
+    The API itself should not be indexed, but `/og/` must be crawlable: every
+    prerendered page on anyplot.ai references its preview image there, and a
+    blanket Disallow made those images unreachable for anything that honours
+    robots.txt — Google Images, and the AI assistants that explicitly say they
+    comply. The image answered 200 while the host forbade fetching it, so an
+    assistant asked to show a plot could read the code and not the picture.
+
+    Link-preview bots were never affected either way; they do not consult
+    robots.txt, which is why this went unnoticed.
+
+    `Allow` is placed first deliberately. A compliant crawler resolves by
+    specificity and would reach the same answer either way, but simpler
+    first-match parsers would stop at `Disallow: /` and never see the
+    exception — the same ordering rule `app/public/robots.txt` documents.
     """
-    return Response(content="User-agent: *\nDisallow: /\n", media_type="text/plain")
+    return Response(content="User-agent: *\nAllow: /og/\nDisallow: /\n", media_type="text/plain")
 
 
 @router.get("/sitemap.xml")
