@@ -74,8 +74,27 @@ const boxStats = rawSamples.map((values) => {
 });
 
 const allValues = rawSamples.flat();
-const yMin = Math.min(...allValues) - 40;
-const yMax = Math.max(...allValues) + 40;
+const valueRange = Math.max(...allValues) - Math.min(...allValues);
+const yPad = valueRange * 0.05;
+const yMin = Math.min(...allValues) - yPad;
+const yMax = Math.max(...allValues) + yPad;
+
+// Pick the pair of batches with the widest non-overlapping notch gap - the
+// clearest "significantly different medians" claim - to call out visually.
+function findMostSignificantPair(stats) {
+  let best = null;
+  for (let i = 0; i < stats.length; i++) {
+    for (let j = i + 1; j < stats.length; j++) {
+      const a = stats[i], b = stats[j];
+      let gap = null;
+      if (a.notchTop < b.notchBottom) gap = b.notchBottom - a.notchTop;
+      else if (b.notchTop < a.notchBottom) gap = a.notchBottom - b.notchTop;
+      if (gap !== null && (!best || gap > best.gap)) best = { i, j, gap };
+    }
+  }
+  return best;
+}
+const highlightPair = findMostSignificantPair(boxStats);
 
 // --- Chart -------------------------------------------------------------------
 let customGroup = null;
@@ -129,19 +148,27 @@ Highcharts.chart("container", {
             .attr({ "stroke-width": 2, stroke: color, zIndex: 3 })
             .add(customGroup);
 
-          // Notched box body — hourglass waist marks the median CI
+          // Notched box body — hourglass waist marks the median CI, with
+          // gently rounded outer corners for a more polished, less "default"
+          // silhouette.
+          const r = Math.min(6, boxWidth * 0.15, notchInset * 0.6);
           this.renderer
             .path([
-              "M", left, yQ3,
-              "L", right, yQ3,
+              "M", left + r, yQ3,
+              "L", right - r, yQ3,
+              "A", r, r, 0, 0, 1, right, yQ3 + r,
               "L", right, yNotchTop,
               "L", right - notchInset, yMed,
               "L", right, yNotchBottom,
-              "L", right, yQ1,
-              "L", left, yQ1,
+              "L", right, yQ1 - r,
+              "A", r, r, 0, 0, 1, right - r, yQ1,
+              "L", left + r, yQ1,
+              "A", r, r, 0, 0, 1, left, yQ1 - r,
               "L", left, yNotchBottom,
               "L", left + notchInset, yMed,
               "L", left, yNotchTop,
+              "L", left, yQ3 + r,
+              "A", r, r, 0, 0, 1, left + r, yQ3,
               "Z",
             ])
             .attr({
@@ -150,6 +177,7 @@ Highcharts.chart("container", {
               "stroke-width": 2,
               zIndex: 4,
             })
+            .shadow({ color: t.ink, offsetX: 0, offsetY: 2, opacity: 0.15, width: 3 })
             .add(customGroup);
 
           // Median line through the notch waist
@@ -161,11 +189,35 @@ Highcharts.chart("container", {
           // Outliers
           s.outliers.forEach((v) => {
             this.renderer
-              .circle(xc, yAxis.toPixels(v, false), 5)
+              .circle(xc, yAxis.toPixels(v, false), 7.5)
               .attr({ fill: t.pageBg, stroke: color, "stroke-width": 2, zIndex: 6 })
               .add(customGroup);
           });
         });
+
+        // Significance bracket: make the "non-overlapping notches" claim
+        // visible directly on the chart for the most clearly separated pair.
+        if (highlightPair) {
+          const { i, j } = highlightPair;
+          const x1 = xAxis.toPixels(i, false);
+          const x2 = xAxis.toPixels(j, false);
+          const topPixel = Math.min(
+            yAxis.toPixels(boxStats[i].whiskerHigh, false),
+            yAxis.toPixels(boxStats[j].whiskerHigh, false)
+          );
+          const barY = topPixel - 34;
+          const tick = 12;
+
+          this.renderer
+            .path(["M", x1, barY + tick, "L", x1, barY, "L", x2, barY, "L", x2, barY + tick])
+            .attr({ "stroke-width": 1.5, stroke: t.inkSoft, zIndex: 7, fill: "none" })
+            .add(customGroup);
+          this.renderer
+            .text("significant (95% CI)", (x1 + x2) / 2, barY - 8)
+            .attr({ align: "center", zIndex: 7 })
+            .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+            .add(customGroup);
+        }
       },
     },
   },
@@ -189,6 +241,8 @@ Highcharts.chart("container", {
   yAxis: {
     min: yMin,
     max: yMax,
+    startOnTick: false,
+    endOnTick: false,
     title: { text: "Bulb Lifespan (hours)", style: { color: t.inkSoft, fontSize: "16px" } },
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
