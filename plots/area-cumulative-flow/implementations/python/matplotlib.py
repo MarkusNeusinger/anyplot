@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: matplotlib 3.11.1 | Python 3.13.15
-Quality: 89/100 | Updated: 2026-08-18
+Quality: 95/100 | Updated: 2026-08-18
 """
 
 import sys

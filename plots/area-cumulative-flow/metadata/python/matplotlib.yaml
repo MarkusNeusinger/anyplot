@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T20:58:11Z'
-updated: '2026-08-18T02:55:43Z'
+updated: '2026-08-18T03:01:46Z'
 generated_by: claude-sonnet
 workflow_run: 32092933453
 issue: 5239
@@ -12,120 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 95
 review:
   strengths:
-  - 'Stack order exactly matches the spec''s explicit requirement: Backlog (earliest
-    stage) on top, Done (latest stage) on bottom, with the first stackplot series
-    correctly assigned brand green #009E73'
-  - Full theme-adaptive chrome coverage — PAGE_BG/ELEVATED_BG/INK/INK_SOFT tokens
-    are threaded through title, axis labels, ticks, spines, grid, legend box, and
-    annotation box, and both renders are fully readable
-  - 'Data storytelling: a shaded axvspan region plus a quantified annotation ("Testing
-    WIP peaks at 30 items") pinpoints the core CFD insight — the Testing-stage bottleneck
-    buildup and drain'
-  - 'Idiomatic matplotlib usage: ax.stackplot for the area layers, mdates.WeekdayLocator/DateFormatter
-    for clean biweekly date ticks, tick_params(length=0) to drop tick marks while
-    keeping labels, and a manually reversed legend order that matches the visual top-to-bottom
-    stacking'
-  - Realistic, well-scaled 90-day Kanban dataset with monotonically non-decreasing
-    cumulative counts, a widening-then-narrowing Testing bottleneck, a steady Development
-    buffer, and a growing Backlog — covers the plot type's key analytical features
+  - Title now includes the full mandated format with the 'python' language token,
+    and the title-fontsize scaling formula keeps the longer string comfortably within
+    canvas bounds
+  - Bottleneck highlight (axvspan) now uses a theme-adaptive alpha (0.06 light / 0.10
+    dark) driven from the INK token instead of a fixed-alpha categorical color, so
+    it reads with consistent visual weight in both renders
+  - Thin INK-colored edge strokes (linewidth=0.5) now separate the five stacked bands,
+    sharpening the WIP-boundary read that is the core analytical value of a cumulative
+    flow diagram — directly fixes the prior color-accessibility gap between the perceptually
+    close lavender-Testing/blue-Development pair
+  - 'Stack order exactly matches the spec: Backlog (earliest stage) on top, Done (latest)
+    on bottom, with the first stackplot series correctly assigned brand green #009E73'
+  - Full theme-adaptive chrome coverage — both renders fully legible, no dark-on-dark
+    or light-on-light failures
+  - 'Strong data storytelling: shaded bottleneck window plus a quantified arrow-annotated
+    callout pinpoints the CFD''s core insight'
+  - 'Idiomatic matplotlib throughout: ax.stackplot, mdates.WeekdayLocator/DateFormatter,
+    tick_params(length=0), manually reversed legend order matching the visual stack
+    direction'
+  - 'Realistic 90-day Kanban dataset covering all key CFD behaviors: S-curve completion,
+    a build-then-drain Testing bottleneck, a steady Development buffer, and a growing
+    Backlog'
   weaknesses:
-  - 'Title is missing the required language field: renders as ''Sprint Kanban Board
-    · area-cumulative-flow · matplotlib · anyplot.ai'' but the mandated format is
-    ''{Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai'' — insert
-    ''python'' between ''area-cumulative-flow'' and ''matplotlib''. The corrected
-    string is longer (~78 chars incl. the descriptive prefix); re-check it against
-    the title_fontsize = max(8, round(12 * 67 / len(title))) scaling rule so it stays
-    within the ~70-85% width band for a prefixed mandated title instead of overflowing.'
-  - The ax.axvspan bottleneck-highlight (alpha=0.07, lavender COLORS[1]) is barely
-    visible in the light render but reads as a much more prominent, hard-edged translucent
-    block in the dark render, because the same alpha/hex blended over a much darker
-    background raises perceived contrast far more — creates a visual inconsistency
-    between themes. Use a theme-adaptive alpha (lower on dark) or drive the tint from
-    INK/ELEVATED_BG rather than a categorical data color so the highlight reads with
-    similar visual weight in both themes.
-  - With 5 adjacent stacked bands (including the perceptually close lavender-Testing
-    / blue-Development pair), no boundary stroke separates the layers. Since the entire
-    analytical value of a CFD is reading the vertical distance between two adjacent
-    band boundaries (WIP), a thin ink-colored stroke between layers (per the style
-    guide's 'Optional outline pattern') would sharpen boundary legibility, especially
-    under CVD simulation.
+  - 'LM-02 still capped below max: stackplot + WeekdayLocator + styled annotate +
+    edge-stroked layers is a solid, cohesive combination, but none of these individual
+    techniques is unique to matplotlib — a comparably strong result is achievable
+    in other stacked-area-capable libraries with similar effort'
+  - DE-01 aesthetic sophistication is clearly above generic defaults but not yet at
+    full publication-tier custom design (e.g. no custom typography hierarchy beyond
+    fontsize scaling, no secondary encoding like value labels on key bands)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Sprint Kanban Board · area-cumulative-flow · matplotlib · anyplot.ai" in dark ink at top (missing the "python" language token — see weaknesses). X-axis "Date" and Y-axis "Cumulative Items" labels in dark ink, clearly readable. Biweekly date tick labels (Jan 08 ... Mar 18) rotated 30°, no overlap with each other or with the axis title. Subtle y-axis-only gridlines. Legend box (top-left, Backlog/Analysis/Development/Testing/Done, listed top-to-bottom matching visual stack order) has a light elevated-cream fill and soft ink-colored border, all legend text dark and legible. A very faint pink-tinted rectangle (axvspan) sits above the stacked area between ~Jan 22 and ~Mar 04, marking the bottleneck build-up window — barely visible against the cream background.
-      Data: Five stacked bands bottom-to-top — Done (green #009E73), Testing (lavender #C475FD), Development (blue #4467A3), Analysis (ochre #BD8233), Backlog (matte red #AE3030), all at alpha 0.88. An italic annotation "Testing WIP peaks at 30 items" in a light elevated callout box with an arrow points down into the Testing band at its widest point (~day 60). No clipping observed at any canvas edge (title, tick labels, annotation box, and axis labels all sit with comfortable margin).
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Sprint Kanban Board · area-cumulative-flow · python · matplotlib · anyplot.ai" in dark ink at top, ~75-80% of plot width, fully visible and not overflowing. Axis labels "Date" / "Cumulative Items" and rotated biweekly date ticks (Jan 08 ... Mar 18) all in dark/soft-dark ink, clearly readable. Subtle horizontal y-axis gridlines visible but not dominant. Legend (cream elevated box, top-left) lists Backlog/Analysis/Development/Testing/Done top-to-bottom, matching the visual stack order. A subtle warm-gray tinted rectangle spans the Testing-bottleneck buildup window (~Jan 22-Mar 04), noticeable but not distracting. Italic annotation "Testing WIP peaks at 30 items" in an elevated cream box with a dark arrow points precisely at the Testing band's widest point.
+      Data: Five stacked bands bottom-to-top: Done (#009E73 green), Testing (lavender #C475FD), Development (blue #4467A3), Analysis (ochre #BD8233), Backlog (matte red #AE3030), alpha 0.88, with thin dark ink-colored edge strokes now separating every layer boundary.
+      Legibility verdict: PASS — no light-on-light text found anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now in light ink (#F0EFE8 / #B8B7B0), fully readable against the dark background — no dark-on-dark failures found. Legend box uses the dark elevated fill (#242420) with a light border and light text, fully legible. The same axvspan rectangle (Jan 22–Mar 04) is now a visibly darker/violet-tinted hard-edged block against the near-black background — considerably more prominent than its light-theme counterpart (see weaknesses, theme-inconsistent highlight).
-      Data: Identical five Imprint colors to the light render (Done green, Testing lavender, Development blue, Analysis ochre, Backlog red) — confirmed unchanged data-color hexes across themes, only chrome flipped. Annotation callout box and arrow re-rendered in dark-appropriate tones (dark fill, light border/text), fully legible, same position, no clipping at the right edge.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis/tick text now rendered in light ink, fully legible against the dark surface — no dark-on-dark failures anywhere (title, axis labels, tick labels, legend text, annotation text all confirmed readable). Gridlines subtle but visible. Legend uses the dark elevated fill with light border/text. The bottleneck-highlight rectangle is now a comparably subtle warm-gray tint in the same date window, consistent in visual weight with the light render (fixed from Attempt 1, where it was a much harder-edged block in dark mode). Annotation callout box re-themed correctly (dark elevated fill, light border/arrow/text), no clipping at any canvas edge.
+      Data: Colors pixel-identical to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) — only chrome flipped, as required. Thin light-ink edge strokes now separate every stacked layer, mirroring the light render's boundary treatment.
+      Legibility verdict: PASS — no dark-on-dark text found anywhere; brand green #009E73 (Done band) reads clearly against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks/legend
-          8pt, annotation 9pt); readable in both themes with no overlap; title comfortably
-          fills ~55% of canvas width. One point held back pending re-verification
-          once the title text changes length after the SC-04 fix.
+        comment: All text at explicit sizes, readable in both themes; longer title
+          (now including 'python' token) still fits within canvas via the length-scaled
+          fontsize formula — the point held back in Attempt 1 pending this re-check
+          is now cleared
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions; annotation box is fully opaque
-          over the data it sits above.
+        comment: No collisions between title, axes, legend, ticks, or annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stack bands at alpha=0.88 are clearly visible across the full 90-day
-          series; thin early-day bands are true zeros (data-accurate), not visibility
-          defects.
+        comment: Five stacked bands all clearly visible with appropriate alpha
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 5 adjacent stacked bands with no boundary stroke; lavender-Testing/blue-Development
-          boundary — the exact line a CFD reader needs to see — has no separation
-          aid for CVD viewers.
+        passed: true
+        comment: 'Fixed from Attempt 1: thin INK edge strokes now separate every adjacent
+          band, including the perceptually close lavender-Testing/blue-Development
+          pair'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a healthy majority of the canvas, balanced margins, legend
-          anchored near the plot, nothing cut off (verified via edge crops on all
-          four sides in both themes).
+        comment: Canvas dimension gate passed (3200x1800), no overflow or cropping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Cumulative Items" are descriptive; count axis has no
-          separate unit to add.'
+        comment: Descriptive 'Date' / 'Cumulative Items' labels with implicit units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First stackplot series (Done) is #009E73; remaining 4 series fill
-          Imprint canonical positions 2-5 in order; identical data hexes across light/dark;
-          backgrounds are #FAF8F1/#1A1A17; all chrome theme-correct in both renders.'
+        comment: 'First stackplot series (Done) = #009E73, canonical Imprint order
+          for remaining 4 series, correct theme backgrounds in both renders'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -133,26 +119,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Clearly above library defaults: alpha-blended fills, styled annotation
-          callout, reversed legend order, tick-mark removal — thoughtful, not yet
-          publication-tier custom design.'
+        comment: Custom palette assignment, styled annotation callout, alpha blending,
+          reversed legend order — clearly above defaults, short of full publication-tier
+          polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Good refinement (spines, subtle grid, elevated legend box) undercut
-          by the axvspan highlight rendering inconsistently heavy in dark theme —
-          a rough edge in an otherwise polished plot.
+        comment: 'Fixed from Attempt 1: bottleneck highlight is now theme-adaptive
+          and visually consistent across both renders; spines removed, subtle grid,
+          generous whitespace'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
         comment: Shaded bottleneck window + quantified peak annotation actively guides
-          the viewer to the chart's key insight.
+          the viewer to the key insight
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -160,28 +146,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative flow diagram (stacked area over time) with correct
-          stage stack order.
+        comment: Stacked area chart (ax.stackplot) correctly implements a cumulative
+          flow diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stack order, monotonic cumulative counts, bottleneck widening/narrowing,
-          legend, and reasonable-interval date ticks all present.
+        comment: Correct stage stacking order, legend, biweekly date ticks, distinct
+          5-color palette
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=cumulative items, full 90-day range visible via set_xlim.
+        comment: X=date, Y=cumulative items, all 90 days and 5 stages shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels are correct, but the title is missing the required
-          'python' language token between the spec-id and library name — format violation.
+        passed: true
+        comment: 'Fixed from Attempt 1: title now includes the required ''python''
+          language token, exact mandated format'
     data_quality:
       score: 15
       max: 15
@@ -191,22 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows an S-curve completion stage, a build-then-drain bottleneck,
-          an oscillating steady buffer, and a growing backlog — covers the full range
-          of CFD band behaviors.
+        comment: S-curve completion, build-then-drain bottleneck, steady buffer, growing
+          backlog — covers the full range of CFD behaviors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral software sprint / Kanban board scenario, fully plausible.
+        comment: Plausible, neutral software Kanban board scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Item counts (0-190 over 90 days) and per-stage WIP magnitudes are
-          realistic for a mid-size team sprint.
+        comment: Item counts (0-190) and WIP magnitudes are sensible for a small-to-mid
+          team sprint board
     code_quality:
       score: 10
       max: 10
@@ -216,34 +201,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: Flat top-level script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all randomness.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: sys, os, matplotlib.dates, matplotlib.pyplot, numpy, pandas — all
-          used.
+        comment: All imports (sys, os, mdates, pyplot, numpy, pandas) actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for synthesizing a 5-stage CFD dataset; no
-          fake UI or interactivity.
+        comment: Appropriate complexity for a 5-layer synthetic CFD dataset, no fake
+          UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400 with default bbox_inches; no deprecated
-          API calls.
+        comment: Saves plot-{THEME}.png via plt.savefig with default bbox_inches
     library_mastery:
       score: 8
       max: 10
@@ -253,16 +236,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Axes-level API throughout (ax.stackplot, ax.annotate, ax.legend),
-          correct mdates locator/formatter usage.
+        comment: ax.stackplot, mdates locator/formatter, tick_params(length=0), Axes-method
+          API throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Combines stackplot with WeekdayLocator date ticks and a styled annotate+arrowprops
-          callout — solid but replicable in other libraries with comparable effort.
-  verdict: REJECTED
+        passed: false
+        comment: Solid combination of features but individually replicable in other
+          stacked-area-capable libraries with comparable effort
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -276,4 +259,5 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - edge-highlighting
   - grid-styling
