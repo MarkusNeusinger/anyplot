@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' area-stacked: Stacked Area Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-08-17
+#' Quality: 92/100 | Updated: 2026-08-18
 
 library(ggplot2)
 library(dplyr)
@@ -45,18 +45,18 @@ df <- tibble(
 )
 
 # Transportation has the steepest growth trend (electrification shifting
-# demand its way) — a slightly higher fill opacity gives it a subtle focal
-# point among the five stacked layers without adding a callout annotation.
-alpha_by_sector <- c(Industrial = 0.82, Transportation = 0.97, Residential = 0.82,
-                      Commercial = 0.82, Agriculture = 0.82)
+# demand its way) — a visibly bolder separator stroke gives it a focal point
+# among the five stacked layers without adding a callout annotation. Fills
+# stay fully opaque (no alpha) so the panel gridlines never bleed through.
+linewidth_by_sector <- c(Industrial = 0.3, Transportation = 1.0, Residential = 0.3,
+                          Commercial = 0.3, Agriculture = 0.3)
 
 # --- Plot -------------------------------------------------------------------
-p <- ggplot(df, aes(x = year, y = twh, fill = sector, alpha = sector)) +
-  geom_area(position = position_stack(reverse = TRUE),
-            color = PAGE_BG, linewidth = 0.3) +
+p <- ggplot(df, aes(x = year, y = twh, fill = sector, linewidth = sector)) +
+  geom_area(position = position_stack(reverse = TRUE), color = PAGE_BG) +
   scale_fill_manual(values = IMPRINT_PALETTE, name = "Sector",
                      guide = guide_legend(reverse = TRUE)) +
-  scale_alpha_manual(values = alpha_by_sector, guide = "none") +
+  scale_linewidth_manual(values = linewidth_by_sector, guide = "none") +
   scale_x_continuous(breaks = seq(2010, 2024, by = 2), expand = c(0, 0)) +
   scale_y_continuous(labels = label_number(),
                       expand = expansion(mult = c(0, 0.05))) +
