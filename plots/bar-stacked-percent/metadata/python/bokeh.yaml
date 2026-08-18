@@ -2,55 +2,50 @@ library: bokeh
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:50:38Z'
-updated: '2026-05-08T11:11:37Z'
-generated_by: claude-haiku
-workflow_run: 25551720944
+updated: '2026-08-18T14:52:38Z'
+generated_by: claude-sonnet
+workflow_run: 32149850160
 issue: 2008
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.15
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/bokeh/plot-dark.html
-quality_score: 95
+quality_score: 94
 review:
   strengths:
-  - 'Perfect palette compliance with Okabe-Ito colors — first series is #009E73, multi-series
-    follows canonical order; theme-adaptive chrome (backgrounds, text, grid) is flawless
-    in both light and dark renders'
-  - 'Excellent text legibility with explicit font sizing (title 28pt, labels 22pt,
-    ticks 18pt); all text is clearly readable against both #FAF8F1 (light) and #1A1A17
-    (dark) backgrounds'
-  - Professional code quality with clean structure, idiomatic Bokeh patterns, and
-    proper ColumnDataSource usage; Selenium screenshot approach is correct for Bokeh
-    PNG export
-  - Perfect spec compliance — correct 100% stacked bar chart with all required features
-    (normalization, composition visualization, legend, percentage labels)
-  - Data quality is excellent — realistic smartphone market share scenario with plausible
-    values; normalized percentages and clear categorical mapping
+  - Distinctive flow-ribbon technique (low-alpha bokeh patches spanning the gaps between
+    bars) turns the 100% stacked bar into a continuity visualization, immediately
+    surfacing quarter-over-quarter share trends without any extra annotation text
+  - Theme-adaptive per-segment label coloring (white text on the brand-green Apple
+    segment, INK-token text on the lighter segments) keeps every percentage label
+    legible in both light and dark renders
+  - 'Correct canonical Imprint palette order (#009E73, #C475FD, #4467A3, #BD8233)
+    with identical data colors and theme-correct chrome across both renders'
+  - Legend relocated to a dedicated right-hand column via add_layout, avoiding collision
+    with the rightmost Q1 2025 bar that an in-frame top_right legend would have caused
+  - Realistic, seasonally-plausible smartphone market-share data — Apple's share peaks
+    in Q4 2024, consistent with real-world holiday iPhone sales cycles
   weaknesses:
-  - Design Excellence could be stronger — while professionally executed with good
-    typography and color choices, the implementation relies on library defaults without
-    custom aesthetic choices that would elevate it to publication-grade (FiveThirtyEight-level)
-    design
-  - Data storytelling lacks visual hierarchy or emphasis — the plot presents data
-    clearly but doesn't guide the reader to insights through color contrast, size
-    variation, or focal points; no visual indication of which quarters show interesting
-    market shifts
+  - Title omits the required 'python' language token — reads 'bar-stacked-percent
+    · bokeh · anyplot.ai' instead of 'bar-stacked-percent · python · bokeh · anyplot.ai'
+  - Legend retains a visible border box (p.legend.border_line_color set) — the style
+    guide's decoration-removal checklist calls for removing box frames around legends
+  - Y-axis grid alpha (0.10) sits slightly below the style guide's recommended 15-25%
+    subtle-grid range; not a legibility problem but worth nudging up for consistency
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with appropriate contrast against dark text
-      Chrome: Title "bar-stacked-percent · bokeh · anyplot.ai" rendered at 28pt in dark ink (#1A1A17), clearly readable. Axis labels "Quarter" (x) and "Market Share (%)" (y) at 22pt in dark ink, fully visible. Tick labels at 18pt in INK_SOFT (#4A4A44), distinct from background. Legend in top-right shows four categories (Apple, Samsung, Xiaomi, Others) with soft gray background (#FFFDF6) and border — excellent readability.
-      Data: Five 100% stacked bars (Q1 2024–Q1 2025) with four color segments: Apple in #009E73 (brand green) at bottom, Samsung in #D55E00 (orange) above, Xiaomi in #0072B2 (blue) third, Others in #CC79A7 (reddish purple) at top. Percentage labels inside segments for values ≥10% (white text on green Apple segments, dark text on lighter segments). Y-axis grid (INK_SOFT, 10% alpha) subtle and non-intrusive. White bar edges (line_color=PAGE_BG, line_width=2) create visual separation between stacked components.
-      Legibility verdict: PASS — all text is crisp and readable; no "light on light" failures; data colors are vibrant and distinct; grid is subtle without competing with data.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bar-stacked-percent · bokeh · anyplot.ai" top-left, italic dark axis labels ("Quarter", "Market Share (%)"), dark-gray tick labels on both axes, subtle near-invisible y-axis gridlines. All fully visible, nothing clipped at any canvas edge.
+      Data: Five quarterly bars (Q1 2024 - Q1 2025), each stacked to 100% with four segments — Apple (brand green #009E73, bottom), Samsung (lavender #C475FD), Xiaomi (blue #4467A3), Others (ochre #BD8233, top) — matching Imprint canonical order 1-4. White percentage labels on the green segment, dark labels on the lighter segments. Faint low-alpha "flow ribbons" bridge each component's segment boundary across the gaps between adjacent bars, visually tracing the share trend over time. Legend sits in a dedicated column to the right of the plot, clear of all bars.
+      Legibility verdict: PASS — every title, axis, tick, legend, and data-label element reads clearly against the light surface.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with strong contrast against light text
-      Chrome: Title rendered at 28pt in light ink (#F0EFE8), fully readable against dark background. Axis labels at 22pt in light ink, clearly visible. Tick labels at 18pt in INK_SOFT (#B8B7B0), excellent contrast. Legend background flipped to #242420 (elevated dark surface), border and text colors adjusted to light theme — all readable.
-      Data: **Colors are IDENTICAL to light render** — Apple #009E73, Samsung #D55E00, Xiaomi #0072B2, Others #CC79A7 (only chrome flipped, not data). Percentage labels present with same conditional logic. Bar edges now use dark theme colors (darker line_color) and remain visible. Y-axis grid now light-colored (INK_SOFT inverted) at 10% alpha — subtle and appropriate for dark surface.
-      Legibility verdict: PASS — no "dark on dark" failures; tick labels are light enough against near-black background; brand green #009E73 remains vibrant and readable on dark surface; data colors maintain their identity; no text contrast issues.
-
-    Both renders pass legibility checks. Data color palette is consistent (Okabe-Ito positions 1–4 identical), only chrome adapts to theme. Perfect theme-adaptive implementation.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and axis labels render in light off-white ink, tick labels in a lighter soft gray, gridlines are barely visible dark-on-dark just as intended (subtle, not absent). No dark-on-dark text failures — everything that was dark text in the light render correctly flipped to light text here.
+      Data: Identical data colors to the light render — Apple green, Samsung lavender, Xiaomi blue, Others ochre are pixel-identical hues. Percentage labels use the same per-segment white/INK logic, and since INK flips to a light tone in dark mode, the previously dark labels (Samsung/Xiaomi/Others) are now light-colored and still legible against their mid-tone fills, exactly like the always-white Apple label.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures in either render; only the chrome tokens flipped, all data colors held constant.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -61,79 +56,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
-          fully readable in both light and dark renders'
+        comment: All sizes explicit (title 50pt, axis 42pt, ticks/legend 34pt, data
+          labels 30pt bold); readable and well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all text fully readable
+        comment: Legend moved to a dedicated right column, no collision with the Q1
+          2025 bar; no text/data collisions anywhere
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars perfectly sized for clarity; segments are visually distinct;
-          percentage labels visible and well-positioned
+        comment: Bar width (0.6) and 4-series stacking are clearly visible and appropriately
+          sized for 5 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; adequate contrast between all
-          segments
+        comment: Per-segment label color (white on brand green, INK token elsewhere)
+          keeps contrast high on every fill in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins; legend positioned appropriately;
-          nothing cut-off
+        comment: Balanced margins, plot fills the majority of the canvas, legend integrated
+          close to the plot in its own column
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels descriptive with units (Market
-          Share %)
+        comment: '''Quarter'' and ''Market Share (%)'' — descriptive, with units on
+          the percentage axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: first series #009E73 (brand green), multi-series follows
-          Okabe-Ito order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); theme-adaptive
-          chrome flawless; data colors identical across both renders'
+        comment: 'First series #009E73; positions 2-4 in canonical Imprint order;
+          backgrounds and chrome theme-correct in both renders'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        passed: false
-        comment: Strong professional design with intentional color choices and explicit
-          typography; uses Okabe-Ito thoughtfully but doesn't introduce custom aesthetic
-          innovations beyond library defaults
+        passed: true
+        comment: Distinctive flow-ribbon technique adds real design thought beyond
+          a stock stacked bar; legend border box slightly undercuts the otherwise
+          strong polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle grid styling (y-axis only, 10% alpha), bar edges provide visual
-          separation, legend has custom background; good attention to detail
+        comment: Subtle y-grid, no x-grid, generous whitespace, white segment dividers;
+          legend still carries a border box the decoration checklist would remove
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Plot displays data clearly and is interpretable, but lacks visual
-          hierarchy or emphasis to guide reader to insights; no highlighting of quarterly
-          trends or market share shifts
+        passed: true
+        comment: Flow ribbons trace each component's share across quarters, surfacing
+          the Apple Q4 seasonal peak and other trends without any extra annotation
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -141,28 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar chart
+        comment: Correct 100% stacked bar chart, y-range fixed 0-100
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: normalized composition, legend, percentage
-          labels for visible segments, clear category distinction'
+        comment: Distinct harmonious colors, clear legend, in-segment percentage labels,
+          consistent component order across all bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, market share percentages on y-axis (0–100),
-          components stacked correctly
+        comment: X=quarter category, Y=percentage share, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''bar-stacked-percent · bokeh · anyplot.ai''; legend labels
-          correct (Apple, Samsung, Xiaomi, Others)'
+        passed: false
+        comment: Legend labels correct, but title omits the required 'python' language
+          token
     data_quality:
       score: 15
       max: 15
@@ -172,23 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of stacked percent: variation across quarters,
-          segment size differences, labels for large segments, unlabeled segments
-          for small values'
+        comment: All four components show real variation across quarters, not flat/uniform
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Smartphone market share data is real, comprehensible, and neutral;
-          genuine business context with recognizable brands
+        comment: 'Neutral, comprehensible business scenario: smartphone brand market
+          share by quarter'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Market share values are plausible (Apple 22–31%, Samsung 22–26%,
-          etc.) and sum to 100% correctly; no factual impossibilities
+        comment: Values and the Q4 Apple seasonal peak are consistent with real-world
+          smartphone market dynamics
     code_quality:
       score: 10
       max: 10
@@ -198,37 +189,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data setup → figure → rendering; no unnecessary
-          functions or classes'
+        comment: Linear imports -> data -> plot -> save, no functions/classes (sys.path
+          shim is required boilerplate for the bokeh.py filename collision)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is deterministic (hardcoded values); same output every execution
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: pandas, bokeh modules, selenium; no extraneous
-          imports'
+        comment: pandas, bokeh io/models/plotting, selenium webdriver — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic; proper variable naming; Selenium import is legitimate
-          for Bokeh PNG export (no fake functionality)
+        comment: No fake UI/interactivity, appropriate complexity for the flow-ribbon
+          technique
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
-          (3.9.0)
+        comment: Saves plot-{THEME}.png via the documented Selenium screenshot pattern
+          and plot-{THEME}.html via output_file/save
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -236,35 +226,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of high-level API: figure(), vbar(), LabelSet(); ColumnDataSource
-          for data management; theme-aware styling; Bokeh-idiomatic patterns throughout'
+        comment: ColumnDataSource, figure(), vbar, FixedTicker, LabelSet, add_layout
+          for legend — all idiomatic bokeh patterns
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses LabelSet with calculated midpoints and conditional logic (≥10%
-          threshold); ColumnDataSource with computed fields; theme-aware rendering
-          via environment variables; Selenium-based screenshot (Bokeh-specific export
-          pattern)
-    score_caps:
-      applied: false
-      notes: No caps triggered. VQ-02, VQ-03, SC-01, DQ-02, CQ-04 all pass; DE-01
-        and DE-02 not both ≤2.
+        comment: p.patch() flow ribbons combined with a numeric x-range + FixedTicker/major_label_overrides
+          is a distinctly bokeh-flavored technique
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - manual-ticks
+  - custom-legend
   - annotations
   - html-export
   patterns:
-  - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
-  - publication-ready
-  - grid-styling
+  - alpha-blending
   - edge-highlighting

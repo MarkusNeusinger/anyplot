@@ -2,40 +2,58 @@ library: matplotlib
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:07Z'
-updated: '2026-05-08T10:55:28Z'
-generated_by: claude-haiku
-workflow_run: 25551170861
+updated: '2026-08-18T14:50:28Z'
+generated_by: claude-sonnet
+workflow_run: 32149228784
 issue: 2008
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 90
 review:
   strengths:
-  - Perfect theme adaptation with both light and dark renders visually beautiful and
-    readable
-  - 'Correct Okabe-Ito palette usage with perfect ordering (first series = brand green
-    #009E73)'
-  - Intelligent data labeling threshold (≥8%) balances information density with readability
-  - Professional typography hierarchy and generous whitespace throughout
-  - Clean, idiomatic matplotlib code with comprehensive theme-adaptive chrome implementation
-  - Excellent visual clarity for comparing energy composition across countries
-  weaknesses: []
+  - Title now follows the exact mandated format including the language token ("bar-stacked-percent
+    · python · matplotlib · anyplot.ai"), fixing the attempt-1 SC-04 deduction
+  - Segment labels now use the idiomatic ax.bar_label(label_type="center") instead
+    of a manual per-bar ax.text() loop, fixing the attempt-1 LM-01 deduction
+  - 'Real, evidence-based data storytelling addition: the single largest segment in
+    the whole chart (Poland''s 68% coal share) gets a subtly larger label via label_artists[standout_row].set_fontsize(11),
+    computed from the actual data rather than hardcoded'
+  - Explicit font sizes at every level (title 12pt, axis labels 10pt, ticks 8pt, in-segment
+    labels 9/11pt bold) with well-proportioned, non-overlapping layout in both themes
+  - Thoughtful theme-adaptive PAGE_BG-colored bar-segment borders separate adjacent
+    stack segments and improve label contrast against fill colors
+  - 'Correct Imprint palette in canonical order with first series #009E73; theme-adaptive
+    chrome (backgrounds, text, grid, legend box) is correct in both renders'
+  - Clean KISS code structure, deterministic hardcoded data, correct plot-{THEME}.png
+    output naming
+  weaknesses:
+  - Germany's nuclear share (13%) is still dated and was not addressed in this repair
+    attempt — Germany completed its nuclear phase-out in April 2023, so a current
+    dataset would show ~0% nuclear for Germany; either label the data with an explicit
+    reference year or update the value for factual consistency with the other rows
+  - 'Design Excellence is solid but not yet publication-grade: the standout-label
+    emphasis is a real but subtle improvement (9pt to 11pt) rather than a strong focal
+    point — a color/weight-based emphasis or a short callout on Poland''s coal dependency
+    or France''s nuclear reliance would sharpen the story further'
+  - 'Library Mastery still leans generic beyond bar_label: no matplotlib-distinctive
+    feature (e.g., custom tick Formatter, hatching for the emphasized segment, or
+    annotate-based callout) that couldn''t be easily replicated in another library'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title is bold and readable in dark text (#1A1A17). Axis labels "Country" and "Percentage (%)" are clear dark text. Tick labels (countries and y-axis percentages) are dark and readable. Grid lines are subtle (alpha 0.15). Spines colored appropriately with INK_SOFT. Legend is positioned upper right with light background.
-      Data: Five energy sources shown in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, pink #CC79A7, gold #E69F00). First series is correct brand green. Percentage labels displayed inside segments where ≥8%, using bold dark text. All bars and segments fully visible and distinct.
-      Legibility verdict: PASS - All text elements are clearly readable against the light background with excellent contrast.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-stacked-percent · python · matplotlib · anyplot.ai" in dark ink, clearly legible, ~75-80% of plot width (expected for the mandated title format). X-axis label "Country" and Y-axis label "Percentage (%)" in dark ink, legible. Tick labels (country names, 0/25/50/75/100) in soft dark gray, legible. Legend box (upper right, outside plot area, elevated cream fill, soft-gray border) with 5 entries (Renewables, Nuclear, Natural Gas, Coal, Other), all legible.
+      Data: 6 stacked bars (Germany, France, UK, Spain, Italy, Poland), each normalized to 100%. Segment colors in order: #009E73 green (Renewables), #C475FD lavender (Nuclear), #4467A3 blue (Natural Gas), #BD8233 ochre (Coal), #AE3030 matte red (Other) — matches Imprint canonical order 1-5, first series is #009E73. Segments ≥8% carry bold in-segment percentage labels in dark ink, clearly readable against every fill color. Poland's 68% Coal label (the single largest segment in the chart) is visibly larger than the other labels, confirming the new size-emphasis focal point. Thin cream-colored borders separate adjacent segments.
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title is bold and readable in light text (#F0EFE8). Axis labels and tick labels are light text (#B8B7B0) with excellent contrast against dark background. Grid lines remain subtle but visible. Spines properly colored. Legend frame adapts to dark theme with appropriate background.
-      Data: All five energy source colors are identical to light render (green, orange, blue, pink, gold). Percentage labels inside segments remain visible in light text. No dark-on-dark text issues detected.
-      Legibility verdict: PASS - All text elements are clearly readable against the dark background. No dark-on-dark failures. Brand green reads well on dark surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels in light off-white ink, clearly legible. Tick labels in soft light gray, legible. Legend box (dark elevated fill #242420, soft-gray border) fully legible, no dark-on-dark issues found.
+      Data: Identical segment colors and order to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) — confirms data colors are theme-invariant, only chrome flipped. In-segment percentage labels render in light ink, clearly readable against every fill color, including on the green and blue segments. Poland's 68% Coal label remains visibly larger than the other labels, same as in the light render.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures in either render.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -46,49 +64,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts properly sized (title 24pt, labels 20pt, ticks 16pt). Readable
-          in both light and dark themes.
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
+          8pt, segment labels 9/11pt); well-proportioned, no overflow, readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, data labels positioned well within segments, legend
-          outside plot area, no collisions.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars and segments fully visible, colors well-saturated, smart
-          label threshold (≥8%) prevents clutter.
+        comment: Bar width and segment borders give clean visibility; 8% label-suppression
+          threshold avoids clutter on thin slivers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe, correct green (#009E73) as
-          first series, good contrast throughout.
+        comment: Theme-colored borders between segments neutralize low-contrast adjacent-hue
+          concerns; text contrast good on every fill
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 0-100% scale appropriate for composition, good proportions, nothing
-          cut off, generous margins.
+        comment: Balanced margins, legend anchored near the plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, clear axis labels, subtitle provides context.
+        comment: '"Percentage (%)" has units; "Country" is descriptive categorical
+          label'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct, Okabe-Ito order perfect, backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark) correct, both renders theme-correct.'
+        comment: 'Canonical Imprint order 1-5, first series #009E73, backgrounds correct,
+          chrome theme-correct in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -98,22 +116,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom Okabe-Ito palette applied correctly, professional polish,
-          intentional visual hierarchy with typography, data labels add refinement.
+        comment: 'Strong design: in-segment labels, themed segment borders, styled
+          legend box — clearly above library defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle grid, generous whitespace, clean
-          L-shaped frame.
+        comment: Spines removed, subtle y-grid, segment borders — good refinement,
+          not maximal whitespace/polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy (title → categories → segments), percentage
-          labels guide viewer focus, color progression aids tracking.
+        comment: New data-driven size emphasis on the single largest segment (Poland's
+          68% coal) creates a real focal point, but the effect is subtle rather than
+          an immediately obvious insight
     spec_compliance:
       score: 15
       max: 15
@@ -123,30 +142,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar chart implementation.
+        comment: Correct 100% stacked bar, all bars normalized to sum to 100
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: 6 categories, 5 components, normalized to
-          100%, percentage labels shown.'
+        comment: Distinct colors, clear legend, in-segment percentage labels, consistent
+          component order across bars — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Countries on x-axis, energy sources as segments, values normalized
-          to percentages, axes show full data range.
+        comment: X=category, Y=percentage 0-100, all data visible and correctly stacked
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (bar-stacked-percent · matplotlib · anyplot.ai),
-          legend identifies all components.
+        comment: Title now includes the required '· python ·' language token, matching
+          the mandated format exactly; legend labels correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -154,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of plot type (composition, proportions, multiple
-          categories across multiple components).
+        comment: Shows full mix diversity including deliberate 0%-nuclear edge case
+          for Italy and Poland
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Energy mix by country is real-world plausible, neutral context, no
-          controversial aspects.
+        comment: Real, neutral business/energy scenario, not politically framed
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 0-100% normalized scale sensible for composition analysis, country
-          values realistic.
+        comment: Mostly factually accurate country energy mixes; Germany's 13% nuclear
+          figure is still dated (Germany completed its nuclear phase-out in 2023)
+          and was not addressed in this repair attempt
     code_quality:
       score: 10
       max: 10
@@ -179,36 +197,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple straightforward code, no unnecessary functions or classes,
-          direct array operations.
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness, fully reproducible.
+        comment: Deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, matplotlib imported; all used, no extraneous dependencies.
+        comment: Only os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clean loop structure, no fake interactivity,
-          smart conditional label display.
+        comment: Appropriate complexity, no fake functionality, clean bar_label usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly, uses current matplotlib API,
-          proper savefig with theme parameter.
+        comment: Saves plot-{THEME}.png, no deprecated calls
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -216,25 +231,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper axes methods (not pyplot), correct figure/axes creation, theme
-          env var handling, tight_layout appropriate.
+        comment: Now uses ax.bar_label(label_type="center") — the idiomatic matplotlib
+          3.4+ API — instead of the prior manual ax.text() loop, plus correct ax.bar(bottom=...)
+          stacking
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Smart percentage label threshold (≥8%), careful bottom array stacking
-          management, thoughtful edge-color matching to background.
+        passed: false
+        comment: bar_label's returned Text artists are manipulated directly (per-artist
+          fontsize override) which is a mildly matplotlib-specific pattern, but overall
+          usage remains fairly generic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
+  - matrix-construction
   - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
-  - publication-ready
+  - edge-highlighting
   - grid-styling
