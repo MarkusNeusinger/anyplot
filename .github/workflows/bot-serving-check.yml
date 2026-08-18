@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     # 7 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
     # ~10.5 min worst-case; 14 leaves room to report a clean failure.
-    timeout-minutes: 14
+    timeout-minutes: 20
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
@@ -84,8 +84,12 @@ jobs:
             "Mozilla/5.0 (compatible; Gemini-Deep-Research)" \
             "Mozilla/5.0 (compatible; GoogleAgent-Mariner)" \
             "meta-externalfetcher/1.1" \
-            "MistralAI-User/1.0" \
-            "Mozilla/5.0 (compatible; DuckAssistBot/1.0)"
+            "Mozilla/5.0 (compatible; Meta-WebIndexer/1.0)" \
+            "Mozilla/5.0 (compatible; MistralAI-User/1.0; +https://docs.mistral.ai/robots)" \
+            "Mozilla/5.0 (compatible; MistralAI-Index/1.0; +https://docs.mistral.ai/robots)" \
+            "DuckAssistBot/1.2; (+http://duckduckgo.com/duckassistbot.html)" \
+            "Mozilla/5.0 (compatible; Amzn-SearchBot/1.0)" \
+            "Mozilla/5.0 (compatible; Amzn-User/1.0)"
           do
             check "$ua" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
           done

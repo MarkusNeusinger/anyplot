@@ -203,7 +203,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   from the `$is_bot` map in `app/nginx.conf` and received the empty SPA shell instead of the
   prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,
   `GoogleAgent-Mariner`, `Meta-ExternalFetcher`, `MistralAI-User` and `DuckAssistBot`, each
-  verified live against the site before the fix. These arrive because a human asked their
+  verified live against the site before the fix. The map now also carries the vendor-documented
+  retrieval agents that were never listed (`MistralAI-Index`, `Amzn-SearchBot`, `Amzn-User`,
+  `Meta-WebIndexer`) and, as best-effort, the community-reported ones (`GrokBot`, `xAI-Grok`,
+  `Grok-DeepSearch`, `YouBot`, `cohere-ai`) — mapping is not permission, so over-listing costs
+  nothing while under-listing is what caused this. These arrive because a human asked their
   assistant to open a page, and Google documents its own as generally ignoring robots.txt — so
   this map, not the crawler policy, is the only control point for them. The daily
   `bot-serving-check` now covers all of them, since the failure is invisible to every human

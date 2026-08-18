@@ -52,7 +52,7 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ### Detected bots
 
-nginx detects 45 User-Agent patterns, organized by category:
+nginx detects 52 User-Agent patterns, organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -94,12 +94,28 @@ asked about a plot page could describe nothing at all.
 | Gemini Deep Research | `gemini-deep-research` |
 | Google agents (Mariner) | `googleagent`, `google-agent` |
 | Meta AI | `meta-externalfetcher` |
-| Mistral (Le Chat) | `mistralai-user` |
+| Mistral (Le Chat) | `mistralai-user`, `mistralai-index` |
 | DuckDuckGo AI | `duckassistbot` |
+| Amazon (retrieval) | `amzn-searchbot`, `amzn-user` |
+| Meta AI search | `meta-webindexer` |
+| xAI / Grok · You.com · Cohere | `grokbot`, `xai-grok`, `grok-deepsearch`, `youbot`, `cohere-ai` — community-reported tokens, no vendor documentation; best-effort |
 
-Note the Meta split: `meta-externalfetcher` is the user-directed fetch and is
-served; `meta-externalagent` is the training crawler and is declined in
-robots.txt. They are different agents and belong on different sides.
+Three vendor splits are easy to get backwards, so they are spelled out:
+
+- **Meta**: `meta-externalfetcher` (user-directed) and `meta-webindexer` (AI
+  search index) are served; `meta-externalagent` is the training crawler and is
+  declined in robots.txt.
+- **Mistral**: `mistralai-user` and `mistralai-index` are served — Mistral
+  documents both as never used for generative-AI training; `mistralai-training`
+  is the training crawler and is not mapped.
+- **Amazon**: `amzn-searchbot` and `amzn-user` are the sanctioned retrieval
+  agents, both documented as not crawling for model training; plain `amazonbot`
+  is the training crawler and is declined.
+
+Mapping is not permission. This map decides only *what* an agent receives once
+it arrives; whether it may crawl at all is robots.txt plus Cloudflare's AI Crawl
+Control. That is why `gptbot` appears here while robots.txt declines it, and why
+mapping community-reported tokens costs nothing.
 
 **Search Engines:**
 | Bot | User-Agent Pattern |
