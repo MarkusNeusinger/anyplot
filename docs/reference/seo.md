@@ -104,18 +104,20 @@ Three vendor splits are easy to get backwards, so they are spelled out:
 
 - **Meta**: `meta-externalfetcher` (user-directed) and `meta-webindexer` (AI
   search index) are served; `meta-externalagent` is the training crawler and is
-  declined in robots.txt.
+  not mapped.
 - **Mistral**: `mistralai-user` and `mistralai-index` are served — Mistral
   documents both as never used for generative-AI training; `mistralai-training`
   is the training crawler and is not mapped.
 - **Amazon**: `amzn-searchbot` and `amzn-user` are the sanctioned retrieval
   agents, both documented as not crawling for model training; plain `amazonbot`
-  is the training crawler and is declined.
+  is the training crawler and is not mapped.
 
 Mapping is not permission. This map decides only *what* an agent receives once
 it arrives; whether it may crawl at all is robots.txt plus Cloudflare's AI Crawl
-Control. That is why `gptbot` appears here while robots.txt declines it, and why
-mapping community-reported tokens costs nothing.
+Control — which is why mapping community-reported tokens costs nothing, and why
+an unmapped agent is not thereby declined. Under the current policy everything
+except `Bytespider` may crawl, so the mapping question is only ever about
+rendering.
 
 **Search Engines:**
 | Bot | User-Agent Pattern |
@@ -135,7 +137,7 @@ mapping community-reported tokens costs nothing.
 | Anthropic crawler | `claudebot` | index/crawl |
 | Claude user fetch | `claude-user` | a human asked Claude to open the page |
 | Claude search | `claude-searchbot` | citation index |
-| OpenAI crawler | `gptbot` | training (declined in robots.txt, mapped anyway — see below) |
+| OpenAI crawler | `gptbot` | training crawler; allowed and mapped |
 | ChatGPT search | `oai-searchbot` | citation index |
 | ChatGPT user fetch | `chatgpt-user` | a human asked ChatGPT to open the page |
 | Perplexity | `perplexitybot`, `perplexity-user` | citation index / user fetch |
@@ -380,19 +382,26 @@ in step.
 Measured on the live zone 2026-08-18 (zone `anyplot.ai` → **AI Crawl Control** →
 Security):
 
+The dashboard was brought in line with the open policy on 2026-08-18. State
+after that change:
+
 | State | Agents |
 |---|---|
-| Blocked at the edge | `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Bytespider`, `Google-CloudVertexBot`, `PetalBot`, `Anchor Browser`, `Arquivo Web Crawler` |
-| Passing | `Googlebot`, `bingbot`, `Baidu`, `Applebot`, `Claude-User`, `ClaudeBot`, `Claude-SearchBot`, `ChatGPT-User`, `OAI-SearchBot`, `PerplexityBot`, `Perplexity-User`, `DuckAssistBot`, `MistralAI-User`, `Meta-ExternalFetcher`, `archive.org_bot` |
+| Blocked at the edge | `Bytespider`, `TikTok Spider`, `Anchor Browser`, `Novellum AI Crawl`, `Timpibot` |
+| Passing | everything else, including `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Google-CloudVertexBot`, `PetalBot`, `FacebookBot`, `Arquivo Web Crawler`, and every retrieval agent |
 
-Two things to note. `Google-CloudVertexBot` is blocked at the edge and appears in
-no repo-side policy — an undocumented decision that only exists as a dashboard
-toggle. And unlike the 2026-07-25 measurement, Cloudflare is **no longer
-prepending a managed robots.txt block**: the live file is byte-identical to this
-repo's, and enforcement is purely the 403.
+`Bytespider` and `TikTok Spider` are both ByteDance; the first is documented as
+ignoring robots.txt, and the second shares its operator. The remaining three are
+blocked for a weaker reason — no vendor documentation of their crawling
+behaviour could be found, so their rule-compliance is unverified rather than
+disproven. Revisit if that changes.
 
-To bring the edge in line with the policy above, unblock everything except
-`Bytespider` in the dashboard.
+Cloudflare is **not** prepending a managed robots.txt block: the live file is
+byte-identical to this repo's, and enforcement is purely the 403. That was
+different at the 2026-07-25 measurement, so re-check rather than assume.
+
+`bot-serving-check` deliberately tests the Cloud Run origin, not the edge, so it
+will never catch a dashboard change. Edge drift has to be checked by hand.
 
 Verify afterwards:
 

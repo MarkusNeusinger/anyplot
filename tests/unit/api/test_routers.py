@@ -708,21 +708,22 @@ class TestSeoProxyRouter:
 
     def test_seo_proxy_records_the_agent_that_read_the_page(self, client: TestClient) -> None:
         """The router dependency reports the PUBLIC path, not its own prefix."""
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.routers.seo.track_bot_fetch") as track:
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_bot_fetch") as track:
             client.get("/seo-proxy/bar-basic", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
         track.assert_called_once()
         assert track.call_args.args[1] == "/bar-basic"
+        assert track.call_args.args[2] == 200  # the status the handler produced
 
     def test_seo_proxy_home_records_root(self, client: TestClient) -> None:
         """The proxy root maps to "/", and the hook fires exactly once per request."""
-        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.routers.seo.track_bot_fetch") as track:
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_bot_fetch") as track:
             client.get("/seo-proxy/", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
         track.assert_called_once()
         assert track.call_args.args[1] == "/"
 
     def test_robots_and_sitemap_are_not_page_reads(self, client: TestClient) -> None:
         """Both live on this router but are machine files, not catalogue pages."""
-        with patch("api.routers.seo.track_bot_fetch") as track:
+        with patch("api.main.track_bot_fetch") as track:
             client.get("/robots.txt", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
             client.get("/sitemap.xml", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
         track.assert_not_called()
@@ -801,6 +802,10 @@ class TestSeoProxyRouter:
         with patch(DB_CONFIG_PATCH, return_value=False):
             response = client.get("/seo-proxy/scatter-basic")
             assert response.status_code == 200
+            # Degraded mode cannot tell a real spec from an invented one, so the
+            # page must not be indexable — otherwise an outage reopens the hole
+            # #10453 closed, one thin near-duplicate per string anyone tries.
+            assert '<meta name="robots" content="noindex" />' in response.text
             assert "og:title" in response.text
             assert "scatter-basic" in response.text
             assert "api.anyplot.ai/og/home.png" in response.text  # Default image via API
@@ -820,6 +825,14 @@ class TestSeoProxyRouter:
             assert "https://anyplot.ai/scatter-basic" in response.text
             # Legacy /python/{spec} prefix must NOT appear
             assert "https://anyplot.ai/python/scatter-basic" not in response.text
+
+    def test_normal_pages_are_not_noindex(self, db_client, mock_spec) -> None:
+        """The guard must apply only to degraded mode, never to real pages."""
+        client, _ = db_client
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            assert "noindex" not in client.get("/seo-proxy/scatter-basic").text
 
     def test_seo_spec_overview_not_found(self, db_client) -> None:
         """SEO spec overview should return 404 when spec not found."""
@@ -871,6 +884,7 @@ class TestSeoProxyRouter:
         with patch(DB_CONFIG_PATCH, return_value=False):
             response = client.get("/seo-proxy/scatter-basic/python/matplotlib")
             assert response.status_code == 200
+            assert '<meta name="robots" content="noindex" />' in response.text
             assert "og:title" in response.text
             assert "scatter-basic" in response.text
             assert "matplotlib" in response.text

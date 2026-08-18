@@ -307,8 +307,8 @@ def track_og_image(
     task.add_done_callback(_handle_task_exception)
 
 
-def track_bot_fetch(request: Request, path: str) -> None:
-    """Record an AI or search agent reading a page (fire-and-forget).
+def track_bot_fetch(request: Request, path: str, status: int) -> None:
+    """Record an AI or search agent requesting a page (fire-and-forget).
 
     Recorded against BOT_DOMAIN, never the main site: every Plausible event
     creates a visitor, and mixing these in is what made the human numbers
@@ -322,7 +322,11 @@ def track_bot_fetch(request: Request, path: str) -> None:
 
     Args:
         request: FastAPI request, for the UA and forwarded IP
-        path: Public path being read, e.g. "/box-basic/python/matplotlib"
+        path: Public path being requested, e.g. "/box-basic/python/matplotlib"
+        status: Response status. Recorded rather than filtered on: an assistant
+            asking for a URL that no longer exists is a signal worth having, and
+            counting it as a successful read would be a lie. Filter on it in the
+            dashboard.
     """
     user_agent = request.headers.get("user-agent", "")
     detected = detect_ai_agent(user_agent)
@@ -335,7 +339,7 @@ def track_bot_fetch(request: Request, path: str) -> None:
     # visitor's, and the rate limiter deliberately returns the rightmost
     # forwarded entry — ours. See api/request_context.py for why the two differ.
     client_ip = visitor_ip(request)
-    props = {"assistant": assistant, "kind": kind, "path": path}
+    props = {"assistant": assistant, "kind": kind, "path": path, "status": str(status)}
     url = f"https://anyplot.ai{path}"
 
     task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "bot_fetch", url, props, domain=BOT_DOMAIN))
