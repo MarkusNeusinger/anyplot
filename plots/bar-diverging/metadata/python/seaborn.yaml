@@ -2,50 +2,59 @@ library: seaborn
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:47Z'
-updated: '2026-05-08T08:55:55Z'
-generated_by: claude-haiku
-workflow_run: 25546227958
+updated: '2026-08-18T12:46:19Z'
+generated_by: claude-sonnet
+workflow_run: 32137704441
 issue: 2009
-python_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both themes
-  - Excellent theme adaptation—data colors identical across light/dark, chrome correctly
-    flips
-  - Correct diverging bar implementation with sorted data and clear positive/negative
-    distinction
-  - Clean, Pythonic code with deterministic data and proper import hygiene
-  - 'Proper color palette compliance (Okabe-Ito #009E73 green for profit, #D55E00
-    orange for loss)'
+  - 'Correct semantic Imprint palette use: Profit uses brand green #009E73 (position
+    1), Loss uses matte red #AE3030 (position 5) per the style guide''s documented
+    finance semantic exception, and the code comments explicitly justify the choice.'
+  - Zero baseline drawn as a clear theme-adaptive vertical rule, bars sorted ascending
+    by value for pattern recognition, and direct value labels at every bar tip (both
+    matching the spec's explicit notes).
+  - 'Data storytelling touches beyond the minimum: bolded value labels for the best/worst
+    performer and a ''Net Q1'' summary callout in an elevated card, giving the chart
+    a clear focal point.'
+  - Theme-adaptive chrome is threaded correctly through every element (title, axes,
+    ticks, grid, legend, callout box) and the data colors are pixel-identical between
+    light and dark renders.
+  - 'Idiomatic seaborn usage: hue-mapped palette dict with dodge=False instead of
+    a manual per-bar color loop.'
+  - Canvas is exactly 3200x1800, bbox_inches left at the safe default, deterministic
+    hardcoded data, clean KISS structure.
   weaknesses:
-  - Design Excellence moderate (4/8)—correct but resembles well-configured library
-    default rather than distinctive design
-  - 'Visual storytelling limited (DE-03: 2/6)—plot displays data clearly but without
-    narrative emphasis or focal points'
-  - 'Library Mastery moderate (LM-02: 1/5)—uses seaborn generically; no distinctive
-    features beyond basic barplot'
-  - Could enhance visual hierarchy through color contrast or size variation to guide
-    viewer attention
+  - 'Title omits the required {language} component: it renders ''bar-diverging · seaborn
+    · anyplot.ai'' but the SC-04 format is ''{spec-id} · {language} · {library} ·
+    anyplot.ai'' — fix to ''bar-diverging · python · seaborn · anyplot.ai'' (and re-check
+    the title fontsize/proportion once the string is longer).'
+  - Y-axis tick marks are still drawn (small dashes before each category label) —
+    the style guide's decoration checklist asks to remove tick marks while keeping
+    the tick labels (e.g. ax.tick_params(axis='y', length=0)).
+  - 'Design Excellence is good but stops short of ''publication-ready'': the callout
+    box and bold extremes create hierarchy, but there''s no additional refinement
+    (e.g., a subtler legend frame, or de-emphasizing mid-range bars) that would push
+    it into top-tier polish.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) ✓
-      Chrome: Title, axis labels (20pt), tick labels (16pt) all clearly visible in dark ink on light background
-      Data: Bars extend from zero baseline in green (#009E73, profit) and orange (#D55E00, loss); all 10 units fully readable
-      Legibility verdict: PASS — excellent contrast, no overlap, clean spines
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-diverging · seaborn · anyplot.ai" in dark ink, centered, fully visible. Axis labels "Profit / Loss ($ Millions)" (x) and "Business Unit" (y) in dark ink with clear units. Tick labels in soft grey, all readable. Subtle vertical grid lines on the x-axis only. Legend box (Profit/Loss swatches) top-right with an off-white elevated card and thin border; "Net Q1: +177M" callout above it in a matching card.
+      Data: 10 horizontal bars, sorted ascending by value. Six bars right of the zero line in brand green (#009E73, "Profit"), four bars left of zero in matte red (#AE3030, "Loss"). A vertical zero-baseline rule separates them. Value labels (+/-NN) at each bar tip; the extremes (-25 and +65) are bold.
+      Legibility verdict: PASS — no light-on-light text, no clipping, no overlap.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) ✓
-      Chrome: All text light-colored, clearly visible on dark background; no dark-on-dark failures
-      Data: Bars identical colors to light render (theme-independent data); baseline visible
-      Legibility verdict: PASS — proper theme adaptation, light text on dark background readable
-
-    Both renders meet all legibility requirements with only chrome (background, text color, grid) flipping by theme.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-grey tones, clearly readable against the dark surface. Grid lines are the same subtle low-alpha style. Legend and callout cards use the dark elevated surface (#242420-ish) with light text and a soft border.
+      Data: Same 10 bars in the identical green (#009E73) and red (#AE3030) hues as the light render — bars now show a thin light edge outline (seaborn's default patch edge for the "ticks" style), which adds contrast against the dark background but doesn't change the fill hues. Value labels and bold extremes match the light render exactly.
+      Legibility verdict: PASS — no dark-on-dark text found; all title/axis/tick/legend/callout text is clearly legible against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,69 +65,78 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt—all explicitly set
+        comment: All font sizes explicitly set (title 12pt, labels 10pt, ticks/legend
+          8pt); readable in both themes and still legible at the 400px mobile thumbnail.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All category labels, tick labels readable; no collisions
+        comment: No collisions between value labels, legend, callout box, or bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars perfectly sized for 10 units; baseline visible
+        comment: 10 sparse categories with prominent, clearly visible bars — appropriate
+          for the data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green/orange colorblind-safe; good contrast
+        comment: Green/red is redundantly encoded by bar direction (left/right of
+          zero) and signed value labels, so it is not the sole distinguishing signal;
+          the Imprint pair is CVD-optimized.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 60-70% canvas utilization; balanced margins
+        comment: Plot area fills a well-balanced majority of the canvas; legend and
+          callout sit near the plot, nothing is cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; labels include units
+        comment: Both axis labels are descriptive and the x-axis includes units ($
+          Millions).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds theme-correct;
-          chrome properly adaptive'
+        comment: Profit uses Imprint position 1 (#009E73), Loss uses the documented
+          semantic-exception red (#AE3030); backgrounds and chrome are theme-correct
+          in both renders; data colors identical across themes.
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured default; correct colors but not distinctive
+        comment: Above a plain default (semantic palette, styled callout card, bolded
+          extremes) but not yet publication-level polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, good whitespace
+        passed: false
+        comment: Spines removed, subtle x-only grid, generous whitespace — but y-axis
+          tick marks are left visible instead of being trimmed to zero length.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Displays data clearly (sorted by value) but no visual hierarchy or
-          narrative emphasis
+        passed: true
+        comment: Sorted bars, bolded best/worst performers, and a net-total callout
+          give the reader an immediate read on direction and magnitude.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -126,26 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar implementation
+        comment: Correct horizontal diverging bar chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Positive/negative division, contrasting colors, zero baseline, sorted
-          data
+        comment: Contrasting profit/loss colors, zero-baseline indicator, and value
+          sorting are all present as the spec's notes request.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on Y, values on X; all data visible
+        comment: Value on x, category on y; all 10 categories visible.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title 'bar-diverging · seaborn · anyplot.ai' correct; no legend needed
+        passed: false
+        comment: Legend labels (Profit/Loss) correctly match the data, but the title
+          omits the required {language} segment — reads 'bar-diverging · seaborn ·
+          anyplot.ai' instead of 'bar-diverging · python · seaborn · anyplot.ai'.
     data_quality:
       score: 15
       max: 15
@@ -155,19 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows positive and negative values, different magnitudes
+        comment: Shows both positive and negative values across a wide magnitude range
+          (-25 to +65).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Business scenario (quarterly profit/loss); neutral, realistic
+        comment: Neutral, plausible quarterly business-unit profit/loss scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (-25 to +65M) realistic for business domain
+        comment: Values in $ millions are sensible for quarterly business-unit results;
+          net total matches the sum of the displayed values.
     code_quality:
       score: 10
       max: 10
@@ -177,33 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → tokens → data → plot → save'
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; no randomness
+        comment: Deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, sys, plt, np, pd, sns)
+        comment: Only os, sys (path cleanup), pandas, numpy, seaborn, matplotlib —
+          all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic list comprehension for color assignment; no fake UI
+        comment: Appropriate complexity, no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves plot-{THEME}.png at dpi=400 with bbox_inches left at the safe
+          default.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -211,20 +235,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of sns.barplot, sns.set_theme, matplotlib rc integration
+        comment: Uses sns.barplot's declarative hue+palette dict mapping (dodge=False)
+          instead of manual per-bar coloring — the recommended seaborn pattern for
+          semantic categorical color.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic barplot usage; no distinctive seaborn features beyond basic
-          API
+        comment: Hue-based semantic color mapping is a seaborn-idiomatic touch, but
+          the overall chart could be replicated with modest effort in another library
+          — no feature unique to seaborn.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
-  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
   - grid-styling
