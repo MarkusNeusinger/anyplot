@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:35Z'
-updated: '2026-08-18T12:42:07Z'
+updated: '2026-08-18T12:51:08Z'
 generated_by: claude-sonnet
 workflow_run: 32137520102
 issue: 2009
@@ -12,135 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - 'Correct chart type: horizontal diverging bar chart with bars sorted by value
-    for immediate pattern recognition, per spec''s explicit recommendation.'
-  - Zero baseline is marked with a clear vertical reference line (ax.axvline), and
-    value labels with explicit +/- signs give a redundant encoding beyond color alone.
-  - 'Semantic color mapping is deliberate and correct: positive = Imprint position-1
-    brand green (#009E73), negative = Imprint position-5 matte red (#AE3030) — a valid
-    semantic exception (sentiment positive/negative -> green/red) rather than an arbitrary
-    override.'
-  - 'Theme-adaptive chrome is threaded through consistently: PAGE_BG/INK/INK_SOFT
-    tokens applied to background, spines, ticks, grid, legend frame, and text in both
-    plot-light.png and plot-dark.png; data colors are identical across themes.'
-  - 'Clean, deterministic code: KISS structure (no functions/classes), fully deterministic
-    hardcoded data (no seed needed), only used imports, uses Axes-based idiomatic
-    API (ax.barh, not pyplot.bar), correct plt.savefig(f''plot-{THEME}.png'') with
-    no bbox_inches=''tight''.'
-  - Data is realistic and neutral (product satisfaction survey), covers a good spread
-    of both positive and negative magnitudes including a near-zero case (Sustainability
-    -8) and clear extremes (Brand Trust +85, Mobile App -52).
+  - Bars sorted by value for pattern recognition, with a clear zero-baseline (axvline)
+    — matches every spec requirement (contrasting colors, horizontal orientation,
+    baseline indicator, sorting)
+  - 'Correct Imprint palette use: brand green #009E73 for positive, matte-red semantic
+    anchor #AE3030 for negative — a legitimate semantic exception (sentiment polarity),
+    not an arbitrary override'
+  - 'Both renders are fully theme-correct: all chrome (title, ticks, spines, grid,
+    legend, annotation boxes) uses theme-adaptive tokens, no dark-on-dark or light-on-light
+    failures, no overlap or edge clipping found on close inspection'
+  - Curved-arrow annotations ('Strongest driver' / 'Biggest pain point') add real
+    data storytelling and guide the viewer straight to the insight
+  - Value labels at bar ends with direction-aware offset/alignment (left-aligned positive,
+    right-aligned negative) read cleanly with no collisions
+  - Clean KISS code structure, deterministic hardcoded data (no seed needed), only
+    used imports
   weaknesses:
-  - 'Design Excellence is competent but not exceptional (14/20): the chart reads as
-    a well-executed standard diverging bar rather than a publication-grade piece.
-    Consider adding a subtle visual emphasis on the extremes (e.g. a callout/annotation
-    on the best ''Brand Trust +85'' and worst ''Mobile App -52'' bars) to push Data
-    Storytelling from ''good'' to ''excellent''.'
-  - 'Library Mastery is generic (5/10, LM-02=1): the Patch-based custom legend and
-    np.argsort sorting are common patterns portable to almost any plotting library
-    with minor syntax changes. Leverage a feature more distinctive to matplotlib''s
-    Axes API (e.g. ax.annotate with arrow/connectionstyle for the extremes, or a Formatter/transform-based
-    touch) to raise Distinctive Features.'
-  - 'Minor VQ-01 polish: value labels (''+85'', ''-52'') sit close to the plot''s
-    right/left extremes near the x-limits — double check they stay comfortably inside
-    the axis padding at all data extremes as the repair loop tunes other elements.'
+  - 'Design is strong but stops short of publication-grade: could push typography/hierarchy
+    further (e.g. a subtitle or slightly bolder title) for the top Aesthetic Sophistication
+    tier'
+  - Annotation/legend/grid refinement is good but not maximal — a touch more whitespace
+    between the legend box and plot edge would tighten Visual Refinement further
+  - Library Mastery relies on standard barh + annotate patterns; a more distinctive
+    matplotlib-only technique (e.g. path effects, blended transforms) would raise
+    Distinctive Features beyond 'uses some library-specific features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-diverging · python · matplotlib · anyplot.ai" in dark ink, centered, comfortably sized (~55% of plot width), fully visible with no clipping. Y-axis shows 12 category labels (Brand Trust, Product Quality, Payment Options, Return Policy, Customer Support, Product Range, Website Experience, Loyalty Program, Sustainability, Delivery Speed, Pricing, Mobile App) in dark-gray ink, all legible. X-axis "Net Satisfaction Score" label and numeric ticks (-100 to 100) in dark-gray, clearly visible. Subtle vertical gridlines and a solid zero-baseline reference line are visible without competing with the data. Legend (bottom right, "Positive (Satisfied)" / "Negative (Dissatisfied)") sits in an elevated off-white box with a thin border, positioned in empty space next to the shortest negative bars — no overlap with data or text.
-      Data: Bars sorted from most positive (Brand Trust +85) to most negative (Mobile App -52). Positive bars render in brand green (#009E73), negative bars in matte red (#AE3030), each with a subtle darker edge. Bold value labels with explicit +/- signs sit just outside each bar end. All text is clearly readable against the light background.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-diverging · python · matplotlib · anyplot.ai" in dark ink, centered-right, fully visible. Y-axis shows 12 category labels (Brand Trust, Product Quality, Payment Options, Return Policy, Customer Support, Product Range, Website Experience, Loyalty Program, Sustainability, Delivery Speed, Pricing, Mobile App) in dark-soft gray. X-axis "Net Satisfaction Score" in dark ink with tick labels -100 to 100. Subtle vertical gridlines. Two callout boxes ("Strongest driver", "Biggest pain point") with curved arrows, styled with an elevated off-white fill and soft-ink border. Legend box (bottom right) with green/red swatches labeled "Positive (Satisfied)" / "Negative (Dissatisfied)".
+      Data: Horizontal diverging bars — green (#009E73) for positive values (18 to 85), matte red (#AE3030) for negative values (-8 to -52), sorted descending. Bold value labels (+85, +72, ... -52) at each bar end. Vertical line at x=0 marks the baseline.
+      Legibility verdict: PASS — all text (title, tick labels, category labels, value labels, annotations, legend) is clearly readable against the light background; no overlap or edge clipping found on close inspection.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis labels, tick labels, gridlines, and legend layout as the light render, but all text/ticks/spines/gridlines have flipped to light ink tones (off-white/light-gray) and the legend box uses the elevated dark surface (#242420-style) with light text. No dark-on-dark text anywhere — every label is clearly legible against the near-black background.
-      Data: Positive bars are still brand green (#009E73) and negative bars still matte red (#AE3030) — pixel-identical hues to the light render; only the chrome (background, text, grid, legend frame) flipped as expected.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, tick labels, and category labels now rendered in light ink/off-white and light gray. Gridlines subtle and visible against the dark surface. Annotation callout boxes use the dark elevated fill (#242420) with light-gray border and light arrow. Legend box also uses the dark elevated fill with light text.
+      Data: Bar colors identical to the light render — green #009E73 and matte red #AE3030, confirming only chrome flipped, not data colors.
+      Legibility verdict: PASS — no dark-on-dark failures found; all title/label/tick/annotation/legend text is clearly legible in light ink against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 12pt, axis 10pt, ticks/legend
-          8pt, value labels 7pt); readable in both themes; title fits without overflow.
-          Value labels near the plot's x-extremes deserve a closer padding check.
+        comment: All font sizes explicitly set (title 12pt, xlabel 10pt, ticks 8pt,
+          value labels 7pt); readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between value labels, category labels, legend, or data.
+        comment: Zoomed crops of annotation/legend region confirm no collisions in
+          either theme
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 bars at height=0.7 are prominent and well-sized for this data
-          density.
+        comment: 12 bars at height=0.7 well-spaced and clearly visible, appropriate
+          for sparse category count
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red is redundantly encoded via bar direction (left/right of
-          zero) and explicit +/- text labels, so color is not the sole signal; Imprint
-          palette is CVD-optimized.
+        comment: Green/red distinguished by direction from baseline + explicit +/-
+          value labels, not hue alone; Imprint palette CVD-optimized
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot area uses a healthy majority of the canvas,
-          legend sits near the data.
+        comment: Canvas gate passed (3200x1800); plot fills canvas well with balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Net Satisfaction Score'' is descriptive; a satisfaction score
-          has no physical unit so this is complete.'
+        comment: '"Net Satisfaction Score" is fully descriptive for this unitless
+          metric'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; negative uses #AE3030 as the deliberate
-          semantic anchor for sentiment; backgrounds and chrome are theme-correct
-          in both renders.'
+        comment: 'First series #009E73, red is the matte-red semantic anchor for sentiment
+          polarity (legitimate exception); chrome theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful semantic color choice and clean typography, above a bare
-          default, but not yet publication-grade.
+        passed: true
+        comment: Thoughtful colors, styled callout boxes, clear typography hierarchy
+          — clearly above defaults, short of top-tier publication polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle x-only grid at alpha=0.15, styled
-          legend frame, generous whitespace.
+        comment: Spines removed top/right, subtle x-axis grid, generous whitespace;
+          minor room for tighter legend/plot spacing
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Sorting by value and the diverging color split create visual hierarchy,
-          but there's no explicit callout highlighting the extremes for an even clearer
-          insight.
+        passed: true
+        comment: Sorted bars + explicit callouts on the extremes give a clear, immediate
+          insight
     spec_compliance:
       score: 15
       max: 15
@@ -150,27 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal diverging bar chart.
+        comment: Correct diverging horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Contrasting colors, zero baseline indicator, sort by value, and horizontal
-          orientation for long labels are all present per spec notes.
+        comment: Contrasting colors, horizontal orientation, zero baseline line, sorted
+          by value — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value on X, category on Y; all 12 categories fully visible.
+        comment: Category on Y, value on X, all 12 categories visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches '{spec-id} · python · matplotlib · anyplot.ai';
-          legend labels match the data semantics.
+        comment: Title format exact; legend labels match data semantics
     data_quality:
       score: 15
       max: 15
@@ -180,21 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Wide range of magnitudes on both sides plus a near-zero case (Sustainability
-          -8).
+        comment: Wide range of positive and negative magnitudes across 12 categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible product-satisfaction survey scenario.
+        comment: Neutral, realistic product-satisfaction survey scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values within the spec's -100..+100 range and plausible relative
-          proportions.
+        comment: Values within the -100..+100 range noted in spec, plausible NPS-like
+          magnitudes
     code_quality:
       score: 10
       max: 10
@@ -204,34 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: No functions/classes, linear imports -> data -> plot -> save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness involved.
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, pyplot, numpy, Patch — all used.
+        comment: os, matplotlib.pyplot, numpy, Patch — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake functionality.
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bbox_inches='tight', no deprecated
-          calls.
+        comment: Saves plot-{THEME}.png, no deprecated calls, no bbox_inches='tight'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -239,27 +225,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Axes methods (ax.barh, ax.axvline, ax.text) correctly per matplotlib
-          best practice.
+        comment: Correct Axes-based API usage (barh, annotate, legend with custom
+          handles)
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Patch-based legend and argsort-based sorting are generic patterns
-          easily replicated in other libraries; no matplotlib-distinctive feature
-          used.
-  verdict: REJECTED
+        passed: true
+        comment: Curved connectionstyle annotation arrows + styled bbox are a nice
+          matplotlib-specific touch, but not maximally distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - explicit-figure
+  - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
   - grid-styling

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
-Quality: 88/100 | Updated: 2026-08-18
+Quality: 93/100 | Updated: 2026-08-18
 """
 
 import os
