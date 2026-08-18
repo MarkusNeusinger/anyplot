@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -85,15 +85,25 @@ ax.set_facecolor(PAGE_BG)
 stage_labels = ["Done", "Testing", "Development", "Analysis", "Backlog"]
 
 ax.stackplot(
-    dates, c_done, c_testing, c_development, c_analysis, c_backlog, labels=stage_labels, colors=COLORS, alpha=0.88
+    dates,
+    c_done,
+    c_testing,
+    c_development,
+    c_analysis,
+    c_backlog,
+    labels=stage_labels,
+    colors=COLORS,
+    alpha=0.88,
+    edgecolor=INK,
+    linewidth=0.5,
 )
 
 # Style
+title = "Sprint Kanban Board · area-cumulative-flow · python · matplotlib · anyplot.ai"
+title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
 ax.set_xlabel("Date", fontsize=10, color=INK)
 ax.set_ylabel("Cumulative Items", fontsize=10, color=INK)
-ax.set_title(
-    "Sprint Kanban Board · area-cumulative-flow · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK
-)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 
 # X-axis: bi-weekly date ticks
@@ -114,8 +124,11 @@ for spine in ("left", "bottom"):
 ax.yaxis.grid(True, alpha=0.18, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Shaded region highlighting Testing bottleneck buildup (days 15–60)
-ax.axvspan(dates[15], dates[60], alpha=0.07, color=COLORS[1], zorder=0)
+# Shaded region highlighting Testing bottleneck buildup (days 15–60) — tint
+# drawn from INK rather than a categorical data color, with a theme-adaptive
+# alpha, so the highlight carries similar visual weight in both themes
+highlight_alpha = 0.06 if THEME == "light" else 0.10
+ax.axvspan(dates[15], dates[60], alpha=highlight_alpha, color=INK, zorder=0)
 
 # Arrow-annotated callout quantifying the bottleneck peak, with an elevated box
 # for typographic hierarchy beyond the title/axis/tick levels
