@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: horizon-basic
 created: '2026-08-18T01:18:17Z'
-updated: '2026-08-18T01:25:15Z'
+updated: '2026-08-18T01:34:40Z'
 generated_by: claude-sonnet
 workflow_run: 32086526978
 issue: 1877
@@ -12,111 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Correctly implements the true horizon-chart folding technique using layered, y-scale-clamped
-    Chart.js Line charts (fill:'start' + clamped [bandIndex*H, (bandIndex+1)*H] y-domain
-    per layer) — a genuinely correct workaround for a chart type Chart.js has no native
-    support for, exactly matching the library rule to build out of core primitives
-    rather than returning NOT_FEASIBLE.
-  - Band color ramps are derived from the fixed Imprint diverging endpoints (t.div[0]/t.div[2]);
-    pixel-sampling the full-saturation swatch confirms it is byte-identical (rgb(68,103,163))
-    between the light and dark renders, satisfying the 'data colors constant across
-    themes' rule.
-  - 'Precise spec alignment: mirrored blue-above/red-below coloring, 3 bands per polarity
-    (within the spec''s 2-4 band note), meaningful zero baseline (50% CPU), 10 services
-    (5-50 range), 121 points/series (100-1000 range).'
-  - 'Clean information design: title, subtitle with units, a mini-gradient legend
-    that explains the color-intensity encoding, right-aligned service labels, and
-    a single shared time axis at the bottom instead of repeating it per row.'
-  - Deterministic seeded LCG data generation, no external dependencies, animation:false
-    set consistently across all 60 layered Chart instances, no fake interactivity.
+  - 'Genuinely implements the horizon-chart fold technique with core Chart.js: each
+    band is a separate Line chart with its y-scale clamped to [i*BAND_HEIGHT, (i+1)*BAND_HEIGHT)
+    and fill:"start", so values above the band saturate to full row height and values
+    below collapse to zero — this is the correct ''fold and overlay'' mechanic, not
+    a fake/simulated horizon.'
+  - Diverging Imprint colormap (imprint_div) is the semantically correct choice for
+    signed CPU-deviation data, matching the spec's 'blue up / red down' note.
+  - Rows are sorted by peak magnitude (most volatile first), giving the dense 10-row
+    layout a clear focal point and visual hierarchy instead of leaving every row equal-weight.
+  - Legend explicitly explains the folded color-intensity encoding ("above baseline,
+    increasing →" / "below baseline, increasing →") which is essential for a chart
+    type most viewers won't recognize on sight.
+  - Deterministic seeded LCG data generation with varied amplitude/period/phase per
+    service plus occasional spikes gives each row a visually distinct pattern rather
+    than uniform noise.
+  - 'animation: false is correctly set on every one of the 60 layered Chart instances,
+    and only a single wrapper + canvases are appended to #container per the mount-node
+    contract.'
   weaknesses:
-  - At the 400px mobile thumbnail scale, the 10 stacked service labels, the subtitle,
-    and the gradient-swatch legend text become quite small and harder to read — the
-    information density (10 rows + subtitle + legend) competes for limited vertical
-    space more than a single-panel chart would; consider slightly larger row-label/subtitle
-    fontsizes or trimming the subtitle for small viewports.
-  - Some rare high-magnitude spikes (the ~4% probability spike noise) render as very
-    thin, needle-like slivers only a few pixels wide, which are easy to miss compared
-    to the broader sinusoidal peaks — acceptable since it reflects the underlying
-    sparse-spike data, but worth noting for repair if legibility needs to improve
-    further.
-  - The horizontal legend swatches ('above baseline, increasing →' / 'below baseline,
-    increasing →') communicate direction via arrow text rather than a numeric scale
-    — sufficient for this compact format, but an optional tick value (e.g. '+9 / +18
-    / +27') on the swatch would remove any residual ambiguity about the exact band
-    thresholds.
+  - 'Band colors are computed as mix(t.pageBg, t.div[end], frac). Since t.pageBg differs
+    between themes (#FAF8F1 light / #1A1A17 dark), the two lower-magnitude bands (frac=1/3,
+    2/3) resolve to different absolute RGB values in light vs dark — only the outermost
+    band (frac=1) is theme-identical, since mix() at frac=1 always returns the target
+    hex regardless of the base. Per the style guide, Imprint data colors must stay
+    pixel-identical across themes; switch to alpha-blended rgba(divColorRGB, frac)
+    (or equivalent opacity-based compositing) instead of mixing toward pageBg so the
+    underlying series color value is identical in both renders.'
+  - No explicit axis label states the unit of the encoded value (percentage points
+    of CPU deviation) — the subtitle mentions 'CPU deviation from 50% baseline' but
+    never states the unit explicitly (e.g. 'pp' or 'percentage points'), which costs
+    points under VQ-06.
+  - At 10 rows x 6 layered Chart.js instances (60 canvases total), the thinnest single-sample
+    spikes in dense/noisy rows (e.g. cache-replica, auth-service) become only a few
+    pixels wide, occasionally making a single spike harder to distinguish from neighboring
+    noise — slightly denser than optimal for a 121-point series at this row height.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
-      Chrome: Bold dark title "horizon-basic · javascript · chartjs · anyplot.ai" top-left, a smaller dark-gray subtitle "CPU deviation from 50% baseline · 10 services · 5-minute samples over 10 hours", and a two-part gradient legend ("above baseline, increasing →" in blue swatches, "below baseline, increasing →" in red swatches) — all clearly readable against the light background. Ten right-aligned service-name row labels (api-gateway, auth-service, cache-primary, cache-replica, db-primary, db-replica, queue-worker, search-index, cdn-edge, websocket-gw) in dark ink, and a shared time axis (00:00–10:00) at the bottom in soft gray.
-      Data: Each row is a horizon-folded band chart — pale blue-gray to saturated blue peaks rising above a light gray-tan "track" background represent CPU above the 50% baseline; pale pink to saturated matte-red peaks represent CPU below baseline. Color intensity increases with magnitude, mirrored above/below a flat baseline, per the spec's horizon-chart notes.
-      Legibility verdict: PASS — every text element (title, subtitle, legend, row labels, axis ticks) is dark-on-light and fully legible; no clipping at any canvas edge.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "horizon-basic · javascript · chartjs · anyplot.ai" in bold dark ink, subtitle "CPU deviation from 50% baseline · 10 services · 5-minute samples over 10 hours" in softer gray, a two-swatch legend explaining the folded band gradients ("above baseline, increasing →" blue ramp, "below baseline, increasing →" red ramp), 10 right-aligned service-name row labels (search-index, cache-replica, cache-primary, queue-worker, auth-service, db-replica, cdn-edge, api-gateway, websocket-gw, db-primary), and bottom x-axis time ticks (00:00 through 10:00). All chrome text is dark-on-light and clearly readable.
+      Data: Each row is a horizon strip folding a single CPU-deviation series into 3 blue bands (above baseline) and 3 red bands (below baseline), layered to show magnitude via color intensity — pale blue/red for small deviations, saturated blue/red for large ones. First-glance impression: search-index (top row, sorted by peak volatility) shows the most dramatic saturated-blue and saturated-red peaks; db-primary (bottom row) is comparatively calmer.
+      Legibility verdict: PASS — all text readable, no overlap, no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
-      Chrome: Same title/subtitle/legend/row-labels/axis layout, now rendered in light cream/gray text against the near-black background — all clearly legible, no dark-on-dark failures observed (verified by close crops of the title block, row-label column, and bottom-right axis label).
-      Data: Pixel-sampling confirms the full-saturation band color is byte-identical between renders (rgb(68,103,163) at the darkest blue swatch position in both light and dark PNGs) — the fixed Imprint diverging endpoints (#AE3030 / #4467A3) are preserved across themes. The lighter, less-saturated inner bands are intentionally blended toward each theme's own page background (a legitimate horizon-chart "fade toward baseline" convention), so their exact hex differs by theme while the outermost/most-saturated band matches exactly.
-      Legibility verdict: PASS — all text is light-on-dark and readable; brand blue/red bands remain vivid and distinguishable from the near-black track background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, subtitle, legend, row labels, and axis ticks, now rendered in light ink (near-white/light-gray) against the dark surface. All text remains fully readable — no dark-on-dark failures observed anywhere (title, row labels, and axis ticks are all clearly legible).
+      Data: Same 10 rows, same fold structure and hue orientation (blue=above baseline, red=below). The hue orientation and the single most-saturated band per polarity are visually consistent with the light render (matching the underlying #4467A3 / #AE3030 anchors, since mix() at frac=1 is theme-independent). However, the two paler intermediate bands read visibly more washed/muted-cool in dark mode than in light mode, because they are blended toward the theme's page background (#1A1A17) rather than kept at a fixed value — see weaknesses.
+      Legibility verdict: PASS — text is fully readable in dark mode, no dark-on-dark issues; flagged separately (not a legibility failure) is the cross-theme data-color drift in the two paler bands.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Fully readable at full resolution in both themes; row labels/subtitle/legend
-          text get small and harder to read at the 400px mobile thumbnail due to 10-row
-          density.
+        comment: All font sizes explicitly set (title 22px, subtitle 16px, row labels
+          16px, axis ticks 15px), fully readable in both themes, title well within
+          proportion (no overflow).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions found in title, legend, row labels, or axis
-          area.
+        comment: No overlapping text or elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Folded bands read clearly; a few rare-spike slivers are only a few
-          px wide.
+        comment: Bands clearly visible; a few single-sample spikes in the noisiest
+          rows are only a few pixels wide at this row density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue/red diverging axis is CVD-safe (not red-green); adequate contrast
-          on both surfaces.
+        comment: Blue/red diverging encoding is inherently CVD-safe, no red-green
+          pairing.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; comfortable margins, no overflow or
-          squeeze.
+        comment: Rows fill the vast majority of the canvas with balanced margins;
+          nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive title+subtitle with units, clear time axis, legend explains
-          encoding.
+        passed: false
+        comment: Subtitle describes the metric but never states the unit (percentage
+          points) explicitly.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Band ramps derived from fixed Imprint div endpoints; full-saturation
-          swatch pixel-verified identical across themes; correct #FAF8F1/#1A1A17 backgrounds.'
+        passed: false
+        comment: Uses imprint_div correctly for the diverging polarity and background/chrome
+          is theme-correct, but the two lower-magnitude bands are mixed toward pageBg,
+          so they are not pixel-identical between light and dark themes (only the
+          outermost band is).
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -124,22 +127,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom Imprint-derived color mixing, intentional typographic hierarchy,
-          gradient-swatch legend beyond generic defaults.
+        comment: Custom fold-technique horizon chart with a thoughtful diverging color
+          ramp and explanatory legend — clearly above a library default, though not
+          fully publication-glossy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle per-row track background, generous whitespace/padding, thin
-          separators between rows.
+        comment: No spines/grid clutter, subtle row-background wash, generous whitespace
+          between chrome and rows.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-intensity encoding communicates magnitude at a glance across
-          10 services; no single strong focal point since all rows are visually equal-weight.
+        comment: Rows sorted by peak magnitude create a clear top-to-bottom focal
+          hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -149,27 +153,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True horizon chart via folded, y-clamped layered areas.
+        comment: Correct horizon-chart fold/overlay technique.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 2-4 bands (3 used), mirrored positive/negative coloring, intensity
-          increases with magnitude, meaningful zero baseline.
+        comment: Mirrored positive/negative coloring, magnitude-increasing color intensity,
+          meaningful zero-deviation baseline, similarly-scaled series.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, folded Y=value via bands, series=service row — all spec data
-          dimensions represented.
+        comment: X=time, Y=CPU deviation via fold/color; full data range represented
+          across bands.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend explains the color-band
+        comment: Title format exact match; legend clearly explains the band-color
           encoding.
     data_quality:
       score: 15
@@ -180,58 +184,59 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 series (5-50 range), 121 points/series (100-1000 range), multi-band
-          folding — full technique coverage.
+        comment: Ten distinctly-shaped series with varied amplitude/period/phase plus
+          occasional spikes covering both polarities.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral CPU-deviation monitoring scenario across 10 backend
-          services.
+        comment: Backend service CPU-deviation monitoring — realistic, neutral, technical
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible percentage-point deviations around a 50% baseline.
+        comment: Deviation magnitudes keep implied CPU% within a plausible 5-95% band.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Small helper functions (lcg, mix, legendGroup, makeBandLayer) are
-          necessary DRY factoring for a 60-instance layered technique, not overengineering.
+        comment: A few helper functions (lcg, mix, legendGroup, makeBandLayer) are
+          used, but each is directly necessary for the layered multi-canvas technique,
+          not gratuitous abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG per series.
+        comment: Seeded LCG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the provided Chart.js global.
+        comment: No unused imports; only the global Chart.js API is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the compound technique; no fake/simulated
-          functionality.
+        comment: Appropriately complex for a from-scratch horizon technique; no fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract; animation:false on every layer; no savefig-style
-          calls.
+        comment: Correct mount-node contract, animation:false set on all 60 chart
+          instances.
     library_mastery:
       score: 8
       max: 10
@@ -241,26 +246,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic use of Line/fill/scale-clamping primitives to
-          compose an unsupported chart type per the library's own guidance.
+        comment: Creative but idiomatic use of Chart.js Line charts with clamped scales
+          and fill:"start".
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The layered, per-band clamped-scale technique is a distinctive, non-trivial
-          demonstration of Chart.js scale/fill mechanics.
+        comment: Layered clamped-scale canvases to fake a chart type Chart.js has
+          no native support for — a technique specific to how Chart.js's per-instance
+          scale/fill model works, not trivially portable to another library.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - layer-composition
   - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
-  - publication-ready
+  - minimal-chrome
