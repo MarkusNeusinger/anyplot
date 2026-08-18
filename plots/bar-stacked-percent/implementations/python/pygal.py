@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -83,7 +83,10 @@ chart = pygal.StackedBar(
     legend_at_bottom=True,
     print_values=True,
     print_values_position="center",
-    value_formatter=lambda x: f"{x:.0f}%",
+    # Segments below ~7% are shorter than value_font_size can render without
+    # spilling outside their own colored band, so those labels are suppressed
+    # rather than printed (their share is still visible from the band + legend).
+    value_formatter=lambda x: f"{x:.0f}%" if x >= 7 else "",
     x_label_rotation=25,
     truncate_label=-1,
     margin=60,
