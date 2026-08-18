@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -19,6 +19,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
 
@@ -104,7 +105,18 @@ for dept in departments:
         (x0 - indent, median),
         (x0 - hw, notch_hi),
     ]
-    poly_rows.extend({"Department": dept, "x": px, "y": py} for px, py in vertices)
+    poly_rows.extend(
+        {
+            "Department": dept,
+            "x": px,
+            "y": py,
+            "Q1": round(q1),
+            "Median": round(median),
+            "Q3": round(q3),
+            "NotchCI": f"{round(notch_lo)} - {round(notch_hi)}",
+        }
+        for px, py in vertices
+    )
 
     cap = hw * 0.4
     whisker_rows.append({"Department": dept, "x": x0, "xend": x0, "y": q3, "yend": whisker_hi})
@@ -131,13 +143,25 @@ plot = (
         aes(x="x", xend="xend", y="y", yend="yend", color="Department"), data=whisker_df, size=1.0, show_legend=False
     )
     + geom_polygon(
-        aes(x="x", y="y", group="Department", fill="Department", color="Department"),
+        aes(x="x", y="y", group="Department", fill="Department"),
         data=poly_df,
-        size=1.0,
+        color=INK,
+        size=0.6,
         alpha=0.85,
         show_legend=False,
+        tooltips=layer_tooltips()
+        .line("@Department")
+        .line("Q1/Median/Q3|@Q1 / @Median / @Q3")
+        .line("Notch CI|@NotchCI"),
     )
-    + geom_point(aes(x="x", y="y", color="Department"), data=outlier_df, size=2.5, alpha=0.8, show_legend=False)
+    + geom_point(
+        aes(x="x", y="y", color="Department"),
+        data=outlier_df,
+        size=2.5,
+        alpha=0.8,
+        show_legend=False,
+        tooltips=layer_tooltips().line("@Department").line("Outlier salary|@y"),
+    )
     + scale_fill_manual(values=IMPRINT)
     + scale_color_manual(values=IMPRINT)
     + scale_x_continuous(breaks=list(dept_x.values()), labels=list(dept_x.keys()))
@@ -146,7 +170,7 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_grid_major_y=element_line(color=INK, size=0.3, linetype="solid"),
+        panel_grid_major_y=element_line(color=GRID_COLOR, size=0.3, linetype="solid"),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
