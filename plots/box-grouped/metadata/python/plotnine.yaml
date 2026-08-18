@@ -2,54 +2,52 @@ library: plotnine
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:54:59Z'
-updated: '2026-05-08T03:31:11Z'
-generated_by: claude-haiku
-workflow_run: 25534905328
+updated: '2026-08-18T08:52:25Z'
+generated_by: claude-sonnet
+workflow_run: 32117825151
 issue: 2017
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 92
 review:
   strengths:
-  - Perfect text legibility with explicit font sizing (Title 24pt, Labels 20pt, Ticks
-    16pt)
-  - 'Flawless theme adaptation: both light and dark renders perfectly readable with
-    zero dark-on-dark or light-on-light failures'
-  - 'Correct Okabe-Ito palette with brand green #009E73 as first series across both
-    themes'
-  - Well-executed grouped box plot with proper position_dodge2 spacing, no overlap,
-    clear box widths
-  - 'Excellent data quality: realistic employee performance scenario with good variation
-    across departments and experience levels'
-  - 'All spec requirements met: correct plot type, features, data mapping, and title
-    format'
-  - Clean, reproducible code with proper KISS structure, seed control, and no unnecessary
-    complexity
-  - 'Comprehensive feature coverage: median lines, quartile boxes, whiskers, and outliers
-    all visible'
+  - 'Correct Imprint palette usage — first series is #009E73, remaining series (#C475FD,
+    #4467A3) follow canonical order and stay identical across light and dark renders'
+  - Layered geom_jitter + geom_boxplot design shows both summary statistics and raw
+    score distribution, adding real distributional texture beyond a plain box plot
+  - Fully theme-adaptive chrome — background, ink text, grid, axis lines, legend box,
+    and even outlier marker color all correctly branch on ANYPLOT_THEME for both renders
+  - Consistent box widths via position_dodge2(preserve='single') and position_jitterdodge,
+    with realistic HR performance data including outliers and varying spreads across
+    departments and experience levels
+  - Clean, idiomatic plotnine grammar-of-graphics code — KISS structure, reproducible
+    via np.random.seed(42), only used imports
   weaknesses:
-  - 'Design Excellence is solid but not exceptional: follows library defaults rather
-    than pushing for distinctive aesthetic sophistication'
+  - Title is missing the mandated language segment — reads 'box-grouped · plotnine
+    · anyplot.ai' instead of 'box-grouped · python · plotnine · anyplot.ai' (SC-04
+    format). Note this repo's own plotnine implementation for donut-nested correctly
+    includes 'python', so this is an inconsistency worth fixing.
+  - Legend keeps a visible box frame (legend_background border) — consider dropping
+    the border for a slightly more refined minimal-chrome look, per the style guide's
+    decoration-removal checklist.
+  - Small axis tick marks remain visible on both axes — per the style guide checklist,
+    consider removing the tick marks themselves while keeping the tick labels.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) with subtle 4px border
-      Chrome: Title "box-grouped · plotnine · anyplot.ai" rendered in dark ink (#1A1A17), clearly visible. X-axis labeled "Department" (4 categories: Engineering, Marketing, Sales, Support), Y-axis labeled "Performance Score (0-100)" with units. All tick labels in soft ink (#4A4A44), readable. Legend titled "Experience Level" with labels "Junior", "Mid-Level", "Senior" positioned right of plot on light background.
-      Data: 3 box plots per department in grouped arrangement. Junior (green #009E73), Mid-Level (orange #D55E00), Senior (blue #0072B2) boxes with consistent widths. Median lines, quartile boxes, whiskers at 1.5*IQR, and outlier circles all visible. Subtle horizontal grid lines aid readability.
-      Layout: Balanced whitespace, plot fills 60% of canvas, no cramping or wasted space
-      Legibility verdict: PASS — All text perfectly readable against light background, no overlap, excellent contrast
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "box-grouped · plotnine · anyplot.ai" at top; dark "Department" x-axis title and dark "Performance Score (0-100)" y-axis title; softer dark-gray tick labels on both axes; subtle horizontal gridlines only; thin dark axis lines (L-shaped, no top/right spines); legend box "Experience Level" at right with a light elevated fill, dark border, and dark text listing Junior/Mid-Level/Senior swatches.
+      Data: Four departments (Engineering, Marketing, Sales, Support) each with three side-by-side dodged box plots (Junior=green #009E73, Mid-Level=lavender #C475FD, Senior=blue #4467A3), dark ink box outlines, gray outlier dots above/below whiskers, and small semi-transparent jittered points of matching series color scattered beneath each box showing the raw score distribution.
+      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) with subtle light border
-      Chrome: Title rendered in light ink (#F0EFE8), clearly visible against dark background. Axis labels in light ink, tick labels in soft ink (#B8B7B0), all readable with NO dark-on-dark failures. Legend on dark background with light text, properly styled.
-      Data: Box plots display identical colors to light render (green, orange, blue) — only chrome adapted to dark theme. Median lines, quartile boxes, whiskers, and outliers all visible and distinguishable. Grid lines subtle but present.
-      Layout: Same balanced composition as light render, no elements cut off or lost
-      Legibility verdict: PASS — All text perfectly readable against dark background, brand green #009E73 visually prominent, no theme adaptation failures, excellent dark-theme chrome
-
-    Both renders pass theme-readiness checks. Data colors are pixel-perfect identical between themes (only chrome flips). Okabe-Ito palette correctly applied with brand green as first series.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as the light render but chrome inverted — light/off-white title and axis titles, lighter gray tick labels, subtle horizontal gridlines, light axis lines, and a legend box with a dark elevated fill, light border, and light text.
+      Data: Same three-series box plots (Junior/Mid-Level/Senior) in the identical green/lavender/blue Imprint colors as the light render, now with light-colored box outlines (theme-adaptive ink) and light-gray outlier dots for contrast against the dark surface; jittered points use the same series colors as in the light render.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, and legend text is clearly readable against the dark background, and the data colors are identical to the light render (only chrome flipped).
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,81 +58,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt—all explicitly set and perfectly
-          readable in both themes
+        comment: All font sizes explicitly set via element_text(size=...); readable
+          in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; X-axis, legend, and all labels fully
-          readable with clear separation
+        comment: No text or element collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box plots perfectly sized and visible; outlier markers (size=3) clearly
-          distinguishable; whiskers and medians distinct
+        comment: Boxes prominent; jittered points appropriately small (size=0.8) and
+          transparent (alpha=0.28) for ~40 pts/group; outliers sized for visibility
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; colors distinguishable without relying
-          on hue alone; good contrast throughout
+        comment: CVD-safe Imprint palette, dark ink box borders aid separation beyond
+          hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of 4800×2700 canvas; balanced margins; legend well-positioned;
-          no wasted space or cramping
+        comment: Plot + legend use ~90% of canvas width, balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (0-100); title in correct format; descriptive
-          category labels
+        comment: Descriptive labels; y-axis includes explicit 0-100 range
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series #009E73; follows Okabe-Ito order; backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark); all chrome theme-correct in both renders;
-          data colors identical between themes'
+        comment: 'First series #009E73; canonical order; theme-correct chrome and
+          backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default with clean Okabe-Ito palette; professional
-          polish present but not exceptional—no custom refinements or FiveThirtyEight-level
-          design
+        passed: true
+        comment: Thoughtful raincloud-style jitter+box layering, custom Imprint palette,
+          clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed (theme_minimal); subtle grid (alpha 0.10);
-          legend styled with background; balanced whitespace—good refinement but not
-          exceptional
+        passed: true
+        comment: Subtle y-only grid, L-shaped spines, generous whitespace; tick marks
+          and legend box frame still present
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Good visual hierarchy through spatial grouping and color contrast;
-          experience level progression visible through color; realistic data context
-          tells a story—solid but not exceptional emphasis
+        passed: true
+        comment: Clear visual hierarchy — color-coded experience progression and tightening
+          spread with seniority is immediately visible across all departments
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -142,29 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped box plot with side-by-side boxes; all subtypes present
-          (median, quartile, whiskers, outliers)
+        comment: Correct grouped/dodged box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features implemented: side-by-side boxes, distinct colors,
-          clear legend, consistent box widths, proper statistics'
+        comment: Side-by-side boxes with distinct colors, clear legend, consistent
+          widths, median/quartiles/whiskers/outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department, Y=Score, Fill=Experience Level; all data visible; axes
-          show full range (0-100)
+        comment: Department on x, Score on y, Experience as fill/color — correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: 'Title: ''box-grouped · plotnine · anyplot.ai'' (correct format);
-          legend labels match data (Junior, Mid-Level, Senior)'
+        passed: false
+        comment: Legend is correct, but title omits the mandated language segment
+          ('python') — reads 'box-grouped · plotnine · anyplot.ai' instead of 'box-grouped
+          · python · plotnine · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -174,22 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent coverage: variation across departments and experience
-          levels; outliers present; different spread patterns (some tight, some wide)'
+        comment: Outliers present in multiple groups, spreads vary meaningfully by
+          department and experience level
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world scenario (employee performance by department and experience);
-          neutral topic; factually sensible context
+        comment: Neutral, plausible HR performance-score scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Performance scores 0-100 (typical for metrics); experience progression
-          realistic; distributions vary plausibly by dept; outliers reasonable
+        comment: 0-100 performance scale with sensible values and seniority-based
+          progression
     code_quality:
       score: 10
       max: 10
@@ -199,36 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → theme tokens → data generation → plot creation
-          → save; no functions or classes'
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; deterministic data generation ensures consistent
-          output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (os, numpy, pandas, plotnine elements); no dead
-          code
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and readable; appropriate complexity; no over-engineering
-          or fake UI elements
+        comment: Clean, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: ggsave() with f''plot-{THEME}.png'', DPI=300, size=(16,9);
-          current plotnine API'
+        comment: ggsave to plot-{THEME}.png, current API
     library_mastery:
       score: 9
       max: 10
@@ -238,16 +223,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent ggplot2 grammar: ggplot() + geom_boxplot() + theme composition;
-          proper use of position_dodge2, scale_fill_manual, element_* functions'
+        comment: Expert layering of geom_jitter/geom_boxplot with position_jitterdodge
+          and position_dodge2(preserve='single')
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: Good use of position_dodge2 with preserve/padding, element_* theme
-          customization, and ggsave parameters—distinctive to plotnine, but not exceptionally
-          advanced
+        passed: true
+        comment: position_dodge2(preserve='single') + position_jitterdodge is a ggplot2/plotnine-specific
+          grammar not trivially replicated elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -255,5 +239,8 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
