@@ -2,93 +2,123 @@ library: seaborn
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:04:30Z'
-updated: '2026-05-08T01:04:58Z'
-generated_by: claude-haiku
-workflow_run: 25530517791
+updated: '2026-08-18T07:16:19Z'
+generated_by: claude-sonnet
+workflow_run: 32107678179
 issue: 2015
-python_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 92
+quality_score: 84
 review:
   strengths:
-  - Nested donut structure properly executed with clear hierarchical visualization
-  - Flawless Okabe-Ito palette implementation with perfect theme adaptation
-  - Exceptional text legibility in both light and dark renders
-  - Clean, readable code with straightforward logic
-  - Effective use of color families to group related categories
-  - Strategic center focal point (total budget label)
-  - Proper spacing between rings enhances visual separation
+  - 'Nested-donut geometry is precisely aligned: outer category wedges line up exactly
+    under their parent region wedge because both rings share the same startangle and
+    region-ordered value sequence, satisfying the spec''s alignment requirement.'
+  - Dynamic per-wedge label color (_luminance/_label_color computing WCAG relative
+    luminance) automatically picks dark ink vs. white text so every in-wedge label
+    stays legible on both dark (green, blue) and light (lavender tint, ochre tint)
+    wedges in both themes.
+  - sns.light_palette tint families give each region's outer category wedges a consistent
+    same-hue/varying-lightness treatment, directly matching the spec's 'consistent
+    color families per parent category' note while the inner ring keeps canonical
+    Imprint order (#009E73 first).
+  - Dual-legend structure (Regions inner / Categories outer) plus direct in-wedge
+    labels on the single largest category per region matches the spec's 'label larger
+    segments, legend for smaller' guidance exactly.
+  - Center 'Total Budget $370M' annotation gives an immediate top-line total that
+    reinforces the part-to-whole story at a glance.
   weaknesses:
-  - Style configuration uses simplified sns.set_theme() instead of full rc dictionary
-    (guideline provides more complete example)
-  - Categories legend uses first-region palette as reference, which could be more
-    explicitly explained
+  - Latin America's inner-ring label ('Latin America $50M') sits close to its own
+    outer-ring label ('Salaries $18M') since Latin America is the smallest region
+    wedge (50/370 ≈ 13.5%) — increase INNER_LABEL_R/OUTER_LABEL_R radial separation
+    or trim the wedge-label fontsize slightly for narrow segments to add breathing
+    room.
+  - In-wedge label fontsize (7pt) is on the small side — bumping to 8-9pt would strengthen
+    legibility at ~400px mobile scale for the two-line region/category direct labels.
+  - The donut is visibly shifted left (CX=0.31) to balance the two left-side legends,
+    leaving a noticeably wider empty margin on the canvas's right edge than the left
+    — could tighten CX slightly for better left/right whitespace balance.
+  - seaborn has no native pie/donut primitive, so the ring geometry itself is drawn
+    with matplotlib's ax.pie(); seaborn's contribution is limited to sns.set_theme()
+    chrome and sns.light_palette() tinting — an inherent library constraint rather
+    than a code defect, but it caps how idiomatic/distinctive the seaborn usage can
+    score.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct and not pure white
-      Chrome: Title in bold dark text is clearly visible; region labels on donut segments are dark and readable; legends have proper contrast with dark text on light background; all label text is readable
-      Data: Inner ring shows 4 regions (green, orange, blue, purple) using Okabe-Ito colors; outer ring shows lighter shades of each parent color for categories; wedge separators are white for clarity
-      Legibility verdict: PASS - all text elements have excellent contrast against light background
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "donut-nested · python · seaborn · anyplot.ai" in bold dark ink, centered top, fully visible with no clipping. Two boxed legends ("Regions (Inner)" top-left, "Categories (Outer) (N. Am. shades)" bottom-left) with dark ink text on an elevated off-white box, soft ink-toned borders — all clearly readable.
+      Data: Nested donut with 4 inner region wedges (North America #009E73 green, Europe lavender, Asia Pacific blue, Latin America ochre — canonical Imprint order, first series green as required) and 16 outer category wedges rendered as same-hue tints of their parent region color. Center hole shows "Total Budget $370M" in bold dark ink. Direct in-wedge labels give each region's name+value on the inner ring and each region's largest category name+value on the outer ring; label text color automatically switches between dark ink (on light tints) and white (on the saturated green/blue) for contrast.
+      Legibility verdict: PASS — all title, legend, and in-wedge text is clearly readable against the light background. Latin America's inner label sits close to its own outer "Salaries" label (smallest wedge) but is still legible, not overlapping-illegible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct and not pure black
-      Chrome: Title in light text is clearly visible; region labels on segments are white/light colored and readable; legend boxes have dark backgrounds (#242420) with light text and borders; all text has proper contrast
-      Data: Inner ring colors (Okabe-Ito 1-4) are identical to light render; outer ring shades also match; no dark-on-dark issues; wedges are clearly distinguishable
-      Legibility verdict: PASS - all text elements have excellent contrast against dark background; data colors maintain full visibility
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend text render in light ink (#F0EFE8/near-white), legend boxes use the dark elevated fill (#242420) with soft light-toned borders — all readable against the dark surface, no dark-on-dark failures observed.
+      Data: Identical wedge colors to the light render — North America #009E73 green first, same lavender/blue/ochre region hues and their tinted outer-ring families — confirming only chrome (background, text, legend box) flipped between themes, not data colors. Center "Total Budget $370M" text renders in light ink, clearly visible on the dark hole. In-wedge label colors again adapt per-wedge luminance (dark text stays dark-appropriate on light tints, white stays white on saturated hues), so contrast holds in this theme too.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures in either the chrome or the in-wedge labels; brand green #009E73 remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; fully readable in both themes
+        comment: All font sizes explicitly set and readable in both themes; title
+          fits comfortably. In-wedge labels at 7pt are on the small side for mobile-scale
+          legibility.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Clean positioning; minor crowding risk on smaller segments
+        comment: Latin America's inner label sits close to its own outer 'Salaries'
+          label (smallest wedge) — tight but still readable, not a severe collision.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All wedges, text, and colors clearly visible
+        comment: Ring widths and radii are well-proportioned; no invisible or barely-visible
+          elements.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette; CVD-safe; first series #009E73'
+        comment: Per-wedge luminance-based label color (dark vs. white text) ensures
+          strong contrast on every wedge in both themes; not reliant on hue alone.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3600×3600px square format appropriate for symmetric plot
+        comment: Donut and both legends use a healthy share of the canvas; donut is
+          shifted left to balance the legends, leaving a somewhat wider empty margin
+          on the right edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive; labels clear
+        comment: No traditional axes, but all wedge labels and the center total include
+          units ($M).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; theme-correct
-          both renders'
+        comment: 'First region series is #009E73; remaining regions follow canonical
+          Imprint order (lavender, blue, ochre); outer ring uses same-hue tints per
+          the spec''s explicit tint-family instruction; both backgrounds are theme-correct
+          and chrome flips correctly.'
     design_excellence:
-      score: 16
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -96,21 +126,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Color families show intentional hierarchy; custom palette derived
-          from Okabe-Ito
+        comment: Thoughtful tinted color families, accessibility-aware label coloring,
+          and a clean dual-legend layout — clearly above default styling.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Generous whitespace; subtle ring borders; legend frames polished
+        comment: No competing chrome (no grid/spines to remove for a pie), generous
+          ring separation via white wedge edges; minor whitespace imbalance left-to-right.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy; center focal point; color families group
-          by region
+        comment: Center total plus automatic largest-category labeling per region
+          creates a clear visual hierarchy without requiring the viewer to hunt through
+          the legend.
     spec_compliance:
       score: 15
       max: 15
@@ -120,108 +152,122 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut with two hierarchy levels
+        comment: Correct two-level nested donut chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All spec requirements met
+        comment: Consistent hue families per parent, aligned child/parent wedge boundaries,
+          direct labels on larger segments with legend for the rest, ring spacing
+          via white wedge edges.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly mapped; hierarchy intact
+        comment: Inner ring correctly aggregates outer values per region; totals match.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legends accurate
+        comment: Title format exactly matches the mandated pattern; both legends'
+          labels match the underlying region/category data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows hierarchy, aggregation, part-to-whole
+        comment: Four regions with genuinely varied totals ($50M-$120M) and four categories
+          with varied splits per region show good hierarchy variation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation; realistic and neutral
+        comment: Regional budget allocation by expense category is a realistic, neutral
+          business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sensible and well-scaled
+        comment: Dollar figures and region-to-region proportions are plausible corporate
+          budget magnitudes.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No unnecessary complexity
+        comment: Mostly flat imports→data→plot→save, but two small helper functions
+          (_luminance, _label_color) deviate from the strict no-functions rule, even
+          though they serve a real accessibility purpose.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic; no randomness
+        comment: Data is fully hardcoded/deterministic, no randomness involved.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import (os, sys, numpy, seaborn, matplotlib pyplot/colors/patches)
+          is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Clean, appropriately complex for a nested donut with accessibility-aware
+          labeling; no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves as plot-{THEME}.png with correct dpi/facecolor, no deprecated
+          APIs.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Standard ax.pie() usage; sns.light_palette() for colors; style config
-          could use full rc dict
+        comment: sns.set_theme() and sns.light_palette() are used idiomatically, but
+          the ring geometry itself is drawn via matplotlib's ax.pie() since seaborn
+          has no native pie/donut primitive.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.light_palette() for color families; custom Patch legend shows
-          skill
+        comment: sns.light_palette()'s perceptually-informed tint generation for the
+          outer ring is a genuinely seaborn-specific color utility, not trivially
+          replicated elsewhere.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
-  - data-generation
+  - iteration-over-groups
   - explicit-figure
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
-  - alpha-blending
+  - edge-highlighting
