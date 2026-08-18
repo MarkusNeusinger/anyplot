@@ -559,6 +559,30 @@ class TestRenderAssetList:
         assert f'<a href="{self.BASE}/plot-light.html">Interactive version, light theme</a>' in out
         assert f'<a href="{self.BASE}/plot-dark.html">Interactive version, dark theme</a>' in out
 
+    def test_a_quoted_spec_title_cannot_break_the_alt_attribute(self) -> None:
+        """Verified through the real builder, not the helper in isolation.
+
+        The helper takes pre-escaped text by contract; what matters is whether
+        the caller honours it, so this drives _build_impl_html with a title that
+        would break the attribute if it did not.
+        """
+        spec = MagicMock()
+        spec.id = "bar-basic"
+        spec.title = 'Bar "Chart" & <b>'
+        spec.description = "d"
+        library = MagicMock()
+        library.language = "python"
+        library.name = "Altair"
+        impl = self._impl()
+        impl.library = library
+        impl.library_id = "altair"
+        spec.impls = [impl]
+
+        out = _build_impl_html(spec, impl, None, "https://api.anyplot.ai/og/x.png")
+        assert 'alt="Bar &quot;Chart&quot; &amp; &lt;b&gt; rendered with Altair"' in out
+        # and not double-escaped into visible noise
+        assert "&amp;quot;" not in out
+
     def test_omits_what_an_implementation_does_not_have(self) -> None:
         """A static library must not be advertised as interactive."""
         out = _render_asset_list(self._impl(interactive=False))

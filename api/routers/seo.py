@@ -445,7 +445,14 @@ def _sized_srcset(full_url: str) -> str:
 
 
 def _render_picture(impl, alt: str) -> str:
-    """The actual plot render, both themes, at a size a consumer can choose."""
+    """The actual plot render, both themes, at a size a consumer can choose.
+
+    ``alt`` must arrive HTML-escaped — the same contract ``_render_bot_html``
+    carries, and for the same reason: escaping here instead would double-escape
+    the callers that already do it, turning a quoted spec title into a visible
+    ``&amp;quot;``. ``html.escape`` defaults to ``quote=True``, so a caller that
+    follows the contract is attribute-safe.
+    """
     light_default = html.escape(
         impl.preview_url_light[:-4] + "_1200.png"
         if impl.preview_url_light.endswith(".png")
