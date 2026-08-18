@@ -30,6 +30,18 @@ const dates = Array.from({ length: days }, (_, i) => {
   return d;
 });
 
+// Deliberate bottleneck: the In-Progress -> Waiting-on-Customer transition
+// slows sharply for two weeks (reviewers overloaded), so the "In Progress"
+// band visibly widens. Deliberate drain: the Waiting-on-Customer -> Resolved
+// transition speeds up afterward (a backlog-clearing push), so the "Waiting
+// on Customer" band visibly narrows. This demonstrates the CFD's signature
+// bottleneck-spotting use case called out in the spec.
+function effectiveRate(idx, day) {
+  if (idx === 2 && day >= 35 && day < 49) return advanceRate[idx] * 0.28;
+  if (idx === 3 && day >= 60 && day < 72) return Math.min(0.85, advanceRate[idx] * 2.3);
+  return advanceRate[idx];
+}
+
 // Daily new-ticket arrivals: a base rate with a weekly dip (weekends) plus noise.
 const cumulative = stages.map(() => new Array(days).fill(0));
 for (let i = 0; i < days; i += 1) {
@@ -41,31 +53,39 @@ for (let i = 0; i < days; i += 1) {
   for (let s = 1; s < stages.length; s += 1) {
     const prevDayOwn = i === 0 ? 0 : cumulative[s][i - 1];
     const gap = cumulative[s - 1][i] - prevDayOwn;
-    const advance = Math.floor(gap * advanceRate[s - 1] + lcg() * 1.5);
+    const advance = Math.floor(gap * effectiveRate(s - 1, i) + lcg() * 1.5);
     cumulative[s][i] = prevDayOwn + Math.max(0, Math.min(gap, advance));
   }
 }
 
-// Band boundaries bottom-to-top: 0, Resolved, Waiting, In Progress, Triaged, Opened.
-// Earliest stage (Opened) renders as the topmost band, latest (Resolved) at the bottom.
-const boundaries = [
-  new Array(days).fill(0),
-  cumulative[4],
-  cumulative[3],
-  cumulative[2],
-  cumulative[1],
-  cumulative[0],
-];
+// --- Colors --------------------------------------------------------------------
+// Canonical ordinal assignment (positions 1-4) for the four in-flight stages,
+// but "Resolved" — the dominant, positive-outcome stage — is reassigned away
+// from position 5 (matte red, the reserved bad/error semantic anchor) to lime
+// (position 8), so a wall of the dominant color doesn't read as "a pile of
+// problems".
+const colorIndex = { Opened: 0, Triaged: 1, "In Progress": 2, "Waiting on Customer": 3, Resolved: 7 };
+const color = d3.scaleOrdinal().domain(stages).range(stages.map((s) => t.palette[colorIndex[s]]));
 
-const bands = stages.map((stage, i) => ({
-  stage,
-  color: t.palette[i],
-  points: dates.map((date, di) => ({
-    date,
-    y0: boundaries[stages.length - i - 1][di],
-    y1: boundaries[stages.length - i][di],
-  })),
+// --- Stack (per-stage WIP, stacked bottom-to-top in reverse workflow order) ----
+// Each stage's plotted band value is its work-in-progress (WIP) — the count
+// currently sitting in that stage — not its raw cumulative count. WIP for an
+// in-flight stage is the gap between its cumulative count and the next
+// stage's; the terminal stage's WIP is its full cumulative count (tickets
+// that have finished and stay in the "Resolved" pool).
+const stackData = dates.map((date, i) => ({
+  date,
+  Opened: cumulative[0][i] - cumulative[1][i],
+  Triaged: cumulative[1][i] - cumulative[2][i],
+  "In Progress": cumulative[2][i] - cumulative[3][i],
+  "Waiting on Customer": cumulative[3][i] - cumulative[4][i],
+  Resolved: cumulative[4][i],
 }));
+
+// Stage order top-to-bottom per spec: Opened (earliest) on top, Resolved
+// (latest) on bottom. d3.stack() lays keys bottom-first, so pass the reverse.
+const stackKeys = [...stages].reverse();
+const series = d3.stack().keys(stackKeys)(stackData);
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -90,16 +110,16 @@ g.append("g")
 // --- Bands ---------------------------------------------------------------------
 const area = d3
   .area()
-  .x((d) => x(d.date))
-  .y0((d) => y(d.y0))
-  .y1((d) => y(d.y1));
+  .x((d, i) => x(dates[i]))
+  .y0((d) => y(d[0]))
+  .y1((d) => y(d[1]));
 
 g.selectAll("path.band")
-  .data(bands)
+  .data(series)
   .join("path")
   .attr("class", "band")
-  .attr("fill", (d) => d.color)
-  .attr("d", (d) => area(d.points));
+  .attr("fill", (d) => color(d.key))
+  .attr("d", (d) => area(d));
 
 // --- Axes ------------------------------------------------------------------
 const xAxis = g
@@ -149,7 +169,7 @@ legendRows
   .attr("width", 18)
   .attr("height", 18)
   .attr("rx", 3)
-  .attr("fill", (_, i) => t.palette[i]);
+  .attr("fill", (d) => color(d));
 
 legendRows
   .append("text")
