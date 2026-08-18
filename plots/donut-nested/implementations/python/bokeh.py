@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 donut-nested: Nested Donut Chart
 Library: bokeh 3.9.2 | Python 3.13.15
-Quality: 88/100 | Updated: 2026-08-18
+Quality: 92/100 | Updated: 2026-08-18
 """
 
 import os

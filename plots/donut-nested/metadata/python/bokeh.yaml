@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:03:11Z'
-updated: '2026-08-18T06:54:44Z'
+updated: '2026-08-18T07:03:13Z'
 generated_by: claude-sonnet
 workflow_run: 32107966926
 issue: 2015
@@ -12,101 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
+  - Inner-ring department labels now use the wedge-luminance-aware contrast_ink()
+    helper (previously only applied to the outer ring), giving high-contrast text
+    on both saturated (Engineering, Sales) and pastel (Marketing, Operations) wedges
+    in BOTH themes
+  - A compact legend now covers every outer segment below the 0.25-radian label-angle
+    threshold (Content, Tools, Utilities), so no wedge is left unidentifiable in the
+    static PNG
   - Genuine same-hue tint families built via HLS interpolation per department, keeping
-    department identity readable while cleanly distinguishing children — a much more
-    sophisticated palette approach than arbitrary per-child colors
+    department identity readable while cleanly distinguishing children
   - Emphasis bump on the largest department (Engineering) creates a clear visual focal
-    point/hierarchy without annotation clutter
-  - Elevated center disc + 'Total $2010K' callout gives the donut a grounding focal
-    point, and the inner/outer radius gaps create real ring separation per the spec's
-    'consider adding spacing between rings' note
+    point without annotation clutter
+  - Elevated center disc + "Total $2010K" callout, plus real inner/outer radius gaps,
+    satisfy the spec's ring-separation note
   - Distinctive, idiomatic bokeh usage (annular_wedge, per-glyph HoverTool, LabelSet)
-    with genuinely functional hover tooltips in the HTML export — not fake/simulated
+    with genuinely functional (not faked) hover tooltips in the HTML export
   weaknesses:
-  - Inner-ring department labels use the fixed theme INK token instead of the per-wedge
-    contrast_ink() helper already used for outer labels — in plot-dark.png, light
-    INK text on the Marketing (#C475FD lavender) and Operations (#BD8233 ochre) wedges
-    drops to roughly 2.5:1 contrast, below the 3:1 WCAG large-text minimum. Apply
-    contrast_ink() to all four inner LabelSet entries, matching the outer-ring approach.
-  - The smallest Marketing category ('Content', $60K, ~10.7 degree wedge) falls below
-    the 0.25-radian label threshold and gets no on-chart label, and no legend exists
-    anywhere in the chart — a static-PNG viewer has no way to identify that wedge.
-    The spec explicitly notes 'use legend for smaller ones'; add a compact legend
-    or leader-line callout for segments below the label threshold.
+  - Four small helper functions (hex_to_rgb01, rgb01_to_hex, tint_family, contrast_ink)
+    push this past pure KISS single-script style, though the color-science they implement
+    (same-hue tint families, per-wedge contrast ink) is genuinely justified rather
+    than gratuitous abstraction
+  - Data storytelling relies on the emphasis bump + center total as the only hierarchy
+    signal — no secondary visual device (e.g. ordering by value, subtle radial gridlines)
+    reinforces the part-to-whole story further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "donut-nested · python · bokeh · anyplot.ai" centered at top, clearly visible. Inner-ring department labels (Engineering, Marketing, Sales, Operations) and outer-ring category labels (Salaries, Equipment, Training, Cloud, Advertising, Events, Salaries, Travel, Facilities, IT Support) render in dark ink and are readable against both the saturated wedge colors and the pale tint wedges. Center "Total / $2010K" sits on a lighter elevated disc.
-      Data: First/largest ring segment (Engineering) is Imprint brand green #009E73; Marketing is lavender #C475FD, Sales is blue #4467A3, Operations is ochre #BD8233 — canonical Imprint order. Outer-ring children use same-hue tints of their parent. Engineering wedge is nudged outward (emphasis bump) as the largest department.
-      Legibility verdict: PASS — all visible text is readable in the light render.
+      Background: Warm off-white (#FAF8F1), not pure white — correct.
+      Chrome: Bold dark title "donut-nested · python · bokeh · anyplot.ai" centered at top, fully readable, ~53% of canvas width (well within the 50-70% guideline). No clipping at any edge — checked top, left, right margins directly, all have generous empty margin around the donut and legend.
+      Data: Inner ring shows four departments (Engineering #009E73, Marketing #C475FD, Sales #4467A3, Operations #BD8233) in canonical Imprint order, first series = #009E73 as required. Outer ring shows same-hue tint families per department for expense categories. Engineering (largest, $800K) is nudged outward via the emphasis bump. Center shows "Total / $2010K" on an elevated off-white disc. A compact 3-row legend in the bottom-left corner covers the three below-threshold outer segments (Marketing·Content $60K, Sales·Tools $45K, Operations·Utilities $55K) with color swatches + labels.
+      Legibility verdict: PASS — all department and category labels are clearly readable against their wedge fill; verified by direct pixel crop that "Marketing $430K" (pale purple wedge) uses dark ink and "Operations $330K" (mid-tone ochre wedge) uses light ink, both high-contrast.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title renders in light ink, clearly visible. Data-wedge colors are pixel-identical to the light render (green/lavender/blue/ochre), confirming only chrome flipped. Outer-ring category labels use a per-wedge computed ink color (contrast_ink()) and remain legible on both pale and saturated tints. However, the four INNER-ring department labels (Engineering/Marketing/Sales/Operations) use the fixed theme INK token (light text) rather than a contrast-aware color — on the Marketing (lavender) and Operations (ochre) wedges this produces noticeably reduced contrast (light text on a light/mid-tone saturated fill, approx. 2.5:1), a softer version of the "dark-on-dark" failure mode called out in the review instructions. Text is still legible to the eye (bold, large) but is a real accessibility/contrast regression versus the outer ring's own handling.
-      Data: Confirmed identical to light render — only background/text/lines flipped.
-      Legibility verdict: PASS with a flagged weakness — text is legible but contrast on 2 of 4 inner-ring labels falls below the 3:1 WCAG large-text threshold; see Weaknesses.
+      Background: Warm near-black (#1A1A17), not pure black — correct.
+      Chrome: Title renders in light ink, fully legible. Legend text uses the light INK token against the dark background, legible. Wedge separator lines flip to dark, as expected.
+      Data: All wedge fill colors are pixel-identical to the light render — only chrome (background, title ink, legend ink, separator lines) flipped, confirming data colors never change per theme.
+      Legibility verdict: PASS — this is the exact regression flagged in Attempt 1 (inner-ring department labels used the fixed theme INK token, causing ~2.5:1 contrast on the Marketing/Operations wedges) and it is now fixed. Direct pixel-crop verification: "Marketing $430K" still renders in dark ink on the pale purple wedge (luminance-based decision is theme-independent, matching the light render exactly) and "Operations $330K" still renders in light ink on the ochre wedge — both clearly legible, no dark-on-dark or light-on-light anywhere.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (50pt title, 20pt inner labels, 16pt
-          outer labels, 26pt center total); outer-ring labels use contrast-aware ink
-          and read well in both themes, but inner-ring department labels rely on the
-          fixed theme INK token and read with visibly reduced contrast on 2 of 4 wedges
-          in the dark render.
+        comment: Inner-ring labels now use contrast_ink() per wedge, matching the
+          outer ring — fixes the Attempt 1 regression; all text reads clearly in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No collisions between labels, legend, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All ring segments clearly visible and distinguishable, appropriate
-          for the data density (4 parent, 13 child segments).
+        comment: Wedges and labels sized appropriately for a 13-segment nested donut
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Inner-ring labels on Marketing (#C475FD) and Operations (#BD8233)
-          wedges fall to roughly 2.5:1 contrast in the dark render, below the 3:1
-          large-text minimum — the outer ring solves this with contrast_ink() but
-          the inner ring does not.
+        passed: true
+        comment: Per-wedge luminance-based ink selection gives reliable contrast on
+          every wedge, verified by pixel crop on the two previously-flagged wedges
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Donut fills a comfortable majority of the 2400x2400 square canvas
-          with balanced margins; nothing cut off.
+        comment: Square canvas well-proportioned; title, donut, and legend all fit
+          with generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a donut; segment labels and center total include
-          units ($K).
+        comment: Title matches required format exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First department is Imprint #009E73; remaining departments use canonical
-          positions 2-4; backgrounds are theme-correct #FAF8F1/#1A1A17; data colors
-          identical across themes.'
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct backgrounds
+          in both renders'
     design_excellence:
       score: 15
       max: 20
@@ -115,51 +110,51 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Custom same-hue HLS tint families per department, elevated center
-          disc, and an emphasis bump on the largest segment show real design intent
-          beyond configured defaults.
+        passed: true
+        comment: Custom HLS-based tint families, elevated center disc, emphasis bump
+          on the largest department
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Clean ring separation via radius gaps and PAGE_BG dividers, no axes/grid
-          clutter, generous margins — the inner-label contrast lapse is the only refinement
-          blemish.
+        passed: true
+        comment: Clean ring separation, no axes/grid clutter, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: The emphasis bump and center total give the chart a clear focal point
-          (largest department) without needing annotations.
+        passed: true
+        comment: Emphasis bump + center total create a focal point, but no further
+          hierarchy device beyond that
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct nested/concentric donut with two hierarchy levels.
+        passed: true
+        comment: Correct nested donut with two hierarchy levels
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Consistent color families, aligned child/parent boundaries, ring
-          spacing, and labels on larger segments are all present; the spec's 'use
-          legend for smaller ones' is not implemented — the one sub-threshold segment
-          (Content, $60K) has no label and no legend exists.
+        passed: true
+        comment: The Attempt 1 gap (no legend for the sub-threshold Content segment)
+          is fixed — legend now covers all three below-threshold segments
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Inner ring correctly aggregates to department totals, outer ring
-          shows all child values; hierarchy renders correctly.
+        passed: true
+        comment: Values aggregate correctly outer-to-inner; totals verified (800+430+450+330=2010)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches 'donut-nested · python · bokeh · anyplot.ai' exactly;
-          inline segment labels serve as legend for labeled segments.
+        passed: true
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -168,19 +163,21 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: 4 departments with 3-4 categories each (within spec's 3-6 parent
-          / 2-5 child range), varied magnitudes across all segments.
+        passed: true
+        comment: Two hierarchy levels, 4 departments, 13 categories — full feature
+          coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible corporate budget-allocation scenario.
+        passed: true
+        comment: Plausible, neutral corporate budget data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Values and proportions (salaries dominant, smaller ops/travel line
-          items) match real-world corporate budget structures.
+        passed: true
+        comment: Sensible dollar-K values for a corporate budget
     code_quality:
       score: 9
       max: 10
@@ -189,32 +186,33 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Mostly linear script, but includes a handful of small helper functions
-          (tint_family, contrast_ink, hex/rgb conversions) needed for the genuine
-          HLS tint-generation logic.
+        passed: true
+        comment: Four small helper functions for color science (justified, not gratuitous)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded data, no randomness.
+        passed: true
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: All imports (numpy, colorsys, math.pi, pathlib, bokeh, selenium)
-          are used.
+        passed: true
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake functionality; complexity is proportional to the genuine
-          wedge-geometry and tinting requirements.
+        passed: true
+        comment: Genuine (not faked) interactivity via HoverTool
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Correct plot-{THEME}.png/.html output via the documented Selenium
-          screenshot pattern; no deprecated calls.
+        passed: true
+        comment: Correct plot-{theme}.png/.html via output_file/save + Selenium screenshot,
+          no deprecated export_png
     library_mastery:
       score: 8
       max: 10
@@ -223,26 +221,26 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: ColumnDataSource, annular_wedge, HoverTool, LabelSet all used per
-          bokeh best practice.
+        passed: true
+        comment: annular_wedge, ColumnDataSource, LabelSet used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: annular_wedge is a bokeh-specific primitive for exactly this chart
-          shape, and per-glyph HoverTool tooltips are genuinely functional (not faked)
-          in the saved HTML.
-  verdict: REJECTED
+        passed: true
+        comment: Functional per-glyph HoverTool distinct to bokeh's interactive model
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
+  - custom-legend
   - annotations
   - html-export
   patterns:
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - minimal-chrome
