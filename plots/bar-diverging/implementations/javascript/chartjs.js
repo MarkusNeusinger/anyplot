@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-diverging: Diverging Bar Chart
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-18
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-08-18
 
 const t = window.ANYPLOT_TOKENS;
 
