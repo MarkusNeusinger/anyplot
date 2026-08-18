@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: plotnine 0.15.8 | Python 3.13.12
-Quality: 84/100 | Updated: 2026-08-18
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os
