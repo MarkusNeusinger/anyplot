@@ -242,6 +242,17 @@ events arrive server-side through the Events API, which is why it shows
 |-------|-----------|--------|-------------|
 | `bot_fetch` | `assistant`, `kind`, `path` | `api/routers/seo.py` (router dependency) | An AI assistant or search crawler read a catalogue page. Recorded on `bots.anyplot.ai`. |
 
+Register the three properties on the **`bots.anyplot.ai`** site, not on
+`anyplot.ai` — property registration is per site, and without it the events
+still arrive but cannot be broken down, which is the whole point of collecting
+them:
+
+| Property | Description | Used by |
+|----------|-------------|---------|
+| `assistant` | Vendor (`claude`, `chatgpt`, `gemini`, `mistral`, `perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …) | `bot_fetch` |
+| `kind` | Why it fetched — see the table below | `bot_fetch` |
+| `path` | Public path that was read, e.g. `/box-basic/python/matplotlib` | `bot_fetch` |
+
 `kind` is the property worth filtering on:
 
 | `kind` | Meaning |
