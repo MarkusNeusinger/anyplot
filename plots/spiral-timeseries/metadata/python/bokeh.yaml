@@ -2,125 +2,122 @@ library: bokeh
 language: python
 specification_id: spiral-timeseries
 created: '2026-05-07T15:36:37Z'
-updated: '2026-05-07T15:55:49Z'
+updated: '2026-08-18T00:37:00Z'
 generated_by: claude-sonnet
-workflow_run: 25505263842
+workflow_run: 32040142862
 issue: 5243
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.15
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 96
 review:
   strengths:
-  - Clear spiral structure with 5-year temperature data clearly showing seasonal variation
-  - Correct Viridis colormap for continuous temperature data with proper ColorBar
-  - 'Full spec compliance: radial month dividers, year labels, Archimedean spiral
-    expanding outward'
-  - Theme-adaptive chrome with no dark-on-dark failures in either render
-  - 'Idiomatic Bokeh usage: ColumnDataSource, segment renderer for per-segment color
-    mapping, HoverTool with line_policy=interp'
+  - 'All three attempt-1 weaknesses are cleanly fixed: title language token, explicit
+    warming-trend callout, and a bokeh-distinctive CustomJS hover interaction'
+  - 'Pixel-verified theme chrome: backgrounds are exactly #FAF8F1/#1A1A17, data colors
+    pixel-identical across themes'
+  - No overlap, no edge clipping, legible even at 400px mobile scale
+  - Realistic, well-scaled synthetic dataset with correct Archimedean spiral construction
   weaknesses:
-  - Color bar is very small (40×600px on 3600×3600 canvas) — label text appears tiny
-    in the rendered image; increase height to 800-1000px
-  - Spiral lines at line_width=6 on a 3600×3600 canvas appear thin; bumping to 8-10
-    would improve visibility especially at smaller display sizes
-  - Year labels placed at fixed x=65 which is slightly awkward positioning — they
-    are legible but not elegantly placed
-  - Title font appears small relative to the canvas size despite 28pt — the plot would
-    benefit from a bolder or slightly larger title
-  - 'Design sophistication is functional but not highly polished: the radial dividers
-    could use varying alpha or the outermost ring could be annotated more prominently'
+  - The imprint_seq ramp direction maps cold temperatures to green and hot temperatures
+    to blue -- correct per the mandated palette, but counter to the everyday blue=cold/warm-color=hot
+    convention some viewers may expect; not a rule violation since the explicit +1.3C
+    callout already carries the trend message
+  - Aesthetic Sophistication (DE-01) and Visual Refinement (DE-02) are strong but
+    stop short of the top tier -- e.g. the outer boundary ring and radial dashed lines
+    are functional but plain
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, approximately #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "spiral-timeseries · bokeh · anyplot.ai" is visible at the top center in dark text. Month labels (Jan–Dec) are placed around the spiral perimeter in muted dark text and are clearly readable. Year labels (2019–2023) appear in bold dark text near the center-right of the spiral, stacked by revolution radius.
-      Data: Five full Archimedean spiral revolutions, each representing one year of daily temperatures. Viridis colormap applied per-segment: deep purple/blue in winter months (Dec–Feb), transitioning through cyan/teal in spring/autumn, reaching yellow-green in summer (Jun–Aug). The seasonal pattern is immediately apparent. ColorBar on the right side labeled "Temperature (°C)" with values roughly -5 to 30°C.
-      Legibility verdict: PASS — all text elements are readable against the light background. No light-on-light issues detected.
+      Background: Warm off-white, pixel-verified exactly #FAF8F1 -- matches spec.
+      Chrome: Title "spiral-timeseries · python · bokeh · anyplot.ai" in dark ink, centered top (language token now present, fixed from attempt 1). Dashed light-grey radial lines mark month boundaries with muted "Jan"-"Dec" labels around the circumference. Bold dark "2019"-"2023" year labels sit near the Jan divider of each revolution, verified via crop to be clear of the spiral line beneath them (no overlap). A new center callout reads "+1.3°C / warming, 2019 → 2023". A vertical ColorBar top-right is labeled "Temperature (°C)" with 0/10/20/30 ticks. Oct/Apr month labels near the canvas edges confirmed fully visible, not clipped.
+      Data: Five concentric spiral arcs (2019 innermost -> 2023 outermost) colored via the imprint_seq ramp from brand green (#009E73, cold months) to blue (#4467A3, warm months).
+      Legibility verdict: PASS -- all text readable against the light background, confirmed legible even at the 400px mobile-scaled render.
 
     Dark render (plot-dark.png):
-      Background: Near-black, approximately #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title appears in light cream/off-white text (INK = #F0EFE8 in dark mode), clearly readable. Month labels appear in muted light gray (INK_MUTED = #A8A79F) — adequately visible against dark background. Year labels in light-colored bold text are readable. Color bar labels use INK_SOFT (#B8B7B0), visible on dark background.
-      Data: Viridis colors are identical to the light render — purple for cold, yellow-green for warm. Data colors unchanged between themes as required. Radial dividers slightly more visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All text elements use appropriate light-colored tokens for the dark theme.
+      Background: Warm near-black, pixel-verified exactly #1A1A17 -- matches spec, not pure black.
+      Chrome: Same title, now light ink. Same dashed radial grid and month labels in muted light tone; year labels and warming callout near-white/bold. ColorBar box flips to dark elevated tone with light border and light tick/title text.
+      Data: Pixel-sampled the spiral and colorbar gradient -- identical green-to-blue values to the light render, confirming only chrome flipped, not data colors.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures found anywhere.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title and labels readable in both themes; color bar text appears
-          small at 3600px canvas scale
+        comment: All font sizes explicit; legible in both themes and at 400px mobile
+          scale.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlaps; year labels cleanly stacked by radius; month
-          labels evenly distributed
+        comment: 'Verified via crop: year labels clear of spiral arcs; center callout
+          clear of guides.'
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Spiral visible; line_width=6 appears thin on large canvas but color
-          contrast compensates
+        comment: line_width=9 on ~1825 segments at 2400px canvas is well-matched to
+          point density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe
+        comment: Green-to-blue sequential ramp gives strong contrast; not red-green-only.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600 format appropriate for spiral; good use of space
+        comment: Spiral fills ~65-70% of canvas with balanced margins; canvas gate
+          passed at 2400x2400.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; color bar labeled Temperature (°C)
+        comment: ColorBar labeled 'Temperature (°C)' with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous temp data; backgrounds #FAF8F1/#1A1A17 correct;
-          theme-adaptive chrome applied'
+        comment: Correct imprint_seq ramp; pixel-verified identical data colors across
+          themes and pixel-exact backgrounds.
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Spiral form is sophisticated; viridis mapping is standard but appropriate;
-          radial dividers add structure
+        comment: Thoughtful color ramp use, refined typography, hand-built spiral
+          geometry; clearly above defaults, short of full publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes hidden, no axis grid; radial dividers subtle; clean minimal
-          look
+        comment: Subtle low-alpha grid, hidden axes/spines, generous whitespace, resized
+          colorbar.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Seasonal patterns immediately visible; year-over-year alignment effective;
-          warming trend encoded
+        comment: New +1.3°C warming callout fixes attempt 1's core weakness -- trend
+          now stated explicitly.
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Archimedean spiral timeseries correctly implemented
+        comment: Correct Archimedean spiral, earliest data at center.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color encodes magnitude, radial month dividers, year-start labels,
-          outward expansion, color bar — all present
+        comment: Radial month grid, cycle-start labels, outward expansion, labeled
+          colorbar all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date→angle, temperature→color, year→revolution — all correct
+        comment: Theta=time, radius=cycle progression, color=temperature -- correct
+          mapping.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: spiral-timeseries · bokeh · anyplot.ai; color bar with Temperature
-          (°C) label
+        comment: Title now reads exactly 'spiral-timeseries · python · bokeh · anyplot.ai'
+          -- missing 'python' token from attempt 1 is fixed.
     data_quality:
       score: 15
       max: 15
@@ -160,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 full years, seasonal variation, warming trend, all aspects of the
-          plot type shown
+        comment: Shows seasonal periodicity, multi-year warming trend, and realistic
+          noise.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperatures for temperate city 2019-2023; plausible range
-          ~-5 to 30°C; neutral topic
+        comment: 'Neutral, plausible: daily average temperature for a temperate city,
+          2019-2023.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1826 data points across 5 years; temperature values appropriate for
-          domain
+        comment: Seasonal amplitude, warming trend, and noise magnitude all physically
+          plausible.
     code_quality:
       score: 10
       max: 10
@@ -185,31 +183,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Linear imports -> data -> plot -> save; one small color-lerp helper.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable; spiral math clearly commented
+        comment: Appropriate complexity; CustomJS hover halo is genuine, functional
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh API
+        comment: output_file/save + Selenium screenshot, current bokeh API.
     library_mastery:
       score: 9
       max: 10
@@ -219,15 +218,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource, HoverTool, ColorBar, LinearColorMapper — all idiomatic
-          Bokeh patterns
+        comment: ColumnDataSource, field-mapped LinearColorMapper transform, HoverTool,
+          add_layout(ColorBar/Label) -- all recommended bokeh patterns.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: segment() renderer for per-segment color mapping is distinctive;
-          HoverTool with line_policy=interp; interactive HTML artifact
+        comment: New CustomJS-driven hover halo is a genuinely bokeh-specific touch
+          beyond generic HoverTool+ColorBar.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -235,7 +234,7 @@ impl_tags:
   techniques:
   - colorbar
   - hover-tooltips
-  - html-export
+  - polar-projection
   - annotations
   patterns:
   - data-generation
@@ -243,5 +242,5 @@ impl_tags:
   dataprep:
   - time-series
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
