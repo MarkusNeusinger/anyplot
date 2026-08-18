@@ -446,7 +446,6 @@ def _sized_srcset(full_url: str) -> str:
 
 def _render_picture(impl, alt: str) -> str:
     """The actual plot render, both themes, at a size a consumer can choose."""
-    light = html.escape(impl.preview_url_light, quote=True)
     light_default = html.escape(
         impl.preview_url_light[:-4] + "_1200.png"
         if impl.preview_url_light.endswith(".png")
@@ -464,8 +463,30 @@ def _render_picture(impl, alt: str) -> str:
         f'<img src="{light_default}" srcset="{html.escape(_sized_srcset(impl.preview_url_light), quote=True)}"'
         f' alt="{alt}" />'
         f"</picture>"
-        f'<p><a href="{light}">Full-resolution render</a></p>'
+        f"{_render_asset_list(impl)}"
     )
+
+
+def _render_asset_list(impl) -> str:
+    """Name every asset this implementation has, and say which is which.
+
+    The <picture> above already offers both themes, but only through a media
+    query — an agent parsing the page cannot tell from that which file is the
+    dark one, or that an interactive version exists at all. Two thirds of the
+    catalogue has one (plotly, altair, bokeh, pygal, lets-plot and every
+    JavaScript library), it is publicly fetchable, and until now nothing in the
+    machine-facing page mentioned it.
+    """
+    items = []
+    for url, label in (
+        (impl.preview_url_light, "Full-resolution render, light theme"),
+        (impl.preview_url_dark, "Full-resolution render, dark theme"),
+        (impl.preview_html_light, "Interactive version, light theme"),
+        (impl.preview_html_dark, "Interactive version, dark theme"),
+    ):
+        if url:
+            items.append(f'<li><a href="{html.escape(url, quote=True)}">{label}</a></li>')
+    return f"<h2>Renders</h2><ul>{''.join(items)}</ul>" if items else ""
 
 
 def _build_impl_html(spec, impl, code: str | None, image: str) -> str:

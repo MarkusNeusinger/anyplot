@@ -19,6 +19,7 @@ from api.routers.seo import (
     _jsonld_script,
     _lastmod,
     _meta_description,
+    _render_asset_list,
     _render_bot_html,
     _render_picture,
     _sized_srcset,
@@ -531,3 +532,35 @@ class TestPlotRender:
     def test_the_full_resolution_stays_reachable(self) -> None:
         """Left out of the srcset, so it needs its own way in."""
         assert f'<a href="{self.BASE}/plot-light.png">' in _render_picture(self._impl(), "alt")
+
+
+class TestRenderAssetList:
+    """A <picture> hides which file is which; the list says it in words."""
+
+    BASE = "https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/plotly"
+
+    def _impl(self, interactive: bool = True) -> MagicMock:
+        impl = MagicMock()
+        impl.preview_url_light = f"{self.BASE}/plot-light.png"
+        impl.preview_url_dark = f"{self.BASE}/plot-dark.png"
+        impl.preview_html_light = f"{self.BASE}/plot-light.html" if interactive else None
+        impl.preview_html_dark = f"{self.BASE}/plot-dark.html" if interactive else None
+        return impl
+
+    def test_names_both_themes_explicitly(self) -> None:
+        """A media query tells a browser which file to take, not a reader which is which."""
+        out = _render_asset_list(self._impl())
+        assert f'<a href="{self.BASE}/plot-light.png">Full-resolution render, light theme</a>' in out
+        assert f'<a href="{self.BASE}/plot-dark.png">Full-resolution render, dark theme</a>' in out
+
+    def test_exposes_the_interactive_version(self) -> None:
+        """Two thirds of the catalogue has one and nothing machine-facing mentioned it."""
+        out = _render_asset_list(self._impl())
+        assert f'<a href="{self.BASE}/plot-light.html">Interactive version, light theme</a>' in out
+        assert f'<a href="{self.BASE}/plot-dark.html">Interactive version, dark theme</a>' in out
+
+    def test_omits_what_an_implementation_does_not_have(self) -> None:
+        """A static library must not be advertised as interactive."""
+        out = _render_asset_list(self._impl(interactive=False))
+        assert "Interactive version" not in out
+        assert "Full-resolution render, light theme" in out

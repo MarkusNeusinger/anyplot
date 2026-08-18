@@ -146,7 +146,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   plot (2400, 3200, 4766 among those measured), so it has no honest `w` descriptor — and gets its
   own link; `src` points at the 1200px variant so a consumer ignoring `srcset` does not pull a
   five-megapixel file. `og:image` is unchanged, and attribution is not lost either way: every
-  render's title reads `{spec} · {language} · {library} · anyplot.ai`.
+  render's title reads `{spec} · {language} · {library} · anyplot.ai`. Below it, a list names every
+  asset in words — a `<picture>` tells a browser which file to take but tells a reader nothing about
+  which is which — including the **interactive version**, which exists for 2,229 of 3,583
+  implementations, is publicly fetchable, and was mentioned nowhere machine-readable before.
 
 - **`og_image_view` is split by who fetched the image** — a social or messenger preview means a
   human shared a link, which is a product signal and stays on the main site; a search or AI crawler
