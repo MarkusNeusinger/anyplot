@@ -55,6 +55,24 @@ const stageColor = {
   Done: t.palette[4],
 };
 
+// Give each band a little depth: a vertical gradient fill (richer near the
+// band's own boundary, softer toward the stack) instead of a flat opacity.
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+function bandGradient(hex) {
+  return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+    { offset: 0, color: hexToRgba(hex, 0.92) },
+    { offset: 1, color: hexToRgba(hex, 0.55) },
+  ]);
+}
+
+// Development is the bottleneck stage: Testing's capacity is the tightest
+// gate, so the Development band widens steadily as the run progresses.
+// Highlight the back half of the run where that widening is unmistakable.
+const bottleneckStartDay = Math.floor(DAYS * 0.45);
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -74,7 +92,7 @@ chart.setOption({
   },
   tooltip: {
     trigger: "axis",
-    axisPointer: { type: "shadow" },
+    axisPointer: { type: "cross" },
     valueFormatter: (value) => `${value} items`,
   },
   legend: {
@@ -122,9 +140,28 @@ chart.setOption({
     stack: "flow",
     data: wip[stageNames.indexOf(name)],
     symbol: "none",
-    lineStyle: { width: 1, color: stageColor[name] },
-    areaStyle: { color: stageColor[name], opacity: 0.85 },
+    lineStyle: { width: 1.5, color: stageColor[name] },
+    areaStyle: { color: bandGradient(stageColor[name]) },
     itemStyle: { color: stageColor[name] },
     emphasis: { focus: "series" },
+    // Call out the widening Development band — the CFD's bottleneck signature
+    // — with a labeled shaded window instead of leaving it only implicit in
+    // the data.
+    ...(name === "Development"
+      ? {
+          markArea: {
+            silent: true,
+            itemStyle: { color: t.ink, opacity: 0.05 },
+            label: {
+              show: true,
+              position: "insideTop",
+              color: t.inkSoft,
+              fontSize: 13,
+              formatter: "Bottleneck: Development WIP widens as Testing throughput caps it",
+            },
+            data: [[{ xAxis: dates[bottleneckStartDay] }, { xAxis: dates[dates.length - 1] }]],
+          },
+        }
+      : {}),
   })),
 });
