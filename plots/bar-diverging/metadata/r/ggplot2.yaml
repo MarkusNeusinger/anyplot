@@ -1,0 +1,262 @@
+library: ggplot2
+language: r
+specification_id: bar-diverging
+created: '2026-08-18T12:55:21Z'
+updated: '2026-08-18T13:27:02Z'
+generated_by: claude-sonnet
+workflow_run: 32139168235
+issue: 2009
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Correct diverging horizontal bar chart, sorted descending by NPS score, with a
+    clearly distinguished zero baseline (thicker INK_SOFT vline vs. the thinner INK
+    major gridlines)
+  - 'Proper semantic-exception use of the Imprint palette: brand green #009E73 for
+    ''Promoters lead'' (first series), matte red #AE3030 for ''Detractors lead'' —
+    both categorical anchors match the style guide'
+  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
+    backgrounds, readable ink/soft-ink text, subtle x-only major gridlines, no dark-on-dark
+    or light-on-light failures'
+  - 'Clean, idiomatic KISS ggplot2 script: single flat file, theme_minimal() base
+    with explicit overrides, ragg::agg_png device, exact 3200×1800 canvas, legend
+    placed top-left near the plot'
+  - 'Realistic, neutral, appropriately scaled data: 16 departments, NPS values from
+    -49 to +62, a plausible business scenario with clear positive/negative variation'
+  weaknesses:
+  - 'Both annotate(''text'', ...) calls meant to direct-label the two extreme bars
+    (Product Design +62, Field Service -49) render nothing in either theme. Verified
+    by pixel-level inspection of plot-light.png: scanning the full region to the right
+    of the Product Design bar (x=3054..3200, y=250..350) and to the left of the Field
+    Service bar (x=300..608, y=1560..1650) finds zero INK-colored glyph pixels — only
+    gridline anti-aliasing and the ''Field Service'' axis category label are present,
+    no ''+62'' or ''-49'' text. Likely cause: scale_x_continuous(expand = expansion(mult
+    = 0.08)) only reserves ~8.8 data units of panel headroom past the data extremes,
+    and the extra hjust=-0.25 / hjust=1.25 offset pushes the text glyphs past that
+    expanded panel edge, so ggplot2''s default coord_cartesian(clip = ''on'') silently
+    drops them. Fix: either grow the scale_x_continuous expansion enough to fit the
+    label width, switch to coord_cartesian(clip = ''off''), or remove the two annotate()
+    calls (and the comment describing them) since they currently ship as dead code
+    with no visual payoff.'
+  - Legend order lists 'Detractors lead' before 'Promoters lead' (alphabetical scale_fill_manual
+    default) — reading positive-first would read more intuitively given promoters
+    are the top-sorted, green, right-extending bars. Minor, not spec-required.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: title "bar-diverging · r · ggplot2 · anyplot.ai" top-left in bold dark ink; legend swatches ("Detractors lead" red, "Promoters lead" green) top-left below title; y-axis department category labels in dark ink; x-axis "Net Promoter Score" label and tick labels (-40..60) in soft ink; vertical gridlines at -40/-20/0/20/40/60, with the 0 line rendered visibly heavier/darker than the others as the baseline indicator. All chrome text is clearly readable against the light background.
+      Data: 16 horizontal bars sorted from Product Design (+62, longest green bar, top) down to Field Service (-49, longest red bar, bottom), diverging from the zero baseline. First/positive series uses Imprint green #009E73, negative series uses Imprint matte red #AE3030. No numeric value labels are visible near the top or bottom bar despite the source code containing annotate() calls intended to label those two extremes — confirmed absent by direct pixel inspection.
+      Legibility verdict: PASS (all core chrome text legible; the two annotation labels are simply not rendered at all, not illegible)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: same title, legend, axis labels and ticks now in light ink (#F0EFE8) / soft light ink (#B8B7B0), fully readable against the dark background. No dark-on-dark text anywhere. Gridlines and the heavier zero baseline are still visible at the same positions.
+      Data: identical bar geometry and identical data colors to the light render (green #009E73 / red #AE3030 unchanged) — only chrome flipped, as required. Same absence of the "+62"/"-49" annotation text as in the light render.
+      Legibility verdict: PASS (all core chrome text legible in both themes; the annotation labels are absent, not unreadable)
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, axis titles, ticks, and legend are explicitly sized and fully
+          readable in both themes; the two annotate() value labels are entirely invisible
+          in both renders (verified by pixel scan), so that specific text element
+          scores 0 on its own
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axis text, or bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 16 bars at width=0.7 are clearly visible and well-proportioned for
+          the category count
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red is redundantly encoded with bar direction (left vs right
+          of zero), so it is not color-alone; good contrast against both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800, margins balanced, plot fills most of
+          the canvas; minor dock because the panel's right/left expansion leaves no
+          room for the intended extreme-value annotations
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Net Promoter Score" is descriptive; y-axis needs no label (categories
+          are self-explanatory department names)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/positive series is #009E73, negative uses the matte-red semantic
+          anchor #AE3030; backgrounds are #FAF8F1/#1A1A17 in the respective renders;
+          chrome is theme-correct in both'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping, sorted bars, restrained chrome
+          — clearly above library defaults, short of publication-perfect
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed via theme_minimal, only x-major gridlines kept, axis
+          ticks removed, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through color contrast and value-sorted bar length
+          gives a clear focal point (best/worst department) even though the planned
+          direct-label annotations failed to render
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Contrasting colors, horizontal orientation for long labels, distinguishable
+          zero baseline, and value-sorted bars are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=nps, y=department, all 16 categories visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels ('Promoters
+          lead'/'Detractors lead') are descriptive and match the data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both promoter-lead and detractor-lead departments with varied
+          magnitudes on both sides
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement NPS by department is a real, neutral business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPS values (-49..+62) are well within the valid -100..100 range and
+          internally consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports -> data -> plot -> save script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is otherwise hardcoded/deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Two annotate() calls plus their explanatory comment produce zero
+          visible output — dead code shipped as if functional
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png at the correct dimensions
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_col/scale_fill_manual/theme_minimal usage; the non-functional
+          annotate() layer keeps this from a perfect score
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: The one attempted distinctive technique (direct extreme-value labeling
+          via annotate()) does not render, leaving only generic geom_col usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling
