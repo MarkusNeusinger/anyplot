@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -37,24 +37,29 @@ df = pd.DataFrame(
     }
 )
 
-# Plot — overlapping semi-transparent histograms; one shared x encoding keeps bin edges aligned
+# Legend-bound selection — click a swatch to isolate that department's bars/rule
+# (Altair-distinctive declarative interaction; empty selection == everything selected,
+# so the static PNG render is unaffected and matches the un-highlighted default state)
+legend_highlight = alt.selection_point(fields=["Department"], bind="legend", empty=True)
+
+# Plot — overlapping semi-transparent histograms; one shared x encoding keeps bin edges aligned.
+# Fill stays semi-transparent so overlaps blend, but each bar's own-color stroke (full opacity)
+# traces its boundary through the blended region for pairwise disambiguation without the legend.
 histograms = (
     alt.Chart(df)
-    .mark_bar(
-        opacity=0.55, binSpacing=0, cornerRadiusTopLeft=2, cornerRadiusTopRight=2, stroke=PAGE_BG, strokeWidth=0.5
-    )
+    .mark_bar(binSpacing=0, cornerRadiusTopLeft=2, cornerRadiusTopRight=2, strokeWidth=1.1)
     .encode(
         x=alt.X(
             "Response Time (ms):Q",
             bin=alt.Bin(maxbins=24),
             title="Response Time (ms)",
-            axis=alt.Axis(labelFontSize=10, titleFontSize=12, grid=False),
+            axis=alt.Axis(labelFontSize=11, titleFontSize=13, grid=False),
         ),
         y=alt.Y(
             "count():Q",
             title="Frequency",
             stack=None,
-            axis=alt.Axis(labelFontSize=10, titleFontSize=12, gridColor=INK, gridOpacity=0.15),
+            axis=alt.Axis(labelFontSize=11, titleFontSize=13, gridColor=INK, gridOpacity=0.15),
         ),
         color=alt.Color(
             "Department:N",
@@ -68,15 +73,22 @@ histograms = (
                 symbolStrokeWidth=0,
             ),
         ),
+        stroke=alt.Stroke("Department:N", scale=COLOR_SCALE, legend=None),
+        fillOpacity=alt.condition(legend_highlight, alt.value(0.55), alt.value(0.08)),
         tooltip=[alt.Tooltip("Department:N"), alt.Tooltip("count():Q", title="Count")],
     )
+    .add_params(legend_highlight)
 )
 
 # Layer — dashed mean-rule per department, using Altair's inline aggregate encoding shorthand
 mean_rules = (
     alt.Chart(df)
-    .mark_rule(strokeDash=[6, 4], strokeWidth=2.5, opacity=0.9)
-    .encode(x=alt.X("mean(Response Time (ms)):Q"), color=alt.Color("Department:N", scale=COLOR_SCALE, legend=None))
+    .mark_rule(strokeDash=[6, 4], strokeWidth=2.5)
+    .encode(
+        x=alt.X("mean(Response Time (ms)):Q"),
+        color=alt.Color("Department:N", scale=COLOR_SCALE, legend=None),
+        opacity=alt.condition(legend_highlight, alt.value(0.9), alt.value(0.08)),
+    )
 )
 
 title = "histogram-overlapping · python · altair · anyplot.ai"
