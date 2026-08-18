@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bar-diverging
 created: '2026-08-18T13:03:30Z'
-updated: '2026-08-18T13:08:00Z'
+updated: '2026-08-18T13:19:55Z'
 generated_by: claude-sonnet
 workflow_run: 32139733979
 issue: 2009
@@ -12,143 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 94
 review:
   strengths:
-  - 'Correct Imprint palette use: brand green #009E73 for growth (position 1) and
-    semantic matte red #AE3030 for decline — a legitimate finance semantic-exception
-    (profit/up=green, loss/down=red), not an arbitrary color pick'
-  - Zero baseline is explicit (vertical rule at x=0) and bars sort by value descending,
-    exactly matching the spec's 'sort by value' and 'clear visual indicator at baseline'
-    notes
-  - 'Data colors are pixel-identical between light and dark renders; only chrome (background,
-    text, grid) flips correctly to #FAF8F1/#1A1A17'
-  - Direction is doubly encoded (color AND bar position relative to the zero line),
-    so the red/green choice isn't a colorblind sole-signal problem
-  - Value labels at each bar tip (+24%, -21%, etc.) add readability without cluttering
-    the chart
-  - 'Clean, idiomatic KISS-structured D3 code: no functions/classes, explicit font
-    sizes, deterministic hardcoded data, correct #container/ANYPLOT_SIZE mount contract'
+  - Custom per-bar arcTo path construction for one-sided rounded bar tips — a distinctive,
+    D3-specific technique that directly addresses the prior LM-02 feedback
+  - 'Clear focal-point storytelling: bold, colored, larger labels with ▲/▼ markers
+    on the strongest grower/decliner, plus a dashed divider separating growth/decline
+    groups — directly addresses the prior DE-01/DE-03 feedback'
+  - Title fontsize increase (22px → 26px) now yields ~62.5% canvas width (pixel-measured),
+    landing in the target 50-70% band — fixes the prior VQ-01 deduction
+  - Gridlines trimmed to 6 major ticks for a cleaner, less busy value axis
+  - 'Background hex pixel-verified exact match to the Imprint spec in both themes
+    (#FAF8F1 / #1A1A17)'
+  - Semantically correct green/red (finance up/down convention) with redundant encoding
+    via bar position — CVD-safe
+  - Clean, deterministic, correctly-scoped D3 code; correct mount-node contract; no
+    animation artifacts
   weaknesses:
-  - 'Design Excellence is at library-default level: the layout, typography, and color
-    use are all correct but not distinctive — nothing here would read as a deliberate
-    ''design'' choice beyond following the prompt defaults. Consider a focal-point
-    technique: bold/larger label on the top grower and top decliner, a subtle background
-    band highlighting the strongest performers, or a light divider/shading between
-    the growth and decline groups.'
-  - 'Data storytelling is default-level: the chart displays sorted data but doesn''t
-    visually emphasize an insight (e.g., which product line matters most). A short
-    callout or emphasized styling on the extremes (Cloud Services / Print Media) would
-    push this from ''displays data'' to ''tells a story.'''
-  - 'Library Mastery is generic: the diverging-bar technique (min(x(0),x(value)) for
-    bar x/width) is standard and easily replicated in any charting library — nothing
-    here is distinctively D3 (e.g., no custom tick formatting beyond a basic %, no
-    d3-specific layout/interpolation trick). Consider leveraging something D3-idiomatic
-    that a declarative library couldn''t do as easily, like a custom axis tick generator
-    or fine-grained per-bar transform logic.'
-  - Title occupies only ~26% of the plot width at 22px — well under the style guide's
-    50-70% target for a short (non-prefixed) mandated title. Not a hard violation,
-    but a slightly larger title (e.g. 24-26px) would strengthen the visual hierarchy
-    per the style guide's typography priority (title = largest, first thing readers
-    see).
-  - Grid styling (vertical gridlines spanning the full inner height) is functional
-    but plain — consider dropping gridlines except at major ticks, or reducing opacity
-    further, to sharpen the 'visual refinement' polish the style guide calls for.
-  - Data values step down almost linearly (24, 19, 15, 11, 8, 4, -3, -7, -10, -13,
-    -16, -21) — realistic but suspiciously uniform in spacing; a touch more natural
-    variance between consecutive categories would read as less synthetic.
+  - A single small helper function (divergingBarPath) technically deviates from the
+    strict KISS "no functions" ideal — acceptable here since it's the idiomatic D3
+    way to build a shape with no declarative equivalent, but noted for completeness
+  - Design Excellence and storytelling are strong but stop short of full publication-level
+    polish (e.g., no explicit annotation/callout text beyond the inline value labels)
+    — a candidate for further refinement, not a blocker
+  - The spine convention (bottom kept, left removed) is a valid choice for this horizontal
+    layout but is a slight variant of the standard L-shaped guideline — no functional
+    issue, just a stylistic note
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bar-diverging · javascript · d3 · anyplot.ai" centered top in bold dark ink, clearly readable. Y-axis category labels (Cloud Services, Data Analytics, ... Print Media) in dark secondary ink, fully legible. X-axis tick labels (-25% to 25%) and axis label "Year-over-Year Revenue Growth (%)" readable in dark-gray ink. Subtle vertical gridlines at 5% intervals, low opacity, do not compete with data. Legend ("Growth" green swatch, "Decline" red swatch) top-right, readable dark text.
-      Data: First 6 bars (positive values, sorted descending from +24% to +4%) render in Imprint brand green #009E73; last 6 bars (negative, -3% to -21%) render in Imprint semantic red #AE3030. Value labels (+24%, -21%, etc.) sit at each bar tip in dark ink, all legible. Zero baseline is a clear dark vertical rule at x=0.
-      Legibility verdict: PASS — all text elements (title, axis labels, tick labels, category labels, legend, value labels) are clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, pixel-verified exact #FAF8F1.
+      Chrome: Title "bar-diverging · javascript · d3 · anyplot.ai" centered top, bold 26px dark ink, measured at ~62.5% of canvas width (up from ~26% in attempt 1). Y-axis category labels and X-axis tick labels/axis title ("Year-over-Year Revenue Growth (%)") in dark secondary ink, fully legible. Legend ("Growth"/"Decline") top-right, clear of the title. No overlap or edge clipping found at any checked extremity (top-right "+24%" label, bottom-left "Print Media" label, "0%" tick at the zero-baseline crossing).
+      Data: First 6 bars (sorted +24% to +3%) are Imprint brand green #009E73 with rounded outer tips; last 6 bars (-2% to -21%) are Imprint semantic red #AE3030 (finance up/down convention). Strongest grower and decliner get bold, larger, colored labels with ▲/▼ markers plus matching bold category labels. Dashed divider separates growth/decline groups; solid zero baseline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels, category labels, tick labels, and legend text all render in light ink (off-white/light-gray), clearly visible against the dark background. Gridlines are faint light lines at low opacity, still visible but unobtrusive. Zero baseline rule is a light-colored vertical line, clearly visible.
-      Data: Same bars, same colors — green #009E73 for growth, red #AE3030 for decline — pixel-identical to the light render as required. Value labels at bar tips are light-colored and fully readable against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, ticks, category labels, legend, value labels) is clearly legible against the near-black surface.
+      Background: Warm near-black, pixel-verified exact #1A1A17.
+      Chrome: All chrome (title, axis labels, category labels, tick labels, legend text, value labels, divider, zero baseline) flips to light ink/soft tones and stays fully legible. No dark-on-dark failures found in any checked region.
+      Data: Bar fill colors (#009E73 green / #AE3030 red) are pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title proportion
-          (~26% width) is smaller than the 50-70% guideline for short titles though
-          not clipped or overflowing
+        comment: Explicit sizes; title now ~62.5% of canvas width (pixel-verified),
+          fixing the attempt-1 undersized title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between legend, title, value labels, category labels,
-          or bars
+        comment: Pixel-cropped all label extremities; no overlap or collision found
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 bars with 0.28 band padding are clearly visible and well-sized
-          for the data density
+        comment: 12 bars at comfortable band height/padding, value labels legible
+          at every tip
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red are redundantly encoded with bar position relative to the
-          zero baseline, so direction is not color-alone-dependent
+        comment: Direction doubly encoded via color AND bar position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills ~75-80% of canvas, nothing cut off, large left margin
-          is justified by long category labels
+        comment: Chart area covers ~79% of canvas, balanced margins, legend near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label 'Year-over-Year Revenue Growth (%)' is descriptive with
-          units
+        comment: Descriptive axis title with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, decline uses semantic red #AE3030 per finance
-          convention; backgrounds and chrome theme-correct in both renders'
+        comment: Brand green first series, semantic red for decline, background hex
+          pixel-verified in both themes
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured library default: correct semantic colors and clean
-          typography, but no distinctive polish beyond that'
+        passed: true
+        comment: Custom rounded bar tips, focal-point emphasis, dashed divider — clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid adjusted to subtle vertical-only lines, y-axis domain removed;
-          some refinement visible but not fully polished
+        comment: Trimmed gridlines, minimal spines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Sorted order plus color contrast creates visual hierarchy (growth
-          vs decline), but no explicit emphasis on a specific insight
+        comment: Extremes clearly called out with bold color/size/markers plus growth/decline
+          divider
     spec_compliance:
       score: 15
       max: 15
@@ -164,106 +140,102 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Contrasting colors, zero baseline indicator, and value-sorted bars
-          all present
+        comment: Contrasting colors, explicit zero baseline, sorted by value
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on Y, value on X, all 12 categories visible
+        comment: Value on X, category on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches 'bar-diverging · javascript · d3 · anyplot.ai';
-          legend labels 'Growth'/'Decline' match the data semantics
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Both positive and negative magnitudes shown across a decent range
-          (+24% to -21%)
+        comment: Wide magnitude range with clear growth/decline split and highlighted
+          extremes
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral business scenario (YoY revenue growth by product
-          line)
+        comment: Neutral, plausible business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are realistic YoY growth/decline percentages for the stated
-          product categories
+        comment: Values and directionality factually sensible for the domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, linear top-to-bottom script
+        comment: One small pure helper function for the custom bar path; justified
+          but not fully flat
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is hardcoded/deterministic
+        comment: Fully hard-coded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; only the global d3
+        comment: No extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately-scoped D3 code, no fake UI
+        comment: Clean, appropriately scoped, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct #container/ANYPLOT_SIZE mount contract, no animations, current
-          d3 API'
+        comment: Correct mount-node contract, no animation
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scales/axes/join pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scaleLinear/scaleBand, axisBottom/axisLeft, data-join pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: Diverging-bar technique (min(x(0),x(value)) width calc) is generic
-          and easily replicated in any declarative charting library
-  verdict: REJECTED
+        comment: Custom arcTo path construction for one-sided rounded bar tips, hard
+          to replicate declaratively
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
-  patterns:
-  - data-generation
+  - custom-legend
+  - patches
+  patterns: []
   dataprep: []
   styling:
   - grid-styling
