@@ -1,4 +1,4 @@
-# Development Guide
+# Development guide
 
 Guide for setting up a local development environment.
 
@@ -18,7 +18,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ---
 
-## Backend Setup
+## Backend setup
 
 ```bash
 # Clone and install
@@ -41,7 +41,7 @@ uv run uvicorn api.main:app --reload
 
 ---
 
-## Frontend Setup
+## Frontend setup
 
 ```bash
 cd app
@@ -57,7 +57,7 @@ yarn build
 
 ---
 
-## Running Tests
+## Running tests
 
 ```bash
 # All tests
@@ -81,7 +81,7 @@ Coverage config is in `pyproject.toml` (`[tool.coverage]`) and `codecov.yml`.
 
 ---
 
-## Code Quality
+## Code quality
 
 Both linting and formatting must pass for CI.
 
@@ -137,7 +137,7 @@ uv run alembic current
 
 ---
 
-## Environment Variables
+## Environment variables
 
 Copy `.env.example` and configure:
 
@@ -150,7 +150,7 @@ Copy `.env.example` and configure:
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 anyplot/
@@ -170,7 +170,7 @@ See [Repository Structure](reference/repository.md) for details.
 
 ---
 
-## Useful Commands
+## Useful commands
 
 ```bash
 # Run single test file

@@ -1,4 +1,4 @@
-# Report Issues
+# Report issues
 
 Report issues with existing plot specifications or implementations.
 
@@ -13,9 +13,9 @@ Reports are validated by AI and structured for efficient review.
 
 ---
 
-## How to Report
+## How to report
 
-### From anyplot.ai (Recommended)
+### From anyplot.ai (recommended)
 
 1. Navigate to the plot page (e.g., `anyplot.ai/scatter-basic`)
 2. Click **"report issue"** in the breadcrumb bar (top right)
@@ -36,7 +36,7 @@ Reports are validated by AI and structured for efficient review.
 
 ---
 
-## Issue Categories
+## Issue categories
 
 | Category | Description | Examples |
 |----------|-------------|----------|
@@ -49,7 +49,7 @@ Reports are validated by AI and structured for efficient review.
 
 ## Labels
 
-### Report Type
+### Report type
 
 | Label | Purpose |
 |-------|---------|
@@ -101,7 +101,7 @@ Maintainer fixes manually:
 
 ---
 
-## Tips for Good Reports
+## Tips for good reports
 
 1. **Be specific:** Describe exactly what's wrong
 2. **Include context:** What did you expect vs. what happened?

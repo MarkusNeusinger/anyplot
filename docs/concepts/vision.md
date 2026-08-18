@@ -1,10 +1,10 @@
-# 🌟 anyplot - Vision
+# anyplot vision
 
 ## Mission
 
-**Making data visualization effortless: Find the right plot, see it with YOUR data, get working code instantly.**
+**Making data visualization effortless: Find the right plot, see it with *your* data, get working code instantly.**
 
-## The Problem
+## The problem
 
 Developers waste hours on visualization:
 
@@ -14,13 +14,13 @@ Developers waste hours on visualization:
 - **Generic Examples**: Tutorials show fake data, not yours
 - **Outdated Code**: Examples break across library versions and ecosystem updates
 
-## The Solution
+## The solution
 
 **anyplot is an AI-powered platform where specifications meet automation.**
 
-### The Human Touch
+### The human touch
 
-While AI can generate plots instantly, **humans need inspiration and choice**. If you just ask AI "make a chart," you'll
+While AI can generate plots instantly, **humans need inspiration and choice**. If you ask AI to "make a chart," you'll
 get the same generic scatter plot every time.
 
 anyplot is different: **AI curates and maintains, humans discover and choose.**
@@ -32,7 +32,7 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 
 **AI automates the boring parts. You bring the creativity.**
 
-### How It Works
+### How it works
 
 1. **Spec Collection**: Comprehensive markdown specifications for every plot type
 2. **AI Code Generation**: Automatically creates implementations for all major libraries
@@ -40,7 +40,7 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 4. **Smart Discovery**: Natural language search + dynamic tagging + similarity clustering
 5. **Your Data, Instantly**: Upload your data, see dozens of plot variations immediately
 
-### What Makes It Different
+### What makes it different
 
 - **Library Agnostic**: Compare libraries side-by-side. Eleven ecosystems across three languages today — Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot), R (ggplot2), and Julia (Makie.jl); the architecture is designed to welcome more
 - **Always Current**: AI agents keep examples updated and optimized
@@ -51,9 +51,9 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 - **Community + AI**: Users submit specs, AI generates and maintains code
 - **Global**: AI-native means any language, anywhere
 
-## Key Features
+## Key features
 
-### Core (Free)
+### Core (free)
 
 - Browse all plot types with live examples
 - Compare libraries side-by-side
@@ -61,14 +61,14 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 - Natural language search
 - AI-generated explanations
 
-### Premium (Future)
+### Premium (future)
 
-- **Try with YOUR data**: Upload CSV/Excel/JSON, see all plots with your actual data
+- **Try with *your* data**: Upload CSV/Excel/JSON, see all plots with your actual data
 - **Custom styles**: Generate plots matching your brand colors
 - **MCP Server**: Integrate anyplot into your AI workflow ([Docs](../reference/mcp.md), [Issue #4129](https://github.com/MarkusNeusinger/anyplot/issues/4129))
 - **API access**: Programmatic access to plot generation
 
-## Why We'll Win
+## Why we'll win
 
 1. **First to solve the real problem**: Your data, not examples
 2. **Never outdated**: AI continuously updates and improves

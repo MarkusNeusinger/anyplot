@@ -541,7 +541,7 @@ plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')  # THEME = os.get
 - No functions, no classes
 - No `if __name__ == '__main__':`
 - No type hints or docstrings (in plot code)
-- Just: imports -> data -> plot -> save
+- Only imports -> data -> plot -> save
 
 ### Anti-Patterns to Avoid
 

@@ -6,7 +6,7 @@ anyplot is a specification-driven platform where **AI generates all plot impleme
 
 ---
 
-## Two Ways to Contribute
+## Two ways to contribute
 
 | Action | When to Use | From anyplot.ai |
 |--------|-------------|-----------------|
@@ -19,10 +19,10 @@ By participating, you agree to our [Code of Conduct](../CODE_OF_CONDUCT.md).
 
 ---
 
-## Request a New Plot
+## Request a new plot
 
 1. **Create a GitHub Issue** with a descriptive title (e.g., "Radar Chart with Multiple Series")
-   - Do NOT include spec-id in the title
+   - Don't include the spec-id in the title
 2. **Add the `spec-request` label**
 3. **Wait for automation**:
    - `spec-create.yml` analyzes your request
@@ -34,7 +34,7 @@ By participating, you agree to our [Code of Conduct](../CODE_OF_CONDUCT.md).
 
 ---
 
-## Report a Plot Issue
+## Report a plot issue
 
 Found a problem with a plot (specification or implementation)?
 
@@ -48,7 +48,7 @@ AI validates your report and adds structured analysis. Maintainers review and ap
 
 ---
 
-## Trigger Implementation Generation
+## Trigger implementation generation
 
 After a spec has the `spec-ready` label:
 
@@ -62,7 +62,7 @@ gh workflow run bulk-generate.yml -f specification_id=<spec-id> -f library=all
 
 ---
 
-## What NOT to Do
+## What not to do
 
 | Don't | Why |
 |-------|-----|
@@ -75,7 +75,7 @@ gh workflow run bulk-generate.yml -f specification_id=<spec-id> -f library=all
 
 ---
 
-## Why This Workflow?
+## Why this workflow?
 
 Manual intervention causes:
 - Missing quality scores in metadata
@@ -87,7 +87,7 @@ Manual intervention causes:
 
 ---
 
-## Labels Reference
+## Labels reference
 
 See [workflows/overview.md](./workflows/overview.md) for the complete label system.
 

@@ -1,14 +1,14 @@
-# Workflow Overview
+# Workflow overview
 
-## How anyplot Automation Works
+## How anyplot automation works
 
 anyplot uses GitHub Actions to automate the entire plot lifecycle: from specification creation to implementation generation, quality review, and deployment.
 
 ---
 
-## The Two Main Pipelines
+## The two main pipelines
 
-### 1. Specification Pipeline
+### 1. Specification pipeline
 
 ```
 Issue + [spec-request] label
@@ -28,7 +28,7 @@ spec-create.yml (merge job)
   |-- Triggers sync-postgres.yml
 ```
 
-### 2. Report Pipeline
+### 2. Report pipeline
 
 See [Report Issues](report-issue.md) for details.
 
@@ -49,7 +49,7 @@ report-validate.yml
 Ready for maintainer review (fix manually)
 ```
 
-### 3. Implementation Pipeline
+### 3. Implementation pipeline
 
 ```
 Issue + [generate:{library}] label  OR  workflow_dispatch
@@ -83,16 +83,16 @@ impl-review.yml
 
 ---
 
-## Label System
+## Label system
 
-### Specification Labels (on Issues)
+### Specification labels (on Issues)
 
 | Label | Meaning | Set By |
 |-------|---------|--------|
 | `spec-request` | New specification request | User |
 | `spec-ready` | Specification merged, ready for implementations | Workflow |
 
-### Implementation Labels (on Issues)
+### Implementation labels (on Issues)
 
 | Label | Meaning | Set By |
 |-------|---------|--------|
@@ -101,7 +101,7 @@ impl-review.yml
 | `impl:{library}:done` | Implementation merged to main | Workflow |
 | `impl:{library}:failed` | Max retries exhausted | Workflow |
 
-### PR Labels (on Pull Requests)
+### PR labels (on Pull Requests)
 
 | Label | Meaning | Set By |
 |-------|---------|--------|
@@ -111,14 +111,14 @@ impl-review.yml
 | `quality:XX` | Quality score (e.g., quality:92) | Workflow |
 | `quality-poor` | Score < 50, needs fundamental fixes | Workflow |
 
-### Approval Labels
+### Approval labels
 
 | Label | Meaning | Set By |
 |-------|---------|--------|
 | `approved` | Human approved specification | Maintainer |
 | `rejected` | Human rejected | Maintainer |
 
-### Report Labels (on Issues)
+### Report labels (on Issues)
 
 | Label | Meaning | Set By |
 |-------|---------|--------|
@@ -134,7 +134,7 @@ impl-review.yml
 
 ---
 
-## Quality Workflow (Cascading Thresholds)
+## Quality workflow (cascading thresholds)
 
 - **Review 1 (Initial)**: Score >= 90
 - **Review 2 (Repair 1)**: Score >= 80
@@ -145,7 +145,7 @@ impl-review.yml
 
 ---
 
-## Key Principles
+## Key principles
 
 1. **Decoupled**: Each library runs independently (no single point of failure)
 2. **Partial OK**: 6/9 implementations done = fine
@@ -155,7 +155,7 @@ impl-review.yml
 
 ---
 
-## Workflow Files
+## Workflow files
 
 Located in `.github/workflows/`:
 
@@ -180,7 +180,7 @@ Located in `.github/workflows/`:
 
 ---
 
-## Bulk Operations
+## Bulk operations
 
 ```bash
 # All libraries for one spec:
@@ -194,7 +194,7 @@ gh workflow run bulk-generate.yml -f specification_id=all -f library=matplotlib
 
 ---
 
-## CLI Model Tiers
+## CLI model tiers
 
 The agentic workflows use abstract model tiers (`small`, `medium`, `large`) instead of CLI-specific model names. This allows the same command to work across different AI tools.
 
@@ -214,7 +214,7 @@ uv run agentic/workflows/plan_build.py "Add feature X" --model large
 uv run agentic/workflows/prompt.py "Quick fix" --model medium --cli copilot
 ```
 
-### Override Mappings
+### Override mappings
 
 Override the default model for any tier via environment variables:
 

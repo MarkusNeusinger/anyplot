@@ -73,7 +73,7 @@ See [docs/reference/](docs/reference/) for details.
 
 ---
 
-## Tech Stack
+## Tech stack
 
 **Backend**: FastAPI • PostgreSQL • SQLAlchemy • Python 3.13+
 
@@ -92,7 +92,7 @@ See [docs/reference/](docs/reference/) for details.
 
 ---
 
-## MCP Server
+## MCP server
 
 anyplot provides an [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server for AI assistants to search plot specifications and fetch implementation code.
 
@@ -128,7 +128,7 @@ Clients with native Streamable HTTP support can connect to
 
 ---
 
-## License Notes
+## License notes
 
 Most plotting libraries are fully open source. Note these exceptions:
 
@@ -136,7 +136,7 @@ Most plotting libraries are fully open source. Note these exceptions:
 
 ---
 
-## Project Structure
+## Project structure
 
 ```
 anyplot/
@@ -167,11 +167,11 @@ anyplot/
 
 ## Contributing
 
-We welcome contributions! **All code is AI-generated** - you propose ideas, AI implements them.
+Contributions are welcome — **all code is AI-generated**: you propose ideas, AI implements them.
 
 **Three ways to contribute** (from [anyplot.ai](https://anyplot.ai) or GitHub):
 
-| Action | When to Use | From anyplot.ai |
+| Action | When to use | From anyplot.ai |
 |--------|-------------|-----------------|
 | **Suggest Spec** | Propose a new plot type | "suggest spec" link in catalog |
 | **Report Spec Issue** | Problem with a specification | "report issue" link on spec page |
@@ -185,7 +185,7 @@ We welcome contributions! **All code is AI-generated** - you propose ideas, AI i
 4. AI generates/fixes the code
 5. Automated quality review ensures excellence
 
-**Important**: Don't submit code directly! If a plot has quality issues, it means the spec needs improvement, not the code.
+**Important**: Don't submit code directly. If a plot has quality issues, it means the spec needs improvement, not the code.
 
 See [contributing.md](docs/contributing.md) for details.
 
