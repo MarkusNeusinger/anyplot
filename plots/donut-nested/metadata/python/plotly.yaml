@@ -2,52 +2,66 @@ library: plotly
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:04:49Z'
-updated: '2026-05-08T01:07:13Z'
-generated_by: claude-haiku
-workflow_run: 25530576360
+updated: '2026-08-18T07:04:17Z'
+generated_by: claude-sonnet
+workflow_run: 32107823032
 issue: 2015
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotly/plot-dark.html
-quality_score: 92
+quality_score: 95
 review:
   strengths:
-  - 'Perfect Visual Quality (30/30): all text readable in both themes, excellent color
-    contrast, no legibility failures'
-  - 'Flawless theme adaptation: data colors identical between light/dark renders,
-    chrome correctly uses theme tokens'
-  - Professional nested structure with color-family approach creates intuitive visual
-    hierarchy
-  - Clean, minimal design appropriate for data presentation, proper use of plotly's
-    nested pie capability
-  - Strong data storytelling with centered $100M focal point
+  - 'All three attempt-1 weaknesses are demonstrably fixed: a clear radial gap now
+    separates the inner and outer rings (domain shrunk to [0.3776, 0.6624] vs. outer
+    [0.16, 0.88]), the legend was pulled in (x=0.84) tightening the dead whitespace,
+    and the largest segments (Engineering inner, Salaries outer) now carry an explicit
+    focal-point treatment via bold text and a subtle pull-out.'
+  - Precise domain math still aligns the inner ring's outer edge with the outer ring's
+    inner boundary per parent segment, so child wedges visually nest exactly under
+    their parent instead of drifting.
+  - 'Consistent color families per parent (precomputed literal tints of each department''s
+    Imprint hue) satisfy the spec''s hierarchy-coloring note while keeping the first
+    series on brand green #009E73 in canonical Imprint order.'
+  - Threshold-based labeling (>=5) places direct labels only on segments large enough
+    to hold text, deferring small categories (Tools, Content, Training, IT Support)
+    to the legend exactly per the spec's guidance.
+  - Values aggregate correctly and verifiably from children to parents (e.g. Salaries
+    22 + Infrastructure 12 + R&D 8 + Tools 3 = Engineering 45 = 45% of the $100M center
+    annotation).
+  - The lighten_hex() helper from attempt 1 was replaced with a precomputed literal
+    color list, bringing the code back to a clean imports->data->plot->save KISS structure.
+  - Full theme-adaptive chrome correctly threaded through INK/INK_SOFT/PAGE_BG/ELEVATED_BG
+    tokens with identical data colors across both renders.
   weaknesses:
-  - 'CRITICAL: Title contains ''pyplots.ai'' instead of ''anyplot.ai'' (line 126)
-    - violates SC-04'
-  - Design Excellence could be enhanced with additional visual refinement techniques
-    or emphasis variations
-  - Library Mastery could exceed defaults with advanced plotly features (callbacks,
-    custom buttons, selection)
+  - The Tools wedge (value=3, the smallest outer-ring slice) is still visually very
+    thin next to its neighbors — acceptable since it correctly defers to the legend
+    rather than a direct label, but it's the one slice where the tint is hard to distinguish
+    at a glance.
+  - A modest whitespace band still remains between the donut's right edge and the
+    legend column (~9% of canvas width) — narrower than attempt 1 but could be tightened
+    a touch further by nudging the outer domain right edge or legend x closer together.
+  - The focal-point pull-out (0.04) on the Engineering/Salaries wedges is subtle at
+    this radius; the bold text weight is what actually carries the emphasis — a slightly
+    larger pull would make the pull-out itself more perceptible.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct theme surface
-      Chrome: Title, ring labels, center annotation, legend all dark text readable against light background
-      Data: Inner ring (departments) in Okabe-Ito colors with percentages; outer ring (categories) in lighter shades of parent colors; clear color-family hierarchy
-      Ring separators: Light gray, subtle but visible
-      Legibility verdict: PASS - all elements clearly readable with excellent contrast
+      Background: Warm off-white (#FAF8F1), not pure white, not dark — correct light-theme surface.
+      Chrome: Dark-ink title "Company Budget Allocation · donut-nested · python · plotly · anyplot.ai" is crisp and fully visible at top, not clipped. Outer-ring category labels (Salaries, Infrastructure, R&D, Advertising, Events, Commissions, Travel, Facilities) sit outside the ring in dark ink and are clearly readable; smaller categories (Tools, Content, Training, IT Support) correctly defer to the legend instead of a direct label. Center annotation "$100M / Total Budget" is bold dark text, clearly legible in the donut hole. Legend on the right lists all 16 entries (4 departments + 12 categories) in dark-ink text on an elevated off-white panel with a visible border.
+      Data: Inner ring = 4 departments in Imprint colors (Engineering #009E73 green, Marketing purple, Sales blue, Operations amber), each with white "name + percent" text. Outer ring = 12 expense categories rendered as progressively lighter tints of their parent department's hue, radially aligned with the parent boundaries. A clear radial gap now separates the inner and outer rings (visible white band), and the largest segments (Engineering inner, Salaries outer) are bolded and slightly pulled outward as a focal point. First series is confirmed #009E73.
+      Legibility verdict: PASS — no light-on-light issues anywhere; all text (title, outer labels, center annotation, legend, inner-ring wedge text) reads cleanly against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct theme surface
-      Chrome: Title, ring labels, center annotation, legend all light text readable against dark background
-      Data: Inner and outer ring colors are IDENTICAL to light render (only chrome changed themes as expected)
-      Ring separators: Dark gray, subtle but visible
-      Legibility verdict: PASS - all elements clearly readable, no dark-on-dark failures, brand green #009E73 visible on both
+      Background: Warm near-black (#1A1A17), not pure black, not light — correct dark-theme surface.
+      Chrome: Same title, same layout, now rendered in light/off-white ink and fully legible against the dark surface. Outer-ring labels, center annotation ("$100M / Total Budget" in light text), and legend entries all flip to light-on-dark correctly, with no dark-on-dark failures. Legend panel background flips to the dark elevated tone with a visible border, text stays legible.
+      Data: Confirmed identical to the light render — Engineering green #009E73, Marketing purple, Sales blue, Operations amber on the inner ring, and the same tint families on the outer ring. Only chrome (background, text ink, legend panel, ring separator stroke) flipped; the wedge fill colors themselves are pixel-identical between the two renders. The same inner/outer ring gap and Engineering/Salaries focal-point treatment (bold text + pull) are preserved.
+      Legibility verdict: PASS — no dark-on-dark failures found; inner-ring wedge text stays fixed white (by design) which reads fine on both saturated fills regardless of theme, and all chrome text uses the correct light-on-dark ink.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -55,71 +69,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both light/dark themes
+        comment: All font sizes explicitly set, fully readable in both themes, title
+          fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Labels positioned clearly without collisions
+        comment: No overlapping text; label threshold + legend fallback avoids crowding
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All segments distinguishable with excellent color contrast
+        comment: All wedges distinguishable via distinct tints; the Tools slice (value=3)
+          is still visually very narrow
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe, no red-green sole signal
+        comment: CVD-safe Imprint tint families, white strokes separate adjoining
+          wedges
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, generous whitespace
+        comment: Outer domain widened and legend pulled in per prior feedback; balanced
+          layout, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title (domain error noted separately)
+        comment: Descriptive title + center annotation gives full context and units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct, data colors identical
-          between themes'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Color-family approach (lighter shades per parent) shows design intent
-          and professional polish
+        comment: Custom domain math for exact ring alignment, per-department tint
+          families, and a new focal-point pull/bold treatment
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Ring separators provide subtle definition, generous margins, clean
-          minimal style
+        comment: Radial gap now separates inner and outer rings, addressing the prior
+          'rings touch directly' weakness
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Center focal point guides viewer, clear inner-to-outer hierarchy,
-          color families reinforce parent-child
+        comment: Explicit focal point via bold text + subtle pull-out on Engineering/Salaries
+          fixes the prior 'no emphasis' finding; pull magnitude is modest
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -127,47 +145,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut chart with two concentric rings
+        comment: Correct nested/multi-level donut with two concentric pie rings
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Parent/child categories, color families, proper alignment all present
+        comment: Color families per parent, boundary alignment, threshold labeling,
+          ring spacing, 2-level hierarchy all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values aggregate correctly, hierarchy represented accurately
+        comment: Child values sum exactly to parent totals
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'CRITICAL: Title domain is ''pyplots.ai'' but should be ''anyplot.ai'''
+        passed: true
+        comment: Title matches mandated format; legend lists all labels correctly
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Complete budget hierarchy, all departments and categories
+        comment: Varied segment counts (4/3/3/2) and sizes ($3M-$22M) show good range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Company budget allocation is plausible, neutral, realistic
+        comment: Neutral, realistic company budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in millions appropriate for company budgets
+        comment: Plausible proportions, consistent aggregation to $100M
     code_quality:
       score: 10
       max: 10
@@ -177,31 +196,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear code with single helper function for color generation
+        comment: lighten_hex() helper removed; now a clean imports->data->plot->save
+          script with a precomputed literal color list
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data and filenames
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: Only os and plotly.graph_objects, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, elegant color helper, no fake UI
+        comment: Clean, appropriate complexity for the domain-alignment math required
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Correct plot-{THEME}.png (3200x1800) + plot-{THEME}.html, current
+          API
     library_mastery:
       score: 9
       max: 10
@@ -211,23 +232,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper graph_objects.Pie, domain/hole parameters, theme-adaptive
-          colors
+        comment: 'Canonical plotly nested-donut idiom: two go.Pie traces with hole+domain'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Nested pie via domains, custom hover templates, interactive HTML
-          export
-  verdict: REJECTED
+        comment: Precise domain/hole math for exact ring-boundary alignment plus pull-based
+          focal point is genuinely plotly-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
-  - hover-tooltips
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
-  - theme-adaptive-chrome
+  - edge-highlighting

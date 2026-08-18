@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: donut-nested
+created: '2026-08-18T07:05:55Z'
+updated: '2026-08-18T07:10:34Z'
+generated_by: claude-sonnet
+workflow_run: 32109018685
+issue: 2015
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - Same-hue, varying-lightness color families for each department's child segments
+    — directly implements the spec's core styling note and makes parent-child membership
+    legible at a glance without a legend lookup
+  - Outer-ring boundaries are computed from the exact same cumulative math as the
+    inner ring, so child wedges align precisely under their parent wedge with no drift
+  - Per-wedge text color is chosen from each wedge's own HSL lightness (not from the
+    theme), guaranteeing readable contrast on every segment regardless of how light
+    or dark that hue-family variant is
+  - Threshold-based split between direct in-wedge labels (>=6% share) and a compact
+    legend for smaller slices keeps the chart uncluttered while still labeling everything
+  - Center 'Total $1365K' callout adds a genuinely useful summary value that a plain
+    nested donut would lack
+  - Theme-adaptive chrome (background, ink, stroke colors) is correctly wired to ANYPLOT_THEME,
+    while all Imprint data colors stay pixel-identical between light and dark renders
+  - First categorical series (Engineering) correctly uses Imprint position 1 (#009E73
+    brand green), with the remaining departments following canonical palette order
+  weaknesses:
+  - '`using Random; Random.seed!(42)` is inert — all data is hardcoded literals with
+    no `rand()`/`randn()` call anywhere in the script, so the seed has no effect.
+    Harmless but dead code; either use it for a data value or drop the import.'
+  - The bottom legend groups child segments by color swatch only ('Tooling', 'Travel',
+    'Utilities', ...) without restating which department each belongs to — a reader
+    has to mentally match hue families back to the inner-ring labels rather than reading
+    it directly off the legend.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "donut-nested · julia · makie · anyplot.ai" is bold dark ink, clearly visible at top. Inner-ring department labels (Engineering, Sales & Marketing, Operations, Customer Support) and outer-ring category labels (Salaries, Cloud Infra, Advertising, Events, Facilities, Staffing) are set in either white or near-black text depending on the wedge's own lightness, and all are legible. The center "Total / $1365K" callout is dark text on the off-white hole, clearly readable. The bottom legend ("Smaller expense categories": Tooling, Content, Travel, Logistics, Utilities, Software, Training) uses dark labels on the off-white background, all legible.
+      Data: Four hue families (brand green for Engineering, lavender/purple for Sales & Marketing, blue for Operations, ochre/brown for Customer Support), each spanning a lightness gradient from the inner department wedge to its outer child wedges. First series (Engineering) is Imprint brand green #009E73.
+      Legibility verdict: PASS — no light-on-light or illegible text found anywhere in the render.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title renders in light/off-white ink, clearly visible against the dark background. All inner- and outer-ring wedge labels keep the same per-wedge light/dark text logic as the light render and remain legible (e.g. white text on the dark-green Salaries wedge, near-black text on the pale lavender Events wedge). Center "Total / $1365K" callout is light text on the near-black hole, clearly readable. Bottom legend text is light gray/off-white on the dark background, legible throughout.
+      Data: Colors are pixel-identical to the light render — same four hue families and lightness gradients (verified by direct visual comparison of every wedge and legend swatch). Only the chrome (background, stroke color between wedges, ink tokens) flips between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; every label, tick, and legend entry is clearly readable against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All labels, legend text, and title readable in both themes via per-wedge
+          adaptive text color; direct-labeled wedges near the 6% threshold are legible
+          but slightly tight.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collides with other text, data, or the legend box in either
+          render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ring segments are cleanly separated with stroke width, all wedges
+          clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Inherits CVD-safe Imprint palette base hues; no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 canvas confirmed, nothing cut off, legend and title comfortably
+          within bounds.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandated title format used; center total callout serves as a descriptive
+          summary value.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order for departments,
+          backgrounds correct per theme, data colors identical across renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hue-family + lightness-gradient palette construction is genuinely
+          sophisticated and directly serves the hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: hidedecorations!/hidespines!, frameless legend, background-matched
+          ring strokes for separation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Center total, percentage labels, and label/legend split guide the
+          reader from whole to parts clearly.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct nested donut with two concentric rings.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Hue-family colors, boundary alignment, labels+legend split, ring
+          spacing all present per spec notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Verified: department totals sum correctly to grand total, percentages
+          match.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match data labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows parent/child hierarchy, alignment, labels, legend, and aggregate
+          total.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: IT department budget breakdown — plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values ($25K-$420K) are sensible for a corporate departmental budget.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data plus seed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used (Random only for the inert seed
+          call — see weaknesses).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity for the hierarchy
+          math.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save() API with px_per_unit=2.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Native pie! recipe with inner_radius for donut rings, Axis + DataAspect,
+          Legend layout row — idiomatic Makie.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: PolyElement custom legend and Colors.jl HSL manipulation are distinctive;
+          could push further into Makie-specific layout tricks.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
+  - publication-ready
