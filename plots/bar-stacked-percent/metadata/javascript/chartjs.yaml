@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bar-stacked-percent
 created: '2026-08-18T15:04:11Z'
-updated: '2026-08-18T15:09:41Z'
+updated: '2026-08-18T15:20:16Z'
 generated_by: claude-sonnet
 workflow_run: 32151522752
 issue: 2008
@@ -12,60 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 95
 review:
   strengths:
-  - Correct 100% stacked bar normalization — every quarter's segments sum to exactly
-    100%, confirmed by cross-checking the raw revenue values against rendered segment
-    widths
+  - 'Repair attempt fully addresses every weakness from Attempt 1: percentage labels
+    now render inside each segment via a custom afterDatasetsDraw plugin, AWS''s persistent
+    lead is highlighted with a dedicated ink-colored border, subtle page-bg seams
+    separate the remaining segments, and the tooltip title callback now surfaces the
+    quarter''s total revenue'
+  - Per-segment label color is computed from fill luminance (YIQ) rather than hardcoded,
+    so text stays legible against every one of the five distinct fill colors in both
+    themes -- verified by hand for all five hues in both light and dark
   - 'Full Imprint palette compliance: AWS is #009E73 (position 1), Azure/Google Cloud/Alibaba
     Cloud follow canonical positions 2-4, and ''Other'' correctly uses the theme-adaptive
-    muted anchor instead of consuming a categorical slot for a non-semantic ''rest''
-    bucket'
-  - Theme-adaptive chrome is flawless in both renders — title, axis titles, tick labels,
-    and legend text are all clearly legible on both the warm off-white and warm near-black
-    backgrounds, with no dark-on-dark or light-on-light failures
-  - categoryPercentage/barPercentage tuned for generous, intentional whitespace between
-    bars rather than the cramped Chart.js default, giving the chart visual breathing
-    room
+    muted anchor rather than consuming a categorical slot'
+  - Theme-adaptive chrome is flawless in both renders -- no dark-on-dark or light-on-light
+    failures, and the AWS leader-border correctly flips from black (light) to off-white
+    (dark) via t.ink
+  - Correct 100% stacked-bar normalization -- every quarter's segments sum to exactly
+    100%, and the underlying raw-dollar totals are exposed via the tooltip for context
+  - 'Genuine Chart.js plugin-system usage (custom afterDatasetsDraw plugin registered
+    via `plugins: [segmentPercentLabels]`) is a meaningfully more distinctive showcase
+    of the library than the Attempt-1 bar-gap tuning'
   - Realistic, neutral, business-appropriate dataset (public cloud market share by
-    provider/quarter) with proportions that plausibly track real-world cloud infrastructure
-    market shares
-  - 'Clean, idiomatic Chart.js usage: stacked scales configured correctly, tooltip
-    callback formats percentages, deterministic in-memory data, animation disabled
-    per harness contract'
+    provider/quarter) with plausible, gradually shifting proportions
   weaknesses:
-  - Design Excellence is only 'well-configured default' territory — the spec explicitly
-    suggests 'consider adding percentage labels within segments when space permits';
-    adding value labels to the larger segments (e.g. AWS, Azure) would meaningfully
-    raise both DE-01 (polish) and DE-03 (storytelling) without touching the data model
-  - No visual hierarchy or emphasis beyond color — the chart displays the data but
-    doesn't guide the viewer to an insight (e.g. AWS's persistent lead, Alibaba's
-    shrinking share); a subtle annotation, callout, or emphasized stroke on one series
-    would elevate DE-03 storytelling
-  - LM-02 (distinctive features) is generic — categoryPercentage/barPercentage bar-gap
-    tuning exists in most bar-chart libraries under different names; leaning on a
-    more Chart.js-specific capability (e.g. borderRadius on bar segments, or a customized
-    tooltip title callback showing the quarter's total) would better showcase library
-    mastery
-  - 'Bar segments use borderWidth: 0 — a subtle 1px edge in the surface color between
-    stacked segments (per the style guide''s ''Bar edges'' guidance) would add a touch
-    more definition and refinement, though the current color contrast is already sufficient
-    for legibility'
+  - Bar segments still use square corners -- a subtle borderRadius on the outer (top/bottom)
+    corners of each stack would add one more touch of polish, though this is a nice-to-have,
+    not a defect
+  - The custom label plugin hardcodes '600 13px sans-serif' instead of referencing
+    a shared font-family token -- purely cosmetic, no legibility impact observed in
+    either render
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-stacked-percent · javascript · chartjs · anyplot.ai" in dark ink, centered top, fully legible. X-axis title "Quarter" and Y-axis title "Share of Cloud Infrastructure Revenue" both in dark ink, clearly readable. Tick labels (0%-100% in 20% steps on Y, six quarter labels Q1 2023-Q2 2024 on X) are soft dark gray and legible. Legend sits below the plot with five swatches (AWS, Azure, Google Cloud, Alibaba Cloud, Other), all readable against the light background. Subtle horizontal gridlines only (no vertical gridlines), matching the style guide's "Y-axis grid only for bar charts" rule.
-      Data: Six stacked bars, each normalized to 100%. Bottom-to-top segment order is consistent across all bars: AWS (brand green #009E73), Azure (lavender), Google Cloud (blue), Alibaba Cloud (ochre), Other (dark muted gray). AWS is confirmed as the first/bottom series in the mandated brand green.
-      Legibility verdict: PASS — no light-on-light or illegible text anywhere.
+      Background: Warm off-white (~#FAF8F1), not pure white -- correct.
+      Chrome: Title "bar-stacked-percent · javascript · chartjs · anyplot.ai" in dark ink, centered top, ~55-60% of plot width (no overflow). X-axis title "Quarter" and Y-axis title "Share of Cloud Infrastructure Revenue" both dark and clearly legible. Y-axis ticks at 0/20/40/60/80/100% with a "%" suffix, subtle horizontal-only gridlines (x-axis grid intentionally off). Legend below the plot with all five swatches (AWS, Azure, Google Cloud, Alibaba Cloud, Other), fully readable.
+      Data: Six stacked bars (Q1 2023 - Q2 2024), each normalized to exactly 100%, bottom-to-top order AWS (brand green #009E73) / Azure (lavender) / Google Cloud (blue) / Alibaba Cloud (ochre) / Other (muted gray, theme-adaptive semantic anchor, not a categorical slot). Every segment carries a rounded percentage label, with per-segment text color (dark or light) chosen for contrast against that segment's fill -- verified correct for all five hues. AWS's bar has a distinct black ink outline on all four sides, calling out its persistent lead versus the other providers' subtle 1px page-bg seams.
+      Legibility verdict: PASS -- no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, both axis titles, and all tick labels render in light ink/off-white and are clearly legible against the dark background. Legend text is white and fully readable. Gridlines are still present but subtle (light, low-opacity horizontal lines only).
-      Data: Segment colors are pixel-identical to the light render for AWS (green), Azure (lavender), Google Cloud (blue), and Alibaba Cloud (ochre) — confirming the categorical data colors do not shift between themes. The "Other" segment correctly flips from dark muted gray (light theme) to light muted gray (dark theme), which is expected and compliant since "muted" is one of the three theme-adaptive semantic anchors (not a fixed categorical color).
-      Legibility verdict: PASS — no dark-on-dark failures observed; every text element is clearly readable against the near-black surface.
+      Background: Warm near-black (~#1A1A17), not pure black -- correct.
+      Chrome: Same layout and title, rendered in light ink/off-white -- fully legible. Y-axis ticks, axis titles, and legend text are all clearly visible against the near-black surface.
+      Data: AWS, Azure, Google Cloud, and Alibaba Cloud fill colors are pixel-identical to the light render, confirming categorical color stability across themes. The "Other" segment correctly flips from dark muted gray to light muted gray (expected, since muted is a theme-adaptive anchor, not a fixed categorical color). Percentage labels remain legible in every segment (their color flips appropriately: e.g. "Other" labels flip from white to dark since its background lightened). AWS's leader-border correctly flips from black ink to off-white ink to stay visible against the dark background.
+      Legibility verdict: PASS -- no dark-on-dark failures anywhere.
 
-    Both renders viewed and compared directly. Canvas dimensions confirmed at exactly 3200x1800 for plot-light.png (landscape target, no drift) — the canvas dimension gate file was absent, confirming the automated pre-check passed.
+    Canvas dimension gate: /tmp/anyplot-canvas-gate.txt does not exist -- gate passed, dimensions confirmed at the 3200x1800 landscape target.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -76,78 +67,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px/weight 500, legend 16px,
-          ticks 14px, axis titles 16px); fully readable in both themes, no overflow
-          or clipping
+        comment: All text readable in both themes; per-segment adaptive label color
+          (YIQ luminance) verified correct for all five fill colors
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions; generous bar spacing keeps category
-          labels well separated
+        comment: No collisions between text, labels, legend, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked segments are all clearly visible and appropriately sized
-          for 6 categories x 5 series
+        comment: All segments and their labels clearly visible; MIN_LABEL_HEIGHT gate
+          keeps small segments from clutter (all segments in this data exceed it)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinguishable hues, no red-green-only signaling, adequate contrast
-          between adjacent segments
+        comment: Adequate contrast, CVD-safe Imprint palette, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses a healthy majority of the 3200x1800 canvas with balanced
-          margins; nothing cut off
+        comment: 3200x1800 confirmed (gate file absent), good proportions, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles ('Quarter', 'Share of Cloud Infrastructure
-          Revenue') with percent-formatted ticks
+        comment: Descriptive axis titles with units (%, revenue share)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining categorical series follow canonical
-          Imprint order, ''Other'' correctly uses the muted semantic anchor, backgrounds
-          and chrome are theme-correct in both renders'
+        comment: AWS=#009E73 first series, canonical order for Azure/Google/Alibaba,
+          'Other' correctly uses theme-adaptive muted anchor, correct backgrounds
+          both themes
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured library default: thoughtful bar spacing and palette
-          use, but no custom typography flourish or data labels beyond the standard
-          chart'
+        passed: true
+        comment: Custom per-segment percentage labels with luminance-aware text color
+          and leader-highlight border show real polish beyond library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, no visible spines/frame, generous whitespace
-          via bar-gap tuning
+        comment: Subtle single-axis grid, generous whitespace, subtle page-bg seams
+          between segments (style guide 'Bar edges')
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed accurately but without emphasis or annotation guiding
-          the viewer to a specific insight (e.g. AWS's lead or Alibaba's decline)
+        passed: true
+        comment: AWS's ink-outlined bar creates a clear focal point calling out the
+          persistent market leader; percentage labels make exact composition scannable
     spec_compliance:
       score: 15
       max: 15
@@ -157,27 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar chart, every bar normalized to sum to 100%
+        comment: Correct 100% stacked bar, normalized per-category
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, consistent component order across
-          bars
+        comment: Distinct colors, clear legend, percentage labels within segments
+          (spec's 'consider adding' suggestion implemented), consistent component
+          order
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarters on X, normalized share % on Y, all data visible
+        comment: X=quarter, Y=normalized % share, stacked segments sum to exactly
+          100%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match the five
-          provider datasets
+        comment: Title matches required format exactly; legend labels match provider
+          names
     data_quality:
       score: 15
       max: 15
@@ -187,22 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows share evolution across 6 quarters with all 5 components varying
-          independently
+        comment: Composition trend over 6 quarters, all 5 providers, normalized shares
+          plus raw-total tooltip context
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral, comprehensible business scenario (cloud infrastructure
-          market share)
+        comment: Plausible, neutral public-cloud market-share data with gradual realistic
+          share shifts
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions plausibly track real-world cloud provider market share
-          trends
+        comment: Sensible dollar and percentage magnitudes for the domain
     code_quality:
       score: 10
       max: 10
@@ -212,34 +199,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: data, mount, chart config, no functions/classes'
+        comment: No unnecessary classes; the one helper plugin is proportionate to
+          the feature it implements
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data arrays
+        comment: Deterministic hardcoded data arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses global Chart and ANYPLOT_TOKENS as intended
+        comment: No imports; uses the provided Chart global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake UI or over-engineering
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly, animation disabled, current
-          Chart.js 4.x API
+        comment: Correct mount-node contract, animation:false, single canvas append,
+          current API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -247,24 +235,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked-scale configuration, tooltip callback, high-level
-          Chart.js API throughout
+        comment: Idiomatic stacked-bar scales, tooltip callbacks, plugin registration
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: categoryPercentage/barPercentage bar-gap tuning is a real Chart.js
-          knob but conceptually generic across bar-chart libraries; nothing more distinctive
-          to Chart.js specifically is used
-  verdict: REJECTED
+        passed: true
+        comment: Custom afterDatasetsDraw plugin is a genuine Chart.js-specific extensibility
+          feature; docked slightly since it's the single distinctive feature rather
+          than layering several (e.g. borderRadius, scriptable options)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - publication-ready
+  - edge-highlighting
