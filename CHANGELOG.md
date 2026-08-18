@@ -246,6 +246,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The sitemap was telling Google nothing had changed** — `lastmod` came from an implementation's
+  `updated` column, which does not move when the page's *rendering* changes. So after a day of work
+  that gave every implementation page the real render, both themes, the interactive version and a
+  rewritten description, the sitemap still reported the old dates, and Google — last seen fetching
+  some of those pages three weeks earlier — had no reason to return. `lastmod` is now the later of
+  the record's date and `TEMPLATE_LAST_CHANGED`, a constant to bump only when the rendered page
+  changes for every URL; claiming 3,900 changes casually is how a site teaches Google to ignore its
+  `lastmod` (#10483).
+
 - **CodeQL alert #103** — an ECharts tooltip called `.replace("\n", " ")` with a string argument,
   which replaces only the first occurrence
   (`plots/bar-heart-rate-zones/implementations/javascript/echarts.js`). Nothing renders differently
