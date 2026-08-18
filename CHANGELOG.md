@@ -199,9 +199,9 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
-- **AI assistants asked about a plot page saw nothing** — eight user-directed fetchers were absent
-  from the `$is_bot` map in `app/nginx.conf` and received the empty SPA shell instead of the
-  prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,
+- **AI assistants asked about a plot page saw nothing** — seven user-directed fetchers (eight UA
+  patterns; NotebookLM and Mariner each answer to two) were absent from the `$is_bot` map in
+  `app/nginx.conf` and received the empty SPA shell instead of the prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,
   `GoogleAgent-Mariner`, `Meta-ExternalFetcher`, `MistralAI-User` and `DuckAssistBot`, each
   verified live against the site before the fix. The map now also carries the vendor-documented
   retrieval agents that were never listed (`MistralAI-Index`, `Amzn-SearchBot`, `Amzn-User`,

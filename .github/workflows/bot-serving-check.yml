@@ -28,7 +28,7 @@ permissions:
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    # 7 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # 19 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
     # ~10.5 min worst-case; 14 leaves room to report a clean failure.
     timeout-minutes: 20
     steps:
