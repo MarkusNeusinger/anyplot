@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.12
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -18,6 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Imprint palette — canonical order, first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Test score distributions across student cohorts
@@ -44,7 +45,7 @@ df = pd.DataFrame(data)
 
 # Setup theme
 sns.set_theme(
-    style="whitegrid",
+    style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
         "axes.facecolor": PAGE_BG,
@@ -54,16 +55,18 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
 )
 
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 
-# Create notched box plot with Okabe-Ito palette
+# Notched box plot on the Imprint palette; mean diamonds sit alongside the
+# notched median so a skewed mean (e.g. Cohort B's high-scoring outliers)
+# reads at a glance without needing text annotations.
 sns.boxplot(
     data=df,
     x="Cohort",
@@ -72,18 +75,24 @@ sns.boxplot(
     palette=IMPRINT[: len(cohorts)],
     notch=True,
     width=0.5,
-    linewidth=2.0,
-    fliersize=10,
+    linewidth=1.6,
+    boxprops={"alpha": 0.88},
+    medianprops={"color": INK, "linewidth": 1.8},
+    whiskerprops={"color": INK_SOFT},
+    capprops={"color": INK_SOFT},
+    showmeans=True,
+    meanprops={"marker": "D", "markerfacecolor": ELEVATED_BG, "markeredgecolor": INK, "markersize": 7},
+    fliersize=6,
     flierprops={"marker": "o", "markerfacecolor": INK_SOFT, "markeredgecolor": INK, "alpha": 0.6},
     ax=ax,
     legend=False,
 )
 
 # Styling
-ax.set_title("box-notched · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.set_xlabel("Student Cohort", fontsize=20, color=INK)
-ax.set_ylabel("Test Score (%)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_title("box-notched · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.set_xlabel("Student Cohort", fontsize=10, color=INK)
+ax.set_ylabel("Test Score (%)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 # Remove top and right spines
 ax.spines["top"].set_visible(False)
@@ -96,4 +105,4 @@ ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
