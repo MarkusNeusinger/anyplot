@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -36,17 +36,20 @@ def contrast_text_color(bg_hex):
     return "#FFFFFF" if contrast_white >= contrast_ink else "#1A1A17"
 
 
-# Data: smartphone OS market share by region, sorted ascending by iOS share
-# so the bars read left-to-right as a rising narrative (already normalized to 100)
+# Data: raw device shipments (millions) by OS and region, sorted ascending by
+# iOS share so the bars read left-to-right as a rising narrative. Each region's
+# shipment total differs (reflecting real market size) — percentages below are
+# normalized from these raw counts, not hardcoded.
 components = ["iOS", "Android", "Other"]
-data = {
-    "Africa": [8, 88, 4],
-    "Asia": [15, 83, 2],
-    "South America": [18, 78, 4],
-    "Europe": [22, 75, 3],
-    "North America": [25, 72, 3],
+raw_shipments = {
+    "Africa": [4, 44, 2],
+    "Asia": [45, 249, 6],
+    "South America": [27, 117, 6],
+    "Europe": [44, 150, 6],
+    "North America": [100, 288, 12],
 }
-categories = list(data.keys())
+categories = list(raw_shipments.keys())
+data = {cat: [v / sum(values) * 100 for v in values] for cat, values in raw_shipments.items()}
 colors = [IMPRINT_PALETTE[0], IMPRINT_PALETTE[1], ANYPLOT_MUTED]
 
 # Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
@@ -109,8 +112,7 @@ fig.update_layout(
         x=0.5,
         font=dict(size=10, color=INK_SOFT),
         bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
+        borderwidth=0,
     ),
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
