@@ -1,0 +1,255 @@
+library: echarts
+language: javascript
+specification_id: bar-diverging
+created: '2026-08-18T13:06:16Z'
+updated: '2026-08-18T13:11:02Z'
+generated_by: claude-sonnet
+workflow_run: 32139928469
+issue: 2009
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Idiomatic ECharts diverging-bar pattern: two stacked bar series (Positive/Negative)
+    with null-padded data, so bars grow from a shared zero baseline without manual
+    coordinate math.'
+  - 'Semantic color mapping is exactly right: brand green (#009E73, palette[0]) for
+    positive scores and matte red (#AE3030, palette[4]) for negative scores, matching
+    the Imprint style guide''s documented sentiment/polarity semantic exception.'
+  - Categories are sorted by score, producing an immediately readable diverging fan
+    from the best-performing feature at the top to the worst at the bottom (spec explicitly
+    calls for sorting to enhance pattern recognition).
+  - Explicit +/- signed value labels placed outside each bar reinforce exact magnitude
+    without adding clutter or overlap.
+  - Zero-baseline is explicitly reinforced via a markLine at x=0, satisfying the spec's
+    'clear visual indicator at the zero baseline' requirement.
+  - Horizontal orientation correctly chosen to accommodate the long category labels
+    (e.g. 'Mobile App Experience', 'Checkout Experience'), per the spec's guidance.
+  - Theme tokens are threaded through every chrome element (title, legend, axis labels,
+    axis lines, grid, value labels) and both light/dark renders are fully legible
+    with correctly flipped chrome and identical data colors.
+  weaknesses:
+  - Design excellence is solid but stops at 'thoughtful defaults' rather than 'publication-ready'
+    — there's no extra visual emphasis (e.g. a subtle highlight, larger marker, or
+    annotation on the top/bottom extreme bars) to sharpen the storytelling beyond
+    the sort order and color split.
+  - 'Visual refinement reads as well-configured rather than exceptional: the composition
+    is clean but generic — consider slightly more generous spacing between legend
+    and plot, or a touch of bar corner rounding, to lift it further.'
+  - Library-mastery usage is correct but moderate — only markLine and a label formatter
+    go beyond basic bar/stack usage; a more ECharts-distinctive touch (e.g. visualMap-driven
+    color intensity by magnitude) would raise LM-02.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-diverging · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend "Positive"/"Negative" with green and red swatches below the title. X-axis (value axis, "Net Promoter Score") runs -60 to 60 with dark tick labels and a subtle vertical gridline every 20 units. Y-axis lists 11 feature category labels in dark text, fully readable, no truncation.
+      Data: 11 horizontal bars diverging from a shared zero baseline — green bars (#009E73) extend right for positive scores (Checkout Experience +8 through Mobile App Experience +52), red bars (#AE3030) extend left for negative scores (Price Value -4 through Technical Reliability -41). Each bar has an explicit signed value label (+52, -41, etc.) placed just outside its tip. A thin dark vertical line marks the zero baseline where positive and negative bars meet.
+      Legibility verdict: PASS — all text (title, legend, axis labels, tick labels, category labels, value labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and legend text now rendered in light ink/off-white, clearly legible against the dark background. Axis lines and tick labels use the lighter secondary-text tone, still easily readable. Gridlines are subtle and visible without competing with the data.
+      Data: Bar colors are pixel-identical to the light render — green #009E73 for positive, matte red #AE3030 for negative — confirming only chrome flipped, not data colors. Value labels remain dark ink-colored text placed just outside each bar tip; against the dark page background this reads as light text next to the bar (label color is theme-adaptive "ink"), fully legible with no dark-on-dark failures observed anywhere (title, legend, axis, category labels, value labels all pass).
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; every text element is clearly readable.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, legend/labels 16px, axis/tick/value
+          labels 14px); fully readable in both themes, no overflow, title well within
+          bounds.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; signed value labels sit cleanly
+          outside each bar.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 11 bars, generous height, clearly visible bar fills with no overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red distinguished with redundant +/- sign labels, not relying
+          on hue alone; good contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a large, balanced portion of the canvas; margins
+          are even; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Net Promoter Score'' is maximally descriptive for this inherently
+          unitless metric.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; negative series uses #AE3030 (palette position
+          5), the documented semantic anchor for negative/loss — a correct semantic-exception
+          use. Backgrounds are theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color choice and signed labels, clearly above
+          library defaults, but stops short of publication-ready flourish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid limited to the value axis only, minimal spines; clean but reads
+          as well-configured rather than exceptional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sort order plus color split creates a clear diverging narrative from
+          best to worst feature; no extra emphasis on the extremes.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging bar chart, horizontal orientation as recommended
+          for long labels.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Contrasting colors, zero-baseline indicator, and value sorting all
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on Y, value on X, all 11 categories visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format; legend labels (Positive/Negative)
+          correctly describe the color coding.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide spread of positive and negative magnitudes, from -41 to +52.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic e-commerce NPS-by-feature scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NPS-style values within a plausible -100..100 range with sensible
+          relative magnitudes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> init -> option script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded arrays.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global echarts object is used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise, no over-engineering, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract correctly: no explicit size, no
+          devicePixelRatio, animation disabled.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ECharts' standard stacked positive/negative series pattern for
+          diverging bars, the library's recommended technique for this chart type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses markLine for the zero baseline and per-series label formatters;
+          solid but not a highly distinctive ECharts-only feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - stacked-diverging-bars
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling

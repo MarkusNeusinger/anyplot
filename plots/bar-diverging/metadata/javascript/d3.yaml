@@ -1,0 +1,241 @@
+library: d3
+language: javascript
+specification_id: bar-diverging
+created: '2026-08-18T13:03:30Z'
+updated: '2026-08-18T13:19:55Z'
+generated_by: claude-sonnet
+workflow_run: 32139733979
+issue: 2009
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Custom per-bar arcTo path construction for one-sided rounded bar tips — a distinctive,
+    D3-specific technique that directly addresses the prior LM-02 feedback
+  - 'Clear focal-point storytelling: bold, colored, larger labels with ▲/▼ markers
+    on the strongest grower/decliner, plus a dashed divider separating growth/decline
+    groups — directly addresses the prior DE-01/DE-03 feedback'
+  - Title fontsize increase (22px → 26px) now yields ~62.5% canvas width (pixel-measured),
+    landing in the target 50-70% band — fixes the prior VQ-01 deduction
+  - Gridlines trimmed to 6 major ticks for a cleaner, less busy value axis
+  - 'Background hex pixel-verified exact match to the Imprint spec in both themes
+    (#FAF8F1 / #1A1A17)'
+  - Semantically correct green/red (finance up/down convention) with redundant encoding
+    via bar position — CVD-safe
+  - Clean, deterministic, correctly-scoped D3 code; correct mount-node contract; no
+    animation artifacts
+  weaknesses:
+  - A single small helper function (divergingBarPath) technically deviates from the
+    strict KISS "no functions" ideal — acceptable here since it's the idiomatic D3
+    way to build a shape with no declarative equivalent, but noted for completeness
+  - Design Excellence and storytelling are strong but stop short of full publication-level
+    polish (e.g., no explicit annotation/callout text beyond the inline value labels)
+    — a candidate for further refinement, not a blocker
+  - The spine convention (bottom kept, left removed) is a valid choice for this horizontal
+    layout but is a slight variant of the standard L-shaped guideline — no functional
+    issue, just a stylistic note
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-verified exact #FAF8F1.
+      Chrome: Title "bar-diverging · javascript · d3 · anyplot.ai" centered top, bold 26px dark ink, measured at ~62.5% of canvas width (up from ~26% in attempt 1). Y-axis category labels and X-axis tick labels/axis title ("Year-over-Year Revenue Growth (%)") in dark secondary ink, fully legible. Legend ("Growth"/"Decline") top-right, clear of the title. No overlap or edge clipping found at any checked extremity (top-right "+24%" label, bottom-left "Print Media" label, "0%" tick at the zero-baseline crossing).
+      Data: First 6 bars (sorted +24% to +3%) are Imprint brand green #009E73 with rounded outer tips; last 6 bars (-2% to -21%) are Imprint semantic red #AE3030 (finance up/down convention). Strongest grower and decliner get bold, larger, colored labels with ▲/▼ markers plus matching bold category labels. Dashed divider separates growth/decline groups; solid zero baseline.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-verified exact #1A1A17.
+      Chrome: All chrome (title, axis labels, category labels, tick labels, legend text, value labels, divider, zero baseline) flips to light ink/soft tones and stays fully legible. No dark-on-dark failures found in any checked region.
+      Data: Bar fill colors (#009E73 green / #AE3030 red) are pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit sizes; title now ~62.5% of canvas width (pixel-verified),
+          fixing the attempt-1 undersized title
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Pixel-cropped all label extremities; no overlap or collision found
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 12 bars at comfortable band height/padding, value labels legible
+          at every tip
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Direction doubly encoded via color AND bar position
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area covers ~79% of canvas, balanced margins, legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis title with units (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green first series, semantic red for decline, background hex
+          pixel-verified in both themes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom rounded bar tips, focal-point emphasis, dashed divider — clearly
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Trimmed gridlines, minimal spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Extremes clearly called out with bold color/size/markers plus growth/decline
+          divider
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal diverging bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Contrasting colors, explicit zero baseline, sorted by value
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value on X, category on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide magnitude range with clear growth/decline split and highlighted
+          extremes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and directionality factually sensible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One small pure helper function for the custom bar path; justified
+          but not fully flat
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately scoped, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scales/axes/join pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom arcTo path construction for one-sided rounded bar tips, hard
+          to replicate declaratively
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - patches
+  patterns: []
+  dataprep: []
+  styling:
+  - grid-styling
