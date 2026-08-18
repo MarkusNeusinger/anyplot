@@ -67,6 +67,10 @@ const outerData = businessUnits.flatMap((unit) =>
   })
 );
 
+// Only the largest product-line slices earn a direct inline label; the rest
+// fall back to the legend, per the spec's "labels on larger segments" guidance.
+const outerLabelThreshold = 15; // percent of the outer ring's total
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -92,12 +96,18 @@ Highcharts.chart("container", {
     verticalAlign: "bottom",
     layout: "horizontal",
   },
-  tooltip: { enabled: false },
+  tooltip: {
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    style: { color: t.ink, fontSize: "13px" },
+    pointFormat: "<b>{point.name}</b>: ${point.y}M ({point.percentage:.1f}%)",
+  },
   plotOptions: {
     series: { animation: false },
     pie: {
       borderWidth: 2,
       borderColor: t.pageBg,
+      borderRadius: 3,
     },
   },
   series: [
@@ -125,7 +135,19 @@ Highcharts.chart("container", {
       size: "96%",
       showInLegend: true,
       data: outerData,
-      dataLabels: { enabled: false },
+      dataLabels: {
+        enabled: true,
+        distance: -20,
+        formatter() {
+          return this.percentage > outerLabelThreshold ? this.point.name : null;
+        },
+        style: {
+          color: t.ink,
+          fontSize: "11px",
+          fontWeight: "600",
+          textOutline: `2px ${t.pageBg}`,
+        },
+      },
     },
   ],
 });
