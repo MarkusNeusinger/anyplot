@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
+from api.request_context import client_ip as _client_ip
 from api.schemas import FeedbackRequest, FeedbackResponse
 from core.database import FEEDBACK_REACTIONS, FeedbackRepository
 
@@ -35,35 +36,6 @@ RATE_LIMIT_MAX = 5
 _URL_RE = re.compile(r"https?://", re.IGNORECASE)
 MAX_URLS_IN_MESSAGE = 1  # 2+ links treated as link-stuffing SEO spam
 DUPLICATE_LOOKBACK = timedelta(minutes=10)
-
-
-def _client_ip(request: Request) -> str:
-    """Resolve the client IP for rate-limit / dup-suppression keying.
-
-    Trust order (client → Cloudflare → Cloud Run):
-    1. `cf-connecting-ip` — Cloudflare overwrites any client-supplied value on
-       proxied traffic, so browsers on anyplot.ai cannot spoof it.
-    2. Rightmost non-empty `x-forwarded-for` entry — appended by the trusted
-       infrastructure hop. The *leftmost* entry (used here previously) is
-       client-controlled: spoofing it evaded the rate limit and allowed
-       poisoning another user's bucket to lock them out. Empty entries from
-       malformed headers ("1.2.3.4, ") are skipped so a caller can't force
-       everyone into one shared empty-string bucket.
-    3. `request.client.host` as the last resort.
-
-    A caller bypassing Cloudflare via the run.app URL can still forge
-    `cf-connecting-ip`, but that only scatters its *own* submissions across
-    buckets — no better than rotating source IPs, and it can no longer
-    impersonate a victim's bucket.
-    """
-    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
-    if cf_ip:
-        return cf_ip
-    forwarded = request.headers.get("x-forwarded-for", "")
-    for entry in reversed(forwarded.split(",")):
-        if entry.strip():
-            return entry.strip()
-    return request.client.host if request.client else ""
 
 
 def _hash_ip(ip: str) -> str:

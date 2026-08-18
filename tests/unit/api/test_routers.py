@@ -697,6 +697,27 @@ class TestSeoProxyRouter:
             assert "1 plot specifications" in response.text
             assert "hundreds of" not in response.text
 
+    def test_seo_proxy_records_the_agent_that_read_the_page(self, client: TestClient) -> None:
+        """The router dependency reports the PUBLIC path, not its own prefix."""
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.routers.seo.track_bot_fetch") as track:
+            client.get("/seo-proxy/bar-basic", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
+        track.assert_called_once()
+        assert track.call_args.args[1] == "/bar-basic"
+
+    def test_seo_proxy_home_records_root(self, client: TestClient) -> None:
+        """The proxy root maps to "/", and the hook fires exactly once per request."""
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.routers.seo.track_bot_fetch") as track:
+            client.get("/seo-proxy/", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
+        track.assert_called_once()
+        assert track.call_args.args[1] == "/"
+
+    def test_robots_and_sitemap_are_not_page_reads(self, client: TestClient) -> None:
+        """Both live on this router but are machine files, not catalogue pages."""
+        with patch("api.routers.seo.track_bot_fetch") as track:
+            client.get("/robots.txt", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
+            client.get("/sitemap.xml", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
+        track.assert_not_called()
+
     def test_seo_home_canonical_ignores_filter_params(self, client: TestClient) -> None:
         """Filter params must not produce a self-canonicalising copy of the home page.
 

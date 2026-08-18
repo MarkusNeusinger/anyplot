@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from api.analytics import track_bot_fetch
 from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
 from api.dependencies import optional_db
 from core.config import settings
@@ -19,7 +20,21 @@ from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
 
 
-router = APIRouter(tags=["seo"])
+async def _record_bot_fetch(request: Request) -> None:
+    """Router dependency: record which agent read which page.
+
+    Attached to the router rather than to each handler — there are a dozen and
+    the next one added would silently go unrecorded. Only /seo-proxy paths are
+    page reads; robots.txt and sitemap.xml also live on this router and are not.
+    """
+    path = request.url.path
+    if not path.startswith("/seo-proxy"):
+        return
+    # Report the public URL, not this router's internal prefix
+    track_bot_fetch(request, path.removeprefix("/seo-proxy") or "/")
+
+
+router = APIRouter(tags=["seo"], dependencies=[Depends(_record_bot_fetch)])
 
 # Canonical spec-id shape — lowercase alphanumerics with hyphen separators.
 # Same pattern enforced in automation/scripts/sync_to_postgres.py. Used here to
