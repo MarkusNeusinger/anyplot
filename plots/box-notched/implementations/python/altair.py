@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -45,6 +45,7 @@ data.extend([{"Department": "Marketing", "Performance Score": v} for v in market
 
 # Sales: bimodal-ish, high variability
 sales = np.concatenate([np.random.normal(60, 10, 40), np.random.normal(80, 8, 45)])
+sales = np.clip(sales, 25, 100)  # keep within the 0-100 performance-score ceiling
 data.extend([{"Department": "Sales", "Performance Score": v} for v in sales])
 
 # Operations: lower median, different from Engineering (to show non-overlapping notches)
@@ -83,11 +84,14 @@ for dept in departments:
             "q1": q1,
             "median": median,
             "q3": q3,
+            "mean": float(np.mean(values)),
             "notch_lower": notch_lower,
             "notch_upper": notch_upper,
             "whisker_lower": whisker_lower,
             "whisker_upper": whisker_upper,
             "n": n,
+            "n_label": f"n = {n}",
+            "n_label_y": 3,  # fixed low baseline, in the near-zero whitespace below every whisker
             "outliers": outliers.tolist(),
         }
     )
@@ -108,10 +112,18 @@ tooltip_fields = [
     alt.Tooltip("q1:Q", title="Q1", format=".1f"),
     alt.Tooltip("median:Q", title="Median", format=".1f"),
     alt.Tooltip("q3:Q", title="Q3", format=".1f"),
+    alt.Tooltip("mean:Q", title="Mean", format=".1f"),
     alt.Tooltip("notch_lower:Q", title="Notch low (95% CI)", format=".1f"),
     alt.Tooltip("notch_upper:Q", title="Notch high (95% CI)", format=".1f"),
     alt.Tooltip("n:Q", title="Sample size"),
 ]
+
+# Hover highlight — mouseover a department's box to bring it to full opacity
+# and dim the rest, an Altair-native selection_point driving a shared param
+# across every colored layer (only visible in the interactive HTML export;
+# the empty selection matches all rows so the static PNG is unaffected).
+hover = alt.selection_point(fields=["Department"], on="mouseover", empty=True)
+hover_opacity = alt.condition(hover, alt.value(1.0), alt.value(0.55))
 
 x_enc = alt.X("Department:N", title="Department", sort=dept_order, axis=alt.Axis(labelAngle=0, grid=False))
 
@@ -141,8 +153,10 @@ lower_box = (
         y=alt.Y("q1:Q", title="Performance Score"),
         y2="notch_lower:Q",
         color=alt.Color("Department:N", scale=color_scale, legend=None),
+        opacity=hover_opacity,
         tooltip=tooltip_fields,
     )
+    .add_params(hover)
 )
 upper_box = (
     alt.Chart(stats_df)
@@ -152,6 +166,7 @@ upper_box = (
         y="notch_upper:Q",
         y2="q3:Q",
         color=alt.Color("Department:N", scale=color_scale, legend=None),
+        opacity=hover_opacity,
         tooltip=tooltip_fields,
     )
 )
@@ -163,12 +178,27 @@ notch_box = (
         y="notch_lower:Q",
         y2="notch_upper:Q",
         color=alt.Color("Department:N", scale=color_scale, legend=None),
+        opacity=hover_opacity,
         tooltip=tooltip_fields,
     )
 )
 # Median tick cut in the page background color — reads as a gap through the waist, theme-adaptive by construction
 median_line = (
     alt.Chart(stats_df).mark_tick(color=PAGE_BG, size=26, thickness=2, opacity=1).encode(x=x_enc, y="median:Q")
+)
+
+# Mean diamond — a second, distinct central-tendency marker beside the median notch
+mean_marker = (
+    alt.Chart(stats_df)
+    .mark_point(shape="diamond", size=90, filled=True, color=INK, opacity=0.9, stroke=PAGE_BG, strokeWidth=1)
+    .encode(x=x_enc, y="mean:Q", tooltip=tooltip_fields)
+)
+
+# On-canvas sample-size annotation, sitting in the near-zero whitespace under every box
+n_label = (
+    alt.Chart(stats_df)
+    .mark_text(fontSize=9, color=INK_SOFT, baseline="middle", align="center")
+    .encode(x=x_enc, y=alt.Y("n_label_y:Q"), text="n_label:N")
 )
 
 outliers_chart = (
@@ -180,7 +210,18 @@ outliers_chart = (
 )
 
 chart = (
-    alt.layer(whisker_rule, lower_cap, upper_cap, lower_box, upper_box, notch_box, median_line, outliers_chart)
+    alt.layer(
+        whisker_rule,
+        lower_cap,
+        upper_cap,
+        lower_box,
+        upper_box,
+        notch_box,
+        median_line,
+        mean_marker,
+        n_label,
+        outliers_chart,
+    )
     .properties(
         width=620,
         height=320,
@@ -190,7 +231,7 @@ chart = (
             fontSize=16,
             anchor="middle",
             color=INK,
-            subtitle="Non-overlapping notches ⇒ medians differ significantly (95% CI)",
+            subtitle="Non-overlapping notches ⇒ medians differ significantly (95% CI) · ◆ = mean",
             subtitleFontSize=11,
             subtitleColor=INK_SOFT,
         ),
