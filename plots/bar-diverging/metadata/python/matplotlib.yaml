@@ -2,43 +2,55 @@ library: matplotlib
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:35Z'
-updated: '2026-05-08T08:49:14Z'
-generated_by: claude-haiku
-workflow_run: 25546136931
+updated: '2026-08-18T12:51:08Z'
+generated_by: claude-sonnet
+workflow_run: 32137520102
 issue: 2009
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 93
 review:
   strengths:
-  - Perfect theme-adaptive implementation with legible text in both light and dark
-    renders
-  - 'Professional, polished design with intentional choices: color semantics, spine
-    removal, grid refinement'
-  - Clean, maintainable code with elegant theme token pattern for theme-switching
-  - 'Excellent visual quality across all dimensions: legible text, clear data, perfect
-    Okabe-Ito palette compliance'
-  - Strong data storytelling through sorted values and clear visual hierarchy showing
-    satisfaction trends
-  - All specification requirements met completely and correctly with proper title
-    and legend formatting
-  weaknesses: []
+  - Bars sorted by value for pattern recognition, with a clear zero-baseline (axvline)
+    — matches every spec requirement (contrasting colors, horizontal orientation,
+    baseline indicator, sorting)
+  - 'Correct Imprint palette use: brand green #009E73 for positive, matte-red semantic
+    anchor #AE3030 for negative — a legitimate semantic exception (sentiment polarity),
+    not an arbitrary override'
+  - 'Both renders are fully theme-correct: all chrome (title, ticks, spines, grid,
+    legend, annotation boxes) uses theme-adaptive tokens, no dark-on-dark or light-on-light
+    failures, no overlap or edge clipping found on close inspection'
+  - Curved-arrow annotations ('Strongest driver' / 'Biggest pain point') add real
+    data storytelling and guide the viewer straight to the insight
+  - Value labels at bar ends with direction-aware offset/alignment (left-aligned positive,
+    right-aligned negative) read cleanly with no collisions
+  - Clean KISS code structure, deterministic hardcoded data (no seed needed), only
+    used imports
+  weaknesses:
+  - 'Design is strong but stops short of publication-grade: could push typography/hierarchy
+    further (e.g. a subtitle or slightly bolder title) for the top Aesthetic Sophistication
+    tier'
+  - Annotation/legend/grid refinement is good but not maximal — a touch more whitespace
+    between the legend box and plot edge would tighten Visual Refinement further
+  - Library Mastery relies on standard barh + annotate patterns; a more distinctive
+    matplotlib-only technique (e.g. path effects, blended transforms) would raise
+    Distinctive Features beyond 'uses some library-specific features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no pure white areas
-      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17); secondary labels in #4A4A44; grid lines subtle at alpha=0.15
-      Data: Positive bars in brand green (#009E73), negative in orange (#D55E00); bars sorted by value from -52 to +85; value labels in bold dark text
-      Legibility verdict: PASS - All text fully readable; no overlaps; high contrast
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-diverging · python · matplotlib · anyplot.ai" in dark ink, centered-right, fully visible. Y-axis shows 12 category labels (Brand Trust, Product Quality, Payment Options, Return Policy, Customer Support, Product Range, Website Experience, Loyalty Program, Sustainability, Delivery Speed, Pricing, Mobile App) in dark-soft gray. X-axis "Net Satisfaction Score" in dark ink with tick labels -100 to 100. Subtle vertical gridlines. Two callout boxes ("Strongest driver", "Biggest pain point") with curved arrows, styled with an elevated off-white fill and soft-ink border. Legend box (bottom right) with green/red swatches labeled "Positive (Satisfied)" / "Negative (Dissatisfied)".
+      Data: Horizontal diverging bars — green (#009E73) for positive values (18 to 85), matte red (#AE3030) for negative values (-8 to -52), sorted descending. Bold value labels (+85, +72, ... -52) at each bar end. Vertical line at x=0 marks the baseline.
+      Legibility verdict: PASS — all text (title, tick labels, category labels, value labels, annotations, legend) is clearly readable against the light background; no overlap or edge clipping found on close inspection.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no pure black areas
-      Chrome: Title, axis labels in light text (#F0EFE8); secondary labels in #B8B7B0; legend frame background #242420
-      Data: Identical green (#009E73) and orange (#D55E00) as light render - only chrome flips
-      Legibility verdict: PASS - All text fully readable; no dark-on-dark failures; brand green visible and readable on dark surface
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, tick labels, and category labels now rendered in light ink/off-white and light gray. Gridlines subtle and visible against the dark surface. Annotation callout boxes use the dark elevated fill (#242420) with light-gray border and light arrow. Legend box also uses the dark elevated fill with light text.
+      Data: Bar colors identical to the light render — green #009E73 and matte red #AE3030, confirming only chrome flipped, not data colors.
+      Legibility verdict: PASS — no dark-on-dark failures found; all title/label/tick/annotation/legend text is clearly legible in light ink against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,46 +61,50 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          value labels 14pt'
+        comment: All font sizes explicitly set (title 12pt, xlabel 10pt, ticks 8pt,
+          value labels 7pt); readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; ample spacing between categories
+        comment: Zoomed crops of annotation/legend region confirm no collisions in
+          either theme
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars clearly visible with distinct colors and subtle edge definition
+        comment: 12 bars at height=0.7 well-spaced and clearly visible, appropriate
+          for sparse category count
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green and orange provide excellent contrast; Okabe-Ito compliant
+        comment: Green/red distinguished by direction from baseline + explicit +/-
+          value labels, not hue alone; Imprint palette CVD-optimized
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 16:9 proportions; 4800x2700px well-utilized with balanced
+        comment: Canvas gate passed (3200x1800); plot fills canvas well with balanced
           margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axis label descriptive
+        comment: '"Net Satisfaction Score" is fully descriptive for this unitless
+          metric'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00; backgrounds correct; theme
-          chrome perfect'
+        comment: 'First series #009E73, red is the matte-red semantic anchor for sentiment
+          polarity (legitimate exception); chrome theme-correct in both renders'
     design_excellence:
       score: 16
       max: 20
@@ -98,21 +114,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong intentional design with thoughtful colors, professional typography,
-          refined details
+        comment: Thoughtful colors, styled callout boxes, clear typography hierarchy
+          — clearly above defaults, short of top-tier publication polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace, polished details
+        comment: Spines removed top/right, subtle x-axis grid, generous whitespace;
+          minor room for tighter legend/plot spacing
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Data sorted by value creates visual hierarchy; divergence from zero
-          is clear
+        comment: Sorted bars + explicit callouts on the extremes give a clear, immediate
+          insight
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar chart with horizontal orientation
+        comment: Correct diverging horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: colors for positive/negative, baseline, labels'
+        comment: Contrasting colors, horizontal orientation, zero baseline line, sorted
+          by value — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis values correct; Y-axis displays all 12 categories
+        comment: Category on Y, value on X, all 12 categories visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels appropriate
+        comment: Title format exact; legend labels match data semantics
     data_quality:
       score: 15
       max: 15
@@ -150,19 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: strong positive, strong negative, mid-range values'
+        comment: Wide range of positive and negative magnitudes across 12 categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real product satisfaction survey; neutral, business-appropriate
+        comment: Neutral, realistic product-satisfaction survey scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard -100 to +100 satisfaction scale; sensible data values
+        comment: Values within the -100..+100 range noted in spec, plausible NPS-like
+          magnitudes
     code_quality:
       score: 10
       max: 10
@@ -172,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save. No unnecessary functions'
+        comment: No functions/classes, linear imports -> data -> plot -> save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; fully reproducible
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary dependencies
+        comment: os, matplotlib.pyplot, numpy, Patch — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: No fake functionality, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format; current API
+        comment: Saves plot-{THEME}.png, no deprecated calls, no bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -206,24 +225,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Very good idiomatic patterns: plt.subplots(), ax.barh(), ax.axvline(),
-          ax.text(), ax.legend()'
+        comment: Correct Axes-based API usage (barh, annotate, legend with custom
+          handles)
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses theme-adaptive styling, custom legend with Patch, value annotations
+        comment: Curved connectionstyle annotation arrows + styled bbox are a nice
+          matplotlib-specific touch, but not maximally distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
-  - data-generation
   - explicit-figure
+  - data-generation
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
+  - alpha-blending
+  - grid-styling
