@@ -2,120 +2,117 @@ library: plotly
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:52:57Z'
-updated: '2026-05-07T22:47:07Z'
-generated_by: claude-haiku
-workflow_run: 25525790280
+updated: '2026-08-18T04:52:54Z'
+generated_by: claude-sonnet
+workflow_run: 32099819059
 issue: 2019
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotly/plot-dark.html
-quality_score: 83
+quality_score: 95
 review:
   strengths:
-  - Perfect theme implementation with flawless readability in both light and dark
-    renders
-  - 'Exact Okabe-Ito palette compliance with first series as #009E73 and correct multi-series
-    order'
-  - All notched box plot specification features correctly implemented (notches at
-    95% CI, quartiles, whiskers, outliers)
-  - High visual quality across all metrics with no text overlap and excellent layout
-    balance
-  - Realistic and neutral salary distribution data with appropriate company department
-    context
-  - Clean, reproducible code with proper random seeding and minimal complexity
+  - The significance bracket annotation directly ties the visualization back to the
+    spec's stated purpose ("quick visual hypothesis testing") — a strong, well-executed
+    storytelling touch
+  - Correct Imprint palette in canonical order, verified pixel-identical across both
+    theme renders
+  - Two-line x-axis tick labels surfacing per-arm sample size reinforces the spec's
+    "notch reliability improves with n > 20" note
+  - Realistic, neutral clinical-trial dataset with genuine outliers and varied spreads
+    across arms
   weaknesses:
-  - 'Design Excellence underdeveloped: lacks aesthetic sophistication beyond default
-    styling'
-  - 'Visual Refinement minimal: mostly library defaults for grid and spacing'
-  - No visual storytelling or emphasis to guide viewer to insights about median differences
-  - 'Library Mastery generic: implementation doesn''t leverage Plotly''s unique interactive
-    features or distinctive capabilities'
+  - Axis lines (linecolor/zerolinecolor) remain visible rather than fully removed
+    — a very minor refinement opportunity for DE-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface color
-      Chrome: Title "box-notched · plotly · anyplot.ai" (28px, dark text), axis labels "Department" and "Annual Salary (USD)" (22px, dark text), tick labels all in dark text (18px) - all perfectly readable
-      Data: Five notched box plots in Okabe-Ito colors: Engineering green (#009E73), Marketing orange (#D55E00), Sales blue (#0072B2), HR reddish-purple (#CC79A7), Finance yellow (#E69F00). Notches clearly visible around median, whiskers, quartile boxes, and outlier points all clearly distinguishable.
-      Legibility verdict: PASS - All text readable against light background, no dark-on-light issues
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title "box-notched · python · plotly · anyplot.ai" centered at top, dark ink; y-axis title "Pain Reduction (VAS points)" and x-axis title "Treatment Arm" both dark ink; two-line x tick labels (arm name + n=sample size) and y tick labels dark-soft ink; horizontal gridlines subtle; significance bracket + annotation text ("Notches don't overlap → medians differ (p < 0.05)") dark-soft ink, positioned clear of the title and boxes. All readable.
+      Data: five notched boxes in Imprint palette order — Placebo #009E73 (first series, confirmed), Low Dose #C475FD, Medium Dose #4467A3, High Dose #BD8233, Standard Care #AE3030. Outlier points as bordered circles matching each box's color.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark surface color
-      Chrome: Title and axis labels rendered in light text (INK #F0EFE8), tick labels in INK_SOFT (#B8B7B0) - all perfectly readable on dark background with good contrast, no dark-on-dark failures
-      Data: Data colors IDENTICAL to light render (first series exactly #009E73, confirming theme-independence). Notches, whiskers, and outlier markers all clearly visible. Grid lines subtle but present.
-      Legibility verdict: PASS - All text readable against dark background, no dark-on-dark issues, brand green clearly visible
+      Background: warm near-black, matches #1A1A17
+      Chrome: same elements as light render, all flipped to light ink (title, axis titles, tick labels, gridlines, axis/zero lines, bracket, annotation) — no dark-on-dark failures observed.
+      Data: same five colors as the light render (#009E73 green, #C475FD purple, #4467A3 blue, #BD8233 ochre, #AE3030 red) — confirmed identical, only chrome changed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, labels 22px, ticks 18px—all explicitly set, perfect readability
-          in both themes
+        comment: All font sizes explicitly set; readable in both themes; title well
+          within width bounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text properly spaced, no collisions or overlapping elements
+        comment: No collisions between bracket, annotation, title, or boxes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box plots and outliers optimally sized and clearly visible
+        comment: Box/whisker widths and outlier marker size well matched to density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe with good contrast
+        comment: Five distinguishable hues; red/green never sole distinguishing signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization with balanced margins
+        comment: Plot area uses most of the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Annual Salary (USD)'''
+        comment: Y-axis has units; x-axis descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito, correct backgrounds
-          and theme-correct chrome'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
     design_excellence:
-      score: 9
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults but lacks custom design touches
+        passed: true
+        comment: Thoughtful, consistent palette application clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal customization, mostly library defaults
+        passed: true
+        comment: Subtle single-axis grid and softened axis lines; axis/zero lines
+          not fully removed
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        passed: true
+        comment: Significance bracket gives an immediate, guided insight tied to the
+          spec's purpose
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot with all subtypes
+        comment: Correct notched box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Notches, quartiles, whiskers, outliers all present
+        comment: Notches, quartiles/whiskers, outliers, per-category colors, correct
+          notch-depth formula
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, salary on Y, all data visible
+        comment: x=arm, y=pain reduction; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct title format; legend appropriately omitted
+        comment: Title format exact; legend not needed, categories already labeled
+          on x-axis
     data_quality:
       score: 15
       max: 15
@@ -153,19 +152,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows variation in distributions, spreads, and outliers
+        comment: Outliers in 3/5 arms, varied spreads and medians
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral business scenario
+        comment: Neutral clinical-trial pain-reduction scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salaries plausible for tech company departments
+        comment: Plausible VAS-point ranges and dose-response pattern
     code_quality:
       score: 10
       max: 10
@@ -175,55 +174,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow, no functions or classes
+        comment: Linear imports/data/plot/save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.default_rng(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only os, numpy, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity
+        comment: Significance bracket is real computed statistics, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Theme-suffixed write_image/write_html, current API
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct high-level API but straightforward usage
+        passed: true
+        comment: Expert use of go.Box parameters
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic usage without distinctive features
+        passed: true
+        comment: Custom hovertemplate, add_shape/add_annotation bracket, built-in
+          notch computation
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - manual-ticks
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
