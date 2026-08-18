@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -6,11 +6,17 @@ Quality: 89/100 | Updated: 2026-08-18
 
 import os
 
+import cairosvg
 import numpy as np
 import pandas as pd
 import pygal
 from pygal.style import Style
 
+
+# pygal drops its internal layout state after render() unless this is set —
+# the QA-crunch annotation below needs chart.view/chart.margin_box afterwards
+# to place the callout at the exact pixel position of the widened Testing band.
+os.environ["PYGAL_KEEP_STATE"] = "1"
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -110,19 +116,61 @@ chart = pygal.StackedLine(
     show_dots=False,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
+    legend_box_size=32,
+    spacing=24,
 )
 
 chart.x_labels = all_labels
 chart.x_labels_major = major_labels
 
-# Add series from bottom (Done) to top (Backlog) — workflow order reversed
+# Add series from bottom (Done) to top (Backlog) — workflow order reversed.
+# Testing (the QA-bottleneck stage) gets a bolder boundary stroke than the
+# other bands: an intentional visual hierarchy that draws the eye straight
+# to the widening band instead of leaving every stage equally weighted.
 chart.add("Done", done_band.tolist())
-chart.add("Testing", testing_band.tolist())
+chart.add("Testing", testing_band.tolist(), stroke_style={"width": 6})
 chart.add("Development", dev_band.tolist())
 chart.add("Analysis", analysis_band.tolist())
 chart.add("Backlog", backlog_band.tolist())
 
+# Render once, keeping pygal's internal view/margin state (see
+# PYGAL_KEEP_STATE above) so the QA-crunch callout below can be placed at
+# the exact pixel position of the Testing band's widest point.
+svg = chart.render()
+svg_text = svg.decode("utf-8") if isinstance(svg, bytes) else svg
+
+# Annotate the QA-capacity crunch: the day the Testing band is widest.
+peak_day = int(np.argmax(testing_band))
+anchor_value = (done[peak_day] + testing_entered[peak_day]) / 2
+anchor_xf = peak_day / (n_days - 1)
+anchor_x = chart.margin_box.left + chart.view.x(anchor_xf)
+anchor_y = chart.margin_box.top + chart.view.y(anchor_value)
+
+# Callout box sits in the empty canvas above the pre-crunch ramp-up (offsets
+# tuned for this fixed-seed dataset so the box and its leader line never
+# cross into the filled bands).
+box_w, box_h = 520, 118
+box_right = anchor_x - 150
+box_left = box_right - box_w
+box_bottom = anchor_y - 434
+box_top = box_bottom - box_h
+text_x = (box_left + box_right) / 2
+text_y = box_top + box_h / 2 + 13
+
+annotation = f"""
+<g class="qa-crunch-annotation">
+  <line x1="{box_right - 20:.1f}" y1="{box_bottom:.1f}" x2="{anchor_x:.1f}" y2="{anchor_y:.1f}"
+        stroke="{INK_MUTED}" stroke-width="3" stroke-dasharray="10,8" />
+  <circle cx="{anchor_x:.1f}" cy="{anchor_y:.1f}" r="9" fill="{INK}" stroke="{PAGE_BG}" stroke-width="3" />
+  <rect x="{box_left:.1f}" y="{box_top:.1f}" width="{box_w}" height="{box_h}" rx="14"
+        fill="{PAGE_BG}" fill-opacity="0.94" stroke="{INK_MUTED}" stroke-width="2" />
+  <text x="{text_x:.1f}" y="{text_y:.1f}" text-anchor="middle" font-weight="bold" font-size="38"
+        font-family='Consolas, "Liberation Mono", Menlo, Courier, monospace' fill="{INK}">QA capacity crunch</text>
+</g>
+"""
+svg_text = svg_text.replace("</svg>", annotation + "</svg>", 1)
+
 # Save
-chart.render_to_png(f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg_text.encode("utf-8"))
+cairosvg.svg2png(bytestring=svg_text.encode("utf-8"), write_to=f"plot-{THEME}.png", dpi=72)
