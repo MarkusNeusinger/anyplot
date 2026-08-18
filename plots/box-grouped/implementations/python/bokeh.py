@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, FixedTicker, Legend, LegendItem, Range1d
+from bokeh.models import Arrow, ColumnDataSource, FixedTicker, HoverTool, Label, Legend, LegendItem, NormalHead, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -109,14 +109,20 @@ p.xgrid.grid_line_dash = "dashed"
 p.ygrid.grid_line_dash = "dashed"
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None  # despine-equivalent: no boxed plot border
 
 # Box dimensions
 box_width = 0.22
 offsets = [-0.28, 0, 0.28]  # Position offsets for subcategories
 
-# Store renderers for legend
+# Store renderers for legend and hover tooltips
 legend_items = []
+box_renderers = []
+
+# Track medians and the highest visible point per category — used below to
+# build a data-driven "Junior -> Lead" trend annotation (DE-03).
+medians = {sub: {} for sub in subcategories}
+max_y_per_cat = dict.fromkeys(categories, -np.inf)
 
 # Draw grouped box plots
 for sub_idx, sub in enumerate(subcategories):
@@ -146,6 +152,10 @@ for sub_idx, sub in enumerate(subcategories):
         boxes_q2.append(stats["q2"])
         boxes_q3.append(stats["q3"])
 
+        medians[sub][cat] = stats["q2"]
+        cat_top = max(stats["upper"], *stats["outliers"]) if len(stats["outliers"]) else stats["upper"]
+        max_y_per_cat[cat] = max(max_y_per_cat[cat], cat_top)
+
         # Collect outliers
         for outlier in stats["outliers"]:
             all_outliers_x.append(x_pos)
@@ -155,9 +165,25 @@ for sub_idx, sub in enumerate(subcategories):
     for i, _cat in enumerate(categories):
         x_pos = x_positions[i]
         # Lower whisker
-        p.segment(x0=[x_pos], y0=[boxes_lower[i]], x1=[x_pos], y1=[boxes_q1[i]], line_color=INK_SOFT, line_width=3)
+        p.segment(
+            x0=[x_pos],
+            y0=[boxes_lower[i]],
+            x1=[x_pos],
+            y1=[boxes_q1[i]],
+            line_color=INK_SOFT,
+            line_width=3,
+            line_cap="round",
+        )
         # Upper whisker
-        p.segment(x0=[x_pos], y0=[boxes_q3[i]], x1=[x_pos], y1=[boxes_upper[i]], line_color=INK_SOFT, line_width=3)
+        p.segment(
+            x0=[x_pos],
+            y0=[boxes_q3[i]],
+            x1=[x_pos],
+            y1=[boxes_upper[i]],
+            line_color=INK_SOFT,
+            line_width=3,
+            line_cap="round",
+        )
         # Whisker caps
         cap_width = box_width * 0.6
         p.segment(
@@ -167,6 +193,7 @@ for sub_idx, sub in enumerate(subcategories):
             y1=[boxes_lower[i]],
             line_color=INK_SOFT,
             line_width=3,
+            line_cap="round",
         )
         p.segment(
             x0=[x_pos - cap_width / 2],
@@ -175,10 +202,21 @@ for sub_idx, sub in enumerate(subcategories):
             y1=[boxes_upper[i]],
             line_color=INK_SOFT,
             line_width=3,
+            line_cap="round",
         )
 
-    # Draw boxes (q1 to q3)
-    box_source = ColumnDataSource(data={"x": x_positions, "bottom": boxes_q1, "top": boxes_q3})
+    # Draw boxes (q1 to q3) — category/subcategory/median are only used by the
+    # HoverTool tooltip on the HTML artifact (LM-02); they don't affect the PNG.
+    box_source = ColumnDataSource(
+        data={
+            "x": x_positions,
+            "bottom": boxes_q1,
+            "top": boxes_q3,
+            "category": categories,
+            "subcategory": [sub] * len(categories),
+            "median": boxes_q2,
+        }
+    )
 
     box_renderer = p.vbar(
         x="x",
@@ -191,6 +229,7 @@ for sub_idx, sub in enumerate(subcategories):
         line_color=INK_SOFT,
         line_width=2,
     )
+    box_renderers.append(box_renderer)
 
     # Draw median lines
     for i in range(len(categories)):
@@ -201,6 +240,7 @@ for sub_idx, sub in enumerate(subcategories):
             y1=[boxes_q2[i]],
             line_color=INK,
             line_width=4,
+            line_cap="round",
         )
 
     # Draw outliers
@@ -236,9 +276,58 @@ legend = Legend(
 )
 p.add_layout(legend, "right")
 
+# Bokeh-distinctive interactivity (LM-02): hover tooltips on the HTML
+# artifact — no effect on the static PNG, which is captured without a
+# mouse position.
+hover = HoverTool(
+    renderers=box_renderers,
+    tooltips=[
+        ("Department", "@category"),
+        ("Level", "@subcategory"),
+        ("Median", "@median{0.0}"),
+        ("Q1 – Q3", "@bottom{0.0} – @top{0.0}"),
+    ],
+)
+p.add_tools(hover)
+
 # Ticks live at the same 1, 2, 3, ... synthetic positions used for x_pos above
 p.xaxis.ticker = FixedTicker(ticks=list(range(1, len(categories) + 1)))
 p.xaxis.major_label_overrides = {i + 1: cat for i, cat in enumerate(categories)}
+
+# Data storytelling (DE-03): call out the department with the largest
+# Junior -> Lead score gap with a connecting arrow + label, derived from the
+# medians actually computed above (not hardcoded).
+highlight_cat = max(categories, key=lambda cat: medians["Lead"][cat] - medians["Junior"][cat])
+highlight_gap = medians["Lead"][highlight_cat] - medians["Junior"][highlight_cat]
+highlight_idx = categories.index(highlight_cat) + 1  # 1-indexed synthetic x position
+x_junior = highlight_idx + offsets[0]
+x_lead = highlight_idx + offsets[-1]
+annotation_y = min(104, max_y_per_cat[highlight_cat] + 6)
+
+p.add_layout(
+    Arrow(
+        x_start=x_junior,
+        y_start=annotation_y,
+        x_end=x_lead,
+        y_end=annotation_y,
+        start=NormalHead(size=8, fill_color=INK_SOFT, line_color=INK_SOFT),
+        end=NormalHead(size=8, fill_color=INK_SOFT, line_color=INK_SOFT),
+        line_color=INK_SOFT,
+        line_width=2,
+    )
+)
+p.add_layout(
+    Label(
+        x=(x_junior + x_lead) / 2,
+        y=annotation_y + 3,
+        text=f"Junior → Lead: +{highlight_gap:.0f} pts",
+        text_font_size="22pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+        text_align="center",
+        text_baseline="bottom",
+    )
+)
 
 # Save the interactive HTML (also a required catalog artifact)
 output_file(f"plot-{THEME}.html", title="box-grouped · python · bokeh · anyplot.ai")
