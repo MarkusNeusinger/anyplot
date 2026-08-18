@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:54:31Z'
-updated: '2026-08-18T05:03:31Z'
+updated: '2026-08-18T05:09:40Z'
 generated_by: claude-sonnet
 workflow_run: 32100556464
 issue: 2019
@@ -12,134 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notch
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Manual notch geometry uses the exact spec formula (median +/- 1.57*IQR/sqrt(n)),
-    clamped to Q1/Q3, since lets-plot's geom_boxplot(notch=...) is silently ignored
-    by the rendering backend -- a real, documented workaround rather than a fake feature
-  - 'Strong statistical storytelling: Engineering and Finance notches visibly overlap
-    (medians not significantly different) while other pairs are clearly separated,
-    directly illustrating the spec''s ''quick visual hypothesis testing'' purpose'
-  - 'Complete five-number-summary rendering: jittered raw points for distribution
-    shape, whiskers at 1.5*IQR, and distinct solid outlier markers beyond the fences,
-    layered under/over the notch polygons'
-  - Perfect Imprint palette compliance in canonical order (green, lavender, blue,
-    ochre, red) across both themes with fully theme-adaptive chrome (background, title,
-    axis text, grid)
-  - 'Realistic, varied department-salary data: different spreads per department, commission-driven
-    Sales outliers on both ends, tight Operations distribution -- good feature coverage
-    for a notched boxplot'
+  - Hand-built the notch geometry (10-vertex bowtie polygon per category, clamped
+    so the notch never exceeds the box) because lets-plot's geom_boxplot(notch=...)
+    is silently ignored by the rendering backend — the code comment documents the
+    workaround, and the result matches the R-style notched box plot precisely, including
+    the ±1.57*IQR/sqrt(n) formula the spec asks for.
+  - 'Full five-number-summary coverage: quartile box, median-pinch notch, 1.5*IQR
+    whiskers with caps, and individually plotted outliers, plus faint jittered raw
+    points (alpha=0.15) behind the boxes that reveal the underlying distribution shape
+    the summary hides.'
+  - Rich interactive tooltips (layer_tooltips) surface Q1/Median/Q3, the notch confidence
+    interval, and individual outlier salaries in the HTML export — a genuine value-add
+    for the interactive detail view.
+  - 'Clean Imprint palette usage in canonical order (green/lavender/blue/ochre/red
+    for 5 abstract department categories), correct theme-adaptive chrome, and correct
+    #FAF8F1/#1A1A17 backgrounds confirmed by pixel sampling in both renders.'
+  - 'Realistic, well-differentiated synthetic data (5 departments, n=70-85 each) that
+    tells a clear statistical story: Engineering/Finance notches overlap (no significant
+    difference), Marketing/Sales have wide notches and clear outliers, Operations
+    is tight and low — genuinely useful for the ''visual hypothesis testing'' use
+    case the spec calls for.'
+  - Legend correctly omitted since department identity is already fully encoded by
+    both x-position and color — avoids a redundant legend per the style guide.
   weaknesses:
-  - 'Design Excellence is solid but not exceptional: relies on theme_minimal() plus
-    the mandated Imprint palette without much further typographic or layout distinction;
-    panel_grid_major_y uses a full INK-colored line at size=0.3 rather than a reduced-alpha
-    rgba per the style guide''s 10-15% grid-opacity guidance -- soften the grid further
-    for a more polished look'
-  - 'Library Mastery is moderate: because geom_boxplot(notch=...) isn''t rendered,
-    the box/notch/whisker/outlier layers are built manually from geom_polygon/geom_segment/geom_point
-    instead of the library''s higher-level boxplot API; consider leaning into lets-plot''s
-    actual strength (native interactivity) by adding tooltips on the polygon/point
-    layers that surface the exact Q1/median/Q3/notch-CI values in the HTML output
-    -- that would make the interactive advantage over static libraries more distinctive'
-  - The polygon fill (alpha=0.85) sits directly against the jittered raw points and
-    whisker segments with no edge highlighting; a subtle ink-colored stroke on the
-    notch polygons (per the style guide's 'Data Element Styling' edge-highlighting
-    guidance) would sharpen the boundary where jittered points cross behind the box
+  - Notch construction bypasses geom_boxplot entirely in favor of manual geom_polygon/geom_segment/geom_point
+    layers — well justified by the backend limitation, but it means less of the library's
+    built-in boxplot machinery (e.g. automatic outlier detection styling) is exercised,
+    slightly capping Library Mastery idiomatic-usage credit.
+  - Tick label font size (10pt) and jittered point alpha (0.15) are both at the low
+    end of legible/visible on a scaled-down mobile view (~400px) — still readable
+    in the provided renders, but worth keeping an eye on if the spec size range grows
+    toward the top of 500 points per category.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "box-notched · python · letsplot · anyplot.ai" is centered, dark ink text, fully visible with margin above and below (not clipped). Y-axis title "Annual Salary (USD)" and x-axis title "Department" are dark ink and clearly readable. Tick labels (150,000 down to 30,000 on Y; Engineering/Marketing/Sales/Finance/Operations on X) are a slightly lighter dark gray, all fully legible with no clipping at the left or bottom edges. Horizontal Y-axis gridlines are thin and subtle, not competing with the data.
-      Data: Five notched box-and-whisker plots in Imprint canonical order -- Engineering (#009E73 green), Marketing (lavender), Sales (blue), Finance (ochre), Operations (matte red). Each box shows the bowtie notch pinch at the median, whiskers with end caps, faint jittered raw points behind the boxes, and solid outlier dots beyond the whiskers (e.g. Sales has outliers near 145,000/140,000/130,000/106,000 and near 30,000/28,000; Marketing has outliers near 125,000/120,000/109,000). First series is confirmed #009E73.
-      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, sampled pixel (250,248,241) = #FAF8F1, matches spec exactly.
+      Chrome: Title "box-notched · python · letsplot · anyplot.ai" centered at top in dark ink, clearly readable and comfortably under 70% of plot width. "Department" x-axis title and "Annual Salary (USD)" y-axis title both dark ink, balanced sizes. Tick labels (department names + comma-formatted salary values) in softer gray-ink, fully legible against the light background. Subtle horizontal gridlines only (y-axis), low opacity, do not compete with data.
+      Data: Five notched boxes (Engineering, Marketing, Sales, Finance, Operations) in Imprint canonical order — brand green (#009E73) first, then lavender, blue, ochre, matte red. Each box shows a pinched median notch, whiskers with caps, individual outlier dots, and faint jittered raw points behind the box revealing distribution shape.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlap, no clipping at any edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
-      Chrome: Title and both axis titles render in light/white ink, fully visible and not clipped. Tick labels on both axes are a lighter gray, clearly legible against the dark surface -- no dark-on-dark failures observed anywhere (department names, salary tick values, and the title are all bright against the near-black background). Gridlines are faint light lines, subtle but visible.
-      Data: The five box colors are pixel-identical to the light render (#009E73 green first, then lavender, blue, ochre, matte red) -- only the chrome (background, text, grid) flipped as expected. Outlier and jitter point positions match the light render exactly.
-      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black, sampled pixel (26,26,23) = #1A1A17, matches spec exactly.
+      Chrome: Same title and axis titles now rendered in light ink (near-white), tick labels in a softer light-gray ink — both clearly legible against the dark background, no dark-on-dark failures observed. Gridlines flip to a light, low-opacity tone, still subtle.
+      Data: Confirmed identical box/outlier/jitter colors to the light render (same green/lavender/blue/ochre/red hues at the same category positions) — only chrome (background, text, grid) flipped as required.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light issues; all chrome elements remain fully readable.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (axis_title=12, axis_text=10, plot_title=16);
-          readable in both themes; title fits comfortably without clipping; matching
-          X/Y sizes guarantee proportional balance
+        comment: Explicit font sizes throughout; readable in both themes; tick labels
+          at the smaller end (10pt) but legible in both full-size and mobile-scaled
+          renders.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with other text or data elements in either render
+        comment: No text or data collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Jitter alpha=0.15 keeps ~65-85 raw points per category as unobtrusive
-          context, outliers at alpha=0.8/size=2.5 are clearly visible, boxes at alpha=0.85
-          read solidly
+        comment: Whisker/box/outlier weights and jitter alpha (0.15) appropriate for
+          the density (70-85 pts per category).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint categorical hues are CVD-safe and mutually distinguishable,
-          no red-green-only signal
+        comment: CVD-safe Imprint categorical hues, no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large, balanced portion of the 3200x1800 canvas;
-          nothing cut off
+        comment: Canvas gate passed (3200x1800 confirmed); title/axes proportioned
+          well, no overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Annual Salary (USD)' with units, X-axis labeled 'Department'
+        comment: Descriptive axis titles with units ('Annual Salary (USD)').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining 4 in canonical Imprint order, identical
-          across themes, correct #FAF8F1/#1A1A17 backgrounds and theme-correct chrome'
+        comment: Canonical Imprint order, correct theme backgrounds confirmed by pixel
+          sampling.
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom manual notch geometry and jittered raw-data overlay go beyond
-          a configured default, but typography and layout stay close to theme_minimal()
-          defaults -- not yet publication-tier polish
+        passed: true
+        comment: Custom hand-built notch geometry, jittered distribution points, deliberate
+          palette assignment — above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Y-only grid, generous whitespace, minimal spines -- but the grid
-          line uses full INK color rather than a reduced-alpha rgba per the style
-          guide's 10-15% opacity guidance
+        passed: true
+        comment: Minimal spines, subtle single-axis grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Overlapping vs. separated notches, jittered points, and distinct
-          outlier markers create real visual hierarchy, though the statistical-significance
-          insight still requires the viewer to know what a notch means
+        passed: true
+        comment: Notches enable direct visual hypothesis testing between departments;
+          jitter cloud adds distribution context without clutter.
     spec_compliance:
       score: 15
       max: 15
@@ -149,29 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot
+        comment: Correct notched box plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Notches at the spec's exact 1.57*IQR/sqrt(n) formula, quartiles,
-          1.5*IQR whiskers, individual outlier points, per-category colors -- all
-          present
+        comment: Notches at 95% CI (1.57*IQR/sqrt(n)), quartiles, 1.5*IQR whiskers,
+          individual outliers, per-category colors — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Department (categorical), Y=Salary (numeric), all data visible
-          on axes
+        comment: category -> x, value -> y, all data represented (box + jitter + outliers).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'box-notched · python · letsplot · anyplot.ai'; legend
-          correctly omitted since color already redundantly encodes the x-axis category
+        comment: Title matches mandated format; legend correctly omitted since category
+          is already encoded by axis position.
     data_quality:
       score: 15
       max: 15
@@ -181,21 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows outliers, varied spreads, and both overlapping and non-overlapping
-          notch pairs
+        comment: Covers every element the spec lists, including tooltip-exposed notch
+          CI.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible department-salary business scenario
+        comment: Plausible, neutral department salary data with sensible per-department
+          variance and outlier stories.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Salary ranges and commission-driven Sales outliers are plausible
-          for the domain
+        comment: Salary ranges ($28k-$145k) are realistic for the domain.
     code_quality:
       score: 10
       max: 10
@@ -205,63 +197,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> geometry -> plot -> save, no functions/classes
+        comment: No functions/classes; flat top-level script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot, ggsave -- all used
+        comment: Only os, numpy, pandas, lets_plot, ggsave — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: The manual vertex/notch math is justified and documented as a workaround
-          for the unsupported notch keyword, not over-engineering or fake UI
+        comment: Manual polygon workaround is well-commented and justified, not fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ggsave(scale=4) plus plot-{THEME}.html,
-          current API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via current
+          ggsave API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct grammar-of-graphics layering, but bypasses the library's
-          own geom_boxplot for manual geom_polygon/geom_segment/geom_point since notch
-          isn't rendered by the backend
+        passed: true
+        comment: Deviates from geom_boxplot due to a documented backend limitation
+          (notch= silently ignored) — a defensible, well-justified workaround rather
+          than a lack of knowledge, but still less idiomatic than a native geom.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Layer composition is a real ggplot-family technique, but the implementation
-          doesn't yet use lets-plot's distinctive native interactivity (e.g. custom
-          tooltips) to differentiate the HTML output
-  verdict: REJECTED
+        passed: true
+        comment: layer_tooltips() used for rich per-layer hover content (Q1/Median/Q3,
+          notch CI, outlier values) — a real lets-plot-distinctive interactive feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
-  - manual-ticks
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
