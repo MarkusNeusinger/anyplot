@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-18
@@ -29,8 +29,9 @@ engineering = np.random.normal(95000, 12000, 200)
 # Marketing: moderate salaries, wider spread
 marketing = np.random.normal(75000, 18000, 180)
 
-# Sales: lower base but high variance due to commissions
-sales = np.random.normal(65000, 22000, 220)
+# Sales: lower base pay plus a smaller high-commission cohort, giving the
+# distribution a light second mode - unlike the two unimodal groups above.
+sales = np.concatenate([np.random.normal(60000, 14000, 180), np.random.normal(105000, 11000, 40)])
 
 groups = [("Engineering", engineering, IMPRINT[0]), ("Marketing", marketing, IMPRINT[1]), ("Sales", sales, IMPRINT[2])]
 
@@ -45,7 +46,7 @@ bins = np.linspace(20000, 150000, 35)
 # group reads more clearly than per-bar edges once fills stack on top of
 # each other, and keeps the silhouette of each distribution legible.
 for name, data, color in groups:
-    ax.hist(data, bins=bins, alpha=0.5, label=name, color=color, histtype="stepfilled", edgecolor=color, linewidth=1.5)
+    ax.hist(data, bins=bins, alpha=0.4, label=name, color=color, histtype="stepfilled", edgecolor=color, linewidth=1.8)
     ax.axvline(data.mean(), color=color, linestyle=":", linewidth=1.3, alpha=0.9)
 
 # Labels and styling
@@ -55,8 +56,8 @@ ax.set_ylabel("Number of Employees", fontsize=10, color=INK)
 ax.set_title(title, fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Grid - subtle on both axes
-ax.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+# Grid - y-axis only, subtle
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
 # Remove top and right spines
@@ -67,6 +68,28 @@ for s in ("left", "bottom"):
 
 # Format x-axis with thousands separator
 ax.xaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x / 1000:.0f}k"))
+
+# Callout: highlight the largest mean gap (Engineering vs. Sales)
+eng_mean, sales_mean = engineering.mean(), sales.mean()
+headroom = ax.get_ylim()[1] * 1.15
+ax.set_ylim(top=headroom)
+callout_y = headroom * 0.94
+ax.annotate(
+    "",
+    xy=(eng_mean, callout_y),
+    xytext=(sales_mean, callout_y),
+    arrowprops={"arrowstyle": "<->", "color": INK_SOFT, "linewidth": 1.2},
+)
+ax.annotate(
+    f"${(eng_mean - sales_mean) / 1000:.0f}k mean gap",
+    xy=((eng_mean + sales_mean) / 2, callout_y),
+    xytext=(0, 6),
+    textcoords="offset points",
+    ha="center",
+    fontsize=8,
+    color=INK,
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.8, "alpha": 0.9, "boxstyle": "round,pad=0.3"},
+)
 
 # Legend styling
 leg = ax.legend(fontsize=8, loc="upper right")
