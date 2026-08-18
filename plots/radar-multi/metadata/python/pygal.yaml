@@ -2,119 +2,146 @@ library: pygal
 language: python
 specification_id: radar-multi
 created: '2025-12-25T19:07:54Z'
-updated: '2026-05-07T17:18:29Z'
-generated_by: claude-haiku
-workflow_run: 25510136759
+updated: '2026-08-17T16:59:53Z'
+generated_by: claude-sonnet
+workflow_run: 32046977179
 issue: 2026
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Perfect radar chart implementation with clear multi-series comparison
-  - Excellent theme-adaptive rendering in both light and dark modes
-  - Well-balanced layout with generous margins and clean legend
-  - Strong data storytelling showing team strengths and weaknesses
-  - Correct specification compliance with all required features
-  - Semi-transparent fills effectively visualize overlapping polygons
-  - Realistic, neutral team performance data with good contextual value
+  - 'Correct Imprint palette with brand green #009E73 as the first (hero) series,
+    canonical categorical order across all three teams, and fully theme-correct chrome
+    (background, text, grid) in both light and dark renders'
+  - The hero-series treatment (bold 6px solid stroke + larger 12px dots for Alpha
+    Team vs. thinner 2.5px dashed strokes + 7px dots for Beta/Gamma) directly resolves
+    the prior attempt's DE-03 weakness by giving the chart a clear focal point and
+    visual hierarchy without hiding the other two series
+  - Legend moved to the bottom with legend_at_bottom_columns=3 resolves the prior
+    attempt's VQ-05 weakness — the radar hexagon is now well-centered with evenly
+    distributed whitespace instead of being shifted toward the top-right
+  - 'All required spec features present: filled polygons at opacity=0.25 with visible
+    outlines, closed hexagonal shapes, regular gridlines at 0/20/40/60/80/100, outer-edge
+    axis labels, and a legend identifying all three teams'
+  - Clean, idiomatic pygal usage via the Style object (theme-adaptive tokens, explicit
+    font sizes) and the Radar chart's high-level API; deterministic, realistic team-skill-assessment
+    data with genuine variation across all six axes
+  - Correct mandated title format and correct output artifacts (plot-{theme}.png and
+    plot-{theme}.html)
   weaknesses:
-  - 'Code specifies wrong palette (#306998, #FFD43B, #E74C3C) instead of Okabe-Ito
-    (#009E73, #D55E00, #0072B2)'
-  - 'Output filenames non-compliant: saves plot.png instead of plot-{THEME}.png (breaks
-    theme separation)'
-  - Code lacks ANYPLOT_THEME environment variable handling and theme-adaptive styling
-    logic
-  - Font size specification (72px title) exceeds style guide recommendation (28px
-    for pixel-based systems)
-  - Design polish is adequate but not exceptional—could elevate with additional visual
-    refinement
+  - 'DE-01: Typography still relies on a single global font_family across all elements
+    — the prior attempt''s suggestion to set distinct title_font_family / legend_font_family
+    for a more distinctive, publication-grade look was not applied.'
+  - 'VQ-02: At the ''Problem Solving'' and ''Teamwork'' vertices the three teams''
+    values are close together (e.g. 82/88/78 and 88/70/92), so the vertex dots nearly
+    touch. The size hierarchy (hero dot larger) keeps them distinguishable, but consider
+    a tiny dots_size bump for the non-hero series or a slight jitter/offset so tightly
+    clustered vertices stay fully separable.'
+  - 'DQ-01: Six axes and three series are within spec range, but per-team variation
+    on a couple of axes (e.g. Communication: 85/78/65) is fairly compressed — slightly
+    wider spread between at least one pair of teams on more axes would make the comparative
+    story even clearer.'
+  - 'LM-02: The added stroke_style dasharray and dots_size differentiation is a good
+    step up from attempt 1, but still basic — pushing further with another pygal-distinctive
+    radar knob (e.g. tuned interpolation, or per-series show_dots toggling) would
+    showcase the library''s strengths more fully.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title "radar-multi · pygal · anyplot.ai" in dark text (top center); legend showing Alpha Team (teal), Beta Team (orange), Gamma Team (blue) in top-left; six axis labels (Communication, Technical, Leadership, Creativity, Teamwork, Problem Solving) radiating outward; all text perfectly readable with strong dark-on-light contrast
-      Data: Three semi-transparent radar polygons overlaying each other with distinct colors; dotted gridlines mark scale intervals (20, 40, 60, 80, 100); data points marked with dots at vertices; 3D isometric perspective creates depth
-      Legibility verdict: PASS - All elements clearly visible and readable
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "radar-multi · python · pygal · anyplot.ai" in dark ink at top, fully visible with no clipping. Six category axis labels (Communication, Problem Solving, Teamwork, Creativity, Leadership, Technical) rotated around the hexagon perimeter, all fully readable and none touching the canvas edge. Radial value labels (0/20/40/60/80/100) run along the top (Communication) axis in dark ink. Legend centered at the bottom in three columns — "Alpha Team" (green swatch), "Beta Team" (purple swatch), "Gamma Team" (blue swatch) — fully visible with comfortable margin below.
+      Data: Three overlapping filled hexagonal polygons at ~25% opacity — Alpha Team in brand green (#009E73) with a bold 6px solid stroke and large 12px dots (the "hero" series), Beta Team in light purple (#C475FD) and Gamma Team in muted blue (#4467A3), both with thinner 2.5px dashed strokes and smaller 7px dots. Dashed light-gray gridlines radiate from the center at each 20-point interval. All three series are distinguishable by both hue and line/dot styling even where their vertices cluster closely (e.g. Problem Solving, Teamwork).
+      Legibility verdict: PASS — all title, axis, tick, and legend text is dark-on-light and clearly readable; no overlapping or clipped text.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title, axis labels, legend text now light-colored (near-white) and fully readable against dark background; no dark-on-dark failures; gridlines visible and subtle
-      Data: Three polygon colors (teal, orange, blue) are IDENTICAL to light render—only chrome has flipped to light; same 3D perspective and transparency effects
-      Legibility verdict: PASS - All text elements have strong contrast; theme-adaptive styling effective
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis labels, value ticks, and bottom legend layout as the light render, now rendered in light/off-white text throughout (title, category labels, tick numbers, legend labels). Gridlines are a lighter, subtle gray-blue tone appropriate for the dark surface.
+      Data: The same three series in the identical hex colors as the light render (#009E73 green hero series with bold solid stroke, #C475FD purple and #4467A3 blue with thinner dashed strokes) — confirming data colors and styling are unchanged between themes; only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — all text is light-on-dark with good contrast; no dark-on-dark failures observed anywhere (title, axis labels, tick numbers, and legend all clear).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes
+        comment: All font sizes explicitly set via Style; readable in both themes;
+          category labels rotated by pygal defaults but fully legible
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Axis labels positioned cleanly, no collisions
+        comment: No text collisions; vertex dots at Problem Solving/Teamwork cluster
+          tightly where team values are close but remain individually distinguishable
+          via size hierarchy
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Polygons, dots, gridlines all visible and well-sized
+        comment: dots_size 12/7 and stroke widths 6/2.5 with dasharray well adapted
+          to the sparse 6-axis/3-series data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Teal/orange/blue contrast clear, CVD-safe
+        comment: Green/purple/blue combination is CVD-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Centered, balanced, generous margins
+        comment: Legend moved to the bottom balances whitespace evenly around the
+          radar hexagon; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels, correct title format
+        comment: Descriptive category labels, clear 0-100 value scale
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Images compliant, but source code specifies wrong colors
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: 3D perspective and transparency above defaults, not publication-ready
+        comment: Well-configured library default; palette/theme tokens and font sizes
+          applied but typography (font family per element) untouched since attempt
+          1
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Good polish with subtle gridlines, could use more customization
+        passed: true
+        comment: Subtle dashed grid, differentiated solid-vs-dashed strokes across
+          series, clean bottom legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear comparison of strengths/weaknesses, visual hierarchy guides
-          reader
+        passed: true
+        comment: Hero-series treatment (bold stroke + larger dots for the top all-round
+          team) creates a clear focal point and visual hierarchy, resolving attempt
+          1's weakness
     spec_compliance:
       score: 15
       max: 15
@@ -124,49 +151,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-series radar correctly implemented
+        comment: Correct multi-series radar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled polygons, transparency, legend, gridlines, closed polygons
+        comment: Filled polygons with alpha, distinct colors, legend, gridlines, outer-edge
+          axis labels, closed polygons, fill+outline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 6 axes, 3 series, 0-100 scale, all data visible
+        comment: 6 axes correctly mapped, 0-100 range set explicitly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title matches mandated format exactly; legend labels match series
+          names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows all dimensions and team variations
+        comment: 6 axes / 3 series with variation across teams, within spec's recommended
+          ranges; a couple of axes have fairly compressed spread between teams
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Team performance scenario, neutral and plausible
+        comment: Neutral, comprehensible team skill-assessment scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (65-92) appropriate, proportions coherent
+        comment: Values (65-92) plausible on a 0-100 skill scale, no logical violations
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -174,54 +204,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no unnecessary functions
+        comment: Imports -> data -> style -> chart -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only os, pygal, Style - all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No ANYPLOT_THEME handling, wrong palette, no theme-adaptive styling
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: render_to_png + html export, correct plot-{theme} naming
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Proper radar API, font sizes non-standard
+        passed: true
+        comment: Proper Style object, Radar high-level API, x_labels, chart.add loop
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses standard radar features, not distinctive
+        passed: true
+        comment: inner_radius, per-series dots_size and stroke_style (dasharray) now
+          used for meaningful hero differentiation, up from a basic level in attempt
+          1
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
