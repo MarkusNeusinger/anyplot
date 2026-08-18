@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 98/100 | Updated: 2026-05-08
+Library: bokeh 3.9.2 | Python 3.13.15
+Quality: 93/100 | Updated: 2026-08-18
 """
 
 import os
@@ -11,9 +11,7 @@ from pathlib import Path
 import numpy as np
 from bokeh.io import output_file, save
 from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, HoverTool, LabelSet, LinearColorMapper
-from bokeh.palettes import RdBu11
 from bokeh.plotting import figure
-from bokeh.resources import CDN
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -24,10 +22,8 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data - realistic financial/economic indicators
-np.random.seed(42)
 variables = ["GDP", "Unemployment", "Inflation", "Interest Rate", "Stock Index", "Consumer Conf.", "Housing", "Exports"]
 n_vars = len(variables)
 
@@ -45,16 +41,19 @@ base_corr = np.array(
     ]
 )
 
-# Create mask for lower triangle (including diagonal)
+# Mask upper triangle (above the diagonal) to avoid redundant mirrored cells
 mask = np.triu(np.ones_like(base_corr, dtype=bool), k=1)
 corr_matrix = np.where(mask, np.nan, base_corr)
 
-# Prepare data for heatmap
+# Prepare data for heatmap — text color adapts per-cell so it stays legible
+# against both the strongly-saturated ends AND the near-zero midpoint, which
+# is itself theme-adaptive (near-white on light, near-black on dark).
 x_data = []
 y_data = []
 values = []
 text_values = []
 text_colors = []
+cell_ij = []
 
 for i, var_y in enumerate(variables):
     for j, var_x in enumerate(variables):
@@ -64,27 +63,66 @@ for i, var_y in enumerate(variables):
             val = corr_matrix[i, j]
             values.append(val)
             text_values.append(f"{val:.2f}")
-            # White text for extreme values, dark text for middle range
-            text_colors.append("#FFFFFF" if abs(val) > 0.55 else "#333333")
+            text_colors.append("#FFFFFF" if abs(val) > 0.45 else INK)
+            cell_ij.append((i, j))
+
+# Highlight the two strongest off-diagonal relationships with a bold outline
+# so the viewer's eye lands on the most important correlations first.
+off_diag = [(idx, abs(v)) for idx, (v, (i, j)) in enumerate(zip(values, cell_ij, strict=True)) if i != j]
+strongest = {idx for idx, _ in sorted(off_diag, key=lambda pair: pair[1], reverse=True)[:2]}
+cell_line_colors = [INK if idx in strongest else PAGE_BG for idx in range(len(values))]
+cell_line_widths = [6 if idx in strongest else 2 for idx in range(len(values))]
 
 source = ColumnDataSource(
-    data={"x": x_data, "y": y_data, "values": values, "text": text_values, "text_color": text_colors}
+    data={
+        "x": x_data,
+        "y": y_data,
+        "values": values,
+        "text": text_values,
+        "text_color": text_colors,
+        "line_color": cell_line_colors,
+        "line_width": cell_line_widths,
+    }
 )
 
-# Create figure with square aspect ratio
+
+# Imprint diverging colormap (matte-red <-> theme-adaptive midpoint <-> blue),
+# built as a 256-stop ramp — see prompts/library/bokeh.md "Colors".
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+_midpoint = PAGE_BG
+imprint_div = [_lerp_hex("#AE3030", _midpoint, t / 127.0) for t in range(128)] + [
+    _lerp_hex(_midpoint, "#4467A3", t / 127.0) for t in range(128)
+]
+
+mapper = LinearColorMapper(palette=imprint_div, low=-1, high=1)
+
+title = "heatmap-correlation · python · bokeh · anyplot.ai"
+
+# Square canvas — see prompts/library/bokeh.md "Canvas — hard rule, no deviation".
+# `min_border_*` reserve room for the 34/42pt tick + axis-label stack so
+# nothing clips at the PNG edges; `toolbar_location=None` is mandatory —
+# bokeh's default toolbar adds ~30-50px above the plot that would shrink
+# the saved screenshot below the target height.
 p = figure(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     x_range=variables,
     y_range=list(reversed(variables)),
     x_axis_location="below",
-    title="heatmap-correlation · bokeh · anyplot.ai",
-    toolbar_location="right",
+    title=title,
+    toolbar_location=None,
     tools="",
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
-
-# Diverging color mapper centered at zero
-mapper = LinearColorMapper(palette=list(reversed(RdBu11)), low=-1, high=1, nan_color="white")
 
 # Draw rectangles for heatmap
 rects = p.rect(
@@ -94,15 +132,24 @@ rects = p.rect(
     height=0.95,
     source=source,
     fill_color={"field": "values", "transform": mapper},
-    line_color="white",
-    line_width=2,
+    line_color="line_color",
+    line_width="line_width",
 )
 
-# Add HoverTool for interactivity
-hover = HoverTool(renderers=[rects], tooltips=[("Row", "@y"), ("Column", "@x"), ("Correlation", "@text")])
+# Refined hover tooltip — theme-aware card instead of the plain default table
+hover = HoverTool(
+    renderers=[rects],
+    tooltips=f"""
+    <div style="background-color:{ELEVATED_BG}; border:1px solid {INK_SOFT};
+                border-radius:4px; padding:8px 10px; font-size:14px; color:{INK};">
+        <div><b>@y</b> &times; <b>@x</b></div>
+        <div style="color:{INK_SOFT}; margin-top:2px;">Correlation: <b>@text</b></div>
+    </div>
+    """,
+)
 p.add_tools(hover)
 
-# Add text annotations with dynamic color based on background
+# Text annotations with per-cell adaptive color (see data-prep above)
 labels = LabelSet(
     x="x",
     y="y",
@@ -111,12 +158,12 @@ labels = LabelSet(
     source=source,
     text_align="center",
     text_baseline="middle",
-    text_font_size="22pt",
+    text_font_size="28pt",
     text_font_style="bold",
 )
 p.add_layout(labels)
 
-# Add colorbar
+# Colorbar (fixed -1..1 range for consistent cross-plot interpretation)
 color_bar = ColorBar(
     color_mapper=mapper,
     ticker=BasicTicker(desired_num_ticks=11),
@@ -124,50 +171,52 @@ color_bar = ColorBar(
     width=60,
     location=(0, 0),
     title="Correlation",
-    title_text_font_size="22pt",
-    major_label_text_font_size="18pt",
+    title_text_font_size="34pt",
+    major_label_text_font_size="28pt",
     title_standoff=15,
 )
 p.add_layout(color_bar, "right")
 
-# Style the figure with theme-adaptive colors
+# Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
 
-p.title.text_font_size = "32pt"
+p.title.text_font_size = "50pt"
 p.title.align = "center"
 p.title.text_color = INK
 
 # Domain-specific axis labels
 p.xaxis.axis_label = "Economic Indicators"
 p.yaxis.axis_label = "Economic Indicators"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 p.xaxis.major_label_orientation = 0.785  # 45 degrees in radians
 
-# Grid and axis styling
+# Grid and axis line styling — no grid needed on a fully-tiled matrix
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.axis.axis_line_color = None
 p.axis.major_tick_line_color = None
 
-# Colorbar label styling
+# Colorbar styling — bokeh defaults ColorBar.background_fill_color to white,
+# which stays a stark white box on the dark theme unless overridden here.
+color_bar.background_fill_color = PAGE_BG
 color_bar.title_text_color = INK
 color_bar.major_label_text_color = INK_SOFT
 
-# Save as HTML
+# Save as HTML (required catalog artifact)
 output_file(f"plot-{THEME}.html")
-save(p, resources=CDN)
+save(p)
 
 # Screenshot with headless Chrome
-W, H = 3600, 3600
+W, H = 2400, 2400
 opts = Options()
 for arg in (
     "--headless=new",
@@ -181,6 +230,11 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Headless Chrome's --window-size sets the OUTER window, which still reserves
+# a phantom title-bar height even headless; pin the viewport exactly via CDP.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()

@@ -2,44 +2,61 @@ library: bokeh
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:13Z'
-updated: '2026-05-08T15:04:17Z'
-generated_by: claude-haiku
-workflow_run: 25562299477
+updated: '2026-08-18T17:05:37Z'
+generated_by: claude-sonnet
+workflow_run: 32161609024
 issue: 1948
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.15
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/bokeh/plot-dark.html
-quality_score: 98
+quality_score: 93
 review:
   strengths:
-  - Publication-quality design with professional diverging colormap and intentional
-    typography hierarchy
-  - Perfect theme adaptation across light and dark renders; no legibility failures
-  - Excellent bokeh mastery—idiomatic usage of ColorBar, LabelSet, LinearColorMapper,
-    HoverTool
-  - Realistic data with economically plausible correlations; clear storytelling through
-    color intensity
-  - Clean code with explicit font sizing, deterministic seed, and no unnecessary complexity
-  - 'All required features present: annotations, colorbar, symmetric masking, interactive
-    tooltips'
+  - 'All three weaknesses flagged in Attempt 1 are fixed cleanly: the dead `np.random.seed(42)`
+    call is gone, the white/ink text-color threshold is tightened from 0.55 to 0.45
+    for safer contrast on mid-saturation cells, and the two strongest off-diagonal
+    correlations (GDP/Stock Index 0.85, Unemployment/Consumer Conf. -0.82) now get
+    a bold outline that gives the viewer a clear focal point'
+  - Fixed -1..1 colorbar range with a hand-built 256-stop Imprint diverging ramp (matte-red
+    -> theme-adaptive midpoint -> blue), exactly matching the spec's diverging-colormap
+    requirement
+  - Upper triangle masked via np.triu/np.where(nan) to remove redundant mirrored cells,
+    per the spec's notes
+  - Per-cell adaptive annotation text color keeps all 2-decimal labels legible across
+    the full color range in both themes, including near-zero cells that blend close
+    to the theme-adaptive midpoint
+  - Data colors are pixel-identical between plot-light.png and plot-dark.png; only
+    chrome flips per theme, and both renders pass the theme-readability checklist
+    with no dark-on-dark or light-on-light failures
+  - 'Idiomatic, non-generic bokeh usage: ColumnDataSource-driven rect glyphs with
+    per-glyph line_color/line_width fields, LinearColorMapper + ColorBar, LabelSet,
+    and a real themed HTML hover tooltip card'
+  - Realistic, internally-consistent economic-indicator correlation matrix (e.g. GDP
+    vs Unemployment -0.72, GDP vs Stock Index 0.85, Unemployment vs Consumer Confidence
+    -0.82)
+  - min_border_* reservations and a disabled toolbar keep the title, rotated tick
+    labels, and colorbar title fully inside the 2400x2400 frame with no clipping
   weaknesses:
-  - 'Minor: hover-tooltip styling could be slightly more refined for maximum polish
-    (very minor refinement only)'
+  - The bold-outline highlight on the two strongest correlations is a good storytelling
+    cue but is unlabeled — a small legend note (e.g. 'strongest relationships outlined')
+    would make the intent explicit rather than left for the viewer to infer
+  - Both axis titles read identically ('Economic Indicators') which is correct for
+    a symmetric matrix but adds no extra information beyond the tick labels themselves
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct theme-adaptive color)
-      Chrome: Title "heatmap-correlation · bokeh · anyplot.ai" in dark INK color (32pt); axis labels "Economic Indicators" in dark INK (24pt); tick labels in INK_SOFT (18pt); all clearly readable
-      Data: RdBu11 diverging colormap with blue (positive), white (zero), red (negative); 8×8 symmetric matrix with lower triangle masked; cell borders white (2px); correlation values annotated with 2 decimal places in adaptive text color (white for |val| > 0.55, dark otherwise); colorbar labeled "Correlation" with scale -1 to 1
-      Legibility verdict: PASS — All text readable, no dark-on-dark failures
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "heatmap-correlation · python · bokeh · anyplot.ai" centered at top, fully visible with no clipping. Italic dark "Economic Indicators" axis labels on both axes; dark-gray tick labels for the 8 variable names (GDP, Unemployment, Inflation, Interest Rate, Stock Index, Consumer Conf., Housing, Exports), x-ticks rotated ~45°. Colorbar on the right labeled "Correlation", ticked from -1 to 1, chrome text legible.
+      Data: Lower-triangle correlation matrix (upper triangle masked/blank) with a diverging matte-red-to-blue ramp centered at the near-white midpoint. Diagonal = 1.00 in solid blue. Every cell is annotated to 2 decimal places with per-cell adaptive text color (white on saturated cells >0.45 magnitude, dark ink on near-zero cells). The two strongest off-diagonal correlations — GDP/Stock Index (0.85) and Unemployment/Consumer Conf. (-0.82) — are outlined with a bold dark border, clearly distinguishing them from the other cells' thin near-background borders.
+      Legibility verdict: PASS — all title, axis, tick, colorbar, and cell-annotation text is clearly readable against the light background; no light-on-light failures observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct theme-adaptive color)
-      Chrome: Title in light INK color (#F0EFE8, 32pt); axis labels in light INK (24pt); tick labels in light INK_SOFT (#B8B7B0, 18pt); colorbar labels in light text; all clearly readable against dark background
-      Data: Data colors (blue/white/red) identical to light render—RdBu11 diverging colormap unchanged; cell borders white (2px); correlation values in adaptive text colors; colorbar labels light-colored
-      Legibility verdict: PASS — All text readable, no dark-on-dark failures, data colors identical to light render
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, tick labels, and colorbar chrome all flip to light/off-white text and remain fully readable — no leftover white boxes or stray light-theme chrome anywhere.
+      Data: The diverging red/blue cell colors and correlation values are pixel-identical to the light render; only chrome flipped, as required. Per-cell adaptive text color continues to work correctly near the theme-adaptive midpoint (now near-black) — no dark-on-dark failures observed on any of the 36 visible cells. The same two strongest-correlation cells are outlined, now with a light-colored bold border that stands out against the dark surface.
+      Legibility verdict: PASS — all title, axis, tick, colorbar, and cell-annotation text is clearly readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,72 +67,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All fonts explicitly set (title 32pt, labels 24pt, ticks 18pt); perfect
-          readability in both themes
+        comment: All font sizes explicit (50/42/34/28pt); text-color threshold tightened
+          to 0.45 fixes prior mid-saturation contrast issue; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing; x-axis rotated 45°; no overlapping elements
+        comment: No overlap between title, axis labels, ticks, cell text, or colorbar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible with white 2px borders; 22pt annotations; well-adapted
-          to 8×8 density
+        comment: 8x8 matrix cells sized to fill the plot area cleanly; highlighted
+          cells clearly stand out
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdBu11 CVD-safe; excellent contrast between blue/white/red
+        comment: Diverging red/blue is not color alone — every cell is redundantly
+          labeled with its numeric value, so CVD users are not dependent on hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format appropriate; 65% canvas fill; balanced margins; colorbar
-          well-positioned
+        comment: Square 2400x2400 canvas gate passed; balanced margins via min_border_*
+          reservations; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Economic Indicators labels are descriptive and domain-specific
+        comment: Descriptive 'Economic Indicators' axis labels; title matches mandated
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: RdBu11 diverging cmap correct; data colors identical in both renders;
-          theme-adaptive chrome perfect (backgrounds, text colors)
+        comment: 'Diverging colormap built from imprint_div endpoints (#AE3030 <->
+          theme-adaptive midpoint <-> #4467A3); backgrounds #FAF8F1/#1A1A17; both
+          renders theme-correct'
     design_excellence:
-      score: 18
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Publication-quality design; professional color scheme; intentional
-          typography hierarchy; elegant lower-triangle masking
+        comment: Custom 256-stop diverging ramp, per-cell adaptive text color, themed
+          HTML hover card — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Clean cell borders; axes cleanly hidden; consistent theme tokens;
-          generous spacing; polished details
+        comment: Spines/tick marks removed, no grid clutter, generous whitespace from
+          masked triangle
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Economic relationships visually interpretable; color intensity guides
-          attention; masking is deliberate storytelling choice
+        comment: Bold outline on the two strongest off-diagonal correlations gives
+          the viewer a clear focal point — directly fixes Attempt 1's flagged weakness
     spec_compliance:
       score: 15
       max: 15
@@ -125,26 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging heatmap for correlation data
+        comment: Correct correlation-matrix heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: axes, matrix, diverging cmap, 2-decimal annotations,
-          colorbar (-1 to 1), masking, bonus HoverTool'
+        comment: Diverging colormap centered at zero, 2-decimal cell annotations,
+          masked upper triangle, fixed -1..1 colorbar range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Variables on axes; correlations mapped to colors; all data visible
+        comment: Variable names correctly mapped to both axes; symmetric matrix data
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar + annotations serve as legend
+        comment: Title format correct; colorbar correctly labeled 'Correlation'
     data_quality:
       score: 15
       max: 15
@@ -154,20 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows strong positive, strong negative, and near-zero correlations;
-          diagonal identity values
+        comment: Shows strong positive, strong negative, and near-zero correlations
+          across the matrix
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real economic scenario; relationships plausible and neutral
+        comment: Neutral, plausible economic-indicator scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlations in [-1, 1]; factually correct relationships
+        comment: Correlation values within [-1, 1] and economically sensible relationships
+          (e.g. GDP vs Unemployment negative)
     code_quality:
       score: 10
       max: 10
@@ -177,33 +199,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean flow: imports → data → plot → output; no unnecessary functions/classes'
+        comment: Flat imports -> data -> plot -> save script, no functions/classes;
+          dead np.random.seed removed
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; fully deterministic
+        comment: Fully deterministic hardcoded correlation matrix
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no bloat
+        comment: Only numpy, bokeh, and selenium (for headless screenshot export)
+          — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic; pragmatic color-text logic; no fake functionality
+        comment: Appropriate complexity for the theme-adaptive ramp and highlight
+          logic, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct format (plot-{THEME}.png/html); current bokeh 3.9.0 API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via output_file/save
+          + Selenium screenshot
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -211,15 +237,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert bokeh patterns: figure(), ColumnDataSource, rect(), LabelSet,
-          LinearColorMapper, HoverTool, ColorBar'
+        comment: Expert use of ColumnDataSource, categorical ranges, LinearColorMapper,
+          ColorBar, HoverTool, and LabelSet
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Uses bokeh-specific features: LinearColorMapper transforms, LabelSet
-          annotations, HoverTool tooltips, dynamic text color, Selenium export'
+        comment: Custom-styled HTML hover tooltip card and per-glyph field-driven
+          border highlighting are bokeh-distinctive touches
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -230,10 +256,9 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - matrix-construction
-  dataprep:
-  - correlation-matrix
+  - columndatasource
+  dataprep: []
   styling:
   - custom-colormap
-  - publication-ready
+  - edge-highlighting
