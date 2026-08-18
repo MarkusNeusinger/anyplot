@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
-Library: letsplot 4.9.0 | Python 3.14.3
-Quality: 92/100 | Created: 2026-03-20
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-08-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,16 @@ from lets_plot.export import ggsave as export_ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme-adaptive chrome (Imprint)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Imprint categorical palette (theme-independent)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
 
 # Data - Mild steel tensile test simulation
 np.random.seed(42)
@@ -69,16 +81,15 @@ df_points = pd.DataFrame(
     {
         "strain": [yield_point_strain, uts_strain, fracture_strain],
         "stress": [yield_point_stress, uts, fracture_stress],
-        "label": [f"Yield Point ({yield_strength} MPa)", f"UTS ({uts} MPa)", f"Fracture ({fracture_stress:.0f} MPa)"],
         "type": ["Yield", "UTS", "Fracture"],
     }
 )
 
-# Consolidated annotations DataFrame
+# Consolidated annotations DataFrame (positions tuned to avoid crowding near the origin)
 df_annotations = pd.DataFrame(
     {
-        "x": [yield_point_strain + 0.012, uts_strain + 0.015, fracture_strain - 0.045, 0.008, 0.007, 0.005, 0.11, 0.29],
-        "y": [yield_point_stress + 15, uts + 10, fracture_stress - 30, 130, 60, 350, 350, 350],
+        "x": [yield_point_strain + 0.03, uts_strain + 0.015, fracture_strain - 0.048, 0.006, 0.058, 0.005, 0.11, 0.29],
+        "y": [yield_point_stress + 60, uts + 10, fracture_stress - 30, 80, 190, 350, 350, 350],
         "label": [
             f"Yield Point\n({yield_strength} MPa)",
             f"UTS ({uts} MPa)",
@@ -93,20 +104,21 @@ df_annotations = pd.DataFrame(
     }
 )
 
-# Colorblind-safe palette: blue, purple, gray (avoids orange/green pair)
-color_yield = "#9467BD"  # purple
-color_uts = "#D62728"  # red
-color_fracture = "#7F7F7F"  # gray
-color_main = "#306998"  # Python blue
-color_offset = "#E377C2"  # pink
+# Imprint palette roles: main curve = blue, yield = lavender, UTS = matte red (critical/peak),
+# fracture = neutral ink (structural reference), 0.2% offset = neutral dashed construction line
+color_main = IMPRINT_PALETTE[2]  # blue
+color_yield = IMPRINT_PALETTE[1]  # lavender
+color_uts = IMPRINT_PALETTE[4]  # matte red
+color_fracture = INK_SOFT
+color_offset = INK_SOFT
 
 # Segment connector lines from key points to annotations (distinctive lets-plot feature)
 df_segments = pd.DataFrame(
     {
         "x": [yield_point_strain, uts_strain, fracture_strain],
         "y": [yield_point_stress, uts, fracture_stress],
-        "xend": [yield_point_strain + 0.011, uts_strain + 0.014, fracture_strain - 0.035],
-        "yend": [yield_point_stress + 12, uts + 8, fracture_stress - 22],
+        "xend": [yield_point_strain + 0.028, uts_strain + 0.014, fracture_strain - 0.038],
+        "yend": [yield_point_stress + 52, uts + 8, fracture_stress - 22],
     }
 )
 
@@ -125,13 +137,14 @@ plot = (
                 "region": ["Elastic", "Strain Hardening", "Necking"],
             }
         ),
-        alpha=0.35,
+        alpha=0.16,
+        color="transparent",
     )
     + scale_fill_manual(
         values={
-            "Elastic": "#DAE8FC",
-            "Strain Hardening": "#FFF2CC",
-            "Necking": "#F8D7DA",
+            "Elastic": IMPRINT_PALETTE[2],
+            "Strain Hardening": IMPRINT_PALETTE[3],
+            "Necking": IMPRINT_PALETTE[6],
             "Yield": color_yield,
             "UTS": color_uts,
             "Fracture": color_fracture,
@@ -142,27 +155,27 @@ plot = (
         aes(x="strain", y="stress"),
         data=df,
         color=color_main,
-        size=2.0,
+        size=1.6,
         tooltips=layer_tooltips()
         .format("strain", ".4f")
         .format("stress", ".1f")
         .line("Strain: @strain")
         .line("Stress: @stress MPa"),
     )
-    # 0.2% offset line
-    + geom_line(aes(x="strain", y="stress"), data=df_offset, color=color_offset, size=1.2, linetype="dashed")
+    # 0.2% offset line (construction reference line)
+    + geom_line(aes(x="strain", y="stress"), data=df_offset, color=color_offset, size=0.9, linetype="dashed")
     # Segment connectors from points to labels (geom_segment - distinctive feature)
     + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend"), data=df_segments, color="#999999", size=0.6, linetype="dotted"
+        aes(x="x", y="y", xend="xend", yend="yend"), data=df_segments, color=INK_MUTED, size=0.5, linetype="dotted"
     )
     # Key points with tooltips (distinctive lets-plot feature)
     + geom_point(
         aes(x="strain", y="stress", fill="type"),
         data=df_points,
-        color="white",
-        size=7,
+        color=PAGE_BG,
+        size=5.5,
         shape=21,
-        stroke=1.2,
+        stroke=1.4,
         tooltips=layer_tooltips().line("@type").line("Strain: @strain").line("Stress: @stress MPa"),
     )
     + guides(fill="none")
@@ -170,17 +183,21 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_annotations.query("group == 'yield'"),
-        size=11,
+        size=4.2,
         color=color_yield,
         hjust=0,
     )
     + geom_text(
-        aes(x="x", y="y", label="label"), data=df_annotations.query("group == 'uts'"), size=11, color=color_uts, hjust=0
+        aes(x="x", y="y", label="label"),
+        data=df_annotations.query("group == 'uts'"),
+        size=4.2,
+        color=color_uts,
+        hjust=0,
     )
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_annotations.query("group == 'fracture'"),
-        size=11,
+        size=4.2,
         color=color_fracture,
         hjust=0.5,
     )
@@ -188,7 +205,7 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_annotations.query("group == 'modulus'"),
-        size=10,
+        size=3.8,
         color=color_main,
         hjust=0,
         fontface="italic",
@@ -197,7 +214,7 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_annotations.query("group == 'offset'"),
-        size=9,
+        size=3.4,
         color=color_offset,
         hjust=0,
         fontface="italic",
@@ -206,35 +223,36 @@ plot = (
     + geom_text(
         aes(x="x", y="y", label="label"),
         data=df_annotations.query("group == 'region'"),
-        size=12,
-        color="#666666",
+        size=4.6,
+        color=INK_MUTED,
         fontface="italic",
     )
     # Styling
     + labs(
         x="Engineering Strain",
         y="Engineering Stress (MPa)",
-        title="line-stress-strain \u00b7 letsplot \u00b7 pyplots.ai",
+        title="line-stress-strain · python · letsplot · anyplot.ai",
     )
     + scale_x_continuous(breaks=[0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35])
     + scale_y_continuous(breaks=[0, 50, 100, 150, 200, 250, 300, 350, 400, 450])
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
     + theme_minimal()
     + theme(
-        axis_text=element_text(size=16, color="#555555"),
-        axis_title=element_text(size=20, color="#333333"),
-        plot_title=element_text(size=24, color="#222222", face="bold"),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        axis_title=element_text(size=12, color=INK),
+        plot_title=element_text(size=16, color=INK, face="bold"),
         panel_grid_major_x=element_blank(),
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.3),
+        panel_grid_major_y=element_line(color=INK, size=0.3),
         panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="#FAFAFA", color="#FAFAFA"),
-        panel_background=element_rect(fill="transparent", color="transparent"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_border=element_blank(),
         axis_ticks=element_blank(),
         axis_ticks_length=0,
-        plot_margin=[30, 40, 20, 20],
+        plot_margin=[15, 20, 10, 10],
     )
 )
 
 # Save
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
-export_ggsave(plot, filename="plot.html", path=".")
+export_ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
+export_ggsave(plot, filename=f"plot-{THEME}.html", path=".")

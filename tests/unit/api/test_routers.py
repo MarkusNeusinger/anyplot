@@ -1775,7 +1775,9 @@ class TestInsightsRouter:
             assert response.status_code == 503
 
     def test_potd_with_db(self, client: TestClient, mock_spec) -> None:
-        """Plot of the day should return a featured implementation."""
+        """Plot of the day should return a featured implementation with themed preview URLs."""
+        dark_url = "https://example.com/plot-dark.png"
+        mock_spec.impls[0].preview_url_dark = dark_url
         mock_spec_repo = MagicMock()
         mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
         mock_impl = MagicMock()
@@ -1784,6 +1786,8 @@ class TestInsightsRouter:
         mock_impl.library_version = "3.10.0"
         mock_impl.python_version = "3.13.11"
         mock_impl.language_version = "3.13.11"
+        mock_impl.preview_url_light = TEST_IMAGE_URL
+        mock_impl.preview_url_dark = dark_url
         mock_impl_repo = MagicMock()
         mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
 
@@ -1799,6 +1803,8 @@ class TestInsightsRouter:
             assert data["spec_id"] == "scatter-basic"
             assert data["library_id"] == "matplotlib"
             assert data["quality_score"] == 92.5
+            assert data["preview_url_light"] == TEST_IMAGE_URL
+            assert data["preview_url_dark"] == dark_url
 
     def test_potd_no_candidates(self, client: TestClient) -> None:
         """Plot of the day should return null when no high-quality implementations."""

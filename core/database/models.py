@@ -8,7 +8,19 @@ from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
-from sqlalchemy import BigInteger, CheckConstraint, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.orm import Mapped, deferred, mapped_column, relationship, synonym
 from sqlalchemy.sql import func
 
@@ -63,6 +75,10 @@ class Spec(Base):
 
     # Relationships
     impls: Mapped[list["Impl"]] = relationship("Impl", back_populates="spec", cascade="all, delete-orphan")
+
+    # Indexes created by migrations (d0c76553a5cc, 7ccd65103917); declared here so
+    # autogenerate does not propose dropping them. GIN applies on PostgreSQL only.
+    __table_args__ = (Index("ix_specs_issue", "issue"), Index("ix_specs_tags", "tags", postgresql_using="gin"))
 
 
 class Language(Base):
@@ -203,6 +219,11 @@ class Impl(Base):
         CheckConstraint(
             "review_verdict IS NULL OR review_verdict IN ('APPROVED', 'REJECTED')", name="ck_review_verdict_valid"
         ),
+        # Indexes created by migrations (d0c76553a5cc, a2f4b8c91d23); declared here so
+        # autogenerate does not propose dropping them. GIN applies on PostgreSQL only.
+        Index("ix_impls_library_id", "library_id"),
+        Index("ix_impls_quality_score", "quality_score"),
+        Index("ix_impls_impl_tags", "impl_tags", postgresql_using="gin"),
     )
 
 
@@ -248,6 +269,10 @@ class Feedback(Base):
             name="ck_feedback_reaction_valid",
         ),
         CheckConstraint("status IN ('new','in_progress','done','wont_solve')", name="ck_feedback_status_valid"),
+        # Indexes created by migration c5d7e9f1a3b2; declared here so autogenerate
+        # does not propose dropping them.
+        Index("ix_feedback_created_at", text("created_at DESC")),
+        Index("ix_feedback_ip_hash_created_at", "ip_hash", text("created_at DESC")),
     )
 
 

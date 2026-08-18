@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: ice-basic
+created: '2026-08-17T23:00:24Z'
+updated: '2026-08-17T23:31:57Z'
+generated_by: claude-sonnet
+workflow_run: 32078058280
+issue: 5238
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Pipeline artifact mismatch from the prior attempt (55/100, stale PNGs) is fully
+    resolved — both rendered images now correctly show the responder/non-responder
+    color split, the interquartile band ribbon, and the y-axis-only grid that exist
+    in the source, verified against the current makie.jl.
+  - 'Theme-adaptive chrome is correct in both renders: warm off-white (#FAF8F1) /
+    near-black (#1A1A17) backgrounds, no dark-on-dark or light-on-light text, spines/grid/legend/PDP
+    line all flip correctly while brand green stays identical between themes.'
+  - 'Strong data storytelling: 80 thin, low-alpha (0.16) ICE lines color-coded by
+    responder status (brand green vs. Imprint blue #4467A3, a CVD-safe pairing) reveal
+    the subgroup split, an IQR band anchors the eye against the dense haze, and a
+    bold opaque PDP line gives a clear focal point — this directly fulfills the spec''s
+    low-alpha/PDP-overlay/second-feature-coloring notes.'
+  - Rug plot (vlines!) along the x-axis implements the spec's optional observed-dosage-distribution
+    suggestion.
+  - 'Clean, idiomatic Makie code: band!()/lines!()/vlines!()/axislegend() at the high-level
+    API, KISS flat structure, Random.seed!(42), only used imports (CairoMakie/Colors/Random/Statistics),
+    correct plot-$(THEME).png + px_per_unit=2 save pattern.'
+  weaknesses:
+  - Title 'ice-basic · julia · makie · anyplot.ai' at titlesize=20 occupies only ~20-25%
+    of the plot width, well under the 50-70% guideline for a short mandated title
+    — increase titlesize modestly (e.g. to 24-26) to give it more visual presence
+    relative to the 3200px canvas.
+  - With 80 overlapping semi-transparent lines plus the IQR band, the responder mass
+    in the lower/middle region reads as a dense solid haze where individual curves
+    are hard to trace — acceptable for an ICE plot's intent but slightly reduces per-line
+    Element Visibility; consider dropping line alpha slightly further (e.g. 0.12)
+    or thinning linewidth marginally to let the band show through more.
+  - Non-responder color uses IMPRINT_PALETTE[3] (#4467A3, blue) rather than the canonical
+    second slot IMPRINT_PALETTE[2] (#C475FD, lavender) — the code comments the choice
+    as an intentional CVD-safe contrast decision, which is reasonable, but it is a
+    minor deviation from strict canonical palette ordering worth noting for consistency
+    across the catalog.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "ice-basic · julia · makie · anyplot.ai" top-left-of-center, readable but visually small relative to the 3200px canvas width (~20-25%); dark x-axis label "Drug Dosage (mg)" and y-axis label "Predicted Relapse Risk (%)" both clearly visible with units; softer dark-gray tick labels (0/50/100 on x, 25/50/75 on y) all legible; subtle horizontal-only gridlines at ~15% opacity (xgridvisible correctly disabled); top/right spines removed, left/bottom spines kept as a soft L-frame; frameless legend box top-right with a solid backing tint, listing four entries in order: "Interquartile spread (25th–75th pct)" (light gray swatch), "Responders (ICE)" (thin green line), "Non-responders (ICE)" (thin blue line), "Population average (PDP)" (bold black line) — all four legend labels are crisp and non-overlapping.
+      Data: ~80 thin, semi-transparent lines split by color — brand-green (#009E73) responder lines trending down from ~55% to ~35-45% risk as dosage increases, and Imprint-blue (#4467A3) non-responder lines staying flat/high around 60-90% risk, visually separated as distinct sub-bands; a light gray IQR ribbon (25th-75th pct) sits behind the lines anchoring the eye; a bold black PDP line traces the smooth population-average decline through the middle; a rug of short vertical tick marks along the bottom shows the distribution of observed dosages, denser in the mid-range. No color overlap issues, no text overlapping data or legend.
+      Legibility verdict: PASS — all title/axis/tick/legend text is clearly readable against the light background, no dark text collisions, no overlap with data.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render but title/axis labels near-white, tick labels/legend text a lighter soft gray, gridlines still subtle at ~15% opacity, legend background switches to the darker elevated tone. Same four legend entries, all legible against the dark background.
+      Data: The same brand-green (#009E73) and Imprint-blue (#4467A3) ICE lines — identical hues and density to the light render, only the chrome around them changed; the PDP line switches to near-white (theme-adaptive INK token) instead of black, remaining the bold focal curve; the IQR band renders as a slightly lighter charcoal fill against the near-black background, still visible; rug ticks render in lighter tick-gray, still visible at the bottom.
+      Legibility verdict: PASS — no dark-on-dark failures anywhere; all title/axis/tick/legend text is clearly visible against the dark background, and data colors (green, blue, band) are confirmed identical in hue to the light render — only chrome flipped as required.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, all readable in both themes, no overflow/clipping;
+          title occupies only ~20-25% of plot width vs the 50-70% guideline for a
+          short title.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text, data, or the legend box in either theme.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Low alpha (0.16) correctly used for 80 individual lines per spec
+          notes; dense overlap in the responder mass still reads as a haze in places.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue responder split is CVD-safe, not red-green, adequate contrast
+          on both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no cut-off elements, good overall
+          proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis labels with units: ''Drug Dosage (mg)'', ''Predicted
+          Relapse Risk (%)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17 correct, both
+          renders theme-correct, data colors identical between themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color choice for responder/non-responder split, IQR band
+          anchor, intentional visual hierarchy above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis-only subtle grid, generous whitespace,
+          frameless legend.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold PDP line as clear focal point against translucent haze; color
+          split reveals the exact subgroup-heterogeneity story an ICE plot exists
+          to show.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct ICE plot: one line per observation plus PDP overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Low-alpha individual lines, bold PDP overlay, rug plot, second-feature
+          color-coding — all spec notes implemented except optional c-ICE centering.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = dosage, Y = predicted risk, full data range shown on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'ice-basic · julia · makie · anyplot.ai' exactly; legend
+          labels match the four plotted series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Individual ICE lines, PDP average, IQR band, rug plot, and second-feature
+          (responder) color-coding — nearly every spec note covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral clinical dosage-response scenario, not controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=80 patients (spec range 50-200), 60 grid points (spec range 50-100),
+          dosage 0-100mg and risk 0-100% both plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat linear script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie/Colors/Random/Statistics, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the ICE+PDP+band+rug composition, no fake
+          UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!()/lines!()/vlines!()/axislegend() used idiomatically at the
+          high-level API with proper Axis theming kwargs.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band!() IQR ribbon and vlines! rug plot are distinctive beyond a
+          basic line/scatter usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling

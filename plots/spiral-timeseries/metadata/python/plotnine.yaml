@@ -2,54 +2,63 @@ library: plotnine
 language: python
 specification_id: spiral-timeseries
 created: '2026-05-07T15:37:23Z'
-updated: '2026-05-07T15:49:51Z'
+updated: '2026-08-18T00:33:15Z'
 generated_by: claude-sonnet
-workflow_run: 25505263150
+workflow_run: 32040035622
 issue: 5243
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Archimedean spiral implemented correctly with outward expansion, earliest data
-    at center
-  - 'Full spec compliance: viridis colormap, radial month grid lines, year labels,
-    colorbar'
-  - Perfect theme adaptation — both light (#FAF8F1) and dark (#1A1A17) renders pass
-    readability checks
-  - All default chart chrome removed; only custom radial grid lines remain — very
-    clean look
-  - Correct continuous colormap (viridis) for temperature encoding
-  - Reproducible with np.random.seed(42); realistic Northern Hemisphere temperature
-    dataset
+  - 'Correct Archimedean spiral geometry: earliest data sits at the center, radius
+    grows linearly with elapsed time, and the angle wraps once per year — exactly
+    matching the spec''s ''expand outward from center'' and ''one revolution per cycle
+    period'' requirements.'
+  - Deliberate radial grid lines at month boundaries with outward month labels for
+    orientation, plus explicitly positioned year labels marking the start of each
+    revolution (nudged into the gap between rings to avoid overlapping the spiral).
+  - 'Correct Imprint diverging colormap (imprint_div: matte-red ↔ theme-adaptive neutral
+    ↔ blue) mapped to temperature, matching the hot→red / cold→blue domain convention
+    called out in the style guide.'
+  - 'Clean minimal chrome: axis ticks/lines/text fully removed, symmetric plot bounds
+    keep the spiral centered rather than drifting toward the year-label side, legend
+    cleanly separated to the right.'
+  - 'Both renders are fully theme-compliant: correct page backgrounds, correct ink
+    tokens for all text, identical data colors (red/blue hues) across light and dark.'
   weaknesses:
-  - Month and year label sizes (5.5pt / 5pt) are slightly small for a 3600×3600px
-    canvas — could be 7-8pt for better legibility at full resolution
-  - Uses geom_point (dots) rather than a connected geom_path/geom_line, resulting
-    in a dotted spiral instead of a smooth curve
-  - Spiral is visually off-center (shifted left) because year labels are placed at
-    x=-0.35 without compensating the plot margin
-  - Design Excellence is competent but not exceptional — no focal point emphasis or
-    trend annotation beyond the basic spiral form
+  - 'The diverging color scale''s midpoint (~13°C) is set to the exact page-background
+    color (mid=PAGE_BG). Spiral segments whose temperature is near that midpoint —
+    visible around the Apr and Oct radial grid lines in BOTH renders — nearly disappear
+    into the canvas background, effectively hiding that data. Fix: blend the midpoint
+    partway toward INK_SOFT instead of using the raw page background, or add a thin
+    ink-colored stroke to geom_path so the line silhouette stays visible even when
+    the fill color matches the background.'
+  - Month labels (geom_text size=3.2) and year labels (size=2.8) are legible at full
+    2400×2400 resolution but become hard to read once scaled to the ~400px mobile
+    thumbnail. Consider bumping both sizes by ~20-30% for better mobile legibility.
+  - 'Library Mastery is generic: the spiral construction (trig-computed x/y fed into
+    geom_path/geom_segment) would look and behave identically in ggplot2 (R) or another
+    grammar-of-graphics library — no plotnine-distinctive capability is leveraged.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "spiral-timeseries · plotnine · anyplot.ai" dark-on-light, clearly readable (24pt). Month labels (Jan–Dec) in muted gray around perimeter, readable. Year labels (2019–2023) in lighter gray left of 12 o'clock, readable. Legend "Temp (°C)" with INK title and INK_SOFT values — readable.
-      Data: Five concentric spiral rings expanding outward, colored with viridis (dark purple = cold ~0°C winters, yellow-green = hot ~28°C summers). First data series 2019 at center, 2023 at outermost ring. Radial month grid lines at 12 positions, subtle gray alpha=0.35.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "spiral-timeseries · python · plotnine · anyplot.ai" in dark ink, top-left, ~66% of canvas width, no overflow or clipping. Month labels (Jan-Dec) in soft ink around the outer perimeter, year labels (2019-2023) in muted ink placed inside each ring near its Jan-1 start. Legend box "Temp (°C)" with colorbar (red/white/blue) and tick labels 0/10/20/30 to the right, clearly separated from the spiral. All chrome text is dark-on-cream and readable.
+      Data: Five concentric spiral revolutions (2019-2023) built from daily temperature, colored via the Imprint diverging colormap — cold winters render blue near the top (Jan), hot summers render red at the bottom (Jul), consistent with the mandated hot=red/cold=blue convention; radial grid lines mark month boundaries.
+      Legibility verdict: PASS overall, with one caveat — the ring segments whose temperature is near the diverging scale's ~13°C midpoint (around the Apr and Oct grid lines) fade almost completely into the cream background because the midpoint color is set to the exact page background color. This is a data-visibility gap, not a text-legibility failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title light-colored on dark background, readable. Month labels render in lighter gray (INK_SOFT = #B8B7B0 in dark theme), clearly visible. Year labels in medium gray (INK_MUTED = #A8A79F), readable. Legend background slightly elevated (#242420), text in correct light tones.
-      Data: Identical viridis colors to light render — data colors unchanged between themes, only chrome adapts. Same spiral pattern, same colorbar range 0–30°C.
-      Legibility verdict: PASS — no dark-on-dark failures. All text uses INK/INK_SOFT/INK_MUTED tokens correctly.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink, fully readable against the dark background. Month and year labels render in light gray tones, clearly legible — no dark-on-dark failures observed. Legend box uses the dark elevated background (#242420-ish) with light text and border, readable.
+      Data: Colors are identical to the light render (same red/blue hues at the same temperature values) — only the chrome (background, text, grid, legend box) flipped, confirming theme-adaptive design.
+      Legibility verdict: PASS for all chrome text. Same caveat as the light render — the near-midpoint-temperature ring segments (Apr/Oct) blend into the near-black background because the diverging colormap's midpoint equals the page background color.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -57,74 +66,79 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title 24pt readable; month/year labels at 5.5pt/5pt slightly small
-          for 3600x3600px canvas
+        comment: Explicit sizes set for title/labels/legend, readable at full 2400x2400
+          resolution in both themes; month/year labels get hard to read once scaled
+          to ~400px mobile thumbnail.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clean layout; minor crowding near Jan/Dec at top where spiral and
-          labels approach each other
+        comment: No overlap; year labels are deliberately nudged inward/right to clear
+          the spiral and the Jan grid line.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Data points at size=2.8 clearly visible; innermost 2019 spiral slightly
-          small but distinguishable
+        comment: Most of the spiral is clearly visible, but ring segments near the
+          diverging colormap's ~13°C midpoint (around Apr/Oct) nearly vanish into
+          the page background in both renders.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe perceptually uniform; no red-green sole-signal
+        comment: Red/blue diverging Imprint pair is CVD-safe; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 12x12in @300dpi = 3600x3600px (correct square format); spiral slightly
-          left of center due to year labels
+        comment: Spiral fills a large, balanced share of the square canvas; legend
+          sits near the plot, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format; axis labels correctly hidden for polar
-          spiral
+        comment: Colorbar labeled 'Temp (°C)' with units; radial position is self-explained
+          via month/year labels since a spiral has no conventional x/y axes.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous temperature data (correct); backgrounds #FAF8F1/#1A1A17
-          correct'
+        comment: Correct imprint_div usage (red↔theme-adaptive neutral↔blue) matching
+          hot/cold convention; both renders theme-correct chrome; data colors identical
+          across themes.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Elegant spiral form with viridis; clean, professional execution above
-          defaults
+        comment: Thoughtful custom diverging palette, deliberate radial grid and label
+          placement, polished typography — clearly above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: All standard chrome removed; custom radial grid; elevated legend
-          background
+        comment: Axis chrome fully removed, generous whitespace, subtle legend framing;
+          the background-camouflage issue and modest text sizing keep it just short
+          of perfect.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Spiral form itself is the storytelling device; seasonal cycles clearly
-          visible; year alignment is the insight
+        comment: Spiral aligns seasons across years and color encodes magnitude, letting
+          the viewer spot seasonal peaks and outward year-over-year warming at a glance;
+          no explicit annotation calls out the trend.
     spec_compliance:
       score: 15
       max: 15
@@ -134,51 +148,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Archimedean spiral time series
+        comment: Correct Archimedean spiral time series.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: color encoding, radial grid, cycle labels,
-          outward expansion, colorbar'
+        comment: Radial grid at month boundaries, cycle-start (year) labels, value-by-color
+          encoding, colorbar, and center-outward expansion are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 5 years daily temperature, correct cycle mapping
+        comment: Radius = elapsed time, angle = position within cycle, color = temperature
+          — all correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; Temp (°C) colorbar present
+        comment: Title matches the mandated format exactly; legend correctly labeled
+          'Temp (°C)'.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows seasonality, multi-year trend, periodic alignment — all key
-          spiral-timeseries features
+        comment: Shows seasonal cycle, year-over-year warming trend, and daily noise
+          across 5 years.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Northern Hemisphere daily temperatures ~0-30°C with seasonal sinusoidal
-          pattern, realistic and neutral
+        comment: Neutral, plausible daily-temperature scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1825 data points (5 years × 365 days), temperature 0-30°C range,
-          plausible warming trend
+        comment: Northern-hemisphere seasonal amplitude and phase (peak late July,
+          trough late January) are realistic; magnitudes and trend are physically
+          plausible.
     code_quality:
       score: 10
       max: 10
@@ -188,31 +204,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear flat structure
+        comment: Linear imports -> data -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports (numpy, pandas, plotnine components).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, systematic data generation; proper sys.path guard
+        comment: Appropriate complexity for spiral geometry, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png at dpi=400, width=6, height=6 -> confirmed
+          2400x2400.
     library_mastery:
       score: 7
       max: 10
@@ -222,25 +239,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic ggplot grammar: coord_fixed, scale_color_cmap, inherit_aes=False
-          for auxiliary data'
+        comment: 'Solid grammar-of-graphics layering: geom_path, geom_segment, geom_text,
+          scale_color_gradient2, coord_fixed, theme_minimal.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_fixed, scale_color_cmap, multi-dataset geom layers with inherit_aes=False
-          are plotnine-specific patterns
+        comment: Manual trig-based spiral coordinates layered with ggplot geoms is
+          competent but not something unique to plotnine specifically — would translate
+          almost 1:1 to ggplot2 (R).
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - colorbar
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - minimal-chrome
-  - custom-colormap
   - alpha-blending

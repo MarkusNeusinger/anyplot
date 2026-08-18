@@ -1,7 +1,7 @@
 """ anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 99/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-17
 """
 
 import math
@@ -14,7 +14,7 @@ from lets_plot import (
     element_blank,
     element_rect,
     element_text,
-    geom_line,
+    geom_path,
     geom_point,
     geom_polygon,
     geom_text,
@@ -50,6 +50,9 @@ products = {
 }
 
 n = len(categories)
+
+# Product with the highest average score gets a subtle emphasis (focal point)
+hero = max(products, key=lambda name: sum(products[name]) / len(products[name]))
 
 # Create angles for each category (evenly spaced, starting from top)
 angles = [i * 2 * math.pi / n for i in range(n)]
@@ -103,44 +106,56 @@ for cat, angle in zip(categories, angles, strict=True):
 
 label_df = pd.DataFrame(label_rows)
 
-# Create grid value labels (scale indicators on first spoke)
+# Create grid value labels (placed in the gap between the Performance and
+# Storage spokes: a near-vertical sector, so the stacked labels don't overlap
+# each other, with a low combined data range so they clear the polygons too)
+gap_angle = (angles[3] + angles[4]) / 2
 value_label_rows = []
 for val in grid_values:
-    x = val * math.cos(-math.pi / 2) + 10  # Offset right for readability
-    y = val * math.sin(-math.pi / 2)
+    x = val * math.cos(gap_angle - math.pi / 2)
+    y = val * math.sin(gap_angle - math.pi / 2)
     value_label_rows.append({"label": str(val), "x": x, "y": y})
 
 value_label_df = pd.DataFrame(value_label_rows)
 
 # Build the plot
+# Note: geom_line() connects points sorted by x, which turns a circular/radial
+# path into a chaotic zigzag; geom_path() preserves the data's own point order,
+# which is required for these polar-via-cartesian shapes.
 plot = (
     ggplot()
-    # Gridlines (concentric circles)
-    + geom_line(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.6, alpha=0.2, linetype="dashed")
+    # Gridlines (concentric circles) - thin solid low-alpha rings
+    + geom_path(aes(x="x", y="y", group="radius"), data=grid_df, color=INK_SOFT, size=0.4, alpha=0.15)
     # Spokes (radial lines)
-    + geom_line(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.6, alpha=0.3)
+    + geom_path(aes(x="x", y="y", group="group"), data=spoke_df, color=INK_SOFT, size=0.4, alpha=0.3)
     # Filled polygons for each series (lower alpha for 4 overlapping series)
     + geom_polygon(aes(x="x", y="y", fill="series", group="series"), data=df, alpha=0.2)
-    # Lines connecting points
-    + geom_line(aes(x="x", y="y", color="series", group="series"), data=df, size=2.5)
+    # Lines connecting points, in category order (not x-sorted)
+    + geom_path(aes(x="x", y="y", color="series", group="series"), data=df, size=1.2)
+    # Emphasize the top-scoring product as a focal point (thicker outline)
+    + geom_path(
+        aes(x="x", y="y", color="series", group="series"), data=df[df["series"] == hero], size=2.2, show_legend=False
+    )
     # Points at each vertex (exclude the closing point to avoid double dot)
-    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=7)
-    # Custom color palette (Okabe-Ito)
+    + geom_point(aes(x="x", y="y", color="series"), data=df[df["order"] < n], size=3.5)
+    # Custom color palette (Imprint)
     + scale_fill_manual(values=IMPRINT)
     + scale_color_manual(values=IMPRINT)
     # Axis limits for square plot
     + scale_x_continuous(limits=(-160, 160))
     + scale_y_continuous(limits=(-160, 160))
     # Title and legend
-    + labs(title="Smartphone Comparison · radar-multi · letsplot · anyplot.ai", fill="Product", color="Product")
-    # Square format for symmetric radar chart
-    + ggsize(1200, 1200)
+    + labs(
+        title="Smartphone Comparison · radar-multi · python · letsplot · anyplot.ai", fill="Product", color="Product"
+    )
+    # Square format for symmetric radar chart (600x600 @ scale=4 -> 2400x2400)
+    + ggsize(600, 600)
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        plot_title=element_text(size=22, color=INK),
-        legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=16, color=INK),
+        legend_title=element_text(size=13, color=INK),
+        legend_text=element_text(size=12, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
         axis_title=element_blank(),
@@ -152,11 +167,11 @@ plot = (
 )
 
 # Add category labels as text
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=16, color=INK)
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=label_df, size=5.5, color=INK)
 
 # Add grid value labels
-plot = plot + geom_text(aes(x="x", y="y", label="label"), data=value_label_df, size=14, color=INK_SOFT)
+plot = plot + geom_text(aes(x="x", y="y", label="label"), data=value_label_df, size=4.5, color=INK_SOFT)
 
 # Save outputs
-ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
 ggsave(plot, f"plot-{THEME}.html", path=".")

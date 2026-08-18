@@ -1,11 +1,12 @@
 """ anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-07
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-18
 """
 
 import datetime
 import importlib
+import itertools
 import math
 import os
 import sys
@@ -21,7 +22,6 @@ np = importlib.import_module("numpy")
 pygal = importlib.import_module("pygal")
 Style = importlib.import_module("pygal.style").Style
 cairosvg = importlib.import_module("cairosvg")
-mcm = importlib.import_module("matplotlib.cm")
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -60,41 +60,59 @@ radius = base_r + year_idx * rev_gap + temp_scale * t_norm
 x_coords = (radius * np.cos(theta)).tolist()
 y_coords = (radius * np.sin(theta)).tolist()
 
-# Viridis colormap — 12 temperature buckets for continuous encoding
+# Imprint sequential colormap (brand green -> blue) for temperature buckets.
 T_MIN = float(np.percentile(temp, 1))
 T_MAX = float(np.percentile(temp, 99))
-N_BUCKETS = 12
+N_BUCKETS = 14
+
+
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    r, g, b = (round(a + (b - a) * t) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+def _rolling_mean(values, window):
+    half = window // 2
+    n = len(values)
+    return np.array([values[max(0, i - half) : min(n, i + half + 1)].mean() for i in range(n)])
+
+
+bucket_colors = tuple(_lerp_hex("#009E73", "#4467A3", i / (N_BUCKETS - 1)) for i in range(N_BUCKETS))
 bucket_edges = np.linspace(T_MIN, T_MAX, N_BUCKETS + 1)
 
+# pygal draws a straight line between any two points added to a series
+# regardless of how far apart they are in time, so bucketing on the raw
+# noisy daily value would connect unrelated days that happen to share a
+# temperature (e.g. a cold spring day with a cold autumn day) into long
+# spurious chords. Bucketing on an 11-day rolling mean instead gives each
+# color a smooth, slow-changing assignment, so consecutive days sharing a
+# bucket are genuinely adjacent in time — grouped below into one contiguous
+# arc per run via itertools.groupby.
+smoothed_temp = _rolling_mean(temp, 11)
+bucket_idx = np.clip(np.digitize(smoothed_temp, bucket_edges[1:]), 0, N_BUCKETS - 1)
 
-def to_viridis_hex(t):
-    r, g, b, _ = mcm.viridis(t)
-    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
-
-
-bucket_colors = tuple(to_viridis_hex(i / (N_BUCKETS - 1)) for i in range(N_BUCKETS))
-bucket_idx = np.clip(np.digitize(temp, bucket_edges[1:]), 0, N_BUCKETS - 1)
-
-# Per-bucket series with year boundary breaks to prevent cross-ring diagonals
 base_date = datetime.date(2019, 1, 1)
-# Allocate n_points + n_years slots (each year gets a trailing None separator)
-bucket_series = [[None] * (n_points + n_years) for _ in range(N_BUCKETS)]
-offset = 0
+arc_runs = []  # list of (color, points) — one per contiguous same-bucket run
 for y in range(n_years):
-    for d in range(days_per_year):
-        i = y * days_per_year + d
-        b = int(bucket_idx[i])
-        date_str = (base_date + datetime.timedelta(days=i)).strftime("%b %d, %Y")
-        bucket_series[b][offset + d] = {"value": (x_coords[i], y_coords[i]), "label": f"{date_str}: {temp[i]:.1f}°C"}
-    offset += days_per_year + 1  # +1 leaves a None gap at year boundary
+    year_buckets = bucket_idx[y * days_per_year : (y + 1) * days_per_year]
+    for b, days in itertools.groupby(range(days_per_year), key=lambda d: year_buckets[d]):
+        points = []
+        for d in days:
+            i = y * days_per_year + d
+            date_str = (base_date + datetime.timedelta(days=i)).strftime("%b %d, %Y")
+            points.append({"value": (x_coords[i], y_coords[i]), "label": f"{date_str}: {temp[i]:.1f}°C"})
+        arc_runs.append((bucket_colors[b], points))
 
-# Spoke geometry
+# Spoke geometry — kept as real chart series (not just an overlay) so pygal's
+# own auto-scaling accounts for their reach; the legend is hidden entirely
+# (custom colorbar below replaces it), so the "Month grid" name is never shown.
 outer_r = base_r + (n_years - 1) * rev_gap + temp_scale + 1.5  # ~15.0
 label_r = outer_r + 1.2  # beyond outer ring, for month text anchors
 
 month_names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-# Month radial spokes
 spoke_points = []
 for m in range(12):
     th = 2 * math.pi * m / 12 - math.pi / 2
@@ -105,49 +123,46 @@ for m in range(12):
 
 start_year = 2019
 
-# pygal Style — buckets + spokes
-all_colors = bucket_colors + (INK_MUTED,)
-
+# pygal Style — one color slot per contiguous run (in add() order), plus one
+# for the spoke series. Legend is hidden; a custom SVG colorbar below
+# communicates the temperature scale instead.
+run_colors = tuple(color for color, _ in arc_runs)
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=all_colors,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=14,
-    value_font_size=22,
-    stroke_width=3,
+    colors=run_colors + (INK_MUTED,),
+    title_font_size=66,
+    major_label_font_size=44,
+    stroke_width=2.6,
 )
 
 chart = pygal.XY(
     style=custom_style,
-    width=3600,
-    height=3600,
-    title="spiral-timeseries · pygal · anyplot.ai",
+    width=2400,
+    height=2400,
+    title="spiral-timeseries · python · pygal · anyplot.ai",
     show_dots=False,
     stroke=True,
     show_x_labels=False,
     show_y_labels=False,
     show_x_guides=False,
     show_y_guides=False,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=6,
+    show_legend=False,
 )
 
-# Temperature-colored spiral arcs (viridis colormap)
-for b in range(N_BUCKETS):
-    t_low = bucket_edges[b]
-    t_high = bucket_edges[b + 1]
-    chart.add(f"{t_low:.0f}–{t_high:.0f}°C", bucket_series[b])
+# Temperature-colored spiral arcs (Imprint sequential gradient) — one series
+# per contiguous same-bucket run so no line ever jumps between distant days.
+for idx, (_, points) in enumerate(arc_runs):
+    chart.add(f"run {idx}", points)
 
-# Month guide spokes
-chart.add("Month grid", spoke_points)
+# Month guide spokes (data only — no legend entry since show_legend=False).
+# Thin dashed stroke keeps them a subtle background grid behind the data rings.
+chart.add("Month grid", spoke_points, stroke_style={"width": 1, "dasharray": "4,6"})
 
-# --- SVG post-processing: inject permanent month and year text labels ---
+# --- SVG post-processing: inject permanent month/year labels + a colorbar ---
 svg_bytes = chart.render()
 svg_str = svg_bytes.decode("utf-8")
 
@@ -156,15 +171,14 @@ ET.register_namespace("", "http://www.w3.org/2000/svg")
 ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 
 root = ET.fromstring(svg_str)
-ns = {"svg": "http://www.w3.org/2000/svg"}
-svg_w = float(root.get("width", 3600))
-svg_h = float(root.get("height", 3600))
+svg_w = float(root.get("width", 2400))
+svg_h = float(root.get("height", 2400))
 
-# Estimate plot area from pygal's layout:
-# title ~90px, bottom legend ~130px, side margins ~60px
-margin_top = 90
-margin_bottom = 140
-margin_side = 60
+# Estimate plot area from pygal's layout: title ~130px, bottom band reserved
+# for the custom colorbar ~200px, side margins ~70px.
+margin_top = 130
+margin_bottom = 200
+margin_side = 70
 plot_w = svg_w - 2 * margin_side
 plot_h = svg_h - margin_top - margin_bottom
 
@@ -202,7 +216,7 @@ for m in range(12):
     text_el.set("y", f"{sy:.1f}")
     text_el.set("text-anchor", "middle")
     text_el.set("dominant-baseline", "middle")
-    text_el.set("font-size", "44")
+    text_el.set("font-size", "36")
     text_el.set("font-family", "sans-serif")
     text_el.set("fill", INK_SOFT)
     text_el.text = month_names[m]
@@ -219,16 +233,54 @@ for y in range(n_years):
     text_el.set("y", f"{sy:.1f}")
     text_el.set("text-anchor", "start")
     text_el.set("dominant-baseline", "middle")
-    text_el.set("font-size", "44")
+    text_el.set("font-size", "36")
     text_el.set("font-family", "sans-serif")
     text_el.set("font-weight", "bold")
     text_el.set("fill", INK)
     text_el.text = str(start_year + y)
 
+# Custom colorbar (replaces the built-in legend) — narrative anchor for the
+# temperature scale, drawn as a smooth gradient strip with endpoint labels.
+BAR_SEGMENTS = 60
+bar_w = plot_w * 0.6
+bar_h = 40
+bar_x0 = margin_side + (plot_w - bar_w) / 2
+bar_y0 = svg_h - margin_bottom + 60
+seg_w = bar_w / BAR_SEGMENTS
+for s in range(BAR_SEGMENTS):
+    seg_color = _lerp_hex("#009E73", "#4467A3", s / (BAR_SEGMENTS - 1))
+    rect_el = ET.SubElement(root, f"{{{svg_ns}}}rect")
+    rect_el.set("x", f"{bar_x0 + s * seg_w:.1f}")
+    rect_el.set("y", f"{bar_y0:.1f}")
+    rect_el.set("width", f"{seg_w + 0.5:.1f}")
+    rect_el.set("height", f"{bar_h}")
+    rect_el.set("fill", seg_color)
+
+caption_el = ET.SubElement(root, f"{{{svg_ns}}}text")
+caption_el.set("x", f"{svg_w / 2:.1f}")
+caption_el.set("y", f"{bar_y0 - 22:.1f}")
+caption_el.set("text-anchor", "middle")
+caption_el.set("font-size", "32")
+caption_el.set("font-family", "sans-serif")
+caption_el.set("fill", INK_SOFT)
+caption_el.text = "Daily average temperature (°C)"
+
+for value, x_pos, anchor in ((T_MIN, bar_x0, "start"), (T_MAX, bar_x0 + bar_w, "end")):
+    label_el = ET.SubElement(root, f"{{{svg_ns}}}text")
+    label_el.set("x", f"{x_pos:.1f}")
+    label_el.set("y", f"{bar_y0 + bar_h + 40:.1f}")
+    label_el.set("text-anchor", anchor)
+    label_el.set("font-size", "32")
+    label_el.set("font-family", "sans-serif")
+    label_el.set("fill", INK)
+    label_el.text = f"{value:.0f}°C"
+
 modified_svg = ET.tostring(root, encoding="unicode", xml_declaration=False)
 modified_svg_bytes = ("<?xml version='1.0' encoding='utf-8'?>\n" + modified_svg).encode("utf-8")
 
-# Save PNG (from modified SVG) and interactive HTML (original with hover labels)
+# Save PNG and interactive HTML from the same annotated SVG (month/year labels,
+# colorbar) so both outputs stay in sync; per-day hover tooltips on the spiral
+# arcs still come from pygal's native interactivity.
 cairosvg.svg2png(bytestring=modified_svg_bytes, write_to=f"plot-{THEME}.png")
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(svg_bytes)
+    f.write(modified_svg_bytes)
