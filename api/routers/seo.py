@@ -209,6 +209,42 @@ _BOT_NAV_HTML = (
 )
 
 
+# Google truncates the SERP snippet around 155 characters and rewrites what it
+# cannot use. Spec descriptions in this catalogue run to a median of 395 (max
+# 801), so the sentence that decides the click was never the one being written.
+_META_DESCRIPTION_LIMIT = 155
+
+
+def _meta_description(text: str | None) -> str:
+    """Trim a description to what a search result will actually display.
+
+    Only the meta/OG tag is trimmed; the visible body copy and the JSON-LD keep
+    the full text, because those are content rather than snippet.
+
+    Ends on the last full sentence that fits — but only where that lands past
+    the halfway mark. A description opening with a short sentence ("A Smith
+    chart.") would otherwise yield a snippet of a dozen characters, wasting the
+    slot that decides the click; below that threshold a word-boundary trim of
+    the full text carries more information. The word-boundary fallback also
+    keeps the trim off mid-word, and running on raw text rather than an escaped
+    string means it can never cut through an HTML entity.
+    """
+    text = " ".join((text or "").split())
+    if len(text) <= _META_DESCRIPTION_LIMIT:
+        return text
+
+    window = text[: _META_DESCRIPTION_LIMIT + 1]
+    for stop in (". ", "! ", "? "):
+        end = window.rfind(stop)
+        if end >= _META_DESCRIPTION_LIMIT // 2:
+            return text[: end + 1]
+
+    cut = window.rfind(" ")
+    if cut <= 0:
+        return text[:_META_DESCRIPTION_LIMIT].rstrip() + "\u2026"
+    return text[:cut].rstrip(" ,;:\u2014-") + "\u2026"
+
+
 def _jsonld_script(payload: dict) -> str:
     """Serialize a JSON-LD payload into a <script> element for the template head.
 
@@ -335,6 +371,7 @@ def _build_spec_hub_html(spec, image: str) -> str:
     spec_id_esc = html.escape(spec.id)
     title_esc = html.escape(spec.title)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    meta_desc_esc = html.escape(_meta_description(spec.description or DEFAULT_DESCRIPTION))
     image_esc = html.escape(image, quote=True)
     hub_url = f"https://anyplot.ai/{spec.id}"
 
@@ -372,7 +409,7 @@ def _build_spec_hub_html(spec, image: str) -> str:
     }
     return _render_bot_html(
         title=f"{title_esc} | anyplot.ai",
-        description=desc_esc,
+        description=meta_desc_esc,
         image=image_esc,
         url=f"https://anyplot.ai/{spec_id_esc}",
         body=body,
@@ -392,6 +429,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     title_esc = html.escape(spec.title)
     lib_name_esc = html.escape(lib_name)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    meta_desc_esc = html.escape(_meta_description(spec.description or DEFAULT_DESCRIPTION))
     image_esc = html.escape(image, quote=True)
     hub_url = f"https://anyplot.ai/{spec.id}"
     page_url = f"{hub_url}/{language_id}/{impl.library_id}"
@@ -444,7 +482,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     }
     return _render_bot_html(
         title=f"{title_esc} - {lib_name_esc} | anyplot.ai",
-        description=desc_esc,
+        description=meta_desc_esc,
         image=image_esc,
         url=html.escape(page_url, quote=True),
         body=body,
