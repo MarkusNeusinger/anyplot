@@ -1,4 +1,4 @@
-# 🔌 API Reference
+# API reference
 
 ## Overview
 
@@ -10,7 +10,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 
 ---
 
-## Core Endpoints
+## Core endpoints
 
 ### Specs
 
@@ -152,7 +152,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 
 ---
 
-### Plots Filter
+### Plots filter
 
 #### GET `/plots/filter`
 
@@ -273,7 +273,7 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 
 ---
 
-## Insights Endpoints
+## Insights endpoints
 
 ### GET `/insights/dashboard`
 
@@ -309,7 +309,7 @@ Returns only the code field for a single implementation. Used by the frontend to
 
 ---
 
-## SEO Endpoints
+## SEO endpoints
 
 ### GET `/sitemap.xml`
 
@@ -345,7 +345,7 @@ Used by nginx to serve correct meta tags to social media bots.
 
 ---
 
-## OG Image Endpoints
+## OG image endpoints
 
 All endpoints are under `/og/` prefix.
 
@@ -373,7 +373,7 @@ All endpoints are under `/og/` prefix.
 
 ---
 
-## Proxy Endpoints
+## Proxy endpoints
 
 ### GET `/proxy/html`
 
@@ -387,9 +387,9 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ---
 
-## Error Responses
+## Error responses
 
-### Standard Error Format
+### Standard error format
 
 ```json
 {
@@ -397,7 +397,7 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 }
 ```
 
-### HTTP Status Codes
+### HTTP status codes
 
 | Status | Description |
 |--------|-------------|
@@ -411,7 +411,7 @@ Used to load interactive plots (plotly, bokeh, altair) in iframes with dynamic s
 
 ## Caching
 
-### In-Memory Cache
+### In-memory cache
 
 API uses in-memory caching with TTL:
 - Stats: 5 min
@@ -419,7 +419,7 @@ API uses in-memory caching with TTL:
 - Individual specs: 2 min
 - Filter results: 30 sec
 
-### HTTP Cache Headers
+### HTTP cache headers
 
 ```http
 Cache-Control: public, max-age=120, stale-while-revalidate=600
@@ -434,7 +434,7 @@ Applied to:
 
 ---
 
-## CORS Configuration
+## CORS configuration
 
 **Allowed Origins**:
 - `https://anyplot.ai`
@@ -444,7 +444,7 @@ Applied to:
 
 ---
 
-## GZip Compression
+## GZip compression
 
 Responses > 500 bytes are compressed with GZip.
 
@@ -452,7 +452,7 @@ Example: `/plots/filter` response: 301KB → ~40KB compressed.
 
 ---
 
-## OpenAPI Documentation
+## OpenAPI documentation
 
 Interactive API documentation available at:
 - **Swagger UI**: `https://api.anyplot.ai/docs`

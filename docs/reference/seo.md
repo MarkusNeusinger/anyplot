@@ -1,4 +1,4 @@
-# SEO Architecture
+# SEO architecture
 
 This document describes the SEO infrastructure for anyplot.ai, including bot detection, dynamic meta tags, branded og:images, and sitemap generation.
 
@@ -8,7 +8,7 @@ anyplot.ai is a React SPA (Single Page Application). SPAs have a fundamental SEO
 
 Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with correct `og:tags` to bots, while regular users get the full SPA experience.
 
-## Architecture Diagram
+## Architecture diagram
 
 ```
                                     ┌─────────────────────┐
@@ -48,9 +48,9 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
     └───────────────────────────┘
 ```
 
-## Bot Detection
+## Bot detection
 
-### Detected Bots
+### Detected bots
 
 nginx detects 37 User-Agent patterns, organized by category:
 
@@ -115,7 +115,7 @@ Cloudflare question in [AI crawler policy](#ai-crawler-policy).
 | Rogerbot | `rogerbot` |
 | Showyoubot | `showyoubot` |
 
-### nginx Configuration
+### nginx configuration
 
 Located in `app/nginx.conf`:
 
@@ -143,7 +143,7 @@ location @seo_proxy {
 }
 ```
 
-## SEO Proxy Endpoints
+## SEO proxy endpoints
 
 Backend endpoints that serve HTML with correct meta tags for bots.
 
@@ -161,7 +161,7 @@ Backend endpoints that serve HTML with correct meta tags for bots.
 | `GET /seo-proxy/{spec_id}/{language}` | **301** → `/seo-proxy/{spec_id}` (consolidated) | — |
 | `GET /seo-proxy/{spec_id}/{language}/{library}` | Implementation | Single branded |
 
-### HTML Template
+### HTML template
 
 All SEO proxy endpoints share one template (`BOT_HTML_TEMPLATE` + `_render_bot_html()`):
 the `<head>` carries the meta/OG/Twitter tags plus an optional JSON-LD script, and the
@@ -207,7 +207,7 @@ Display names (Matplotlib, Makie.jl, Apache ECharts, …) are derived from
 `core/constants.py` (`LANGUAGES_METADATA` / `LIBRARIES_METADATA`) — never
 hand-maintained in the router.
 
-## Branded OG Images
+## Branded OG images
 
 Dynamically generated preview images with anyplot.ai branding.
 
@@ -221,7 +221,7 @@ Dynamically generated preview images with anyplot.ai branding.
 | `GET /og/{spec_id}.png` | Collage of top 6 implementations | 1200x630 |
 | `GET /og/{spec_id}/{library}.png` | Single branded implementation | 1200x630 |
 
-### Single Implementation Image
+### Single implementation image
 
 Layout:
 - anyplot.ai logo (centered, MonoLisa font 42px, weight 700)
@@ -229,7 +229,7 @@ Layout:
 - Plot image in rounded card with shadow
 - Label: `{spec_id} · {library}`
 
-### Collage Image (Spec Overview)
+### Collage image (spec overview)
 
 Layout:
 - anyplot.ai logo (centered, MonoLisa font 38px)
@@ -399,7 +399,7 @@ duplicate-content entries for Google.
 4. Spec overview pages (`/{spec_id}`) — only if spec has implementations
 5. Implementation pages (`/{spec_id}/{language}/{library}`) — all implementations
 
-### nginx Proxy
+### nginx proxy
 
 ```nginx
 location = /sitemap.xml {
@@ -409,7 +409,7 @@ location = /sitemap.xml {
 
 ## Testing
 
-### Test Bot Detection Locally
+### Test bot detection locally
 
 ```bash
 # Simulate Twitter bot
@@ -418,7 +418,7 @@ curl -H "User-Agent: Twitterbot/1.0" https://anyplot.ai/scatter-basic
 # Should return HTML with og:tags, not React SPA
 ```
 
-### Test OG Images
+### Test OG images
 
 ```bash
 # Single implementation
@@ -428,7 +428,7 @@ curl -o test.png https://api.anyplot.ai/og/scatter-basic/matplotlib.png
 curl -o test.png https://api.anyplot.ai/og/scatter-basic.png
 ```
 
-### Validate with Social Media Debuggers
+### Validate with social media debuggers
 
 - **LinkedIn**: https://www.linkedin.com/post-inspector/
 
@@ -444,14 +444,14 @@ curl -o test.png https://api.anyplot.ai/og/scatter-basic.png
 | `core/images.py` | Image processing, branding functions |
 | `.github/workflows/bot-serving-check.yml` | Daily synthetic check of the bot → seo-proxy path |
 
-## Multi-Language URL Strategy
+## Multi-language URL strategy
 
 Spec URLs are organised so the spec slug is the top-level identifier and the
 language sits between spec and library. This keeps the spec — the actual SEO
 entity — at the URL root and lets us add Julia, R, and MATLAB without touching
 existing Python URLs.
 
-### URL Structure
+### URL structure
 
 | URL | Purpose | canonical |
 |-----|---------|-----------|
@@ -474,7 +474,7 @@ The interactive view follows the same pattern: `?view=interactive` is a
 deep-link parameter only; the canonical tag always points at the base URL
 without the query string.
 
-### Reserved Spec Slugs
+### Reserved spec slugs
 
 Spec IDs are top-level path segments, so they must not collide with reserved
 routes. The blocklist is enforced at runtime in `app/src/routes/paths.ts`
@@ -492,7 +492,7 @@ There is no legacy redirect layer. Old `/python/{spec_id}[/{library}]` and
 (catch-all `*` route) and emit a 404 on bot requests via `/seo-proxy`. The
 sitemap stops listing those URLs, and Google removes them on next crawl.
 
-### Marketing Subdomain
+### Marketing subdomain
 
 `python.anyplot.ai` is served by a dedicated nginx server block
 (`app/nginx.conf`) that proxies bot requests to the main-domain hub / detail
@@ -510,7 +510,7 @@ URL. Human visitors: the SPA may detect
 `?language=python` on spec routes so the grid renders filtered without
 changing the canonical.
 
-### Path Utility
+### Path utility
 
 Frontend URL generation is centralized in `app/src/routes/paths.ts`:
 - `specPath(specId, language?, library?)` — builds the three-tier URL based on
@@ -518,7 +518,7 @@ Frontend URL generation is centralized in `app/src/routes/paths.ts`:
 - `langFromPath(pathname)` — extracts the language segment from a path.
 - `RESERVED_TOP_LEVEL` — Set of slugs that cannot be used as spec IDs.
 
-### Adding a New Language
+### Adding a new language
 
 When adding Julia, R, or MATLAB:
 

@@ -1,4 +1,4 @@
-# Library Expansion Roadmap
+# Library expansion roadmap
 
 Strategic overview for expanding anyplot beyond Python into a true multi-language
 gallery. This document estimates the global market for charting libraries,
@@ -273,8 +273,9 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 
 ### Tier 1 — do first (biggest reach, cleanest fit)
 
-1. **Chart.js (JavaScript)** — largest JS audience, smallest API surface, easy
-   to render to PNG via headless browser. The single highest-ROI addition.
+1. **Chart.js (JavaScript)** — largest JS audience, smallest API surface, and it
+   renders to PNG via a headless browser with minimal setup. The single
+   highest-ROI addition.
 2. **D3.js (JavaScript)** — expected by any serious charting site; SEO magnet
    ("d3 example" is one of the most-searched dataviz queries).
 3. **ECharts (JavaScript)** — broad coverage of chart types, Apache-licensed,

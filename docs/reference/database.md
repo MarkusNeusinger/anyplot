@@ -1,4 +1,4 @@
-# 💾 Database Schema
+# Database schema
 
 ## Overview
 
@@ -8,7 +8,7 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 ---
 
-## Database Stack Decision
+## Database stack decision
 
 | Database | Status | Use Case | When to Consider |
 |----------|--------|----------|------------------|
@@ -20,9 +20,9 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 
 ---
 
-## What's Stored Where
+## What's stored where
 
-### ✅ Stored in Database (PostgreSQL)
+### Stored in the database (PostgreSQL)
 
 **Specs:**
 - Full spec content (title, description, applications, data, notes)
@@ -38,26 +38,26 @@ anyplot uses **PostgreSQL** (Cloud SQL) as the primary data store for the websit
 **Other:**
 - Library information (name, version, docs URL)
 
-### ✅ Stored in GCS (Google Cloud Storage)
+### Stored in GCS (Google Cloud Storage)
 
 - Preview images (PNG, thumbnails)
 - Interactive HTML plots (plotly, bokeh, altair, etc.)
 
-### ✅ Stored in GitHub
+### Stored in GitHub
 
 - Source of truth for all code and specs (`plots/` directory)
 - Quality reports (as Issue comments)
 - Workflow state (via labels on Issues/PRs)
 
-### ❌ NOT Stored Anywhere Permanently
+### Not stored anywhere permanently
 
 - User uploaded data (processed in-memory only)
 
 ---
 
-## Database Schema
+## Database schema
 
-### Type Compatibility (PostgreSQL & SQLite)
+### Type compatibility (PostgreSQL & SQLite)
 
 The database models use **custom SQLAlchemy types** (`core/database/types.py`) that work with both PostgreSQL (production) and SQLite (tests):
 
@@ -158,7 +158,7 @@ CREATE INDEX idx_impls_library ON impls (library_id);
 
 ---
 
-## Table Details
+## Table details
 
 ### `specs`
 
@@ -246,9 +246,9 @@ INSERT INTO libraries (id, name, version, documentation_url) VALUES
 
 ---
 
-## Data Access Patterns
+## Data access patterns
 
-### 1. Browse All Plots (with implementation count)
+### 1. Browse all plots (with implementation count)
 
 ```sql
 SELECT s.id, s.title, s.description, s.tags,
@@ -260,7 +260,7 @@ GROUP BY s.id, s.title, s.description, s.tags
 ORDER BY best_quality_score DESC, s.updated_at DESC;
 ```
 
-### 2. Get Implementations for a Spec
+### 2. Get implementations for a spec
 
 ```sql
 SELECT i.*, l.name as library_name
@@ -270,7 +270,7 @@ WHERE i.spec_id = 'scatter-basic'
 ORDER BY i.quality_score DESC;
 ```
 
-### 3. Search by Tags (JSONB)
+### 3. Search by tags (JSONB)
 
 ```sql
 SELECT s.*
@@ -282,9 +282,9 @@ ORDER BY s.updated_at DESC;
 
 ---
 
-## Database Migrations
+## Database migrations
 
-### Migration Strategy
+### Migration strategy
 
 Use **Alembic** for schema migrations:
 
@@ -299,7 +299,7 @@ alembic upgrade head
 alembic downgrade -1
 ```
 
-### Migration Files
+### Migration files
 
 ```python
 # migrations/versions/001_initial_schema.py
@@ -316,9 +316,9 @@ def downgrade():
 
 ---
 
-## Connection Management
+## Connection management
 
-### Connection Modes
+### Connection modes
 
 anyplot supports two connection modes (priority order):
 
@@ -327,7 +327,7 @@ anyplot supports two connection modes (priority order):
 | Direct URL | Local development | `DATABASE_URL` | Connects via public IP |
 | Cloud SQL Connector | Cloud Run | `INSTANCE_CONNECTION_NAME` | Uses IAM auth, no public IP needed |
 
-### Local Development (Direct Connection)
+### Local development (direct connection)
 
 ```bash
 # .env
@@ -348,7 +348,7 @@ DB_NAME=anyplot
 
 Uses `cloud-sql-python-connector[asyncpg]` for secure connection without exposing public IP.
 
-### Connection Pooling
+### Connection pooling
 
 ```python
 # core/database/connection.py
@@ -363,16 +363,16 @@ engine = create_async_engine(
 
 ---
 
-## Backup Strategy
+## Backup strategy
 
-### Automated Backups
+### Automated backups
 
 Cloud SQL automatic backups:
 - Daily backups at 3:00 AM UTC
 - Retained for 7 days
 - Point-in-time recovery enabled
 
-### Manual Backups
+### Manual backups
 
 Before major changes:
 ```bash
@@ -383,7 +383,7 @@ gcloud sql backups create \
 
 ---
 
-## Performance Considerations
+## Performance considerations
 
 ### Indexes
 
@@ -392,7 +392,7 @@ Strategic indexes for common queries:
 - Implementation searches by spec_id and library_id
 - JSONB GIN index for tag searches
 
-### Query Optimization
+### Query optimization
 
 Use `EXPLAIN ANALYZE` for slow queries:
 ```sql
@@ -405,9 +405,9 @@ GROUP BY s.id;
 
 ---
 
-## Data Lifecycle
+## Data lifecycle
 
-### New Plot Flow
+### New plot flow
 
 ```
 1. Spec created (via spec-create.yml)
@@ -420,7 +420,7 @@ GROUP BY s.id;
    → Database updated from plots/ directory
 ```
 
-### Update Flow
+### Update flow
 
 ```
 1. New version of implementation
@@ -428,7 +428,7 @@ GROUP BY s.id;
    → GCS images overwritten with latest version
 ```
 
-### Deletion Flow
+### Deletion flow
 
 ```
 1. Complete removal (rare)
@@ -440,14 +440,14 @@ GROUP BY s.id;
 
 ## Security
 
-### Access Control
+### Access control
 
 - API has full read/write access (service account)
 - Frontend has read-only access via API
 - No direct database access from frontend or n8n
 - Secrets stored in Google Secret Manager
 
-### SQL Injection Prevention
+### SQL injection prevention
 
 Use parameterized queries (SQLAlchemy ORM):
 ```python
@@ -460,7 +460,7 @@ await session.execute(
 await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 ```
 
-### Data Privacy
+### Data privacy
 
 - No user data stored permanently
 - Anonymous session IDs only
@@ -471,7 +471,7 @@ await session.execute(f"SELECT * FROM specs WHERE id = '{spec_id}'")
 
 ## Monitoring
 
-### Key Metrics
+### Key metrics
 
 Track in Cloud SQL:
 - Query performance (slow query log)

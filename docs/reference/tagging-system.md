@@ -1,4 +1,4 @@
-# Tagging System
+# Tagging system
 
 anyplot uses a two-level tagging system:
 - **Spec-Level Tags** (4 dimensions) - describe WHAT is visualized
@@ -6,7 +6,7 @@ anyplot uses a two-level tagging system:
 
 ---
 
-## Naming Convention
+## Naming convention
 
 **For ALL tags (both levels):**
 - All lowercase
@@ -16,13 +16,13 @@ anyplot uses a two-level tagging system:
 
 ---
 
-## Part 1: Spec-Level Tags
+## Part 1: spec-level tags
 
 Spec-Level Tags are assigned during specification creation and apply to ALL library implementations of a plot.
 
 Stored in: `plots/{spec-id}/specification.yaml`
 
-### The 4 Spec Tag Dimensions
+### The 4 spec tag dimensions
 
 #### 1. plot_type - "What is visualized?"
 
@@ -69,7 +69,7 @@ Describes variants and special attributes.
 - **Interaction:** `interactive`, `animated`
 - **Function:** `comparison`, `distribution`, `correlation`
 
-### Spec Tag Example
+### Spec tag example
 
 ```yaml
 # plots/scatter-basic/specification.yaml
@@ -90,13 +90,13 @@ tags:
 
 ---
 
-## Part 2: Impl-Level Tags
+## Part 2: impl-level tags
 
 Impl-Level Tags are assigned during implementation review and vary PER LIBRARY.
 
 Stored in: `plots/{spec-id}/metadata/python/{library}.yaml`
 
-### The 5 Impl Tag Dimensions
+### The 5 impl tag dimensions
 
 #### 1. dependencies - "Which external packages?"
 
@@ -139,7 +139,7 @@ Distinctive visual/aesthetic choices that deviate from defaults.
 
 **Note:** `custom-colormap` is only for continuous color scales (cmap=), not manual color definitions.
 
-### Impl Tag Example
+### Impl tag example
 
 ```yaml
 # plots/chord-basic/metadata/python/matplotlib.yaml
@@ -160,7 +160,7 @@ impl_tags:
 
 ---
 
-## Comparison: Spec vs Impl Tags
+## Comparison: spec vs impl tags
 
 | Aspect | Spec-Level Tags | Impl-Level Tags |
 |--------|-----------------|-----------------|
@@ -173,21 +173,21 @@ impl_tags:
 
 ---
 
-## Use Cases
+## Use cases
 
-### Spec-Level Tags
+### Spec-level tags
 - "Show all scatter plots" → `plot_type: scatter`
 - "Plots for finance data" → `domain: finance`
 - "3D visualizations" → `features: 3d`
 
-### Impl-Level Tags
+### Impl-level tags
 - "Which plots use scipy?" → `dependencies: scipy`
 - "Implementations with twin-axes" → `techniques: twin-axes`
 - "Code with clustering" → `dataprep: hierarchical-clustering`
 
 ---
 
-## AI Prompts
+## AI prompts
 
 For AI agents, there are separate, detailed prompt files:
 - **Spec-Tags:** `prompts/spec-tags-generator.md`
@@ -197,7 +197,7 @@ These contain complete vocabulary, detection patterns, and examples.
 
 ---
 
-## Best Practices
+## Best practices
 
 1. **Consistent naming convention** - lowercase, kebab-case
 2. **Tag conservatively** - Only what is clearly recognizable

@@ -1,4 +1,4 @@
-# 🔌 MCP Server
+# MCP server
 
 ## Overview
 
@@ -8,9 +8,9 @@ The anyplot MCP (Model Context Protocol) server enables AI assistants and tools 
 
 ---
 
-## Quick Start
+## Quick start
 
-### Claude Desktop Configuration
+### Claude Desktop configuration
 
 Add to your Claude Desktop config file:
 
@@ -43,7 +43,7 @@ Add to `.claude/config.json`:
 
 ---
 
-## MCP Tools
+## MCP tools
 
 ### list_specs
 
@@ -262,9 +262,9 @@ Claude: [calls get_tag_values("plot_type")]
 
 ---
 
-## Tag Reference
+## Tag reference
 
-### Spec-Level Tags (4 categories)
+### Spec-level tags (4 categories)
 
 Describe **WHAT** is visualized (same for all libraries):
 
@@ -275,7 +275,7 @@ Describe **WHAT** is visualized (same for all libraries):
 | `domain` | statistics, finance, science, ml, geospatial, time-series |
 | `features` | basic, 3d, interactive, animated, multi, grouped, stacked |
 
-### Impl-Level Tags (5 categories)
+### Impl-level tags (5 categories)
 
 Describe **HOW** code implements it (per-library):
 
@@ -287,7 +287,7 @@ Describe **HOW** code implements it (per-library):
 | `dataprep` | normalization, aggregation, transformation, filtering |
 | `styling` | publication-ready, minimal, colorful, theme |
 
-### Other Filters
+### Other filters
 
 | Filter | Examples |
 |--------|----------|
@@ -296,37 +296,37 @@ Describe **HOW** code implements it (per-library):
 
 ---
 
-## Common Usage Patterns
+## Common usage patterns
 
-### Pattern 1: Browse by Type
+### Pattern 1: browse by type
 
 ```
 User: "Show me all heatmap examples"
 Claude: [calls search_specs_by_tags(plot_type=["heatmap"])]
 ```
 
-### Pattern 2: Library-Specific Search
+### Pattern 2: library-specific search
 
 ```
 User: "Find plotly scatter plots"
 Claude: [calls search_specs_by_tags(plot_type=["scatter"], library=["plotly"])]
 ```
 
-### Pattern 3: Feature-Based Discovery
+### Pattern 3: feature-based discovery
 
 ```
 User: "I need an interactive 3D plot"
 Claude: [calls search_specs_by_tags(features=["3d", "interactive"])]
 ```
 
-### Pattern 4: Domain-Specific Search
+### Pattern 4: domain-specific search
 
 ```
 User: "Show me finance-related visualizations"
 Claude: [calls search_specs_by_tags(domain=["finance"])]
 ```
 
-### Pattern 5: Get Code for Multiple Libraries
+### Pattern 5: get code for multiple libraries
 
 ```
 User: "Compare matplotlib and seaborn implementations of scatter-basic"
@@ -351,16 +351,16 @@ Claude: [calls get_implementation("scatter-basic", "seaborn")]
 
 ---
 
-## Error Handling
+## Error handling
 
-### Standard Errors
+### Standard errors
 
 | Error | Cause | Example |
 |-------|-------|---------|
 | `ValueError` | Invalid spec_id or library | `"Specification 'xyz' not found"` |
 | `ValidationError` | Invalid parameters | `"Invalid library: 'foo'"` |
 
-### Example Error Response
+### Example error response
 
 ```json
 {
@@ -373,7 +373,7 @@ Claude: [calls get_implementation("scatter-basic", "seaborn")]
 
 ---
 
-## Rate Limiting
+## Rate limiting
 
 The MCP server uses the same rate limiting as the REST API:
 
@@ -383,7 +383,7 @@ The MCP server uses the same rate limiting as the REST API:
 
 ---
 
-## Technical Details
+## Technical details
 
 ### Architecture
 
@@ -399,7 +399,7 @@ api.anyplot.ai
     └── Uses: SpecRepository → PostgreSQL
 ```
 
-### Benefits of Integration
+### Benefits of integration
 
 - Zero additional infrastructure costs
 - Direct database access (no network hop)
@@ -414,9 +414,9 @@ api.anyplot.ai
 
 ---
 
-## Testing Your Integration
+## Testing your integration
 
-### 1. MCP Inspector (Browser)
+### 1. MCP Inspector (browser)
 
 Test MCP tools directly in your browser:
 
@@ -431,7 +431,7 @@ npx @anthropic-ai/mcp-inspector https://api.anyplot.ai/mcp/
 3. Open chat and type: "Use anyplot to show me scatter plots"
 4. Claude will automatically use MCP tools
 
-### 3. Custom Client
+### 3. Custom client
 
 ```python
 from mcp.client import Client
@@ -468,7 +468,7 @@ async with Client("https://api.anyplot.ai/mcp/") as client:
 
 ---
 
-## Related Documentation
+## Related documentation
 
 - **[API Reference](api.md)** - REST API endpoints (complementary to MCP)
 - **[Database Schema](database.md)** - Understanding data models
@@ -477,7 +477,7 @@ async with Client("https://api.anyplot.ai/mcp/") as client:
 
 ---
 
-## Feedback & Support
+## Feedback and support
 
 - **Issues**: [GitHub Issues](https://github.com/MarkusNeusinger/anyplot/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/MarkusNeusinger/anyplot/discussions)
@@ -485,7 +485,7 @@ async with Client("https://api.anyplot.ai/mcp/") as client:
 
 ---
 
-## Version History
+## Version history
 
 | Version | Date | Changes |
 |---------|------|---------|
