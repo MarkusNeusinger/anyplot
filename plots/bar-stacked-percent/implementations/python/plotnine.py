@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: pending | Updated: 2026-08-18
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 88/100 | Updated: 2026-08-18
 """
 
 import os
