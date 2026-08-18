@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -93,8 +93,11 @@ sns.set_theme(
 g = sns.FacetGrid(df, row="stock", row_order=stocks, sharex=True, sharey=True, despine=True)
 g.fig.set_size_inches(8, 4.5)
 g.fig.set_dpi(400)
-g.fig.subplots_adjust(hspace=0.06, top=0.85, bottom=0.34, left=0.24, right=0.97)
+g.fig.subplots_adjust(hspace=0.06, top=0.82, bottom=0.34, left=0.24, right=0.97)
 g.set_titles("")
+
+tick_positions = np.arange(0, trading_days, 15)
+tick_labels = [f"Day {i}" for i in tick_positions]
 
 for idx, (stock, ax) in enumerate(zip(stocks, g.axes.flat, strict=True)):
     stock_data = df[df["stock"] == stock]
@@ -103,6 +106,7 @@ for idx, (stock, ax) in enumerate(zip(stocks, g.axes.flat, strict=True)):
 
     ax.set_xlim(0, len(x))
     ax.set_ylim(0, band_height)
+    ax.set_xticks(tick_positions)
 
     gain_vals = np.maximum(values, 0)
     loss_vals = np.abs(np.minimum(values, 0))
@@ -129,18 +133,28 @@ for idx, (stock, ax) in enumerate(zip(stocks, g.axes.flat, strict=True)):
     for spine in ("top", "right", "left"):
         ax.spines[spine].set_visible(False)
     ax.spines["bottom"].set_visible(idx == len(stocks) - 1)
-    ax.tick_params(axis="x", labelsize=14, bottom=(idx == len(stocks) - 1))
+    is_last = idx == len(stocks) - 1
+    ax.tick_params(axis="x", labelsize=14, bottom=is_last, labelbottom=is_last)
 
-# X-axis formatting
-tick_positions = np.arange(0, trading_days, 15)
-tick_labels = [f"Day {i}" for i in tick_positions]
+# X-axis formatting — labels/ticklabels only on the last facet, but every facet
+# shares the same tick_positions (set above) so gridlines align vertically across rows
 last_ax = g.axes.flat[-1]
-last_ax.set_xticks(tick_positions)
 last_ax.set_xticklabels(tick_labels)
 last_ax.set_xlabel("Trading Days (90-day period)", fontsize=18, color=INK)
 
-# Title
-g.fig.suptitle("horizon-basic · python · seaborn · anyplot.ai", fontsize=22, y=0.97, fontweight="bold", color=INK)
+# Title + subtitle clarifying what the bands measure
+g.fig.suptitle(
+    "horizon-basic · python · seaborn · anyplot.ai", fontsize=18, y=0.98, va="top", fontweight="bold", color=INK
+)
+g.fig.text(
+    0.5,
+    0.895,
+    "Deviation from 20-Day Moving Average (percentage points)",
+    ha="center",
+    va="top",
+    fontsize=13,
+    color=INK_SOFT,
+)
 
 # Legend — single row anchored below the x-axis label, entirely clear of every facet's data
 legend_patches = [
