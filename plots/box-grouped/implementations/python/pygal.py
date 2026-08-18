@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -64,7 +64,7 @@ custom_style = Style(
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
-    opacity=0.85,
+    opacity=0.97,
     opacity_hover=1.0,
     stroke_width=2.5,
 )
@@ -74,7 +74,7 @@ chart = pygal.Box(
     width=3200,
     height=1800,
     style=custom_style,
-    title="box-grouped · pygal · anyplot.ai",
+    title="box-grouped · python · pygal · anyplot.ai",
     x_title="Treatment Arm",
     y_title="Symptom Improvement Score",
     show_legend=True,
@@ -91,7 +91,7 @@ chart = pygal.Box(
     yrange=(-15, 100),
     range=(-15, 100),
     y_labels=[-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-    dots_size=6,
+    dots_size=9,
 )
 
 # Track which age groups have been labeled in legend
