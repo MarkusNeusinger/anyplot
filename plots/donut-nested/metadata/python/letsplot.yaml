@@ -2,12 +2,12 @@ library: letsplot
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:03:39Z'
-updated: '2026-05-08T01:27:30Z'
-generated_by: claude-haiku
-workflow_run: 25530954959
+updated: '2026-08-18T07:20:52Z'
+generated_by: claude-sonnet
+workflow_run: 32108713522
 issue: 2015
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.15
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/letsplot/plot-light.html
@@ -15,121 +15,113 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 quality_score: 94
 review:
   strengths:
-  - Excellent text legibility with all font sizes explicitly set and perfectly readable
-    in both light and dark themes
-  - 'Perfect palette compliance: first series is #009E73, multi-series follows Okabe-Ito
-    order, backgrounds and chrome fully theme-correct'
-  - Sophisticated geometric implementation with precise angle/radius calculations
-    for accurate nested donut structure
-  - Design polish with white segment separators and clear center focal point adding
-    visual refinement
-  - Realistic business budget data with plausible department allocations and expense
-    categories demonstrating feature coverage
+  - Native geom_pie usage (lets-plot's distinctive donut/pie geom, no ggplot2 equivalent)
+    draws two perfectly angle-aligned concentric rings sharing a start angle and total.
+  - 'Consistent hue-family coloring: each department''s children lighten from the
+    parent hue in value-ranked order, giving a second visual cue for the size hierarchy
+    the wedge angles already encode.'
+  - Clean, refined chrome — axes, ticks, grid, and legend fully removed; a generous
+    ring gap and a bold 'Total $100M' center label anchor the visual hierarchy.
+  - 'Correct Imprint palette compliance (first series #009E73, canonical color order)
+    and theme-correct backgrounds/text/labels in both light and dark renders.'
+  - Every wedge, including the smallest ('Inside Sales', $4M), is labeled directly
+    on the segment, keeping the chart self-contained without needing a legend.
   weaknesses:
-  - 'Design excellence moderate: relies on well-configured defaults rather than exceptional
-    aesthetic innovation (DE-01 at upper end of typical, not publication-exceptional)'
-  - 'Visual storytelling straightforward: presents data structure clearly but does
-    not emphasize a particular narrative or insight through visual hierarchy beyond
-    color families'
-  - 'Library mastery conventional: uses letsplot capably but polygon composition approach
-    is replicable in other ggplot-style libraries, not distinctively letsplot-specific'
+  - Two small helper functions (lighten, with_mid_angle) add structural complexity
+    beyond the KISS 'no functions' ideal, though justified by the color-lightening
+    and label-angle math they encapsulate.
+  - The spec suggests using a legend for smaller segments; the implementation labels
+    every segment directly instead, which reads well visually but deviates from the
+    literal suggestion.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color, not pure white
-      Chrome: Title "donut-nested · letsplot · anyplot.ai" in dark 28pt bold text, centered and clearly readable. Inner ring labels (Marketing, Operations, R&D, Sales) in bold 12pt dark text, highly readable. Outer ring labels in 10pt softer gray text, readable. Center label "Total $100M" in 16pt bold dark text, prominent and clear.
-      Data: First series Marketing segment is bluish green (#009E73), verified as correct Okabe-Ito first color. Other departments: Operations (#D55E00 vermillion), R&D (#0072B2 blue), Sales (#CC79A7 reddish purple) - all Okabe-Ito positions 2-4. Child category segments inherit parent colors with size variation showing data distribution. White segment borders aid visual separation.
-      Legibility verdict: PASS - All text elements fully readable against light background with proper contrast. No dark-on-light legibility issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "donut-nested · python · letsplot · anyplot.ai" in dark ink, top-left aligned, fully readable. No axes, ticks, or grid lines (all blanked). Center label "Total $100M" in bold dark ink on the page background. Thin off-white strokes separate wedges and rings.
+      Data: Two concentric rings — inner ring shows 4 departments (Marketing green #009E73, Operations purple, R&D blue, Sales amber), outer ring shows each department's expense-category children in a progressively lighter tint of the parent hue. Inner-ring labels are bold dark text directly on the wedges; outer-ring labels are soft dark-grey text on the lighter wedges. First series (Marketing) correctly uses Imprint green #009E73.
+      Legibility verdict: PASS — all title, center label, and per-segment text is clearly readable against both the page background and the colored wedges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color, not pure black, has warmth
-      Chrome: Title in light text (#F0EFE8) on dark background, centered and clearly readable. Inner ring labels in light text, easily readable. Outer ring labels in softer light text (#B8B7B0), readable against dark background. Center label "Total $100M" in white text on dark center, very prominent and clear.
-      Data: Data colors verified identical to light render - Marketing still #009E73, Operations still #D55E00, R&D still #0072B2, Sales still #CC79A7. This confirms proper color independence from theme (only chrome adapts). White segment borders remain highly visible on dark background, providing excellent definition. Child segments maintain size relationships and color family inheritance from light render.
-      Legibility verdict: PASS - All text elements fully readable in light colors against dark background. No dark-on-dark legibility failures. Theme adaptation is correct: data colors identical, chrome colors adapted (dark text → light text, light background → dark background).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title in light/white ink, fully readable against the dark background. Center label "Total $100M" in bold white text on the dark background. Wedge-separating strokes are now dark (matching PAGE_BG), producing a visible near-black gap between the two rings — an intentional design choice, not a rendering artifact.
+      Data: Same four department hues and child tints as the light render — data colors are identical, only chrome (title, center label, stroke color) flips with the theme. Inner-ring labels remain bold dark text and outer-ring labels remain soft dark-grey text, both directly on the colored wedges (not on the page background), so they stay legible in both themes by design.
+      Legibility verdict: PASS — no dark-on-dark failures; title and center label properly flip to light ink, and on-wedge labels retain sufficient contrast against their fixed-hue backgrounds in both themes.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, inner labels 12pt bold,
-          outer 10pt, center 16pt bold. Perfectly readable in both light and dark
-          themes'
+        comment: All text explicitly sized and readable in both themes; small 'Inside
+          Sales' wedge label stays fully within its segment
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements. All segment labels and center label
-          positioned perfectly with no collisions
+        comment: No collisions between labels, rings, or center text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All donut segments large, bright, and clearly distinguishable. White
-          separators enhance visibility. Optimal sizing for density
+        comment: Ring thickness and gap give every wedge, including small ones, clear
+          visibility
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD-safe contrast. All colors distinct
-          and accessible
+        comment: Green/purple/blue/amber hue families are distinct and CVD-safe; no
+          red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600×3600 format appropriate for symmetric donut. Plot fills
-          canvas well with balanced margins. No wasted space
+        comment: 2400x2400 canvas gate passed; title within expected width for the
+          mandated string; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct: ''donut-nested · letsplot · anyplot.ai''.
-          Center label ''Total $100M'' provides valuable context'
+        comment: No axes needed for a donut chart; title format matches spec exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct. Multi-series follows Okabe-Ito (#D55E00,
-          #0072B2, #CC79A7). Backgrounds #FAF8F1 light and #1A1A17 dark correct. Theme
-          chrome fully adapted in both renders. Data colors identical across themes'
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Professional polish with thoughtful color application. Okabe-Ito
-          palette used effectively. Typography hierarchy (bold inner, soft outer)
-          shows design intent. White segment separators are elegant refinement. Above
-          default configuration but not exceptionally creative
+        comment: Custom per-department hue-family palette with ranked lightening;
+          intentional hierarchy via ring geometry and center total
       - id: DE-02
         name: Visual Refinement
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Perfect execution: no grid (appropriate), all spines hidden, generous
-          whitespace, white separators add refinement, clean uncluttered design'
+        comment: Axes/ticks/grid/legend fully removed; deliberate ring gap and stroke
+          separation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Good visual hierarchy through color families per parent category
-          and size variation. Center total is clear focal point. Data choice shows
-          realistic budget variance. Hierarchy guides viewer from general to specific.
-          Straightforward presentation without exceptional narrative emphasis
+        passed: true
+        comment: Center total label as focal point; color lightness reinforces the
+          size ranking the angles already show
     spec_compliance:
       score: 15
       max: 15
@@ -139,29 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut chart. Two hierarchical levels properly implemented
+        comment: Correct nested/concentric donut chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: hierarchical structure, inner ring parents,
-          outer ring children, color families per parent, labels on segments, center
-          total'
+        comment: Consistent color families, aligned ring boundaries, ring spacing,
+          2-level hierarchy — all present; labels every segment directly instead of
+          using a legend for small ones, which achieves the same readability goal
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Level_1 maps to inner ring, level_2 to outer ring. Values properly
-          aggregated. All data visible
+        comment: level_1 correctly inner ring, level_2 outer ring, values aggregate
+          correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct 'donut-nested · letsplot · anyplot.ai'. Legend
-          omitted (appropriate, labels on segments)
+        comment: Title exactly 'donut-nested · python · letsplot · anyplot.ai'; no
+          legend needed since all segments are directly labeled
     data_quality:
       score: 15
       max: 15
@@ -171,62 +163,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 departments with 2-5 child categories. Size
-          variation demonstrates realistic budget distribution'
+        comment: Full hierarchy with aggregation, 4 parents x 2-3 children, all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business budget scenario. Neutral, uncontroversial topic. Department
-          and category names are standard and plausible
+        comment: Neutral, plausible corporate budget-allocation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $100M corporate budget is realistic. Department allocations (32%
-          Marketing, 30% Ops, 25% R&D, 13% Sales) are plausible. Proportions correct
+        comment: Values 4-18M summing to a clean $100M total are sensible for the
+          domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data setup, polygon construction,
-          plotting, save. No unnecessary functions or classes'
+        comment: Two small helper functions (lighten, with_mid_angle) used for color/angle
+          math, slightly beyond a no-function ideal
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data hardcoded and deterministic. No randomness. No seed needed
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: math (trig), os (theme), pandas (DataFrame), lets_plot
-          components, ggsave'
+        comment: All imports (colorsys, math, os, pandas, lets_plot) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex. Geometric calculations well-structured. No
-          fake functionality. Clean approach
+        comment: Appropriate complexity for the geometry involved, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct outputs: plot-{THEME}.png and plot-{THEME}.html. Current
-          letsplot API'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -234,28 +221,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of ggplot() + geom_*() composition. Proper aes() mapping.
-          scale_fill_manual() for colors. coord_fixed() for aspect. theme() customization.
-          Fully idiomatic
+        comment: geom_pie with hole/start/direction is the idiomatic high-level lets-plot
+          API for donut charts
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Effective use of geom_polygon() with manual coordinate manipulation.
-          Sophisticated angle/radius calculations. Pattern replicable in other ggplot
-          libraries, not distinctively letsplot
+        passed: true
+        comment: geom_pie is a lets-plot-exclusive geom (no ggplot2 equivalent), explicitly
+          called out in code comments
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - annotations
-  - custom-legend
   patterns:
-  - data-generation
   - groupby-aggregation
   - iteration-over-groups
-  - matrix-construction
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
   - minimal-chrome
