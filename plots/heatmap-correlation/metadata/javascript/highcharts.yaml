@@ -1,0 +1,261 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-correlation
+created: '2026-08-18T16:58:22Z'
+updated: '2026-08-18T17:30:30Z'
+generated_by: claude-sonnet
+workflow_run: 32162335269
+issue: 1948
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Fixed the attempt-1 weakness: the invisible scatter overlay now carries `enableMouseTracking`,
+    `stickyTracking: false`, and a real tooltip formatter, recovering genuine native
+    Highcharts hover interactivity in the HTML view on top of the hand-drawn grid
+    — no longer an empty series/disabled tooltip.'
+  - 'Fixed the attempt-1 margin weakness: top chart margin tightened (145px to 100px),
+    removing the large blank gap between the subtitle and the grid on both renders.'
+  - Clever, well-executed manual grid renderer that fully substitutes for the unavailable
+    core-bundle heatmap module — clean cell borders, correct diverging color computation
+    for both positive and negative correlations.
+  - WCAG-conscious per-cell text color chosen via a relative-luminance formula, keeping
+    every cell's numeric value legible against its own fill in both themes.
+  - Freed upper-triangle void (rows 0-1 x cols 3-5) used effectively to host the diverging
+    colorbar instead of being wasted blank space.
+  - Theme-adaptive chrome throughout — diagonal cell fill, ink/inkSoft tokens, and
+    the theme-adaptive imprint_div midpoint all swap correctly; both renders pass
+    the legibility check with no dark-on-dark or light-on-light failures.
+  - Emphasis stroke on the strongest positive and negative off-diagonal correlations
+    gives the matrix a clear focal point beyond a raw grid of numbers.
+  - Masking the upper triangle plus a fixed -1..1 colorbar range directly follows
+    the spec's explicit notes for reducing redundancy and consistent interpretation.
+  weaknesses:
+  - Several helper functions (hexToRgb, lerp, corrRgb, corrFill, corrTextColor, isStrongest,
+    drawAll, clearDrawn) push code structure past bare KISS — justified by the manual-renderer
+    workaround for the missing core-bundle heatmap module, but still more machinery
+    than a typical implementation.
+  - Design layer (cell borders, diagonal styling, whitespace) is functional but still
+    fairly close to the base grid concept — no additional data-storytelling device
+    (e.g. sorted/clustered variable order, secondary emphasis) beyond the two strongest-correlation
+    borders.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the required light surface.
+      Chrome: Title "Air-Quality Sensor Correlations · heatmap-correlation · javascript · highcharts · anyplot.ai" in bold dark ink, fully readable and comfortably within the canvas (~55-60% width). Subtitle in softer gray beneath it, readable. Row labels (Temperature, Humidity, CO2 Level, PM2.5, Noise Level, Wind Speed) right-aligned to the left of the grid in dark ink; column labels rotated -40 degrees below the grid, also dark ink and fully visible with margin to spare above the canvas bottom edge — no clipping. Colorbar title "Correlation (r)" and tick labels -1/0/1 in dark ink, readable, placed in the freed upper-right void.
+      Data: Lower-triangle + diagonal 6x6 grid. Diagonal cells (1.00) filled with a near-white elevated background and soft dark text. Off-diagonal cells use the diverging red-white-blue scale: strong red for the most negative values (-0.60, -0.50), strong blue for the most positive (0.55), near-white/cream for values close to zero (0.05, -0.05). The two strongest correlations (0.55 and -0.60) carry a heavier dark border, giving the matrix a clear focal point. Every cell's numeric value is set in near-black or near-white text depending on the fill's computed luminance, and remains legible against its own cell.
+      Legibility verdict: PASS — no light-on-light text found; all title, subtitle, axis labels, cell values, and colorbar text are clearly visible against the light background. Top margin between subtitle and grid is now tight and well-proportioned (previously flagged as too generous in attempt 1).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — matches the required dark surface.
+      Chrome: Title and subtitle render in light ink, fully readable against the dark background. Row/column labels also switch to light ink and stay legible, including the rotated column labels, with the same generous margin from the canvas bottom edge. Colorbar title and -1/0/1 ticks are light-colored and readable.
+      Data: Same 6x6 lower-triangle grid with identical correlation values. Diagonal cells now use a dark elevated background (slightly lighter than the page) with soft light text. Off-diagonal cell colors are visibly the same hue family as the light render (same reds and blues at the -1/+1 endpoints), confirming the diverging scale endpoints are held constant; only the zero-midpoint of the diverging scale itself shifts from cream to near-black per the theme-adaptive imprint_div rule (sanctioned by the style guide), and the surrounding chrome flips as expected. Cell text again switches between near-black and near-white per cell based on computed luminance, and remains legible on every cell — no dark-on-dark failures observed.
+      Legibility verdict: PASS — all chrome and data-cell text is clearly readable against the dark background; no black-on-black or unreadable elements found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, axis labels, and per-cell values all readable in
+          both themes via luminance-based text color
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, cells, or the colorbar; column labels
+          clear of the bottom edge
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells sized appropriately for a 6x6 grid; all values clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red-blue scale (not red-green), luminance-based text contrast
+          per cell
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; attempt-1's oversized top margin (145px) was
+          tightened to 100px, removing the blank gap above the grid
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive variable names on both axes, colorbar labeled 'Correlation
+          (r)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_div correctly with theme-adaptive midpoint (per style
+          guide); backgrounds match #FAF8F1/#1A1A17; div[0]/div[2] endpoints identical
+          across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom luminance-aware text contrast and freed-space colorbar placement
+          show real polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean cell borders, subtle diagonal distinction, generous but now
+          well-proportioned whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Emphasis border on the two strongest correlations creates a focal
+          point, but no further hierarchy (e.g. sorted variable order) beyond that
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct correlation-matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap centered at zero, 2-decimal annotations, masked
+          upper triangle, fixed -1..1 colorbar range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Symmetric variable labels correctly mapped on both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the required format; colorbar serves as a clear legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows diagonal, positive, negative, and near-zero correlations plus
+          colorbar
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral outdoor air-quality sensor domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation magnitudes are realistic for the chosen sensor variables
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, justified by the manual-renderer workaround,
+          but goes beyond bare KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the constraint; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, credits disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Sanctioned core-renderer fallback for the missing heatmap module
+          now paired with a real scatter series carrying enableMouseTracking + a tooltip
+          formatter, recovering genuine native interactivity
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Luminance-based per-cell text contrast, freed-space colorbar placement,
+          and the invisible-scatter tooltip-recovery trick are creative, library-aware
+          touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - publication-ready
