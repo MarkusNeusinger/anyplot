@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bar-diverging
 created: '2026-08-18T13:01:51Z'
-updated: '2026-08-18T13:07:38Z'
+updated: '2026-08-18T13:17:37Z'
 generated_by: claude-sonnet
 workflow_run: 32139546304
 issue: 2009
@@ -12,139 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 95
 review:
   strengths:
-  - Correct diverging bar chart type with horizontal orientation, well-suited to the
-    long category labels
-  - Clear zero-baseline indicator — a bold ink-colored vertical rule exactly as the
-    spec requests
-  - Bars sorted descending by value, giving an at-a-glance narrative from strongest
-    agreement to strongest disagreement
-  - Correct semantic color mapping (green=positive/agree, red=negative/disagree) using
-    the Imprint palette's documented sentiment exception, reinforced by a redundant
-    spatial cue (bar direction) beyond hue alone
-  - 'Both renders are fully theme-correct: proper backgrounds (#FAF8F1 / #1A1A17),
-    all text legible, data colors identical across themes'
-  - Explicit font sizes throughout (title, axis title, ticks) with a length-aware
-    title-shrink formula for the descriptive-prefixed title
-  - Clean, deterministic, KISS-structured code; correct mount-node contract with animation:false
-    set
+  - Custom canvas-drawn value-label plugin (afterDatasetsDraw) gives every bar an
+    explicit numeric focal point (e.g. "+62", "-45") that reinforces the color encoding
+    with a redundant, colorblind-safe signal.
+  - 'Correct semantic-exception color mapping: brand green #009E73 (palette[0]) for
+    positive/agree, matte red #AE3030 (palette[4], the designated bad/loss/error anchor)
+    for negative/disagree — exactly matches the Imprint style guide''s sentiment/polarity
+    exception.'
+  - Zero baseline is visually emphasized with a thicker, ink-colored gridline (scriptable
+    grid.color/lineWidth keyed on tick.value === 0) plus a labeled "0" tick — directly
+    satisfies the spec's "clear visual indicator at the zero baseline" requirement.
+  - Bars are sorted descending by net score (explicitly documented in a code comment),
+    creating a clean visual hierarchy from strongest agreement to strongest disagreement.
+  - Theme-adaptive chrome is threaded correctly through title/axis/tick/grid tokens
+    (t.ink, t.inkSoft, t.grid); data colors are pixel-identical between light and
+    dark renders.
+  - Adaptive title-fontsize formula avoids overflow for the long mandated title suffix
+    combined with the descriptive prefix, without ever needing to shrink below a readable
+    size here.
   weaknesses:
-  - Title occupies only ~41% of canvas width (measured 929-2238px of 3200px) — proportionally
-    small versus the ~50-70% target for custom titles. The shrink formula divides
-    by a fixed 67-char reference, but this spec-id's bare mandated title is only ~49
-    chars, so the descriptive-prefixed 78-char title gets over-shrunk. Increase the
-    baseline titleFontSize slightly or base the shrink ratio on this spec's own unprefixed
-    title length instead of the generic 67 constant.
-  - Layout padding is minimal (8px top/bottom in options.layout.padding) — add more
-    generous whitespace margins around the plot per the style guide's 'generous margins'
-    guidance.
-  - 'DE-01: Solid, well-configured implementation (rounded bars, semantic colors,
-    zero-line accent) but stops short of exceptional/publication-level polish — no
-    direct data-value labels or standout typographic flourish to elevate it further.'
-  - 'DE-02: Grid/spine/zero-line treatment shows real refinement, but overall spacing
-    still reads close to a ''well-configured default'' rather than every detail being
-    polished.'
-  - 'DE-03: Sorting plus semantic color creates a decent hierarchy, but a stronger
-    focal point (e.g., annotating the highest and lowest bars with their values) would
-    push storytelling into the ''excellent'' tier.'
-  - 'LM-02: The scriptable zero-line color/width is a genuine Chart.js-specific touch,
-    but the rest of the implementation is fairly portable to other bar-chart libraries
-    — leaning further into Chart.js-distinctive capabilities would raise distinctiveness.'
+  - No explicit color-key/legend stating the green=agree / red=disagree convention;
+    it's inferable from the +/- signed labels but a small legend or subtitle would
+    make it instantly clear without reading individual values.
+  - Bottom margin under the x-axis tick row is comparatively tight (~44px of 1800px
+    canvas height) versus the generous left/top margins — could use slightly more
+    breathing room for full margin balance.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Employee Engagement Survey · bar-diverging · javascript · chartjs · anyplot.ai" is dark ink text, centered at top and fully visible (not clipped). Y-axis category labels (Career Growth, Work-Life Balance, Team Collaboration, Remote Flexibility, Job Security, Training & Development, Management Support, Compensation) are dark, readable, left-aligned. X-axis tick labels (-70 to 70) and the axis title "Net Agreement Score (%)" are legible in dark/soft-ink tones. Subtle vertical grid lines run across the plot area; a bold black vertical rule marks the zero baseline.
-      Data: 8 horizontal bars extending left or right from zero. Top four bars (Career Growth, Work-Life Balance, Team Collaboration, Remote Flexibility) are brand green (#009E73) extending right (positive net agreement, 62/48/31/14). Bottom four (Job Security, Training & Development, Management Support, Compensation) are matte red (#AE3030) extending left (negative net agreement, -8/-19/-33/-45). Bars have subtly rounded corners.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Employee Engagement Survey · bar-diverging · javascript · chartjs · anyplot.ai" in dark ink, centered, clearly readable and occupying ~57% of canvas width. Y-axis category labels (Career Growth, Work-Life Balance, ... Compensation) in dark-grey ink, fully legible, none clipped at the left edge (checked pixel-level, ~30px margin remaining). X-axis title "Net Agreement Score (%)" includes units. X-axis tick labels (-70..70) legible, "0" tick is explicitly labeled and the zero gridline is rendered thicker/darker than the other subtle vertical gridlines. Y-axis has no gridlines (categorical), consistent with style-guide grid guidance.
+      Data: 8 horizontal bars, sorted descending by net score. Positive bars (Career Growth +62, Work-Life Balance +48, Team Collaboration +31, Remote Flexibility +14) render in brand green #009E73. Negative bars (Job Security -8, Training & Development -19, Management Support -33, Compensation -45) render in matte red #AE3030. Each bar has a signed numeric value label at its outer end, colored to match its bar. No text/element overlap; no clipping at any canvas edge (verified programmatically: right-edge text margin 72px, left-edge 30px, top 68px, bottom 44px).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, now rendered in light/off-white ink, fully visible and not clipped. Category labels and axis tick/title text are rendered in light gray tones, clearly legible against the dark background. The zero-baseline rule is now a bright near-white vertical line, and grid lines are faint light strokes. No dark-on-dark text was observed anywhere (title, category labels, tick labels, and axis title all use light ink).
-      Data: Same 8 bars, same green (#009E73) for positive values and matte red (#AE3030) for negative values — colors are pixel-identical to the light render; only the chrome (background, text, grid, zero-line color) flipped as expected.
-      Legibility verdict: PASS — no dark-on-dark failures; brand green and matte red both read clearly on the near-black surface.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, now in light/off-white ink, fully readable against the dark background. Y-axis category labels in light grey, all legible, no dark-on-dark issues. X-axis tick labels and "Net Agreement Score (%)" title also legible in light ink. Zero gridline is rendered in bright ink-white and thicker than the subtle grey gridlines, clearly marking the baseline.
+      Data: Same 8 bars in identical positions and identical colors to the light render — brand green #009E73 for positive, matte red #AE3030 for negative — confirming the data-color identity rule (only chrome flips between themes).
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed in either render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; readable in both themes; title intentionally
-          shrunk via a length-aware formula for the descriptive-prefixed title.
+        comment: All font sizes explicitly set (title formula, axis title 15px, ticks
+          13/14px, value labels 13px); title fits comfortably (~57% width); readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlap between category labels, bars, value labels, or axis ticks.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 bars with well-proportioned, rounded fills — clearly visible for
-          this data density.
+        comment: 8 sparse bars sized generously; well adapted to low data density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red sentiment pairing is CVD-validated per Imprint, plus a
-          redundant spatial cue (bar direction relative to zero) beyond hue alone.
+        comment: 'Red/green pairing is CVD-safe in practice: direction (left/right
+          of zero) plus explicit signed numeric labels provide strong redundant encoding
+          beyond hue.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall canvas utilization, but tight 8px top/bottom layout
-          padding and a proportionally small title (~41% of canvas width) leave visual
-          weight on the table.
+        comment: Chart fills the large majority of the canvas; nothing cut off (verified
+          pixel margins on all 4 edges); minor tight bottom margin noted as a weakness
+          but not a deduction-worthy defect.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis title 'Net Agreement Score (%)' is descriptive with units.
+        comment: '"Net Agreement Score (%)" includes units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data colors (#009E73 positive / #AE3030 negative) match Imprint''s
-          documented sentiment semantic exception; backgrounds and chrome are theme-correct
-          in both renders.'
+        comment: 'First series #009E73, negative series #AE3030 (documented semantic-exception
+          anchor for sentiment polarity); backgrounds and chrome theme-correct in
+          both renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured implementation (rounded bars, semantic colors, zero-line
-          accent) but stops short of publication-level polish — no value labels or
-          standout typographic flourish.
+        passed: true
+        comment: Thoughtful semantic color choice, custom value-label plugin, adaptive
+          title sizing — clearly above library defaults, short of full publication-level
+          polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines/borders hidden, y-axis grid removed, zero-line intentionally
-          emphasized — real refinement beyond raw defaults, though margins remain
-          tight.
+        passed: true
+        comment: Spines removed, y-axis grid off, x-axis grid subtle except emphasized
+          zero-line, rounded bar corners — strong refinement with only minor margin-balance
+          nitpick.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Descending sort by value plus sentiment color creates an immediate,
-          readable pattern from strongest agreement to strongest disagreement.
+        passed: true
+        comment: Descending sort + color-coded direction + signed value labels create
+          an immediate, clear pattern from strongest agreement to strongest disagreement.
     spec_compliance:
       score: 15
       max: 15
@@ -154,50 +143,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging horizontal bar chart.
+        comment: Correct horizontal diverging bar chart from a zero baseline.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero baseline emphasized, horizontal orientation for long labels,
-          contrasting colors, bars sorted by value — all spec notes addressed.
+        comment: Contrasting pos/neg colors, horizontal orientation for labels, zero-baseline
+          indicator, sorted by value — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on y, net-agreement value on x; all data visible.
+        comment: X = net score value, Y = category; all 8 categories visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format with a descriptive prefix; single-dataset
-          color-by-sign makes an explicit legend unnecessary.
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed since color meaning is self-evident from sign/direction.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows strong positive and negative extremes and a near-zero negative
-          value; a near-zero positive example would round out full coverage.
+        comment: Full spread from strong positive (+62) to strong negative (-45) plus
+          mid-range values on both sides.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral employee-engagement-survey scenario.
+        comment: Employee engagement survey — real, neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Net agreement percentages (-45 to +62) are plausible survey values.
+        comment: Net agreement percentages in a plausible survey range, consistent
+          axis bounds.
     code_quality:
       score: 10
       max: 10
@@ -207,57 +197,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> mount -> chart script, no functions/classes.
+        comment: Linear data -> plugin -> chart flow; the plugin object is proportionate
+          to the feature it implements.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Deterministic hardcoded data arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; only globals used.
+        comment: No unused imports; only the provided globals are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality.
+        comment: No fake UI/functionality; appropriate complexity for the value-label
+          feature.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract; animation:false set; current Chart.js
-          API.
+        comment: 'Correct mount-node contract, animation: false set, current Chart.js
+          API.'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Idiomatic indexAxis: ''y'', scriptable scale options, dataset-level
+          color mapping, layout padding.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic Chart.js: indexAxis ''y'' for horizontal bars, scriptable
-          grid options, proper mount/animation contract.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Scriptable zero-line color/width is a genuine Chart.js-specific technique,
-          though the overall structure is fairly portable to other bar-chart libraries.
-  verdict: REJECTED
+        comment: Custom Chart.js plugin (afterDatasetsDraw) and scriptable grid-color/lineWidth
+          callbacks are genuinely Chart.js-specific and not trivially portable.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - grid-styling
-  - minimal-chrome
