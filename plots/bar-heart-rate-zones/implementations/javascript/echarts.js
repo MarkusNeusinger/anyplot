@@ -52,7 +52,7 @@ chart.setOption({
     formatter: (params) => {
       const idx = params[0].dataIndex;
       return (
-        `<b>${zoneNames[idx].replace("\n", " ")}</b><br/>` +
+        `<b>${zoneNames[idx].replace(/\n/g, " ")}</b><br/>` +
         `Duration: <b>${minutes[idx]} min</b><br/>` +
         `HR range: ${hrRanges[idx]}`
       );
