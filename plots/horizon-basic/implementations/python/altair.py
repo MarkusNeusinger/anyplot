@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-18
@@ -9,7 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
-from PIL import Image
+from PIL import Image, ImageColor
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -46,35 +46,50 @@ for server in servers:
 
 df = pd.DataFrame(data_list)
 
-# Horizon bands: fold magnitude into 3 mirrored intensity bands per polarity
+# Horizon bands: fold magnitude into 3 mirrored intensity bands per polarity.
+# band_height is computed per series (not globally) so low-variance series
+# like Cache still span the full Low/Medium/High range instead of being
+# flattened into "Low" by a shared global max.
 n_bands = 3
-band_height = df["value"].abs().max() / n_bands
+FIXED_BAND_HEIGHT = 1.0
 intensity_labels = {0: "Low", 1: "Medium", 2: "High"}
 
 band_data = []
-for _, row in df.iterrows():
-    val = row["value"]
-    direction = "positive" if val >= 0 else "negative"
-    abs_val = abs(val)
-    for band in range(n_bands):
-        band_min = band * band_height
-        band_val = max(0, min(abs_val - band_min, band_height))
-        band_data.append(
-            {
-                "date": row["date"],
-                "series": row["series"],
-                "band": band,
-                "value": band_val,
-                "label": f"{direction.capitalize()} {intensity_labels[band]}",
-            }
-        )
+for _series, group in df.groupby("series"):
+    local_band_height = group["value"].abs().max() / n_bands
+    for _, row in group.iterrows():
+        val = row["value"]
+        direction = "positive" if val >= 0 else "negative"
+        abs_val = abs(val)
+        for band in range(n_bands):
+            band_min = band * local_band_height
+            band_frac = max(0.0, min(abs_val - band_min, local_band_height) / local_band_height)
+            band_data.append(
+                {
+                    "date": row["date"],
+                    "series": row["series"],
+                    "band": band,
+                    "value": band_frac * FIXED_BAND_HEIGHT,
+                    "label": f"{direction.capitalize()} {intensity_labels[band]}",
+                }
+            )
 
 band_df = pd.DataFrame(band_data)
 
-# Imprint diverging anchors (#AE3030 red / #4467A3 blue) tinted toward white
-# for the 3 intensity steps per polarity — fixed hex, identical across themes.
-positive_colors = ["#CBD4E5", "#8BA1C6", "#4467A3"]
-negative_colors = ["#E8C5C5", "#CD7F7F", "#AE3030"]
+
+def _lerp_hex(c1, c2, t):
+    """Linear-interpolate two hex colors — builds the imprint_div ramp below."""
+    r1, g1, b1 = ImageColor.getrgb(c1)
+    r2, g2, b2 = ImageColor.getrgb(c2)
+    return "#{:02X}{:02X}{:02X}".format(round(r1 + (r2 - r1) * t), round(g1 + (g2 - g1) * t), round(b1 + (b2 - b1) * t))
+
+
+# imprint_div gradient: anchors #AE3030 red / #4467A3 blue, theme-adaptive
+# midpoint (PAGE_BG). The 3 intensity steps per polarity are interpolated
+# from the midpoint toward the anchor, so Low/Medium/High are built from the
+# documented gradient rather than hand-picked hexes.
+positive_colors = [_lerp_hex(PAGE_BG, "#4467A3", (i + 1) / n_bands) for i in range(n_bands)]
+negative_colors = [_lerp_hex(PAGE_BG, "#AE3030", (i + 1) / n_bands) for i in range(n_bands)]
 
 color_scale = alt.Scale(
     domain=["Positive Low", "Positive Medium", "Positive High", "Negative Low", "Negative Medium", "Negative High"],
@@ -93,7 +108,7 @@ chart = (
         x=alt.X(
             "date:T", title="Time (15-min intervals)", axis=alt.Axis(format="%H:%M", labelFontSize=10, titleFontSize=12)
         ),
-        y=alt.Y("value:Q", title=None, axis=None, stack=None, scale=alt.Scale(domain=[0, band_height])),
+        y=alt.Y("value:Q", title=None, axis=None, stack=None, scale=alt.Scale(domain=[0, FIXED_BAND_HEIGHT])),
         color=alt.Color(
             "label:N",
             scale=color_scale,
@@ -121,7 +136,7 @@ chart = (
         )
     )
     .properties(
-        title=alt.Title("horizon-basic · altair · anyplot.ai", fontSize=16, anchor="start", offset=12),
+        title=alt.Title("horizon-basic · python · altair · anyplot.ai", fontSize=16, anchor="start", offset=12),
         background=PAGE_BG,
     )
     .configure_facet(spacing=4)
