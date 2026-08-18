@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: box-grouped
 created: '2026-08-18T08:56:23Z'
-updated: '2026-08-18T09:01:40Z'
+updated: '2026-08-18T09:10:34Z'
 generated_by: claude-sonnet
 workflow_run: 32118179721
 issue: 2017
@@ -12,136 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Clever, legitimate workaround for the missing highcharts-more boxplot module:
-    a hidden column series establishes axis pixel mapping while chart.events.render
-    + SVGRenderer (path/rect/circle) + axis.toPixels draw genuine quartile boxes,
-    whiskers at 1.5×IQR, median lines, and outliers — this is a documented Highcharts
-    extensibility pattern, not a fake/simulated feature'
-  - Box widths and inter-group offsets are computed once from axis pixel spacing (slot/groupWidth/boxWidth),
-    so all four department groups render with visually consistent box and cap widths
+  - 'Correct Imprint palette application: Junior (first legend entry) renders in brand
+    green #009E73, Mid-level in lavender, Senior in blue — identical data colors across
+    both light and dark renders'
+  - 'Creative, correct workaround for the unavailable highcharts-more boxplot module:
+    quartile box, median line, whiskers, caps, and outliers are all drawn manually
+    via the core Highcharts SVG renderer, synced to axis pixel coordinates on the
+    chart ''render'' event'
+  - Deterministic seeded data generation (fixed-seed LCG) with realistic department
+    + seniority-driven means and spreads, plus plausible outliers ('a struggling senior',
+    'a standout junior')
+  - 'Thoughtful visual hierarchy: Senior-level boxes get a bolder stroke and higher
+    fill opacity, calling attention to the seniority → productivity trend the data
+    tells'
+  - Theme-adaptive chrome is fully correct in both renders — background, title, axis
+    labels, tick labels, grid, and legend all use theme tokens correctly, and the
+    median line correctly flips from dark ink to light ink between themes
+  - Consistent box widths across all groups and a clear, correctly labeled legend,
     as required by the spec
-  - 'Full Imprint palette compliance: Junior=#009E73 (brand green, always-first rule),
-    Mid-level and Senior follow canonical positions 2-3, identical across light/dark
-    renders, with theme-adaptive chrome (ink, inkSoft, grid, pageBg) correctly threaded
-    through title/axes/legend/median-line color'
-  - 'Realistic, neutral data: seniority-correlated productivity distributions (tightening
-    spread + rising median from Junior to Senior) plus four genuine outliers spread
-    across different department/level combinations satisfy the spec''s outlier + varying-spread
-    requirement'
-  - Deterministic reproducibility via a tiny fixed-seed LCG (seed 42) generating Box-Muller
-    normal samples — appropriate since there's no seeded RNG in the browser runtime
-  - Outlier markers rendered as hollow circles filled with the page background color,
-    giving good contrast against the translucent (45% opacity) box fills at every
-    zoom level
   weaknesses:
-  - 'Design refinement: the full x-axis line and y-axis tick/line remain fully visible
-    as a boxed-in frame rather than the recommended L-shaped or minimal spine treatment
-    — lighten or drop the axis line further (keep only tick labels) for a more polished
-    look'
-  - 'Data storytelling: the clear ''productivity rises and spread tightens with seniority''
-    pattern repeats identically across all four departments but nothing in the chart
-    calls it out — a subtle emphasis (e.g. a slightly bolder Senior median line, or
-    a small annotation on one group) would help the viewer land on the insight faster'
-  - Code structure leans on several helper functions (makeLcg, randNormal, quantile)
-    and a fairly involved chart.events.render handler rather than a flatter data-then-plot
-    script; understandable given the manual box-plot construction, but consider trimming/inlining
-    where feasible to move closer to the KISS ideal
-  - Title (fontSize 22px) reads noticeably smaller relative to the 3200px canvas width
-    than a typical mandated-title fill; still legible and matches the highcharts-specific
-    default, but a touch larger could strengthen the visual hierarchy
+  - Relies on several helper functions (makeLcg, randNormal, quantile, drawLine) rather
+    than a flat top-down script — acceptable given the custom-rendering requirement,
+    but a minor deviation from the ideal KISS structure
+  - Y-axis title 'Productivity Score' has no explicit scale/unit hint (e.g. '(0-100
+    index)'); minor since it's a synthetic score without a natural physical unit
+  - The core visual bypasses Highcharts' native series abstraction entirely (raw renderer
+    draws instead of a typed series) — the correct workaround for the module constraint,
+    but a lower-level approach than the library's most idiomatic high-level API pattern
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "box-grouped · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. X-axis title "Department" and Y-axis title "Productivity Score" in medium-gray ink, both legible. Tick labels (department names, 30-100 Y ticks) in the same soft gray, all readable. Subtle horizontal gridlines only, not competing with data. Legend "Experience Level" with three swatches (Junior/Mid-level/Senior) sits centered below the x-axis title, clearly separated from the plot area.
-      Data: Four department groups (Engineering, Sales, Support, Operations), each with three side-by-side boxes. First series (Junior) is brand green #009E73, second (Mid-level) is lavender/purple, third (Senior) is blue — matching Imprint palette canonical order. Box fills are translucent with a solid colored stroke; median lines are dark ink; whiskers/caps extend to 1.5×IQR; open outlier circles (hollow, page-background fill, colored stroke) appear above/below several boxes (Engineering Senior, Sales Junior, Support Mid-level, Operations Senior).
-      Legibility verdict: PASS — no light-on-light text, all chrome and data elements clearly distinguishable.
+      Background: Warm off-white, matching #FAF8F1 - not pure white, not dark.
+      Chrome: Title "box-grouped · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; "Department" x-axis title and "Productivity Score" y-axis title in medium-gray ink, both readable; tick labels (department names, y-axis numbers) in a slightly lighter gray, all legible; subtle horizontal gridlines at each y tick; legend "Experience Level" with three swatches (Junior/Mid-level/Senior) below the x-axis, clearly readable.
+      Data: Four department groups (Engineering, Sales, Support, Operations), each with three side-by-side box plots (Junior=green #009E73, Mid-level=lavender/purple, Senior=blue-gray). Each box shows a quartile body, a dark median line, whisker lines with caps, and open-circle outliers (e.g. a low junior outlier in Engineering, a high senior outlier in Sales, a low mid-level outlier in Support, a low senior outlier in Operations). Senior boxes have a visibly bolder outline/fill than Junior/Mid-level, creating a clear seniority-based visual hierarchy.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title now rendered in near-white ink, still bold and fully legible. Axis titles and tick labels switch to light gray, remaining readable against the dark surface. Gridlines are faint light-gray at low opacity, still visible but subtle. Legend text is light gray, swatches unchanged.
-      Data: Same three data colors (green / lavender-purple / blue) as the light render — confirmed identical, only chrome flipped. Median lines switch to near-white ink so they stay visible against the (still colored, still translucent) box fills. Outlier circles keep their colored stroke with page-background (near-black) fill, remaining visible against the box colors.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis titles, tick labels, legend) is clearly readable against the near-black background, and data colors are unchanged from the light render.
+      Background: Warm near-black, matching #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all render in light/off-white ink, clearly legible against the dark surface; gridlines are faint and visible; legend text is light-colored and readable; the box median lines correctly flip from dark ink (light render) to light/white ink (dark render) so they remain visible against the fill.
+      Data: Same four departments and three experience levels, identical box colors and structure as the light render (green/lavender/blue-gray, same outlier positions and Senior emphasis). No color drift between themes.
+      Legibility verdict: PASS - no dark-on-dark text; all chrome elements are clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
-          14px), readable in both themes; title reads slightly small relative to canvas
-          width but not a legibility issue
+          14px); well-proportioned, readable in both themes, no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions across any of the four department groups
+        comment: No overlapping text or data elements observed in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box, whisker, cap, and outlier-circle sizes are well adapted to the
-          45-point-per-box sample size
+        comment: Box bodies, whiskers, caps, and outlier markers (radius 6.5) are
+          clearly visible and sized appropriately for the 45-sample-per-box density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues plus stroke/fill contrast; not relying on hue alone
+        comment: Good contrast, CVD-safe Imprint palette, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills most of the canvas, balanced margins, legend sits
-          close to the plot, nothing cut off
+        comment: Plot area uses a large majority of the canvas, balanced margins,
+          legend sits close to the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Department'' and ''Productivity Score'' are descriptive; score
-          is a unitless index so no literal unit applies'
+        comment: Descriptive 'Department' and 'Productivity Score' axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for series 2-3, correct
-          theme backgrounds, chrome fully theme-adaptive in both renders'
+        comment: 'First series (Junior) is #009E73, subsequent series follow canonical
+          Imprint order, identical across themes, backgrounds theme-correct'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom-built box rendering (rounded corners, translucent fills, hollow
-          outlier markers) is above a configured default, but not yet publication-grade
+        passed: true
+        comment: 'Strong design: correct palette, rounded box corners, deliberate
+          stroke/opacity contrast for seniority tiers - clearly above default'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle gridlines are good, but the axis frame is still fully boxed-in
-          rather than reduced to an L-shape or minimal spines
+        passed: true
+        comment: Grid subtle (y-only), y-axis line/ticks removed, generous whitespace,
+          though x-axis keeps a thin line
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: A consistent seniority-productivity pattern exists across all groups
-          but nothing in the design calls attention to it
+        passed: true
+        comment: Bolder Senior boxes create visual hierarchy that highlights the seniority-productivity
+          relationship across all departments
     spec_compliance:
       score: 15
       max: 15
@@ -151,54 +139,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Genuine grouped box plot: quartile box, median line, 1.5×IQR whiskers,
-          outliers all present'
+        comment: Correct grouped box plot with side-by-side subgroup boxes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Side-by-side boxes with distinct colors, clear legend, consistent
-          widths, all required box-plot elements
+        comment: Distinct colors per subcategory, clear legend, consistent box widths,
+          median/quartile/whiskers/outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = department category, Y = productivity score, all data visible
-          within axis range
+        comment: X = department categories, Y = productivity score, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend labels (Junior/Mid-level/Senior)
-          match the subcategory data
+        comment: Title matches mandated format, legend labels match subcategory names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows outliers, varying spread (std tightens with seniority), differing
-          medians; groups follow a fairly uniform formulaic pattern across departments
+        comment: Shows outliers, varying spreads and medians across departments and
+          seniority levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible workplace productivity-by-department-and-experience
-          scenario
+        comment: Neutral, plausible business scenario (department productivity by
+          experience level)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score values and outliers are all within a sensible 0-100-ish range
-          with no impossible values
+        comment: Productivity scores and seniority-driven trends are internally consistent
+          and plausible
     code_quality:
       score: 9
       max: 10
@@ -208,34 +193,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (makeLcg, randNormal, quantile) and a nontrivial
-          render-event handler are used, justified by manual box-plot construction
-          but a deviation from flat KISS structure
+        comment: Uses a handful of small helper functions (LCG, quantile, drawLine)
+          needed for the custom-rendering approach, rather than a flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed 42) makes generation fully deterministic
+        comment: Fixed-seed LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No external imports beyond the provided Highcharts/tokens globals
+        comment: No unused imports; only the global ANYPLOT_TOKENS and Highcharts
+          are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; complexity is proportional
-          to the constraint of no native boxplot series
+        comment: Appropriately complex for the required custom rendering; no fake
+          UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, credits disabled
+        comment: Correct mount-node contract, animation disabled, credits disabled,
+          no explicit width/height
     library_mastery:
       score: 8
       max: 10
@@ -245,21 +231,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Since highcharts-more's boxplot series is unavailable, using chart.events.render
-          + SVGRenderer + axis.toPixels is the documented Highcharts pattern for custom
-          visualizations
+        comment: Correctly uses Highcharts.chart(), the render event lifecycle, and
+          the SVG renderer API - a lower-level path than a native series type, but
+          the right workaround given the unavailable boxplot module
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The renderer/events/toPixels combination is a genuinely Highcharts-specific
-          extensibility technique, not generic cross-library code
-  verdict: REJECTED
+        comment: Leverages Highcharts' renderer + axis pixel-coordinate transforms
+          tied to the redraw lifecycle - a technique fairly distinctive to Highcharts'
+          architecture
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
+  - custom-rendering
   patterns:
   - data-generation
   - iteration-over-groups
