@@ -232,6 +232,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The bot analytics recorded nothing at all** — Plausible identifies crawler user agents and
+  discards their events, so forwarding the real one guaranteed an empty dashboard. Verified against
+  the live API: the same event sent as `Claude-User` never appears, sent as a browser agent it does,
+  and both are acknowledged with `202 ok` — Plausible always accepts, then drops. There is no
+  documented bypass, so machine-side events now travel under a neutral agent; nothing is lost,
+  because the user agent only feeds browser/OS detection, which is meaningless for a crawler, while
+  the identity rides in the `assistant` and `kind` properties. A second silent drop was found in the
+  same pass: the [Events API docs](https://plausible.io/docs/events-api) state that forwarding an
+  infrastructure address rather than the visitor's makes Plausible discard the event, and analytics
+  was reusing the rate limiter's IP resolver — which deliberately returns the *rightmost* forwarded
+  entry, ours. Analytics now has its own `visitor_ip`, and `api/request_context.py` records why the
+  two must not be merged (#10477).
 - **The daily bot-serving monitor had been red for ten days** — it greps for an exact home-page
   title, the copy changed to "anyplot.ai — AI-generated plot catalog for 15 libraries", and every
   scheduled run since 2026-08-09 failed on that one line. Nothing else was wrong, and nobody looked:

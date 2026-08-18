@@ -13,7 +13,7 @@ import re
 import httpx
 from fastapi import Request
 
-from api.request_context import client_ip as resolve_client_ip
+from api.request_context import visitor_ip
 
 
 logger = logging.getLogger(__name__)
@@ -27,6 +27,17 @@ DOMAIN = "anyplot.ai"
 # ~40% too high and the trend lines unusable. A second site keeps the human
 # numbers clean while still answering "how often does an assistant read this".
 BOT_DOMAIN = "bots.anyplot.ai"
+
+# Plausible discards events whose User-Agent it recognises as a bot, and it
+# recognises all of them — verified against the live API: the same event sent
+# as `Claude-User` never appears, sent as a browser UA it does. Forwarding the
+# real crawler UA therefore guarantees the bot site records nothing at all.
+#
+# So machine-side events are sent under a neutral agent. Nothing is lost: the
+# UA only feeds Plausible's browser/OS/device detection, which is meaningless
+# for a crawler, while the identity that matters travels in the `assistant` and
+# `kind` properties either way.
+BOT_SENDER_UA = "anyplot-server/1.0"
 
 # Which assistant, and on whose behalf. The distinction is the point: a
 # user-directed fetch means a person asked their assistant to open this page,
@@ -195,11 +206,14 @@ async def _send_plausible_event(
         domain: Plausible site to record against; BOT_DOMAIN keeps AI traffic
             out of the human numbers
     """
+    # Events for the bot site travel under a neutral agent: Plausible drops
+    # anything it identifies as a bot, which is every UA this path carries.
+    sender_ua = BOT_SENDER_UA if domain == BOT_DOMAIN else user_agent
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             await client.post(
                 PLAUSIBLE_ENDPOINT,
-                headers={"User-Agent": user_agent, "X-Forwarded-For": client_ip, "Content-Type": "application/json"},
+                headers={"User-Agent": sender_ua, "X-Forwarded-For": client_ip, "Content-Type": "application/json"},
                 json={"name": name, "url": url, "domain": domain, "props": props},
             )
     except Exception as e:
@@ -241,7 +255,7 @@ def track_og_image(
         filters: Query params for filtered home page (e.g., {'lib': 'plotly', 'dom': 'statistics'})
     """
     user_agent = request.headers.get("user-agent", "")
-    client_ip = resolve_client_ip(request)
+    client_ip = visitor_ip(request)
     platform = detect_platform(user_agent)
 
     # Build URL based on page type. Spec routes follow /{spec}/{language}/{library}.
@@ -316,13 +330,11 @@ def track_bot_fetch(request: Request, path: str) -> None:
         return
     assistant, kind = detected
 
-    # Resolve through the shared helper rather than reading the raw header:
-    # x-forwarded-for is a comma-separated chain once more than one proxy has
-    # appended to it, so the raw value is neither a valid single IP for
-    # Plausible nor the right one for geolocation. The helper also prefers
-    # cf-connecting-ip and takes the rightmost entry, which is the one a
-    # client cannot forge.
-    client_ip = resolve_client_ip(request)
+    # visitor_ip, not the rate limiter's client_ip: Plausible documents that it
+    # drops events carrying an infrastructure address rather than the real
+    # visitor's, and the rate limiter deliberately returns the rightmost
+    # forwarded entry — ours. See api/request_context.py for why the two differ.
+    client_ip = visitor_ip(request)
     props = {"assistant": assistant, "kind": kind, "path": path}
     url = f"https://anyplot.ai{path}"
 
