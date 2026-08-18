@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: box-grouped
+created: '2026-08-18T08:55:17Z'
+updated: '2026-08-18T09:06:14Z'
+generated_by: claude-sonnet
+workflow_run: 32118532518
+issue: 2017
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Horizontal gridlines now use INK_SOFT at a thin linewidth (0.15) instead of full
+    INK — directly fixes the attempt-1 weakness that they read as too bold/prominent,
+    giving a properly subtle grid in both themes
+  - New stat_summary mean-diamond overlay (shape 23, dodge-matched to the boxes, hollow
+    fill/border swap using PAGE_BG/INK) is a genuine distinctive ggplot2 technique
+    that adds real analytical value — comparing mean vs. median highlights skew per
+    department/experience group without introducing a new palette color
+  - 'Correct Imprint palette usage: IMPRINT_PALETTE[1:3] in canonical order with brand
+    green (#009E73) first, identical data colors between light and dark renders'
+  - 'Fully theme-adaptive chrome — title, axis titles, tick labels, legend text, and
+    the mean-marker stroke all read cleanly on both #FAF8F1 and #1A1A17 backgrounds'
+  - Consistent box widths (width = 0.65) and dodge spacing (position_dodge(width =
+    0.75)) shared across the boxplot and stat_summary layers, so mean markers align
+    exactly over their boxes
+  - Clean, idiomatic single-file ggplot2 implementation — set.seed(42), only-used
+    imports (ggplot2/dplyr/tidyr/ragg), no functions, ragg::agg_png output at the
+    correct canvas size
+  weaknesses:
+  - Beyond the new mean-marker overlay, the composition is still a fairly standard
+    grouped-boxplot layout with no annotation or callout calling out a specific insight
+    (e.g. the largest mean/median gap or biggest outlier cluster) — a missed opportunity
+    for stronger data storytelling.
+  - Box fills are flat single-color with no additional refinement (e.g. subtle alpha,
+    refined outline weight beyond the shared INK_SOFT stroke) to further differentiate
+    this from a default themed boxplot — aesthetic sophistication is competent but
+    not yet distinctive.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "box-grouped · r · ggplot2 · anyplot.ai" top-left; "Experience Level" legend (Junior/Mid/Senior swatches + a "Mean" diamond glyph) top-right, right-justified; "Department" x-axis title and "Productivity Score" y-axis title in dark ink; tick labels (Engineering/Sales/Marketing/Support, 40/60/80) in softer dark grey. Horizontal gridlines are thin and subtle (INK_SOFT, linewidth 0.15). All text is clearly readable against the light background.
+      Data: Grouped/dodged box plots — 4 departments (Engineering, Sales, Marketing, Support) each with 3 side-by-side boxes (Junior = green #009E73, Mid = lavender #C475FD, Senior = blue #4467A3), all with INK_SOFT-colored outlines/median lines and matching grey outlier dots. A hollow diamond (cream fill, dark border) sits over each box marking the group mean, dodge-aligned with its box. Boxes are consistently sized and evenly spaced within each department group.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Light/white bold title, light-grey/white axis titles, light-grey tick labels and legend text — all clearly visible against the dark background. Gridlines remain thin and subtle in light ink. No dark-on-dark text observed anywhere.
+      Data: Same grouped box plot layout and identical three data colors (green/lavender/blue) as the light render — confirmed unchanged from light; only chrome (background, gridlines, text, box outline/median-line ink, mean-diamond fill/border) flipped to dark-theme tones. The mean diamonds now show a near-black fill with a light border, still clearly distinguishable against both the colored boxes and the dark canvas. Outlier dots remain grey and visible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 12, axis title 10, axis/legend
+          text 8); all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, boxes, or the new mean markers
+          in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Outlier size/alpha (1.8, 0.7) and mean-diamond size/stroke (2.2,
+          0.6) both well-tuned for ~70 points/subgroup
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue combination is CVD-safe; no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape canvas, no clipping or overflow, balanced axis
+          label sizes
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Department' / 'Productivity Score' axis labels; mandated
+          title format used
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; IMPRINT_PALETTE[1:3] used in canonical
+          order; backgrounds match spec in both themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Mean-diamond overlay (hollow fill/border swap) adds a genuine polish
+          touch beyond the base style guide, but overall composition is still fairly
+          standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Attempt-1 weakness fixed: gridlines now use INK_SOFT at linewidth
+          0.15 instead of full INK, reading as properly subtle; generous whitespace,
+          clean legend'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Mean vs. median overlay adds an analytical layer surfacing skew across
+          groups, but no annotation/callout highlights a specific insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped/dodged box plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Side-by-side colored boxes, clear legend, consistent widths, median/quartiles/whiskers/outliers
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: department -> x (category), experience -> fill (subcategory), score
+          -> y (value), matching spec's data model
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels (Junior/Mid/Senior +
+          Mean) match subcategory values
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 departments x 3 experience levels x 70 points, within spec ranges
+          (2-6 categories, 2-4 subcategories, 20-200 points)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral department/experience productivity scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Score values (~30-95) are sensible for a productivity-score domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) used
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: expand.grid + rowwise + unnest is an appropriate, non-inflated data-generation
+          approach; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave/ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_boxplot + position_dodge + scale_fill_manual + stat_summary
+          is idiomatic layered ggplot2 grammar
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Attempt-1 weakness fixed: added stat_summary mean overlay with matched
+          dodge width, custom shape scale, and guides() legend ordering — a genuinely
+          distinctive ggplot2-specific technique'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - grid-styling
