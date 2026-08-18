@@ -46,6 +46,8 @@ Highcharts.chart("container", {
     min: 0,
     max: 100,
     tickInterval: 20,
+    lineColor: t.inkSoft,
+    tickColor: t.inkSoft,
     title: {
       text: "Market Share (%)",
       style: { color: t.inkSoft, fontSize: "16px" },
@@ -60,12 +62,23 @@ Highcharts.chart("container", {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
-  tooltip: { enabled: false },
+  tooltip: {
+    enabled: true,
+    shared: true,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    style: { color: t.ink, fontSize: "13px" },
+    headerFormat: '<span style="font-weight:600">{point.key}</span><br/>',
+    pointFormat:
+      '<span style="color:{point.color}">●</span> {series.name}: <b>{point.percentage:.0f}%</b> ({point.y})<br/>',
+  },
   plotOptions: {
     series: { animation: false },
     column: {
       stacking: "percent",
-      borderWidth: 0,
+      borderWidth: 2,
+      borderColor: t.pageBg,
+      borderRadius: 3,
       pointPadding: 0.08,
       groupPadding: 0.12,
       dataLabels: {
