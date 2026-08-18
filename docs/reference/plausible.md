@@ -256,6 +256,31 @@ machine-side and goes to `bots.anyplot.ai` carrying the same `assistant` and
 `kind` props as `bot_fetch`, so both events slice alike. Anything it does not
 recognise (Twitter, Facebook, Slack, WhatsApp, …) is a share and stays put.
 
+#### Two things Plausible will silently drop
+
+Both were found by sending probe events against the live API and comparing what
+appeared, and both make an event vanish with an HTTP `202 ok` — Plausible always
+acknowledges, then discards.
+
+**A bot User-Agent.** Plausible identifies crawler agents and drops their
+events. Verified: the same event sent as `Claude-User` never appears, sent as a
+browser UA it does. There is no documented bypass. Machine-side events are
+therefore sent under `BOT_SENDER_UA` (`anyplot-server/1.0`); nothing is lost,
+because the UA only feeds Plausible's browser/OS/device detection — meaningless
+for a crawler — while the identity travels in `assistant` and `kind`.
+
+**Our own IP instead of the visitor's.** The
+[Events API docs](https://plausible.io/docs/events-api) state that Plausible
+uses "the first valid IP address from the list" and that if you "forward a
+server, hosting provider, or CDN IP address instead of the actual visitor IP,
+Plausible's bot filtering will drop the event". Analytics therefore resolves the
+IP with `visitor_ip`, **not** the rate limiter's `client_ip`: the latter
+deliberately returns the *rightmost* forwarded entry, because the leftmost is
+client-controlled and forging it once let callers poison another user's
+rate-limit bucket. The rightmost entry is our own infrastructure, so reusing it
+here would discard every event. `api/request_context.py` documents why the two
+must stay separate.
+
 Register the three properties on the **`bots.anyplot.ai`** site, not on
 `anyplot.ai` — property registration is per site, and without it the events
 still arrive but cannot be broken down, which is the whole point of collecting
