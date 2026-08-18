@@ -4,7 +4,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 
 ---
 
-## Quick Links
+## Quick links
 
 | I want to... | Go to |
 |--------------|-------|
@@ -22,7 +22,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 
 ---
 
-## Documentation Structure
+## Documentation structure
 
 ```
 docs/
@@ -90,7 +90,7 @@ Technical details for development and integration.
 
 ---
 
-## Other Resources
+## Other resources
 
 - **[README](../README.md)** - Project overview and quick start
 - **[CLAUDE.md](../CLAUDE.md)** - AI assistant instructions (for Claude Code)

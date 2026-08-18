@@ -1,4 +1,4 @@
-# Plausible Analytics Tracking
+# Plausible analytics tracking
 
 This document provides a comprehensive overview of Plausible Analytics implementation for anyplot.ai, including all tracked events, user interactions, and the required Plausible dashboard configuration.
 
@@ -12,11 +12,11 @@ This document provides a comprehensive overview of Plausible Analytics implement
 - Production-only: Only tracks on `anyplot.ai` domain
 - Privacy-focused: No cookies, GDPR-compliant
 
-## Page Views
+## Page views
 
 **Implementation**: Query parameters converted to URL path segments for better analytics segmentation.
 
-### Multi-Language URL Strategy
+### Multi-language URL strategy
 
 **Cutover date**: 2026-04-20
 
@@ -43,7 +43,7 @@ Historical data before 2026-04-14 uses un-prefixed paths
 `/python/{spec_id}[/{library}]` prefix. Both ranges remain visible in
 Plausible but are no longer produced.
 
-### Filter-Based Pageviews
+### Filter-based pageviews
 
 Filters create dynamic URLs with the following format:
 ```
@@ -93,7 +93,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 
 **Total pageview tracking**: Automated via `trackPageview()` in all pages
 
-## Custom Events
+## Custom events
 
 ### Conversions
 
@@ -119,7 +119,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `search` | `query`, `category` | FilterBar.tsx | User searches and selects value |
 | `search_no_results` | `query` | FilterBar.tsx | Search query returns no results (debounced 200ms) |
 
-### Feature Usage
+### Feature usage
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
@@ -143,7 +143,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `feedback_opened` | `path` | FeedbackWidget.tsx | User clicks the floating feedback FAB and the quick mini-stack of 👍 / 👎 / 💬 appears (issue #5662). `path` is `window.location.pathname + search` at open time. |
 | `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `mode` | FeedbackWidget.tsx | User submits a feedback entry. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea` (omitted if none selected). `mode` is `"quick"` for a one-tap 👍/👎 from the mini-stack, `"full"` for a submit from the detailed dialog. `has_contact` is `"true"`/`"false"` — the contact field is now a free-form name/email/handle, not strictly an email. `spec_id` is set when the current route resolves to a spec page. |
 
-### Landing Page Navigation (`nav_click`)
+### Landing page navigation (`nav_click`)
 
 A single event captures every clickable surface on the chrome and the new
 editorial landing page so we can answer "where do users go from `/` and via
@@ -181,7 +181,7 @@ carry `spec`, `library`, or `value` for richer breakdowns.
 
 **Tab names**: `code`, `specification`, `implementation`, `quality`
 
-### External/Internal Link Events
+### External and internal link events
 
 | Event Name | Properties | Where | Description |
 |------------|-----------|-------|-------------|
@@ -208,7 +208,7 @@ CWV tracking is production-only and dynamically imported (zero dev/bundle cost).
 
 ---
 
-## Server-Side og:image Tracking
+## Server-side og:image tracking
 
 Social media bots (Twitter, WhatsApp, Teams, etc.) don't execute JavaScript, so og:image requests can only be tracked server-side.
 
@@ -228,7 +228,7 @@ Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image 
 
 **Implementation**: `api/analytics.py` (server-side Plausible tracking)
 
-### og:image Event
+### og:image event
 
 | Event Name | Properties | Description |
 |------------|------------|-------------|
@@ -245,7 +245,7 @@ Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image 
 | `library` | Library ID | Only for spec detail pages |
 | `filter_*` | Filter value | Dynamic props for filtered URLs (e.g., `filter_lib`, `filter_dom`) |
 
-### Platform Detection (27 platforms)
+### Platform detection (27 platforms)
 
 **Social Media**: twitter, facebook, linkedin, pinterest, reddit, tumblr, mastodon
 
@@ -257,7 +257,7 @@ Bot requests page → nginx detects bot → SEO proxy serves HTML with og:image 
 
 **Fallback**: unknown
 
-#### WhatsApp Variant Detection
+#### WhatsApp variant detection
 
 Some apps (Signal, others) use a WhatsApp User-Agent to bypass rate limits ([Issue #10060](https://github.com/signalapp/Signal-Android/issues/10060)). We distinguish real WhatsApp from spoofed requests by version format:
 
@@ -266,7 +266,7 @@ Some apps (Signal, others) use a WhatsApp User-Agent to bypass rate limits ([Iss
 | `whatsapp` | `WhatsApp/2.23.18.78 i` | 3+ part version = verified WhatsApp |
 | `whatsapp-lite` | `WhatsApp` or `WhatsApp/2` | Simplified UA = Signal or other spoofers |
 
-### API Endpoints
+### API endpoints
 
 | Endpoint | Description | Tracking |
 |----------|-------------|----------|
@@ -275,7 +275,7 @@ Some apps (Signal, others) use a WhatsApp User-Agent to bypass rate limits ([Iss
 | `/og/{spec_id}.png` | Collage og:image for spec overview | `page=spec_overview`, `spec` |
 | `/og/{spec_id}/{language}/{library}.png` | Branded og:image for implementation | `page=spec_detail`, `spec`, `language`, `library` |
 
-### Filter Tracking for Shared URLs
+### Filter tracking for shared URLs
 
 When users share filtered URLs (e.g., `https://anyplot.ai/?lib=plotly&dom=statistics`), the filters are passed to the og:image endpoint:
 
@@ -289,15 +289,15 @@ Tracked props: { page: "home", platform: "twitter", filter_lib: "plotly,matplotl
 
 ---
 
-## Plausible Dashboard Configuration
+## Plausible dashboard configuration
 
-### Required Custom Properties
+### Required custom properties
 
 To see event properties in Plausible dashboard, you **MUST** register them as custom properties.
 
 **Go to**: Plausible Dashboard → Site Settings → Custom Properties → Add Property
 
-#### Properties to Register
+#### Properties to register
 
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
@@ -334,11 +334,11 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `filter_prep` | Dataprep filter value (for og:image) | `og_image_view` |
 | `filter_style` | Styling filter value (for og:image) | `og_image_view` |
 
-### Goals Configuration
+### Goals configuration
 
 **Go to**: Plausible Dashboard → Site Settings → Goals → Add Goal
 
-#### Recommended Goals
+#### Recommended goals
 
 | Goal Name | Type | Description |
 |-----------|------|-------------|
@@ -371,7 +371,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | `CLS` | Custom Event | Cumulative Layout Shift (Core Web Vital) |
 | `INP` | Custom Event | Interaction to Next Paint (Core Web Vital) |
 
-### Funnels (Optional)
+### Funnels (optional)
 
 **Example funnel**: Home → Spec → Copy
 
@@ -379,7 +379,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 2. Pageview `/{spec_id}/{language}/{library}` (spec detail)
 3. `copy_code` event
 
-### Dashboard Widgets
+### Dashboard widgets
 
 Recommended custom widgets:
 
@@ -393,9 +393,9 @@ Recommended custom widgets:
 
 ---
 
-## User Journey Tracking
+## User journey tracking
 
-### Understanding `page` Property
+### Understanding the `page` property
 
 The `page` property tracks **where** users perform actions to understand their journey:
 
@@ -418,7 +418,7 @@ User lands on anyplot.ai
         └─→ open_interactive { spec, language, library }
 ```
 
-### Journey Examples in Plausible
+### Journey examples in Plausible
 
 **Q: Do users copy from search results or spec pages?**
 - Filter `copy_code` by `page` property
@@ -432,9 +432,9 @@ User lands on anyplot.ai
 
 ---
 
-## Complete Event Reference
+## Complete event reference
 
-### Events Summary Table
+### Events summary table
 
 | Event | Properties | Code Location |
 |-------|------------|---------------|
@@ -485,19 +485,19 @@ User lands on anyplot.ai
 
 ---
 
-## Property Values Reference
+## Property values reference
 
-### `spec` Values
+### `spec` values
 Any valid specification ID (e.g., `scatter-basic`, `heatmap-correlation`, `bar-grouped`)
 
-### `library` Values
+### `library` values
 ```
 matplotlib | seaborn | plotly | bokeh | altair | plotnine | pygal | letsplot
 ggplot2 | makie | chartjs | d3 | echarts | highcharts | muix
 ```
 (Canonical source: `LIBRARIES_METADATA` in `core/constants.py`.)
 
-### `method` Values
+### `method` values
 ```
 card      # ImageCard copy button (home grid)
 image     # SpecPage image copy button
@@ -507,7 +507,7 @@ space     # Spacebar pressed
 doubletap # Mobile double-tap
 ```
 
-### `page` Values
+### `page` values
 ```
 home          # HomePage grid view (client) or og:image home endpoint (server)
 plots         # PlotsPage (server og:image only)
@@ -515,7 +515,7 @@ spec_overview # SpecPage showing all libraries
 spec_detail   # SpecPage showing single library
 ```
 
-### `platform` Values (server-side og:image tracking only)
+### `platform` values (server-side og:image tracking only)
 ```
 # Social Media
 twitter | facebook | linkedin | pinterest | reddit | tumblr | mastodon
@@ -536,7 +536,7 @@ embedly | quora | outbrain | rogerbot | showyoubot
 unknown
 ```
 
-### `category` Values
+### `category` values
 ```
 # Spec-level (WHAT is visualized)
 lib   # library filter
@@ -554,7 +554,7 @@ prep  # dataprep filter
 style # styling filter
 ```
 
-### `tab` Values
+### `tab` values
 ```
 code           # Python code tab
 specification  # Spec details tab
@@ -562,7 +562,7 @@ implementation # AI implementation review tab
 quality        # Quality score breakdown tab
 ```
 
-### `destination` Values
+### `destination` values
 ```
 github          # GitHub repository link (Footer)
 stats           # Plausible stats dashboard link (Footer)
@@ -573,13 +573,13 @@ mcp             # MCP documentation page (internal link, Footer)
 legal           # Legal page (internal link, Footer)
 ```
 
-### `size` Values
+### `size` values
 ```
 normal   # Larger cards (1-3 columns)
 compact  # Smaller cards (2-6 columns)
 ```
 
-### `rating` Values (Core Web Vitals)
+### `rating` values (Core Web Vitals)
 ```
 good              # Within recommended thresholds
 needs-improvement # Between good and poor thresholds
@@ -588,7 +588,7 @@ poor              # Exceeds poor threshold
 
 ---
 
-## Reading Stats — Backend → Plausible Stats API
+## Reading stats — backend → Plausible Stats API
 
 In addition to *sending* events, the backend reads aggregate visitor data
 from Plausible to render the unique-visitors chart at the top of the
@@ -612,7 +612,7 @@ public stats page.
   dashboard endpoint is unaffected because visitors load on a separate
   fetch.
 
-## Code Locations
+## Code locations
 
 - **Plausible setup**: `app/index.html` (lines 59-68)
 - **Analytics hook**: `app/src/hooks/useAnalytics.ts`
@@ -639,7 +639,7 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 
 ---
 
-## Implementation Checklist
+## Implementation checklist
 
 - [x] Plausible script loaded
 - [x] Manual pageview tracking
@@ -661,7 +661,7 @@ window.plausible = function(...args) { console.log('Plausible:', args); };
 - [x] Landing-page navigation tracking (`nav_click`)
 - [x] Theme tracking (`theme_toggle` event + `theme` ambient pageview prop)
 
-### Plausible Dashboard Checklist
+### Plausible dashboard checklist
 
 - [ ] Register all custom properties (see table above, including `rating`, `action`, `param`, `source`, `platform`, `filter_*`)
 - [ ] Create goals for key events (including `LCP`, `CLS`, `INP`)

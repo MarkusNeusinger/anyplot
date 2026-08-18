@@ -1,4 +1,4 @@
-# Performance Reference
+# Performance reference
 
 Backend API response time measurements for anyplot-backend (Cloud Run, europe-west4).
 
@@ -11,11 +11,11 @@ Backend API response time measurements for anyplot-backend (Cloud Run, europe-we
 | Cloud SQL | `db-g1-small`, PostgreSQL 18, PD-SSD 10GB | 0.5 shared vCPU, 1.7GB RAM |
 | Cache | In-memory TTLCache, 86400s TTL (24h), max 1000 entries | Per-instance, stampede-protected, stale-while-revalidate |
 
-## Baseline: Before `--no-cpu-throttling` (March 24, 2026)
+## Baseline: before `--no-cpu-throttling` (March 24, 2026)
 
 Cloud Run config: `cpu-throttling=true` (request-based billing), 512Mi RAM.
 
-### Uncached Requests (first hit after cache expiry, requires DB query)
+### Uncached requests (first hit after cache expiry, requires DB query)
 
 | Endpoint | Samples | Min | Median | Max | Notes |
 |----------|---------|-----|--------|-----|-------|
@@ -24,7 +24,7 @@ Cloud Run config: `cpu-throttling=true` (request-based billing), 512Mi RAM.
 | `/libraries` | 4 | 0.46s | 6.96s | 7.06s | 9 rows, simple SELECT |
 | `/specs/{id}` | 4 | 7.08s | 8.66s | 9.59s | Single spec + all impls |
 
-### Cached Requests (cache hit, no DB)
+### Cached requests (cache hit, no DB)
 
 | Endpoint | Samples | Min | Median | Max |
 |----------|---------|-----|--------|-----|
@@ -32,7 +32,7 @@ Cloud Run config: `cpu-throttling=true` (request-based billing), 512Mi RAM.
 | `/stats` | 5 | 2ms | 3ms | 3ms |
 | `/libraries` | 10 | 3ms | 37ms | 57ms |
 
-### OOM Events (512Mi RAM)
+### OOM events (512Mi RAM)
 
 14 OOM crashes in 15 days (March 10-23):
 
@@ -55,7 +55,7 @@ Cloud Run config: `cpu-throttling=false` (instance-based billing), 1Gi RAM.
 
 Deployed revision `anyplot-backend-00085-4rn` at 2026-03-24 22:25 UTC.
 
-### Uncached Requests
+### Uncached requests
 
 | Endpoint | Samples | Min | Median | Max | Notes |
 |----------|---------|-----|--------|-----|-------|
@@ -64,7 +64,7 @@ Deployed revision `anyplot-backend-00085-4rn` at 2026-03-24 22:25 UTC.
 | `/libraries` | 8 | 0.31s | 7.59s | 8.57s | No improvement |
 | `/specs/{id}` | 6 | 7.08s | 8.76s | 9.59s | No improvement |
 
-### Cached Requests
+### Cached requests
 
 | Endpoint | Samples | Min | Median | Max |
 |----------|---------|-----|--------|-----|
@@ -72,11 +72,11 @@ Deployed revision `anyplot-backend-00085-4rn` at 2026-03-24 22:25 UTC.
 | `/stats` | 2 | 2ms | 2ms | 2ms |
 | `/libraries` | 10 | 18ms | 107ms | 228ms |
 
-### OOM Events (1Gi RAM)
+### OOM events (1Gi RAM)
 
 **0 OOM events since upgrade** (March 24-25). Memory increase resolved the OOM crashes.
 
-## Cloud SQL Metrics (March 25, 2026)
+## Cloud SQL metrics (March 25, 2026)
 
 Measured via Cloud Monitoring API while running `db-f1-micro`:
 
@@ -90,7 +90,7 @@ Measured via Cloud Monitoring API while running `db-f1-micro`:
 
 **Note:** The `memory/utilization` metric at 100% is NOT indicative of memory pressure. Linux uses all free RAM as filesystem page cache, which is normal and beneficial. Actual PostgreSQL memory usage is ~200 MB / 614 MB.
 
-### Root Cause: Shared 0.2 vCPU under concurrent load
+### Root cause: shared 0.2 vCPU under concurrent load
 
 Connection establishment is **not** the issue — `num_backends` metric shows 5-8 persistent connections to the `anyplot` database at all times. The connection pool (`pool_size=5`, `max_overflow=10`, `pool_pre_ping=True`) keeps connections alive.
 
@@ -110,7 +110,7 @@ gcloud monitoring: num_backends
 
 Cloud Run backend OOM crash at the same timestamp caused all active DB connections to drop.
 
-## Cloud SQL Tier Comparison
+## Cloud SQL tier comparison
 
 | Spec | `db-f1-micro` (current) | `db-g1-small` | `db-custom-1-3840` |
 |------|-------------------------|---------------|---------------------|
@@ -137,7 +137,7 @@ Upgrade: `gcloud sql instances patch anyplot-db --tier=db-g1-small`
 
 Cloud SQL config: `db-g1-small` (0.5 shared vCPU, 1.7 GB RAM, ~$27/mo).
 
-### Uncached Requests
+### Uncached requests
 
 | Endpoint | Samples | Min | Median | Max | vs db-f1-micro |
 |----------|---------|-----|--------|-----|----------------|
@@ -146,7 +146,7 @@ Cloud SQL config: `db-g1-small` (0.5 shared vCPU, 1.7 GB RAM, ~$27/mo).
 | `/libraries` | 4 | 7.89s | 9.44s | 10.77s | No improvement (was 7.59s) |
 | `/specs/{id}` | 1 | 7.86s | — | 7.86s | Insufficient data |
 
-### Cached Requests
+### Cached requests
 
 | Endpoint | Samples | Min | Median | Max |
 |----------|---------|-----|--------|-----|
@@ -155,7 +155,7 @@ Cloud SQL config: `db-g1-small` (0.5 shared vCPU, 1.7 GB RAM, ~$27/mo).
 | `/libraries` | 6 | 3ms | 25ms | 129ms |
 | `/specs/{id}` | 6 | 10ms | 37ms | 92ms |
 
-### OOM Events (1Gi RAM)
+### OOM events (1Gi RAM)
 
 **0 OOM events** since the 1Gi RAM upgrade (March 24-26).
 
@@ -163,7 +163,7 @@ Cloud SQL config: `db-g1-small` (0.5 shared vCPU, 1.7 GB RAM, ~$27/mo).
 
 DB upgrade from `db-f1-micro` to `db-g1-small` provided moderate improvement for `/specs` and `/stats` median latency but no improvement for `/libraries` or concurrent heavy queries. The fundamental issue remains: when the cache expires, 3-4 parallel requests overwhelm the shared 0.5 vCPU.
 
-## Cache Stampede Prevention + Stale-While-Revalidate (March 26, 2026)
+## Cache stampede prevention + stale-while-revalidate (March 26, 2026)
 
 Software optimization to eliminate periodic slow responses entirely.
 
@@ -174,7 +174,7 @@ Software optimization to eliminate periodic slow responses entirely.
 3. **Stale-while-revalidate** — After `cache_refresh_after` seconds (default 1h), the next request triggers a background cache refresh. The user gets the stale cached response immediately.
 4. **Stats derivation** — `/stats` derives counts from cached `/specs` and `/libraries` responses when available, avoiding a separate DB query.
 
-### Expected Impact
+### Expected impact
 
 | Scenario | Before | After |
 |----------|--------|-------|
@@ -182,7 +182,7 @@ Software optimization to eliminate periodic slow responses entirely.
 | Cold start (after deploy) | 3-4 parallel DB queries | 2 DB queries (lock), stats derived |
 | Normal request | 2-230ms | 2-230ms (unchanged) |
 
-## How to Reproduce These Measurements
+## How to reproduce these measurements
 
 ### Query slow requests (>500ms) for specific endpoints
 
