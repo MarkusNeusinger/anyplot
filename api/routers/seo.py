@@ -842,24 +842,22 @@ async def seo_spec_implementation(
     impl = next(
         (i for i in spec.impls if i.library_id == library and i.library and i.library.language == language), None
     )
-    image = (
-        f"https://api.anyplot.ai/og/{spec_id}/{language}/{library}.png"
-        if impl and impl.preview_url
-        else DEFAULT_HOME_IMAGE
-    )
+    if impl is None:
+        # The spec exists but this language/library pair does not. This used to
+        # serve a 200 with a minimal meta-only page, so that bots holding stale
+        # URLs after a regen still got something — but neither segment is
+        # validated anywhere, so every {spec}/{any string}/{any string} URL was
+        # an indexable page carrying its own self-referencing canonical. That is
+        # an unbounded supply of thin near-duplicates competing with the real
+        # catalogue for the same crawl budget, and it kept 161 URLs from the
+        # highcharts Python->JS migration (#8516) indexed months after the
+        # implementations were deleted. They are worth 10 clicks per 28 days
+        # between them, so they are dropped rather than redirected.
+        raise HTTPException(status_code=404, detail="Implementation not found")
 
-    if impl:
-        code_impl = await ImplRepository(db).get_code(spec_id, library, language)
-        code = strip_noqa_comments(code_impl.code) if code_impl and code_impl.code else None
-        result = _build_impl_html(spec, impl, code, image)
-    else:
-        # Unknown language/library combination for a real spec: keep serving
-        # the minimal meta-only page (bots may hold stale URLs after regens).
-        result = _render_bot_html(
-            title=f"{html.escape(spec.title)} - {html.escape(library)} | anyplot.ai",
-            description=html.escape(spec.description or DEFAULT_DESCRIPTION),
-            image=html.escape(image, quote=True),
-            url=f"https://anyplot.ai/{html.escape(spec_id)}/{html.escape(language)}/{html.escape(library)}",
-        )
+    image = f"https://api.anyplot.ai/og/{spec_id}/{language}/{library}.png" if impl.preview_url else DEFAULT_HOME_IMAGE
+    code_impl = await ImplRepository(db).get_code(spec_id, library, language)
+    code = strip_noqa_comments(code_impl.code) if code_impl and code_impl.code else None
+    result = _build_impl_html(spec, impl, code, image)
     set_cache(key, result)
     return HTMLResponse(result)

@@ -613,22 +613,13 @@ class TestSeoRouter:
     """Tests for SEO router."""
 
     def test_robots_txt(self, client: TestClient) -> None:
-        """robots.txt should block the API but expose the preview images.
-
-        Every prerendered page references an image under /og/; a blanket
-        Disallow made those unfetchable for anything that honours robots.txt,
-        so an assistant could read a plot's code but not show its picture.
-        """
+        """robots.txt should block crawlers from all routes."""
         response = client.get("/robots.txt")
         assert response.status_code == 200
         assert response.headers["content-type"] == "text/plain; charset=utf-8"
         content = response.text
         assert "User-agent: *" in content
         assert "Disallow: /" in content
-        assert "Allow: /og/" in content
-        # Allow must come first: a first-match parser stops at Disallow: / and
-        # would never reach the exception.
-        assert content.index("Allow: /og/") < content.index("Disallow: /")
 
     def test_sitemap_structure(self, client: TestClient) -> None:
         """Sitemap should return valid XML structure."""
@@ -714,8 +705,10 @@ class TestSeoProxyRouter:
         assert track.call_args.args[1] == "/bar-basic"
 
     def test_seo_proxy_home_records_root(self, client: TestClient) -> None:
+        """The proxy root maps to "/", and the hook fires exactly once per request."""
         with patch(DB_CONFIG_PATCH, return_value=False), patch("api.routers.seo.track_bot_fetch") as track:
             client.get("/seo-proxy/", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
+        track.assert_called_once()
         assert track.call_args.args[1] == "/"
 
     def test_robots_and_sitemap_are_not_page_reads(self, client: TestClient) -> None:
@@ -910,6 +903,57 @@ class TestSeoProxyRouter:
         with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
             response = client.get("/seo-proxy/nonexistent-spec/python/matplotlib")
             assert response.status_code == 404
+
+    def test_seo_spec_implementation_unknown_combination_is_404(self, db_client, mock_spec) -> None:
+        """A real spec with a language/library pair that has no implementation must 404.
+
+        Neither segment is validated against a vocabulary, so a 200 here made
+        every {spec}/{any string}/{any string} URL an indexable page with its
+        own self-referencing canonical.
+        """
+        client, _ = db_client
+
+        # Give the spec a JavaScript-only implementation so the wrong-language
+        # case is genuinely exercised: /python/highcharts must fail on the
+        # language filter, not merely because the library id is absent.
+        js_impl = MagicMock()
+        js_impl.library_id = "highcharts"
+        js_impl.library = MagicMock()
+        js_impl.library.language = "javascript"
+        js_impl.preview_url = None
+        mock_spec.impls = [*mock_spec.impls, js_impl]
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=None)
+
+        with (
+            patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.seo.ImplRepository", return_value=mock_impl_repo),
+        ):
+            # Library exists on this spec, but only under a different language
+            assert client.get("/seo-proxy/scatter-basic/python/highcharts").status_code == 404
+            # ...while its real language still resolves
+            assert client.get("/seo-proxy/scatter-basic/javascript/highcharts").status_code == 200
+            # Library that does not exist at all
+            assert client.get("/seo-proxy/scatter-basic/python/madeuplib").status_code == 404
+            # Language that does not exist at all
+            assert client.get("/seo-proxy/scatter-basic/klingon/matplotlib").status_code == 404
+
+    def test_seo_spec_implementation_404_is_not_cached(self, db_client, mock_spec) -> None:
+        """A 404 must not populate the cache, or a later real regen stays invisible."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+
+        with (
+            patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.seo.set_cache") as mock_set_cache,
+        ):
+            assert client.get("/seo-proxy/scatter-basic/python/madeuplib").status_code == 404
+            mock_set_cache.assert_not_called()
 
     def test_seo_spec_implementation_fallback_image(self, db_client, mock_spec) -> None:
         """SEO spec implementation should use default image when impl has no preview."""

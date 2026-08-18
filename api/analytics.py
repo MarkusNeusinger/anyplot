@@ -13,6 +13,8 @@ import re
 import httpx
 from fastapi import Request
 
+from api.request_context import client_ip as resolve_client_ip
+
 
 logger = logging.getLogger(__name__)
 
@@ -239,7 +241,7 @@ def track_og_image(
         filters: Query params for filtered home page (e.g., {'lib': 'plotly', 'dom': 'statistics'})
     """
     user_agent = request.headers.get("user-agent", "")
-    client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "")
+    client_ip = resolve_client_ip(request)
     platform = detect_platform(user_agent)
 
     # Build URL based on page type. Spec routes follow /{spec}/{language}/{library}.
@@ -301,7 +303,13 @@ def track_bot_fetch(request: Request, path: str) -> None:
         return
     assistant, kind = detected
 
-    client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "")
+    # Resolve through the shared helper rather than reading the raw header:
+    # x-forwarded-for is a comma-separated chain once more than one proxy has
+    # appended to it, so the raw value is neither a valid single IP for
+    # Plausible nor the right one for geolocation. The helper also prefers
+    # cf-connecting-ip and takes the rightmost entry, which is the one a
+    # client cannot forge.
+    client_ip = resolve_client_ip(request)
     props = {"assistant": assistant, "kind": kind, "path": path}
     url = f"https://anyplot.ai{path}"
 
