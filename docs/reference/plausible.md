@@ -240,7 +240,7 @@ events arrive server-side through the Events API, which is why it shows
 
 | Event | Properties | Source | Description |
 |-------|-----------|--------|-------------|
-| `bot_fetch` | `assistant`, `kind`, `path` | `api/routers/seo.py` (router dependency) | An AI assistant or search crawler read a catalogue page. Always recorded on `bots.anyplot.ai`. |
+| `bot_fetch` | `assistant`, `kind`, `path`, `status` | `api/main.py` (middleware) | An AI assistant or search crawler requested a catalogue page. Always recorded on `bots.anyplot.ai`. |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`?, plus `assistant` + `kind` when machine-fetched | `api/routers/og_images.py` | A preview image was fetched. **Split by audience**, see below. |
 
 #### og:image is split by who fetched it
@@ -290,7 +290,16 @@ them:
 |----------|-------------|---------|
 | `assistant` | Vendor (`claude`, `chatgpt`, `gemini`, `mistral`, `perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …) | `bot_fetch` |
 | `kind` | Why it fetched — see the table below | `bot_fetch` |
-| `path` | Public path that was read, e.g. `/box-basic/python/matplotlib` | `bot_fetch` |
+| `path` | Public path that was requested, e.g. `/box-basic/python/matplotlib` | `bot_fetch` |
+| `status` | Response status as a string (`200`, `404`, …) | `bot_fetch` |
+
+Filter on `status` before reading anything else. The event records the
+*request*, not a successful read: an assistant asking for a URL that no longer
+exists is a signal worth keeping — it is how a library migration announces
+itself — but counting it as a page view would be a lie. This is also why the
+recording lives in a middleware rather than a router dependency: a dependency
+runs before the handler and cannot see the response, so every miss was recorded
+as a read.
 
 Machine-side `og_image_view` events carry the main site's image properties as
 well, so register these on `bots.anyplot.ai` too: `page`, `platform`, `spec`,
