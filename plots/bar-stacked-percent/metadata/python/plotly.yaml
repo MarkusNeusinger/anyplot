@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:52Z'
-updated: '2026-08-18T14:50:09Z'
+updated: '2026-08-18T14:58:14Z'
 generated_by: claude-sonnet
 workflow_run: 32149641373
 issue: 2008
@@ -12,42 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
+  - 'Both attempt-1 weaknesses were cleanly fixed: percentages are now computed from
+    raw per-region shipment counts (raw_shipments -> v / sum(values) * 100), and the
+    legend''s bordered box frame is gone (borderwidth=0)'
   - Adaptive contrast_text_color() helper picks white or ink label text based on segment-background
-    luminance, keeping inside-bar percentage labels legible on green/purple/muted
+    luminance, keeping inside-bar percentage labels legible on green/lavender/muted
     fills in both themes
   - Percentage labels are suppressed below a 6% threshold, avoiding cramped or overlapping
     text in the thin 'Other' segment
-  - Categories are sorted ascending by iOS share and paired with a descriptive subtitle,
-    giving the chart a clear left-to-right narrative
+  - Categories are sorted ascending by iOS share and paired with a descriptive, factually-accurate
+    subtitle, giving the chart a clear left-to-right narrative
   - '''Other'' correctly uses the theme-adaptive Imprint muted anchor as a semantic
     remainder bucket instead of consuming another ordinal palette slot'
   - Theme-adaptive chrome (backgrounds, gridlines, ink tokens, font sizes) matches
     the style guide's Visual Sizing Defaults and Theme-adaptive Chrome tables exactly
   weaknesses:
-  - Data is hardcoded as already-normalized percentages rather than raw values divided
-    by category totals — the spec describes 'value' as raw values to be normalized,
-    so the normalization step itself isn't demonstrated in code (cosmetic gap, not
-    a visual defect)
-  - Legend keeps a bordered box frame (borderwidth=1, bordercolor=INK_SOFT) — the
-    style guide's Decoration Removal Checklist suggests dropping box frames around
-    legends for a cleaner look
-  - Distinctive plotly-specific features are modest (mostly go.Bar + barmode='stack');
-    could lean further into library-unique capabilities for extra Library Mastery
-    credit
+  - Distinctive plotly-specific features remain modest (mostly go.Bar + barmode='stack'
+    + hovertemplate); could lean further into library-unique capabilities (e.g., pattern
+    fills, custom shapes, animation frames) for extra Library Mastery credit
+  - Overall composition is still a fairly conventional 100%-stacked-bar layout; further
+    visual-hierarchy or emphasis techniques (e.g., highlighting one region) could
+    push Design Excellence higher
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), not pure white — matches the spec.
-      Chrome: Title "bar-stacked-percent · python · plotly · anyplot.ai" in dark ink, centered, with a lighter gray narrative subtitle below it. X-axis "Region" and Y-axis "Market Share (%)" labels are dark and clearly readable; tick labels (0-100% by 20%, region names) are medium-gray and legible. A subtle horizontal gridline sits at each 20% tick. Legend is a bordered horizontal strip below the x-axis title with swatches for Other (gray), Android (purple), iOS (green).
-      Data: Five bars (Africa, Asia, South America, Europe, North America), each stacked to 100%: green iOS segment at bottom (8-25%), purple Android segment in the middle (72-88%), thin gray "Other" segment on top (2-4%). First series iOS is Imprint brand green #009E73; Android uses Imprint slot 2 (lavender/purple); "Other" uses the muted semantic anchor. Percentage labels are printed inside the iOS and Android segments in high-contrast text; the Other segment (below the 6% label threshold) has no label, avoiding clutter.
+      Chrome: Title "bar-stacked-percent · python · plotly · anyplot.ai" in dark ink, centered, with a lighter-gray narrative subtitle below it. X-axis "Region" and Y-axis "Market Share (%)" labels are dark and clearly readable; tick labels (0-100% by 20%, region names) are medium-gray and legible. A subtle horizontal gridline sits at each 20% tick. Legend is a horizontal strip below the x-axis title with swatches for Other (gray), Android (lavender), iOS (green) — now without a bordered box frame (borderwidth=0), fixing the attempt-1 weakness.
+      Data: Five bars (Africa, Asia, South America, Europe, North America), each stacked to 100%: green iOS segment at bottom (8-25%), lavender Android segment in the middle (72-88%), thin gray "Other" segment on top (2-4%). First series iOS is Imprint brand green #009E73; Android uses Imprint slot 2 (lavender); "Other" uses the muted semantic anchor. Percentage labels are printed inside the iOS and Android segments in high-contrast text; the Other segment (below the 6% label threshold) has no label, avoiding clutter. Percentages are now computed from raw per-region shipment counts rather than hardcoded, fixing the other attempt-1 weakness.
       Legibility verdict: PASS — all title, axis, tick, and legend text reads clearly against the light surface; no light-on-light text found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), not pure black — matches the spec.
-      Chrome: Same title and subtitle now rendered in off-white / light-gray ink against the dark surface. Axis titles are light and axis tick labels are a lighter gray, both clearly visible. Gridlines are faint light lines at 15% opacity. Legend swatches and text are legible against the dark legend box background.
-      Data: Colors are identical to the light render — iOS is the same brand green #009E73, Android the same purple, confirming only chrome (not data hues) flips between themes. The muted "Other" swatch itself is intentionally theme-adaptive per the style guide's semantic-anchor rule (it's not one of the 8 fixed categorical positions), so its slightly different tone between renders is expected, not a defect.
+      Chrome: Same title and subtitle now rendered in off-white / light-gray ink against the dark surface. Axis titles are light and axis tick labels are a lighter gray, both clearly visible. Gridlines are faint light lines at 15% opacity. Legend is border-free here too, swatches and text legible against the dark surface.
+      Data: Colors are identical to the light render — iOS is the same brand green #009E73, Android the same lavender, confirming only chrome (not data hues) flips between themes. The muted "Other" swatch itself is intentionally theme-adaptive per the style guide's semantic-anchor rule (it's not one of the 8 fixed categorical positions), so its slightly different tone between renders is expected, not a defect.
       Legibility verdict: PASS — no dark-on-dark failures observed; all text (title, subtitle, axis labels, tick labels, legend, in-bar percentage labels) remains clearly readable against the near-black surface.
   criteria_checklist:
     visual_quality:
@@ -85,7 +84,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, title ~55% width, nothing clipped
+        comment: Correct 3200x1800 canvas, title comfortably fits, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,7 +99,7 @@ review:
         comment: 'First series #009E73, canonical order for Android, muted anchor
           for ''Other'', correct theme backgrounds'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -108,15 +107,15 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette and adaptive text contrast show intentional polish,
-          but overall composition is a fairly standard stacked bar
+        comment: Custom palette, adaptive text contrast, and page-bg segment strokes
+          show intentional polish, but overall composition is a fairly standard stacked
+          bar
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid and generous margins, but legend keeps a bordered box
-          frame the style guide suggests removing
+        comment: Legend border frame removed as requested; subtle grid, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -125,7 +124,7 @@ review:
         comment: Ascending sort by iOS share plus a narrative subtitle creates a clear
           focal point and reading order
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,11 +136,11 @@ review:
           to 100
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Percentage labels, clear legend, consistent component order present;
-          normalization from raw values isn't computed in code (data is pre-normalized)
+        comment: Percentages now computed from raw per-region shipment values, matching
+          the spec's normalization description
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -156,16 +155,16 @@ review:
         comment: Title matches mandated format; legend labels (iOS, Android, Other)
           match components
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows proportional composition, ordering, and labeling well; normalization
-          step not shown explicitly
+        comment: Normalization step is now explicit in code, not just baked into hardcoded
+          percentages
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -177,7 +176,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 0-100% range with sensible regional variation
+        comment: Computed percentages exactly match the displayed segment labels for
+          all five regions
     code_quality:
       score: 10
       max: 10
@@ -187,13 +187,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-level script
+        comment: Flat top-level script; two small color-contrast helper functions
+          are the only exception
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness
+        comment: Fully deterministic hardcoded raw data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -228,15 +229,17 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: Uses title subtitle dict, hovertemplate, and insidetextanchor, but
-          overall stays close to common patterns
+        comment: Uses title subtitle dict, hovertemplate with unified hover, and insidetextanchor,
+          but overall stays close to common patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - edge-highlighting
