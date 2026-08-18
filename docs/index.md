@@ -12,6 +12,7 @@ Welcome to the anyplot documentation. Start here to find what you're looking for
 | Contribute plot ideas | [Contributing](contributing.md) |
 | Set up local development | [Development Guide](development.md) |
 | See how automation works | [Workflows](workflows/overview.md) |
+| Report a broken plot | [Report Issues](workflows/report-issue.md) |
 | Look up API endpoints | [API Reference](reference/api.md) |
 | Integrate anyplot into AI workflow | [MCP Server](reference/mcp.md) |
 | Understand the database | [Database Schema](reference/database.md) |
@@ -32,7 +33,8 @@ docs/
 │   ├── vision.md         # Product vision and mission
 │   └── library-expansion.md  # Roadmap for multi-language gallery expansion
 ├── workflows/            # Process documentation
-│   └── overview.md       # GitHub Actions automation
+│   ├── overview.md       # GitHub Actions automation
+│   └── report-issue.md   # Reporting issues with specs or implementations
 └── reference/            # Technical details
     ├── api.md            # REST API endpoints
     ├── mcp.md            # MCP server integration
@@ -61,6 +63,7 @@ High-level understanding of why things work the way they do.
 How the automation pipeline works.
 
 - **[Overview](workflows/overview.md)** - Specification and implementation pipelines, label system
+- **[Report Issues](workflows/report-issue.md)** - How plot spec/implementation issue reports are submitted, validated, and queued
 
 ---
 

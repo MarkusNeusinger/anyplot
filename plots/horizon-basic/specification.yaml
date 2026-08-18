@@ -6,7 +6,7 @@ title: Horizon Chart
 
 # Specification tracking
 created: 2025-12-24T22:10:16Z
-updated: null
+updated: 2026-08-18T00:32:58Z
 issue: 1877
 suggested: MarkusNeusinger
 
@@ -28,6 +28,6 @@ tags:
     - finance
   features:
     - basic
-    - multi-series
+    - multi
     - compact
     - color-mapped
