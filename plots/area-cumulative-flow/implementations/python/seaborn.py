@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 78/100 | Updated: 2026-08-18
@@ -52,9 +52,9 @@ arrivals = np.random.poisson(6, n_days)
 backlog_cum = np.cumsum(arrivals).astype(float)
 
 analysis_cum = np.minimum(backlog_cum, np.cumsum(np.random.poisson(5, n_days)).astype(float))
-dev_cum = np.minimum(analysis_cum, np.cumsum(np.random.poisson(4, n_days)).astype(float))
-testing_cum = np.minimum(dev_cum, np.cumsum(np.random.poisson(4, n_days)).astype(float))
-done_cum = np.minimum(testing_cum, np.cumsum(np.random.poisson(4, n_days)).astype(float))
+dev_cum = np.minimum(analysis_cum, np.cumsum(np.random.poisson(4.3, n_days)).astype(float))
+testing_cum = np.minimum(dev_cum, np.cumsum(np.random.poisson(3.6, n_days)).astype(float))
+done_cum = np.minimum(testing_cum, np.cumsum(np.random.poisson(3.0, n_days)).astype(float))
 
 # WIP per stage: vertical band height = items currently in that stage
 done_wip = done_cum
@@ -113,7 +113,7 @@ ax.annotate(
 # Style
 ax.set_xlabel("Date", fontsize=11, color=INK)
 ax.set_ylabel("Cumulative Items", fontsize=11, color=INK)
-ax.set_title("area-cumulative-flow · seaborn · anyplot.ai", fontsize=13, fontweight="medium", color=INK)
+ax.set_title("area-cumulative-flow · python · seaborn · anyplot.ai", fontsize=13, fontweight="medium", color=INK)
 
 ax.tick_params(axis="both", labelsize=9, colors=INK_SOFT)
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
