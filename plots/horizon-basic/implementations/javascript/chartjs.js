@@ -1,7 +1,7 @@
 // anyplot.ai
 // horizon-basic: Horizon Chart
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-18
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-08-18
 //# anyplot-orientation: landscape
 
 // Chart.js has no native "horizon chart" type, so this snippet builds one out
