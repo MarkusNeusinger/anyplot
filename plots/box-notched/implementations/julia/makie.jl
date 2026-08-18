@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -43,6 +44,19 @@ for (i, (mu, sigma)) in enumerate(zip(means, stds))
     append!(point_color, fill(IMPRINT_PALETTE[i], sample_size))
 end
 
+# Per-group median + notch band (±1.57 * IQR / sqrt(n), matching the spec's
+# 95%-CI notch formula) so the significance callout below is derived from the
+# actual sampled data rather than hard-coded.
+group_vals   = [reaction_ms[group_index .== i] for i in eachindex(conditions)]
+group_median = [median(v) for v in group_vals]
+group_notch  = [1.57 * (quantile(v, 0.75) - quantile(v, 0.25)) / sqrt(length(v)) for v in group_vals]
+baseline_lo, baseline_hi = group_median[1] - group_notch[1], group_median[1] + group_notch[1]
+
+# Dense y-axis ticks: every 50ms across the full sampled range, so the lower
+# half of the data reads with the same reference density as the upper half.
+y_tick_lo = floor(minimum(reaction_ms) / 50) * 50
+y_tick_hi = ceil(maximum(reaction_ms) / 50) * 50
+
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
     size            = (1600, 900),
@@ -63,6 +77,7 @@ ax = Axis(
     ylabelcolor        = INK,
     xticks             = (1:length(conditions), conditions),
     xticklabelsize     = 12,
+    yticks             = y_tick_lo:50:y_tick_hi,
     yticklabelsize     = 12,
     xticklabelcolor    = INK_SOFT,
     yticklabelcolor    = INK_SOFT,
@@ -92,6 +107,31 @@ boxplot!(
     outlierstrokecolor  = INK,
     outlierstrokewidth  = 1.0,
 )
+
+# Significance callout: connect Baseline to whichever condition's notch band
+# clears Baseline's with a Makie `bracket!` annotation, making the "quick
+# visual hypothesis testing" story explicit rather than requiring the viewer
+# to compare notch bands by eye. Picks the condition with the largest median
+# gap among the non-overlapping ones so the callout matches the most visually
+# obvious separation.
+non_overlapping = [i for i in 2:length(conditions)
+                    if group_median[i] + group_notch[i] < baseline_lo ||
+                       group_median[i] - group_notch[i] > baseline_hi]
+if !isempty(non_overlapping)
+    callout_idx = non_overlapping[argmax(abs.(group_median[non_overlapping] .- group_median[1]))]
+    bracket_y = maximum(vcat(group_vals[1], group_vals[callout_idx])) + 15
+    bracket!(
+        ax, 1, bracket_y, callout_idx, bracket_y;
+        text        = "$(conditions[callout_idx]) notch clears $(conditions[1]) — medians differ",
+        style       = :square,
+        orientation = :up,
+        width       = 12,
+        color       = INK_SOFT,
+        textcolor   = INK,
+        fontsize    = 13,
+        linewidth   = 1.5,
+    )
+end
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
