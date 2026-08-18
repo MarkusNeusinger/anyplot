@@ -21,18 +21,31 @@ const rand = () => {
   return seed / 0x7fffffff;
 };
 
-const seriesValues = sectorNames.map(() => {
-  let value = (rand() - 0.5) * 6;
-  const drift = (rand() - 0.5) * 0.15;
-  const volatility = 0.8 + rand() * 1.2;
+const rawValues = sectorNames.map(() => {
+  let value = (rand() - 0.5) * 4;
+  const drift = (rand() - 0.5) * 0.08;
+  const volatility = 0.6 + rand() * 0.9;
+  const reversion = 0.05 + rand() * 0.03; // pulls sustained runs back toward baseline
   const values = [];
   for (let i = 0; i < T; i++) {
-    value += drift + (rand() - 0.5) * volatility;
+    value += drift + (rand() - 0.5) * volatility - reversion * value;
     value = Math.max(-18, Math.min(18, value));
     values.push(Math.round(value * 10) / 10);
   }
   return values;
 });
+
+// Sort rows by mean deviation (descending) so the strongest/weakest sectors
+// cluster at top/bottom and the pattern is visible at a glance.
+const order = sectorNames
+  .map((_, i) => i)
+  .sort((a, b) => {
+    const meanA = rawValues[a].reduce((s, v) => s + v, 0) / T;
+    const meanB = rawValues[b].reduce((s, v) => s + v, 0) / T;
+    return meanB - meanA;
+  });
+const rowNames = order.map((i) => sectorNames[i]);
+const seriesValues = order.map((i) => rawValues[i]);
 
 const startDate = new Date(2024, 0, 2);
 const dayLabels = Array.from({ length: T }, (_, i) => {
@@ -144,7 +157,7 @@ for (let i = 0; i < N; i++) {
     left: 16,
     top: rowTop(i) + rowH / 2 - 8,
     style: {
-      text: sectorNames[i],
+      text: rowNames[i],
       fill: t.inkSoft,
       font: "500 15px sans-serif",
     },
@@ -163,7 +176,7 @@ graphic.push(
     style: {
       text: "Deviation from sector avg (%)",
       fill: t.inkSoft,
-      font: "12px sans-serif",
+      font: "14px sans-serif",
     },
   },
   {
@@ -186,20 +199,20 @@ graphic.push(
   {
     type: "text",
     left: legendX,
-    top: legendY + 16,
-    style: { text: `-${K * BAND_H}%`, fill: t.inkSoft, font: "11px sans-serif" },
+    top: legendY + 17,
+    style: { text: `-${K * BAND_H}%`, fill: t.inkSoft, font: "13px sans-serif" },
   },
   {
     type: "text",
-    left: legendX + legendW / 2 - 6,
-    top: legendY + 16,
-    style: { text: "0", fill: t.inkSoft, font: "11px sans-serif" },
+    left: legendX + legendW / 2 - 7,
+    top: legendY + 17,
+    style: { text: "0", fill: t.inkSoft, font: "13px sans-serif" },
   },
   {
     type: "text",
-    left: legendX + legendW - 26,
-    top: legendY + 16,
-    style: { text: `+${K * BAND_H}%`, fill: t.inkSoft, font: "11px sans-serif" },
+    left: legendX + legendW - 30,
+    top: legendY + 17,
+    style: { text: `+${K * BAND_H}%`, fill: t.inkSoft, font: "13px sans-serif" },
   },
 );
 
@@ -211,7 +224,7 @@ chart.setOption({
     text: "Sector Return Deviation · horizon-basic · javascript · echarts · anyplot.ai",
     left: "center",
     top: Math.round(titleH * 0.28),
-    textStyle: { color: t.ink, fontSize: 20, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 26, fontWeight: 500 },
   },
   grid,
   xAxis,
