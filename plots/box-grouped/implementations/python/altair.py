@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-08-18
@@ -60,12 +60,27 @@ for dept in departments:
 
 df = pd.DataFrame(data)
 
+# Order departments by descending Senior-level median score, giving the
+# grouped comparison a clear takeaway (best- to worst-performing department).
+dept_order = (
+    df[df["Experience"] == "Senior"]
+    .groupby("Department")["Performance Score"]
+    .median()
+    .sort_values(ascending=False)
+    .index.tolist()
+)
+
 # Create grouped box plot with theme-adaptive styling
 chart = (
     altair.Chart(df)
     .mark_boxplot(size=22, median={"stroke": INK, "strokeWidth": 1.5}, outliers={"size": 28, "strokeOpacity": 0.7})
     .encode(
-        x=altair.X("Department:N", title="Department", axis=altair.Axis(labelFontSize=10, titleFontSize=12)),
+        x=altair.X(
+            "Department:N",
+            title="Department",
+            sort=dept_order,
+            axis=altair.Axis(labelFontSize=11, titleFontSize=12, labelAngle=0),
+        ),
         y=altair.Y(
             "Performance Score:Q",
             title="Performance Score (%)",
@@ -85,14 +100,14 @@ chart = (
         width=620,
         height=320,
         background=PAGE_BG,
-        title=altair.Title(text="box-grouped · altair · anyplot.ai", fontSize=16, anchor="middle"),
+        title=altair.Title(text="box-grouped · python · altair · anyplot.ai", fontSize=16, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
     )
     .configure_title(color=INK)
-    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=None, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save as PNG and HTML with theme-suffixed filenames
