@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: pygal | Python 3.13
-Quality: pending | Updated: 2026-08-18
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-08-18
 """
 
 import os
