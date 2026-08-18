@@ -2,123 +2,137 @@ library: plotnine
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:50:12Z'
-updated: '2026-05-08T11:07:23Z'
-generated_by: claude-haiku
-workflow_run: 25551716625
+updated: '2026-08-18T15:16:36Z'
+generated_by: claude-sonnet
+workflow_run: 32150273058
 issue: 2008
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Perfect theme-adaptive styling in both light and dark renders
-  - Correct Okabe-Ito palette with proper color ordering (#009E73 first)
-  - Excellent text legibility with explicitly sized fonts (title 24pt, labels 20pt,
-    ticks 16pt)
-  - Clean, KISS-structured code with proper categorical ordering
-  - Accurate 100% stacked bar implementation using position_fill()
-  - Realistic and neutral market share data with clear quarterly trends
+  - In-segment percentage labels now correctly match their own bar segment in every
+    quarter, both themes -- verified via zoomed crops of Q1 2023 and Q1/Q2 2024 --
+    fully resolving the attempt-2 misalignment bug via the precomputed LabelY/StackRank
+    approach.
+  - WCAG-contrast-aware in-segment label coloring (_relative_luminance/_contrast_ratio/_label_color)
+    driven through scale_color_identity() is a genuinely sophisticated, distinctive
+    plotnine touch.
+  - 'Imprint palette used correctly: Apple (first categorical series) = #009E73; Samsung/Xiaomi
+    take canonical positions 2-3; "Others" correctly uses the theme-adaptive muted
+    semantic anchor rather than a 4th arbitrary categorical color.'
+  - Theme-adaptive chrome correctly threaded through both renders -- correct backgrounds,
+    fully legible text, subtle y-only gridlines, no dark-on-dark or light-on-light
+    failures.
+  - Clean, realistic, neutral smartphone-market-share data with genuine quarter-over-quarter
+    variation (Apple gently declining, Xiaomi growing) that gives DQ-01/DQ-03 real
+    substance; canvas is correct (3200x1800), title format matches the mandated pattern,
+    legend order mirrors the visual stacking order.
   weaknesses:
-  - Design Excellence lacks distinctive custom elements beyond style guide requirements
-  - Visual storytelling is straightforward—displays data clearly but without particular
-    emphasis or focal points
+  - Design Excellence beyond the palette/label choices is fairly restrained -- no
+    additional refinement flourish (e.g. subtle bar-edge stroke, custom legend key
+    styling) beyond theme_minimal() + token overrides.
+  - LM-01 idiomatic usage is solid but not exhaustive -- e.g. no guides()-based legend
+    reordering or other plotnine-specific flourish beyond the required position_fill()
+    mechanism and the label-color trick.
+  - Y-axis title "Market Share" has no explicit unit suffix (e.g. "Market Share (%)")
+    -- the percent-formatted tick labels make the unit self-evident, but an explicit
+    unit would be marginally clearer.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title "bar-stacked-percent · plotnine · anyplot.ai" bold and large (24pt), axis labels "Quarter" and "Market Share (%)" clearly visible in dark text (INK #1A1A17), tick labels for quarters and percentages readable at 16pt
-      Data: Green (#009E73) Apple segment at bottom, orange (#D55E00) Samsung, blue (#0072B2) Xiaomi, pink (#CC79A7) Others—all segments clearly distinguishable with proper proportions
-      Legend: Company labels match data; legend positioned right of plot with adequate spacing
-      Grid: Subtle major grid lines at 10% opacity; no visual competition with data
-      Legibility verdict: PASS — all elements readable with good contrast against light background
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Title "bar-stacked-percent · python · plotnine · anyplot.ai", axis titles ("Quarter", "Market Share"), tick labels, and the bordered "Company" legend (top-right) all render in dark ink and are clearly legible against the light background.
+      Data: Six 100%-stacked bars (Q1 2023-Q2 2024), each summing to 100%, stacked bottom-to-top as Apple (#009E73 brand green) / Samsung (lavender) / Xiaomi (blue) / Others (muted dark taupe-gray). In-segment percentage labels are correctly positioned: verified Q1 2023 shows Apple 23%, Samsung 22%, Xiaomi 12%, Others 43% (sums to 100, matches source data exactly), each label centered in its own correctly-colored segment with dark-ink text on the lighter purple/blue segments and light-ink text on the darker gray "Others" segment.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) matching specification
-      Chrome: Title visible in light text (INK #F0EFE8), axis labels and tick labels clearly readable in INK_SOFT (#B8B7B0), no dark-on-dark failures
-      Data: All data colors identical to light render (Apple #009E73, Samsung #D55E00, Xiaomi #0072B2, Others #CC79A7)—categorical series maintain visual identity across themes; proportions match light render
-      Legend: Company labels equally visible with light text on elevated background (#242420)
-      Grid: Subtle grid at same opacity; visible but not dominant
-      Legibility verdict: PASS — excellent readability on dark surface; all text and data elements clearly distinguished
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Title, axis titles, tick labels, and legend flip to light off-white / soft light-gray ink and remain fully legible -- no dark-on-dark failures anywhere.
+      Data: Apple/Samsung/Xiaomi fill colors are pixel-identical to the light render (Imprint categorical positions held constant across themes, as required). "Others" correctly switches to the lighter warm-gray value of the theme-adaptive muted anchor. Verified Q1 2024 shows Apple 21%, Samsung 20%, Xiaomi 15%, Others 44% (sums to 100, matches source data), and Q2 2024 shows Apple 20%, Samsung 19%, Xiaomi 16%, Others 45% -- one correctly-valued label per segment, zero doubling/blank segments (the exact defect that caused the attempt-2 rejection is gone).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt—all explicitly sized and readable
-          in both themes
+        comment: All font sizes explicitly set via theme(); title fits without clipping;
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; all quarter labels and legend clear
+        comment: Attempt-2 label misalignment bug fully fixed -- exactly one correctly-valued
+          label per segment, verified across multiple quarters in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments clearly visible and sized appropriately for 100% stacked
-          format
+        comment: Bar segments and labels clearly visible and well-sized for 6 categories
+          x 4 series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures colorblind safety; good contrast between
-          segments
+        comment: WCAG-contrast-computed label color per segment; CVD-safe Imprint
+          palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figure 16×9 (4800×2700px) fills canvas appropriately with balanced
-          margins
+        comment: Correct 3200x1800 canvas, balanced margins, legend near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Quarter'' (descriptive), Y: ''Market Share (%)'' (with units)'
+        comment: Descriptive Quarter/Market Share labels, percent-formatted ticks
+          make units self-evident
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 ✓; Okabe-Ito order maintained; backgrounds
-          #FAF8F1/#1A1A17 ✓; theme-correct chrome in both renders'
+        comment: 'First series #009E73, canonical Imprint order, correct muted semantic
+          anchor for Others, theme-correct chrome in both renders'
     design_excellence:
-      score: 8
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library defaults following style guide; no exceptional
-          custom design beyond requirements
+        passed: true
+        comment: Thoughtful WCAG-aware label coloring and semantic color mapping,
+          but otherwise fairly standard theme_minimal customization
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Grid and theme customized; mostly library defaults with theme token
-          application
+        passed: true
+        comment: Spines removed, subtle y-only grid, generous whitespace; no additional
+          refinement flourishes
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data clearly displayed with natural composition order; no visual
-          emphasis or focal point
+        passed: true
+        comment: Correctly-placed in-segment percentage labels now give the chart
+          a real data-reading focal point, guiding the viewer to exact share values
+          per component
     spec_compliance:
       score: 15
       max: 15
@@ -128,27 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 100% stacked bar chart with position_fill() normalization ✓
+        comment: Correct 100% stacked bar via geom_bar(position_fill())
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple categories (6 quarters), components (4 companies), proportional
-          segments, legend all present
+        comment: Percentage labels now render with correct values/positions in every
+          bar, both themes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Quarter, Y: normalized share, Fill: Company—correct and complete'
+        comment: geom_text's y now matches geom_bar's stacking order exactly, via
+          shared precomputed LabelY
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bar-stacked-percent · plotnine · anyplot.ai'' ✓; Legend:
-          Company with correct labels'
+        comment: Title matches mandated format, legend labels match data, legend order
+          mirrors visual stack
     data_quality:
       score: 15
       max: 15
@@ -158,80 +173,84 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple categories, multiple components, composition
-          changes over time'
+        comment: 6 quarters x 4 components with genuine quarter-over-quarter variation
+          in each series
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech company market share by quarter—real, neutral, comprehensible
-          scenario
+        comment: Neutral, comprehensible smartphone-market-share business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Percentages sum to ~100% per quarter; trends are realistic for smartphone
-          market
+        comment: Values and trends are plausible for real-world smartphone market
+          share
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no unnecessary functions
+        comment: Mostly linear script, but 3 helper functions for WCAG contrast math
+          deviate from pure imports->data->plot->save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; all necessary
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Python; proper categorical ordering; no fake functionality
+        comment: Functional defect from attempt 2 resolved; appropriate complexity
+          for the WCAG-aware labeling feature
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves as plot-{THEME}.png via plot.save(), current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert ggplot2 style: ggplot() + geom_bar() + position_fill() +
-          scale_fill_manual() + theme()'
+        comment: Idiomatic grammar-of-graphics composition; correct usage of position_fill,
+          scale_fill_manual, theme_minimal
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses position_fill() and comprehensive theme customization; solid
-          library knowledge but standard patterns
+        passed: true
+        comment: scale_color_identity() mapping a precomputed WCAG-contrast column
+          to per-row text color is a genuinely distinctive grammar-of-graphics technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
-  dataprep: []
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
   styling:
   - grid-styling
