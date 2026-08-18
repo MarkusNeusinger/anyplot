@@ -6,7 +6,7 @@ title: Correlation Matrix Heatmap
 
 # Specification tracking
 created: 2025-12-25T08:20:08Z
-updated: null
+updated: 2026-08-18T16:31:53Z
 issue: 1948
 suggested: MarkusNeusinger
 
@@ -15,10 +15,11 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - heatmap
-    - matrix
   data_type:
     - numeric
     - continuous
+    - matrix
+    - correlation
   domain:
     - general
     - statistics
