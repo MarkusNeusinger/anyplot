@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: bokeh 3.9.2 | Python 3.13.12
-Quality: 88/100 | Created: 2026-05-07
+Library: bokeh 3.9.2 | Python 3.13.15
+Quality: 89/100 | Updated: 2026-08-18
 """
 
 import os
