@@ -2,12 +2,12 @@ library: plotnine
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:52:44Z'
-updated: '2026-05-07T22:52:28Z'
-generated_by: claude-haiku
-workflow_run: 25526014099
+updated: '2026-08-18T04:52:22Z'
+generated_by: claude-sonnet
+workflow_run: 32100179853
 issue: 2019
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/plotnine/plot-dark.png
 preview_html_light: null
@@ -15,30 +15,45 @@ preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - Perfect visual quality with theme-correct chrome on both light and dark renders
-  - All Okabe-Ito palette colors applied correctly; data colors identical across themes
-  - Excellent data quality with realistic clinical trial scenario showing varied outcomes
-  - Proper implementation of all spec requirements including notches
-  - Clean, reproducible code with proper seed and theme token architecture
-  - Font sizes explicitly set and readable at 4800×2700px
+  - Correct notched box plot via geom_boxplot(notch=True), which relies on plotnine's
+    built-in ±1.57*IQR/√n notch formula exactly as the spec requests
+  - 'Imprint palette applied in canonical order across all 5 categories, first series
+    is #009E73, identical data colors in both light and dark renders'
+  - 'Both renders are fully theme-adaptive: PAGE_BG, INK, INK_SOFT all correctly switch
+    between #FAF8F1/#1A1A17 surfaces with no dark-on-dark or light-on-light failures'
+  - stat_summary(fun_y=np.mean, geom='point', shape='D') layers a mean-diamond marker
+    over each box, giving genuine data-storytelling value directly relevant to the
+    spec's 'quick visual hypothesis testing' framing (mean-vs-median divergence is
+    visible, e.g. right-skewed Treatment C)
+  - L-shaped spine (panel_border=element_blank() + axis_line only) and subtle low-alpha
+    grid keep focus on the boxes/notches
+  - Canvas gate passed (3200x1800 landscape), no clipping/overflow/overlap in either
+    render
+  - Clean, idiomatic plotnine grammar-of-graphics composition; reproducible via np.random.seed(42);
+    no unused imports
   weaknesses:
-  - Design Excellence could be elevated with more distinctive visual refinement (e.g.,
-    custom spine styling, enhanced grid subtlety)
-  - Library Mastery could leverage more plotnine-specific patterns or techniques
-  - Visual storytelling, while good, could benefit from enhanced color or size emphasis
-    on key comparisons
+  - 'Title omits the mandated language token: code has title="box-notched · plotnine
+    · anyplot.ai" but the required format is "{spec-id} · {language} · {library} ·
+    anyplot.ai" — should read "box-notched · python · plotnine · anyplot.ai" (the
+    sibling plots/box-notched/implementations/python/matplotlib.py in the same spec
+    already uses the correct 4-part format, confirming this is a plotnine-specific
+    omission, not a spec ambiguity).'
+  - Design Excellence is solid but not exceptional beyond the mean-diamond storytelling
+    touch — palette/spine/grid choices are baseline style-guide compliance rather
+    than standout aesthetic sophistication; a bit more visual hierarchy (e.g. subtle
+    emphasis on the category with the widest notch gap) would lift DE-01/DE-02 further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title "box-notched · plotnine · anyplot.ai" in dark text (24pt), axis labels "Treatment Group" and "Clinical Score" in dark text (20pt), tick labels in softer dark text (16pt) - all clearly readable
-      Data: Five notched box plots in Okabe-Ito order (green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7, yellow #E69F00); notches visible on each box; outliers shown as individual points; whiskers and quartiles clear
-      Legibility verdict: PASS - All elements readable with excellent contrast
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "box-notched · plotnine · anyplot.ai" in dark ink, centered, comfortably sized (does not overflow). "Treatment Group" (x-axis) and "Clinical Score" (y-axis) labels in dark ink, balanced in size. Category tick labels (Control, Treatment A, Treatment B, Treatment C, Long-term) and numeric y tick labels (50/75/100) in soft gray — all clearly legible. Only left+bottom axis lines are drawn (L-shaped frame), subtle horizontal gridlines at low opacity.
+      Data: Five notched boxes in Imprint order — green (Control), lavender (Treatment A), blue (Treatment B), ochre (Treatment C), matte red (Long-term) — matching palette positions 1-5 exactly. Each box shows a clear median notch, IQR box, whiskers, gray outlier dots beyond the whiskers, and a dark diamond marker at the group mean layered on top. No overlap between boxes, notches, outlier points, or text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct and appropriate for dark theme
-      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in softer light text (#B8B7B0) - all clearly readable against dark background, no dark-on-dark failures
-      Data: Identical data colors to light render (green, orange, blue, purple, yellow) confirming proper theme adaptation; notches, boxes, whiskers all visible on dark surface; outlier points visible
-      Legibility verdict: PASS - All elements readable; theme adaptation perfect
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels now light near-white; tick labels light gray; axis lines and gridlines flipped to light-on-dark equivalents, at the same low opacity as the light render. No dark-on-dark or light-on-light text found anywhere — every label reads clearly against the dark surface.
+      Data: Box fill colors are pixel-identical to the light render (same green/lavender/blue/ochre/red sequence) — only chrome (background, text, grid, axis lines, mean-diamond outline color which is theme-adaptive INK) changed as expected. Outlier dots remain a legible mid-gray against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -49,72 +64,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: Title 24pt, Labels 20pt, Ticks 16pt;
-          perfectly readable in both themes'
+        comment: All text explicitly sized (title 12pt, axis title 10pt, tick text
+          8pt) and fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all elements fully separated
+        comment: No collisions between boxes, notches, outliers, or text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Notches, boxes, whiskers, outliers optimally visible and sized
+        comment: Boxes, notches, outlier points (size 2.5), and mean diamonds all
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with strong colorblind-safe contrast
+        comment: Imprint palette is CVD-safe; color redundant with x-axis category
+          position
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect balance with proper margins and space utilization
+        comment: Canvas gate passed; title/axis-label proportions balanced; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Treatment Group, Clinical Score'
+        comment: Descriptive axis labels (Treatment Group / Clinical Score)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: first series #009E73, all colors follow Okabe-Ito order,
-          backgrounds correct (#FAF8F1 light / #1A1A17 dark), theme-adaptive chrome
-          perfect'
+        comment: 'First series is #009E73; canonical Imprint order for all 5 groups;
+          correct theme backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Well-configured with intentional theme tokens; polished but not extraordinary
+        passed: false
+        comment: Baseline style-guide compliance (palette, L-spine); no standout polish
+          beyond that
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Subtle grid (alpha 0.10/0.05), clean minimal base, good attention
-          to detail
+        passed: false
+        comment: Spines removed, subtle grid (alpha 0.10/0.05), generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Clear treatment progression story; varied distributions and outliers
-          guide viewer
+        passed: false
+        comment: Mean-diamond overlay via stat_summary gives real median-vs-mean visual
+          hierarchy tied to the notch hypothesis-testing theme
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -122,25 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot with all required elements
+        comment: geom_boxplot(notch=True) is a correct notched box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: notches, quartiles, whiskers, outliers'
+        comment: Notches, quartile box, 1.5*IQR whiskers, individual outlier points,
+          per-category colors all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: x=group, y=score; all data represented
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct; legend appropriately omitted
+        passed: false
+        comment: Title missing the mandated language token — reads 'box-notched ·
+          plotnine · anyplot.ai' instead of 'box-notched · python · plotnine · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -150,20 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: varied medians, different spreads, outliers,
-          bimodality'
+        comment: 5 categories (spec range 2-8), 95-120 points each (spec range 20-500,
+          n>20 for notch reliability)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic clinical trial scenario (Control + treatments + long-term)
+        comment: Clinical trial framing, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible clinical score values (65-88) and SDs
+        comment: Score values in a sensible clinical-score range
     code_quality:
       score: 10
       max: 10
@@ -173,54 +191,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save'
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Every imported name is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic and appropriate complexity
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level grammar-of-graphics composition (geom_boxplot + stat_summary
+          + scale_fill_manual + theme)
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot2 grammar, correct aes(), theme tokens, categorical
-          ordering
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses native notch=True, element_*() functions, proper theme adaptation
+        comment: stat_summary layering to overlay a mean marker on the notch box showcases
+          plotnine's layered-stat capability
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
