@@ -1,6 +1,6 @@
 ---
 name: open-pr
-description: Take a finished change from diff to an open, green, review-clean PR — run the matching verify skills and local CI gates first, then commit, push and open the PR via /pull_request, watch the pipeline AND the Copilot review, fix sensible findings, resolve the review threads, and watch any Cloud Build deploy after merge. Never merges unless the user explicitly authorizes it in this session. Use when asked to open or create a PR, ship a change, or finish up a change.
+description: Take a finished change from diff to an open, green, review-clean PR — run the matching verify skills and local CI gates first, then commit, push and open the PR via /pull_request, watch the pipeline AND the Copilot review, fix sensible findings, resolve the review threads, and watch any Cloud Build deploy after merge. Detects local vs. cloud GitHub tooling (gh vs. GitHub MCP). Never merges unless the user explicitly authorizes it in this session. Use when asked to open or create a PR, ship a change, or finish up a change.
 ---
 
 # Open a PR (ship a change)
@@ -15,6 +15,47 @@ the automated pipeline's PRs: spec/impl/polish PRs are merged by
 metadata, quality scores, and GCS promotion (CLAUDE.md, mandatory
 workflow).
 
+## 0 · Pick the GitHub interface (local vs. cloud)
+
+This skill runs in two environments and the GitHub tooling differs.
+Detect once, up front:
+
+```bash
+command -v gh >/dev/null && echo "gh path (local)" || echo "MCP path (cloud/web)"
+```
+
+- **`gh` present (local machine):** use the `gh`/`gh api` commands as
+  written below.
+- **`gh` absent (Claude Code on the web / remote container):** `gh`,
+  `hub` and direct GitHub API access do **not** exist there. Use the
+  GitHub MCP tools (`mcp__github__*`) instead. They are deferred —
+  load each one's schema via `ToolSearch` with its **fully-qualified**
+  name (a bare method name silently matches nothing), e.g.
+  `select:mcp__github__create_pull_request,mcp__github__pull_request_read,mcp__github__resolve_review_thread`,
+  before the first call.
+
+`git` itself (commit / push / fetch) is identical in both — only the
+PR/review/CI steps swap. The mapping:
+
+| Step | `gh` (local) | GitHub MCP (cloud/web) |
+|---|---|---|
+| Create PR | `/pull_request` command (`gh pr create` inside) | follow `/pull_request`'s body format + changelog gate manually, create via `mcp__github__create_pull_request` (ready for review, not draft) |
+| List PRs | `gh pr list` | `mcp__github__list_pull_requests` |
+| Read PR / reviews | `gh pr view --json …` | `mcp__github__pull_request_read` |
+| Watch CI | `gh pr checks` poll (§3a) | `mcp__github__actions_list` / `mcp__github__actions_get` / `mcp__github__get_job_logs` (+ `mcp__github__subscribe_pr_activity` to be woken on results) |
+| List review threads | `gh api graphql … reviewThreads` (§3c) | `mcp__github__pull_request_read` (review-threads method) |
+| Reply on a thread | `gh pr comment` | `mcp__github__add_reply_to_pull_request_comment` (thread) / `mcp__github__add_issue_comment` (PR-level) |
+| Resolve a thread | `gh api graphql … resolveReviewThread` (§3d) | `mcp__github__resolve_review_thread` |
+| Request Copilot review | `gh api -X POST … requested_reviewers` (§3b) | `mcp__github__request_copilot_review` |
+| Merge (only if authorized) | `gh pr merge` | `mcp__github__merge_pull_request` |
+
+In the cloud, prefer `mcp__github__subscribe_pr_activity` over any
+polling loop: CI/review events wake the session as
+`<github-webhook-activity>` messages — never `sleep`-poll there.
+`gcloud` is also absent in the cloud, so the §4 deploy watch is
+local-only — in a cloud session, say so and hand the Cloud Build
+watch to the user.
+
 ## 1 · Pre-PR gates (pick by what the diff touches)
 
 ```bash
@@ -26,8 +67,10 @@ git diff --name-only origin/main...
 | `app/` | `/verify-frontend` (drive the changed flow; both viewports, both themes) |
 | `api/` | `/verify-api` (read sweep + the changed endpoint's payload) |
 | `core/`, `tests/` | `/verify-core` (pytest + direct smoke) |
+| `alembic/` | `/verify-migrations` (throwaway Postgres; the shared prod DB never sees an untested revision) |
 | `.github/workflows/`, `prompts/`, `automation/` | no live loop exists — reason through carefully, dry-run what's dry-runnable, and say so in the PR |
-| `docs/`, `CLAUDE.md`, instruction files | check the sync duties: CLAUDE.md ↔ `.github/copilot-instructions.md` ↔ `agentic/commands/` where rules are duplicated |
+| `docs/`, `CLAUDE.md`, instruction files | `/write-docs` (layer choice, `docs/index.md` + cross-file sync duties) |
+| new binaries, fonts, embedded assets | `/audit-licenses` (tracked-binary/payload/history sweep) |
 | any nontrivial code | `/simplify` (built-in) for a quality pass |
 
 A `/verify-*` gate only counts if the **diff's own flow** was driven —

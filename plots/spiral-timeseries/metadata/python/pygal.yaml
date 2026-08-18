@@ -2,105 +2,115 @@ library: pygal
 language: python
 specification_id: spiral-timeseries
 created: '2026-05-07T15:37:01Z'
-updated: '2026-05-07T16:03:26Z'
+updated: '2026-08-18T00:28:52Z'
 generated_by: claude-sonnet
-workflow_run: 25505263059
+workflow_run: 32040157018
 issue: 5243
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance: all required features (spiral geometry, viridis encoding,
-    monthly spokes, year labels, colormap legend) correctly implemented'
-  - Sophisticated Archimedean spiral computed from scratch with temperature deviation
-    in radial dimension
-  - Correct theme adaptation in both renders with no dark-on-dark failures and correct
-    warm backgrounds
-  - Leverages pygal interactive HTML output with per-day hover tooltips (date + temperature)
-  - Year boundary None-separators prevent cross-ring artifacts; reproducible with
-    np.random.seed(42)
+  - 'Creative, technically sophisticated radial time-series layout with per-year rings
+    colored by an Imprint-derived sequential gradient (#009E73 -> #4467A3), correctly
+    encoding temperature magnitude and backed by a custom SVG colorbar.'
+  - Excellent theme adaptation - both light and dark renders are fully readable, chrome
+    flips correctly, and data colors are pixel-identical between themes.
+  - Careful data-to-color bucketing via an 11-day rolling mean plus itertools.groupby
+    avoids spurious chords between unrelated same-temperature days - a thoughtful
+    solution to pygal's straight-line-per-series limitation.
+  - Injected month and year SVG text labels give clear cycle-start orientation and
+    radial cycle subdivisions, directly satisfying the spec's labeling requirements.
+  - 'Realistic, well-scaled synthetic data: 5-year daily temperature series with a
+    plausible Northern Hemisphere seasonal cycle and a subtle multi-year warming trend.'
   weaknesses:
-  - legend_font_size=14 is below the 16px style-guide minimum; 13-entry legend (12
-    temperature buckets + Month grid entry) is small and cluttered at bottom
-  - Month grid named legend entry adds noise — it is a structural guide not a data
-    series; should be suppressed from legend
-  - Two small helper functions (to_viridis_hex, data_to_svg) technically violate KISS;
-    could be inlined
-  - No visual focal point or narrative anchor for temperature scale; adding warm/cold
-    annotations via SVG post-processing would strengthen DE-03
+  - The 'spiral' renders as five discrete concentric rings (one per year) rather than
+    a continuously expanding Archimedean spiral - day-of-year resets each year so
+    the radius steps between years instead of increasing smoothly across the full
+    time range. Visually and mathematically this reads closer to a polar ring/radial-loop
+    chart than a single continuous coil. Consider accumulating a continuous angle
+    (total elapsed days instead of day-of-year modulo) so Dec 31 of one year flows
+    directly into Jan 1 of the next for a genuine spiral.
+  - The bottom colorbar area is fairly tight - the 'Jan' tick label and the 'Daily
+    average temperature (°C)' caption sit close together with limited vertical breathing
+    room.
+  - The core spiral/colorbar geometry is built via manual SVG post-processing outside
+    pygal's own API (pygal has no native polar/radial chart type or colorbar) - a
+    well-justified workaround given the library's limits, but it means pygal-distinctive
+    features are used only moderately (hover tooltips, dashed stroke_style) rather
+    than as the showcase of the visualization.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "spiral-timeseries · pygal · anyplot.ai" visible at 28px (small but readable). Month labels at 44px (Aug, Sep, Oct, Nov, Dec, Jan, Feb, Mar, Apr, May, Jun, Jul) clearly visible around perimeter in dark muted ink. Year labels (2019-2023) at 44px bold dark ink at 12-o'clock position for each ring. Bottom legend shows 12 temperature-range entries + "Month grid" at 14px — small but readable.
-      Data: Viridis colormap — yellows/yellow-greens at summer arc (top/Jul), grading through cyan/teal to deep blue-purples at winter arc (bottom/Jan). 5 spiral rings expand outward. 12 radial spoke lines from center to perimeter in muted ink.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "spiral-timeseries · python · pygal · anyplot.ai" in bold dark ink at top, clearly readable and comfortably within canvas width (~75%). Month labels (Jan-Dec) in muted gray ring the outer edge, evenly spaced and legible. Bold black year labels (2019-2023) sit near the vertical axis marking the start of each ring. Dashed radial spoke lines (month grid) are subtle gray, visible but not competing with data. Bottom colorbar reads "Daily average temperature (°C)" with "-3°C" / "29°C" endpoint labels in dark ink.
+      Data: Five concentric rings, innermost (2019) to outermost (2023), colored along a green-to-blue gradient (#009E73 -> #4467A3) matching the colorbar - warmer days green, cooler/higher-radius-shifted days blue-ish per the sequential scale. First-series/brand green is present and correct.
+      Legibility verdict: PASS - all title, month, year, grid, and colorbar text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title visible in light ink at top. Month labels render in soft gray (#B8B7B0), year labels in near-white (#F0EFE8) — all clearly readable against dark surface. Radial spokes in muted gray (#A8A79F). Legend entries small but visible. No dark-on-dark failures detected.
-      Data: Viridis colors are identical to light render — same yellows/greens at summer arc, blues/purples at winter arc. Data encoding unchanged between themes.
-      Legibility verdict: PASS — all chrome tokens correctly flipped to dark-theme values; no readability failures.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title in light/off-white ink, clearly legible. Month labels in light gray, year labels in bold white, both easily readable against the dark surface. Dashed radial spokes are light gray and subtle. Colorbar caption and endpoint labels ("-3°C"/"29°C") render in light ink, fully legible - no dark-on-dark failures observed anywhere (title, ticks, or colorbar text).
+      Data: Same five rings, same green-to-blue gradient as the light render - colors are pixel-identical between themes, confirming only chrome (background/text) flipped as required.
+      Legibility verdict: PASS - all text elements are clearly visible against the near-black background; no dark-on-dark text found.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Month/year labels at 44px are well-sized. Title at 28px and legend
-          at 14px are small; legend below 16px minimum.
+        comment: All font sizes explicitly set via Style/SVG injection; title, month/year
+          labels, and colorbar text are readable in both themes at full resolution.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Month labels at perimeter are clean. Year labels inside rings do
-          not collide. Spoke lines cause minor visual noise.
+        comment: No significant overlap; bottom colorbar caption and 'Jan' tick label
+          sit somewhat close together.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Viridis 12-bucket gradient clearly visible in both themes. Spoke
-          lines present with muted INK_MUTED styling.
+        comment: Stroke width (2.6) and dot-free lines suit the ~1825-point density
+          well; not perfectly optimized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually-uniform and colorblind-safe. No red-green
-          as sole signal.
+        comment: Sequential green-blue gradient reads clearly on both backgrounds,
+          no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600 is correct for radial chart. 13-entry legend at
-          bottom slightly cramped. Good central whitespace.
+        comment: Square 2400x2400 canvas suits the symmetric radial layout; balanced
+          margins, no cut-off content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows required format. Month labels serve as angular axis
-          reference.
+        comment: Mandated title format used exactly; colorbar caption includes units
+          (°C).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correctly used for continuous temperature data. Backgrounds
-          #FAF8F1 light / #1A1A17 dark. Chrome tokens flip correctly.'
+        comment: 'Uses exact imprint_seq stops (#009E73 -> #4467A3); backgrounds and
+          chrome are theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -108,55 +118,55 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Archimedean spiral computed from scratch, viridis 12-bucket gradients,
-          temperature deviation in radius, SVG post-processing for labels — well above
-          generic defaults.
+        comment: Custom colorbar, careful color-bucket smoothing, and injected labels
+          show strong design intent well above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No axes, no gridlines, clean polar composition. Spokes provide reference
-          without dominating. 13-entry legend slightly cluttered.
+        comment: No spines (polar layout), subtle dashed grid, generous whitespace;
+          bottom colorbar band slightly tight.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Summer/winter color contrast creates readable seasonal pattern. Warming
-          trend visible in radial deviation. Year labels anchor reading. Lacks explicit
-          temperature scale annotation.
+        comment: Color and radius together visually surface the seasonal cycle and
+          multi-year trend, though it takes a moment to parse the radial encoding.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct Archimedean spiral time series expanding outward from center.
+        comment: Correct radial/spiral-family time-series type, but rendered as discrete
+          concentric year-rings rather than a continuously expanding single spiral
+          curve.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: One revolution per year, viridis color encoding, 12 monthly radial
-          spokes, year labels, colormap legend all present.
+        comment: Color-encoded magnitude, radial month grid, cycle-start (year) labels,
+          colorbar, and outward expansion from center are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Day-of-year maps to angle, year index to base radius, temperature
-          to color and radial deviation.
+        comment: Angle correctly maps day-of-year, radius correctly maps year + temperature
+          deviation.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'spiral-timeseries · pygal · anyplot.ai'. Legend shows temperature
-          bucket ranges with viridis colors.
+        comment: Title matches mandated format exactly; colorbar substitutes appropriately
+          for a legend on continuous data.
     data_quality:
       score: 14
       max: 15
@@ -166,61 +176,57 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows seasonal oscillation, multi-year warming trend, angular periodicity
-          alignment, radial temperature encoding. Discrete buckets vs continuous colorbar
-          is minor limitation.
+        comment: Shows seasonal cycle, year-over-year comparison, and a subtle warming
+          trend across the 5 rings.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperatures for Northern Hemisphere city, 2019-2023, mean
-          12C, amplitude 13C, warming 0.4C/year. Plausible and neutral.
+        comment: Neutral, comprehensible daily-temperature scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature range ~-5C to 29C appropriate for temperate zone. 5 years
-          gives 5 clear revolutions.
+        comment: Annual mean 12°C, amplitude 13°C, range -3°C to 29°C are realistic
+          for a temperate Northern Hemisphere city.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two small helper functions (to_viridis_hex, data_to_svg) technically
-          violate KISS; both could be inlined.
+        comment: No classes; only two small, justified helper functions (_lerp_hex,
+          _rolling_mean).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used. importlib pattern justified by filename
-          collision with installed pygal package.
+        comment: All imports (datetime, itertools, math, ET, cairosvg, etc.) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: 'Clear structure: data generation -> spiral geometry -> bucket coloring
-          -> chart -> SVG post-processing -> export. No fake UI.'
+        comment: Appropriate complexity for a polar layout pygal doesn't natively
+          support; no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html via pygal
-          native render. Correct naming.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly via cairosvg.svg2png.
     library_mastery:
       score: 7
       max: 10
@@ -230,28 +236,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct pygal.XY with coordinate-pair format, Style object for theming,
-          render() for HTML. Matches pygal documentation patterns.
+        comment: Good use of pygal's Style token system and XY chart API; relies on
+          manual SVG post-processing to work around pygal's lack of a native polar
+          chart type.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses interactive HTML output with per-day hover tooltips, XY chart
-          for free-form coordinates, Style system for theme token control.
+        comment: Retains native per-point hover tooltips and dashed stroke_style,
+          but the spiral/colorbar itself is custom SVG rather than a pygal-distinctive
+          mechanism.
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - matplotlib
+  - cairosvg
   techniques:
-  - html-export
+  - polar-projection
+  - colorbar
   - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
+  - rolling-window
   - binning
-  - normalization
   styling:
   - custom-colormap
-  - minimal-chrome
