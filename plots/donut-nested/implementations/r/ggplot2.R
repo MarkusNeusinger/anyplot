@@ -64,7 +64,7 @@ INNER_XMAX  <- HOLE + 0.8
 OUTER_XMIN  <- INNER_XMAX + 0.1
 OUTER_XMAX  <- OUTER_XMIN + 0.9
 CHILD_LABEL_X  <- OUTER_XMAX + 0.55
-PARENT_LABEL_X <- CHILD_LABEL_X + 0.55
+PARENT_LABEL_X <- CHILD_LABEL_X + 0.85
 
 parent_df <- parent_totals %>%
   mutate(
@@ -90,11 +90,12 @@ child_df <- revenue %>%
     xmid  = CHILD_LABEL_X,
     ymid  = (ymin + ymax) / 2,
     share = value / total_value,
-    label = ifelse(share >= label_threshold, level_2, NA_character_)
+    label = ifelse(share >= label_threshold, level_2, NA_character_),
+    legend_label = paste(level_1, level_2, sep = " · ")
   )
 
 legend_df <- child_df %>% filter(is.na(label))
-legend_colors <- setNames(legend_df$color, legend_df$level_2)
+legend_colors <- setNames(legend_df$color, legend_df$legend_label)
 
 # --- Plot -----------------------------------------------------------------
 p <- ggplot() +
@@ -110,7 +111,7 @@ p <- ggplot() +
   ) +
   scale_fill_identity() +
   geom_point(
-    data = legend_df, aes(x = xmid, y = ymid, color = level_2),
+    data = legend_df, aes(x = xmid, y = ymid, color = legend_label),
     size = 0, stroke = 0, alpha = 0, na.rm = TRUE
   ) +
   scale_color_manual(name = "Smaller segments", values = legend_colors) +
