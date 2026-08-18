@@ -112,8 +112,36 @@ function BoxWhiskerLayer() {
   const boxWidth = boxSlot * 0.66;
   const capWidth = boxWidth * 0.6;
 
+  // Dashed median trend per level makes the consistent Senior > Mid > Junior
+  // pattern an explicit visual thread rather than something left for the
+  // reader to infer box-by-box.
+  const levelTrends = levels.map((level, levelIndex) => ({
+    level,
+    color: t.palette[levelIndex],
+    points: boxGroups.map((group) => {
+      const bandStart = xScale(group.department) ?? 0;
+      const groupStart = bandStart + (bandwidth - groupWidth) / 2;
+      const cx = groupStart + boxSlot * (levelIndex + 0.5);
+      return { x: cx, y: yScale(group.boxes[levelIndex].stats.median) };
+    }),
+  }));
+
   return (
     <g>
+      {levelTrends.map((trend) => (
+        <polyline
+          key={`trend-${trend.level}`}
+          points={trend.points.map((p) => `${p.x},${p.y}`).join(" ")}
+          fill="none"
+          stroke={trend.color}
+          strokeWidth={1.5}
+          strokeDasharray="5 4"
+          opacity={0.4}
+        />
+      ))}
+      <text x={(xScale.range()?.[0] ?? 0) + 2} y={yScale(yMax) + 16} fontSize={12} fontStyle="italic" fill={t.inkSoft}>
+        Senior medians (dashed) consistently outperform Mid and Junior
+      </text>
       {boxGroups.map((group) => {
         const bandStart = xScale(group.department) ?? 0;
         const groupStart = bandStart + (bandwidth - groupWidth) / 2;
@@ -152,6 +180,7 @@ function BoxWhiskerLayer() {
                 y={yQ3}
                 width={boxWidth}
                 height={Math.max(yQ1 - yQ3, 1)}
+                rx={2}
                 fill={color}
                 fillOpacity={0.72}
                 stroke={color}
@@ -225,7 +254,7 @@ export default function Chart() {
             min: yMin,
             max: yMax,
             disableTicks: true,
-            label: "Productivity Index",
+            label: "Productivity Index (0-100 scale)",
             labelStyle: { fontSize: 16 },
             tickLabelStyle: { fontSize: 14 },
           },
