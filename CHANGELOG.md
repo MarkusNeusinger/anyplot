@@ -28,7 +28,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   search crawlers are included on purpose: per-engine crawl frequency is otherwise only visible by
   sampling Search Console one URL at a time, which is how a months-long recrawl gap went unnoticed.
   Hooked in as a router dependency rather than per handler, so the next endpoint added cannot go
-  unrecorded.
+  unrecorded (#10471).
 
 - **Dead URLs are now visible in analytics** — a new `page_not_found` Plausible event fires when a
   visitor reaches a URL the app cannot serve, carrying the requested `path` and a `source` that
@@ -41,7 +41,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   which redirects such visitors to the hub instead of rendering a 404 — without it the event would
   have missed the exact case it was built for, since that silent redirect is what a library
   migration produces. Documented in `docs/reference/plausible.md` (#10453 covers the crawler-facing
-  half; bots run no JavaScript, so the two never overlap).
+  half; bots run no JavaScript, so the two never overlap) (#10465).
 - **Search Console API access, documented and reproducible** — `docs/reference/seo.md` gains a
   "Search Console API access" section: the domain property (`sc-domain:anyplot.ai`), the
   Application Default Credentials login that carries the `webmasters.readonly` scope, a
@@ -49,7 +49,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   token can never hold the scope, and the localhost callback flow dies with `missing_code` on
   WSL2 before you finish the consent screen. Machine-specific values move to `.env`
   (`SEARCH_CONSOLE_PROPERTY`, `SEARCH_CONSOLE_ACCOUNT`, documented in `.env.example`), so a
-  second machine is one login away from full-mode audits.
+  second machine is one login away from full-mode audits (#10452).
 
 - **Three new verification skills** — `/verify-migrations` runs the Alembic chain against a
   throwaway Postgres (Docker, or a rootless `pgserver` fallback; single-head check,
@@ -149,7 +149,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   far harder than this catalogue can justify serving. Verified against Python's `urllib.robotparser`
   across eleven agent/path pairs. **Requires a Cloudflare dashboard change to take effect** — the
   edge still 403s GPTBot, CCBot, Amazonbot, meta-externalagent and Google-CloudVertexBot, and a
-  permission the edge blocks is a published lie.
+  permission the edge blocks is a published lie (#10474).
 
 - **Repository prose now follows the Google developer documentation style guide** — the
   `write-docs` skill gains a "Writing style" section anchoring
@@ -232,7 +232,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   index none of the 3,913 previews. Link-preview bots were unaffected either way — they do not
   consult robots.txt, which is why this went unnoticed. `/og/` is now allowed, with `Allow` placed
   before `Disallow` so first-match parsers see the exception; verified against Python's
-  `urllib.robotparser`, which is exactly such a parser.
+  `urllib.robotparser`, which is exactly such a parser (#10472).
 
 - **The SEO proxy no longer invents pages** — `/{spec}/{language}/{library}` served HTTP 200 with
   a self-referencing canonical for *any* language and library string, because neither segment is
@@ -242,7 +242,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   URLs from the highcharts Python→JS migration (#8516) were still indexed months after those
   implementations were deleted. Unknown combinations now return 404, and the 404 is not cached so
   a later regen becomes visible immediately. The stale URLs are dropped rather than redirected:
-  measured over 28 days they carry 4.4% of impressions and 10 clicks in total.
+  measured over 28 days they carry 4.4% of impressions and 10 clicks in total (#10453).
 - **A trailing slash sent crawlers to a crawl-blocked URL** — `/box-basic/` answered `307` to
   `http://api.anyplot.ai/seo-proxy/box-basic`: the internal proxy path, on the API host, over plain
   http, and that host's `robots.txt` disallows everything. FastAPI's `redirect_slashes` built the
@@ -251,7 +251,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   written with a trailing slash, which is common, dead-ended there; some of the 48 Search Console
   "Redirect error" URLs came from this. nginx now normalises the trailing slash to the canonical URL
   before any routing, the proxy declares the scheme, and `bot-serving-check` fails if a
-  trailing-slash redirect ever again points at `/seo-proxy` or downgrades to http.
+  trailing-slash redirect ever again points at `/seo-proxy` or downgrades to http (#10473).
 
 - **AI assistants asked about a plot page saw nothing** — seven user-directed fetchers (eight UA
   patterns; NotebookLM and Mariner each answer to two) were absent from the `$is_bot` map in
@@ -265,7 +265,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   assistant to open a page, and Google documents its own as generally ignoring robots.txt — so
   this map, not the crawler policy, is the only control point for them. The daily
   `bot-serving-check` now covers all of them, since the failure is invisible to every human
-  visitor and would otherwise regress unnoticed.
+  visitor and would otherwise regress unnoticed (#10470).
 
 - **Home-page filter params were self-canonicalising** — the bot page built its canonical from the
   request query string, so `/?spec=point-basic` declared itself a page in its own right rather than
@@ -277,7 +277,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `canonical` slots, previously one value, are now separate — defaulting to identical, so every
   other handler is unchanged. Verified that `?view=` and `?language=` on implementation and hub
   pages were already correct. Verified that `?view=` and `?language=` on implementation and
-  hub pages were already correct.
+  hub pages were already correct (#10462).
 - **Meta descriptions were three times too long to survive a search result** — every prerendered
   page passed the full spec description straight into `<meta name="description">`. Measured across
   40 live pages: median 424 characters, longest 801, and all 40 over Google's ~155-character
@@ -286,7 +286,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   that ends on the last full sentence that fits (falling back to a word boundary), taking the same
   sample to a median of 142 with none over the limit. Visible body copy and JSON-LD keep the full
   description — the trim is for the snippet, not the content — and it runs on the raw text before
-  escaping, so it can never cut through an HTML entity.
+  escaping, so it can never cut through an HTML entity (#10458).
 - **Googlebot was walking an infinite redirect on every `/{spec}/{language}` URL** — the handler
   answered `Location: /seo-proxy/{spec}`, its own internal path. nginx serves crawlers by
   prepending `/seo-proxy` to the request URI, so the bot fetched `anyplot.ai/seo-proxy/{spec}`,
@@ -295,7 +295,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   at `anyplot.ai/seo-proxy/seo-proxy`; a normal user agent never saw it, because only bots take
   the proxy path. Search Console recorded it as 48 URLs under **Redirect error**. The Location is
   now the public URL, and a regression test asserts both that it never starts with `/seo-proxy`
-  and that re-entering with the prefix nginx adds resolves instead of bouncing.
+  and that re-entering with the prefix nginx adds resolves instead of bouncing (#10455).
 - **`seo-auditor` could never reach Search Console** — its auth contract probed
   `gcloud auth print-access-token`, which mints the gcloud CLI credential; that credential's
   scope set is fixed and can never include `webmasters.readonly`, so every audit since the
@@ -305,7 +305,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   auditor was told to collect data it was simultaneously barred from fetching; read-ness is now
   anchored to the `webmasters.readonly` scope rather than the HTTP verb, which additionally
   unlocks `urlInspection`. Its Coverage guidance no longer asks for the page-indexing report
-  buckets, which have no API at all.
+  buckets, which have no API at all (#10452).
 
 - **Model↔migration index drift fixed before it could drop production indexes** — seven
   migration-created indexes (`ix_specs_issue`, `ix_specs_tags` GIN, `ix_impls_library_id`,

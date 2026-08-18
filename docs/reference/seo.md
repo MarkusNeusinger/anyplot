@@ -293,41 +293,30 @@ Uses **MonoLisa** variable font (commercial, not in repo):
 
 ### Frontend (anyplot.ai)
 
-Static file at `app/public/robots.txt`. It carries the full policy — content
-signals, the welcomed AI agents, the declined training collectors — so it holds
-regardless of what Cloudflare does or does not prepend (see
-[AI crawler policy](#ai-crawler-policy)):
+Static file at `app/public/robots.txt`. It carries the full policy — the content
+signals and the one declined agent — so it holds regardless of what Cloudflare
+does or does not prepend (see [AI crawler policy](#ai-crawler-policy)):
 
-Four groups in this order — welcomed AI agents (`ClaudeBot`, `Claude-User`,
-`Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`,
-`Perplexity-User`), declined training collectors (`GPTBot`, `CCBot`,
-`Bytespider`, `Amazonbot`, `meta-externalagent`), opt-out tokens
-(`Google-Extended`, `Applebot-Extended`), and finally the wildcard. The first
+Two groups, in this order: `Bytespider`, declined on bandwidth grounds, then the
+wildcard that allows everyone else. The retrieval-yes / training-no split this
+section used to describe is gone — the policy is open to every operator, so the
+named allow-groups it needed became redundant with `User-agent: *`. The declined
 group verbatim; read the file for the rest:
 
 ```txt
-User-agent: ClaudeBot
-User-agent: Claude-User
-User-agent: Claude-SearchBot
-User-agent: OAI-SearchBot
-User-agent: ChatGPT-User
-User-agent: PerplexityBot
-User-agent: Perplexity-User
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Disallow: /debug
-Disallow: /interactive
-Allow: /
+User-agent: Bytespider
+Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
+Disallow: /
 ```
 
 Three properties of that file are deliberate and should survive any cleanup:
 
-- The `Content-Signal` line is repeated in **every** group, declining ones
-  included. A crawler reads only the group that matches it, so a reservation
-  declared once under `User-agent: *` never reaches a named agent — least of all
-  the training collectors it is aimed at.
-- The named groups come **before** the wildcard group. A spec-compliant crawler
-  picks the most specific match regardless of order, but simpler parsers take
-  the first match and would read `Allow: /` and stop.
+- The `Content-Signal` line is repeated in **every** group. A crawler reads only
+  the group that matches it, so a signal declared once under `User-agent: *`
+  never reaches a named agent.
+- The named group comes **before** the wildcard. A spec-compliant crawler picks
+  the most specific match regardless of order, but simpler parsers take the
+  first match and would read `Allow: /` and stop.
 - Inside each group, `Disallow:` comes **before** `Allow: /` — same reason: with
   the broad allow first, a first-match parser (Python's `urllib.robotparser`,
   for one) hands out `/debug` and `/interactive`.
@@ -338,8 +327,13 @@ Dynamic endpoint at `GET /robots.txt`:
 
 ```txt
 User-agent: *
+Allow: /og/
 Disallow: /
 ```
+
+`/og/` is the exception: every prerendered page references its preview image
+there, so a blanket `Disallow` pointed crawlers at an image they were forbidden
+to fetch. `Allow` comes first for the first-match parsers described above.
 
 **Why block the API?**
 - APIs should not be indexed by search engines
