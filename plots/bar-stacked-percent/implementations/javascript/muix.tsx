@@ -19,7 +19,6 @@ const LABEL_ON_DARK_FILL = "#F0EFE8"; // light ink — for the darker blue segme
 // total output spans two orders of magnitude — China dwarfs Norway in raw
 // terawatt-hours, which is exactly why a percent-stacked view (composition)
 // tells a clearer story here than a raw stacked view (dominated by scale).
-const countries = ["China", "USA", "Germany", "France", "Brazil", "Norway"];
 const rawByCountry = {
   China: { renewables: 3100, nuclear: 400, gas: 300, coal: 5200 },
   USA: { renewables: 900, nuclear: 800, gas: 1700, coal: 700 },
@@ -28,6 +27,16 @@ const rawByCountry = {
   Brazil: { renewables: 550, nuclear: 15, gas: 60, coal: 15 },
   Norway: { renewables: 150, nuclear: 0, gas: 0.5, coal: 0.1 },
 };
+
+// Sorted descending by renewables share so the bars themselves form a visual
+// gradient (all-renewable Norway -> coal-heavy China) that reinforces the
+// subtitle's contrast, rather than an arbitrary country ordering.
+const renewablesShare = (country) => {
+  const raw = rawByCountry[country];
+  const total = raw.renewables + raw.nuclear + raw.gas + raw.coal;
+  return raw.renewables / total;
+};
+const countries = Object.keys(rawByCountry).sort((a, b) => renewablesShare(b) - renewablesShare(a));
 
 // Renewables listed first so it lands on Imprint position 1 (brand green) —
 // a natural semantic fit (growth/nature). Order stays fixed across every bar.
@@ -112,7 +121,7 @@ export default function Chart() {
             valueFormatter: (v) => `${v.toFixed(1)}%`,
           }))}
           barLabel={(item) => (item.value != null && item.value >= 6 ? `${item.value.toFixed(0)}%` : null)}
-          margin={{ top: 14, right: 130, bottom: 90, left: 140 }}
+          margin={{ top: 14, right: 90, bottom: 90, left: 140 }}
           grid={{ horizontal: true }}
           slotProps={{
             legend: {
@@ -129,7 +138,9 @@ export default function Chart() {
             }),
           }}
           sx={{
-            "& .MuiChartsAxis-line": { stroke: t.inkSoft },
+            // Lighter, grid-weight axis line instead of the default full-ink
+            // stroke — a more refined chrome treatment than the library default.
+            "& .MuiChartsAxis-line": { stroke: t.grid },
             "& .MuiChartsGrid-line": { stroke: t.grid },
           }}
         />
