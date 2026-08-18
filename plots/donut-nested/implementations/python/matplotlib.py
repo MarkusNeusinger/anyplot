@@ -1,11 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-08
+Library: matplotlib 3.11.1 | Python 3.13.12
+Quality: 92/100 | Updated: 2026-08-18
 """
 
 import os
 
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -17,10 +18,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-4 for departments)
+# Imprint palette (positions 1-4 for departments)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
-# Data - Budget allocation: departments (inner) and expense categories (outer)
+# Data - Budget allocation: departments (inner ring) and expense categories (outer ring)
 departments = ["Engineering", "Marketing", "Operations", "Sales"]
 categories = {
     "Engineering": ["Salaries", "Equipment", "Software"],
@@ -35,93 +36,95 @@ values = {
     "Sales": [140, 220, 70],
 }
 
-# Calculate department totals for inner ring
+# Department totals for the inner ring (values aggregate outer -> inner)
 dept_totals = [sum(values[dept]) for dept in departments]
 
-# Flatten outer ring data while maintaining order
+# Flatten outer ring data while maintaining department order
 outer_labels = []
 outer_values = []
 for dept in departments:
     outer_labels.extend(categories[dept])
     outer_values.extend(values[dept])
 
-# Color palette - use Okabe-Ito base with varying opacity per subcategory
-dept_colors = {}
-for i, dept in enumerate(departments):
-    base_color = IMPRINT[i]
-    num_cats = len(categories[dept])
-    dept_colors[dept] = [base_color] * num_cats
-
 inner_colors = [IMPRINT[i] for i in range(len(departments))]
-outer_colors = []
-for dept in departments:
-    outer_colors.extend(dept_colors[dept])
 
-# Create figure - square format for pie/donut charts (3600x3600 px at 300 dpi = 12x12 inches)
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Outer ring reuses each department's hue with varying opacity per subcategory,
+# so a category visually belongs to its parent while staying distinguishable.
+outer_colors_with_alpha = []
+for dept, color in zip(departments, inner_colors, strict=True):
+    rgb = tuple(int(color[j : j + 2], 16) / 255.0 for j in (1, 3, 5))
+    alphas = np.linspace(0.5, 1.0, len(categories[dept]))
+    outer_colors_with_alpha.extend((*rgb, alpha) for alpha in alphas)
+
+# Square canvas for symmetric circular shapes: figsize=(6, 6) x dpi=400 -> 2400x2400 px
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Inner ring (departments)
 inner_wedge_props = {"width": 0.4, "edgecolor": PAGE_BG, "linewidth": 2}
-wedges_inner, texts_inner = ax.pie(
-    dept_totals, radius=0.6, colors=inner_colors, wedgeprops=inner_wedge_props, startangle=90
-)
+wedges_inner, _ = ax.pie(dept_totals, radius=0.6, colors=inner_colors, wedgeprops=inner_wedge_props, startangle=90)
 
-# Outer ring (categories within departments) - use varying opacity for subcategories
+# Outer ring (categories within departments)
 outer_wedge_props = {"width": 0.35, "edgecolor": PAGE_BG, "linewidth": 1.5}
-outer_colors_with_alpha = []
-for dept, color in zip(departments, inner_colors, strict=True):
-    num_cats = len(categories[dept])
-    alphas = np.linspace(0.5, 1.0, num_cats)
-    for alpha in alphas:
-        # Convert hex to RGB, apply alpha
-        rgb = tuple(int(color[j : j + 2], 16) / 255.0 for j in (1, 3, 5))
-        outer_colors_with_alpha.append((*rgb, alpha))
-
-wedges_outer, texts_outer = ax.pie(
+wedges_outer, _ = ax.pie(
     outer_values, radius=1.0, colors=outer_colors_with_alpha, wedgeprops=outer_wedge_props, startangle=90
 )
 
-# Add labels for inner ring (departments with totals)
+# A thin halo behind wedge labels keeps them crisp against every segment shade
+halo = [pe.withStroke(linewidth=3, foreground=PAGE_BG)]
+
+# Department labels (inner ring) - bold, the largest data-label tier
 for wedge, dept, total in zip(wedges_inner, departments, dept_totals, strict=True):
-    angle = (wedge.theta2 + wedge.theta1) / 2
-    x = 0.42 * np.cos(np.radians(angle))
-    y = 0.42 * np.sin(np.radians(angle))
-    ax.text(x, y, f"{dept}\n${total}K", ha="center", va="center", fontsize=16, fontweight="bold", color=INK)
+    angle = np.radians((wedge.theta2 + wedge.theta1) / 2)
+    x, y = 0.42 * np.cos(angle), 0.42 * np.sin(angle)
+    ax.text(
+        x,
+        y,
+        f"{dept}\n${total}K",
+        ha="center",
+        va="center",
+        fontsize=11,
+        fontweight="bold",
+        color=INK,
+        path_effects=halo,
+    )
 
-# Add labels for outer ring (larger segments only)
+# Category labels (outer ring) - regular weight, larger segments only
 for wedge, label, value in zip(wedges_outer, outer_labels, outer_values, strict=True):
-    if value >= 100:  # Only label segments >= $100K
-        angle = (wedge.theta2 + wedge.theta1) / 2
-        x = 0.82 * np.cos(np.radians(angle))
-        y = 0.82 * np.sin(np.radians(angle))
-        ax.text(x, y, f"{label}\n${value}K", ha="center", va="center", fontsize=12, color=INK)
+    if value >= 100:  # only label segments >= $100K to avoid clutter
+        angle = np.radians((wedge.theta2 + wedge.theta1) / 2)
+        x, y = 0.82 * np.cos(angle), 0.82 * np.sin(angle)
+        ax.text(x, y, f"{label}\n${value}K", ha="center", va="center", fontsize=7.5, color=INK, path_effects=halo)
 
-# Create custom legend for all categories
-legend_elements = []
-for i, dept in enumerate(departments):
-    for cat in categories[dept]:
-        legend_elements.append(
-            plt.Rectangle((0, 0), 1, 1, facecolor=IMPRINT[i], edgecolor=INK_SOFT, label=f"{dept}: {cat}")
-        )
-
-ax.legend(
+# Custom legend: every department + category pair, colored by parent hue
+legend_elements = [
+    plt.Rectangle((0, 0), 1, 1, facecolor=IMPRINT[i], edgecolor=INK_SOFT, label=f"{dept}: {cat}")
+    for i, dept in enumerate(departments)
+    for cat in categories[dept]
+]
+leg = ax.legend(
     handles=legend_elements,
     loc="center left",
     bbox_to_anchor=(1.0, 0.5),
-    fontsize=14,
+    fontsize=8,
     frameon=True,
-    fancybox=False,
     edgecolor=INK_SOFT,
     facecolor=ELEVATED_BG,
+    handlelength=1.2,
+    handletextpad=0.6,
+    borderaxespad=0.6,
 )
-plt.setp(ax.get_legend().get_texts(), color=INK_SOFT)
+leg.get_frame().set_linewidth(0.5)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Title
-ax.set_title("donut-nested · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+# fig.suptitle (not ax.set_title) so the mandated title centers on the full canvas,
+# not just the donut's axes, which is shifted left to leave room for the legend.
+fig.suptitle(
+    "donut-nested · python · matplotlib · anyplot.ai", x=0.5, y=0.965, fontsize=12, fontweight="medium", color=INK
+)
 
-# Equal aspect ratio for circular donuts
 ax.set_aspect("equal")
-
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+# Reserve room on the right for the legend instead of bbox_inches="tight" (which drifts canvas size).
+# Height span matches the width span so aspect="equal" doesn't pad extra whitespace top/bottom.
+fig.subplots_adjust(left=0.02, right=0.60, top=0.88, bottom=0.30)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
