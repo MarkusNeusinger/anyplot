@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: box-notched
+created: '2026-08-18T04:56:28Z'
+updated: '2026-08-18T05:12:54Z'
+generated_by: claude-sonnet
+workflow_run: 32100433829
+issue: 2019
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/javascript/highcharts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Custom hourglass-shaped notched box built via Highcharts' SVG renderer (path with
+    rounded corners, subtle drop shadow) — a genuinely polished silhouette, not a
+    generic default
+  - 'Significance bracket + "significant (95% CI)" annotation directly visualizes
+    the notched box plot''s core purpose: spotting the most clearly separated pair
+    of medians'
+  - 'Perfect Imprint palette compliance in both themes — first series is #009E73,
+    remaining four follow the canonical order, and data colors are pixel-identical
+    between light and dark'
+  - Realistic manufacturing/quality-control dataset (bulb lifespan by batch) with
+    varied spreads, sample sizes, and genuine outliers per category — satisfies DQ-01
+    feature coverage
+  - Deterministic LCG-seeded data generation; theme-adaptive chrome (ink/inkSoft/grid
+    tokens) correctly threaded through title, subtitle, axes, and the custom-rendered
+    elements
+  weaknesses:
+  - Statistics helper functions (quantile, findMostSignificantPair) push the code
+    beyond a strict Imports→Data→Plot KISS structure — justified by the notch/IQR
+    math a box plot requires, but still a minor CQ-01 deduction
+  - Because the highcharts-more boxplot series isn't loaded, the box itself is built
+    from low-level renderer.path calls with manual toPixels coordinate math rather
+    than a high-level series API — reduces LM-01 slightly relative to what a native
+    series type would offer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Dark, clearly readable title "box-notched · javascript · highcharts · anyplot.ai" and subtitle at top; dark axis titles "Manufacturing Batch" (x) and "Bulb Lifespan (hours)" (y); dark tick labels on both axes; subtle horizontal gridlines. The "significant (95% CI)" bracket annotation between Batch B and Batch C is rendered in dark ink and fully legible.
+      Data: Five notched (hourglass-waisted) boxes, one per batch, each with a distinct Imprint color — Batch A green (#009E73, first series as required), Batch B purple, Batch C blue, Batch D ochre/tan, Batch E red — filled at ~40% opacity with a matching colored stroke and a dark median line through the waist. Whiskers extend to 1.5×IQR with hollow, colored-outline outlier circles beyond them (Batches A, B, C, D each show at least one outlier). Box widths and spreads visibly differ by batch (e.g. Batch D is notably wider/more variable than Batch B), demonstrating real distributional variety.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles, tick labels, and the significance bracket annotation all render in light/white text, clearly visible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle but visible.
+      Data: Same five box colors as the light render (green/purple/blue/tan/red), pixel-identical hues — only the chrome (background, text, median-line color which switches from dark ink to light ink) adapts. Box shapes, widths, notches, and outlier placement are unchanged from the light render.
+      Legibility verdict: PASS — all text remains clearly readable against the dark background; the median line correctly switches to a light color so it stays visible against the darker box fills.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis titles
+          16px, tick/annotation labels 13-14px); fully readable in both themes, title
+          well within bounds
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between boxes, outliers, axis labels, or the significance
+          bracket annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Box widths, whisker caps, and outlier markers (radius 7.5) are well-sized
+          for 28-60 points per category
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues plus x-axis position differentiate categories; not
+          reliant on red-green alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced portion of the canvas; bracket annotation
+          and outliers stay within bounds, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Bulb Lifespan (hours)" and "Manufacturing Batch" — descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining four in canonical Imprint order,
+          identical across themes, correct theme backgrounds'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hourglass notch shape with rounded corners and subtle drop
+          shadow — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, no chart frame/spines, generous whitespace,
+          crisp notch waist
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Significance bracket + "significant (95% CI)" label calls out the
+          most clearly separated pair of medians — the plot's core insight is immediately
+          visible
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct notched box plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median, quartiles, 1.5*IQR whiskers, outliers, 95% CI notches, per-category
+          colors all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x, lifespan values on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed since x-axis categories already
+          identify series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Different spreads, sample sizes, and outliers per batch
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Manufacturing quality-control scenario (bulb lifespan by batch) —
+          real, neutral, matches spec's stated application
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lifespan values (~1000-1400 hours) are plausible for bulb testing
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions (quantile, findMostSignificantPair) needed for the
+          stats, but move beyond pure Imports->Data->Plot flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; only the global Highcharts/tokens used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom-rendered notched box plot, no
+          fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart("container", ...), animation disabled on chart and
+          series, no explicit width/height
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of chart.events.render, axis.toPixels, and renderer groups
+          given the boxplot module isn't loaded
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG path shapes with rounded corners/shadow and a coordinate-driven
+          significance bracket — not trivially portable to another library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - quantile-calculation
+  styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
