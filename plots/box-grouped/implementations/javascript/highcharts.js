@@ -90,6 +90,13 @@ const yMax = Math.max(...allValues) + yPad;
 // --- Chart -------------------------------------------------------------------
 let customGroup = null;
 
+function drawLine(renderer, group, x1, y1, x2, y2, color, width) {
+  renderer
+    .path(["M", x1, y1, "L", x2, y2])
+    .attr({ "stroke-width": width, stroke: color, zIndex: 3 })
+    .add(group);
+}
+
 Highcharts.chart("container", {
   chart: {
     backgroundColor: "transparent",
@@ -117,6 +124,13 @@ Highcharts.chart("container", {
             const xc = xc0 + offset;
             const left = xc - boxWidth / 2;
 
+            // Senior (last level) gets a bolder stroke to call out the
+            // seniority -> productivity trend the data tells.
+            const isSenior = k === nSub - 1;
+            const lineWidth = isSenior ? 3 : 2;
+            const medianWidth = isSenior ? 3.5 : 2.5;
+            const fillOpacity = isSenior ? 0.58 : 0.45;
+
             const yQ1 = yAxis.toPixels(s.q1, false);
             const yQ3 = yAxis.toPixels(s.q3, false);
             const yMed = yAxis.toPixels(s.median, false);
@@ -124,40 +138,33 @@ Highcharts.chart("container", {
             const yWhiskerHigh = yAxis.toPixels(s.whiskerHigh, false);
 
             // Whiskers + caps
-            this.renderer
-              .path(["M", xc, yQ3, "L", xc, yWhiskerHigh])
-              .attr({ "stroke-width": 2, stroke: color, zIndex: 3 })
-              .add(customGroup);
-            this.renderer
-              .path(["M", xc, yQ1, "L", xc, yWhiskerLow])
-              .attr({ "stroke-width": 2, stroke: color, zIndex: 3 })
-              .add(customGroup);
-            this.renderer
-              .path(["M", xc - capWidth / 2, yWhiskerHigh, "L", xc + capWidth / 2, yWhiskerHigh])
-              .attr({ "stroke-width": 2, stroke: color, zIndex: 3 })
-              .add(customGroup);
-            this.renderer
-              .path(["M", xc - capWidth / 2, yWhiskerLow, "L", xc + capWidth / 2, yWhiskerLow])
-              .attr({ "stroke-width": 2, stroke: color, zIndex: 3 })
-              .add(customGroup);
+            drawLine(this.renderer, customGroup, xc, yQ3, xc, yWhiskerHigh, color, lineWidth);
+            drawLine(this.renderer, customGroup, xc, yQ1, xc, yWhiskerLow, color, lineWidth);
+            drawLine(
+              this.renderer, customGroup,
+              xc - capWidth / 2, yWhiskerHigh, xc + capWidth / 2, yWhiskerHigh,
+              color, lineWidth
+            );
+            drawLine(
+              this.renderer, customGroup,
+              xc - capWidth / 2, yWhiskerLow, xc + capWidth / 2, yWhiskerLow,
+              color, lineWidth
+            );
 
             // Box body (Q1–Q3)
             const r = Math.min(4, boxWidth * 0.12);
             this.renderer
               .rect(left, yQ3, boxWidth, yQ1 - yQ3, r)
               .attr({
-                fill: Highcharts.color(color).setOpacity(0.45).get(),
+                fill: Highcharts.color(color).setOpacity(fillOpacity).get(),
                 stroke: color,
-                "stroke-width": 2,
+                "stroke-width": lineWidth,
                 zIndex: 4,
               })
               .add(customGroup);
 
             // Median line
-            this.renderer
-              .path(["M", left, yMed, "L", left + boxWidth, yMed])
-              .attr({ "stroke-width": 2.5, stroke: t.ink, zIndex: 5 })
-              .add(customGroup);
+            drawLine(this.renderer, customGroup, left, yMed, left + boxWidth, yMed, t.ink, medianWidth);
 
             // Outliers
             s.outliers.forEach((v) => {
@@ -180,8 +187,9 @@ Highcharts.chart("container", {
   xAxis: {
     categories: departments,
     title: { text: "Department", style: { color: t.inkSoft, fontSize: "16px" } },
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 1,
+    lineColor: t.grid,
+    tickWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   yAxis: {
@@ -191,6 +199,8 @@ Highcharts.chart("container", {
     endOnTick: false,
     title: { text: "Productivity Score", style: { color: t.inkSoft, fontSize: "16px" } },
     gridLineColor: t.grid,
+    lineWidth: 0,
+    tickWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   legend: {
