@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:05:07Z'
-updated: '2026-08-18T07:00:12Z'
+updated: '2026-08-18T07:18:17Z'
 generated_by: claude-sonnet
 workflow_run: 32108260468
 issue: 2015
@@ -12,137 +12,141 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 49
 review:
   strengths:
-  - Genuine nested donut built natively in plotnine via layered geom_polygon rings
-    (no matplotlib workaround) — a real demonstration of grammar-of-graphics mastery
-    for a chart type the library has no built-in geom for.
-  - 'Correct Imprint palette: first parent segment is #009E73, remaining parents follow
-    canonical order, and each parent''s children use lightened tonal shades of the
-    same hue — exactly matching the spec''s ''consistent color families per parent,
-    same hue varying lightness'' requirement.'
-  - 'Both renders are fully theme-correct: FAF8F1/1A1A17 backgrounds, ink colors adapt
-    via INK/INK_SOFT tokens, and data colors are pixel-identical between light and
-    dark.'
-  - Child values aggregate correctly to parent totals (verified arithmetic, e.g. North
-    America 420+260+240+130=1050), and inner-ring labels pair value + percentage share
-    for clear at-a-glance context.
-  - Clean, deterministic, KISS-adjacent code with the correct canonical title format
-    and correct plot-{THEME}.png output naming.
+  - Correct nested-donut structure with two rings (parent region / child product line),
+    value+share inner-ring labels, and per-parent tonal color families for children
+    (consistent hue, varying lightness) matching the spec's guidance
+  - 'Canonical Imprint palette (first ring = #009E73, canonical ordinal order for
+    the abstract region category) with correct theme-adaptive backgrounds (#FAF8F1
+    light / #1A1A17 dark) and CVD-safe categorical hues'
+  - Small-share inner-ring segments (Latin America, Middle East & Africa) get dedicated
+    angle-nudging and smaller-font handling to avoid label collisions — good attention
+    to detail, though the same care was not extended to the outer ring where it was
+    actually needed
+  - Legend correctly reserved for outer-ring segments below the label threshold, matching
+    the spec's 'labels on larger segments, use legend for smaller ones' guidance
+  - Clean chrome (no axis/grid), correct mandated title format, fully deterministic
+    code with no randomness needed
   weaknesses:
-  - Spec explicitly calls for 'labels on larger segments, use legend for smaller ones,'
-    but legend_position='none' plus scale_fill_identity() means the implementation
-    has no legend at all — smaller outer-ring segments below the $100M label_threshold
-    (e.g. Cloud Services and Support in Middle East & Africa) render as unlabeled
-    colored wedges with no way to identify them.
-  - Outer-ring segment labels are always colored INK_SOFT regardless of the underlying
-    wedge's tint lightness — on the palest tonal tints (the most-lightened child shade
-    in each family) this produces borderline-low contrast in both themes; text color
-    should adapt to the specific wedge fill rather than a single global token.
-  - Inner-ring label pairs for the two smallest adjacent parent segments (Latin America
-    10% and Middle East & Africa 9%) sit close together with little breathing room
-    between the two segments' name/value text blocks — increase label_dy or the label
-    radius for segments below a share threshold to give them more separation.
-  - Two custom helper functions (lighten_hex, create_annular_segment) depart from
-    the pure KISS 'imports → data → plot → save' structure, though the geometry math
-    genuinely needs the reuse.
+  - 'SEVERE (both light and dark renders): in the Asia Pacific outer ring, the ''Consulting''
+    label directly crosses and overlaps the neighboring ''Cloud Services'' label —
+    the two texts collide diagonally and are unreadable at the intersection. Outer-ring
+    label placement (mid-angle at label_radius) doesn''t account for text width versus
+    the narrow angular width of adjacent segments. Fix: extend the small-share font/threshold
+    treatment already used on the inner ring to the outer ring (smaller font or legend
+    fallback for narrow neighbors), or nudge mid-angles apart the same way small-share
+    inner segments are nudged.'
+  - 'Europe: the outer-ring ''Cloud Services'' label overlaps the Europe inner-ring
+    value label (''$760M · 23%'') — both occupy the same pixel region. Worst in the
+    dark render, where the similar light-toned text colors blend into an unreadable
+    smudge; still visibly crowded in the light render. Inner-ring value-label positions
+    and outer-ring segment-label positions are computed independently with no collision
+    check between rings. Fix: shift Europe''s value label or the Cloud Services outer
+    label radially/angularly apart.'
+  - 'North America outer ring: the ''Cloud Services'' label is visibly clipped at
+    both ends in the DARK render only (reads as ''oud Service'', missing leading ''Cl''
+    and trailing letters) while the identical position renders fully legible in the
+    light render. This looks like a theme-specific compositing/z-order issue (segment
+    border stroke appearing to cut through the text) rather than a missing color token
+    — investigate whether the polygon border (color=BORDER_COLOR) is drawing above
+    the text layer in dark mode, or shrink the label so it no longer spans the segment
+    boundary stroke.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "donut-nested · python · plotnine · anyplot.ai" in dark ink, centered top, fully readable. No axis lines, ticks, or grid (intentionally blanked, appropriate for a donut chart). Inner-ring labels (region name bold + "$XXXM · XX%" value) and outer-ring labels (product line names on larger segments) render in dark ink / soft gray respectively, both legible against the light background.
-      Data: Nested rings — inner ring shows 5 regions (North America teal #009E73, Asia Pacific purple, Europe blue, Latin America ochre, Middle East & Africa red), outer ring shows product-line children in lighter tonal tints of each parent's hue. First categorical series is confirmed #009E73.
-      Legibility verdict: PASS — all text is readable against the light background; minor crowding between the Latin America and Middle East & Africa label pairs (both small segments) but not unreadable.
+      Background: Warm off-white (~#FAF8F1), correct light-theme surface.
+      Chrome: Title "donut-nested · python · plotnine · anyplot.ai" centered at top, dark ink, fully legible. No axis, no grid (intentional for a donut chart). Inner-ring parent labels (North America, Asia Pacific, Europe, Latin America, MEA) in bold dark text plus a lighter "$XXXM · XX%" value line beneath each — all legible. A manual legend (color swatch + text) sits in the lower-left margin for the three sub-threshold outer segments (Asia Pacific·Support, MEA·Cloud Services, MEA·Support) — legible.
+      Data: Inner ring = 5 regions in canonical Imprint hues (North America #009E73 green, Asia Pacific purple, Europe blue, Latin America amber, MEA red). Outer ring = product-line children in lighter tonal tints of each parent's hue, separated by a thin gap/border from the inner ring. Two defects found: (1) Asia Pacific's outer "Consulting" label visibly overlaps/crosses the neighboring "Cloud Services" label — both unreadable at the collision; (2) Europe's outer "Cloud Services" label visibly crowds/touches Europe's inner "$760M · 23%" value label.
+      Legibility verdict: FAIL — two outer-ring label collisions are present even in the light render (see above), independent of theme.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and inner-ring bold region names switch to light/white ink, clearly visible. Value and outer-ring labels use a lighter soft-gray token, readable against the dark page background. No dark-on-dark failures against the page background itself.
-      Data: Same 5-region / tonal-tint color scheme as the light render — data colors are identical across themes, only chrome (background, ink) flips as expected.
-      Legibility verdict: PASS overall — no dark-on-dark failures against the page background; flagged as a weakness (not an outright fail) that outer-ring labels use a single INK_SOFT gray regardless of the underlying wedge tint, which is borderline low-contrast on the very palest tonal wedges in this theme.
+      Background: Warm near-black (~#1A1A17), correct dark-theme surface.
+      Chrome: Same title, now in light ink, fully legible against the dark background. Inner-ring parent labels and value lines are in light/soft-gray ink, all legible. Legend text/swatches in the lower-left margin are legible against the dark background.
+      Data: Data colors are identical to the light render (same Imprint hues and tonal tints for both rings) — only chrome (background/text) flipped, as required.
+      Legibility verdict: FAIL — the same two label collisions from the light render are present and are worse here (Europe's "Cloud Services" vs. "$760M · 23%" become a barely-legible smudge because both texts use similarly light, low-contrast ink colors that blend together). Additionally, North America's outer "Cloud Services" label is clipped at both ends in this render only (reads "oud Service"), a theme-specific artifact not present in the light render.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 17
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 3
         max: 8
-        passed: true
-        comment: All font sizes explicitly set, readable in both themes; minor crowding
-          in the smallest-segment label pairs and borderline contrast on pale tonal
-          tints keep it below perfect.
+        passed: false
+        comment: Most text is legible in both themes, but North America's outer 'Cloud
+          Services' label is clipped/unreadable in the dark render only ('oud Service'),
+          and the Consulting/Cloud Services and Europe collisions further hurt legibility
+          at those points
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 0
         max: 6
-        passed: true
-        comment: No hard overlap found, but the Latin America / Middle East & Africa
-          label pairs sit very close together (small adjacent segments).
+        passed: false
+        comment: 'Severe: Asia Pacific ''Consulting'' label directly crosses ''Cloud
+          Services'' label in both renders; Europe outer ''Cloud Services'' label
+          collides with Europe''s inner value label, worst in dark render'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Wedges well-sized and clearly visible at all segment sizes; smallest
-          unlabeled wedges are still visibly distinct as colored regions.
+        comment: Ring segments and tonal color families are clearly distinguishable
+          at this data density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Good contrast overall, but outer-ring labels use a single INK_SOFT
-          token regardless of underlying wedge lightness, causing borderline contrast
-          on the palest tints.
+        comment: Imprint categorical palette, CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Donut fills ~83% of the square canvas with balanced margins around
-          the title; nothing cut off.
+        comment: Correct 2400x2400 canvas, good ring proportions, no canvas-edge clipping;
+          internal label collisions are scored under VQ-02/VQ-01 not here
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axes needed for a donut chart; inline value+share
-          labels serve a descriptive role, mandated title format used.
+        comment: No axis needed for a donut; mandated title format present and correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, remaining parents follow canonical Imprint
-          order, backgrounds correct, chrome theme-correct in both renders.'
+        comment: 'First series #009E73, canonical Imprint order, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom polygon-built nested donut with tonal color families is well
-          above a configured default; not flawless due to label crowding/contrast.
+        comment: Tonal color-family concept per parent category is a thoughtful, professional
+          touch
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No grid/axis clutter, subtle wedge borders for ring separation, clean
-          minimalist background.
+        passed: false
+        comment: Clean chrome and ring spacing, but label collisions undercut the
+          polish
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Font-size hierarchy (name > value > outer label) and value+share
-          pairing guide the reader, though no single focal emphasis beyond natural
-          reading order.
+        passed: false
+        comment: Value + share labels give hierarchy, but collisions obscure part
+          of the story
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,29 +154,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut chart with two hierarchy levels.
+        comment: Correct nested donut with two concentric rings
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Consistent color families, ring spacing, and parent/child alignment
-          all present; missing the spec's 'use legend for smaller ones' fallback for
-          unlabeled segments.
+        comment: Color families, ring spacing, label/legend split, boundary alignment
+          all present in the data/code
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angular sweeps correctly map to values; child totals verified to
-          sum to parent totals.
+        comment: Inner ring = level_1 totals, outer ring = level_2 children, aggregation
+          correct
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; no legend exists
-          at all despite the spec suggesting one for small segments.
+        comment: Title format matches mandate; legend used correctly for sub-threshold
+          segments
     data_quality:
       score: 15
       max: 15
@@ -182,21 +185,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 5 parent categories (within 3-6 range) with 2-5 children each, spanning
-          the full spec-required range.
+        comment: 5 regions, 2-5 children each, totals and shares all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral global tech-revenue-by-region scenario.
+        comment: Plausible, neutral technology-revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible revenue magnitudes and regional proportions for a global
-          technology company.
+        comment: Revenue figures ($70M-$420M) are sensible for the domain
     code_quality:
       score: 9
       max: 10
@@ -206,33 +207,33 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two helper functions (lighten_hex, create_annular_segment) deviate
-          from pure imports->data->plot->save, though justified by reused geometry
-          math.
+        comment: Three small helper functions (lighten_hex, contrast_text_color, create_annular_segment)
+          are effectively necessary since plotnine has no native donut geom
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no randomness.
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (math, pandas, plotnine components).
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the geometry required, no fake UI/interactivity.
+        comment: No fake UI/interactivity, appropriate complexity for custom polygon-based
+          donut
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png naming, current plotnine API (plot.save).
+        comment: Saves plot-{THEME}.png via plot.save with correct dpi/size
     library_mastery:
       score: 7
       max: 10
@@ -242,26 +243,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct layered ggplot-style composition (geom_polygon + geom_text
-          + scale_fill_identity + coord_fixed), the idiomatic way to build custom
-          shapes in plotnine.
+        comment: geom_polygon + scale_fill_identity is the correct plotnine workaround
+          given no native pie/donut geom
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-layer polygon composition and scale_fill_identity for a chart
-          type plotnine has no native geom for is a genuinely library-specific technique.
+        comment: coord_fixed, identity scales, and layered manual legend show library-specific
+          technique beyond defaults
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - patches
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
+  - edge-highlighting
