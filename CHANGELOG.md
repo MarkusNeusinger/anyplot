@@ -232,6 +232,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A database outage would have reopened the hole #10453 closed** — with no catalogue to check
+  against, the bot routes answered 200 with a fabricated page for any string, self-canonicalising,
+  exactly the defect that PR removed. Degraded pages now carry `noindex`. The path is unreachable in
+  production, where the database is configured, but it is one misconfiguration away from indexable.
+  `bot_fetch` also moved from a router dependency to a middleware and gained a `status` property: a
+  dependency runs before the handler and cannot see the response, so every 404 was being recorded as
+  a successful page read (#10479).
+
+- **Documentation that still described the superseded crawler policy** — `docs/reference/seo.md`
+  said `gptbot`, `meta-externalagent` and `amazonbot` were "declined in robots.txt" and
+  `app/nginx.conf` carried the same claim in a comment. Both were written about an hour before
+  #10474 opened the policy and never reconciled, so the page contradicted itself. The measured
+  edge-state table was stale for the opposite reason: the dashboard unblock it prescribed had since
+  been done. A docstring also pointed at `app/src/router.tsx`, which does not exist — the routing
+  lives in `app/src/routes/index.tsx` (#10479).
+
 - **The trailing-slash redirect leaked the internal port** — #10473 removed a redirect to
   `http://api.anyplot.ai/seo-proxy/…` and replaced it with `http://anyplot.ai:8080/…`: a smaller
   version of the same defect, since nginx builds a `permanent` rewrite's Location from

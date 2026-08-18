@@ -375,7 +375,7 @@ class TestTrackBotFetch:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
-            track_bot_fetch(self._request("Mozilla/5.0 (compatible; Claude-User/1.0)"), "/box-basic")
+            track_bot_fetch(self._request("Mozilla/5.0 (compatible; Claude-User/1.0)"), "/box-basic", 200)
             await asyncio.sleep(0)  # let the fire-and-forget task run
 
             assert mock_client.post.call_args[1]["json"]["domain"] == BOT_DOMAIN
@@ -386,7 +386,7 @@ class TestTrackBotFetch:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
-            track_bot_fetch(self._request("MistralAI-User/1.0"), "/box-basic/python/matplotlib")
+            track_bot_fetch(self._request("MistralAI-User/1.0"), "/box-basic/python/matplotlib", 200)
             await asyncio.sleep(0)
 
             payload = mock_client.post.call_args[1]["json"]
@@ -397,6 +397,7 @@ class TestTrackBotFetch:
                 "assistant": "mistral",
                 "kind": "user_directed",
                 "path": "/box-basic/python/matplotlib",
+                "status": "200",
             }
 
     @pytest.mark.asyncio
@@ -418,7 +419,7 @@ class TestTrackBotFetch:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
-            track_bot_fetch(request, "/box-basic")
+            track_bot_fetch(request, "/box-basic", 200)
             await asyncio.sleep(0)
 
             assert mock_client.post.call_args[1]["headers"]["X-Forwarded-For"] == "10.0.0.9"
@@ -429,7 +430,7 @@ class TestTrackBotFetch:
             mock_client = AsyncMock()
             mock_client_class.return_value.__aenter__.return_value = mock_client
 
-            track_bot_fetch(self._request("Mozilla/5.0 (X11; Linux) Chrome/126.0 Safari/537.36"), "/")
+            track_bot_fetch(self._request("Mozilla/5.0 (X11; Linux) Chrome/126.0 Safari/537.36"), "/", 200)
             await asyncio.sleep(0)
 
             mock_client.post.assert_not_called()
@@ -486,3 +487,25 @@ class TestOgImageAudienceSplit:
             assert payload["domain"] == BOT_DOMAIN
             assert payload["props"]["assistant"] == assistant
             assert payload["props"]["kind"] == kind
+
+
+class TestBotFetchRecordsTheStatus:
+    """A miss is a signal, but it is not a page read — so record it, don't hide it."""
+
+    @staticmethod
+    def _request() -> MagicMock:
+        request = MagicMock()
+        request.headers = {"user-agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"}
+        request.client.host = "203.0.113.7"
+        return request
+
+    @pytest.mark.asyncio
+    async def test_a_miss_is_recorded_as_such(self) -> None:
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_bot_fetch(self._request(), "/bar-basic/python/highcharts", 404)
+            await asyncio.sleep(0)
+
+            assert mock_client.post.call_args[1]["json"]["props"]["status"] == "404"

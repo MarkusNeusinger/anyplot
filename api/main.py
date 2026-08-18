@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException, Request, Response  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
+from api.analytics import track_bot_fetch  # noqa: E402
 from api.cache import cache_key, set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -153,6 +154,23 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["Mcp-Session-Id"],  # MCP session tracking
 )
+
+
+# Record which AI or search agent read which catalogue page.
+#
+# A middleware rather than a router dependency: a dependency runs BEFORE the
+# handler and cannot see the response, so every 404 was recorded as a
+# successful read. The status matters — an assistant asking for a URL that no
+# longer exists is a signal worth keeping, it just is not a page view.
+@app.middleware("http")
+async def record_bot_fetch(request: Request, call_next):
+    """Report AI/search agent page reads to the bot analytics site."""
+    response: Response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/seo-proxy"):
+        # The public URL, never this router's internal prefix
+        track_bot_fetch(request, path.removeprefix("/seo-proxy") or "/", response.status_code)
+    return response
 
 
 # Add cache headers middleware

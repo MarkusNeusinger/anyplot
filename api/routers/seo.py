@@ -10,7 +10,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.analytics import track_bot_fetch
 from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
 from api.dependencies import optional_db
 from core.config import settings
@@ -20,21 +19,7 @@ from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
 
 
-async def _record_bot_fetch(request: Request) -> None:
-    """Router dependency: record which agent read which page.
-
-    Attached to the router rather than to each handler — there are a dozen and
-    the next one added would silently go unrecorded. Only /seo-proxy paths are
-    page reads; robots.txt and sitemap.xml also live on this router and are not.
-    """
-    path = request.url.path
-    if not path.startswith("/seo-proxy"):
-        return
-    # Report the public URL, not this router's internal prefix
-    track_bot_fetch(request, path.removeprefix("/seo-proxy") or "/")
-
-
-router = APIRouter(tags=["seo"], dependencies=[Depends(_record_bot_fetch)])
+router = APIRouter(tags=["seo"])
 
 # Canonical spec-id shape — lowercase alphanumerics with hyphen separators.
 # Same pattern enforced in automation/scripts/sync_to_postgres.py. Used here to
@@ -122,7 +107,7 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
     <meta name="twitter:title" content="{title}" />
     <meta name="twitter:description" content="{description}" />
     <meta name="twitter:image" content="{image}" />
-    <link rel="canonical" href="{url}" />{jsonld}
+    <link rel="canonical" href="{url}" />{robots}{jsonld}
 </head>
 <body>
 {body}
@@ -280,6 +265,7 @@ def _render_bot_html(
     og_url: str | None = None,
     body: str = "",
     jsonld: dict | None = None,
+    noindex: bool = False,
 ) -> str:
     """Render a bot-serving page.
 
@@ -304,6 +290,7 @@ def _render_bot_html(
         image=image,
         url=url,
         og_url=og_url if og_url is not None else url,
+        robots='\n    <meta name="robots" content="noindex" />' if noindex else "",
         jsonld=_jsonld_script(jsonld) if jsonld else "",
         body=f"{body or f'<h1>{title}</h1><p>{description}</p>'}\n{_BOT_NAV_HTML}",
     )
@@ -750,12 +737,17 @@ async def seo_stats():
 async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_db)):
     """Bot-optimized cross-language spec hub."""
     if db is None:
+        # Degraded mode: without the catalogue we cannot tell a real spec from
+        # an invented one, so this page must not be indexable — serving it
+        # otherwise recreates the defect #10453 removed, an indexable
+        # near-duplicate for any string anyone tries.
         return HTMLResponse(
             _render_bot_html(
                 title=f"{html.escape(spec_id)} | anyplot.ai",
                 description=DEFAULT_DESCRIPTION,
                 image=DEFAULT_HOME_IMAGE,
                 url=f"https://anyplot.ai/{html.escape(spec_id)}",
+                noindex=True,
             )
         )
 
@@ -783,7 +775,7 @@ async def seo_spec_language(spec_id: str, language: str):
 
     The /{spec_id}/{language} tier was consolidated into /{spec_id} to eliminate
     duplicate content. Bots following this endpoint get a 301 to the public hub
-    URL; humans get the SPA redirect configured in app/src/router.tsx. The
+    URL; humans get the SPA redirect configured in app/src/routes/index.tsx. The
     `language` query parameter is dropped because the hub's canonical tag does
     not include it — Google should consolidate the page, not a filtered variant.
     """
@@ -820,12 +812,14 @@ async def seo_spec_implementation(
 ):
     """Bot-optimized implementation detail."""
     if db is None:
+        # Same reasoning as the hub route — unverifiable, so not indexable.
         return HTMLResponse(
             _render_bot_html(
                 title=f"{html.escape(spec_id)} - {html.escape(library)} | anyplot.ai",
                 description=DEFAULT_DESCRIPTION,
                 image=DEFAULT_HOME_IMAGE,
                 url=f"https://anyplot.ai/{html.escape(spec_id)}/{html.escape(language)}/{html.escape(library)}",
+                noindex=True,
             )
         )
 

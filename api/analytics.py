@@ -293,7 +293,7 @@ def track_og_image(
     task.add_done_callback(_handle_task_exception)
 
 
-def track_bot_fetch(request: Request, path: str) -> None:
+def track_bot_fetch(request: Request, path: str, status: int) -> None:
     """Record an AI or search agent reading a page (fire-and-forget).
 
     Recorded against BOT_DOMAIN, never the main site: every Plausible event
@@ -309,6 +309,10 @@ def track_bot_fetch(request: Request, path: str) -> None:
     Args:
         request: FastAPI request, for the UA and forwarded IP
         path: Public path being read, e.g. "/box-basic/python/matplotlib"
+        status: Response status. Recorded rather than filtered on: an assistant
+            asking for a URL that no longer exists is a signal worth having, and
+            counting it as a successful read would be a lie. Filter on it in the
+            dashboard.
     """
     user_agent = request.headers.get("user-agent", "")
     detected = detect_ai_agent(user_agent)
@@ -323,7 +327,7 @@ def track_bot_fetch(request: Request, path: str) -> None:
     # cf-connecting-ip and takes the rightmost entry, which is the one a
     # client cannot forge.
     client_ip = resolve_client_ip(request)
-    props = {"assistant": assistant, "kind": kind, "path": path}
+    props = {"assistant": assistant, "kind": kind, "path": path, "status": str(status)}
     url = f"https://anyplot.ai{path}"
 
     task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "bot_fetch", url, props, domain=BOT_DOMAIN))
