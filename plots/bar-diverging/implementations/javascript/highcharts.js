@@ -1,8 +1,7 @@
 // anyplot.ai
 // bar-diverging: Diverging Bar Chart
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-08-18
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-08-18
 
 const t = window.ANYPLOT_TOKENS;
 
