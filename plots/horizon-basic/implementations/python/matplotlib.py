@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -7,10 +7,12 @@ Quality: 88/100 | Updated: 2026-08-18
 import os
 
 import matplotlib.colors as mcolors
+import matplotlib.dates as mdates
 import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from scipy.ndimage import gaussian_filter1d
 
 
 # Theme tokens
@@ -20,9 +22,10 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - 8 server metrics over 24 hours with pronounced daily cycles + spikes
+# Data - 8 server metrics over 24 hours, sampled every 5 minutes for a smooth
+# mountain-range fold, with pronounced daily cycles + localized spikes.
 np.random.seed(42)
-hours = pd.date_range("2024-01-15", periods=24, freq="h")
+hours = pd.date_range("2024-01-15", periods=288, freq="5min")
 
 series_names = ["CPU Load", "Memory", "Network I/O", "Disk I/O", "Requests/s", "Latency", "Queue Depth", "Threads"]
 n_series = len(series_names)
@@ -31,11 +34,16 @@ n_points = len(hours)
 data = {}
 for i, name in enumerate(series_names):
     base = np.sin(np.linspace(0, 2 * np.pi, n_points) + i * np.pi / 4) * 0.5
-    noise = np.random.randn(n_points) * 0.2
+    # Smooth the per-point noise so the 5-min sampling reads as a fluid
+    # mountain-range fold rather than a jittery, needle-thin silhouette.
+    noise = gaussian_filter1d(np.random.randn(n_points), sigma=4) * 0.45
     spikes = np.zeros(n_points)
     if i % 2 == 0:
-        spike_idx = np.random.choice(n_points, 4, replace=False)
-        spikes[spike_idx] = np.random.uniform(0.7, 1.2, 4) * (1 if np.random.random() > 0.3 else -1)
+        t = np.arange(n_points)
+        width = n_points / 48  # ~30-minute-wide bump at 5-minute resolution
+        for center in np.random.choice(n_points, 4, replace=False):
+            magnitude = np.random.uniform(0.7, 1.2) * (1 if np.random.random() > 0.3 else -1)
+            spikes += magnitude * np.exp(-0.5 * ((t - center) / width) ** 2)
     data[name] = np.clip(base + noise + spikes, -1.5, 1.5)
 
 # Horizon chart parameters - 3 mirrored bands, intensity increases with magnitude.
@@ -105,7 +113,10 @@ for idx, (name, values) in enumerate(data.items()):
         ax.spines["bottom"].set_color(INK_SOFT)
         ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-# Configure x-axis on bottom subplot
+# Configure x-axis on bottom subplot - plain hour-of-day ticks since every
+# point falls on the same day, matching the "Time (Hour of Day)" axis label.
+axes[-1].xaxis.set_major_locator(mdates.HourLocator(byhour=range(0, 24, 3)))
+axes[-1].xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 axes[-1].set_xlabel("Time (Hour of Day)", fontsize=10, color=INK)
 
 # Title
