@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -92,11 +92,15 @@ label_df = pd.DataFrame(
     }
 )
 
-# Year labels at Jan 1 of each revolution (top of spiral, left-aligned)
+# Year labels at Jan 1 of each revolution. The spiral's local radius barely
+# changes near the Jan boundary (the curve is nearly tangential there), so an
+# x-only offset at the same radius still sits on the ring. Nudge the label
+# radially inward into the empty gap between revolutions instead, plus a
+# small x offset to clear the Jan grid line.
 year_label_df = pd.DataFrame(
     {
-        "x": [-0.35] * n_years,
-        "y": [r_base + r_expand * yi for yi in range(n_years)],
+        "x": [-0.45] * n_years,
+        "y": [r_base + r_expand * yi - 0.55 * r_expand for yi in range(n_years)],
         "label": [str(start_year + yi) for yi in range(n_years)],
     }
 )
@@ -146,6 +150,7 @@ plot = (
         legend_text=element_text(color=INK_SOFT, size=8),
         legend_title=element_text(color=INK, size=9),
         legend_position="right",
+        legend_box_margin=9,
     )
 )
 
