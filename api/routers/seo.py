@@ -690,7 +690,7 @@ async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_
 
 @router.get("/seo-proxy/{spec_id}/{language}")
 async def seo_spec_language(spec_id: str, language: str):
-    """Permanent redirect: language-overview URLs now live on the hub with ?language=.
+    """Permanent redirect: language-overview URLs are consolidated onto the hub.
 
     The /{spec_id}/{language} tier was consolidated into /{spec_id} to eliminate
     duplicate content. Bots following this endpoint get a 301 to the public hub

@@ -785,12 +785,16 @@ class TestSeoProxyRouter:
         loops until the crawler gives up — which is exactly what Googlebot
         recorded against the live site.
         """
-        location = client.get("/seo-proxy/scatter-basic/python", follow_redirects=False).headers["location"]
+        response = client.get("/seo-proxy/scatter-basic/python", follow_redirects=False)
+        assert response.status_code == 301
+        location = response.headers["location"]
         assert not location.startswith("/seo-proxy")
         assert not location.startswith("//")
-        # One more hop must not redirect again: re-entering with the proxy
-        # prefix that nginx adds has to resolve, not bounce.
-        assert client.get(f"/seo-proxy{location}", follow_redirects=False).status_code != 301
+        # One more hop must terminate: re-entering with the proxy prefix that
+        # nginx adds has to resolve. Asserting 200 rather than "not 301" — the
+        # loop would come back just as happily as a 302, 307 or 308.
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            assert client.get(f"/seo-proxy{location}", follow_redirects=False).status_code == 200
 
     def test_seo_spec_language_rejects_malformed_spec_id(self, client: TestClient) -> None:
         """Malformed spec_ids must 404, not redirect — prevents header injection."""
