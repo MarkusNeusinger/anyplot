@@ -137,6 +137,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **`og_image_view` is split by who fetched the image** — a social or messenger preview means a
+  human shared a link, which is a product signal and stays on the main site; a search or AI crawler
+  fetching the same image is not a share and now goes to `bots.anyplot.ai`. The distinction matters
+  from now on rather than in principle: `robots.txt` only began permitting `/og/` in the same
+  release, so crawler fetches of the 3,913 preview images would otherwise have arrived in volume on
+  the main site, drowning the sharing signal and inflating visitor counts. Machine-side events carry
+  the same `assistant` and `kind` props as `bot_fetch`, so both slice alike.
+
 - **Repository prose now follows the Google developer documentation style guide** — the
   `write-docs` skill gains a "Writing style" section anchoring
   [Google style](https://developers.google.com/style) as the baseline for `docs/`, `README.md`,

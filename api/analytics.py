@@ -259,7 +259,20 @@ def track_og_image(
         # Fallback: missing spec for a spec-based page
         url = "https://anyplot.ai/"
 
+    # Where this is recorded depends on WHO fetched it. A social or messenger
+    # preview means a human shared a link — that is a product signal and belongs
+    # with the human numbers. A search or AI crawler fetching the same image is
+    # not a share, and now that robots.txt permits /og/ (#10472) those will
+    # arrive in volume: recording them on the main site would drown the sharing
+    # signal in crawler traffic and inflate visitor counts. detect_ai_agent
+    # recognises exactly the machine side, so its verdict makes the split.
+    agent = detect_ai_agent(user_agent)
+    domain = BOT_DOMAIN if agent else DOMAIN
+
     props: dict[str, str] = {"page": page, "platform": platform}
+    if agent:
+        # Same shape as bot_fetch, so the bot site slices both events alike
+        props["assistant"], props["kind"] = agent
     if spec:
         props["spec"] = spec
     if language:
@@ -274,7 +287,7 @@ def track_og_image(
 
     # Fire-and-forget: create task without awaiting, but add exception handler.
     # Track via _BACKGROUND_TASKS so the GC cannot collect the task before it runs.
-    task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "og_image_view", url, props))
+    task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "og_image_view", url, props, domain=domain))
     _BACKGROUND_TASKS.add(task)
     task.add_done_callback(_BACKGROUND_TASKS.discard)
     task.add_done_callback(_handle_task_exception)

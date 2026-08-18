@@ -240,7 +240,21 @@ events arrive server-side through the Events API, which is why it shows
 
 | Event | Properties | Source | Description |
 |-------|-----------|--------|-------------|
-| `bot_fetch` | `assistant`, `kind`, `path` | `api/routers/seo.py` (router dependency) | An AI assistant or search crawler read a catalogue page. Recorded on `bots.anyplot.ai`. |
+| `bot_fetch` | `assistant`, `kind`, `path` | `api/routers/seo.py` (router dependency) | An AI assistant or search crawler read a catalogue page. Always recorded on `bots.anyplot.ai`. |
+| `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`?, plus `assistant` + `kind` when machine-fetched | `api/routers/og_images.py` | A preview image was fetched. **Split by audience**, see below. |
+
+#### og:image is split by who fetched it
+
+A social or messenger preview means a human shared a link — a product signal
+that belongs with the human numbers, so those stay on `anyplot.ai`. A search or
+AI crawler fetching the same image is not a share, and since `robots.txt` began
+permitting `/og/` those arrive in volume: recording them on the main site would
+drown the sharing signal in crawler traffic and inflate visitor counts.
+
+The split uses `detect_ai_agent` — if it recognises the user agent, the event is
+machine-side and goes to `bots.anyplot.ai` carrying the same `assistant` and
+`kind` props as `bot_fetch`, so both events slice alike. Anything it does not
+recognise (Twitter, Facebook, Slack, WhatsApp, …) is a share and stays put.
 
 Register the three properties on the **`bots.anyplot.ai`** site, not on
 `anyplot.ai` — property registration is per site, and without it the events
@@ -252,6 +266,10 @@ them:
 | `assistant` | Vendor (`claude`, `chatgpt`, `gemini`, `mistral`, `perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …) | `bot_fetch` |
 | `kind` | Why it fetched — see the table below | `bot_fetch` |
 | `path` | Public path that was read, e.g. `/box-basic/python/matplotlib` | `bot_fetch` |
+
+Machine-side `og_image_view` events carry the main site's image properties as
+well, so register these on `bots.anyplot.ai` too: `page`, `platform`, `spec`,
+`language`, `library`, and the `filter_*` family.
 
 `kind` is the property worth filtering on:
 
