@@ -211,6 +211,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Preview images were forbidden to every crawler that follows the rules** — `api.anyplot.ai`
+  served a blanket `Disallow: /`, while every prerendered page references its preview image at
+  `api.anyplot.ai/og/…png`. The image answered HTTP 200 and the host forbade fetching it, so an
+  assistant asked to show a plot could read the code and not the picture, and Google Images could
+  index none of the 3,913 previews. Link-preview bots were unaffected either way — they do not
+  consult robots.txt, which is why this went unnoticed. `/og/` is now allowed, with `Allow` placed
+  before `Disallow` so first-match parsers see the exception; verified against Python's
+  `urllib.robotparser`, which is exactly such a parser.
+
 - **AI assistants asked about a plot page saw nothing** — seven user-directed fetchers (eight UA
   patterns; NotebookLM and Mariner each answer to two) were absent from the `$is_bot` map in
   `app/nginx.conf` and received the empty SPA shell instead of the prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,

@@ -613,13 +613,22 @@ class TestSeoRouter:
     """Tests for SEO router."""
 
     def test_robots_txt(self, client: TestClient) -> None:
-        """robots.txt should block crawlers from all routes."""
+        """robots.txt should block the API but expose the preview images.
+
+        Every prerendered page references an image under /og/; a blanket
+        Disallow made those unfetchable for anything that honours robots.txt,
+        so an assistant could read a plot's code but not show its picture.
+        """
         response = client.get("/robots.txt")
         assert response.status_code == 200
         assert response.headers["content-type"] == "text/plain; charset=utf-8"
         content = response.text
         assert "User-agent: *" in content
         assert "Disallow: /" in content
+        assert "Allow: /og/" in content
+        # Allow must come first: a first-match parser stops at Disallow: / and
+        # would never reach the exception.
+        assert content.index("Allow: /og/") < content.index("Disallow: /")
 
     def test_sitemap_structure(self, client: TestClient) -> None:
         """Sitemap should return valid XML structure."""
