@@ -87,7 +87,7 @@ const segmentData = SEGMENTS.map((segment) => {
 });
 
 const TITLE = "donut-nested · javascript · muix · anyplot.ai";
-const MARGIN = { top: 130, bottom: 50, left: 50, right: 320 };
+const MARGIN = { top: 130, bottom: 50, left: 90, right: 260 };
 const TOTAL_REVENUE = BUSINESS_UNITS.reduce((sum, unit) => sum + unit.value, 0);
 
 export default function Chart() {
@@ -134,8 +134,8 @@ export default function Chart() {
           {
             id: "business-units",
             data: unitData,
-            innerRadius: 80,
-            outerRadius: 190,
+            innerRadius: 85,
+            outerRadius: 200,
             paddingAngle: 1.5,
             cornerRadius: 3,
             arcLabel: "label",
@@ -145,8 +145,8 @@ export default function Chart() {
           {
             id: "customer-segments",
             data: segmentData,
-            innerRadius: 215,
-            outerRadius: 400,
+            innerRadius: 225,
+            outerRadius: 420,
             paddingAngle: 1.5,
             cornerRadius: 3,
             arcLabel: "label",
@@ -175,7 +175,7 @@ export default function Chart() {
             strokeLinejoin: "round",
           },
           "& .MuiPieArcLabel-series-business-units": { fontSize: 18, fontWeight: 700 },
-          "& .MuiPieArcLabel-series-customer-segments": { fontSize: 13, fontWeight: 600 },
+          "& .MuiPieArcLabel-series-customer-segments": { fontSize: 15, fontWeight: 600 },
         }}
       />
 
