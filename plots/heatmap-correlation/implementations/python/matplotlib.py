@@ -1,29 +1,29 @@
 """ anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-08
+Library: matplotlib 3.11.1 | Python 3.13.15
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
 
 
-# Theme configuration
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
-EMPHASIS_COLOR = "#E67E22" if THEME == "light" else "#F39C12"
+EMPHASIS_POS = "#009E73"  # Imprint palette position 1 — strong positive correlation
+EMPHASIS_NEG = "#AE3030"  # Imprint palette position 5 — strong negative correlation
 
-# Data - Realistic weather variables correlation matrix
+# Data - realistic weather-station correlation matrix
 np.random.seed(42)
 
-# Variable names - weather metrics
 variables = [
     "Temperature",
     "Humidity",
@@ -34,13 +34,9 @@ variables = [
     "UV Index",
     "Cloud Cover",
 ]
-
 n_vars = len(variables)
 
-# Create a realistic correlation matrix with varied relationships
 correlation_matrix = np.eye(n_vars)
-
-# Define realistic correlations between weather variables
 correlations = {
     (0, 1): -0.82,  # Temperature - Humidity (strong negative)
     (0, 2): 0.15,  # Temperature - Wind Speed (weak positive)
@@ -71,74 +67,84 @@ correlations = {
     (5, 7): -0.79,  # Solar Radiation - Cloud Cover (strong negative)
     (6, 7): -0.71,  # UV Index - Cloud Cover (strong negative)
 }
-
-# Fill in the correlation matrix (symmetric)
 for (i, j), corr in correlations.items():
     correlation_matrix[i, j] = corr
     correlation_matrix[j, i] = corr
 
-# Create mask for upper triangle
+# Mask the upper triangle so each pair is shown once
 mask = np.triu(np.ones_like(correlation_matrix, dtype=bool), k=1)
-
-# Apply mask - set upper triangle to nan for visualization
 masked_corr = np.where(mask, np.nan, correlation_matrix)
 
-# Create figure - square format for heatmap
-fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+# Imprint diverging colormap — matte-red (negative) through the theme midpoint to blue (positive)
+midpoint = PAGE_BG
+imprint_div = LinearSegmentedColormap.from_list("imprint_div", ["#AE3030", midpoint, "#4467A3"])
+
+# Plot — square canvas for this symmetric matrix (see default-style-guide.md "Dimensions")
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG, layout="constrained")
 ax.set_facecolor(PAGE_BG)
 
-# Create heatmap with diverging colormap centered at zero
-im = ax.imshow(masked_corr, cmap="BrBG", vmin=-1, vmax=1, aspect="equal")
+im = ax.imshow(masked_corr, cmap=imprint_div, vmin=-1, vmax=1, aspect="equal")
 
-# Add subtle grid lines for visual hierarchy
+# Subtle cell-boundary grid
 ax.set_xticks(np.arange(n_vars) - 0.5, minor=True)
 ax.set_yticks(np.arange(n_vars) - 0.5, minor=True)
-ax.grid(which="minor", color=INK_MUTED, linestyle="-", linewidth=0.5, alpha=0.3)
+ax.grid(which="minor", color=INK_MUTED, linestyle="-", linewidth=0.6, alpha=0.25)
+ax.tick_params(which="minor", bottom=False, left=False)
 
-# Add colorbar with enhanced styling
-cbar = ax.figure.colorbar(im, ax=ax, shrink=0.8, pad=0.02)
-cbar.ax.set_ylabel("Correlation Coefficient", fontsize=18, labelpad=15, color=INK, fontweight="medium")
-cbar.ax.tick_params(labelsize=14, colors=INK_SOFT, labelcolor=INK_SOFT)
-cbar.ax.set_facecolor(PAGE_BG)
+# Colorbar, fixed to the full correlation range
+cbar = ax.figure.colorbar(im, ax=ax, shrink=0.74, pad=0.03)
+cbar.ax.set_ylabel("Correlation Coefficient", fontsize=10, labelpad=10, color=INK)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
+cbar.outline.set_visible(False)
 
-# Set ticks and labels with theme-adaptive coloring
+# Ticks and axis labels
 ax.set_xticks(np.arange(n_vars))
 ax.set_yticks(np.arange(n_vars))
-ax.set_xticklabels(variables, fontsize=16, rotation=45, ha="right", rotation_mode="anchor", color=INK_SOFT)
-ax.set_yticklabels(variables, fontsize=16, color=INK_SOFT)
+ax.set_xticklabels(variables, fontsize=9, rotation=45, ha="right", rotation_mode="anchor", color=INK_SOFT)
+ax.set_yticklabels(variables, fontsize=9, color=INK_SOFT)
+ax.tick_params(which="major", bottom=False, left=False)
 
-# Add axis labels with theme-adaptive coloring
-ax.set_xlabel("Weather Variables", fontsize=20, labelpad=15, color=INK, fontweight="medium")
-ax.set_ylabel("Weather Variables", fontsize=20, labelpad=15, color=INK, fontweight="medium")
+ax.set_xlabel("Weather Variables", fontsize=10, labelpad=12, color=INK)
+ax.set_ylabel("Weather Variables", fontsize=10, labelpad=12, color=INK)
 
-# Add visual emphasis to strong correlations via borders
+# Emphasis borders on strong correlations — solid for positive, dashed for negative,
+# so the sign reads even without checking the colorbar
 for i in range(n_vars):
     for j in range(n_vars):
-        if not mask[i, j]:
-            value = abs(correlation_matrix[i, j])
-            if value > 0.75 and i != j:
-                rect = Rectangle(
-                    (j - 0.45, i - 0.45), 0.9, 0.9, linewidth=2, edgecolor=EMPHASIS_COLOR, facecolor="none", alpha=0.5
-                )
-                ax.add_patch(rect)
+        if not mask[i, j] and i != j and abs(correlation_matrix[i, j]) > 0.75:
+            positive = correlation_matrix[i, j] > 0
+            rect = Rectangle(
+                (j - 0.45, i - 0.45),
+                0.9,
+                0.9,
+                linewidth=1.8,
+                edgecolor=EMPHASIS_POS if positive else EMPHASIS_NEG,
+                facecolor="none",
+                linestyle="-" if positive else "--",
+                alpha=0.85,
+            )
+            ax.add_patch(rect)
 
-# Annotate cells with correlation values
+# Cell annotations — text color follows the actual cell luminance so it stays
+# legible against both saturated correlation colors and the near-neutral midpoint
 for i in range(n_vars):
     for j in range(n_vars):
         if not mask[i, j]:
             value = correlation_matrix[i, j]
-            text_color = "white" if abs(value) > 0.5 else INK_SOFT
-            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color, fontsize=14, fontweight="bold")
+            r, g, b, _ = imprint_div((value + 1) / 2)
+            luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b
+            text_color = "white" if luminance < 0.55 else INK_SOFT
+            ax.text(j, i, f"{value:.2f}", ha="center", va="center", color=text_color, fontsize=9, fontweight="bold")
 
-# Title with theme-adaptive coloring and enhanced styling
-ax.set_title("heatmap-correlation · matplotlib · pyplots.ai", fontsize=24, pad=20, fontweight="bold", color=INK)
+# Title on the full figure (not just the heatmap axes) so it stays centered over
+# the colorbar too — the square canvas is narrower than the landscape default,
+# so the mandated title needs a smaller fontsize than the 12pt landscape baseline
+# to stay clear of the colorbar's top tick label.
+fig.suptitle(
+    "heatmap-correlation · python · matplotlib · anyplot.ai", fontsize=11, y=0.97, fontweight="medium", color=INK
+)
 
-# Remove spines for clean look
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-# Adjust layout
-plt.tight_layout()
-
-# Save with theme-based filename and background
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
