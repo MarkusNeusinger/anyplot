@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -65,7 +65,7 @@ temperature = 12.0 + 14.0 * np.sin(2 * np.pi * (day_of_year - 80) / 365) + 0.4 *
 # Archimedean spiral: theta increases 2π per year, r grows with each revolution
 theta = 2 * np.pi * np.arange(n) / days_per_year
 r_min = 2.0
-arm_spacing = 1.3
+arm_spacing = 1.9
 r = r_min + arm_spacing * (theta / (2 * np.pi))
 
 # Build colored line segments for the spiral
@@ -120,20 +120,22 @@ ax.tick_params(axis="x", pad=14, length=0)
 ax.set_rticks([])
 ax.set_yticklabels([])
 
-# Year labels at the start of each spiral arm (just past Jan 1, clockwise)
+# Year labels just outside the outer edge of each spiral arm (past Jan 1, clockwise);
+# a background swatch means contrast never depends on the local spiral color.
 year_label_angle = np.radians(10)
 for yr in range(n_years):
-    yr_r = r_min + arm_spacing * yr + 0.1
+    yr_r = r_min + arm_spacing * yr + 0.4
     ax.text(
         year_label_angle,
         yr_r,
         str(2020 + yr),
         ha="left",
         va="center",
-        fontsize=11,
+        fontsize=10,
         color=INK,
         fontweight="bold",
         zorder=6,
+        bbox={"boxstyle": "round,pad=0.12", "facecolor": PAGE_BG, "edgecolor": "none", "alpha": 0.85},
     )
 
 # Show only spoke grid lines (months), hide concentric r-circles
@@ -161,9 +163,9 @@ sns.regplot(
     line_kws={"linewidth": 2.5},
 )
 ax_trend.set_title("Annual Warming Trend", fontsize=10, color=INK, pad=6)
-ax_trend.set_xlabel("Year", fontsize=8, color=INK)
-ax_trend.set_ylabel("Daily Avg. Temp. (°C)", fontsize=8, color=INK)
-ax_trend.tick_params(axis="both", labelsize=7, colors=INK_SOFT)
+ax_trend.set_xlabel("Year", fontsize=9, color=INK)
+ax_trend.set_ylabel("Daily Avg. Temp. (°C)", fontsize=9, color=INK)
+ax_trend.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 ax_trend.set_xticks([2020, 2021, 2022, 2023, 2024])
 sns.despine(ax=ax_trend)
 ax_trend.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
@@ -171,11 +173,11 @@ ax_trend.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 # Supplementary panel: seasonal cycle (seaborn lineplot aggregates mean ± sd across years)
 sns.lineplot(x=day_of_year, y=temperature, ax=ax_season, color=BRAND, errorbar="sd", linewidth=2.5)
 ax_season.set_title("Seasonal Cycle", fontsize=10, color=INK, pad=6)
-ax_season.set_xlabel("Month", fontsize=8, color=INK)
-ax_season.set_ylabel("Daily Avg. Temp. (°C)", fontsize=8, color=INK)
+ax_season.set_xlabel("Month", fontsize=9, color=INK)
+ax_season.set_ylabel("Daily Avg. Temp. (°C)", fontsize=9, color=INK)
 ax_season.set_xticks(month_start_days[::2])
 ax_season.set_xticklabels(month_names[::2])
-ax_season.tick_params(axis="both", labelsize=7, colors=INK_SOFT)
+ax_season.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=ax_season)
 ax_season.yaxis.grid(True, alpha=0.15, linewidth=0.6, color=INK)
 
