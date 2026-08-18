@@ -2,54 +2,65 @@ library: seaborn
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:16:46Z'
-updated: '2026-05-07T20:00:14Z'
-generated_by: claude-haiku
-workflow_run: 25477630508
+updated: '2026-08-18T01:00:26Z'
+generated_by: claude-sonnet
+workflow_run: 32085277656
 issue: 1877
-python_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 85
 review:
   strengths:
-  - Correct horizon chart technique with proper band folding and magnitude encoding
-  - Excellent spec compliance - all required features (multi-series, positive/negative
-    bands, 3-level intensity) are present
-  - Proper theme-adaptive chrome with correct PAGE_BG tokens for both light and dark
-    renders
-  - 'Good data context: realistic stock sector deviations over 90 trading days with
-    5 diverse patterns'
-  - 'Correct font sizing hierarchy: 24/20/16pt for title/labels/ticks'
-  - Clean compact layout with hspace=0.06 and per-row spine removal appropriate for
-    horizon charts
-  - Legend clearly explains all 6 band levels with percentage-point ranges
+  - 'Correct horizon-chart technique: 3 folded intensity bands per polarity, colors
+    generated via sns.light_palette from Imprint diverging anchors (blue gain / matte-red
+    loss) instead of the default green/red pairing, with an in-code rationale for
+    CVD safety'
+  - 'Both renders are fully theme-correct: identical data colors across light and
+    dark, chrome (background, title, subtitle, row labels, ticks, grid, legend box)
+    properly threaded through INK/INK_SOFT/ELEVATED_BG tokens'
+  - Compact row-faceted layout via sns.FacetGrid with tight intentional vertical packing
+    (hspace=0.06), matching the horizon-chart goal of comparing many series in minimal
+    vertical space
+  - Explicit font sizes throughout (title, subtitle, row labels, ticks, axis label,
+    legend); clear 6-entry legend with correctly labeled bands matching the plotted
+    magnitude ranges
+  - Good data variety across the 5 series (sinusoidal, volatility spikes, linear trend,
+    cosine, drift) exercising both gain and loss directions and reaching the outer
+    intensity band in multiple series
+  - Shared tick_positions across facets (fixed from the attempt-1 review) keep the
+    vertical gridlines aligned across all 5 rows
   weaknesses:
-  - No seaborn API is imported or used anywhere - the implementation is pure matplotlib
-    with zero sns.* calls; at minimum sns.set_theme() should set the theme context
-  - Red-green color scheme (positive=green, negative=red) creates CVD accessibility
-    concern - deuteranopes and protanopes cannot distinguish them; BrBG diverging
-    colormap would be both perceptually uniform and CVD-safer
-  - Legend text is 14pt, below the 16pt minimum specified in the style guide
-  - Legend overlaps slightly with TECH row data in both renders due to bbox_to_anchor=(0.98,
-    0.92) placement
+  - Band fills use raw unsmoothed daily noise, producing jagged, spiky edges in several
+    rows (especially FINANCE) that reduce the smooth, at-a-glance pattern recognition
+    horizon charts are meant to offer — a short rolling window before folding into
+    bands would read more cleanly without losing the underlying signal
+  - 90 trading days per series is slightly below the specification's suggested 100-1000
+    time-point range
+  - Deviation magnitudes reaching up to ±15 percentage points from a 20-day moving
+    average are on the aggressive end for typical stock behavior outside crisis periods
+  - Legend uses matplotlib's default column-major fill (ncol=3), so the two polarities
+    are interleaved across columns (e.g. 'Gain 0-5 pp' and 'Gain 10-15 pp' land in
+    different columns) rather than grouped Gain-then-Loss — pass an explicit handle
+    order or use two separate legends to make the polarity grouping immediately obvious
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, visible as a cream tone distinct from pure white.
-      Chrome: Title "horizon-basic · seaborn · anyplot.ai" in dark ink at 24pt — clearly readable. Y-axis stock labels (TECH, FINANCE, ENERGY, HEALTHCARE, RETAIL) in dark ink at 16pt — all readable. X-axis tick labels "Day 0", "Day 15", ... "Day 75" in muted dark ink at 16pt — clearly readable. X-axis label "Trading Days (90-day period)" at 20pt — readable. Legend in upper right with 6 color swatches on elevated (#FFFDF6) background — text at 14pt readable though slightly small.
-      Data: Green bands for positive deviations (3 shades: light #E8F5E9, medium #66BB6A, dark #2E7D32); Red bands for negative deviations (3 shades: light #FFEBEE, medium #EF5350, dark #C62828). 5 stock series stacked vertically. Subtle x-axis grid lines.
-      Legibility verdict: PASS — all text clearly readable against #FAF8F1 background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold black title "horizon-basic · python · seaborn · anyplot.ai" at top, gray subtitle "Deviation from 20-Day Moving Average (percentage points)" beneath it. Five row labels (TECH, FINANCE, ENERGY, HEALTHCARE, RETAIL) in dark ink, right-aligned. X-axis tick labels (Day 0, Day 15, Day 30, Day 45, Day 60, Day 75) and axis title "Trading Days (90-day period)" in dark/soft-dark ink. Legend box with off-white elevated background and soft border, 6 labeled color swatches. All chrome elements are clearly legible against the light background.
+      Data: Folded horizon bands in a blue (gain) → matte-red (loss) diverging pair, three intensity shades per polarity from light to saturated. First data color is blue-family (#4467A3 family), not the brand green — this is a deliberate diverging/semantic choice (finance gain/loss), not a categorical series, and is internally consistent across all 5 rows and both themes.
+      Legibility verdict: PASS — no dark-on-dark or clipped text observed; subtle vertical gridlines are visible but do not compete with the data.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, distinct from pure black.
-      Chrome: Title text appears light-colored (#F0EFE8) on dark background — readable. Y-axis stock labels appear in lighter ink — readable. X-axis tick and axis labels appear in light muted tone — readable. Legend box uses elevated dark background (#242420) with appropriately colored text.
-      Data: Green and red band colors are identical to the light render — only chrome (background, text, legend box) has flipped to dark theme. Data colors unchanged.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all chrome elements properly use light ink tokens against the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and row labels render in light/white ink, subtitle and tick labels in a softer light gray, legend box uses the dark elevated fill (#242420) with a light border and light text. Every chrome element flips correctly relative to the light render.
+      Data: Same blue/matte-red banded fills as the light render — visually identical hues and band boundaries confirmed across all 5 rows, only the chrome (background, text, grid, legend frame) changed.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/label/tick text is clearly readable against the near-black surface, and the diverging blue/red data colors remain highly visible on the dark background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +68,55 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt all explicitly set and readable;
-          legend at 14pt slightly below 16pt minimum
+        comment: All font sizes explicitly set; title/subtitle/row-label/tick hierarchy
+          reads well and legibly in both themes; title fontsize was already tuned
+          down from 22pt to 18pt in the attempt-1 fix to avoid overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; 5 rows well separated; tick labels at 15-day
-          intervals have adequate spacing
+        comment: No overlapping text or text/data collisions observed in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Horizon bands clearly visible with distinct color intensities for
-          all 3 band levels
+        comment: Bands are clearly visible and correctly intensity-graded, but raw
+          unsmoothed daily noise creates jagged, spiky fill edges (esp. FINANCE row)
+          that reduce clean pattern recognition
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Red-green color scheme for positive/negative is conventional for
-          finance but fails deuteranopia/protanopia CVD test
+        passed: true
+        comment: Blue/matte-red diverging pair is CVD-safe and clearly distinguishable,
+          avoiding the classic green/red confusion
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good 16:9 layout; legend at bbox_to_anchor=(0.98,0.92) overlaps slightly
-          with TECH row data
+        comment: 'Balanced use of canvas: title/subtitle, 5 compact rows, and legend
+          all fit with sensible margins, nothing cut off'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label descriptive with context; stock names as y-labels; title
-          in required format
+        comment: X-axis label descriptive with implicit unit (days), subtitle explicitly
+          states the unit (percentage points)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Background tokens (#FAF8F1/#1A1A17) and chrome are correct; band
-          colors use custom green/red instead of recommended BrBG diverging colormap
+        passed: true
+        comment: 'Band colors are generated from Imprint palette diverging anchors
+          (blue #4467A3 / matte-red #AE3030, matching imprint_div''s own endpoints),
+          identical across both themes; page background and all chrome are theme-correct
+          in both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,25 +124,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional 3-level intensity encoding, clean band layout, thoughtful
-          use of color semantics (green=positive, red=negative) — above default but
-          not publication-level
+        comment: Custom light_palette-derived intensity gradient and compact faceted
+          composition are above a plain library default, but not yet at publication-level
+          polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed except bottom of last row; compact hspace=0.06; subtle
-          x-grid at alpha=0.2; y-ticks removed — good refinement for horizon charts
+        comment: Top/right/left spines removed, subtle grid, deliberate tight row
+          spacing appropriate to the horizon technique
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Color intensity narrates magnitude; 5 stocks show different behavioral
-          patterns (trending, volatile, cyclical); viewer can compare across series
+        comment: Color-intensity hierarchy makes extreme sector moves (e.g. ENERGY's
+          sustained losses, TECH's oscillation) immediately visible, though jaggedness
+          partially obscures the narrative
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,56 +151,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizon chart with fill_between band folding, positive/negative
-          mirroring
+        comment: Correct horizon chart with folded bands
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features: multiple series, color-coded bands, intensity
-          encoding, meaningful baseline (zero), normalized scale'
+        comment: 3 bands, mirrored gain/loss coloring, magnitude-scaled intensity,
+          zero baseline, and equally-scaled series are all present; series length
+          (90 points) is slightly below the spec's suggested 100-1000 minimum
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x-axis, band height encodes magnitude, colors encode polarity
-          and intensity
+        comment: X=trading day, row=series, color=magnitude/direction — correctly
+          mapped and fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'horizon-basic · seaborn · anyplot.ai' correct; legend explains
-          all 6 band levels with percentage-point ranges
+        comment: Title matches the mandated format exactly; legend labels correctly
+          match the plotted band ranges
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 5 stocks with varied patterns (sinusoidal, volatile with spikes,
-          trending, cyclical, drifting); both positive and negative bands well represented;
-          all 3 intensity levels visible
+        comment: All 3 bands reached in both directions across the 5 series; varied
+          shapes (sinusoidal, spikes, trend, cosine, drift) exercise the full technique
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price deviations from 20-day MA is a real financial analysis
-          use case; sector names (TECH, FINANCE, ENERGY, HEALTHCARE, RETAIL) are neutral
-          and plausible
+        comment: Stock-sector deviation-from-moving-average is a real, neutral, comprehensible
+          financial analysis scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: ±15pp deviation range with 5pp bands is realistic for stock sector
-          data over 90 trading days
+        comment: Values plausible but deviations up to ±15pp are on the aggressive
+          end for typical 20-day MA deviation outside volatile/crisis periods
     code_quality:
       score: 10
       max: 10
@@ -195,63 +208,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: constants → data generation → figure creation → loop
-          over stocks → save'
+        comment: Linear imports → data → theme → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) globally + per-stock seed (42+idx) for full determinism
+        comment: np.random.seed(42) plus deterministic per-stock reseeding
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports (os, matplotlib.patches, matplotlib.pyplot, numpy,
-          pandas) are used
+        comment: os, mpatches, numpy, pandas, seaborn all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop structure for bands; no over-engineering; no fake UI
+        comment: Appropriately complex for a manually-folded horizon chart; no fake
+          UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with facecolor=PAGE_BG; no deprecated API
+        comment: Saves as plot-{THEME}.png with bbox_inches left at default; current
+          seaborn/matplotlib API
     library_mastery:
-      score: 1
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: seaborn is not imported at all; the implementation is pure matplotlib;
-          not even sns.set_theme() is called for theme setup
+        passed: true
+        comment: Good use of sns.FacetGrid for row faceting and sns.light_palette
+          for the intensity gradient; core band-folding necessarily falls to manual
+          matplotlib fill_between since seaborn has no native horizon-chart type
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 3
         max: 5
-        passed: false
-        comment: Zero seaborn-distinctive features — no sns.* calls anywhere in the
-          code
+        passed: true
+        comment: light_palette-driven gradient generation and FacetGrid row-faceting
+          are seaborn-distinctive techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - faceting
   - custom-legend
   - manual-ticks
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
