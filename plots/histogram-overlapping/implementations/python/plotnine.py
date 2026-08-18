@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-08-18
@@ -40,15 +40,18 @@ regular_users = np.random.normal(loc=320, scale=80, size=200)
 # Power users: faster response times, tighter distribution
 power_users = np.random.normal(loc=220, scale=50, size=180)
 
-# Combine into a DataFrame
+# Combine into a DataFrame, ordering groups fastest-to-slowest (Power -> Regular -> New)
+# so the legend and palette assignment tell the response-time story at a glance.
 df = pd.DataFrame(
     {
-        "response_time": np.concatenate([new_users, regular_users, power_users]),
+        "response_time": np.concatenate([power_users, regular_users, new_users]),
         "user_group": (
-            ["New Users"] * len(new_users) + ["Regular Users"] * len(regular_users) + ["Power Users"] * len(power_users)
+            ["Power Users"] * len(power_users) + ["Regular Users"] * len(regular_users) + ["New Users"] * len(new_users)
         ),
     }
 )
+group_order = ["Power Users", "Regular Users", "New Users"]
+df["user_group"] = pd.Categorical(df["user_group"], categories=group_order, ordered=True)
 
 # Theme-adaptive elements — L-shaped frame (axis lines, no panel border), y-axis-only grid
 anyplot_theme = pn.theme(
@@ -69,19 +72,23 @@ anyplot_theme = pn.theme(
     text=pn.element_text(size=7, family="sans"),
 )
 
-# Plot
+# Plot — per-group edge colors (instead of a uniform background edge) keep each
+# distribution separable even inside the triple-overlap zone.
 plot = (
-    pn.ggplot(df, pn.aes(x="response_time", fill="user_group"))
-    + pn.geom_histogram(alpha=0.6, bins=30, position="identity", color=PAGE_BG, size=0.3)
+    pn.ggplot(df, pn.aes(x="response_time", fill="user_group", color="user_group"))
+    + pn.geom_histogram(alpha=0.6, bins=30, position="identity", size=0.6)
     + pn.scale_fill_manual(values=IMPRINT)
+    + pn.scale_color_manual(values=IMPRINT)
     + pn.labs(
         x="Response Time (ms)",
         y="Frequency",
         title="histogram-overlapping · python · plotnine · anyplot.ai",
         fill="User Group",
+        color="User Group",
     )
     + pn.theme_minimal()
     + anyplot_theme
+    + pn.guides(color=pn.guide_legend(override_aes={"alpha": 1}))
 )
 
 # Save
