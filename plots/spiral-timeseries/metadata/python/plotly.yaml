@@ -2,50 +2,71 @@ library: plotly
 language: python
 specification_id: spiral-timeseries
 created: '2026-05-07T15:38:02Z'
-updated: '2026-05-07T15:44:08Z'
+updated: '2026-08-18T00:37:50Z'
 generated_by: claude-sonnet
-workflow_run: 25505260493
+workflow_run: 32039691471
 issue: 5243
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/plotly/plot-dark.html
-quality_score: 90
+quality_score: 89
 review:
   strengths:
-  - 'Near-perfect implementation of all spec requirements: correct Archimedean spiral,
-    Viridis temperature coloring, monthly radial dividers, year labels at cycle starts,
-    colorbar with units'
-  - 'Excellent theme adaptation: both light and dark renders are fully readable, chrome
-    tokens applied correctly throughout all elements (annotations, colorbar, guides)'
-  - Strong data storytelling through the spiral structure itself — seasonal periodicity
-    and multi-year warming trend are immediately visible without any annotations
-  - Clean, well-structured code with deterministic seed and all theme tokens consistently
-    applied
-  - Appropriate use of Plotly interactivity (hover tooltips, HTML output) alongside
-    static PNG export
+  - 'Repair success: the spiral is now a smooth continuous colored ribbon (per-run
+    line segments) instead of the beaded dotted texture flagged in Attempt 1 — DE-02
+    concern directly addressed'
+  - 'Repair success: the multi-year warming trend is now explicitly surfaced via per-year
+    average-temperature labels on each ring plus a top callout (''2019 → 2023 avg:
+    10.0°C → 11.7°C (+1.6°C)'') alongside the seasonal pattern — DE-03 concern directly
+    addressed'
+  - Correct Archimedean spiral geometry (constant radial spacing per day-of-year fraction)
+    with earliest data (2019) at the center, expanding outward — matches the spec's
+    core layout requirement exactly
+  - 'All required spec features present: radial month dividers with labels, year labels
+    at the Jan 1 start of each cycle, color-encoded value magnitude with a labeled
+    colorbar'
+  - Theme-adaptive chrome threaded through every element — both renders pass the theme-readability
+    checklist with no dark-on-dark or light-on-light failures, and Imprint imprint_seq
+    colors are pixel-identical across themes
+  - Rich per-point hover tooltips (raw unsmoothed temperature) plus a dummy-trace
+    colorbar add genuine plotly-specific interactive value without faking anything
+    in the static PNG
   weaknesses:
-  - Title format deviates from {spec-id} · {library} · anyplot.ai standard — 'Daily
-    Temperatures ·' prefix should be removed
-  - Font sizes slightly below Plotly-specific guidelines (26px vs. 28px title, 20px
-    vs. 22px month labels)
+  - The new ribbon technique leaves visible thin gap/notch artifacts at every color-run
+    boundary (small background-colored slivers cutting across the line width) — visible
+    on close zoom in both themes; the run_starts/run_ends vertex-sharing comment in
+    the code doesn't fully eliminate the seam because adjacent Scatter traces still
+    get separately capped line ends
+  - The headlined '+1.6°C' 2019→2023 warming callout implies a ~0.4°C/year regional
+    trend (≈4°C/decade) — far beyond any real-world 5-year regional climate signal
+    (even Arctic-amplification hotspots run closer to 0.5-1°C/decade); now that it's
+    an explicit labeled statistic rather than implicit data texture, the exaggerated
+    rate is more evaluable and should be toned down to stay factually plausible
+  - A small lerp_color() helper function is defined for the color interpolation —
+    a minor deviation from the KISS Imports→Data→Plot→Save structure (though reasonable
+    given it's called in a loop)
+  - Still builds the spiral via manual x/y trigonometry on go.Scatter rather than
+    plotly's native go.Scatterpolar (r/theta) — flagged in Attempt 1 as worth evaluating;
+    not addressed this round (acceptable if intentional for custom ring/divider control,
+    but leaves Library Mastery idiomatic-usage points on the table)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — PASS
-      Chrome: Title "Daily Temperatures · spiral-timeseries · plotly · anyplot.ai" in dark ink at top — readable. Month labels (Jan–Dec) around outer ring in dark INK color — readable. Year labels (2019–2023) in muted INK_MUTED at Jan position — readable. Colorbar title "Temp (°C)" and tick labels in INK/INK_SOFT — readable. Circular ring guides and month spokes at GRID opacity (10%) — subtle.
-      Data: Viridis colorscale from cold purple/blue (winter, ~−5°C) through teal/green (spring/fall) to yellow-green (summer, ~25°C). First series/single continuous data correctly uses viridis.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Dark-ink title "spiral-timeseries · python · plotly · anyplot.ai" centered at top; a smaller dark-ink callout below it reads "2019 → 2023 avg: 10.0°C → 11.7°C (+1.6°C)"; dark month labels (Jan-Dec) ring the outside on radial spokes; muted-gray bold year labels ("2019 · 10.0°C" ... "2023 · 11.7°C") sit at the Jan-1 position of each ring on a background-matched patch so they don't collide with the ribbon or grid. A labeled colorbar ("Temp (°C)", ticks -5..25) with a bordered elevated-bg box sits to the right. All text is clearly readable against the light background.
+      Data: A continuous Archimedean spiral, now rendered as a smooth colored ribbon (not discrete markers) running from the center (2019, smallest radius) outward to the edge (2023, largest radius), colored via the Imprint imprint_seq scale (#009E73 brand green -> #4467A3 blue) by 15-day-smoothed temperature. On close zoom, the ribbon shows thin gap/notch artifacts at each constant-color segment boundary — a minor seam texture, not a legibility problem.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — PASS
-      Chrome: Title in light F0EFE8 text — readable. Month labels in light text — readable. Year labels in muted B8B7B0 text — readable. Colorbar labels in light text — readable. No dark-on-dark text failures anywhere in the render. Year annotation backgrounds adapt to #1A1A17 PAGE_BG.
-      Data: Viridis data colors identical to light render — cold winters dark purple/blue, warm summers yellow-green. Colors unchanged between themes as required.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same layout as light — title and callout flip to light-ink text, month labels flip to white, year labels stay muted-gray-light on a background-matched patch (no boxy artifact), grid rings/spokes are faint but visible, colorbar box uses the elevated dark surface with light border/text.
+      Data: The ribbon's data colors are pixel-identical to the light render (same green-to-blue gradient) — only chrome (background, text, grid, colorbar box) flipped, as required. The same faint seam artifacts are visible at segment boundaries in this theme too.
+      Legibility verdict: PASS — no dark-on-dark failures observed; brand green and blue both read clearly on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,78 +74,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 26px, month labels 20px, year labels
-          17px, colorbar ticks 17px); slightly below 28/22/18 px Plotly guidelines
-          but clearly readable in both themes
+        comment: All font sizes explicitly set, readable in both themes, no clipping;
+          title fits without overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Month labels evenly spaced around outer ring, year labels at distinct
-          radii, no text collisions
+        comment: Year/month labels sit on background-matched patches, no collisions
+          with ribbon or grid
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Marker size=10 well-adapted to spiral daily-resolution density; viridis
-          range ensures both cold and warm points are visually distinct
+        comment: Ribbon width appropriate for the data density, but thin seam/notch
+          artifacts at color-segment boundaries slightly mar clean visibility
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform
+        comment: Green-to-blue sequential gradient, no red-green reliance, good contrast
+          on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 3600x3600px format ideal for circular chart; spiral fills
-          ~70% of canvas with balanced margins
+        comment: Square 2400x2400 canvas well suited to the circular chart; spiral
+          + colorbar balanced with generous but not excessive margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title; colorbar labelled 'Temp (°C)' with units
+        comment: Colorbar labeled 'Temp (°C)' with units; month/year labels self-describing
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correctly used for continuous temperature data; backgrounds
-          #FAF8F1/#1A1A17; all chrome tokens adapt in both renders'
+        comment: 'imprint_seq (#009E73 -> #4467A3) correctly used for single-polarity
+          continuous data, identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom polar layout, viridis colorscale, hidden axes, circular guides
-          at 10% opacity — clearly above configured default; intentional hierarchy
+        comment: Custom ring/spoke system, gradient ribbon, and trend callout read
+          as a deliberately designed chart; seam artifacts keep it just short of flawless
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Both axes fully hidden; ring guides and month spokes very subtle;
-          connector line at 35% opacity adds depth; year label backgrounds blend into
-          surface; nearly perfect polish
+        comment: Beaded texture from Attempt 1 replaced with a smooth ribbon; minor
+          seam notches at segment joins remain
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Spiral structure surfaces seasonal recurrence; warm summers and cold
-          winters align vertically; multi-year warming trend readable from color shift
-          across revolutions
+        comment: Per-year average labels plus explicit top callout make the multi-year
+          warming trend immediately visible alongside the seasonal cycle
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -132,112 +151,105 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Archimedean spiral (constant SPACING=2.0), expanding outward
-          from center
+        comment: Correct Archimedean spiral time series
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: One revolution per year, color encodes temperature magnitude, radial
-          month dividers, year labels at cycle starts, spiral expands outward, colorbar
-          present
+        comment: Radial grid subdivisions, cycle-start labels, color-encoded value,
+          colorbar all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Day-of-year maps to angle, year maps to radius, temperature maps
-          to Viridis color — all correct
+        comment: Angle = day-of-year fraction, radius = year + fraction; earliest
+          data at center
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title has extra 'Daily Temperatures ·' prefix before the required
-          spec-id · library · anyplot.ai pattern; colorbar (not legend) correctly
-          used for continuous data
+        passed: true
+        comment: Title matches mandated format; colorbar legend correct
     data_quality:
-      score: 15
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 5 full cycles (2019–2023) showing seasonal variation, multi-year
-          warming trend, and day-to-day noise
+        comment: Shows seasonal cycle and multi-year trend across 5 full cycles
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily temperate-hemisphere temperatures; neutral scientific context;
-          no controversial elements
+        comment: Neutral, plausible daily-temperature scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Range −4 to +26°C realistic for temperate climate; 0.4°C/year warming
-          plausible; noise σ=1.8°C appropriate
+        passed: false
+        comment: The headlined +1.6°C over 2019-2023 implies ~0.4°C/year (~4°C/decade)
+          regional warming — far beyond any real-world 5-year climate signal, and
+          now prominent as an explicit labeled statistic
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → figure → layout → save; no functions
-          or classes'
+        comment: Adds a small lerp_color() helper function, a minor deviation from
+          the no-functions KISS structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.graph_objects — all used
+        comment: Only os, numpy, pandas, plotly.graph_objects, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; loops for ring/spoke generation appropriate; no
-          fake functionality
+        comment: No fake UI, appropriate complexity for a smooth color-gradient ribbon
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: write_image(width=600,height=600,scale=4) -> 2400x2400, write_html
+          with cdn
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct use of go.Figure(), add_trace(), add_annotation(), update_layout(),
-          write_image(), write_html(); scaleanchor/scaleratio for aspect ratio maintenance;
-          selective hoverinfo=skip on decorative traces
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Leverages Plotly-specific features: interactive hover with custom
-          hovertemplate per data point, HTML export, colorbar with fine-grained customization
-          (bgcolor, bordercolor, tickvals), scaleanchor for equal axes'
+        comment: Manual x/y trig on go.Scatter instead of native go.Scatterpolar (r/theta);
+          flagged in Attempt 1, not addressed this round
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dummy-trace colorbar, rich per-point hovertemplate, and multi-trace
+          segment-colored ribbon are genuine plotly-specific techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -246,12 +258,13 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - time-series
+  - rolling-window
+  - binning
   styling:
   - custom-colormap
-  - minimal-chrome
-  - alpha-blending
