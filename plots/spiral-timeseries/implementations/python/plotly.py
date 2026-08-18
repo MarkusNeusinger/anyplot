@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -50,6 +50,26 @@ y_sp = r * np.sin(theta)
 r_outer = R0 + 5.0 * SPACING  # outer boundary (end of 2023)
 r_label = r_outer + 0.55  # month-label ring
 
+
+def lerp_color(t, c0=(0, 158, 115), c1=(68, 103, 163)):
+    """Linear interpolation along the two-stop imprint_seq scale."""
+    t = min(max(t, 0.0), 1.0)
+    rgb = [round(a + (b - a) * t) for a, b in zip(c0, c1)]
+    return f"rgb({rgb[0]},{rgb[1]},{rgb[2]})"
+
+
+# Smoothed color channel (15-day rolling mean) removes daily-noise flicker so
+# the ribbon reads as a polished gradient; raw daily values stay in hover text.
+NBINS = 40
+smooth_temp = pd.Series(temperature).rolling(15, center=True, min_periods=1).mean().values
+bin_idx = np.clip(((smooth_temp - TMIN) / (TMAX - TMIN) * NBINS).astype(int), 0, NBINS - 1)
+run_breaks = np.flatnonzero(np.diff(bin_idx) != 0)
+run_starts = np.concatenate(([0], run_breaks + 1))
+# each run's end coincides with the next run's start so adjacent line traces
+# share a literal vertex — otherwise separately-capped traces leave visible
+# notches at every color transition
+run_ends = np.concatenate((run_breaks + 1, [n - 1]))
+
 # Figure
 fig = go.Figure()
 
@@ -92,28 +112,44 @@ for m, mname in enumerate(month_names):
         yanchor="middle",
     )
 
-# 3. Thin connector line (shows spiral path beneath colored markers)
-fig.add_trace(
-    go.Scatter(
-        x=x_sp,
-        y=y_sp,
-        mode="lines",
-        line=dict(color=INK_SOFT, width=1.0),
-        opacity=0.35,
-        hoverinfo="skip",
-        showlegend=False,
+# 3. Temperature-colored ribbon: one smooth line per constant-color run, so the
+# spiral reads as a continuous gradient stroke rather than a beaded scatter.
+for start, end in zip(run_starts, run_ends):
+    t = (bin_idx[start] + 0.5) / NBINS
+    fig.add_trace(
+        go.Scatter(
+            x=x_sp[start : end + 1],
+            y=y_sp[start : end + 1],
+            mode="lines",
+            line=dict(color=lerp_color(t), width=6, shape="linear"),
+            hoverinfo="skip",
+            showlegend=False,
+        )
     )
-)
 
-# 4. Temperature-colored markers (daily resolution, Imprint sequential scale)
+# 4. Invisible per-day markers carry the rich hover tooltips (raw, unsmoothed
+# temperature) without reintroducing a visible dotted texture.
 fig.add_trace(
     go.Scatter(
         x=x_sp,
         y=y_sp,
         mode="markers",
+        marker=dict(size=8, color="rgba(0,0,0,0)"),
+        text=[f"{d.strftime('%b %d, %Y')}: {t:.1f}°C" for d, t in zip(dates, temperature)],
+        hovertemplate="%{text}<extra></extra>",
+        showlegend=False,
+    )
+)
+
+# 4b. Zero-size dummy trace: draws the colorbar for the ribbon's temperature scale
+fig.add_trace(
+    go.Scatter(
+        x=[None],
+        y=[None],
+        mode="markers",
         marker=dict(
-            size=5,
-            color=temperature,
+            size=0.1,
+            color=[TMIN, TMAX],
             colorscale=imprint_seq,
             cmin=TMIN,
             cmax=TMAX,
@@ -129,21 +165,22 @@ fig.add_trace(
                 len=0.65,
                 x=1.03,
             ),
-            line=dict(width=0),
         ),
-        text=[f"{d.strftime('%b %d, %Y')}: {t:.1f}°C" for d, t in zip(dates, temperature)],
-        hovertemplate="%{text}<extra></extra>",
+        hoverinfo="skip",
         showlegend=False,
     )
 )
 
-# 5. Year labels at Jan 1 position (top of each ring)
+# 5. Year labels at Jan 1 position (top of each ring), annotated with each
+# year's average temperature to surface the multi-year warming trend alongside
+# the seasonal pattern.
+yearly_avg = pd.Series(temperature).groupby(dates.year).mean()
 for k, yr in enumerate(range(2019, 2024)):
     yr_r = R0 + k * SPACING + 0.12
     fig.add_annotation(
         x=0.0,
         y=yr_r,
-        text=f"<b>{yr}</b>",
+        text=f"<b>{yr}</b> · {yearly_avg[yr]:.1f}°C",
         showarrow=False,
         font=dict(size=10, color=INK_MUTED, family="Arial, sans-serif"),
         xanchor="center",
@@ -151,6 +188,23 @@ for k, yr in enumerate(range(2019, 2024)):
         bgcolor=PAGE_BG,
         borderpad=3,
     )
+
+# 6. Compact multi-year trend callout (below title): makes the secondary
+# year-over-year warming signal explicit, not just implied by the ring labels.
+warming = yearly_avg[2023] - yearly_avg[2019]
+fig.add_annotation(
+    x=0.5,
+    y=0.955,
+    xref="paper",
+    yref="paper",
+    text=f"2019 → 2023 avg: {yearly_avg[2019]:.1f}°C → {yearly_avg[2023]:.1f}°C (+{warming:.1f}°C)",
+    showarrow=False,
+    font=dict(size=11, color=INK_SOFT, family="Arial, sans-serif"),
+    xanchor="center",
+    yanchor="top",
+    bgcolor=PAGE_BG,
+    borderpad=4,
+)
 
 # Layout (square canvas for circular chart)
 ax_lim = r_label + 0.5
@@ -165,12 +219,12 @@ fig.update_layout(
         font=dict(size=16, color=INK, family="Arial, sans-serif"),
         x=0.5,
         xanchor="center",
-        y=0.98,
+        y=0.99,
         yanchor="top",
     ),
     xaxis=dict(range=[-ax_lim, ax_lim], scaleanchor="y", scaleratio=1, visible=False),
     yaxis=dict(range=[-ax_lim, ax_lim], visible=False),
-    margin=dict(l=10, r=60, t=28, b=10),
+    margin=dict(l=10, r=60, t=85, b=10),
     showlegend=False,
 )
 
