@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
 Library: plotly 6.9.0 | Python 3.13.15
-Quality: 89/100 | Updated: 2026-08-18
+Quality: 95/100 | Updated: 2026-08-18
 """
 
 import os
