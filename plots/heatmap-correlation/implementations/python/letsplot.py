@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -64,13 +64,18 @@ df = pd.DataFrame(
 
 corr_matrix = df.corr()
 variables = corr_matrix.columns.tolist()
+var_pos = {v: i for i, v in enumerate(variables)}
 
 # Long format for geom_tile; annotation color adapts to per-cell contrast
 # (near-zero cells sit on the theme-adaptive midpoint, extremes on saturated
-# red/blue) rather than a single hardcoded color.
+# red/blue) rather than a single hardcoded color. Upper triangle is masked
+# (spec: "Consider masking upper or lower triangle to reduce redundancy") —
+# every pair is symmetric, so only the lower triangle + diagonal is kept.
 corr_data = []
 for var_y in variables:
     for var_x in variables:
+        if var_pos[var_x] > var_pos[var_y]:
+            continue
         corr_val = corr_matrix.loc[var_y, var_x]
         corr_data.append(
             {
@@ -86,6 +91,12 @@ corr_df = pd.DataFrame(corr_data)
 corr_df["x"] = pd.Categorical(corr_df["x"], categories=variables, ordered=True)
 corr_df["y"] = pd.Categorical(corr_df["y"], categories=variables[::-1], ordered=True)
 
+# Storytelling focal point: outline the strongest off-diagonal correlation
+# so the reader's eye lands on the standout relationship, not just a flat grid.
+off_diagonal = corr_df[corr_df["x"].astype(str) != corr_df["y"].astype(str)]
+strongest = off_diagonal.loc[off_diagonal["correlation"].abs().idxmax()]
+highlight_df = pd.DataFrame([strongest])
+
 # Title — mandated format, scaled per prompts/plot-generator.md
 title = "heatmap-correlation · python · letsplot · anyplot.ai"
 title_fontsize = round(16 * min(1.0, 67 / len(title)))
@@ -94,6 +105,7 @@ title_fontsize = round(16 * min(1.0, 67 / len(title)))
 plot = (
     ggplot(corr_df, aes(x="x", y="y", fill="correlation"))
     + geom_tile(color=PAGE_BG, size=1.5)
+    + geom_tile(data=highlight_df, fill=PAGE_BG, alpha=0, color=INK, size=3, tooltips="none")
     + geom_text(aes(label="label", color="text_color"), size=4.5, fontface="bold", tooltips="none")
     + scale_color_identity()
     + scale_fill_gradient2(
