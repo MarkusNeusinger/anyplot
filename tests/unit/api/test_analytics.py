@@ -7,6 +7,7 @@ import pytest
 
 from api.analytics import (
     BOT_DOMAIN,
+    DOMAIN,
     PLATFORM_PATTERNS,
     _detect_whatsapp_variant,
     detect_ai_agent,
@@ -432,3 +433,56 @@ class TestTrackBotFetch:
             await asyncio.sleep(0)
 
             mock_client.post.assert_not_called()
+
+
+class TestOgImageAudienceSplit:
+    """A shared link and a crawler fetch are different things and are recorded apart."""
+
+    @staticmethod
+    def _request(user_agent: str) -> MagicMock:
+        request = MagicMock()
+        request.headers = {"user-agent": user_agent}
+        request.client.host = "203.0.113.7"
+        return request
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        "user_agent",
+        ["Twitterbot/1.0", "facebookexternalhit/1.1", "Slackbot-LinkExpanding 1.0", "WhatsApp/2.23.18.78 i"],
+    )
+    async def test_a_shared_link_stays_with_the_human_numbers(self, user_agent: str) -> None:
+        """A preview fetch means someone shared the page — that is a product signal."""
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_og_image(self._request(user_agent), page="spec_detail", spec="box-basic")
+            await asyncio.sleep(0)
+
+            payload = mock_client.post.call_args[1]["json"]
+            assert payload["domain"] == DOMAIN
+            assert "assistant" not in payload["props"]
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("user_agent", "assistant", "kind"),
+        [
+            ("Mozilla/5.0 (compatible; Googlebot/2.1)", "google", "search"),
+            ("Mozilla/5.0 (compatible; Claude-User/1.0)", "claude", "user_directed"),
+            ("Mozilla/5.0 (compatible; GPTBot/1.4)", "chatgpt", "training"),
+        ],
+    )
+    async def test_a_crawler_fetch_goes_to_the_bot_site(self, user_agent: str, assistant: str, kind: str) -> None:
+        """Now that /og/ is crawlable these arrive in volume; they must not
+        drown the sharing signal or inflate visitors on the main site."""
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_og_image(self._request(user_agent), page="spec_detail", spec="box-basic")
+            await asyncio.sleep(0)
+
+            payload = mock_client.post.call_args[1]["json"]
+            assert payload["domain"] == BOT_DOMAIN
+            assert payload["props"]["assistant"] == assistant
+            assert payload["props"]["kind"] == kind
