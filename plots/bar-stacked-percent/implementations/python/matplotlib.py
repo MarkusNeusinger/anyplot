@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-18
@@ -39,6 +39,9 @@ data = np.array(
 # Normalize to percentages
 percentages = data / data.sum(axis=1, keepdims=True) * 100
 
+# Standout segment (largest single share) gets a subtle size emphasis
+standout_row, standout_col = np.unravel_index(np.argmax(percentages), percentages.shape)
+
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -54,26 +57,20 @@ for i, (component, color) in enumerate(zip(components, IMPRINT, strict=True)):
         x, percentages[:, i], bar_width, bottom=bottom, label=component, color=color, edgecolor=PAGE_BG, linewidth=1.0
     )
 
-    # Add percentage labels within segments if large enough
-    for j, (bar, pct) in enumerate(zip(bars, percentages[:, i], strict=True)):
-        if pct >= 8:  # Only show label if segment is at least 8%
-            ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                bottom[j] + pct / 2,
-                f"{pct:.0f}%",
-                ha="center",
-                va="center",
-                fontsize=9,
-                fontweight="bold",
-                color=INK,
-            )
+    # In-segment percentage labels, suppressed below an 8% visibility threshold
+    labels = [f"{pct:.0f}%" if pct >= 8 else "" for pct in percentages[:, i]]
+    label_artists = ax.bar_label(bars, labels=labels, label_type="center", fontsize=9, fontweight="bold", color=INK)
+
+    # Emphasize the single largest segment in the whole chart (data storytelling focal point)
+    if i == standout_col:
+        label_artists[standout_row].set_fontsize(11)
 
     bottom += percentages[:, i]
 
 # Style
 ax.set_xlabel("Country", fontsize=10, color=INK)
 ax.set_ylabel("Percentage (%)", fontsize=10, color=INK)
-ax.set_title("bar-stacked-percent · matplotlib · anyplot.ai", fontsize=12, color=INK, fontweight="medium")
+ax.set_title("bar-stacked-percent · python · matplotlib · anyplot.ai", fontsize=12, color=INK, fontweight="medium")
 
 ax.set_xticks(x)
 ax.set_xticklabels(categories, fontsize=8, color=INK_SOFT)
