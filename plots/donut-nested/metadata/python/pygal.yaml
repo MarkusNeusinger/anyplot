@@ -2,47 +2,64 @@ library: pygal
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:06:53Z'
-updated: '2026-05-08T01:29:17Z'
-generated_by: claude-haiku
-workflow_run: 25530826750
+updated: '2026-08-18T07:26:58Z'
+generated_by: claude-sonnet
+workflow_run: 32108415343
 issue: 2015
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 85
 review:
   strengths:
-  - Excellent spec compliance with all required features implemented correctly
-  - Proper color adaptation to both light and dark themes using Okabe-Ito palette
-  - Clear hierarchical data visualization effectively conveying part-to-whole relationships
-  - Realistic, neutral market-share domain data with appropriate scaling
-  - All text readable in both light and dark theme renders
+  - All four department totals ($1300K/$580K/$540K/$600K) and all 8 top-category child
+    labels now render correctly — both the hidden-total and dropped-label bugs flagged
+    in the previous review are fully fixed via the self-computed overlay geometry.
+  - 'The spec''s ‘labels on larger segments, legend for smaller ones’ requirement
+    is now fully satisfied: the top-2 categories per department get on-ring labels,
+    the other 8 get a clean two-row callout legend with color-matched swatches.'
+  - Consistent hue-per-department color families (lerp_hex tinting) with the lightest-tint
+    cap tightened to 0.60 (from 0.75 in the prior attempt), fixing the previous low-contrast
+    smallest-category issue.
+  - A new white/black ring-gap stroke visually separates the inner department ring
+    from the outer category ring, addressing the spec's ‘spacing between rings’ suggestion.
+  - 'Canonical Imprint palette order with brand green #009E73 on the first series;
+    both renders are theme-correct (#FAF8F1 light / #1A1A17 dark backgrounds, adaptive
+    ink tokens).'
+  - Deterministic budget data with correct child-to-parent aggregation and a correctly
+    formatted, title-length-aware scaled title.
   weaknesses:
-  - PIL image compositing creates non-idiomatic implementation; pygal lacks native
-    nested-donut support
-  - Center background color in composited image doesn't perfectly match theme tokens
-  - Large legend (12 region-product combinations) takes significant space; could filter
-    to larger segments only
-  - Design lacks sophistication due to compositing workaround approach; library mastery
-    limited by library constraints
+  - 'Minor label collision: ''Events & Trade Shows ($150K)'' and ''Digital Advertising
+    ($280K)'' child labels overlap where they meet near the Marketing wedge''s angular
+    midpoint — the closing ''$150K)'' collides with the ''D'' of ''Digital Advertising'',
+    visible in both light and dark renders. Both remain legible with effort but should
+    be repositioned (stagger radius or nudge angularly, or shrink font slightly for
+    long adjacent labels) to remove the collision.'
+  - The two-row callout legend for the 8 smaller categories becomes quite small at
+    mobile/thumbnail scale (~400px wide) — still technically legible but tight; consider
+    a larger font or fewer columns to improve mobile readability.
+  - The label-placement approach still regex-scrapes pygal's rendered SVG internals
+    (the 'big_slice' path structure and the plot-group translate) to recover wedge
+    geometry — functional and now correct, but brittle across pygal versions, same
+    underlying technique flagged as a risk in the previous review.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "donut-nested · pygal · anyplot.ai" is clearly readable in dark text; legend at bottom shows all region-product combinations in readable 3-column layout; axis and segment labels all visible
-      Data: Outer ring shows product categories (Premium, Standard, Budget) in color families per region: green (#009E73) for North America, vermillion (#D55E00) for LATAM, blue (#0072B2) for Europe, reddish purple for Asia-Pacific; inner ring shows regional totals with matching base colors; segment values labeled in $M
-      Legibility verdict: PASS - All elements readable against light background with good contrast
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Title "donut-nested · python · pygal · anyplot.ai" renders in dark ink at the top, clearly legible and comfortably within the canvas. Department legend row (4 swatches) and a two-row, 8-entry callout legend for smaller categories sit below the chart, all in dark ink, legible.
+      Data: Two concentric rings around a punched-out center hole, separated by a thin theme-colored gap stroke. Inner ring = 4 departments in canonical Imprint order (Engineering #009E73 green, Marketing #C475FD lavender, Operations #4467A3 blue, Sales #BD8233 ochre), each with a bold centered department name + total ($1300K/$580K/$540K/$600K -- all four now visible, unlike the prior attempt). Outer ring = child expense categories in lighter tints of the parent hue (tint capped at 0.60). The top-2 categories per department are labeled directly on the ring (8 labels total: Salaries, Cloud Infrastructure, Digital Advertising, Events & Trade Shows, Facilities, Logistics, Commissions, Travel); the remaining 8 smaller categories are covered by the callout legend below. One minor overlap: "Events & Trade Shows ($150K)" and "Digital Advertising ($280K)" labels collide where they meet near the Marketing wedge boundary -- both still readable but visually crowded.
+      Legibility verdict: PASS overall (all content now reaches the viewer, no light-on-light) with one minor overlap noted above; callout-legend text is small at mobile scale but readable at full size.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Title and legend text render in light color appropriate for dark background, all labels readable; legend maintains same 3-column structure
-      Data: Identical color palette to light render (Okabe-Ito positions 1-4 maintained); data colors are consistent and clearly distinguished from background; segment values visible
-      Legibility verdict: PASS - All text readable against dark background; no dark-on-dark failures detected; theme adaptation successful
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title, department legend, and callout legend, rendered in light ink (#F0EFE8-family), clearly legible against the dark surface. No dark-on-dark failures observed.
+      Data: Identical hex colors to the light render for every department and tint step (only chrome flipped, as required, including the ring-gap stroke switching to a dark tone). Same label placement and the same minor "Events & Trade Shows" / "Digital Advertising" overlap persists unchanged from the light render.
+      Legibility verdict: PASS overall, same minor overlap as the light render; theme-adaptation of chrome itself is fully correct.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -50,67 +67,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; minor deduction for compositing
-          center background
+        comment: All font sizes explicitly set via the Style object and the manual
+          overlay; readable in both themes at full size. Callout-legend text is small
+          at ~400px mobile scale, still legible but tight.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Segments clearly separated; no text collisions
+        comment: '''Events & Trade Shows ($150K)'' and ''Digital Advertising ($280K)''
+          labels collide near the Marketing wedge boundary in both renders -- minor
+          but visible overlap, main content still readable. All other labels and the
+          department totals (now all 4 visible) are collision-free.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and segments distinctly visible
+        comment: 16 segments across 4 departments are all clearly distinguishable;
+          tint cap of 0.60 keeps even the lightest child segment visible against the
+          page background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Four distinct hues (green/purple/blue/ochre) are CVD-safe and don't
+          rely on red-green alone; adequate contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format (3600×3600) appropriate for symmetric plot
+        comment: 2400x2400 square canvas is well-used, donut plus legends fill the
+          majority of the frame with balanced margins; nothing clipped at the canvas
+          edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title and region/product labels present
+        comment: No axes needed for a donut; title descriptive and correctly formatted,
+          every segment carries a $-denominated value label.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito colors correct, but center background doesn't perfectly
-          match theme tokens
+        passed: true
+        comment: 'Brand green #009E73 on the first series, canonical Imprint order
+          for the remaining three, theme-correct #FAF8F1/#1A1A17 backgrounds and adaptive
+          ink in both renders.'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 6
         max: 8
-        passed: false
-        comment: Competent structure but PIL compositing workaround reduces sophistication
+        passed: true
+        comment: Thoughtful per-department hue-family tinting, title-length-aware
+          font scaling, and a self-authored label/legend layer show clear design intent
+          above library defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Clean but compositing approach lacks refinement
+        passed: true
+        comment: New ring-gap stroke cleanly separates the two hierarchy levels, generous
+          margins, subtle chrome; the minor label collision keeps this from a perfect
+          score.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear hierarchy effectively conveys part-to-whole relationships
+        comment: Bold centered department totals versus smaller outer-ring category
+          labels create a clear visual hierarchy that guides the reader from whole
+          to parts.
     spec_compliance:
       score: 15
       max: 15
@@ -120,107 +154,125 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut chart
+        comment: Genuine two-ring nested donut via pygal's native dual-series Pie
+          plus a manual center-hole punch.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Hierarchical structure, color families, child alignment, labels and
-          legend all present
+        comment: Consistent hue-per-parent color families with varying lightness,
+          child segments aligned to parent boundaries, labels on larger segments with
+          a legend for smaller ones, and visible ring spacing -- all spec notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Inner ring aggregates correctly; outer ring shows child values
+        comment: Child values sum exactly to each parent total; angular spans correctly
+          align outer categories to their parent department wedge.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend matches spec
+        comment: Title format correct; department legend and the new callout legend
+          for smaller categories both accurately match the underlying data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full hierarchy, parent aggregates, child values shown
+        comment: All 16 data points are now identifiable (label or legend); departments
+          share a uniform 4-category shape rather than varying 2-5 children per the
+          spec's allowed range, a minor missed opportunity to show more structural
+          variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Market share data is realistic and neutral
+        comment: Plausible, neutral corporate department-budget scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $90M–$590M range is sensible
+        comment: Sensible $40K-$850K range for a company budget breakdown, correct
+          aggregation math throughout.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Straightforward code without unnecessary complexity
+        comment: Mostly linear script, but three small helper functions (lerp_hex,
+          polar_to_xy, svg_text) are needed to support the manual overlay technique.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed data; deterministic
+        comment: Fully deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: math, os, re, xml.sax.saxutils.escape, cairosvg, pygal, and Style
+          are all used.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: PIL compositing is functional but not idiomatic
+        comment: Regex-scraping pygal's rendered SVG internals ('big_slice' path,
+          plot-group translate) to recover wedge geometry works correctly now but
+          remains a brittle, low-level workaround rather than a clean API-level solution.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly.
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct API but PIL workaround not idiomatic for pygal
+        passed: true
+        comment: Correctly uses pygal's native dual-series Pie and Style token system,
+          but bypasses pygal's own label/legend rendering entirely in favor of hand-rolled
+          SVG post-processing.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Compositing is creative but not a pygal-specific feature
+        passed: true
+        comment: Leverages pygal's SVG-native output to compute exact wedge geometry
+          and inject custom labels/legend/hole -- a technique fairly specific to pygal's
+          rendering model, showing resourcefulness beyond generic usage.
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - pillow
+  - cairosvg
   techniques:
-  - layer-composition
+  - annotations
+  - custom-legend
+  - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - cumulative-sum
   styling:
-  - dark-theme
+  - publication-ready

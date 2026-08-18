@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: donut-nested
+created: '2026-08-18T07:08:18Z'
+updated: '2026-08-18T07:25:20Z'
+generated_by: claude-sonnet
+workflow_run: 32109318379
+issue: 2015
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Repair directly addressed both attempt-1 weaknesses: segment/legend font sizes
+    were bumped (ring labels 15/13px → 18/15px, legend text 14px → 17px, swatch 16px
+    → 20px), meaningfully improving legibility at the ~400px mobile preview width.'
+  - Legend is now vertically centered on the donut's own center (cy) with taller row
+    spacing (34px → 72px), closing most of the previous top-heavy whitespace imbalance
+    and keeping the legend close to the donut's right edge.
+  - Retains the strong idiomatic d3.hierarchy()/d3.partition()/d3.arc() alignment,
+    adaptive luminance-based label ink, and consistent per-department Imprint hue
+    families noted in the first review.
+  - Center 'Total Budget / $1,660K' focal point remains clear and legible in both
+    themes; both renders confirmed theme-correct with identical data hues.
+  weaknesses:
+  - A blank pocket still persists in the bottom-right quadrant of the square canvas,
+    below the legend column and right of the donut's lower arc — the legend block
+    (4 rows) is much shorter than the donut's full vertical extent (2020-500=1520px
+    vs legend's ~550px), so whitespace above/below the legend isn't fully balanced
+    against the ring. Consider growing legend row height further, widening the donut
+    radius, or adding a small supplementary element to fill the region.
+  - At the ~400px mobile preview, outer-ring child labels (short names like 'Admin',
+    'Content') are technically readable but still noticeably smaller than the inner-ring
+    labels — minor headroom remains; could grow the depth-2 label font slightly more.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Bold dark title "donut-nested · javascript · d3 · anyplot.ai" and gray subtitle at top, both fully readable. Center hole shows "Total Budget / $1,660K" in dark ink, clearly legible.
+      Data: Nested donut with inner ring of 4 departments (Engineering=Imprint #009E73, Marketing=lavender, Sales=blue, Operations=ochre, canonical order) and an outer ring of lightened per-parent-hue child segments. Larger segments carry inline radial labels (font raised to 18px/15px this attempt); the 4 smallest child segments are listed instead in a "Smaller categories" legend on the right, now vertically centered against the donut's own center and using larger swatches/text (20px swatch, 17px text) than attempt 1.
+      Legibility verdict: PASS - all chrome and data-region text readable at full resolution; spot-checked plot-light_400.png (mobile width) and both ring labels and legend text remain legible, though outer-ring short labels ("Admin") and legend copy are noticeably smaller than primary chrome.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Same layout on dark surface; title, subtitle, center total, and legend text all flip to light-colored ink and remain fully legible. No dark-on-dark failures observed.
+      Data: Data hues are pixel-identical to the light render (Imprint palette unchanged) - only chrome and stroke separators flip.  Per-segment label ink still adapts independently to each shade's own luminance, keeping labels legible on every wedge in both themes.
+      Legibility verdict: PASS - no dark-on-dark or light-on-light failures in either render; both themes confirmed theme-correct.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set; ring labels (18px/15px), legend text
+          (17px) and swatches (20px) all bumped this attempt and remain readable at
+          full resolution and at ~400px mobile preview. Minor headroom: short outer-ring
+          labels stay small at mobile.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: padAngle gap + cornerRadius keep every segment distinct and visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance-adaptive label ink keeps contrast good on every shade;
+          CVD-safe Imprint palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Legend re-centered on the donut's own vertical center with larger
+          row spacing, closing most of attempt-1's imbalance; a moderate blank pocket
+          remains bottom-right beneath the (still shorter-than-ring) legend column.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title + subtitle; center total labeled 'Total Budget'
+          with unit ($K).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Engineering = #009E73; remaining departments follow
+          canonical Imprint order; identical data hues across both themes; backgrounds
+          theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful hue-family system, adaptive label ink, center focal total
+          — clearly above a configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: padAngle gap, cornerRadius, consistent stroke separators, plus this
+          attempt's legend re-centering/whitespace attention to detail.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold/regular weight hierarchy and center total create emphasis; no
+          explicit insight callout.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct nested donut / concentric-ring hierarchy.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Inner/outer rings, aligned child boundaries, label-large/legend-small
+          strategy, ring spacing — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: level_1/level_2/value mapped correctly via d3.hierarchy + partition.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data (parent · child ($value
+          K)).
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 departments, 3-4 children each, varied magnitudes — shows most
+          hierarchy features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible annual department budget scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions align with realistic department budget splits.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> scales -> draw, no classes/functions beyond small
+          helpers.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; harness captures plot-{theme}.png/.html;
+          animation not used.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of d3.hierarchy()/d3.partition()/d3.arc() high-level pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3-hierarchy partition layout guarantees parent/child angle alignment
+          by construction — distinctive to D3's low-level data-binding model.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
