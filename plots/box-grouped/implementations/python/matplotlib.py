@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -75,14 +75,14 @@ for sub_idx, sub in enumerate(subcategories):
         patch_artist=True,
         showfliers=True,
         showmeans=True,
-        flierprops={"marker": "o", "markerfacecolor": IMPRINT_PALETTE[sub_idx], "markersize": 4, "alpha": 0.7},
+        flierprops={"marker": "o", "markerfacecolor": IMPRINT_PALETTE[sub_idx], "markersize": 6.5, "alpha": 0.7},
         medianprops={"color": INK, "linewidth": 1.5},
         meanprops={
             "marker": "D",
             "markerfacecolor": PAGE_BG,
             "markeredgecolor": INK,
-            "markersize": 3.5,
-            "markeredgewidth": 0.8,
+            "markersize": 7,
+            "markeredgewidth": 1,
         },
         whiskerprops={"color": INK_SOFT, "linewidth": 1},
         capprops={"color": INK_SOFT, "linewidth": 1},
@@ -102,6 +102,8 @@ center_positions = [
 ]
 ax.set_xticks(center_positions)
 ax.set_xticklabels(categories, fontsize=8, color=INK)
+# Sharpen the best-to-worst narrative: bold the top-performing department as a focal point
+ax.get_xticklabels()[0].set_fontweight("bold")
 
 # Labels and title
 ax.set_xlabel("Department", fontsize=10, color=INK)
@@ -135,8 +137,9 @@ for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
     ax.spines[s].set_linewidth(1)
 
-# Y-axis limits
-ax.set_ylim(0, 110)
+# Y-axis limits — extra headroom above the data ceiling so the legend never crowds
+# whiskers/fliers, even on data regenerations with taller spreads
+ax.set_ylim(0, 122)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
