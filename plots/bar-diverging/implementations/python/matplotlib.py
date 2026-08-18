@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -76,13 +76,43 @@ for val, y in zip(values_sorted, y_pos, strict=True):
 
 # Set x-axis limits with padding
 max_abs = max(abs(values_sorted.min()), abs(values_sorted.max()))
-ax.set_xlim(-max_abs - 20, max_abs + 20)
+ax.set_xlim(-max_abs - 25, max_abs + 25)
 
 # Remove top and right spines for cleaner look
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
+
+# Callout annotations on the extremes — a matplotlib-distinctive touch (curved
+# connectionstyle arrow + themed bbox) that raises the chart's storytelling
+# beyond the bare sort-and-color-split baseline.
+best_idx = int(np.argmax(values_sorted))
+worst_idx = int(np.argmin(values_sorted))
+
+ax.annotate(
+    "Strongest driver",
+    xy=(0, y_pos[best_idx]),
+    xytext=(-max_abs * 0.45, y_pos[best_idx]),
+    fontsize=7,
+    color=INK,
+    ha="center",
+    va="center",
+    arrowprops={"arrowstyle": "->", "connectionstyle": "arc3,rad=0.15", "color": INK_SOFT, "linewidth": 0.9},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.4, "boxstyle": "round,pad=0.35"},
+)
+
+ax.annotate(
+    "Biggest pain point",
+    xy=(0, y_pos[worst_idx]),
+    xytext=(max_abs * 0.4, y_pos[worst_idx] + 1.6),
+    fontsize=7,
+    color=INK,
+    ha="center",
+    va="center",
+    arrowprops={"arrowstyle": "->", "connectionstyle": "arc3,rad=-0.15", "color": INK_SOFT, "linewidth": 0.9},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "linewidth": 0.4, "boxstyle": "round,pad=0.35"},
+)
 
 # Add legend
 legend_elements = [
