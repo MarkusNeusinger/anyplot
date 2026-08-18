@@ -1,13 +1,26 @@
 """ anyplot.ai
 box-notched: Notched Box Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-07
+Library: altair 6.2.2 | Python 3.13.15
+Quality: 94/100 | Updated: 2026-08-18
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Imprint categorical palette — canonical order, departments are abstract groups
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Employee performance scores across departments
 np.random.seed(42)
@@ -32,6 +45,7 @@ data.extend([{"Department": "Marketing", "Performance Score": v} for v in market
 
 # Sales: bimodal-ish, high variability
 sales = np.concatenate([np.random.normal(60, 10, 40), np.random.normal(80, 8, 45)])
+sales = np.clip(sales, 25, 100)  # keep within the 0-100 performance-score ceiling
 data.extend([{"Department": "Sales", "Performance Score": v} for v in sales])
 
 # Operations: lower median, different from Engineering (to show non-overlapping notches)
@@ -41,10 +55,8 @@ data.extend([{"Department": "Operations", "Performance Score": v} for v in opera
 
 df = pd.DataFrame(data)
 
-# Altair does not natively support notched box plots
-# We need to calculate the notch values manually and use layered marks
-
-# Calculate statistics for each group
+# Altair does not natively support notched box plots — calculate the notch
+# geometry manually and assemble it from layered marks.
 stats_list = []
 for dept in departments:
     values = df[df["Department"] == dept]["Performance Score"].values
@@ -54,21 +66,16 @@ for dept in departments:
     iqr = q3 - q1
     n = len(values)
 
-    # Notch calculation: ±1.57 × IQR / √n (95% CI around median)
+    # Notch: ±1.57 × IQR / √n (95% CI around the median)
     notch_size = 1.57 * iqr / np.sqrt(n)
     notch_lower = median - notch_size
     notch_upper = median + notch_size
 
-    # Whiskers at 1.5*IQR
-    whisker_lower = max(q1 - 1.5 * iqr, values.min())
-    whisker_upper = min(q3 + 1.5 * iqr, values.max())
-
-    # Find actual whisker endpoints (furthest non-outlier)
+    # Whiskers: furthest non-outlier point within 1.5×IQR of the box
     non_outliers = values[(values >= q1 - 1.5 * iqr) & (values <= q3 + 1.5 * iqr)]
     whisker_lower = non_outliers.min()
     whisker_upper = non_outliers.max()
 
-    # Outliers
     outliers = values[(values < q1 - 1.5 * iqr) | (values > q3 + 1.5 * iqr)]
 
     stats_list.append(
@@ -77,107 +84,184 @@ for dept in departments:
             "q1": q1,
             "median": median,
             "q3": q3,
+            "mean": float(np.mean(values)),
             "notch_lower": notch_lower,
             "notch_upper": notch_upper,
             "whisker_lower": whisker_lower,
             "whisker_upper": whisker_upper,
+            "n": n,
+            "n_label": f"n = {n}",
+            "n_label_y": 3,  # fixed low baseline, in the near-zero whitespace below every whisker
             "outliers": outliers.tolist(),
         }
     )
 
 stats_df = pd.DataFrame(stats_list)
+# Sort by median (descending) so the ranking reads left-to-right — storytelling win over alphabetical order
+dept_order = stats_df.sort_values("median", ascending=False)["Department"].tolist()
 
-# Prepare outlier data
 outlier_data = []
 for _, row in stats_df.iterrows():
     for outlier in row["outliers"]:
         outlier_data.append({"Department": row["Department"], "Performance Score": outlier})
 outliers_df = pd.DataFrame(outlier_data) if outlier_data else pd.DataFrame(columns=["Department", "Performance Score"])
 
-# Color scale - Python Blue as primary, varied for categories
-colors = ["#306998", "#FFD43B", "#4B8BBE", "#E85C41"]
-color_scale = alt.Scale(domain=departments, range=colors)
+color_scale = alt.Scale(domain=departments, range=IMPRINT_PALETTE)
+tooltip_fields = [
+    alt.Tooltip("Department:N"),
+    alt.Tooltip("q1:Q", title="Q1", format=".1f"),
+    alt.Tooltip("median:Q", title="Median", format=".1f"),
+    alt.Tooltip("q3:Q", title="Q3", format=".1f"),
+    alt.Tooltip("mean:Q", title="Mean", format=".1f"),
+    alt.Tooltip("notch_lower:Q", title="Notch low (95% CI)", format=".1f"),
+    alt.Tooltip("notch_upper:Q", title="Notch high (95% CI)", format=".1f"),
+    alt.Tooltip("n:Q", title="Sample size"),
+]
 
-# Box (from Q1 to notch_lower, then notch_lower to notch_upper, then notch_upper to Q3)
-# For a notched box, we draw two rectangles: lower box and upper box with a narrower waist at the notch
+# Hover highlight — mouseover a department's box to bring it to full opacity
+# and dim the rest, an Altair-native selection_point driving a shared param
+# across every colored layer (only visible in the interactive HTML export;
+# the empty selection matches all rows so the static PNG is unaffected).
+hover = alt.selection_point(fields=["Department"], on="mouseover", empty=True)
+hover_opacity = alt.condition(hover, alt.value(1.0), alt.value(0.55))
 
-# Lower box: Q1 to notch_lower (full width)
+x_enc = alt.X("Department:N", title="Department", sort=dept_order, axis=alt.Axis(labelAngle=0, grid=False))
+
+# Whiskers drawn first so the box marks layer cleanly on top
+whisker_rule = (
+    alt.Chart(stats_df)
+    .mark_rule(strokeWidth=2, color=INK_SOFT)
+    .encode(x=x_enc, y="whisker_lower:Q", y2="whisker_upper:Q")
+)
+lower_cap = (
+    alt.Chart(stats_df)
+    .mark_tick(size=26, thickness=2.5, color=INK_SOFT, opacity=1)
+    .encode(x=x_enc, y="whisker_lower:Q")
+)
+upper_cap = (
+    alt.Chart(stats_df)
+    .mark_tick(size=26, thickness=2.5, color=INK_SOFT, opacity=1)
+    .encode(x=x_enc, y="whisker_upper:Q")
+)
+
+# Notched box: lower box (Q1 -> notch_lower), waist (notch_lower -> notch_upper), upper box (notch_upper -> Q3)
 lower_box = (
     alt.Chart(stats_df)
-    .mark_bar(size=60, stroke="black", strokeWidth=2)
+    .mark_bar(size=48, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x=alt.X("Department:N", title="Department", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0)),
+        x=x_enc,
         y=alt.Y("q1:Q", title="Performance Score"),
         y2="notch_lower:Q",
         color=alt.Color("Department:N", scale=color_scale, legend=None),
+        opacity=hover_opacity,
+        tooltip=tooltip_fields,
     )
+    .add_params(hover)
 )
-
-# Upper box: notch_upper to Q3 (full width)
 upper_box = (
     alt.Chart(stats_df)
-    .mark_bar(size=60, stroke="black", strokeWidth=2)
+    .mark_bar(size=48, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
-        x="Department:N", y="notch_upper:Q", y2="q3:Q", color=alt.Color("Department:N", scale=color_scale, legend=None)
+        x=x_enc,
+        y="notch_upper:Q",
+        y2="q3:Q",
+        color=alt.Color("Department:N", scale=color_scale, legend=None),
+        opacity=hover_opacity,
+        tooltip=tooltip_fields,
     )
 )
-
-# Notch area: narrower bar from notch_lower to notch_upper
 notch_box = (
     alt.Chart(stats_df)
-    .mark_bar(size=35, stroke="black", strokeWidth=2)
+    .mark_bar(size=26, stroke=PAGE_BG, strokeWidth=0.75)
     .encode(
-        x="Department:N",
+        x=x_enc,
         y="notch_lower:Q",
         y2="notch_upper:Q",
         color=alt.Color("Department:N", scale=color_scale, legend=None),
+        opacity=hover_opacity,
+        tooltip=tooltip_fields,
     )
 )
+# Median tick cut in the page background color — reads as a gap through the waist, theme-adaptive by construction
+median_line = (
+    alt.Chart(stats_df).mark_tick(color=PAGE_BG, size=26, thickness=2, opacity=1).encode(x=x_enc, y="median:Q")
+)
 
-# Median line (inside the notch)
-median_line = alt.Chart(stats_df).mark_tick(color="white", size=35, thickness=3).encode(x="Department:N", y="median:Q")
-
-# Whiskers - vertical lines
-whisker_rule = (
+# Mean diamond — a second, distinct central-tendency marker beside the median notch
+mean_marker = (
     alt.Chart(stats_df)
-    .mark_rule(strokeWidth=2, color="black")
-    .encode(x="Department:N", y="whisker_lower:Q", y2="whisker_upper:Q")
+    .mark_point(shape="diamond", size=90, filled=True, color=INK, opacity=0.9, stroke=PAGE_BG, strokeWidth=1)
+    .encode(x=x_enc, y="mean:Q", tooltip=tooltip_fields)
 )
 
-# Whisker caps - horizontal ticks at whisker ends
-lower_cap = (
-    alt.Chart(stats_df).mark_tick(size=30, thickness=2, color="black").encode(x="Department:N", y="whisker_lower:Q")
+# On-canvas sample-size annotation, sitting in the near-zero whitespace under every box
+n_label = (
+    alt.Chart(stats_df)
+    .mark_text(fontSize=9, color=INK_SOFT, baseline="middle", align="center")
+    .encode(x=x_enc, y=alt.Y("n_label_y:Q"), text="n_label:N")
 )
 
-upper_cap = (
-    alt.Chart(stats_df).mark_tick(size=30, thickness=2, color="black").encode(x="Department:N", y="whisker_upper:Q")
-)
-
-# Outliers
 outliers_chart = (
     alt.Chart(outliers_df)
-    .mark_point(size=120, filled=True, opacity=0.8)
-    .encode(
-        x="Department:N",
-        y=alt.Y("Performance Score:Q"),
-        color=alt.Color("Department:N", scale=color_scale, legend=None),
-    )
+    .mark_point(size=70, filled=True, opacity=0.85, stroke=PAGE_BG, strokeWidth=1.2)
+    .encode(x=x_enc, y=alt.Y("Performance Score:Q"), color=alt.Color("Department:N", scale=color_scale, legend=None))
     if len(outliers_df) > 0
     else alt.Chart(pd.DataFrame()).mark_point()
 )
 
-# Layer all elements
 chart = (
-    alt.layer(whisker_rule, lower_cap, upper_cap, lower_box, upper_box, notch_box, median_line, outliers_chart)
-    .properties(
-        width=1600, height=900, title=alt.Title("box-notched · altair · pyplots.ai", fontSize=28, anchor="middle")
+    alt.layer(
+        whisker_rule,
+        lower_cap,
+        upper_cap,
+        lower_box,
+        upper_box,
+        notch_box,
+        median_line,
+        mean_marker,
+        n_label,
+        outliers_chart,
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .properties(
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        title=alt.Title(
+            "box-notched · python · altair · anyplot.ai",
+            fontSize=16,
+            anchor="middle",
+            color=INK,
+            subtitle="Non-overlapping notches ⇒ medians differ significantly (95% CI) · ◆ = mean",
+            subtitleFontSize=11,
+            subtitleColor=INK_SOFT,
+        ),
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelFontSize=10,
+        titleFontSize=12,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_axisY(grid=True, gridColor=INK, gridOpacity=0.15)
 )
 
-# Save as PNG (4800x2700 with scale_factor=3)
-chart.save("plot.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Save interactive HTML version
-chart.save("plot.html")
+# PAD-only to the canonical 3200x1800 landscape target — see prompts/library/altair.md "Canvas".
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
