@@ -1,13 +1,11 @@
 """ anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 96/100 | Updated: 2026-05-08
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-18
 """
 
 import os
 import sys
-
-import numpy as np
 
 
 # Temporarily remove current directory from path to avoid name collision
@@ -81,9 +79,21 @@ class CorrelationHeatmap(Graph):
         plot_width = self.view.width
         plot_height = self.view.height
 
-        label_margin_left = 480
-        label_margin_bottom = 280
-        label_margin_top = 60
+        # Row-label width scales with the longest label so the y-axis title never
+        # collides with row text, regardless of how long the variable names are.
+        max_row_chars = max((len(label) for label in self.labels), default=0)
+        row_label_width = max_row_chars * 54 * 0.56
+        y_title_block = 90 if self.y_axis_title else 0
+
+        # Column labels are rotated 45deg, so their vertical drop below the grid
+        # scales with label length too — reserve room before the x-axis title.
+        max_col_chars = max((len(label) for label in self.labels), default=0)
+        col_label_drop = max_col_chars * 54 * 0.56 * 0.7071
+        x_title_block = 90 if self.x_axis_title else 0
+
+        label_margin_left = row_label_width + y_title_block + 60
+        label_margin_bottom = 25 + col_label_drop + x_title_block + 40
+        label_margin_top = 20
         label_margin_right = 320
 
         available_width = plot_width - label_margin_left - label_margin_right
@@ -94,7 +104,8 @@ class CorrelationHeatmap(Graph):
 
         grid_size = n * (cell_size + gap) - gap
 
-        x_offset = self.view.x(0) + label_margin_left + (available_width - grid_size) / 2
+        left_edge = self.view.x(0)
+        x_offset = left_edge + label_margin_left + (available_width - grid_size) / 2
         y_offset = self.view.y(n) + label_margin_top + (available_height - grid_size) / 2
 
         plot_node = self.nodes["plot"]
@@ -102,7 +113,7 @@ class CorrelationHeatmap(Graph):
 
         if self.y_axis_title:
             y_title_size = 52
-            y_title_x = x_offset - 430
+            y_title_x = left_edge + y_title_block / 2
             y_title_y = y_offset + grid_size / 2
             text_node = self.svg.node(heatmap_group, "text", x=y_title_x, y=y_title_y)
             text_node.set("text-anchor", "middle")
@@ -121,20 +132,20 @@ class CorrelationHeatmap(Graph):
             text_node.text = label
 
         col_font_size = min(54, int(cell_size * 0.55))
+        col_label_y = y_offset + n * (cell_size + gap) + 25
         for j, label in enumerate(self.labels):
             x = x_offset + j * (cell_size + gap) + cell_size / 2
-            y = y_offset + n * (cell_size + gap) + 25
-            text_node = self.svg.node(heatmap_group, "text", x=x, y=y)
+            text_node = self.svg.node(heatmap_group, "text", x=x, y=col_label_y)
             text_node.set("text-anchor", "start")
             text_node.set("fill", INK_SOFT)
             text_node.set("style", f"font-size:{col_font_size}px;font-weight:600;font-family:sans-serif")
-            text_node.set("transform", f"rotate(45, {x}, {y})")
+            text_node.set("transform", f"rotate(45, {x}, {col_label_y})")
             text_node.text = label
 
         if self.x_axis_title:
             x_title_size = 52
             x_title_x = x_offset + grid_size / 2
-            x_title_y = y_offset + n * (cell_size + gap) + 240
+            x_title_y = col_label_y + col_label_drop + 40
             text_node = self.svg.node(heatmap_group, "text", x=x_title_x, y=x_title_y)
             text_node.set("text-anchor", "middle")
             text_node.set("fill", INK)
@@ -243,26 +254,29 @@ class CorrelationHeatmap(Graph):
         self._box.ymax = n
 
 
-# Data: Correlation matrix for financial portfolio metrics
-np.random.seed(42)
-
-variables = ["Revenue", "Profit", "Customers", "Marketing", "R&D Spend", "Employees", "Market Share", "Stock Price"]
+# Data: Correlation matrix for molecular descriptors (cheminformatics QSAR feature set)
+variables = [
+    "Mol. Weight",
+    "LogP",
+    "TPSA",
+    "H-Bond Donors",
+    "H-Bond Acceptors",
+    "Rotatable Bonds",
+    "Aromatic Rings",
+    "LogS",
+]
 n = len(variables)
 
-correlation_matrix = np.array(
-    [
-        [1.00, 0.82, 0.75, 0.45, 0.28, 0.55, 0.68, 0.72],
-        [0.82, 1.00, 0.58, -0.15, -0.22, 0.35, 0.62, 0.85],
-        [0.75, 0.58, 1.00, 0.52, 0.18, 0.48, 0.55, 0.45],
-        [0.45, -0.15, 0.52, 1.00, 0.32, 0.38, 0.42, 0.12],
-        [0.28, -0.22, 0.18, 0.32, 1.00, 0.25, 0.15, -0.08],
-        [0.55, 0.35, 0.48, 0.38, 0.25, 1.00, 0.32, 0.28],
-        [0.68, 0.62, 0.55, 0.42, 0.15, 0.32, 1.00, 0.58],
-        [0.72, 0.85, 0.45, 0.12, -0.08, 0.28, 0.58, 1.00],
-    ]
-)
-
-matrix_data = correlation_matrix.tolist()
+matrix_data = [
+    [1.00, 0.45, 0.55, 0.25, 0.60, 0.70, 0.50, -0.55],
+    [0.45, 1.00, -0.75, -0.50, -0.35, 0.20, 0.40, -0.80],
+    [0.55, -0.75, 1.00, 0.80, 0.85, 0.15, -0.10, 0.50],
+    [0.25, -0.50, 0.80, 1.00, 0.45, 0.10, -0.15, 0.40],
+    [0.60, -0.35, 0.85, 0.45, 1.00, 0.25, 0.05, 0.35],
+    [0.70, 0.20, 0.15, 0.10, 0.25, 1.00, -0.20, -0.15],
+    [0.50, 0.40, -0.10, -0.15, 0.05, -0.20, 1.00, -0.35],
+    [-0.55, -0.80, 0.50, 0.40, 0.35, -0.15, -0.35, 1.00],
+]
 
 # Custom style with theme-adaptive colors
 custom_style = Style(
@@ -279,13 +293,25 @@ custom_style = Style(
     font_family="sans-serif",
 )
 
-# Diverging colormap: blue (negative) -> white (zero) -> red (positive)
-diverging_colormap = ["#2166ac", "#4393c3", "#92c5de", "#d1e5f0", "#f7f7f7", "#fddbc7", "#f4a582", "#d6604d", "#b2182b"]
+
+def _lerp_hex(c0, c1, t):
+    """Linearly interpolate between two hex colors."""
+    r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i : i + 2], 16) for i in (1, 3, 5))
+    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+# Diverging Imprint colormap: matte-red (negative) -> theme-adaptive midpoint (zero) -> blue (positive)
+_half_stops = 16
+diverging_colormap = [_lerp_hex("#AE3030", PAGE_BG, i / _half_stops) for i in range(_half_stops)] + [
+    _lerp_hex(PAGE_BG, "#4467A3", i / _half_stops) for i in range(_half_stops + 1)
+]
 
 # Create correlation heatmap
 chart = CorrelationHeatmap(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
     title="heatmap-correlation · pygal · anyplot.ai",
     matrix_data=matrix_data,
@@ -294,12 +320,12 @@ chart = CorrelationHeatmap(
     show_values=True,
     show_legend=False,
     margin=120,
-    margin_top=200,
+    margin_top=60,
     margin_bottom=100,
     show_x_labels=False,
     show_y_labels=False,
-    x_axis_title="Business Metrics",
-    y_axis_title="Business Metrics",
+    x_axis_title="Molecular Descriptors",
+    y_axis_title="Molecular Descriptors",
 )
 
 chart.add("", [0])
