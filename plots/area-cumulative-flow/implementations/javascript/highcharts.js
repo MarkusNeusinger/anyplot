@@ -7,12 +7,13 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Kanban delivery pipeline: cumulative item counts per stage over 90 days.
-// Testing's own exit rate (into Done) is undersized relative to its inflow
-// from Development, so its band widens over time — a bottleneck a CFD is
-// meant to surface.
+// Each stage's exit capacity is a little tighter than the one before it, so
+// every band keeps a readable minimum WIP; Testing's exit rate (into Done) is
+// the most undersized relative to its inflow, so its band widens the most
+// over time — the dominant bottleneck a CFD is meant to surface.
 const DAYS = 90;
 const STAGES = ["Backlog", "Analysis", "Development", "Testing", "Done"];
-const CAPACITIES = [Infinity, 11, 9, 9, 6];
+const CAPACITIES = [Infinity, 11, 10, 9, 6];
 const DAY_MS = 24 * 3600 * 1000;
 const START = Date.UTC(2026, 0, 1);
 
@@ -24,7 +25,7 @@ function lcg() {
 
 const cumulative = STAGES.map(() => new Array(DAYS).fill(0));
 for (let day = 0; day < DAYS; day++) {
-  const arrivals = 8 + Math.round(lcg() * 6);
+  const arrivals = 8 + Math.round(lcg() * 8);
   cumulative[0][day] = (day === 0 ? 0 : cumulative[0][day - 1]) + arrivals;
 
   for (let stage = 1; stage < STAGES.length; stage++) {
@@ -43,6 +44,11 @@ for (let day = 0; day < DAYS; day++) {
 const wip = STAGES.map((name, i) =>
   cumulative[i].map((value, day) => value - (i + 1 < STAGES.length ? cumulative[i + 1][day] : 0))
 );
+
+// Mark the day the Testing WIP band first crosses 100 items — the point
+// where the bottleneck stops being a minor lag and becomes a visible pileup.
+const bottleneckDay = wip[3].findIndex((value) => value >= 100);
+const bottleneckX = START + bottleneckDay * DAY_MS;
 
 // Highcharts stacks the *last* series in the array against the axis, so
 // natural workflow order (Backlog first) already puts Backlog's band at the
@@ -68,7 +74,12 @@ Highcharts.chart("container", {
            style: { color: t.ink, fontSize: "22px", fontWeight: "600" } },
   xAxis: { type: "datetime", tickInterval: 14 * DAY_MS,
            lineColor: t.inkSoft, tickColor: t.inkSoft,
-           labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
+           labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+           plotLines: [{ value: bottleneckX, color: t.inkSoft, width: 1.5, dashStyle: "Dash",
+                          zIndex: 5,
+                          label: { text: "Testing backlog tops 100 items", rotation: 0,
+                                   x: 6, y: 14,
+                                   style: { color: t.inkSoft, fontSize: "12px" } } }] },
   yAxis: { title: { text: "Cumulative Items", style: { color: t.inkSoft, fontSize: "16px" } },
            min: 0, gridLineColor: t.grid,
            labels: { style: { color: t.inkSoft, fontSize: "14px" } } },
