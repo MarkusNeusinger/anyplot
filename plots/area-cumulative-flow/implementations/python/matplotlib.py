@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 91/100 | Created: 2026-05-07
@@ -25,7 +25,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito positions 1-5 (bottom to top: Done → Backlog)
 COLORS = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030"]
@@ -74,8 +73,13 @@ c_development = np.maximum(development - testing, 0).astype(float)
 c_analysis = np.maximum(analysis - development, 0).astype(float)
 c_backlog = np.maximum(backlog - analysis, 0).astype(float)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Peak of the Testing bottleneck band — drives the callout annotation below
+peak_idx = int(np.argmax(c_testing))
+peak_wip = int(round(c_testing[peak_idx]))
+peak_top = float(testing[peak_idx])
+
+# Plot — canonical 3200x1800 landscape canvas (figsize x dpi = 8 x 400, 4.5 x 400)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 stage_labels = ["Done", "Testing", "Development", "Analysis", "Backlog"]
@@ -85,12 +89,12 @@ ax.stackplot(
 )
 
 # Style
-ax.set_xlabel("Date", fontsize=20, color=INK)
-ax.set_ylabel("Cumulative Items", fontsize=20, color=INK)
+ax.set_xlabel("Date", fontsize=10, color=INK)
+ax.set_ylabel("Cumulative Items", fontsize=10, color=INK)
 ax.set_title(
-    "Sprint Kanban Board · area-cumulative-flow · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK
+    "Sprint Kanban Board · area-cumulative-flow · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK
 )
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, length=0)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, length=0)
 
 # X-axis: bi-weekly date ticks
 ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
@@ -107,30 +111,34 @@ for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
 # Grid (y-axis only, subtle)
-ax.yaxis.grid(True, alpha=0.13, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.18, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
 # Shaded region highlighting Testing bottleneck buildup (days 15–60)
 ax.axvspan(dates[15], dates[60], alpha=0.07, color=COLORS[1], zorder=0)
-mid_bottleneck = dates[15] + (dates[60] - dates[15]) / 2
+
+# Arrow-annotated callout quantifying the bottleneck peak, with an elevated box
+# for typographic hierarchy beyond the title/axis/tick levels
 ax.annotate(
-    "Testing Bottleneck",
-    xy=(mid_bottleneck, 0.52),
-    xycoords=("data", "axes fraction"),
-    ha="center",
+    f"Testing WIP peaks at {peak_wip} items",
+    xy=(dates[peak_idx], peak_top),
+    xytext=(dates[min(peak_idx + 14, len(dates) - 1)], peak_top + 45),
+    ha="left",
     va="center",
-    fontsize=15,
-    color=INK_MUTED,
+    fontsize=9,
+    color=INK_SOFT,
     style="italic",
+    arrowprops={"arrowstyle": "-|>", "color": INK_SOFT, "lw": 1.2, "shrinkA": 2, "shrinkB": 4},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.92, "boxstyle": "round,pad=0.35"},
 )
 
 # Legend — reversed so Backlog appears at top, matching visual stacking order
 handles, labels = ax.get_legend_handles_labels()
-leg = ax.legend(handles[::-1], labels[::-1], loc="upper left", fontsize=16, framealpha=0.92)
+leg = ax.legend(handles[::-1], labels[::-1], loc="upper left", fontsize=8, framealpha=0.92)
 leg.get_frame().set_facecolor(ELEVATED_BG)
 leg.get_frame().set_edgecolor(INK_SOFT)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
 _out = os.path.join(os.path.dirname(os.path.abspath(__file__)), f"plot-{THEME}.png")
-plt.savefig(_out, dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(_out, dpi=400, facecolor=PAGE_BG)  # bbox_inches MUST stay default (None) — see canvas contract
