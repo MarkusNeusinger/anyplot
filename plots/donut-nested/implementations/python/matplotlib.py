@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 86/100 | Updated: 2026-08-18
@@ -83,7 +83,7 @@ for wedge, dept, total in zip(wedges_inner, departments, dept_totals, strict=Tru
         f"{dept}\n${total}K",
         ha="center",
         va="center",
-        fontsize=11,
+        fontsize=12,
         fontweight="bold",
         color=INK,
         path_effects=halo,
@@ -94,7 +94,7 @@ for wedge, label, value in zip(wedges_outer, outer_labels, outer_values, strict=
     if value >= 100:  # only label segments >= $100K to avoid clutter
         angle = np.radians((wedge.theta2 + wedge.theta1) / 2)
         x, y = 0.82 * np.cos(angle), 0.82 * np.sin(angle)
-        ax.text(x, y, f"{label}\n${value}K", ha="center", va="center", fontsize=7.5, color=INK, path_effects=halo)
+        ax.text(x, y, f"{label}\n${value}K", ha="center", va="center", fontsize=8, color=INK, path_effects=halo)
 
 # Custom legend: every department + category pair, colored by parent hue
 legend_elements = [
@@ -125,6 +125,7 @@ fig.suptitle(
 
 ax.set_aspect("equal")
 # Reserve room on the right for the legend instead of bbox_inches="tight" (which drifts canvas size).
-# Height span matches the width span so aspect="equal" doesn't pad extra whitespace top/bottom.
-fig.subplots_adjust(left=0.02, right=0.60, top=0.88, bottom=0.30)
+# Height span matches the width span (both 0.64) and is centered vertically (top/bottom margins
+# both 0.18) so aspect="equal" doesn't leave an asymmetric dead zone below the donut.
+fig.subplots_adjust(left=0.02, right=0.66, top=0.82, bottom=0.18)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
