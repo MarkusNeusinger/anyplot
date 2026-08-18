@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -145,7 +145,10 @@ fig = go.Figure(
 )
 
 # Highlight strong pairs (|r| >= 0.7, off-diagonal) with an outlined cell border —
-# a real data-driven emphasis, not a simulated interaction.
+# a real data-driven emphasis, not a simulated interaction. The stroke color
+# contrasts against PAGE_BG (the xgap/ygap color the border sits on top of), not
+# against the cell fill — otherwise a fill that interpolates near PAGE_BG makes
+# the border blend into the surrounding gap and disappear.
 for i in range(n_vars):
     for j in range(i):
         r = correlation_matrix[i, j]
@@ -156,7 +159,7 @@ for i in range(n_vars):
                 x1=j + 0.5,
                 y0=i - 0.5,
                 y1=i + 0.5,
-                line={"color": cell_text_color(r, mid_rgb), "width": 2.5},
+                line={"color": INK, "width": 2.5},
                 fillcolor="rgba(0,0,0,0)",
                 layer="above",
             )
