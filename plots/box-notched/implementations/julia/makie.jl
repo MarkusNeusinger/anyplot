@@ -1,7 +1,7 @@
 # anyplot.ai
 # box-notched: Notched Box Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 89/100 | Created: 2026-08-18
+# Quality: 93/100 | Created: 2026-08-18
 
 using CairoMakie
 using Colors

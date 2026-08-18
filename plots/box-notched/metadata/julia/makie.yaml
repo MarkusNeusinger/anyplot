@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: box-notched
 created: '2026-08-18T05:07:52Z'
-updated: '2026-08-18T05:12:52Z'
+updated: '2026-08-18T05:28:48Z'
 generated_by: claude-sonnet
 workflow_run: 32100803130
 issue: 2019
@@ -12,51 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notch
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correct notch feature (show_notch=true, notchwidth=0.5) matching the spec exactly,
-    using Makie's native statistical box-plot support rather than a manual workaround
-  - Full theme-adaptive chrome architecture (PAGE_BG/INK/INK_SOFT tokens) correctly
-    threaded through Figure and Axis in both light and dark renders — no dark-on-dark
-    or light-on-light artifacts
-  - 'Correct Imprint palette usage: first series is #009E73, subsequent categories
-    follow canonical order 2-5, identical data colors across both themes'
-  - Realistic, neutral cognitive-science reaction-time dataset with genuine per-condition
-    variation in mean/std, producing a natural mix of overlapping and non-overlapping
-    notches — directly demonstrates the notch-reliability concept called out in the
-    spec
-  - 'Clean KISS-structured code: single flat script, explicit Random.seed!(42), no
-    unused imports, no fake functionality'
-  - Outliers rendered as individual points beyond the whiskers per spec requirement,
-    visible in both themes
+  - Correct, idiomatic use of Makie's boxplot! notch parameters (show_notch, notchwidth,
+    whiskerwidth, mediancolor) producing crisp, clearly visible notches in both themes
+  - Distinctive bracket! annotation directly implements the spec's 'quick visual hypothesis
+    testing' use case — it derives the notch-overlap comparison from the actual sampled
+    per-group medians/IQRs rather than hard-coding a claim
+  - 'Full theme-adaptive chrome: identical Imprint data colors between light/dark
+    renders, correct backgrounds (#FAF8F1 / #1A1A17), and INK/INK_SOFT tokens correctly
+    threaded through title, axis labels, ticks, grid, spines, and the bracket callout'
+  - Clean, KISS, reproducible code — single Random.seed!(42), only used imports (CairoMakie,
+    Colors, Random, Statistics), no functions/classes — saved at the canonical 1600x900
+    @ px_per_unit=2 landscape canvas
+  - 'All required box-plot elements present per spec: median, quartile box, 1.5*IQR
+    whiskers, outliers as individual points with subtle ink strokes, five categories
+    each in canonical Imprint palette order (green/lavender/blue/ochre/red)'
   weaknesses:
-  - 'Y-axis tick/grid coverage is sparse: labeled ticks only at 400/500/600 ms, while
-    box whiskers and outliers extend down to roughly 340-350 ms, leaving the bottom
-    ~15-20% of the visible data range without any reference gridline. Add a tick step
-    of 50 (or an explicit tick at the data minimum) so the lower boxes are as easy
-    to read precisely as the upper ones.'
-  - Design storytelling is present only implicitly through color and notch position.
-    Since the spec's whole point is 'quick visual hypothesis testing,' consider a
-    small callout or subtitle noting which condition's notch does not overlap with
-    Baseline (Distraction) to make the statistical takeaway immediate rather than
-    requiring the viewer to compare notch bands themselves.
-  - 'Library Mastery is solid but generic: a single boxplot! call with sensible keyword
-    arguments. Consider leveraging something more distinctly Makie (e.g. Makie.Theme()
-    for the token set, or a custom Legend/Colorbar) to differentiate from what any
-    other library''s notched-boxplot support could produce with a syntax swap.'
+  - Title text occupies only ~20-25% of the plot width for this 5-category layout,
+    on the small side for a title's visual hierarchy role — could raise titlesize
+    slightly for more presence (not a hard violation, well within overflow limits)
+  - Styling customization mostly leans on palette + notch/whisker/outlier stroke params;
+    no extra refinement layer (e.g. a sample-size note 'n=50/group', or a second bracket
+    color to distinguish it from the axis spines)
+  - Only the largest-gap comparison (Combined Cue vs Baseline) gets the bracket callout
+    even though Distraction's notch also clears Baseline's — a second bracket or an
+    'and 1 more' note would make the significance story more complete
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "box-notched · julia · makie · anyplot.ai" in bold dark ink, centered above the plot. Axis labels "Condition" (x) and "Reaction Time (ms)" (y) in dark ink; tick labels (category names and 400/500/600 ms) in a softer dark gray. Thin horizontal grid lines at 15% opacity. Left and bottom spines visible in soft gray; top and right spines removed.
-      Data: Five notched boxes — Baseline (green), Visual Cue (lavender), Auditory Cue (blue), Combined Cue (ochre), Distraction (red) — each with visible median line, IQR box, notch waist, whiskers, and outlier points (one green dot above Baseline, one red dot below Distraction). First series confirmed #009E73.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold black title "box-notched · julia · makie · anyplot.ai" centered at top, fully legible.
+        Axis labels "Condition" (x) and "Reaction Time (ms)" (y) in dark ink, clearly readable.
+        Tick labels (condition names, y-axis ms values) in medium-grey ink-soft, legible.
+        Subtle horizontal grid lines (y-axis only) at low opacity, visible but not competing with data.
+        Top/right spines removed; left/bottom spines in soft grey.
+        Bracket annotation near the top reads "Combined Cue notch clears Baseline — medians differ" in dark ink with grey bracket lines — fully readable.
+      Data: Five notched boxes in canonical Imprint order — Baseline (#009E73 green), Visual Cue (lavender), Auditory Cue (blue), Combined Cue (ochre), Distraction (matte red). Black median lines, black box/whisker strokes, individual outlier points (green dot above Baseline, red dot below Distraction) with thin ink strokes. Notch "hourglass" pinch is clearly visible on every box.
+      Legibility verdict: PASS — no light-on-light or illegible text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis labels now rendered in light/near-white ink; tick labels in a lighter soft gray. Grid lines flipped to a light-on-dark 15%-opacity tone. Spines in soft light gray, top/right still removed.
-      Data: Same five category colors (green, lavender, blue, ochre, red) in identical hues to the light render — only the surrounding chrome flipped, confirming theme-adaptive design. Notch shapes, whiskers, and outlier points all still clearly visible.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (title, axis labels, and tick labels are all rendered in light ink, contrasting cleanly with the near-black surface).
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all flip to light tones (white title/labels, light-grey ticks) and remain fully readable against the dark background. Grid lines are faint light-grey at low opacity, still visible.
+      Data: Same five box colors as the light render (green/lavender/blue/ochre/red) — Imprint categorical hues confirmed identical between themes, only the chrome (backgrounds, text, grid, spines, median-line color, bracket color) flipped to the dark-theme tokens (median lines and bracket text are now white/light instead of black).
+      Legibility verdict: PASS — no dark-on-dark failures; every text element is clearly legible against the near-black surface, including the bracket annotation text.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,50 +66,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; minor deduction
-          because sparse y-axis tick coverage below 400ms makes the lower half of
-          the range harder to read precisely
+        comment: All text readable in both themes; title comparatively small relative
+          to plot width for its hierarchy role
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No collisions between text, boxes, outliers, or the bracket annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Box widths, notches, whiskers, and outlier markers all clearly visible
-          and well-sized for n=50 per group
+          at n=50/group density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette colors are CVD-safe, categories also distinguished
-          by x-axis position (redundant encoding)
+        comment: Ink strokes on boxes/outliers add contrast; no red-green used as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing clipped
+        comment: Correct 3200x1800 canvas, generous margins, nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (ms), x-axis is descriptive
+        comment: Descriptive axis labels with units (Reaction Time (ms))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order 2-5, identical across themes,
-          correct theme-adaptive chrome and backgrounds'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -118,23 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful theme-token architecture and palette choice, clearly above
-          library defaults, but not yet publication/FiveThirtyEight-level
+        comment: Professional polish via palette + stroke styling, but stays close
+          to a conventional notched-boxplot look
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, spines removed on top/right, generous whitespace,
-          refined stroke details on boxes
+        comment: Spines trimmed, grid subtle, generous whitespace, clean box/outlier
+          strokes
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Notch overlap pattern visually communicates which groups differ significantly
-          (Distraction clearly separate), but no explicit annotation calling this
-          out
+        comment: Bracket callout derived from actual notch-overlap data directly tells
+          the 'medians differ' story the spec calls for
     spec_compliance:
       score: 15
       max: 15
@@ -150,21 +147,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Notches, median/quartiles/whiskers at 1.5*IQR, outliers as points,
-          per-category colors all present
+        comment: Notches, median, quartiles, 1.5*IQR whiskers, outliers, per-category
+          color all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Condition on x, reaction time on y, all groups visible
+        comment: x=condition, y=reaction time (ms), full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed since x-axis
-          labels already identify categories
+        comment: Title matches 'box-notched · julia · makie · anyplot.ai'; legend
+          correctly omitted since x-axis ticks already label categories
     data_quality:
       score: 15
       max: 15
@@ -174,7 +171,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Outliers present, varying spreads and medians across the five conditions
+        comment: All box-plot elements shown including notches and outliers
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -186,8 +183,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Reaction times (390-480ms mean, 30-50ms std) are realistic for human
-          RT paradigms
+        comment: Realistic ms values, n=50/group within spec's recommended >20 range
     code_quality:
       score: 10
       max: 10
@@ -197,7 +193,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,41 +205,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used
+        comment: Only CairoMakie, Colors, Random, Statistics — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity, no fake functionality
+        comment: No fake UI; notch/bracket math is genuine, derived from the sampled
+          data
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
+        comment: Saves plot-$(THEME).png with px_per_unit=2
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of boxplot! notch/whisker/outlier kwargs and theme-adaptive
+          Axis kwargs
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level boxplot! usage with theme-adaptive Axis kwargs,
-          but a fairly standard single-call structure
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses Makie's native notch support, but notched box plots are also
-          easily achieved in other libraries — no truly Makie-unique feature leveraged
-  verdict: REJECTED
+        comment: Uses Makie's bracket! primitive for a data-driven significance callout
+          — distinctive but a single technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
