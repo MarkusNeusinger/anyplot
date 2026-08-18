@@ -705,8 +705,10 @@ class TestSeoProxyRouter:
         assert track.call_args.args[1] == "/bar-basic"
 
     def test_seo_proxy_home_records_root(self, client: TestClient) -> None:
+        """The proxy root maps to "/", and the hook fires exactly once per request."""
         with patch(DB_CONFIG_PATCH, return_value=False), patch("api.routers.seo.track_bot_fetch") as track:
             client.get("/seo-proxy/", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
+        track.assert_called_once()
         assert track.call_args.args[1] == "/"
 
     def test_robots_and_sitemap_are_not_page_reads(self, client: TestClient) -> None:

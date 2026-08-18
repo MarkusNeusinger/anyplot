@@ -399,6 +399,30 @@ class TestTrackBotFetch:
             }
 
     @pytest.mark.asyncio
+    async def test_resolves_a_forwarded_for_chain_to_one_address(self) -> None:
+        """Multiple proxies append to XFF, so the raw header is not an IP.
+
+        Plausible needs a single address for geolocation, and the rightmost
+        entry is the one a client cannot forge — the same rule the feedback
+        rate limiter uses, which is why both now share one resolver.
+        """
+        request = MagicMock()
+        request.headers = {
+            "user-agent": "Mozilla/5.0 (compatible; Claude-User/1.0)",
+            "x-forwarded-for": "203.0.113.7, 198.51.100.2, 10.0.0.9",
+        }
+        request.client.host = "127.0.0.1"
+
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_bot_fetch(request, "/box-basic")
+            await asyncio.sleep(0)
+
+            assert mock_client.post.call_args[1]["headers"]["X-Forwarded-For"] == "10.0.0.9"
+
+    @pytest.mark.asyncio
     async def test_sends_nothing_for_a_human(self) -> None:
         with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
             mock_client = AsyncMock()
