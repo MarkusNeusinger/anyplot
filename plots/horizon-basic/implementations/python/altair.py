@@ -1,7 +1,7 @@
 """ anyplot.ai
 horizon-basic: Horizon Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-07
+Library: altair 6.2.2 | Python 3.13.15
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image, ImageColor
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -17,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data: Generate server metrics over 24 hours for multiple servers
+# Data: server metrics over 24 hours at 15-minute resolution
 np.random.seed(42)
 
 n_points = 96
@@ -45,74 +46,78 @@ for server in servers:
 
 df = pd.DataFrame(data_list)
 
-# Horizon chart parameters
+# Horizon bands: fold magnitude into 3 mirrored intensity bands per polarity.
+# band_height is computed per series (not globally) so low-variance series
+# like Cache still span the full Low/Medium/High range instead of being
+# flattened into "Low" by a shared global max.
 n_bands = 3
-band_height = df["value"].abs().max() / n_bands
-
-# Create band data with human-readable labels
-band_data = []
+FIXED_BAND_HEIGHT = 1.0
 intensity_labels = {0: "Low", 1: "Medium", 2: "High"}
 
-for _, row in df.iterrows():
-    val = row["value"]
-    for band in range(n_bands):
-        band_min = band * band_height
-        if val >= 0:
-            band_val = max(0, min(val - band_min, band_height))
+band_data = []
+for _series, group in df.groupby("series"):
+    local_band_height = group["value"].abs().max() / n_bands
+    for _, row in group.iterrows():
+        val = row["value"]
+        direction = "positive" if val >= 0 else "negative"
+        abs_val = abs(val)
+        for band in range(n_bands):
+            band_min = band * local_band_height
+            band_frac = max(0.0, min(abs_val - band_min, local_band_height) / local_band_height)
             band_data.append(
                 {
                     "date": row["date"],
                     "series": row["series"],
                     "band": band,
-                    "value": band_val,
-                    "direction": "positive",
-                    "label": f"Positive {intensity_labels[band]}",
-                }
-            )
-        else:
-            abs_val = abs(val)
-            band_val = max(0, min(abs_val - band_min, band_height))
-            band_data.append(
-                {
-                    "date": row["date"],
-                    "series": row["series"],
-                    "band": band,
-                    "value": band_val,
-                    "direction": "negative",
-                    "label": f"Negative {intensity_labels[band]}",
+                    "value": band_frac * FIXED_BAND_HEIGHT,
+                    "label": f"{direction.capitalize()} {intensity_labels[band]}",
                 }
             )
 
 band_df = pd.DataFrame(band_data)
 
-# Colorblind-safe diverging colors using BrBG-inspired palette
-# Positive: shades of blue-green, Negative: shades of brown/red
-positive_colors = ["#d4e9f0", "#5ba3c0", "#1d6a8e"]
-negative_colors = ["#f0d4a8", "#d4944f", "#8b5a2b"]
 
-band_df["color_label"] = band_df["label"]
+def _lerp_hex(c1, c2, t):
+    """Linear-interpolate two hex colors — builds the imprint_div ramp below."""
+    r1, g1, b1 = ImageColor.getrgb(c1)
+    r2, g2, b2 = ImageColor.getrgb(c2)
+    return "#{:02X}{:02X}{:02X}".format(round(r1 + (r2 - r1) * t), round(g1 + (g2 - g1) * t), round(b1 + (b2 - b1) * t))
+
+
+# imprint_div gradient: anchors #AE3030 red / #4467A3 blue, theme-adaptive
+# midpoint (PAGE_BG). The 3 intensity steps per polarity are interpolated
+# from the midpoint toward the anchor, so Low/Medium/High are built from the
+# documented gradient rather than hand-picked hexes.
+positive_colors = [_lerp_hex(PAGE_BG, "#4467A3", (i + 1) / n_bands) for i in range(n_bands)]
+negative_colors = [_lerp_hex(PAGE_BG, "#AE3030", (i + 1) / n_bands) for i in range(n_bands)]
 
 color_scale = alt.Scale(
     domain=["Positive Low", "Positive Medium", "Positive High", "Negative Low", "Negative Medium", "Negative High"],
     range=positive_colors + negative_colors,
 )
 
-# Create the horizon chart
+# Canvas — landscape inner view sized so vl-convert's title/legend/facet-header
+# padding still lands the saved PNG within 3200x1800 at scale_factor=4.0.
+VIEW_W = 600
+ROW_H = 44
+
 chart = (
     alt.Chart(band_df)
-    .mark_area()
+    .mark_area(clip=True)
     .encode(
-        x=alt.X("date:T", title="Time", axis=alt.Axis(format="%H:%M", labelFontSize=18, titleFontSize=22)),
-        y=alt.Y("value:Q", title=None, axis=None, scale=alt.Scale(domain=[0, band_height])),
+        x=alt.X(
+            "date:T", title="Time (15-min intervals)", axis=alt.Axis(format="%H:%M", labelFontSize=10, titleFontSize=12)
+        ),
+        y=alt.Y("value:Q", title=None, axis=None, stack=None, scale=alt.Scale(domain=[0, FIXED_BAND_HEIGHT])),
         color=alt.Color(
-            "color_label:N",
+            "label:N",
             scale=color_scale,
             legend=alt.Legend(
                 title="Intensity",
                 orient="right",
-                titleFontSize=18,
-                labelFontSize=16,
-                symbolSize=200,
+                titleFontSize=10,
+                labelFontSize=10,
+                symbolSize=100,
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
                 labelColor=INK_SOFT,
@@ -122,23 +127,40 @@ chart = (
         tooltip=["date:T", "series:N", "value:Q"],
         order=alt.Order("band:O"),
     )
-    .properties(width=1400, height=80)
+    .properties(width=VIEW_W, height=ROW_H)
     .facet(
         row=alt.Row(
             "series:N",
             title=None,
-            header=alt.Header(labelFontSize=16, labelAngle=0, labelAlign="left", labelPadding=10),
+            header=alt.Header(labelFontSize=10, labelAngle=0, labelAlign="left", labelPadding=8, labelColor=INK),
         )
     )
     .properties(
-        title=alt.Title("horizon-basic · altair · anyplot.ai", fontSize=28, anchor="start", offset=20, color=INK)
+        title=alt.Title("horizon-basic · python · altair · anyplot.ai", fontSize=16, anchor="start", offset=12),
+        background=PAGE_BG,
     )
-    .configure_facet(spacing=5)
+    .configure_facet(spacing=4)
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
     )
+    .configure_title(color=INK)
 )
 
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to the canonical landscape target — never crop (would clip text).
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
