@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: bar-stacked-percent
+created: '2026-08-18T14:53:57Z'
+updated: '2026-08-18T15:07:46Z'
+generated_by: claude-sonnet
+workflow_run: 32150689182
+issue: 2008
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct 100% stacked column chart via stacking: "percent", precisely matching
+    the bar-stacked-percent spec type; all six years sum to exactly 100%'
+  - 'First series correctly uses brand green #009E73; full Imprint categorical palette
+    applied in canonical order across all 4 components, identical between light and
+    dark renders'
+  - 'Previous-attempt weaknesses are all addressed: tooltip is now enabled (shared,
+    with a custom formatter showing both percentage and underlying value) instead
+    of being disabled outright; yAxis now has lineColor/tickColor matching xAxis;
+    column segments gained borderRadius + borderColor separation for extra polish'
+  - Thoughtful MIN_LABEL_SHARE=13 threshold hides percentage labels only on the thin
+    Google Cloud segment to avoid label crowding, while the legend still identifies
+    it
+  - Theme-adaptive chrome correctly threaded through title/axis/legend/grid/tooltip
+    tokens; both renders are clean with no dark-on-dark or light-on-light issues
+  - Clean KISS code structure, deterministic hard-coded data, correct mount-node/animation-false
+    contract compliance (chart.animation, plotOptions.series.animation both false)
+  weaknesses:
+  - Design excellence is still fairly close to the library-prompt skeleton — beyond
+    the new border/radius touch there is limited additional distinctive polish (e.g.
+    no subtle background banding, no emphasis treatment on a focal series) to elevate
+    it past a solid-but-standard baseline
+  - Data storytelling is neutral rather than guided — all four series read with equal
+    visual weight; a deliberate emphasis (e.g. slightly bolder stroke or annotation
+    on the AWS decline / Other Providers rise) would sharpen the narrative
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-stacked-percent · javascript · highcharts · anyplot.ai" in bold dark ink, centered top. Y-axis labeled "Market Share (%)" with 0%-100% ticks at 20% intervals; X-axis labeled "Year" with categories 2019-2024. Subtle horizontal gridlines only, both axis lines visible (x and y now symmetric). Legend at bottom with circular swatches for AWS, Microsoft Azure, Google Cloud, Other Providers. All chrome text is dark ink on the light background and clearly legible.
+      Data: Six columns, each stacked to exactly 100%, bottom-to-top: Other Providers (ochre), Google Cloud (blue), Microsoft Azure (lavender), AWS (green, brand #009E73). A thin page-background-colored border now separates each segment for extra visual clarity. White data labels with a dark text-outline show rounded percentages inside segments ≥13% share; the thin Google Cloud band (8-12%) is intentionally left unlabeled to avoid crowding but is still identified via the legend and color.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and legend layout, now rendered in light ink/off-white text against the dark background. Gridlines and both axis lines are faint and visible without competing with the data. Legend swatches unchanged.
+      Data: Colors are identical to the light render (AWS green, Azure lavender, Google Cloud blue, Other Providers ochre) — only the chrome (background, text, grid, segment border color) flipped as expected (segment border uses t.pageBg so it's near-black here vs off-white in light). White data labels with dark outline remain legible against all four segment colors; no dark-on-dark or light-on-light failures observed anywhere (title, ticks, legend, or data labels).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, axis titles 16px, ticks/legend 14px);
+          readable in both themes; white data labels with textOutline stay legible
+          on every segment color
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar segments sized appropriately for 6 categories x 4 series; thin
+          Google Cloud band still visible via color even without a label
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, 4 series well within the color-alone-is-enough
+          range, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins, no clipping/overflow, title well within bounds,
+          balanced axis labels, canvas dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Market Share (%)" carries units; "Year" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; canonical Imprint order for all 4 components;
+          both renders theme-correct backgrounds'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Improved over the prior attempt with segment border/radius separation,
+          but still close to the standard library-prompt skeleton
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, symmetric axis lines (yAxis lineColor fix
+          applied), no boxed legend, deliberate bar padding and segment borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: MIN_LABEL_SHARE threshold intentionally declutters the smallest segment;
+          no additional focal-point emphasis across series
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'stacking: "percent" column chart — correct type'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, clear legend, consistent component order, percentage
+          labels where space permits
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = year categories, Y = normalized percent share, all data represented,
+          each year sums to 100%
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows composition, trend across 6 years, all 4 components, labels,
+          legend
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral cloud-market-share narrative, explicitly noted
+          as illustrative in comments
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentages sum to 100 per year with sensible magnitude shifts over
+          time
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic arrays, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses the global Highcharts object as required
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, sensible formatter functions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled both places, current
+          Highcharts API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic percent-stacking column config, dataLabels.formatter for
+          conditional labels
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Shared tooltip with custom header/point formatter surfacing both
+          percentage and underlying value — now a genuine use of a distinctive Highcharts
+          interactive strength instead of being disabled
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - edge-highlighting
