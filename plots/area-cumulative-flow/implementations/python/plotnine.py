@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 90/100 | Created: 2026-05-07
+Library: plotnine | Python
 """
 
 import os
@@ -28,6 +27,7 @@ from plotnine import (
     labs,
     scale_fill_manual,
     scale_x_datetime,
+    scale_y_continuous,
     theme,
 )
 
@@ -92,41 +92,44 @@ idx = 55
 x_annot = dates[idx]
 y_annot = int((cum_testing[idx] + cum_dev[idx]) / 2)
 
+# Title — canonical format, well under the 67-char baseline so no fontsize scaling needed
+title = "area-cumulative-flow · python · plotnine · anyplot.ai"
+
 # Plot
 anyplot_theme = theme(
-    figure_size=(16, 9),
+    figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
     panel_grid_major_x=element_blank(),
     panel_grid_major_y=element_line(color=INK_SOFT, size=0.3, alpha=0.20),
     panel_grid_minor=element_blank(),
     panel_border=element_blank(),
-    axis_title=element_text(color=INK, size=20),
-    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_title=element_text(color=INK, size=10),
+    axis_text=element_text(color=INK_SOFT, size=8),
     # L-shaped frame: bottom x-axis line and left y-axis line only
     axis_line_x=element_line(color=INK_SOFT),
     axis_line_y=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=24, face="bold"),
+    plot_title=element_text(color=INK, size=12, face="bold"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-    legend_text=element_text(color=INK_SOFT, size=16),
-    # Larger legend title for visual hierarchy within the legend
-    legend_title=element_text(color=INK, size=18, face="bold"),
+    legend_text=element_text(color=INK_SOFT, size=8),
+    # Slightly larger legend title for visual hierarchy within the legend
+    legend_title=element_text(color=INK, size=9, face="bold"),
     legend_position="right",
-    # Breathing room between legend and plot area
-    legend_box_spacing=0.4,
+    # Tight breathing room between plot area and legend — avoids the excess
+    # right-side whitespace flagged in the previous review
+    legend_box_spacing=0.02,
+    plot_margin=0.02,
 )
 
 plot = (
     ggplot(df, aes(x="date", y="wip", fill="stage"))
     + geom_area(position="stack", alpha=0.88, color=PAGE_BG, size=0.3)
     + scale_fill_manual(values=stage_colors)
-    + scale_x_datetime(date_labels="%b %d", date_breaks="2 weeks")
-    + labs(
-        x="Date",
-        y="Cumulative Items",
-        fill="Stage",
-        title="Sprint Delivery · area-cumulative-flow · plotnine · anyplot.ai",
-    )
+    # date axis hugs the data range — no leading/trailing padding
+    + scale_x_datetime(date_labels="%b %d", date_breaks="2 weeks", expand=(0, 0))
+    # y axis: no padding at the baseline, a touch of headroom above the stack top
+    + scale_y_continuous(expand=(0, 0, 0.04, 0))
+    + labs(x="Date", y="Cumulative Items", fill="Stage", title=title)
     # Callout draws the viewer's eye to the Development bottleneck
     + annotate(
         "text",
@@ -134,7 +137,7 @@ plot = (
         y=y_annot,
         label="← bottleneck",
         color="#FFFFFF",
-        size=12,
+        size=3.5,
         ha="left",
         va="center",
         fontstyle="italic",
@@ -143,4 +146,4 @@ plot = (
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9, units="in", verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
