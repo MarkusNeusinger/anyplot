@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: pending | Updated: 2026-08-18
+Library: seaborn 0.13.2 | Python 3.13.15
+Quality: 91/100 | Updated: 2026-08-18
 """
 
 import os
