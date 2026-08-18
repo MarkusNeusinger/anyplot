@@ -1,7 +1,7 @@
 """ anyplot.ai
 curve-dose-response: Pharmacological Dose-Response Curve
-Library: pygal 3.1.3 | Python 3.13.14
-Quality: 91/100 | Updated: 2026-06-24
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 94/100 | Updated: 2026-08-17
 """
 
 import os
@@ -128,7 +128,7 @@ chart = pygal.XY(
     show_x_guides=False,
     show_y_guides=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=3,
     legend_box_size=28,
     x_label_rotation=0,
     truncate_legend=-1,
@@ -145,13 +145,13 @@ chart.y_labels = [0, 25, 50, 75, 100]
 
 # Fitted curves (solid, prominent — primary data layer)
 chart.add(
-    f"Compound A  EC₅₀={ec50_a:.1e} M",
+    f"Compound A  EC₅₀={ec50_a:.1e} M, Hill={hill_a:.1f}",
     list(zip(log_smooth.tolist(), fit_a.tolist(), strict=True)),
     show_dots=False,
     stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},
 )
 chart.add(
-    f"Compound B  EC₅₀={ec50_b:.1e} M",
+    f"Compound B  EC₅₀={ec50_b:.1e} M, Hill={hill_b:.1f}",
     list(zip(log_smooth.tolist(), fit_b.tolist(), strict=True)),
     show_dots=False,
     stroke_style={"width": 8, "linecap": "round", "linejoin": "round"},

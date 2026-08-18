@@ -1,7 +1,7 @@
 """ anyplot.ai
 radar-multi: Multi-Series Radar Chart
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-07
+Library: altair 6.2.2 | Python 3.13.15
+Quality: 90/100 | Updated: 2026-08-17
 """
 
 import importlib.util
@@ -10,6 +10,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Explicitly import altair from site-packages to avoid shadowing
@@ -32,7 +33,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series ALWAYS #009E73)
+# Imprint palette (first series ALWAYS #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data: Product comparison across key attributes
@@ -114,16 +115,36 @@ value_label_df = pd.DataFrame(value_label_records)
 series_list = ["Product A", "Product B", "Product C"]
 color_scale = alt.Scale(domain=series_list, range=IMPRINT)
 
-# Chart dimensions for square output (base size with 3x scale factor)
-chart_width = 1600
-chart_height = 1600
+# Domain for axes, sized to the hexagon's own geometry (not a generic square):
+# label radius 125 reaches the full radius only at the top/bottom vertices
+# (Price/Support); the left/right vertices (Quality/Durability/Features/
+# Design, at +-30 deg off horizontal) only reach 125*cos(30deg). Deriving
+# separate x/y half-ranges from that geometry (plus a fixed text buffer)
+# keeps the margin tight and the view free of the dead space a flat +-160
+# square domain would leave on the hexagon's shorter horizontal axis.
+LABEL_R = 125
+BUFFER = 18
+x_half = LABEL_R * np.cos(np.pi / 6) + BUFFER
+y_half = LABEL_R + BUFFER
+axis_domain_x = [-x_half, x_half]
+axis_domain_y = [-y_half, y_half]
 
-# Domain for axes
-axis_domain = [-160, 160]
+# Chart dimensions — square inner view (see prompts/library/altair.md "Canvas"),
+# aspect-matched to x_half:y_half so the hexagon renders undistorted.
+chart_width = 480
+chart_height = round(chart_width * y_half / x_half)
 
 # Base encoding for x and y
-x_enc = alt.X("x:Q", scale=alt.Scale(domain=axis_domain), axis=None)
-y_enc = alt.Y("y:Q", scale=alt.Scale(domain=axis_domain), axis=None)
+x_enc = alt.X("x:Q", scale=alt.Scale(domain=axis_domain_x), axis=None)
+y_enc = alt.Y("y:Q", scale=alt.Scale(domain=axis_domain_y), axis=None)
+
+# Legend-bound selection: click a series to isolate it, click again to
+# release. A distinctly altair/vega-lite interaction — not reproducible in
+# a static PNG library — that shows up in the saved interactive HTML.
+legend_selection = alt.selection_point(fields=["series"], bind="legend")
+fill_opacity = alt.condition(legend_selection, alt.value(0.25), alt.value(0.05))
+stroke_opacity = alt.condition(legend_selection, alt.value(0.9), alt.value(0.15))
+point_opacity = alt.condition(legend_selection, alt.value(0.9), alt.value(0.15))
 
 # Grid hexagons
 grid_lines = (
@@ -142,34 +163,38 @@ spokes = (
 # Axis labels
 labels = (
     alt.Chart(label_df)
-    .mark_text(fontSize=22, fontWeight="bold")
+    .mark_text(fontSize=13, fontWeight="bold")
     .encode(x="x:Q", y="y:Q", text="category:N", color=alt.value(INK))
 )
 
 # Grid value labels
 value_labels = (
     alt.Chart(value_label_df)
-    .mark_text(fontSize=14, align="left", baseline="middle")
+    .mark_text(fontSize=10, align="left", baseline="middle")
     .encode(x="x:Q", y="y:Q", text="value:N", color=alt.value(INK_SOFT))
 )
 
-# Create filled polygons for each series
+# Create filled polygons for each series. `mark_area()` fills toward an
+# implicit baseline (it is designed for y=f(x) functions), so feeding it a
+# closed, non-monotonic radar-polygon path produces spurious fill spikes. A
+# `mark_line` with `interpolate="linear-closed"` instead closes the path as
+# a true polygon and fills it directly -- the standard Vega-Lite technique
+# for radar/spider charts.
 fill_layers = []
 for series_name, fill_color in zip(series_list, IMPRINT, strict=True):
     series_df = df[df["series"] == series_name].copy()
 
-    # Use mark_area for proper polygon fill
     fill_layer = (
         alt.Chart(series_df)
-        .mark_area(fillOpacity=0.25, opacity=0.25)
-        .encode(x=x_enc, y=y_enc, color=alt.value(fill_color), order="order:Q")
+        .mark_line(interpolate="linear-closed", fill=fill_color, fillOpacity=0.25, strokeWidth=0)
+        .encode(x=x_enc, y=y_enc, opacity=fill_opacity, order="order:Q")
     )
     fill_layers.append(fill_layer)
 
 # Polygon outlines
 polygon_outline = (
     alt.Chart(df)
-    .mark_line(strokeWidth=3, opacity=0.9)
+    .mark_line(strokeWidth=3.5)
     .encode(
         x=x_enc,
         y=y_enc,
@@ -178,18 +203,19 @@ polygon_outline = (
             scale=color_scale,
             legend=alt.Legend(
                 title="Series",
-                titleFontSize=20,
-                labelFontSize=18,
+                titleFontSize=10,
+                labelFontSize=10,
                 orient="right",
                 offset=10,
-                symbolSize=300,
-                symbolStrokeWidth=3,
+                symbolSize=120,
+                symbolStrokeWidth=2,
                 fillColor=ELEVATED_BG,
                 strokeColor=INK_SOFT,
                 labelColor=INK_SOFT,
                 titleColor=INK,
             ),
         ),
+        opacity=stroke_opacity,
         detail="series:N",
         order="order:Q",
     )
@@ -199,11 +225,12 @@ polygon_outline = (
 points_df = df[df["order"] < n_categories].copy()
 points = (
     alt.Chart(points_df)
-    .mark_circle(size=200, opacity=0.9)
+    .mark_circle(size=160)
     .encode(
         x=x_enc,
         y=y_enc,
         color=alt.Color("series:N", scale=color_scale, legend=None),
+        opacity=point_opacity,
         tooltip=["series:N", "category:N", "value:Q"],
     )
 )
@@ -211,18 +238,36 @@ points = (
 # Combine all layers
 all_layers = [grid_lines, spokes] + fill_layers + [polygon_outline, points, labels, value_labels]
 
+title_text = "radar-multi · python · altair · anyplot.ai"
+
 chart = (
     alt.layer(*all_layers)
+    .add_params(legend_selection)
     .properties(
         width=chart_width,
         height=chart_height,
         background=PAGE_BG,
-        title=alt.Title("radar-multi · altair · pyplots.ai", fontSize=28, anchor="middle", offset=20),
+        title=alt.Title(title_text, fontSize=16, anchor="middle", offset=20, color=INK),
     )
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_legend(strokeColor=INK_SOFT, padding=15, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save as PNG and HTML with theme suffix
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to the exact canonical target — never crop (see
+# prompts/library/altair.md "Canvas — hard rule, no deviation").
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. Shrink chart dims and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")

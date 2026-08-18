@@ -2,59 +2,56 @@ library: matplotlib
 language: python
 specification_id: ice-basic
 created: '2026-05-07T16:47:13Z'
-updated: '2026-05-07T17:04:10Z'
+updated: '2026-08-17T22:44:06Z'
 generated_by: claude-sonnet
-workflow_run: 25509381538
+workflow_run: 32076509040
 issue: 5238
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 93
 review:
   strengths:
-  - 'Correct Okabe-Ito palette: #009E73 for ICE lines, #D55E00 for PDP — canonical
-    order followed'
-  - Both light (#FAF8F1) and dark (#1A1A17) themes fully implemented with all chrome
-    tokens (INK, INK_SOFT, INK_MUTED) applied to every element
-  - All font sizes explicitly set (title=24, labels=20, ticks=16) — reads well at
-    4800x2700px
-  - Rug plot adds distributional context without cluttering the visualization
-  - alpha=0.14 on 120 ICE lines creates an effective density band that intuitively
-    shows heterogeneous effects
-  - Dollar FuncFormatter on y-axis is professional and informative
-  - Custom Line2D legend handles are idiomatic matplotlib
-  - 'Spec features fully covered: individual ICE lines, PDP overlay, rug plot, realistic
-    GradientBoostingRegressor scenario'
-  - 'KISS code structure: no functions/classes, deterministic seed in both np.random.seed
-    and model random_state'
+  - 'Correct ICE plot: 120 individual low-alpha lines (alpha=0.14) plus a bold, opaque
+    partial-dependence overlay (linewidth=3), matching the spec''s core requirement'
+  - Includes a min-max prediction-range envelope and an x-axis rug plot of observed
+    sqft values, both explicitly suggested in the spec notes
+  - 'Genuine data storytelling: an annotation identifies the exact sqft range (~2,274
+    sqft) where individual effects diverge most from the average, guiding the viewer
+    to the key insight'
+  - 'Palette and theme-adaptive chrome are fully compliant: first series is Imprint
+    #009E73, PDP line is Imprint position 2 (#C475FD), identical across both renders;
+    backgrounds, text, grid, spines, legend box, and annotation box all flip correctly
+    between light (#FAF8F1) and dark (#1A1A17) with no dark-on-dark or light-on-light
+    failures'
+  - Clean KISS structure, fully reproducible (np.random.seed(42) + random_state=42),
+    correct mandated title format, custom legend labels match the plotted series
+  - Landscape canvas (3200x1800) is well utilized with balanced margins; verified
+    no edge clipping on title, axis labels, tick labels, legend, or annotation in
+    either render
   weaknesses:
-  - 'DE-01 (5/8): The alpha-density ICE visualization is well-executed but stops short
-    of FiveThirtyEight-level polish — no subtitle or annotation calling out the key
-    insight (e.g. spread widens past 2500 sqft)'
-  - 'DE-02 (4/6): Grid alpha=0.10 is correct but rug_y uses ax.get_ylim()[0] before
-    final layout, which could misplace the rug if tight_layout shifts limits; no explicit
-    tick removal to further reduce chrome'
-  - 'DE-03 (4/6): Visual hierarchy is clear (bold orange PDP vs subtle green ICE)
-    but no focal annotation highlights where individual curves diverge from the average
-    — viewer must discover the story themselves'
-  - 'LM-02 (3/5): FuncFormatter and Line2D handles are idiomatic matplotlib but are
-    common techniques; no use of more distinctive matplotlib features (e.g. fill_between
-    for confidence band, axline for reference)'
+  - 'Optional spec suggestions not implemented: no centered ICE (c-ICE) variant and
+    no color-coding of lines by a second feature — both are ''consider'' language
+    in the spec, not required, but would add further heterogeneity insight'
+  - Library Mastery is solid but generic-transferable (fill_between, annotate, custom
+    Line2D legend) rather than leveraging a feature distinctive to matplotlib specifically
+    — e.g. coloring individual ICE lines by a second variable via a Normalize/ScalarMappable
+    colorbar would raise LM-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "House Price by Square Footage · ice-basic · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis label "Square Footage (sqft)" and Y-axis label "Predicted House Price ($)" in dark ink. Tick labels formatted as dollar amounts ($100,000–$600,000) in dark soft ink. All text readable against light background.
-      Data: 120 semi-transparent teal/green (#009E73) ICE lines with alpha=0.14 creating a density band from bottom-left to top-right. Bold orange (#D55E00) PDP line overlaid prominently. Rug plot of | markers along the x-axis baseline in muted ink. Legend in upper-left with elevated background frame.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "House Price by Square Footage · ice-basic · matplotlib · anyplot.ai" is dark ink, fully visible, occupies ~68% of canvas width (no overflow/clipping, measured via pixel scan). Axis labels "Square Footage (sqft)" and "Predicted House Price ($)" are dark and clearly legible. Y-axis tick labels are formatted as currency ($100,000-$600,000), fully visible with no left-edge clipping. X-axis ticks (1000-3500) fully visible with no right-edge clipping. Legend box (upper-left, elevated cream background) lists three entries with dark, readable text. An annotation box ("Effects diverge most around 2,274 sqft") sits clearly above the data band with no overlap, connected by an arrow to the divergence point.
+      Data: 120 individual ICE lines in Imprint green (#009E73) at low alpha, a faint green min-max envelope, and a bold violet (#C475FD) partial-dependence line — first series is correctly #009E73. A gray rug plot along the x-axis shows the distribution of observed sqft values.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues, no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all render in light off-white colors (#F0EFE8 / #B8B7B0), clearly visible against the dark background. No dark-on-dark failures detected. Legend frame uses elevated dark background (#242420) with light text. Grid lines subtle.
-      Data: ICE lines remain #009E73 (identical to light render), PDP line remains #D55E00 — only chrome flipped, data colors unchanged. Rug plot markers render in muted light ink. All data elements clearly distinguishable from the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light/white ink, fully legible against the dark background — no dark-on-dark failures observed anywhere (title, axes, legend text, annotation text all flip correctly to light ink). Legend box uses a dark-elevated background with light text and a soft border, fully readable. Annotation box similarly flips to dark background with light border/text and remains legible.
+      Data: Individual ICE lines remain Imprint green (#009E73) and the PDP line remains violet (#C475FD) — identical hues to the light render, confirming only chrome (not data color) changed between themes.
+      Legibility verdict: PASS — no dark-on-dark text, all chrome elements correctly theme-adapted, data colors match the light render exactly.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -65,77 +62,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=24, labels=20, ticks=16. Both
-          themes fully readable.'
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks/legend/annotation
+          8pt); title fits at ~68% canvas width with no overflow; fully readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions. Legend in upper-left does not overlap data in
-          the main trend area.
+        comment: 'Verified via pixel crop: annotation box sits clearly above the data
+          band with a visible gap; legend does not overlap data or annotation'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: alpha=0.14 on 120 ICE lines creates effective density bands. PDP
-          line at linewidth=3.5 is prominently visible.
+        comment: n=120 lines at alpha=0.14/linewidth=0.9 appropriately dense-adapted;
+          bold PDP line (linewidth=3) clearly stands out; rug ticks visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and orange (#D55E00) Okabe-Ito pair — CVD-safe, good
-          luminance contrast.
+        comment: Green vs violet, strong luminance/hue contrast, not a red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 canvas well-utilized. Balanced margins, tight_layout applied.
+        comment: Plot area measured to span ~88% of canvas width with balanced margins;
+          legend and annotation both near the data; no cut-off content at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Square Footage (sqft)'', Y: ''Predicted House Price ($)'' —
-          descriptive with units.'
+        comment: 'Both axis labels include units: ''Square Footage (sqft)'' and ''Predicted
+          House Price ($)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (ICE), second #D55E00 (PDP). Backgrounds #FAF8F1/#1A1A17.
-          All chrome theme-adaptive.'
+        comment: 'First series #009E73 (Imprint position 1), PDP line #C475FD (Imprint
+          position 2), identical across themes; backgrounds and chrome correctly theme-adaptive
+          in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above well-configured defaults: alpha-density ICE effect is professionally
-          crafted, dollar formatting adds polish, rug plot adds informational layer.
-          Not yet FiveThirtyEight-level — no callout annotation on key insight.'
+        comment: Custom envelope fill, custom legend swatches, currency-formatted
+          ticks, and an annotated insight — clearly above library defaults, though
+          not yet at fully publication-ready polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Top/right spines removed, grid alpha=0.10 (very subtle), dollar
-          FuncFormatter, styled legend frame. Small issue: rug_y computed pre-tight_layout
-          which could misplace it.'
+        comment: Top/right spines removed, subtle y-axis-only grid (alpha=0.10), generous
+          whitespace; minor room for further detail polish
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: bold orange PDP dominates, subtle green
-          ICE lines form contextual background. Rug plot shows feature distribution.
-          Missing: focal annotation on where heterogeneity is most pronounced.'
+        comment: Annotation explicitly calls out the divergence point; bold PDP vs.
+          faint individual lines creates clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +142,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ICE plot with individual prediction curves per observation.
+        comment: Correct ICE plot with PDP overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Individual semi-transparent lines (alpha=0.14), PDP overlay (bold
-          opaque), rug plot — all spec features present.
+        comment: Low-alpha individual lines, bold PDP overlay, and rug plot all present
+          as specified
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: sqft_grid (feature_value), Y: ice_matrix rows (prediction), observation
-          loop (observation_id). Correct.'
+        comment: X=feature_value (sqft), Y=prediction ($), correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title includes spec-id/library/anyplot.ai watermark. Legend labels:
-          ''Individual ICE lines (n=120)'' and ''Partial dependence (average)''.'
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          accurately describe each series
     data_quality:
       score: 15
       max: 15
@@ -176,22 +172,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full ICE coverage: heterogeneous individual effects, average PDP
-          trend, feature distribution via rug. 120 obs × 70 grid points.'
+        comment: Shows individual heterogeneity, average trend, spread envelope, and
+          feature-value distribution (rug) — full ICE feature set
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: GradientBoostingRegressor on synthetic housing data — real-world
-          ML interpretability scenario, neutral topic.
+        comment: Real-world, neutral housing price prediction scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: House prices $100K–$650K, sqft 800–3500, price per sqft ~$180 — all
-          realistic proportions.
+        comment: Price range ($180k-$650k) and implied ~$180/sqft is realistic for
+          the domain
     code_quality:
       score: 10
       max: 10
@@ -201,34 +196,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → model → ICE → plot → save. No
-          functions or classes.'
+        comment: Linear imports -> data -> model -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) and model random_state=42 both set.
+        comment: np.random.seed(42) and random_state=42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 5 imports (os, matplotlib.pyplot, numpy, Line2D, GradientBoostingRegressor)
-          are used.
+        comment: All imports (os, pyplot, numpy, Line2D, GradientBoostingRegressor)
+          are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. Loop for ICE matrix is appropriate. No over-engineering.
+        comment: Appropriate complexity for the technique, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi=300 and facecolor. Current matplotlib
-          API.
+        comment: Saves as plot-{THEME}.png via Axes methods, no deprecated calls
     library_mastery:
       score: 7
       max: 10
@@ -238,28 +231,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ax. methods throughout, FuncFormatter, Line2D custom legend, plt.setp()
-          for text styling — idiomatic but misses fill_between or axline for extra
-          sophistication.
+        comment: Correct Axes-method usage, FuncFormatter, custom Line2D legend handles
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: FuncFormatter for dollar formatting and Line2D custom handles are
-          matplotlib-specific. Recognized techniques but not exceptionally distinctive.
+        comment: fill_between envelope + annotate arrow + custom legend construction
+          go beyond generic usage, but nothing unique to matplotlib alone (e.g. no
+          colorbar-based encoding)
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
+  - annotations
   - custom-legend
-  - rug-plot
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
-  dataprep:
-  - regression
+  - explicit-figure
+  dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
