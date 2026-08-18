@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:54:27Z'
-updated: '2026-08-18T08:42:29Z'
+updated: '2026-08-18T08:48:49Z'
 generated_by: claude-sonnet
 workflow_run: 32116956597
 issue: 2017
@@ -12,54 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correct grouped box plot with all required statistical elements (median line,
-    IQR box, 1.5×IQR whiskers, and genuine outliers) and consistent box widths across
-    every group
-  - 'Full theme-adaptive chrome — both light (#FAF8F1) and dark (#1A1A17) renders
-    are clean and legible, with identical Imprint data colors (#009E73, #C475FD, #4467A3)
-    for the three experience levels'
-  - 'Realistic, neutral data: employee performance scores by department and experience
-    level, with per-group variance and real outliers rather than uniform, look-alike
-    groups'
-  - Departments sorted by descending overall median score, giving the chart a clear
-    best-to-worst narrative
-  - 'Clean, KISS-structured code: seeded RNG, only used imports, no deprecated boxplot
-    API usage'
-  - Distinct mean (diamond) vs. median (line) markers add statistical insight beyond
-    a bare boxplot, and box edges are explicitly stroked with INK_SOFT for contrast
-    against low-saturation fills
+  - Grouped box plot correctly implements every required statistical element (median
+    line, IQR box, 1.5×IQR whiskers, genuine outliers, and distinct mean markers)
+    with consistent box widths across all four departments
+  - Mean-diamond and outlier-flier marker sizes now sit in the reviewer-recommended
+    range (meanprops markersize=7, flierprops markersize=6.5), directly fixing the
+    mobile-legibility gap flagged in attempt 1 (previously 3.5/4)
+  - Extra y-axis headroom (ylim 0–122) keeps the top-right legend clear of tall whiskers/fliers,
+    resolving the crowding risk noted in attempt 1's third weakness
+  - New bold tick label on the top-performing department (Support) adds an explicit
+    focal point on top of the existing median-sorted ordering, sharpening the data
+    storytelling per the repair feedback
+  - 'Full theme-adaptive chrome across both renders — identical Imprint data colors
+    (#009E73 / #C475FD / #4467A3) in light and dark, only chrome (background, text,
+    grid, legend frame) flips'
+  - 'Clean, KISS-structured code: seeded RNG (np.random.seed(42)), only used imports,
+    modern non-deprecated boxplot API (patch_artist, tick positioning via set_xticks/set_xticklabels)'
   weaknesses:
-  - Mean-marker (diamond, markersize=3.5) and outlier flier markers (markersize=4)
-    render at only ~19-22px on the 3200px canvas and shrink to ~2-3px at the 400px
-    mobile preview width — barely visible at that scale. Increase to markersize ~6-8
-    for the mean diamond and ~6-7 for fliers so they stay legible when scaled down.
-  - 'Design Excellence is close to baseline: beyond the mandated theme tokens, category
-    sorting, and mean/median distinction, there is little additional aesthetic differentiation
-    (typography is all default weights/sizes, no focal-point emphasis on the standout
-    group). Consider a subtle emphasis technique (e.g. a light annotation or callout
-    on the top department, or varied spacing/rhythm between groups) to sharpen the
-    data storytelling and visual polish.'
-  - Legend sits close to the region where several boxes/whiskers reach the y=100 ceiling
-    — comfortable now, but tighten ylim headroom or reposition the legend so future
-    data regenerations with taller whiskers don't crowd it.
+  - 'Design Excellence still trails top marks: beyond the new bold tick label, typography
+    and color treatment remain close to the mandated theme-token defaults — a secondary
+    refinement (e.g. a light delta annotation between top and bottom department, or
+    refined legend framing) would push DE-01/DE-02 higher'
+  - LM-02 distinctive-features usage remains fairly generic — the manual grouped-box
+    positioning and patch coloring approach would port to another library with only
+    minor syntax changes; a matplotlib-unique touch (e.g. a notched-box or violin
+    overlay) would raise this score
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "box-grouped · python · matplotlib · anyplot.ai" is dark ink, bold-ish, clearly visible at top center. "Department" (x-axis) and "Performance Score (0-100)" (y-axis) labels are dark ink and fully readable. Tick labels (department names, y-axis numbers 0-100) are legible grey-ink text. Subtle horizontal gridlines only. Legend "Experience Level" (Junior/Mid-Level/Senior) sits top-right in a light elevated box with dark-ink text, fully within canvas bounds.
-      Data: Four department groups (Support, Marketing, Engineering, Sales — sorted by descending median), each with 3 side-by-side boxes. First series (Junior) is Imprint green #009E73, second (Mid-Level) is lavender #C475FD, third (Senior) is blue #4467A3 — matches Imprint palette positions 1-3. Median lines are dark, mean markers are small white diamonds with dark edges, outlier points appear as small circles in their series color (e.g. purple dot near 100 in Engineering/Mid-Level, blue dot near 65 in Engineering/Senior, purple dot near 35 in Sales/Mid-Level).
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "box-grouped . python . matplotlib . anyplot.ai" renders in dark ink at medium weight, clearly visible at top center, comfortably under 90% of plot width. "Department" (x-axis) and "Performance Score (0-100)" (y-axis) labels are dark ink and fully readable. Tick labels (department names, y-axis 0-120) are legible soft-grey ink; the "Support" tick label (top-performing department) is bolded as an explicit focal point. Subtle horizontal gridlines only, not competing with data. Legend "Experience Level" (Junior/Mid-Level/Senior) sits top-right in a light elevated box with dark-ink text, fully within canvas bounds and clear of the tallest whiskers.
+      Data: Four department groups (Support, Marketing, Engineering, Sales -- sorted by descending median), each with 3 side-by-side boxes. First series (Junior) is Imprint green #009E73, second (Mid-Level) is lavender #C475FD, third (Senior) is blue #4467A3 -- matches Imprint palette positions 1-3 in canonical order. Median lines are dark, mean markers are now clearly visible white diamonds with dark edges (markersize=7, up from 3.5), outlier points are visibly sized colored circles (markersize=6.5) -- e.g. lavender dot near 100 in Engineering/Mid-Level, blue dot near 65 in Engineering/Senior, lavender dot near 35 in Sales/Mid-Level.
+      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues; markers are now visibly larger and readable at a glance.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and axis labels render in light off-white ink, tick labels in a softer light grey — all clearly legible against the dark surface. Median lines switch to white for contrast against the darker box fills. Legend box uses a dark elevated fill (#242420-like) with light text, fully visible and readable.
-      Data: Same three series colors as the light render — #009E73 (Junior), #C475FD (Mid-Level), #4467A3 (Senior) — confirmed identical positions/hues across both themes; only the chrome (background, text, grid, legend frame, median-line color) flips. Outlier and mean markers are positioned identically to the light render.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, tick, and legend text is clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and axis labels render in light off-white ink, tick labels in a softer light grey (with "Support" bolded, matching the light render) -- all clearly legible against the dark surface. Median lines switch to white for contrast against the darker box fills. Legend box uses a dark elevated fill with light text, fully visible and readable, still clear of the tallest whisker.
+      Data: Same three series colors as the light render -- #009E73 (Junior), #C475FD (Mid-Level), #4467A3 (Senior) -- confirmed identical hues/positions across both themes; only chrome (background, text, grid, legend frame, median-line color) flips. Mean-diamond and outlier markers are the same larger size as the light render and remain clearly visible against both the box fills and the dark page background.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all title, axis, tick, and legend text is clearly visible against the near-black background; brand green #009E73 reads well on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -69,42 +64,44 @@ review:
         passed: true
         comment: All font sizes explicitly set (title scales with title length, 10pt
           axis labels, 8pt ticks/legend); readable in both themes, title well-proportioned
+          (~55% width)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: No text/text or text/data collisions; legend does not overlap any
-          box or whisker
+          box, whisker, or outlier
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Boxes/whiskers themselves are well-sized, but the mean-diamond (markersize=3.5)
-          and flier markers (markersize=4) are proportionally tiny (~19-22px on the
-          3200px canvas) and would be nearly invisible at the 400px mobile preview
+        passed: true
+        comment: Mean-diamond (markersize=7) and flier (markersize=6.5) markers now
+          match the recommended range from attempt 1's feedback and are clearly visible
+          against both box fills and background in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Good contrast; explicit INK_SOFT edge stroke on all boxes mitigates
-          the low-contrast lavender/blue fills against the cream background
+          the lower-contrast lavender/blue fills against the cream background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area uses a large, balanced share of the canvas; margins are
-          even; nothing cut off
+        comment: Plot area uses a large, balanced share of the canvas; margins even;
+          extra ylim headroom keeps the legend clear of tall whiskers; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Department" and "Performance Score (0-100)" are descriptive; the
-          latter effectively conveys the scale/unit'
+        comment: '"Department" and "Performance Score (0-100)" are descriptive with
+          an explicit scale/unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -113,7 +110,7 @@ review:
         comment: 'First series is #009E73, positions 2-3 follow canonical Imprint
           order; backgrounds and chrome are theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -122,23 +119,24 @@ review:
         max: 8
         passed: false
         comment: Well-configured beyond bare defaults (alpha-blended fills, edge stroking,
-          mean/median distinction), but no standout typography or color-harmony flourish
-          beyond the mandated theme tokens
+          mean/median distinction, bolded focal tick label), but still reads as a
+          well-configured library default rather than a standout flourish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle y-only grid, L-shaped spines, generous whitespace — solid
-          but matches what the style guide already mandates rather than adding extra
-          polish
+        passed: true
+        comment: Subtle y-only grid, L-shaped spines, generous whitespace, and now
+          tuned ylim headroom so the legend never crowds the data -- a genuine incremental
+          polish step over attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Departments sorted best-to-worst by median gives a clear narrative
-          order, but there's no explicit emphasis/annotation calling out the insight
+        passed: true
+        comment: Departments sorted best-to-worst by median plus a bolded top-department
+          tick label now gives an explicit visual-hierarchy focal point, directly
+          addressing attempt 1's feedback
     spec_compliance:
       score: 15
       max: 15
@@ -215,7 +213,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only os, matplotlib.pyplot, numpy -- all used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -239,7 +237,7 @@ review:
         max: 5
         passed: true
         comment: Thorough, idiomatic use of ax.boxplot customization (flierprops,
-          medianprops, meanprops, whiskerprops, capprops, boxprops) — the correct
+          medianprops, meanprops, whiskerprops, capprops, boxprops) -- the correct
           low-level approach since matplotlib has no built-in grouped-boxplot API
       - id: LM-02
         name: Distinctive Features
@@ -249,7 +247,7 @@ review:
         comment: showmeans/meanprops diamond-vs-median distinction and manual per-group
           positioning are matplotlib-specific touches, but the overall approach isn't
           uniquely irreplicable elsewhere
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
