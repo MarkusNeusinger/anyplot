@@ -6,7 +6,7 @@ title: Cumulative Flow Diagram for Workflow Analytics
 
 # Specification tracking
 created: "2026-04-11T20:22:20Z"
-updated: null
+updated: "2026-08-18T02:42:07Z"
 issue: 5239
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - area
-    - stacked
   data_type:
     - timeseries
     - categorical
