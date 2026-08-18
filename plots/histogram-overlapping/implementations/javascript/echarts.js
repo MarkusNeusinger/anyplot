@@ -29,8 +29,14 @@ function normalSamples(rand, mean, stdDev, count) {
 const randControl = lcg(42);
 const randTreatment = lcg(1337);
 
-const controlScores = normalSamples(randControl, 68, 11, 220);
-const treatmentScores = normalSamples(randTreatment, 76, 10, 220);
+const clampScore = (value) => Math.min(100, Math.max(0, value));
+
+const controlScores = normalSamples(randControl, 68, 11, 220).map(clampScore);
+const treatmentScores = normalSamples(randTreatment, 76, 10, 220).map(clampScore);
+
+const meanOf = (samples) => samples.reduce((sum, v) => sum + v, 0) / samples.length;
+const controlMean = meanOf(controlScores);
+const treatmentMean = meanOf(treatmentScores);
 
 // --- Shared bins across both groups ------------------------------------------
 const allScores = controlScores.concat(treatmentScores);
@@ -57,6 +63,13 @@ for (let i = 0; i < binCount; i += 1) {
 
 const controlCounts = toHistogram(controlScores);
 const treatmentCounts = toHistogram(treatmentScores);
+
+const binIndexFor = (value) => {
+  const idx = Math.round((value - dataMin) / binWidth);
+  return Math.min(binCount - 1, Math.max(0, idx));
+};
+const controlMeanIndex = binIndexFor(controlMean);
+const treatmentMeanIndex = binIndexFor(treatmentMean);
 
 // --- Init ---------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -106,9 +119,21 @@ chart.setOption({
       data: controlCounts,
       barGap: "-100%",
       barCategoryGap: "0%",
-      itemStyle: { color: t.palette[0], opacity: 0.55 },
+      itemStyle: {
+        color: t.palette[0],
+        opacity: 0.55,
+        borderColor: t.pageBg,
+        borderWidth: 1,
+      },
       emphasis: { disabled: true },
       z: 2,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.palette[0], type: "dashed", width: 2 },
+        label: { show: true, formatter: "Control mean", color: t.inkSoft, fontSize: 12 },
+        data: [{ xAxis: controlMeanIndex }],
+      },
     },
     {
       name: "Treatment group",
@@ -116,9 +141,21 @@ chart.setOption({
       data: treatmentCounts,
       barGap: "-100%",
       barCategoryGap: "0%",
-      itemStyle: { color: t.palette[1], opacity: 0.55 },
+      itemStyle: {
+        color: t.palette[1],
+        opacity: 0.55,
+        borderColor: t.pageBg,
+        borderWidth: 1,
+      },
       emphasis: { disabled: true },
       z: 3,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.palette[1], type: "dashed", width: 2 },
+        label: { show: true, formatter: "Treatment mean", color: t.inkSoft, fontSize: 12 },
+        data: [{ xAxis: treatmentMeanIndex }],
+      },
     },
   ],
 });
