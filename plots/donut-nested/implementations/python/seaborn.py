@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 79/100 | Updated: 2026-08-18
@@ -54,7 +54,7 @@ categories = ["Salaries", "Marketing", "Operations", "R&D"]
 data = {
     "North America": [45, 22, 18, 35],
     "Europe": [38, 18, 15, 24],
-    "Asia Pacific": [32, 25, 20, 28],
+    "Asia Pacific": [28, 20, 25, 32],
     "Latin America": [18, 12, 10, 10],
 }
 
@@ -101,8 +101,12 @@ OUTER_RADIUS = 0.9
 OUTER_WIDTH = 0.315
 INNER_RADIUS = 0.54
 INNER_WIDTH = 0.27
-INNER_LABEL_R = 0.405  # midpoint of the inner ring
+INNER_LABEL_R = 0.49  # biased toward the outer edge of the inner ring for center-text clearance
 OUTER_LABEL_R = OUTER_RADIUS - OUTER_WIDTH / 2  # midpoint of the outer ring
+
+# The legend column occupies the axes' left margin, so the donut is shifted right
+# of the data origin to balance the canvas whitespace evenly left-to-right.
+CX, CY = 0.31, 0.0
 
 # Outer ring (categories within regions)
 outer_wedges, _ = ax.pie(
@@ -111,6 +115,7 @@ outer_wedges, _ = ax.pie(
     colors=outer_colors,
     wedgeprops={"width": OUTER_WIDTH, "edgecolor": PAGE_BG, "linewidth": 2.5},
     startangle=90,
+    center=(CX, CY),
 )
 
 # Inner ring (regions)
@@ -121,10 +126,16 @@ inner_wedges, inner_texts = ax.pie(
     wedgeprops={"width": INNER_WIDTH, "edgecolor": PAGE_BG, "linewidth": 2.5},
     startangle=90,
     labels=None,
+    center=(CX, CY),
 )
 
+# Pin the viewport to the un-shifted symmetric range so the CX offset above
+# actually moves the donut within the axes instead of being auto-recentered.
+ax.set_xlim(-1.25, 1.25)
+ax.set_ylim(-1.25, 1.25)
+
 # Add center text
-ax.text(0, 0, f"Total Budget\n${total_budget}M", ha="center", va="center", fontsize=15, fontweight="bold", color=INK)
+ax.text(CX, CY, f"Total\nBudget\n${total_budget}M", ha="center", va="center", fontsize=11, fontweight="bold", color=INK)
 
 # Add labels for inner ring (regions with values)
 cumsum = 0
@@ -132,10 +143,10 @@ for region, val, color in zip(regions, inner_values, IMPRINT, strict=True):
     # matplotlib pie() sweeps counterclockwise from startangle by default — match that direction
     angle = 90 + (cumsum + val / 2) / total_budget * 360
     angle_rad = np.radians(angle)
-    x = INNER_LABEL_R * np.cos(angle_rad)
-    y = INNER_LABEL_R * np.sin(angle_rad)
+    x = CX + INNER_LABEL_R * np.cos(angle_rad)
+    y = CY + INNER_LABEL_R * np.sin(angle_rad)
     ax.text(
-        x, y, f"{region}\n${val}M", ha="center", va="center", fontsize=8, fontweight="bold", color=_label_color(color)
+        x, y, f"{region}\n${val}M", ha="center", va="center", fontsize=7, fontweight="bold", color=_label_color(color)
     )
     cumsum += val
 
@@ -149,8 +160,8 @@ for r_idx, region in enumerate(regions):
         mid_angle = 90 + (cumsum + val / 2) / total_budget * 360
         if c_idx == max_idx:
             angle_rad = np.radians(mid_angle)
-            x = OUTER_LABEL_R * np.cos(angle_rad)
-            y = OUTER_LABEL_R * np.sin(angle_rad)
+            x = CX + OUTER_LABEL_R * np.cos(angle_rad)
+            y = CY + OUTER_LABEL_R * np.sin(angle_rad)
             wedge_color = outer_colors[r_idx * len(categories) + c_idx]
             ax.text(
                 x,
@@ -186,7 +197,7 @@ legend1 = ax.legend(
     handles=region_patches,
     title="Regions (Inner)",
     loc="upper left",
-    bbox_to_anchor=(-0.15, 1.0),
+    bbox_to_anchor=(-0.02, 1.0),
     fontsize=8,
     title_fontsize=9,
     framealpha=0.95,
@@ -203,9 +214,9 @@ ax.add_artist(legend1)
 
 legend2 = ax.legend(
     handles=category_patches,
-    title="Categories (Outer)\nshade family shown: N. America",
+    title="Categories (Outer)\n(N. Am. shades)",
     loc="lower left",
-    bbox_to_anchor=(-0.15, 0.0),
+    bbox_to_anchor=(-0.02, 0.0),
     fontsize=8,
     title_fontsize=9,
     framealpha=0.95,
@@ -220,7 +231,7 @@ legend2.get_title().set_weight("bold")
 legend2.get_title().set_color(INK)
 
 # Title
-ax.set_title("donut-nested · seaborn · anyplot.ai", fontsize=14, fontweight="bold", pad=16, color=INK)
+ax.set_title("donut-nested · python · seaborn · anyplot.ai", fontsize=14, fontweight="bold", pad=16, color=INK)
 
 ax.set_aspect("equal")
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
