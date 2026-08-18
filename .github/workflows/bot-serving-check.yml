@@ -29,8 +29,10 @@ jobs:
   bot-serving:
     runs-on: ubuntu-latest
     # 19 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
-    # ~10.5 min worst-case; 14 leaves room to report a clean failure.
-    timeout-minutes: 20
+    # ~28.5 min worst-case; 32 leaves room to report a clean failure rather
+    # than dying to the job timeout, which reports nothing useful. Recompute
+    # this when adding checks: the ceiling is checks x 90s, plus margin.
+    timeout-minutes: 32
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
