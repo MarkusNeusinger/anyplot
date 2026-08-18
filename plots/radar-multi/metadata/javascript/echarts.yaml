@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: radar-multi
 created: '2026-08-17T17:04:18Z'
-updated: '2026-08-18T00:19:45Z'
+updated: '2026-08-18T00:33:41Z'
 generated_by: claude-sonnet
 workflow_run: 32048151557
 issue: 2026
@@ -12,52 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-mul
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - 'Imprint palette applied correctly: first series AudioMax Pro is #009E73 (brand
-    green), second/third series follow canonical order (lavender #C475FD, blue #4467A3),
-    and data colors are pixel-identical between light and dark renders — only chrome
-    flips.'
-  - Filled polygons with alpha ~0.22 plus distinct outline width (3px) satisfy the
-    spec's transparency and fill+outline notes, and marker size (6px circles) is well-chosen
-    for the sparse 3-series/6-axis dataset.
-  - 'Canvas is exactly square 2400x2400 per the `//# anyplot-orientation: square`
-    directive, with no clipping, overlap, or overflow in either theme.'
-  - Clean, idiomatic single setOption() call with animation:false, no explicit init
-    size/devicePixelRatio, and deterministic in-memory data — matches the mount-node
-    contract exactly.
-  - Title format is exactly `radar-multi · javascript · echarts · anyplot.ai`; legend
-    labels match series names; realistic, neutral fictional earbud product data at
-    a sensible 0-100 scale.
+  - radar.axisLabel is now show:true with numeric split-line values (20/40/60/80/100
+    at fontSize 10, t.inkSoft), closing the prior SC-02 gap where the spec's 'gridlines
+    for value reference' were not visible
+  - AudioMax Pro (first/brand series) gets a deliberate focal treatment — bolder 4px
+    outline, shadowBlur:12 glow, and higher fill opacity (0.3 vs 0.2) — creating real
+    visual hierarchy instead of three uniform overlapping polygons
+  - Alternating radar.splitArea bands add radial depth and refinement beyond the flat
+    default background
+  - 'emphasis: { focus: ''series'', lineStyle: { width: 5 } } is a genuine ECharts-specific
+    touch that isolates a hovered series in the interactive HTML view'
+  - 'Imprint palette correct and identical across themes: first series #009E73 (brand
+    green), then canonical lavender/blue order; theme-adaptive chrome (title/legend/axis-name/background)
+    is correct in both light (#FAF8F1) and dark (#1A1A17) renders'
+  - Clean KISS single setOption() call, deterministic in-memory data, animation:false
+    per the harness mount-node contract, exact 2400x2400 square canvas with no clipping
+    or overlap
+  - Realistic, neutral earbud-comparison data with genuinely differentiated per-series
+    strengths/weaknesses across all six metrics (no two series look alike)
   weaknesses:
-  - radar.axisLabel is set to show:false, so no numeric gridline values (e.g. 20/40/60/80/100)
-    are ever visible on any axis — the spec explicitly asks for gridlines 'at regular
-    intervals... for value reference'. Set axisLabel.show:true with a small fontsize
-    (~10-11px) colored from t.inkSoft so viewers can read the scale, while keeping
-    it subtle enough not to clutter the polygon overlap area.
-  - 'Design Excellence is generic: no visual hierarchy or distinctive touch beyond
-    the palette swap — e.g. no emphasis/highlight on a focal series, no alternating
-    splitArea shading for radial depth, uniform line weights across all three series.
-    Consider a subtle splitArea banding or emphasis focus state to add polish and
-    guide the eye.'
-  - Library Mastery is basic idiomatic usage only — no distinctive ECharts radar features
-    exercised (e.g. shape:'circle' vs default polygon comparison, rich axisName formatting,
-    emphasis.focus:'series' for hover clarity in the HTML view). Leveraging one or
-    two of these would better showcase what ECharts specifically offers for radar
-    charts.
+  - radar.axisLabel fontSize is 10 — legible but on the small side relative to the
+    15px axis-name / 16px legend / 22px title hierarchy; bumping to ~11-12 would give
+    the value-scale text a bit more breathing room, especially where it sits inside
+    the overlapping filled regions
+  - Design storytelling is 'good' but not yet 'excellent' — the AudioMax Pro glow
+    signals a focal series but there is no explicit callout/insight (e.g., a short
+    annotation naming the standout metric) that would push the chart from 'guided
+    hierarchy' to a fully realized narrative
+  - Library Mastery still relies on a fairly common combination of radar options (splitArea,
+    shadowBlur, emphasis.focus) — an additional distinctive touch (e.g., per-axis
+    custom min/max, rich axisName formatting, or a non-default radar shape for contrast)
+    would push this further into ECharts-specific territory
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "radar-multi · javascript · echarts · anyplot.ai" in bold dark ink, centered top, clearly legible. Six axis category labels (Sound Quality, Durability, Value, Noise Cancel., Comfort, Battery Life) in medium-gray ink, all readable and well-balanced in size. Legend at bottom with three color swatches and dark, legible text. Radial split lines (concentric hexagon rings) are subtle light gray, visible but not dominant. No numeric value labels are rendered on any axis (axisLabel.show is false).
-      Data: Three overlapping filled polygons — AudioMax Pro in brand green (#009E73), SoundWave Elite in lavender (#C475FD), EchoBuds Plus in blue (#4467A3) — each with ~0.22 opacity fill and a solid 3px outline plus circular markers at each vertex. All three are clearly distinguishable from each other and from the background.
-      Legibility verdict: PASS (all text readable; only gap is the absent numeric gridline reference values, which is a spec-completeness issue, not a legibility failure).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "radar-multi · javascript · echarts · anyplot.ai" centered at top, clearly legible. Six axis category labels (Sound Quality, Durability, Value, Noise Cancel., Comfort, Battery Life) in medium-gray around the hexagon, all readable and balanced. Legend with three swatches (AudioMax Pro, SoundWave Elite, EchoBuds Plus) at the bottom in dark, readable text. Radial split-line rings now carry visible numeric reference labels (20/40/60/80/100) in small gray text along the spokes — this closes the gap flagged in the prior review round. Alternating light/near-transparent splitArea bands add subtle radial depth.
+      Data: Three overlapping translucent filled polygons with solid colored outlines and circular vertex markers. First series (AudioMax Pro) is brand green #009E73 with a visible soft glow (shadowBlur) and bolder 4px outline, clearly marked as the focal/brand series. Second series (SoundWave Elite) is lavender/purple #C475FD, third (EchoBuds Plus) is steel blue #4467A3 — both with standard 3px outlines and lighter fill. Canonical Imprint palette order confirmed.
+      Legibility verdict: PASS — all text (title, axis names, legend, and the newly-added numeric value labels) is readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light/white ink, clearly legible against the dark background. Axis category labels are in a lighter gray tone, still clearly readable — no dark-on-dark issue observed. Legend text is light-colored and legible. Split lines are a subtle light gray, visible without dominating.
-      Data: Same three polygons in the identical brand green / lavender / blue as the light render — confirmed pixel-identical hues; only the surrounding chrome (background, text, grid) flipped to the dark theme. Markers and outlines remain clearly visible against the dark fill.
-      Legibility verdict: PASS (no dark-on-dark text; all chrome and data elements remain distinguishable).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title renders in white/near-white bold text, axis category labels in light gray, legend text in light color — all clearly readable against the dark background, no dark-on-dark failures. Numeric split-line value labels are also legible in light gray against the dark background. splitArea alternating bands remain subtly visible.
+      Data: Identical colors to the light render — brand green with glow, lavender, and blue — confirming only chrome (background, text, grid) flipped between themes and data-series colors stayed constant.
+      Legibility verdict: PASS — all text elements, including the newly-enabled value-scale labels, are readable against the dark background; no dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -68,75 +68,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, category labels, legend all readable in both themes at explicit
-          font sizes; no radial value-scale labels rendered at all.
+        comment: All font sizes explicit and readable in both themes; radar axisLabel
+          at fontSize 10 is legible but on the small side
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No overlap; newly-added value labels sit legibly along spokes without
+          colliding with other text or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (6px) and line width (3px) well-chosen for sparse 3-series/6-axis
-          data.
+        comment: symbolSize 6 and line widths 3-4px well-matched to sparse 18-point
+          dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three perceptually distinct hues (green/lavender/blue), no red-green
-          sole signal.
+        comment: Good contrast, CVD-safe hue separation (green/purple/blue), transparency
+          aids overlap distinction
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 square canvas, well-centered radar, generous margins,
-          nothing clipped.
+        comment: Exact 2400x2400 square canvas, well-balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format exact; category axis labels descriptive.
+        comment: Descriptive category labels plus now-visible 0-100 value scale
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for series 2-3, identical
-          data colors across themes, correct theme backgrounds.'
+        comment: 'First series #009E73, canonical Imprint order, identical data colors
+          across themes, theme-correct chrome'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom palette and alpha fills applied, but otherwise a fairly standard
-          radar with no distinctive polish.
+        passed: true
+        comment: Glow/shadow highlight on the brand series plus splitArea banding
+          is clearly above a configured default
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, alternating splitArea bands, hidden axis ticks, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, clean legend placement; no splitArea
-          banding for depth.
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: No focal emphasis or hierarchy beyond raw overlapping polygons; all
-          three series treated uniformly.
+        comment: Focal-series emphasis (glow, bolder outline, higher opacity) creates
+          real visual hierarchy, though no explicit annotated insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,50 +144,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-series radar chart.
+        comment: Correct multi-series radar chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Filled polygons, distinct colors, legend, closed polygons, fill+outline
-          all present; gridlines exist but carry no numeric value labels, so the 'value
-          reference' requirement is only partially met.
+        passed: true
+        comment: Fill+outline, alpha 0.2-0.3, legend, closed polygons, and now numeric
+          gridline reference values — all spec notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 6 axes populated correctly per series.
+        comment: Each axis maps correctly to its indicator/value pair
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match series names.
+        comment: Title format exact; legend labels match series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 3 series, 6 axes, legend, gridlines shown; missing only the numeric
-          scale reference.
+        comment: Each of the three series has genuinely different strengths/weaknesses
+          across all six metrics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral fictional earbud comparison.
+        comment: Neutral, plausible earbud product-comparison scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 scale as recommended, sensible spread of values.
+        comment: Values in sensible 60-92 range on a 0-100 scale
     code_quality:
       score: 10
       max: 10
@@ -197,33 +196,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Single setOption() call, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data.
+        comment: Deterministic hard-coded data, no RNG needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only.
+        comment: No unused imports; only tokens + echarts global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, no explicit size/DPR.
+        comment: Correct mount-node contract, animation:false, no explicit init size/DPR
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,23 +230,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper radar series/indicator API usage with per-series lineStyle/areaStyle/itemStyle.
+        comment: Idiomatic single setOption with proper radar/indicator config
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: No distinctive ECharts radar features exercised (emphasis.focus,
-          splitArea banding, custom shape, rich axisName).
-  verdict: REJECTED
+        passed: true
+        comment: splitArea banding, shadowBlur glow, and emphasis.focus:'series' are
+          genuine ECharts-specific radar touches
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - polar-projection
-  - alpha-blending
+  techniques: []
   patterns:
-  - iteration-over-groups
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
