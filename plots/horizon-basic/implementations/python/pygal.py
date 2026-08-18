@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-08-18
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 85/100 | Updated: 2026-08-18
 """
 
 import os
