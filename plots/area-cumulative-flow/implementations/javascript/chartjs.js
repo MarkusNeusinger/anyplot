@@ -1,7 +1,7 @@
 // anyplot.ai
 // area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-18
+// Quality: 92/100 | Created: 2026-08-18
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;

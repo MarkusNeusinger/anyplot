@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: area-cumulative-flow
 created: '2026-08-18T03:13:40Z'
-updated: '2026-08-18T03:18:36Z'
+updated: '2026-08-18T03:28:04Z'
 generated_by: claude-sonnet
 workflow_run: 32094296776
 issue: 5239
@@ -12,49 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
+  - 'Explicit bottleneck-onset annotation now added: a dashed reference line + ''Bottleneck
+    onset'' label at day 45, drawn via a native Chart.js afterDraw plugin hook (no
+    external annotation plugin) — directly resolves the prior review''s top weakness
+    and gives the widening ''In Progress'' band an explained focal point.'
   - 'Correct stacking order: Backlog (earliest stage) on top down to Done (latest
-    stage) at the bottom, matching the spec''s workflow-order requirement exactly.'
-  - 'Uses Chart.js''s fill-to-adjacent-dataset-index technique (fill: 1, fill: 2,
-    fill: 3, fill: ''origin'') to render true per-stage WIP bands rather than naive
-    additive stacking — a sophisticated, idiomatic solution for a chart type Chart.js
-    has no built-in primitive for.'
+    stage) at the bottom, matching the spec''s workflow-order requirement exactly,
+    via fill-to-adjacent-dataset-index chaining (fill: 1, fill: 2, fill: 3, fill:
+    ''origin'') — an idiomatic solution for a chart type Chart.js has no built-in
+    stacked-area primitive for.'
   - Data generation enforces backlog >= inProgress >= review >= done at every date
     via lag-based derivation, and deliberately widens the Review lag after day 45
-    so the 'In Progress' band visibly grows — directly fulfilling the spec's bottleneck-identification
+    so the WIP band visibly grows — directly fulfilling the spec's bottleneck-identification
     use case.
   - Correct Imprint palette order (Backlog=#009E73 brand green first) and fully theme-adaptive
     chrome; both light and dark renders are legible with no dark-on-dark or light-on-light
-    failures.
+    failures, and data colors are pixel-identical across themes.
+  - Title enlarged and bolded (22px -> 25px bold) with added top/bottom padding, and
+    legend switched to rounded point-style swatches with more padding — a modest but
+    real visual-refinement pass in response to feedback.
   - 'Clean, deterministic, dependency-free code: seeded LCG for reproducibility, no
-    functions/classes, follows the mount-node contract exactly with animation disabled.'
+    functions/classes beyond the idiomatic plugin object, follows the mount-node contract
+    exactly with animation disabled.'
   weaknesses:
-  - No annotation or callout marks the bottleneck onset (~day 45) despite the spec
-    explicitly calling out bottleneck identification as a key use case — the widening
-    band is visible but unexplained to the viewer.
-  - Title and legend text feel modest relative to the mandated title's available width
-    (~33% of canvas width used at fontsize 22) — could be sized closer to the style
-    guide's upper range for stronger visual hierarchy.
+  - Title still renders narrower than the style guide's expectation for this mandated
+    ~67-char title format (roughly 40% of canvas width even at the enlarged 25px)
+    — could grow further toward the 70-85% range typical for this title length for
+    stronger visual hierarchy.
   - 'Lower-contrast palette members used for critical WIP bands (lavender #C475FD
-    ''In Progress'', ochre #BD8233 ''Done'') skip the optional 1px ink-stroke outline
-    the style guide recommends for series carrying critical information on the cream
-    background.'
-  - No redundant encoding (e.g. subtle hatching or stage-order legend ordering emphasis)
-    beyond color for the 4 stacked bands, though color alone is acceptable at n=4
-    per the style guide's series-count guidance.
+    ''In Progress'', ochre #BD8233 ''Done'') still skip the optional 1px ink-stroke
+    outline the style guide recommends for series carrying critical information on
+    the cream background.'
+  - The bottleneck annotation marks the onset day with a line and label but doesn't
+    explicitly name the insight (e.g. a short callout like 'Review lag widens here')
+    — a reader has to infer the WIP-growth story from the band width themselves.
+  - No redundant encoding (e.g. subtle hatching) beyond color for the 4 stacked bands,
+    though color alone is acceptable at n=4 per the style guide's series-count guidance.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-equivalent), not pure white and not dark — matches the required light-theme surface.
-      Chrome: Title "area-cumulative-flow · javascript · chartjs · anyplot.ai" in bold dark ink at top center, clearly legible. Legend below the title with 4 swatches (Backlog/In Progress/Review/Done) in dark ink text, all readable. X-axis "Date" title and rotation-free date tick labels (2024-03-01 through 2024-05-21 at even intervals) in soft dark gray, all legible. Y-axis "Cumulative Items" title and numeric ticks (0-350) in soft dark gray, legible. Subtle horizontal gridlines only (no vertical gridlines), consistent with the style guide's "Y-axis grid only" rule.
-      Data: Four stacked area bands from top to bottom: green (Backlog, #009E73), lavender/purple (In Progress), blue (Review), ochre/brown (Done). Bands trend upward from day 0 (near zero) to day 90 (~318 cumulative), with the "In Progress" (purple) band visibly widening in the back half of the chart, consistent with the intended bottleneck simulation. All data boundaries are clearly distinguishable from each other and from the light background.
+      Chrome: Title "area-cumulative-flow · javascript · chartjs · anyplot.ai" in bold dark ink at top center, clearly legible, now larger (25px) than the prior attempt. Legend below the title with 4 rounded-swatch entries (Backlog/In Progress/Review/Done) in dark ink text, all readable. A dashed vertical reference line crosses the plot near day 45 (2024-04-15) with a "Bottleneck onset" label in soft ink at the top of the plot area — clearly visible, does not overlap the legend or axes. X-axis "Date" title and date tick labels (2024-03-01 through 2024-05-21 at even intervals, no rotation) in soft dark gray, all legible. Y-axis "Cumulative Items" title and numeric ticks (0-350) in soft dark gray, legible. Subtle horizontal gridlines only, consistent with the "Y-axis grid only" rule.
+      Data: Four stacked area bands from top to bottom: green (Backlog, #009E73), lavender/purple (In Progress), blue (Review), ochre/brown (Done). Bands trend upward from near zero at day 0 to ~318 cumulative by day 90, with the "In Progress" (purple) band visibly widening after the marked bottleneck-onset line — the annotation now makes this bottleneck story explicit rather than merely visible. All band boundaries are clearly distinguishable from each other and from the light background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-equivalent), not pure black and not light — matches the required dark-theme surface.
-      Chrome: Title and legend text render in light/white ink, clearly legible against the dark background — no dark-on-dark failures. X-axis and Y-axis titles and tick labels render in soft light gray, fully legible. Gridlines remain subtle (horizontal only), correctly inverted for dark-theme contrast.
-      Data: Same four bands in the identical colors as the light render (green, lavender, blue, ochre) — confirmed the four data hues are pixel-identical between themes; only the chrome (background, text, grid) flipped as required. The widening "In Progress" band bottleneck signal remains equally visible on dark.
+      Chrome: Title and legend text render in light/white ink, clearly legible against the dark background — no dark-on-dark failures. The dashed bottleneck-onset reference line and its label render in a light soft-ink tone, fully legible against the dark background. X-axis and Y-axis titles and tick labels render in soft light gray, fully legible. Gridlines remain subtle (horizontal only), correctly inverted for dark-theme contrast.
+      Data: Same four bands in identical colors to the light render (green, lavender, blue, ochre) — confirmed the four data hues are pixel-identical between themes; only the chrome (background, text, grid, annotation ink) flipped as required. The widening "In Progress" band and its now-labeled bottleneck onset remain equally visible on dark.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -66,14 +73,16 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title occupies less width than
-          typical (~33%) but remains fully legible at full size and at 400px scale.
+        comment: All text readable in both themes; title grew to 25px bold but still
+          fills only ~40% of canvas width versus the ~70-85% typical for this mandated
+          title length.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, ticks, axis labels, or data.
+        comment: No collisions between title, legend, bottleneck annotation, ticks,
+          axis labels, or data.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -93,8 +102,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no clipping, generous margins, balanced
-          axis label sizes.
+        comment: Correct 3200x1800 canvas, no clipping, generous margins (improved
+          with added layout padding), balanced axis label sizes.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,30 +118,33 @@ review:
         comment: 'First series #009E73, canonical palette order, correct theme backgrounds,
           data colors identical across themes.'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Competent but largely default styling; palette compliance is baseline,
-          not exceptional flourish.
+        comment: Bolder/larger title and rounded-point legend swatches move past bare
+          defaults, but overall still reads as a well-configured default rather than
+          a distinctive design.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Correctly removes x-axis grid per style guide and keeps y-grid subtle;
-          otherwise standard Chart.js defaults.
+        comment: Horizontal-only grid, added layout padding for more generous margins,
+          and refined legend point style; still no ink-stroke outlines on lower-contrast
+          bands.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Widening 'In Progress' band visually communicates the intended bottleneck,
-          but no annotation calls it out explicitly.
+        passed: true
+        comment: The new bottleneck-onset dashed line + label gives the widening 'In
+          Progress' band an explicit, immediately visible focal point — resolves the
+          prior review's key storytelling gap.
     spec_compliance:
       score: 15
       max: 15
@@ -148,8 +160,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Workflow-order stacking, legend, and reasonable date-axis intervals
-          all present.
+        comment: Workflow-order stacking, legend, reasonable date-axis intervals,
+          and now an explicit bottleneck annotation.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -173,7 +185,7 @@ review:
         max: 6
         passed: true
         comment: Covers date, 4 ordered stages, monotonic cumulative counts, and a
-          demonstrated bottleneck.
+          clearly demonstrated, now-annotated bottleneck.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -196,7 +208,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat procedural script.
+        comment: No functions/classes beyond the idiomatic Chart.js plugin object;
+          flat procedural script.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,8 +227,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; lag-based derivation is appropriately concise for the
-          effect achieved.
+        comment: No fake UI; the afterDraw plugin for the reference line is an appropriately
+          concise, idiomatic way to add the annotation without an external plugin.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -232,20 +245,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses Chart.js's fill-to-dataset-index chaining, the correct idiom
-          for area-band charts, instead of misusing native 'stacked' summation.
+        comment: Uses Chart.js's fill-to-dataset-index chaining plus the native plugin
+          afterDraw hook instead of reaching for an unavailable annotation plugin
+          — the correct idioms for both the area-band chart and the reference-line
+          overlay.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: fill:'origin'/index chaining plus interaction mode:'index' tooltip
-          grouping are genuinely Chart.js-specific techniques.
+        comment: fill:'origin'/index chaining, interaction mode:'index' tooltip grouping,
+          and a custom afterDraw plugin overlay are genuinely Chart.js-specific techniques.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
