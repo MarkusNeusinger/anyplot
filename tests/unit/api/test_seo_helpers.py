@@ -467,6 +467,14 @@ class TestMetaDescription:
         # never splits a word
         assert all(chunk == "word" for chunk in result.rstrip("\u2026").split())
 
+    def test_short_opening_sentence_does_not_win(self) -> None:
+        """A sentence ending before the halfway mark is not worth the whole slot."""
+        text = "A Smith chart. " + "It maps complex impedance onto a normalised polar grid " * 5
+        result = _meta_description(text)
+        assert result != "A Smith chart."
+        assert len(result) > _META_DESCRIPTION_LIMIT // 2
+        assert result.endswith("\u2026")
+
     def test_never_cuts_a_dangling_separator(self) -> None:
         text = "alpha beta gamma, " * 40
         result = _meta_description(text)

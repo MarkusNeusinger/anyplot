@@ -219,10 +219,15 @@ def _meta_description(text: str | None) -> str:
     """Trim a description to what a search result will actually display.
 
     Only the meta/OG tag is trimmed; the visible body copy and the JSON-LD keep
-    the full text, because those are content rather than snippet. Prefers to end
-    on a sentence that fits, and falls back to a word boundary so the trim never
-    lands mid-word or mid-entity — which is also why this runs on the raw text,
-    before HTML escaping, rather than on an escaped string it could cut through.
+    the full text, because those are content rather than snippet.
+
+    Ends on the last full sentence that fits — but only where that lands past
+    the halfway mark. A description opening with a short sentence ("A Smith
+    chart.") would otherwise yield a snippet of a dozen characters, wasting the
+    slot that decides the click; below that threshold a word-boundary trim of
+    the full text carries more information. The word-boundary fallback also
+    keeps the trim off mid-word, and running on raw text rather than an escaped
+    string means it can never cut through an HTML entity.
     """
     text = " ".join((text or "").split())
     if len(text) <= _META_DESCRIPTION_LIMIT:
