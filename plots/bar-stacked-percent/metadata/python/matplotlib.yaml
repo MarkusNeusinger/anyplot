@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:49:07Z'
-updated: '2026-08-18T14:44:05Z'
+updated: '2026-08-18T14:50:28Z'
 generated_by: claude-sonnet
 workflow_run: 32149228784
 issue: 2008
@@ -12,53 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - Text sizes explicitly set at every level (title 12pt, axis labels 10pt, ticks
-    8pt, in-bar percentage labels 9pt bold) and remain well-proportioned with no overflow
-    or overlap in either theme
-  - Thoughtful use of theme-adaptive PAGE_BG-colored bar-segment borders to visually
-    separate adjacent stack segments, which also neutralizes any low-contrast color-pair
-    concerns (VQ-04)
-  - 'Correct Imprint palette in canonical order with first series #009E73, and a sensible
-    semantic read for later slots (ochre for coal, matte-red for the residual ''Other''
-    bucket)'
-  - In-segment percentage labels (suppressed below an 8% threshold to avoid clutter)
-    add real data storytelling value beyond a bare stacked bar
-  - 'Data deliberately includes a realistic edge case: Italy and Poland both have
-    0% nuclear share, exercising the zero-segment rendering path'
-  - Clean KISS structure, deterministic hardcoded data (no seed needed), and correct
-    plot-{THEME}.png output naming
+  - Title now follows the exact mandated format including the language token ("bar-stacked-percent
+    · python · matplotlib · anyplot.ai"), fixing the attempt-1 SC-04 deduction
+  - Segment labels now use the idiomatic ax.bar_label(label_type="center") instead
+    of a manual per-bar ax.text() loop, fixing the attempt-1 LM-01 deduction
+  - 'Real, evidence-based data storytelling addition: the single largest segment in
+    the whole chart (Poland''s 68% coal share) gets a subtly larger label via label_artists[standout_row].set_fontsize(11),
+    computed from the actual data rather than hardcoded'
+  - Explicit font sizes at every level (title 12pt, axis labels 10pt, ticks 8pt, in-segment
+    labels 9/11pt bold) with well-proportioned, non-overlapping layout in both themes
+  - Thoughtful theme-adaptive PAGE_BG-colored bar-segment borders separate adjacent
+    stack segments and improve label contrast against fill colors
+  - 'Correct Imprint palette in canonical order with first series #009E73; theme-adaptive
+    chrome (backgrounds, text, grid, legend box) is correct in both renders'
+  - Clean KISS code structure, deterministic hardcoded data, correct plot-{THEME}.png
+    output naming
   weaknesses:
-  - 'Title omits the required language token: code renders "bar-stacked-percent ·
-    matplotlib · anyplot.ai" but the mandated format is "{spec-id} · {language} ·
-    {library} · anyplot.ai" — fix to "bar-stacked-percent · python · matplotlib ·
-    anyplot.ai".'
-  - Percentage labels are placed manually with a per-segment ax.text() loop and a
-    hand-rolled 8% visibility threshold; matplotlib's native ax.bar_label() (available
-    since 3.4) is the more idiomatic high-level API for this exact stacked-bar-labeling
-    use case and would reduce custom logic.
-  - 'Design Excellence is solid but not exceptional: the plot reads as a well-executed
-    but fairly conventional stacked bar — no explicit visual emphasis (e.g. highlighting
-    Poland''s 68% coal dependency or France''s 66% nuclear share) beyond what the
-    raw labels already convey; consider a subtle callout or color/weight emphasis
-    on the most notable data point to sharpen the storytelling.'
-  - Germany's nuclear share (13%) reflects an earlier point in time — Germany completed
-    its nuclear phase-out in April 2023, so a current-year dataset would show ~0%
-    nuclear for Germany; either date the data explicitly or update the value for factual
-    consistency with the other rows.
+  - Germany's nuclear share (13%) is still dated and was not addressed in this repair
+    attempt — Germany completed its nuclear phase-out in April 2023, so a current
+    dataset would show ~0% nuclear for Germany; either label the data with an explicit
+    reference year or update the value for factual consistency with the other rows
+  - 'Design Excellence is solid but not yet publication-grade: the standout-label
+    emphasis is a real but subtle improvement (9pt to 11pt) rather than a strong focal
+    point — a color/weight-based emphasis or a short callout on Poland''s coal dependency
+    or France''s nuclear reliance would sharpen the story further'
+  - 'Library Mastery still leans generic beyond bar_label: no matplotlib-distinctive
+    feature (e.g., custom tick Formatter, hatching for the emphasized segment, or
+    annotate-based callout) that couldn''t be easily replicated in another library'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "bar-stacked-percent · matplotlib · anyplot.ai" in dark ink, clearly legible. X-axis label "Country" and Y-axis label "Percentage (%)" in dark ink, legible. Tick labels (country names, 0/25/50/75/100) in soft dark gray, legible. Legend box (upper right, elevated cream fill, soft-gray border) with 5 entries (Renewables, Nuclear, Natural Gas, Coal, Other), all legible.
-      Data: 6 stacked bars (Germany, France, UK, Spain, Italy, Poland), each stacked to 100%. Segment colors in order: #009E73 green (Renewables), #C475FD lavender (Nuclear), #4467A3 blue (Natural Gas), #BD8233 ochre (Coal), #AE3030 matte red (Other) — matches Imprint canonical order 1-5, first series is #009E73. Segments ≥8% carry bold in-segment percentage labels in dark ink, clearly readable against every fill color. Thin cream-colored borders separate adjacent segments.
+      Chrome: Title "bar-stacked-percent · python · matplotlib · anyplot.ai" in dark ink, clearly legible, ~75-80% of plot width (expected for the mandated title format). X-axis label "Country" and Y-axis label "Percentage (%)" in dark ink, legible. Tick labels (country names, 0/25/50/75/100) in soft dark gray, legible. Legend box (upper right, outside plot area, elevated cream fill, soft-gray border) with 5 entries (Renewables, Nuclear, Natural Gas, Coal, Other), all legible.
+      Data: 6 stacked bars (Germany, France, UK, Spain, Italy, Poland), each normalized to 100%. Segment colors in order: #009E73 green (Renewables), #C475FD lavender (Nuclear), #4467A3 blue (Natural Gas), #BD8233 ochre (Coal), #AE3030 matte red (Other) — matches Imprint canonical order 1-5, first series is #009E73. Segments ≥8% carry bold in-segment percentage labels in dark ink, clearly readable against every fill color. Poland's 68% Coal label (the single largest segment in the chart) is visibly larger than the other labels, confirming the new size-emphasis focal point. Thin cream-colored borders separate adjacent segments.
       Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Title, axis labels in light off-white ink, clearly legible. Tick labels in soft light gray, legible. Legend box (dark elevated fill #242420, soft-gray border) fully legible, no dark-on-dark issues found.
-      Data: Identical segment colors and order to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) — confirms data colors are theme-invariant, only chrome flipped. In-segment percentage labels render in light ink, clearly readable against every fill color, including on the green and blue segments.
+      Data: Identical segment colors and order to the light render (#009E73, #C475FD, #4467A3, #BD8233, #AE3030) — confirms data colors are theme-invariant, only chrome flipped. In-segment percentage labels render in light ink, clearly readable against every fill color, including on the green and blue segments. Poland's 68% Coal label remains visibly larger than the other labels, same as in the light render.
       Legibility verdict: PASS — no dark-on-dark or light-on-light failures in either render.
   criteria_checklist:
     visual_quality:
@@ -71,8 +65,8 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 12pt, axis labels 10pt, ticks
-          8pt, segment labels 9pt); well-proportioned, no overflow, readable in both
-          themes
+          8pt, segment labels 9/11pt); well-proportioned, no overflow, readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -136,10 +130,11 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: In-segment labels create hierarchy and readability, but no explicit
-          emphasis on the most notable data point (e.g. Poland's coal dependency)
+        comment: New data-driven size emphasis on the single largest segment (Poland's
+          68% coal) creates a real focal point, but the effect is subtle rather than
+          an immediately obvious insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -163,11 +158,11 @@ review:
         comment: X=category, Y=percentage 0-100, all data visible and correctly stacked
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend correct, but title omits the required '· python ·' language
-          token from the mandated format
+        passed: true
+        comment: Title now includes the required '· python ·' language token, matching
+          the mandated format exactly; legend labels correct
     data_quality:
       score: 14
       max: 15
@@ -191,7 +186,8 @@ review:
         max: 4
         passed: true
         comment: Mostly factually accurate country energy mixes; Germany's 13% nuclear
-          figure is dated (Germany completed its nuclear phase-out in 2023)
+          figure is still dated (Germany completed its nuclear phase-out in 2023)
+          and was not addressed in this repair attempt
     code_quality:
       score: 10
       max: 10
@@ -219,7 +215,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake functionality, clean bar_label usage
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,23 +223,26 @@ review:
         passed: true
         comment: Saves plot-{THEME}.png, no deprecated calls
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct ax.bar(bottom=...) stacking, but manual ax.text() loop for
-          labels instead of the more idiomatic ax.bar_label() (matplotlib 3.4+)
+        comment: Now uses ax.bar_label(label_type="center") — the idiomatic matplotlib
+          3.4+ API — instead of the prior manual ax.text() loop, plus correct ax.bar(bottom=...)
+          stacking
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic technique usage, no feature distinctive to matplotlib specifically
-  verdict: REJECTED
+        comment: bar_label's returned Text artists are manipulated directly (per-artist
+          fontsize override) which is a mildly matplotlib-specific pattern, but overall
+          usage remains fairly generic
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -255,6 +254,7 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
+  - cumulative-sum
   styling:
   - edge-highlighting
   - grid-styling
