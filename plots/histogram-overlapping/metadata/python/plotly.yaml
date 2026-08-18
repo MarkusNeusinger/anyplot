@@ -2,49 +2,58 @@ library: plotly
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:47:33Z'
-updated: '2026-05-08T07:03:07Z'
-generated_by: claude-haiku
-workflow_run: 25541581433
+updated: '2026-08-18T11:03:21Z'
+generated_by: claude-sonnet
+workflow_run: 32127593098
 issue: 2010
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotly/plot-dark.html
-quality_score: 91
+quality_score: 90
 review:
   strengths:
-  - Perfect text legibility with explicit sizing in both light and dark themes
-  - Excellent palette compliance with correct Okabe-Ito colors and theme-adaptive
-    chrome
-  - Clean, idiomatic Plotly usage with barmode='overlay' for true overlapping visualization
-  - Realistic and neutral data example (heights by gender) that demonstrates the plot
-    type effectively
-  - High-quality visual hierarchy with semi-transparent overlapping bars naturally
-    showing distribution divergence
-  - Proper theme adaptation using environment-based token system (#FAF8F1/#1A1A17
-    backgrounds)
+  - 'Correct Imprint palette application — first series #009E73 (Male), second #C475FD
+    (Female), canonical order, identical hex in both themes'
+  - Semi-transparent overlay (opacity 0.55, barmode='overlay') cleanly reveals both
+    distributions and their overlap band
+  - Mean reference lines + delta annotation callout add genuine data storytelling
+    and a clear focal point on the central-tendency gap
+  - Theme-adaptive chrome fully threaded through — both renders pass the readability
+    checks with no dark-on-dark or light-on-light failures
+  - Explicit shared xbins (start=141, end=197, size=3) now guarantee bin alignment
+    across both traces regardless of the underlying data
+  - Title now fills header space proportionally (~74% width at fontsize 18) without
+    overflowing or clipping
+  - 'Clean, reproducible code: seeded RNG, minimal used-only imports, correct canvas
+    kwargs (3200x1800)'
   weaknesses:
-  - Design Excellence could be elevated with custom visual refinements (currently
-    relies on well-configured defaults)
+  - The overlap band between the two histograms still renders as a somewhat low-contrast
+    muted violet-gray blend, even after the opacity bump to 0.55 — a further nudge
+    to ~0.6 or a thin contrasting edge on the overlap region would sharpen the read
+    without hurting individual-group legibility.
+  - 'DE-01/DE-02 remain solid-but-not-exceptional: the plot reads as a well-executed
+    default histogram with two nice storytelling devices (mean lines, delta annotation)
+    rather than a fully bespoke publication-grade design — consider a secondary refinement
+    such as a subtle y-axis-only fade or annotation arrow pointing at the overlap
+    zone to push aesthetic sophistication further.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with clear contrast against text elements
-      Chrome: Title "histogram-overlapping · plotly · anyplot.ai" renders in dark (#1A1A17), clearly readable at 28px. X-axis label "Height (cm)" and Y-axis label "Frequency" both in dark text at 22px, fully legible. Tick labels in soft ink (#4A4A44) at 18px, well-spaced and readable. Subtle grid lines at ~10% opacity provide visual reference without dominance. Legend box with border positioned top-right, clearly identifies "Male" (green) and "Female" (vermillion)
-      Data: Male distribution (Okabe-Ito green #009E73) centered ~175cm with 200 samples; Female distribution (Okabe-Ito vermillion #D55E00) centered ~162cm with 200 samples. Semi-transparent bars (opacity=0.5) clearly show overlapping regions in central range (165-175cm). Bin edges marked with subtle INK_SOFT outlines. Bar heights range from 0-40 frequency, appropriate scale
-      Legibility verdict: PASS - All text readable, colors distinct, no "light-on-light" elements, overlap regions visible by design
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "histogram-overlapping · python · plotly · anyplot.ai" centered in dark ink at fontsize 18, comfortably fills ~74% of plot width without clipping. Axis titles "Height (cm)" / "Frequency" and tick labels are dark/soft-dark and clearly legible. Subtle horizontal y-axis-only gridlines. Bordered legend (top-right) shows "Male" (green) / "Female" (purple) swatches with dark readable text. Bordered annotation callout (top-left, y=0.99) reads "Male mean 175 cm · Female mean 163 cm · Δ 12 cm" and sits clear of the tallest bars with no overlap.
+      Data: Two semi-transparent histograms (Imprint green #009E73 for Male, Imprint purple #C475FD for Female, opacity 0.55, explicit shared bins start=141/end=197/size=3) overlap around 163-172 cm, blending into a muted violet-gray band; dashed vertical mean lines (rgba versions of the same hues) mark each group's center and stay clear of the annotation box.
+      Legibility verdict: PASS — all text readable against the light background, no clipping at canvas edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) matches light render exactly except for theme flip
-      Chrome: Title renders in light text (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in light-appropriate colors (primary #F0EFE8, secondary #B8B7B0), all legible with no "dark-on-dark" issues. Subtle grid lines at ~10% opacity visible against dark background. Legend box uses elevated dark background (#242420) with light text, properly positioned and readable
-      Data: Colors identical to light render - green #009E73 for Male, vermillion #D55E00 for Female (Okabe-Ito positions 1-2). Distributions show same shape and scale as light render. Semi-transparent overlapping is maintained, with composite colors visible in overlap regions. No loss of contrast or visibility
-      Legibility verdict: PASS - All text readable on dark background, data colors identical to light render, grid subtle but visible, no theme-readability failures
-
-    Both renders successfully demonstrate the overlapping histogram technique with proper theme adaptation. Only chrome (background, text, grid) flips between themes; data colors remain constant, achieving correct theme-adaptive design.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels all flip to light ink (INK / INK_SOFT tokens) and remain clearly legible — no dark-on-dark failures anywhere. Gridlines stay subtle but visible. Legend and annotation callout both use the dark-elevated fill (#242420) with light borders and light text, fully readable.
+      Data: The histogram fills use the identical underlying hex values as the light render (#009E73 / #C475FD, opacity 0.55) — only chrome (background, text, grid, borders) flips to dark tokens, confirming data colors are unchanged between themes.
+      Legibility verdict: PASS — all text readable against the dark background, brand green and lavender remain distinct.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -52,75 +61,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px.
-          Readable in both light and dark themes'
+        comment: All font sizes explicitly set; title now fills ~74% of width at fontsize
+          18 without overflow; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements. Legend clear of data area. Tick labels
-          well-spaced
+        comment: No collisions; annotation nudged to y=0.99 clears the tallest bars
+          and the mean lines
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible and adapted to 200 samples per group. Semi-transparent
-          opacity allows overlap visualization
+        comment: Bars visible at opacity 0.55 with subtle edge stroke; overlap band
+          still reads as a slightly low-contrast blend
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Green and vermillion have excellent
-          contrast
+        comment: Good contrast, CVD-safe, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 'Perfect proportions: 4800x2700 landscape, 60-70% canvas utilization,
-          generous 100px margins'
+        comment: Balanced margins, plot fills a healthy share of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Height (cm)'' and ''Frequency''.
-          Title format correct'
+        comment: Height (cm) includes units; Frequency is self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito positions 1-2).
-          Backgrounds #FAF8F1 (light) and #1A1A17 (dark). Both renders theme-correct'
+        comment: 'First series #009E73, second #C475FD, canonical order, identical
+          hex across themes, theme-correct chrome'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults with clean palette and proper styling.
-          No custom design elements beyond basics
+        passed: true
+        comment: Mean lines + delta annotation show intentional hierarchy beyond a
+          generic histogram, but not yet publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Subtle grid styling, generous whitespace, bar outlines provide refinement.
-          Some customization visible
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Clear visual hierarchy showing gender comparison through color separation
-          and overlap visualization. Data tells story naturally
+        passed: true
+        comment: X-axis gridlines removed, subtle y-grid, consistently bordered legend/annotation
+          boxes
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed mean lines + delta callout create a clear focal point on the
+          group difference
     spec_compliance:
       score: 15
       max: 15
@@ -130,52 +137,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: overlapping histograms with barmode=''overlay'''
+        comment: Correct overlapping-histogram type via barmode=overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills (opacity=0.5), distinct colors, legend, aligned
-          bin edges (size=3)
+        comment: Semi-transparent fills, distinct colors, legend, and now explicit
+          aligned bin edges across both traces
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: heights 150-195cm. Y-axis: frequency 0-40. All data visible'
+        comment: X=height, Y=frequency, both distributions fully visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''histogram-overlapping · plotly · anyplot.ai''. Legend labels:
-          Male/Female correct'
+        comment: Title matches mandated format; legend labels Male/Female match data
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all aspects: central tendency differences, spread variation,
-          overlap regions'
+        comment: Two distributions with distinct means/spreads and a visible overlap
+          region; single modality each
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Classic real-world example: heights by gender. Neutral, non-controversial,
-          well-known domain'
+        comment: Real, neutral scenario (heights by gender), plausible and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Factually correct: male mean ~175cm, female ~162cm. Appropriate
-          for domain and sample size'
+        comment: Means (175/162 cm) and spreads (sd 7/6) align with real-world adult
+          height distributions
     code_quality:
       score: 10
       max: 10
@@ -185,60 +190,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save. No functions/classes'
+        comment: Imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Deterministic data generation
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, plotly'
+        comment: Only numpy, plotly.graph_objects, os used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No fake UI
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API used
+        comment: Saves plot-{THEME}.png and .html via current write_image/write_html
+          API
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expertly uses go.Figure, add_trace, update_layout. barmode='overlay'
-          idiomatic for overlapping
+        comment: Correct go.Figure/go.Histogram usage with overlay barmode, doesn't
+          reach for the most advanced patterns
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Leverages Histogram trace, xbins binning, marker.line styling, opacity,
-          HTML output, theme-aware rendering
-    score_caps:
-      applied: false
-      notes: No score caps triggered. VQ-02=6, VQ-03=6, SC-01=5, DQ-02=5, DE-01/DE-02>2,
-        CQ-04=2
+        comment: add_vline plus paper-coordinate add_annotation with styled bgcolor/border
+          go beyond generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
