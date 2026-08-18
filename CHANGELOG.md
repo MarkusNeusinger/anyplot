@@ -16,6 +16,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [3.1.0] — 2026-08-19 — Legible to machines
+
+anyplot 3.1 makes the catalogue readable by machines. An assistant asked about a plot can now find
+it, open one library's page, read the runnable source, fetch the rendered image and cite the URL —
+a path that was broken at four separate points, each invisible to anyone browsing the site by hand.
+Googlebot had been walking an infinite redirect; a trailing slash sent crawlers to a host that
+forbids crawling; unknown library names produced an unbounded supply of indexable near-duplicates;
+and seven AI fetchers were served an empty shell. The crawler policy that used to decline training
+crawlers is now open to every operator that follows the rules, which is also the only way Gemini
+could ever cite the catalogue. Two Plausible sites now separate what people read from what machines
+do.
+
+Behind that: a Search Console integration that had never once worked, a synthetic monitor that had
+been failing unnoticed for ten days, three new verification skills, and a security-headers and
+audit sweep across the stack.
+
 ### Added
 
 - **You can now see which assistants read the catalogue** — a `bot_fetch` event records every AI
@@ -235,9 +251,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   previews regenerate against the new major through the regular pipeline (#9609).
 - **Post-restructure `app/` cleanup:** dead components removed and stale doc paths fixed (#8630);
   ECharts / MUI X labels shortened in the `/stats` library list (#8666).
-- **Dependencies:** grouped bumps across Python (starlette, cryptography, python-multipart,
-  sqlalchemy, uvicorn, 15-update python-minor group), npm (esbuild, undici), and GitHub Actions
-  (#8668, #8823, #8824, #8864, #8978, #8980, #9074, #9513, #9515).
+- **Dependencies:** 32 grouped bumps across Python (starlette, cryptography, python-multipart,
+  sqlalchemy, uvicorn, pydantic, the python-minor group), npm (esbuild, undici, vite, react, the
+  npm-minor and mui groups) and GitHub Actions (#8330, #8668, #8823, #8824, #8864, #8977, #8978,
+  #8979, #8980, #9074, #9513, #9515, #9613, #9640, #9643, #9647, #9648, #9650, #9652, #9653, #9654,
+  #9657, #9673, #9674, #9955, #9957, #9960, #9961, #9962, #10017, #10067, #10115, #10178). One of
+  them, the vite 8.1.5 bump in #9657, took the site down and is written up under Fixed.
 
 ### Removed
 
@@ -635,6 +654,8 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   included in both server blocks and re-included in every `add_header` location
   (audit 2026-07-15 Medium#21) (#9642).
 
+*Catalog: 1,607 implementation merges across 15 libraries and 10 new plot types (heatmap-periodic-table, line-cycle-seasonal, depth-order-book, climograph-walter-lieth, audiogram-clinical, burndown-sprint, bar-heart-rate-zones, gauge-activity-rings, curve-power-duration, line-training-load-pmc); the catalogue stands at 324 specifications.*
+
 ## [3.0.0] — 2026-06-10 — Julia & JavaScript, 15 libraries & the Imprint palette
 
 anyplot 3.0 doubles the language count — Julia and JavaScript join Python and R, growing the
@@ -892,7 +913,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.0.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.1.0...HEAD
+[3.1.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/MarkusNeusinger/anyplot/compare/v2.4.0...v3.0.0
 [2.4.0]: https://github.com/MarkusNeusinger/anyplot/compare/v2.3.0...v2.4.0
 [2.3.0]: https://github.com/MarkusNeusinger/anyplot/compare/v2.2.0...v2.3.0
