@@ -20,8 +20,8 @@ function randomNormal(mean, stdDev) {
 }
 
 const groups = [
-  { name: "Morning Section", mean: 72, stdDev: 11, n: 300 },
-  { name: "Afternoon Section", mean: 79, stdDev: 9, n: 300 },
+  { name: "Morning Section", mean: 72, stdDev: 13, n: 300 },
+  { name: "Afternoon Section", mean: 80, stdDev: 6, n: 300 },
 ];
 groups.forEach((group) => {
   group.scores = Array.from({ length: group.n }, () =>
@@ -59,6 +59,42 @@ function withAlpha(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// --- Mean-marker plugin --------------------------------------------------
+// Makes the score-gap insight explicit: a dashed vertical line + label at
+// each group's mean, positioned via the shared bin grid (fractional
+// category index) so it lines up with the actual score, not the bin edge.
+const meanMarkerPlugin = {
+  id: "meanMarkers",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    ctx.save();
+    groups.forEach((group, i) => {
+      const fracIndex = (group.mean - minEdge) / binWidth - 0.5;
+      const xPixel = xScale.getPixelForValue(fracIndex);
+
+      ctx.strokeStyle = t.palette[i];
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.moveTo(xPixel, chartArea.top);
+      ctx.lineTo(xPixel, chartArea.bottom);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      ctx.fillStyle = t.palette[i];
+      ctx.font = "600 13px sans-serif";
+      ctx.textAlign = i === 0 ? "right" : "left";
+      ctx.fillText(
+        `mean ${group.mean.toFixed(0)}`,
+        xPixel + (i === 0 ? -6 : 6),
+        chartArea.top + 16,
+      );
+    });
+    ctx.restore();
+  },
+};
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -79,10 +115,14 @@ new Chart(canvas, {
       grouped: false,
     })),
   },
+  plugins: [meanMarkerPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: {
+      padding: { right: 24, top: 8 },
+    },
     plugins: {
       title: {
         display: true,
@@ -92,7 +132,13 @@ new Chart(canvas, {
         padding: { bottom: 20 },
       },
       legend: {
-        labels: { color: t.ink, font: { size: 16 }, boxWidth: 20 },
+        labels: {
+          color: t.inkSoft,
+          font: { size: 14 },
+          boxWidth: 14,
+          usePointStyle: true,
+          pointStyle: "rectRounded",
+        },
       },
     },
     scales: {
