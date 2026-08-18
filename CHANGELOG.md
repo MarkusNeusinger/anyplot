@@ -137,6 +137,20 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **The crawler policy is open to every operator** — retrieval, citation, search indexing and model
+  training are now permitted for all of them, replacing the retrieval-yes / training-no split from
+  #9633. That split was never coherent for an MIT-licensed catalogue published to be reused:
+  declining a training crawler protected nothing the licence had not already granted, while costing
+  reach. It also had an unintended consequence — Google's `Google-Extended` token governs Gemini
+  **grounding and training together**, with no finer control, so declining it kept anyplot out of
+  Gemini's answers entirely. The `Content-Signal` line moves to `ai-train=yes` and the Article 4
+  reservation is gone rather than left contradicting the licence beside it. `Bytespider` remains
+  declined on bandwidth grounds, not principle: it is documented as ignoring robots.txt and crawling
+  far harder than this catalogue can justify serving. Verified against Python's `urllib.robotparser`
+  across eleven agent/path pairs. **Requires a Cloudflare dashboard change to take effect** — the
+  edge still 403s GPTBot, CCBot, Amazonbot, meta-externalagent and Google-CloudVertexBot, and a
+  permission the edge blocks is a published lie.
+
 - **Repository prose now follows the Google developer documentation style guide** — the
   `write-docs` skill gains a "Writing style" section anchoring
   [Google style](https://developers.google.com/style) as the baseline for `docs/`, `README.md`,
