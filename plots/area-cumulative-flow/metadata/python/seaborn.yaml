@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T21:02:16Z'
-updated: '2026-08-18T02:57:00Z'
+updated: '2026-08-18T03:03:02Z'
 generated_by: claude-sonnet
 workflow_run: 32093058077
 issue: 5239
@@ -12,63 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 91
 review:
   strengths:
+  - 'Both Attempt 1 defects are fully resolved: the title now reads ''area-cumulative-flow
+    · python · seaborn · anyplot.ai'', and Development/Testing bands stay visibly
+    nonzero across the entire 90-day range (differentiated Poisson rates: 6 -> 5 ->
+    4.3 -> 3.6 -> 3.0 instead of duplicate rates)'
+  - All five workflow stages now carry a real WIP signal, giving the CFD its core
+    teaching point (band width = queue size) across the full pipeline, not just the
+    highlighted Backlog stage
   - Idiomatic use of seaborn's modern objects interface (so.Plot/so.Area/so.Stack)
     for the stacked-area CFD, rather than the legacy stackplot API
   - 'Stack order matches CFD convention exactly: Backlog (earliest stage) on top,
     Done (latest stage) on bottom, and the custom legend mirrors that same visual
     order top-to-bottom'
   - 'Smart semantic color use: Done mapped to brand green (#009E73) and Backlog mapped
-    to matte red (#AE3030) reads instantly as ''complete'' vs ''bottleneck'', on top
-    of satisfying the canonical first-series-is-green rule'
-  - The 'Backlog bottleneck' annotation correctly identifies and points at the widening
+    to matte red (#AE3030) reads instantly as complete vs bottleneck, while still
+    satisfying the canonical first-series-is-green rule'
+  - The Backlog bottleneck annotation correctly identifies and points at the widening
     band, giving the chart a clear focal point and story
-  - Full theme-adaptive chrome (background, ink tokens, grid, legend) correctly threaded
-    through sns.set_theme rc params for both light and dark renders
+  - Full theme-adaptive chrome correctly threaded through sns.set_theme rc params
+    for both light and dark renders - no dark-on-dark or light-on-light issues in
+    either render
   - 'Clean, flat, reproducible script: single explicit figure, no functions/classes,
     fixed np.random.seed(42), only used imports'
   weaknesses:
-  - 'Title is ''area-cumulative-flow · seaborn · anyplot.ai'' but the mandated format
-    is ''{spec-id} · {language} · {library} · anyplot.ai'' — the ''python'' language
-    segment is missing entirely. Fix: ax.set_title("area-cumulative-flow · python
-    · seaborn · anyplot.ai", ...).'
-  - 'Two of the five legend entries — Development and Testing — are effectively invisible
-    bands: they show a thin sliver only in the first ~2 weeks (Jan 15-29) and then
-    vanish completely for the remaining ~75 days in both renders. The data-generation
-    logic feeds dev_wip/testing_wip from independent np.random.poisson(4) draws with
-    the SAME rate as done_wip''s generator, so np.minimum() collapses their WIP to
-    ~0 almost immediately — those two stages never show meaningful queue buildup or
-    drain, which undercuts the CFD''s core teaching point (every band''s width = WIP
-    in that stage) for 40% of the workflow stages. Fix: give Development and Testing
-    distinctly lower throughput rates than their upstream stage (e.g. poisson(3.5)
-    and poisson(3.2) vs Analysis''s poisson(5)) so each maintains a visibly nonzero,
-    non-trivial band width across the full date range, or shape the WIP with a slower-draining
-    function rather than same-rate independent Poisson walks.'
-  - Because Development/Testing WIP collapses to near-zero for most of the series,
-    the implied real-world scenario is inconsistent — a Kanban stage with zero cycle
-    time for 75+ consecutive days is not a plausible dev/test process, undercutting
-    the realism of the synthetic data.
-  - Legend uses a visible box frame (framealpha=0.9 + explicit edgecolor) which the
-    style guide's decoration-removal checklist lists as a candidate for removal on
-    minimal/clean layouts — a borderless or lighter-weight legend would read cleaner,
-    though this is a minor polish item next to the two issues above.
+  - Legend still uses a visible box frame (framealpha=0.9 + explicit edgecolor=INK_SOFT).
+    The style guide favors minimal chrome for clean layouts - consider a frameless
+    legend or a lighter-touch background to lift DE-02 further. Minor polish item,
+    not a functional issue.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly not pure white.
-      Chrome: Title "area-cumulative-flow · seaborn · anyplot.ai" (dark ink, centered), axis labels "Date" / "Cumulative Items" (dark ink), tick labels in softer gray (rotated x-axis date labels: Jan 15, Jan 29, Feb 12, Feb 26, Mar 11, Mar 25, Apr 08), boxed legend (upper-left) listing Backlog/Analysis/Development/Testing/Done with color swatches, "Backlog bottleneck" annotation with arrow pointing into the red band near the end of the series. All text is clearly readable against the light background — no light-on-light issues.
-      Data: 5-band stacked area chart, bottom to top: Done (large green #009E73 area, ~0 to ~350 by day 90), Testing (thin lavender sliver, visible only in the first ~2 weeks then vanishes), Development (thin blue sliver, same pattern as Testing), Analysis (ochre #BD8233 band, moderate and growing), Backlog (red #AE3030 band at top, visibly widening toward the end — this is the annotated bottleneck). Only 3 of the 5 bands (Done, Analysis, Backlog) are visually distinguishable for the bulk of the 90-day range; Development and Testing read as an essentially flat line after ~Jan 29.
-      Legibility verdict: PASS (all text readable), but Element Visibility is a FAIL for the Development/Testing bands specifically (see weaknesses).
+      Background: Warm off-white, matches #FAF8F1 target, not pure white.
+      Chrome: Title "area-cumulative-flow · python · seaborn · anyplot.ai" in dark ink, fully visible and correctly formatted. "Date" (rotated tick labels) and "Cumulative Items" axis labels dark and legible. Boxed legend upper-left lists Backlog/Analysis/Development/Testing/Done in stack order. Subtle horizontal gridlines visible but unobtrusive. All readable, no light-on-light issues.
+      Data: 5 stacked bands, colors green (#009E73, Done) / lavender (#C475FD, Testing) / blue (#4467A3, Development) / ochre (#BD8233, Analysis) / red (#AE3030, Backlog). First series is #009E73 as required. All 5 bands maintain visible, nonzero width across the full 90-day range - the prior Development/Testing collapse-to-zero defect is fixed. "Backlog bottleneck" annotation with arrow points into the widening red band near the end.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly not pure black.
-      Chrome: Same title/axis labels/ticks now in light ink (#F0EFE8 primary, #B8B7B0 secondary) against the dark background — all clearly legible, no dark-on-dark failures. Legend box uses the elevated dark surface (#242420) with light text, annotation arrow and text rendered in light ink, fully readable.
-      Data: Identical band colors and identical shapes to the light render — Done green, Testing lavender, Development blue, Analysis ochre, Backlog red are pixel-for-pixel the same hues as light mode, confirming only chrome (not data colors) flips between themes. Same Development/Testing near-invisibility issue reproduces identically in dark mode (it's a data-generation issue, not a theme-adaptation issue).
-      Legibility verdict: PASS (all text/chrome readable, correct theme adaptation), but same Element Visibility concern as light render carries over.
+      Background: Warm near-black, matches #1A1A17 target, not pure black.
+      Chrome: Same title/axis labels/legend/annotation now rendered in light ink tokens (#F0EFE8 / #B8B7B0), all clearly legible. No dark-on-dark failures - title, ticks, legend text, and annotation arrow are all white/light against the dark background.
+      Data: Colors pixel-identical to the light render (green/lavender/blue/ochre/red unchanged), confirming only chrome flips between themes. Band-width dynamics match the light render exactly.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -76,81 +64,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/legend/annotation text is clearly readable in
-          both light and dark renders; sizes are appropriate for the 3200x1800 canvas.
+        comment: All font sizes explicitly set, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions; legend, title, and annotation
-          are well separated from the data.
+        comment: No overlap between legend, annotation, and data
       - id: VQ-03
         name: Element Visibility
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Development and Testing bands are visible for only the first ~2 weeks,
-          then collapse to an imperceptible sliver for the remaining ~75 days in both
-          renders — 2 of 5 legend-referenced elements are effectively invisible for
-          most of the chart.
+        passed: true
+        comment: 'Fixed: Development/Testing bands now stay visibly nonzero across
+          the full date range'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe by design; semantic red/green use adds
-          a redundant meaning cue beyond hue alone.
+        comment: Good contrast, CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800; canvas dimension gate passed. Title,
-          margins, and legend proportions are all within expected bounds, no overflow
-          or clipping.
+        comment: Balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Date'' and ''Cumulative Items'' are descriptive; units are implicit
-          and clear from context (item counts over time).'
+        comment: Date / Cumulative Items are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First stacking series (Done) uses #009E73; Backlog uses semantic-anchor
-          red for the bottleneck; both renders theme-correct; backgrounds match #FAF8F1/#1A1A17
-          exactly; data colors identical across themes.'
+        comment: 'First series #009E73, remaining stages from Imprint palette, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Deliberate semantic palette assignment (green=Done, red=Backlog),
-          custom legend order mirroring the visual stack, and a targeted callout annotation
-          show real design intent above generic defaults.
+        passed: true
+        comment: Semantic green/red mapping, legend order mirrors stack
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Spines removed (top/right), subtle y-grid, generous whitespace; legend
-          keeps a visible box frame which the style guide's decoration checklist suggests
-          removing for a cleaner look.
+        passed: false
+        comment: Legend still keeps a visible box frame
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: The bottleneck annotation gives a clear focal point and narrative,
-          but the storytelling is undercut because 2 of 5 stages never show a readable
-          WIP signal to compare against the highlighted Backlog stage.
+        passed: true
+        comment: Annotation now contrasts against 5 visibly-dynamic bands instead
+          of 3
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -158,54 +135,47 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked-area cumulative flow diagram.
+        comment: Correct CFD / stacked area
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Stages stacked in correct workflow order (Backlog top, Done bottom),
-          legend present, date x-axis at reasonable intervals; the widening/narrowing
-          WIP signal spec calls out is only demonstrated for 3 of 5 stages.
+        comment: 'Fixed: widening/narrowing WIP now demonstrated across all 5 stages'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=cumulative items, correctly stacked by stage.
+        comment: X=date, Y=cumulative items, correct
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels are correct, but the title omits the mandated 'python'
-          language segment entirely ('area-cumulative-flow · seaborn · anyplot.ai'
-          instead of 'area-cumulative-flow · python · seaborn · anyplot.ai').
+        passed: true
+        comment: 'Fixed: title now includes the python language segment'
     data_quality:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        comment: Only 3 of 5 stages (Done, Analysis, Backlog) show a meaningful, sustained
-          WIP band; Development and Testing never show real growth/drain dynamics
-          after the first two weeks.
+        passed: true
+        comment: 'Fixed: all 5 stages now show meaningful, sustained WIP dynamics'
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        comment: Kanban board scenario is plausible and neutral, but zero measurable
-          WIP in Development/Testing for 75+ consecutive days is not realistic for
-          a real delivery pipeline.
+        passed: true
+        comment: 'Fixed: plausible Kanban board, no stage stuck at zero WIP'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 90-day range, item counts growing to ~525 cumulative — sensible scale
-          for a Kanban board.
+        comment: Realistic arrival/throughput rates and item counts
     code_quality:
       score: 10
       max: 10
@@ -215,32 +185,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat top-to-bottom script.
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) fixed.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (os, mdates, mpatches, plt, np, pd, sns, so) is used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake interactivity.
+        comment: Clean, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png at dpi=400 with no bbox_inches='tight', matching
-          the canvas hard rule.
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight'
     library_mastery:
       score: 7
       max: 10
@@ -249,17 +218,16 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Uses seaborn's modern objects interface (so.Plot/so.Area/so.Stack/so.Nominal)
-          rather than the legacy stackplot approach — a strong, idiomatic choice for
-          this chart type.
+        passed: true
+        comment: Uses seaborn's modern objects interface (so.Plot/so.Area/so.Stack)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: so.Stack() with an ordered categorical scale is a genuinely seaborn-objects-specific
-          feature, though the rest of the styling (legend, annotation) is generic
-          matplotlib.
-  verdict: REJECTED
+        passed: true
+        comment: so.Stack() with ordered categorical scale is distinctive; rest is
+          generic matplotlib chrome
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
