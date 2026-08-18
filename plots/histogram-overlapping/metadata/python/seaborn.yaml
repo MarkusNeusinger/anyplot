@@ -2,45 +2,60 @@ library: seaborn
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:47:40Z'
-updated: '2026-05-08T07:00:11Z'
-generated_by: claude-haiku
-workflow_run: 25541719178
+updated: '2026-08-18T10:51:14Z'
+generated_by: claude-sonnet
+workflow_run: 32127425609
 issue: 2010
-python_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 92
 review:
   strengths:
-  - Excellent theme adaptation with no readability failures in either render
-  - 'Perfect palette compliance: first series is brand green, Okabe-Ito order followed
-    precisely'
-  - Clean code with explicit, readable styling choices
-  - Well-chosen realistic data context (employee response times)
-  - All text legible with explicit font sizing throughout
+  - 'Fixed the prior attempt''s LM-01 weakness: now a single idiomatic sns.histplot(data=df,
+    x=''values'', hue=''group'', multiple=''layer'', palette=IMPRINT[:3]) call replaces
+    the three manual histplot() calls, seaborn''s recommended pattern for exactly
+    this use case'
+  - 'Fixed the prior DE-03 weakness: a dashed reference line plus a bold annotation
+    now call out the fastest department''s average response time, giving the chart
+    a clear focal point and story instead of a raw data dump'
+  - 'Fixed the prior DQ-01 weakness: Marketing now uses a right-skewed skewnorm distribution
+    instead of a symmetric normal, so the overlap demonstrates a shape difference
+    in addition to shifts in mean/spread, matching the spec''s ''central tendency,
+    spread, and shape'' requirement'
+  - Shared bin edges via np.histogram_bin_edges() across all three groups, alpha=0.55
+    transparency, and background-colored bar edges keep overlap regions legible in
+    both themes
+  - 'Full theme-adaptive chrome threaded through sns.set_theme rc params; Imprint
+    palette in canonical order with Engineering correctly first at #009E73, identical
+    across light/dark renders'
+  - Clean KISS structure, reproducible via np.random.seed(42) and skewnorm(random_state=42),
+    correct 3200x1800 canvas with no bbox_inches='tight'
   weaknesses:
-  - Design Excellence could be elevated with more distinctive styling choices beyond
-    defaults
-  - Could leverage sns.set_theme() for more systematic theme configuration
+  - 'Design Excellence is solid but not yet publication-grade: DE-02 visual refinement
+    (grid, spines, edge-highlighting) is unchanged from the prior attempt and still
+    reads as ''good'' rather than ''perfect'' — consider one more refinement pass
+    (e.g. slightly larger margin above the peak bars, or a source/units footnote)
+    if pursuing a top-tier score in a future iteration'
+  - Sales (the smallest group, n=160) is drawn last and can visually dominate overlap
+    regions purely due to z-order rather than data density; layering hue_order by
+    descending group size (or nudging Sales alpha down slightly) would make the layering
+    feel more intentional rather than incidental
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), perfectly matches spec
-      Chrome: Title, axis labels, tick labels all clearly visible in dark text
-      Data: Three overlapping histograms in Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2) with alpha=0.5 transparency
-      Legend: Upper right corner with proper styling and contrast
-      Grid: Subtle Y-axis grid with appropriate alpha
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: Bold dark title "histogram-overlapping · python · seaborn · anyplot.ai" centered at top, spanning roughly 75% of plot width. X-axis label "Response Time (ms)" and y-axis label "Count" in dark ink, tick labels in softer gray. Subtle horizontal gridlines only (y-axis). Legend box (cream fill, dark border) in the upper right lists Engineering (green), Marketing (lavender), Sales (blue). A green dashed vertical line at ~447 ms is topped by a bold green annotation "Engineering: fastest avg (447 ms)" directly beneath the title, with no overlap with the legend or the bars.
+      Data: Three overlapping semi-transparent histograms (25 shared bins, ~230-720 ms range). First series (Engineering) is #009E73 green, second (Marketing) is #C475FD lavender, third (Sales) is #4467A3 blue — matches Imprint canonical order. Marketing shows a visible right skew (sharp peak near 470 ms, longer tail to ~700 ms) versus the more symmetric Engineering/Sales shapes, so shape differences are now visible alongside shifts in mean/spread. Overlap regions blend into distinct teal/violet/navy tones that stay readable.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), perfectly matches spec
-      Chrome: Title, axis labels, tick labels all clearly visible in light text, no dark-on-dark failures
-      Data: Identical colors to light render (green, orange, blue) - only chrome flipped
-      Legend: Proper dark theme styling with light text on dark background
-      Grid: Subtle and readable against dark surface
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels rendered in light ink (white/light-gray), fully legible against the dark surface. Gridlines remain subtle. Legend box uses the dark elevated fill with a light border and light swatches/text, all readable. The green dashed line and annotation are equally legible against the dark background.
+      Data: Same three colors as the light render (#009E73 green, #C475FD lavender, #4467A3 blue) — confirmed identical, only chrome flipped. The skewed Marketing shape and overlap blending remain clearly distinguishable.
+      Legibility verdict: PASS — no dark-on-dark failures observed; brand green remains clearly visible in both themes.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,48 +66,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized (24/20/16pt), perfectly readable in both
-          themes
+        comment: All font sizes explicitly set (title=12 bold, labels=10, ticks/legend/annotation=8),
+          readable in both themes, title proportion within expected range for the
+          mandated string
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly distinguishable despite overlap via transparency
-          and color
+        comment: No collisions between title, annotation, legend, and data in either
+          render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Optimal bin sizing, bars clearly visible, alpha=0.5 allows proper
-          overlap visibility
+        comment: Bar alpha (0.55) and shared 25-bin grid well suited to ~540 total
+          observations across 3 groups
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+        comment: Green/lavender/blue trio is CVD-safe, no red-green reliance, edge
+          highlighting aids overlap separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Ideal proportions, nothing cut off, generous whitespace
+        comment: Chart fills the canvas well with balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units, title matches spec format
+        comment: Response Time (ms) includes units; Count is clear
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, follows Okabe-Ito order, correct theme backgrounds'
+        comment: 'First series is #009E73, canonical Imprint order for the rest, theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -100,20 +118,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Polished use of Okabe-Ito palette and clean theme adaptation; goes
-          beyond defaults but no custom innovation
+        comment: 'Improved from the prior attempt: intentional hierarchy via the annotation
+          on top of theme tokens and edge highlighting, but still short of a fully
+          custom, publication-grade look'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Top/right spines removed, subtle grid, proper legend styling
+        passed: false
+        comment: 'Unchanged from the prior attempt: spines removed, subtle y-grid,
+          bar edge highlighting — good but not maximally polished'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Employee response times creates clear departmental efficiency narrative
+        comment: 'Fixed: dashed reference line plus bold annotation now name the fastest
+          department and its exact average, giving the chart a clear focal point'
     spec_compliance:
       score: 15
       max: 15
@@ -123,26 +144,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct overlapping histogram implementation
+        comment: Correct overlapping histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: overlapping, transparent, distinct colors,
-          legend'
+        comment: Semi-transparent fills, distinct colors, legend, aligned shared bin
+          edges all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Response Time on X, Count on Y, all data visible
+        comment: X=response time, Y=count, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format, legend correctly labels groups
+        comment: Title format correct, legend labels match group names
     data_quality:
       score: 15
       max: 15
@@ -152,19 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three distributions with different means and spreads
+        comment: 'Fixed: Marketing now carries a right skew, so shape differences
+          are visible alongside shifts in central tendency and spread'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee response times by department is realistic and neutral
+        comment: Neutral, plausible business scenario (department response times)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times 200-900ms are realistic and well-proportioned
+        comment: Values and ranges (roughly 230-720 ms) are plausible for the domain;
+          the previous long, sparse tail is gone
     code_quality:
       score: 10
       max: 10
@@ -174,55 +197,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, clean code without unnecessary abstractions
+        comment: No functions/classes, linear structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) and skewnorm(random_state=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only required imports
+        comment: pandas and scipy.stats.skewnorm are both actually used; no unused
+          imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png
+        comment: Correct plot-{THEME}.png save, no bbox_inches='tight'
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper sns.histplot() usage, clean theme integration
+        comment: 'Fixed: single long-form sns.histplot(hue=''group'', multiple=''layer'')
+          call replaces the three manual calls from the prior attempt, seaborn''s
+          recommended pattern for this exact use case'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses seaborn's histplot with fine-grained matplotlib control
+        comment: Leverages seaborn's hue/multiple faceting machinery (auto-binning
+          + auto-legend across groups) which is genuinely distinctive to seaborn,
+          though still a fairly common pattern within the library
   verdict: APPROVED
 impl_tags:
-  dependencies: []
-  techniques: []
+  dependencies:
+  - scipy
+  techniques:
+  - annotations
   patterns:
   - data-generation
-  - explicit-figure
-  dataprep: []
+  dataprep:
+  - binning
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
