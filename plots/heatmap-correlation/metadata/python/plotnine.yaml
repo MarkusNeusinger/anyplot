@@ -2,44 +2,66 @@ library: plotnine
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:58Z'
-updated: '2026-05-08T15:07:00Z'
-generated_by: claude-haiku
-workflow_run: 25562501733
+updated: '2026-08-18T16:57:47Z'
+generated_by: claude-sonnet
+workflow_run: 32161974629
 issue: 1948
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance—all required correlation heatmap features present
-  - Excellent theme adaptation with token-based light/dark rendering
-  - Clean financial dataset demonstrating realistic correlation patterns with stocks,
-    bonds, gold, and real estate
-  - Proper use of diverging BrBG colormap centered at zero for ±1.0 scale
-  - Strong visual quality with no text overlap, proper sizing, or canvas wasting
-  - All font sizes explicitly set and readable at full 3600×3600px resolution
+  - Masks the upper triangle (including reflecting only the lower half) exactly as
+    the spec note suggests, reducing redundancy while keeping the diagonal visible
+    for reference
+  - 'Diverging fill scale uses the canonical Imprint imprint_div anchors (#AE3030
+    low, page-background mid, #4467A3 high) with limits fixed to (-1, 1), matching
+    the spec''s ''fixed colorbar range'' requirement precisely'
+  - Per-cell annotation text color is computed from each cell's actual rendered luminance
+    (relative-luminance formula) rather than a single static color, so every '0.XX'
+    label stays legible against light and dark fills in both themes
+  - Bold outline layer (geom_tile subset) highlights |r| >= 0.7 relationships, giving
+    the viewer an immediate focal point on the strongest correlations instead of a
+    flat data dump
+  - Diagonal cells are masked to a neutral ink tone instead of the hottest color-scale
+    endpoint, avoiding a misleading visual read that the trivial self-correlation
+    is the most 'extreme' value on the map
+  - 'Correlation matrix covers the full realistic range for a portfolio use case:
+    strong positive (stocks vs. tech index 0.75-0.91), negative (bonds vs. stocks
+    -0.18 to -0.35), and near-zero (gold vs. stocks) relationships'
+  - Title matches the mandated '{spec-id} · {language} · {library} · anyplot.ai' format
+    exactly, and both renders share identical data colors with only chrome (background/text/border)
+    flipping between themes
   weaknesses:
-  - Dark render has reduced text contrast on light-colored cells (negative correlations)—annotation
-    text should adapt color based on cell luminance, not just theme
-  - Design is competent but generic—library defaults with minimal visual hierarchy
-    or aesthetic distinction beyond color
-  - Limited use of plotnine-specific features or advanced styling techniques
+  - 'CQ-01 KISS violation: the script defines five helper functions (_hex_to_rgb,
+    _lerp_hex, _relative_luminance, cell_fill_hex, text_color_for) instead of the
+    flat Imports -> Data -> Plot -> Save structure; consider precomputing the annotation
+    text colors more directly or accepting a simpler two-tone contrast rule to cut
+    the function count'
+  - cell_fill_hex() manually re-implements scale_fill_gradient2's low/mid/high interpolation
+    outside the ggplot grammar purely to guess each cell's rendered color for contrast
+    purposes -- this duplicated logic could silently drift out of sync if the scale's
+    low/mid/high/midpoint arguments are ever retuned in a repair pass
+  - On the square 2400x2400 canvas the long mandated title fills close to ~85-90%
+    of the plot width (wider than it would on a landscape canvas) -- still inside
+    the canvas with no clipping, but there is little breathing room left on either
+    side
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1, provides excellent contrast for all elements
-      Chrome: Title (26pt bold dark), axis labels (22pt dark), tick labels (16pt dark, rotated on x-axis) all clearly readable with no overlap
-      Data: BrBG diverging colormap shows teal for positive correlations, brown for negative, cream for near-zero values; cell annotations in dark text with excellent contrast on all cell backgrounds; colorbar shows -1.0 to 1.0 scale
-      Legibility verdict: PASS - All text explicitly sized and perfectly readable
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "heatmap-correlation · python · plotnine · anyplot.ai" at top, fully visible and centered. X-axis label "Portfolio Asset" (rotated 45 deg tick labels: Stock_A...Tech_Index) and Y-axis label "Portfolio Asset" (Tech_Index...Stock_A) both dark/soft-ink and clearly readable. Colorbar legend "Correlation Coefficient" sits in the masked upper-right region with a clear -1.0 to 1.0 scale.
+      Data: Lower-triangular matrix (incl. diagonal) of tiles. Diagonal cells are a neutral grey (masked, annotated 1.00). Off-diagonal cells use a red (#AE3030) <-> off-white <-> blue (#4467A3) diverging scale; the first strong positive relationships (Stock_A/B/C vs. Tech_Index, and Stock_A vs. Stock_B/C) are outlined with a bold dark border. Each cell's numeric label (2 decimals) automatically switches between dark and light text depending on the cell's own fill luminance, and all labels are legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17, maintains appropriate contrast for structural elements
-      Chrome: Title and axis labels in light #F0EFE8, clearly readable; tick labels light and distinct from background
-      Data: BrBG colormap maintains identical data colors to light render (teal positive, brown negative, cream neutral); cell annotations in light text show excellent contrast on dark/teal cells but reduced contrast on light/cream cells representing negative/near-zero correlations—this is a minor legibility issue where light text on light background creates subdued readability, though text remains discernible
-      Legibility verdict: PASS with caveat - Mostly readable but cell annotations on light-colored cells have suboptimal contrast in dark theme
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and both axis titles/tick labels render in light ink tones, clearly visible against the near-black background. The strong-correlation outline switches from dark to a light/white stroke so it still stands out against the dark tiles. Colorbar legend box and text are light-colored and fully readable.
+      Data: Same red/off-white/blue diverging fill colors as the light render -- confirmed identical data-color anchors, only the chrome (background, borders, text, outline color) flips for the theme. Diagonal neutral-grey cells and per-cell adaptive text color both carry over correctly with no dark-on-dark or light-on-light failures anywhere on the matrix.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -50,67 +72,74 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All text explicitly sized; dark render shows reduced contrast on
-          light cells
+        comment: All font sizes explicitly set via theme(); readable in both themes;
+          title fills ~85-90% of the square canvas for the long mandated string, tight
+          but not clipped
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text fully readable with no overlapping elements
+        comment: No collisions between annotations, tick labels, or the legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells and colorbar perfectly visible and well-sized
+        comment: Tile size and annotation size well matched to an 8-variable matrix
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG is perceptually uniform and CVD-safe
+        comment: Red/blue diverging scale (not red-green); per-cell text color computed
+          from luminance for guaranteed contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 3600×3600px square format with balanced margins
+        comment: Square canvas well utilized; masked upper triangle repurposed for
+          the colorbar legend instead of wasted whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with proper formatting
+        comment: Descriptive categorical axis labels ('Portfolio Asset'); no units
+          needed for a categorical axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: BrBG diverging; backgrounds correct; theme tokens applied properly
+        comment: imprint_div anchors (#AE3030/background/#4467A3) exactly, fixed -1..1
+          limits, theme-correct backgrounds in both renders
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured defaults; thoughtful BrBG choice but lacks exceptional
-          polish
+        passed: true
+        comment: Custom per-cell contrast logic and diagonal-masking decision go well
+          beyond a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Grid removed, generous whitespace; could emphasize hierarchy further
+        passed: true
+        comment: No grid, minimal panel border kept intentionally as a heatmap frame,
+          generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Color hierarchy shows patterns but minimal narrative emphasis
+        passed: true
+        comment: Bold outline on |r|>=0.7 cells creates a clear, immediate focal point
+          on the strongest relationships
     spec_compliance:
       score: 15
       max: 15
@@ -120,26 +149,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct correlation matrix heatmap with lower triangle
+        comment: Correct correlation heatmap with diverging scale
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: diverging colormap, 2-decimal annotations, symmetric
-          matrix, -1 to 1 range'
+        comment: Diverging colormap, 2-decimal annotations, symmetric matrix, triangle
+          masking, fixed -1..1 colorbar all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Variables correctly mapped to axes, values to color
+        comment: Var1/Var2 correctly mapped to y/x, full variable set on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend properly formatted
+        comment: Title matches the mandated format exactly; legend title and scale
+          are correct
     data_quality:
       score: 15
       max: 15
@@ -149,81 +179,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: positive, negative, near-zero correlations, diagonal
-          values'
+        comment: Shows strong positive, negative, and near-zero correlations across
+          the matrix
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real financial portfolio scenario with genuine asset types
+        comment: Realistic, neutral portfolio-asset correlation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values -1 to 1; all specific values plausible
+        comment: Correlation magnitudes and signs are plausible for the named asset
+          classes (e.g. bonds negatively correlated with equities, gold near-independent)
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Clean linear flow
+        passed: false
+        comment: Defines five helper functions instead of a flat imports->data->plot->save
+          script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42) set; matrix itself is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports utilized
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity
+        comment: No fake functionality, but manually re-deriving the scale's interpolation
+          outside the grammar duplicates logic that could drift
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png
+        comment: Saves as plot-{THEME}.png via plot.save(), current API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic grammar-of-graphics layering (geom_tile + geom_text + scale_fill_gradient2
+          + coord_fixed)
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Follows plotnine patterns; doesn't leverage all advanced features
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses coord_fixed and scale_fill_cmap; fairly standard heatmap
+        comment: Layered geom_tile subset for the strong-correlation outline is a
+          distinctive ggplot-grammar technique, harder to replicate as cleanly outside
+          plotnine/ggplot2
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   - layer-composition
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - correlation-matrix
   styling:
   - custom-colormap
-  - grid-styling
+  - edge-highlighting
