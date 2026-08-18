@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-08
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -17,8 +17,8 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (positions 1-3 for three subcategories)
-COLORS = ["#009E73", "#C475FD", "#4467A3"]
+# Imprint palette positions 1-3 (three subcategories)
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Employee performance scores across departments and experience levels
 np.random.seed(42)
@@ -43,8 +43,14 @@ for cat_idx, cat in enumerate(categories):
             scores = np.concatenate([scores, outliers])
         data[cat][sub] = np.clip(scores, 0, 100)
 
+# Order departments by overall median score, best to worst, for a clearer narrative
+categories = sorted(categories, key=lambda cat: -np.median(np.concatenate(list(data[cat].values()))))
+
 # Create plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+title = "box-grouped · python · matplotlib · anyplot.ai"
+title_fontsize = round(12 * 67 / len(title)) if len(title) > 67 else 12
+
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Calculate positions for grouped boxes
@@ -53,7 +59,7 @@ n_subcategories = len(subcategories)
 box_width = 0.25
 group_gap = 0.4
 
-# Plot boxes for each subcategory
+# Plot boxes for each subcategory, marking the mean alongside the median
 for sub_idx, sub in enumerate(subcategories):
     positions = []
     box_data = []
@@ -68,16 +74,24 @@ for sub_idx, sub in enumerate(subcategories):
         widths=box_width * 0.8,
         patch_artist=True,
         showfliers=True,
-        flierprops={"marker": "o", "markerfacecolor": COLORS[sub_idx], "markersize": 8, "alpha": 0.7},
-        medianprops={"color": INK, "linewidth": 2.5},
-        whiskerprops={"color": INK_SOFT, "linewidth": 1.5},
-        capprops={"color": INK_SOFT, "linewidth": 1.5},
-        boxprops={"linewidth": 1.5},
+        showmeans=True,
+        flierprops={"marker": "o", "markerfacecolor": IMPRINT_PALETTE[sub_idx], "markersize": 4, "alpha": 0.7},
+        medianprops={"color": INK, "linewidth": 1.5},
+        meanprops={
+            "marker": "D",
+            "markerfacecolor": PAGE_BG,
+            "markeredgecolor": INK,
+            "markersize": 3.5,
+            "markeredgewidth": 0.8,
+        },
+        whiskerprops={"color": INK_SOFT, "linewidth": 1},
+        capprops={"color": INK_SOFT, "linewidth": 1},
+        boxprops={"linewidth": 1},
     )
 
-    # Color the boxes with Okabe-Ito palette
+    # Color the boxes with the Imprint palette
     for patch in bp["boxes"]:
-        patch.set_facecolor(COLORS[sub_idx])
+        patch.set_facecolor(IMPRINT_PALETTE[sub_idx])
         patch.set_alpha(0.85)
         patch.set_edgecolor(INK_SOFT)
 
@@ -87,24 +101,27 @@ center_positions = [
     for cat_idx in range(n_categories)
 ]
 ax.set_xticks(center_positions)
-ax.set_xticklabels(categories, fontsize=20, color=INK)
+ax.set_xticklabels(categories, fontsize=8, color=INK)
 
 # Labels and title
-ax.set_xlabel("Department", fontsize=20, color=INK)
-ax.set_ylabel("Performance Score (0-100)", fontsize=20, color=INK)
-ax.set_title("box-grouped · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.set_xlabel("Department", fontsize=10, color=INK)
+ax.set_ylabel("Performance Score (0-100)", fontsize=10, color=INK)
+ax.set_title(title, fontsize=title_fontsize, fontweight="medium", color=INK)
 
 # Tick params
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT, labelcolor=INK_SOFT)
 
-# Legend
+# Legend (diamond marker explains the mean; box color explains experience level)
 legend_patches = [
-    plt.Rectangle((0, 0), 1, 1, facecolor=COLORS[i], edgecolor=INK_SOFT, alpha=0.85) for i in range(len(subcategories))
+    plt.Rectangle((0, 0), 1, 1, facecolor=IMPRINT_PALETTE[i], edgecolor=INK_SOFT, alpha=0.85)
+    for i in range(len(subcategories))
 ]
-leg = ax.legend(legend_patches, subcategories, loc="upper right", fontsize=16, framealpha=0.95)
+leg = ax.legend(legend_patches, subcategories, title="Experience Level", loc="upper right", fontsize=8)
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_title().set_color(INK_SOFT)
+    leg.get_title().set_fontsize(8)
     plt.setp(leg.get_texts(), color=INK_SOFT)
 
 # Grid (y-axis only, subtle)
@@ -116,10 +133,10 @@ ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
-    ax.spines[s].set_linewidth(1.2)
+    ax.spines[s].set_linewidth(1)
 
 # Y-axis limits
 ax.set_ylim(0, 110)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
