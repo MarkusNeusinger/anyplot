@@ -481,6 +481,24 @@ filtering is served as `/{spec_id}?language={language}` (the hub with a filter
 query param, same canonical as the unfiltered hub), so listing it would create
 duplicate-content entries for Google.
 
+### `lastmod` describes the page, not the row
+
+`lastmod` is the later of an implementation's own `updated` date and
+`TEMPLATE_LAST_CHANGED` in `api/routers/seo.py`. The two drift apart, and the
+drift matters: on 2026-08-18 every implementation page gained the real render,
+both themes, the interactive version and a rewritten meta description, while no
+`updated` column moved. The sitemap accordingly told Google nothing had changed
+— and Google, which had last fetched some of those pages three weeks earlier,
+had no reason to come back and see any of it.
+
+Bump `TEMPLATE_LAST_CHANGED` **only** when the rendered page genuinely changes
+for every URL. It asserts to search engines that ~3,900 pages changed at once;
+making that claim casually is how a site teaches Google to ignore its `lastmod`
+altogether.
+
+A sitemap resubmission in Search Console pairs with the bump — the file is only
+re-read every few days on its own.
+
 ### Included URLs
 
 1. Home page (`/`)

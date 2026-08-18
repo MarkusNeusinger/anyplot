@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 from api.routers.seo import (
     _HOME_JSONLD,
     _META_DESCRIPTION_LIMIT,
+    TEMPLATE_LAST_CHANGED,
     _build_home_body,
     _build_impl_html,
     _build_sitemap_xml,
@@ -55,20 +56,21 @@ def _mock_spec(impls: list) -> MagicMock:
 
 
 class TestLastmod:
-    """Tests for _lastmod helper."""
+    """lastmod describes the page, which is not the same as the row behind it."""
 
-    def test_with_datetime(self) -> None:
-        dt = datetime(2025, 3, 15)
-        result = _lastmod(dt)
-        assert result == "<lastmod>2025-03-15</lastmod>"
+    def test_a_record_newer_than_the_template_wins(self) -> None:
+        dt = datetime(2099, 3, 15)
+        assert _lastmod(dt) == "<lastmod>2099-03-15</lastmod>"
 
-    def test_with_none(self) -> None:
-        assert _lastmod(None) == ""
+    def test_an_older_record_is_lifted_to_the_template_date(self) -> None:
+        """The row has not moved, but the page it renders into has."""
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert _lastmod(datetime(2024, 12, 1, 10, 30, 0)) == f"<lastmod>{stamp}</lastmod>"
 
-    def test_with_different_date(self) -> None:
-        dt = datetime(2024, 12, 1, 10, 30, 0)
-        result = _lastmod(dt)
-        assert result == "<lastmod>2024-12-01</lastmod>"
+    def test_without_a_record_date_the_template_date_still_applies(self) -> None:
+        """The page was last modified at least when its template was."""
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert _lastmod(None) == f"<lastmod>{stamp}</lastmod>"
 
 
 class TestBuildSitemapXml:
@@ -115,8 +117,12 @@ class TestBuildSitemapXml:
         assert "<loc>https://anyplot.ai/scatter-basic/python</loc>" not in result
         # Legacy /python/{spec} path must NOT appear
         assert "https://anyplot.ai/python/scatter-basic" not in result
-        assert "<lastmod>2025-03-14</lastmod>" in result
-        assert "<lastmod>2025-03-15</lastmod>" in result
+        # The record's own date is older than the template's, so the page's
+        # lastmod is the template's — the page changed even though the row did not.
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert f"<lastmod>{stamp}</lastmod>" in result
+        assert "<lastmod>2025-03-14</lastmod>" not in result
+        assert "<lastmod>2025-03-15</lastmod>" not in result
 
     def test_spec_without_impls_excluded(self) -> None:
         spec = MagicMock()
@@ -223,8 +229,11 @@ class TestBuildSitemapXml:
         spec.updated = None
 
         result = _build_sitemap_xml([spec])
-        # Should not have lastmod when updated is None
-        assert "<loc>https://anyplot.ai/scatter-basic</loc></url>" in result
+        # A missing `updated` no longer means a missing lastmod: the page was
+        # last modified at least when its template was, and saying nothing left
+        # Google with no reason to recrawl pages whose rendering had changed.
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert f"<loc>https://anyplot.ai/scatter-basic</loc><lastmod>{stamp}</lastmod></url>" in result
 
 
 class TestRenderBotHtml:

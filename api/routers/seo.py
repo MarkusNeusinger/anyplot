@@ -27,9 +27,28 @@ router = APIRouter(tags=["seo"])
 _SPEC_ID_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 
 
+# The date the bot-facing page template last changed materially. `lastmod`
+# describes the PAGE, not the row behind it, and those drift apart: on
+# 2026-08-18 every implementation page gained the real render, both themes, the
+# interactive version and a rewritten meta description, while no `updated`
+# column moved. The sitemap consequently told Google nothing had changed, and
+# Google — which had last fetched some of these pages three weeks earlier — had
+# no reason to come back and see any of it.
+#
+# Bump this ONLY when the rendered page genuinely changes for every URL. It is
+# a claim to search engines that ~3,900 pages changed at once; making it
+# casually is how a site teaches Google to stop trusting its lastmod.
+TEMPLATE_LAST_CHANGED = datetime(2026, 8, 18)
+
+
 def _lastmod(dt: datetime | None) -> str:
-    """Format datetime as <lastmod> XML element, or empty string if None."""
-    return f"<lastmod>{dt.strftime('%Y-%m-%d')}</lastmod>" if dt else ""
+    """Format the later of the record's own date and the template's, as <lastmod>.
+
+    Empty when neither is known — an absent lastmod is honest, a wrong one is
+    not.
+    """
+    latest = max(dt, TEMPLATE_LAST_CHANGED) if dt else TEMPLATE_LAST_CHANGED
+    return f"<lastmod>{latest.strftime('%Y-%m-%d')}</lastmod>"
 
 
 def _build_sitemap_xml(specs: list) -> str:
