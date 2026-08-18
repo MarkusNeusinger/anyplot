@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-08-18
@@ -80,16 +80,17 @@ bar_tooltips = layer_tooltips().line("@group").line("Response time|^x ms").line(
 # Theme-adaptive styling
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-    panel_background=element_rect(fill=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_grid_major_y=element_line(color=RULE, size=0.3),
     panel_grid_minor_y=element_blank(),
     panel_grid_major_x=element_blank(),
     axis_title=element_text(size=12, color=INK),
     axis_text=element_text(size=10, color=INK_SOFT),
     axis_line=element_line(color=INK_SOFT, size=0.3),
+    panel_border=element_blank(),
     plot_title=element_text(size=16, color=INK),
     plot_subtitle=element_text(size=11, color=INK_SOFT),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color=""),
     legend_text=element_text(size=10, color=INK_SOFT),
     legend_title=element_text(size=11, color=INK),
     legend_position="top",
@@ -131,7 +132,7 @@ plot = (
     + labs(
         x="Response Time (ms)",
         y="Count",
-        title="histogram-overlapping · letsplot · anyplot.ai",
+        title="histogram-overlapping · python · letsplot · anyplot.ai",
         subtitle=f"Intervention shifts the mean left by {mean_control - mean_treatment:.0f} ms",
         fill="Condition",
     )
