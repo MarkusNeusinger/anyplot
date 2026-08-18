@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 87/100 | Updated: 2026-08-18
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os

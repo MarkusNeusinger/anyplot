@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:57:08Z'
-updated: '2026-08-18T08:53:32Z'
+updated: '2026-08-18T08:59:29Z'
 generated_by: claude-sonnet
 workflow_run: 32118002423
 issue: 2017
@@ -12,56 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/pygal/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - All font sizes explicitly set (title 66, axis 56, ticks/legend 44, values 36)
-    — title, axis labels, tick labels, and legend are all crisp and readable in both
-    themes.
-  - 'Correct grouped box plot: 9 boxes (3 treatment arms x 3 age groups) side-by-side
-    with distinct colors, consistent box widths, and median/IQR box/whiskers/outliers
-    all shown.'
-  - Realistic clinical-trial dataset with genuine dose-response (Placebo < Low Dose
-    < High Dose) and age-attenuation effects, plus deliberately placed outliers (non-responders
-    and exceptional responders) so DQ-01 feature coverage is satisfied.
-  - Clean legend-dedup technique — `labeled_groups` set plus `chart.add(None, values)`
-    — produces exactly one legend entry per age group instead of 9 duplicate entries.
-  - Theme-adaptive chrome (PAGE_BG/INK/INK_MUTED) correctly threaded into the Style
-    object for both `plot-light.png` and `plot-dark.png`.
-  - Uses pygal's distinctive `box_mode="tukey"` whisker-calculation option rather
-    than the generic default.
+  - 'Title now correctly includes the mandated language segment: "box-grouped · python
+    · pygal · anyplot.ai"'
+  - Box-fill opacity raised from 0.85 to 0.97 - data colors now stay visually consistent
+    between light and dark renders (only ~3% background bleed vs. the prior ~15%)
+  - Outlier dots enlarged from size 6 to 9 - clearly visible against the 3200x1800
+    canvas in both themes
+  - 'Correct grouped box plot: 9 boxes (3 treatment arms x 3 age groups) side-by-side,
+    distinct consistent Imprint colors per subgroup, uniform box widths'
+  - Median line, IQR box, tukey-mode whiskers, and outlier points all rendered for
+    every box
+  - Clean legend-dedup technique (labeled_groups set + chart.add(None, values)) produces
+    exactly one legend entry per age group instead of 9 redundant entries
+  - Realistic clinical-trial dataset with a genuine dose-response effect and age-attenuation,
+    plus deliberate outliers to exercise the box-plot outlier feature
+  - All font sizes explicitly set via the Style object (title 66, axis 56, ticks/legend
+    44, values 36) and legible in both themes
+  - 'First categorical series is #009E73 (brand green), remaining series follow canonical
+    Imprint order'
+  - Theme-adaptive chrome (background, ink, muted ink) correctly threaded through
+    the Style object for both renders
   weaknesses:
-  - 'Title is ''box-grouped · pygal · anyplot.ai'' but the mandated format is ''{spec-id}
-    · {language} · {library} · anyplot.ai'' — the ''python'' language segment is missing.
-    Fix: title="box-grouped · python · pygal · anyplot.ai".'
-  - 'Box fills use opacity=0.85, which alpha-composites against the page background
-    rect. Because PAGE_BG differs between themes (#FAF8F1 near-white vs #1A1A17 near-black),
-    the same Imprint hex renders visibly lighter/pastel in the light PNG and visibly
-    darker/deeper in the dark PNG — the data colors are not perceptually identical
-    across themes as required. Fix: raise opacity closer to 1.0 (e.g. 0.95-1.0) so
-    the composited color stays close to the source hex in both themes, or keep opacity_hover
-    for interactivity but reduce the base fill''s dependence on background blending.'
-  - Outlier dots (dots_size=6) read quite small relative to the box/whisker scale
-    at 3200x1800 — bump slightly (e.g. 8-10) for better visibility without crowding.
-  - Design Excellence is at the 'well-configured default' tier — grid/whitespace/legend
-    are clean but there is no additional visual hierarchy or emphasis beyond the ordered
-    treatment-arm grouping (e.g. no annotation or callout highlighting the dose-response
-    trend).
+  - Design Excellence still reads as a well-configured default rather than an intentionally
+    sophisticated composition - no additional visual hierarchy, emphasis, or annotation
+    beyond the ordered treatment-arm/age-group grouping
+  - Library Mastery is solid but not exceptional - box_mode="tukey" and the legend-suppression
+    trick are good pygal-specific choices, but nothing further distinguishes this
+    from a competent baseline implementation
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "box-grouped · pygal · anyplot.ai" in dark ink, clearly visible; axis titles "Treatment Arm" (x) and "Symptom Improvement Score" (y) in dark ink; tick labels dark and legible; subtle dashed horizontal gridlines at each y-guide; legend at bottom with three swatches (Under 40 / 40-59 / 60+) in dark text.
-      Data: 9 box plots grouped into 3 clusters (Placebo, Low Dose, High Dose), each cluster containing 3 side-by-side boxes colored green (#009E73, Under 40), lavender (#C475FD, 40-59), and blue-gray (#4467A3 blended with the light background at opacity 0.85, 60+). Median line, IQR box, whiskers, and small circular outlier markers are all visible (e.g. a high outlier near 84 in Low Dose/Under 40, low outliers near 0 in several Placebo boxes). Dose-response trend (higher dose -> higher score) and age-attenuation (older groups score lower within each arm) are both visually apparent.
-      Legibility verdict: PASS — no text is light-on-light; all chrome is fully readable against the off-white surface.
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "box-grouped · python · pygal · anyplot.ai" in dark ink at top, clearly legible and comfortably sized (~50% of canvas width). Axis titles "Treatment Arm" (x) and "Symptom Improvement Score" (y) in dark ink, fully readable. Tick labels (-10 to 100 on y, three treatment-arm names on x) legible. Subtle dashed horizontal gridlines. Bottom legend shows three color swatches (Under 40 / 40-59 / 60+) with dark, readable text.
+      Data: Nine box plots grouped into 3 clusters (Placebo, Low Dose, High Dose), each cluster containing 3 side-by-side boxes colored green (#009E73, first series, Under 40), lavender (40-59), and blue-gray (60+) - consistent across all three clusters. Each box shows a median line, IQR box, tukey whiskers, and small outlier dots (e.g. a high outlier near 84 in Low Dose/Under 40, and a low outlier near -8 in Placebo/Under 40). Clear increasing trend from Placebo to High Dose and decreasing improvement with older age groups.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles, tick labels, and legend text all render in light ink (near-white/light-gray) and are clearly legible against the dark surface; gridlines are subtle light dashed lines; no dark-on-dark text found.
-      Data: Same 9-box layout and same underlying data as the light render. The hue identity per subgroup is preserved (green/lavender/blue-gray), but because box fills use opacity=0.85 composited over the page background, the perceived color is noticeably darker/deeper in this render than the pastel appearance in the light render (most visible on the green "Under 40" boxes, which read as a deep forest green here vs. a pale mint green in the light PNG). This is a theme-consistency issue distinct from chrome — see Weaknesses.
-      Legibility verdict: PASS for text readability; FLAG for data-color consistency (opacity blending shifts the apparent series color between themes, see VQ-07 weakness).
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Same title, axis titles, tick labels, and legend now rendered in light ink; all fully legible against the dark surface, no dark-on-dark failures. Gridlines remain subtle but visible.
+      Data: Same 9-box layout and values as the light render. Box outlines/strokes read as the same Imprint hues (green/lavender/blue-gray); box fills are only marginally darker than in the light render due to the near-opaque (0.97) fill blending with the dark background - a large improvement over the previous 0.85-opacity version, and no longer a distinguishable color-identity problem. First series remains #009E73 green.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -69,8 +64,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via Style(); title/axis/tick/legend
-          readable in both themes
+        comment: All font sizes explicitly set via Style; well-proportioned, readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -79,37 +74,36 @@ review:
         comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Box widths and whiskers well sized; outlier dots (dots_size=6) a
-          bit small
+        comment: Outlier dots enlarged to size 9, clearly visible; boxes well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Hue-distinguishable subgroups, not red-green reliant
+        comment: Imprint palette colors distinguishable, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, legend near plot, no cut-off content
+        comment: 3200x1800 canvas gate passed; title ~50% width; no overflow or cutoff
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Treatment Arm, Symptom Improvement Score)
+        comment: Descriptive x/y axis titles
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series is #009E73 and palette order is canonical, but opacity=0.85
-          alpha-blends box fills against the differing light/dark page backgrounds,
-          making the same hex read visibly different (pastel vs. deep) between themes'
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; opacity raised to
+          0.97 so data colors now stay consistent between light/dark; theme-correct
+          chrome'
     design_excellence:
       score: 12
       max: 20
@@ -119,24 +113,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Well-configured library default: custom palette and explicit sizing,
-          but not clearly above a strong default'
+        comment: 'Well-configured default: custom palette + explicit sizing, but no
+          additional intentional hierarchy'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle y-guides only, generous margins, but not fully polished (e.g.
-          no spine/axis-line refinement)
+        comment: Subtle y-guides, generous margins, L-shaped implicit frame, but not
+          fully polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Ordered treatment-arm grouping and consistent subgroup coloring create
-          a readable dose-response trend, but no explicit emphasis/annotation
+        comment: Ordered grouping and consistent coloring read a dose-response trend,
+          but no explicit emphasis/annotation
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,29 +138,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped box plot with all subtypes present
+        comment: Correct grouped box plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Side-by-side boxes with distinct colors, clear legend, consistent
-          widths, median/quartile/whiskers/outliers all present
+        comment: Side-by-side colored boxes, legend, consistent widths, median/IQR/whiskers/outliers
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = treatment arm category, Y = symptom improvement score, all data
-          visible
+        comment: x=treatment arm, y=value, color=age subgroup, all data shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Legend labels correct, but title omits the mandated language segment
-          ('python') — reads 'box-grouped · pygal · anyplot.ai' instead of 'box-grouped
-          · python · pygal · anyplot.ai'
+        passed: true
+        comment: Title now matches mandated format exactly; legend labels match subcategories
     data_quality:
       score: 15
       max: 15
@@ -176,22 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows varying spreads, medians, and both low/high outliers across
-          groups
+        comment: Median, IQR box, whiskers, and outliers all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible clinical-trial scenario (treatment arm x
-          age group)
+        comment: Plausible, neutral clinical-trial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Dose-response and age-attenuation values are plausible and internally
-          consistent
+        comment: Sensible symptom-improvement-score range
     code_quality:
       score: 10
       max: 10
@@ -201,7 +189,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> data -> style -> chart -> add loop -> save, no functions/classes
+        comment: No unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -213,20 +201,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pygal, pygal.style.Style all used
+        comment: Only os, numpy, pygal, Style used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean legend-dedup loop, no fake functionality
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current render_to_png/render_to_file
-          API
+        comment: Saves plot-{THEME}.png and .html correctly
     library_mastery:
       score: 8
       max: 10
@@ -236,24 +223,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Style object, chart.add() pattern, render_to_file/render_to_png —
-          idiomatic pygal usage
+        comment: Idiomatic pygal.Box + Style usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses box_mode='tukey' whisker method and legend-suppression via None
-          labels, both pygal-specific, but nothing further distinctive
-  verdict: REJECTED
+        comment: box_mode=tukey and legend-suppression via None labels are solid pygal-specific
+          techniques, but not exceptional
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
