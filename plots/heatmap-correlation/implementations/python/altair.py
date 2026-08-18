@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: altair 6.2.2 | Python 3.13.15
-Quality: 89/100 | Updated: 2026-08-18
+Quality: 92/100 | Updated: 2026-08-18
 """
 
 import os

@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:02Z'
-updated: '2026-08-18T16:55:27Z'
+updated: '2026-08-18T17:03:03Z'
 generated_by: claude-sonnet
 workflow_run: 32161791767
 issue: 1948
@@ -12,45 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Theme-adaptive imprint_div diverging colormap: the midpoint uses PAGE_BG (FAF8F1
-    light / 1A1A17 dark) per the style guide, and pixel-sampling confirms the r=1.00
-    diagonal renders byte-identical #4467A3 in both light and dark PNGs -- only chrome
-    and the midpoint flip.'
-  - 'Genuine data storytelling: cells with |r| > 0.6 get a thicker ink-colored stroke
-    plus contrast-flipped text color, drawing the eye to the strongest relationships
-    (Profit-Market Cap 0.66, Profit-Assets -0.67, Revenue-Expenses -0.64) instead
-    of a flat data dump.'
+  - Revenue vs Expenses now correlates at +0.61 and Revenue vs Employees at +0.58
+    -- the latent-factor model (scale/profitability/leverage factors) directly fixes
+    the attempt-1 DQ-03 finding (previously -0.64 and 0.04, both implausible for real
+    firms) and every pairing in the matrix now reads as economically sensible.
+  - Legend title/label font sizes bumped to 13/12 (from 11/10 in attempt 1), directly
+    addressing the prior 'legend text on the small side' weakness -- clearly legible
+    at the 2400x2400 canvas.
+  - 'Theme-adaptive imprint_div diverging colormap: range=[''#AE3030'', PAGE_BG, ''#4467A3'']
+    with domainMid=0, matching the style guide''s exact recipe; the r=1.00 diagonal
+    cells render identical #4467A3 in both light and dark renders -- only the midpoint
+    and chrome flip.'
+  - 'Genuine data storytelling: cells with |r| > 0.6 (Revenue-Expenses 0.61, Profit-Market
+    Cap 0.66) get a thicker ink-colored stroke plus contrast-flipped text, creating
+    a clear focal point beyond a flat data dump.'
   - 'Distinctive, idiomatic Altair usage: alt.condition() drives per-cell conditional
-    stroke/strokeWidth/text-color from a Vega-Lite data predicate (alt.datum.Correlation
-    > 0.6), a declarative pattern that is not easily replicated in matplotlib/seaborn.'
-  - Clean KISS structure with np.random.seed(42), no functions/classes, sensible mark_rect
-    + mark_text layering, and a guarded PNG canvas check (raises on overshoot, pads
-    to exactly 2400x2400 -- never crops).
-  - Upper-triangle masking (spec-recommended to reduce redundancy) is implemented
-    correctly while keeping consistent variable ordering on both axes.
+    stroke/strokeWidth/text-color from a single Vega-Lite predicate (alt.datum.Correlation
+    > 0.6), a declarative pattern not easily replicated in matplotlib/seaborn.'
+  - 'Clean KISS structure: np.random.seed(42), no functions/classes, guarded PNG canvas
+    check that raises loudly on overshoot and pads (never crops) to exactly 2400x2400.'
   weaknesses:
-  - Correlation values come from a purely random symmetric matrix rather than a domain-informed
-    structure, producing some implausible pairings for real financial metrics -- e.g.
-    Revenue vs Expenses = -0.64 (real companies almost always show these positively
-    correlated across firm size), and Employees is barely correlated with anything
-    including Revenue (0.04) despite headcount normally scaling with revenue.
-  - Legend text (titleFontSize=11, labelFontSize=10) is on the small side relative
-    to the 2400x2400 canvas -- readable but not generous; bumping 1-2pt would improve
-    mobile legibility.
+  - X-axis tick labels (fontSize=11) are noticeably smaller than the bold 13pt axis
+    titles -- readable but could be bumped 1-2pt for better balance on the 2400x2400
+    canvas.
+  - 'Design excellence is solid but not maximal: only the |r|>0.6 threshold drives
+    visual hierarchy -- a secondary emphasis tier (e.g. subtly muting near-zero cells)
+    could sharpen the storytelling further.'
+  - 'LM-02: alt.condition() is a nice distinctive touch but the chart otherwise uses
+    fairly standard mark_rect + mark_text layering; a more Altair-unique feature (e.g.
+    interactive selection binding for the HTML view) would push this further.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), confirmed by pixel sample at (60,60) = (250,248,241) -- matches target, not pure white.
-      Chrome: Bold dark title "heatmap-correlation · python · altair · anyplot.ai" centered at top, clearly readable dark-ink text; "Financial Metrics" bold axis titles on both X (rotated -40 deg tick labels) and Y; tick labels in soft ink gray; thin dark stroke separates cells; "Correlation" legend with gradient bar top-right, dark title/labels on an elevated cream swatch. All text is clearly legible against the light background -- no light-on-light issues.
-      Data: Lower-triangular correlation matrix, 8 financial variables (Revenue, Profit, Expenses, Employees, Market Cap, Debt, Assets, R&D Spend). Diagonal cells are solid blue (#4467A3, r=1.00). Positive correlations trend cream -> teal -> blue with magnitude; negative correlations trend cream -> tan/orange -> red-brown with magnitude (coolwarm-style diverging behavior, consistent with the spec's explicit "blue-white-red or coolwarm" allowance). Cells with |r| > 0.6 (Profit-MarketCap 0.66, Profit-Assets -0.67, Revenue-Expenses -0.64) get a thicker dark outline and white text for emphasis; other cells use dark ink text. Every cell is annotated with its correlation value to 2 decimals.
+      Background: Warm off-white (#FAF8F1), not pure white -- matches target.
+      Chrome: Bold dark title "heatmap-correlation · python · altair · anyplot.ai" centered at top, clearly readable. Bold "Financial Metrics" axis titles on both X (rotated -40 deg tick labels) and Y axes; tick labels in soft ink gray. Thin light stroke separates cells. "Correlation" legend with vertical gradient bar top-right on an elevated cream swatch, dark bold title and labels. All text is clearly legible against the light background -- no light-on-light issues.
+      Data: Lower-triangular 8x8 correlation matrix (Revenue, Profit, Expenses, Employees, Market Cap, Debt, Assets, R&D Spend). Diagonal cells are solid blue (#4467A3, r=1.00). Positive correlations trend cream -> teal -> blue with magnitude; the two negative cells (Profit-Debt -0.23, Market Cap-Debt -0.20) render as light tan/orange. Cells with |r| > 0.6 (Revenue-Expenses 0.61, Profit-Market Cap 0.66) get a thicker dark outline and white text for emphasis; other cells use dark ink text. Every cell is annotated with its correlation value to 2 decimals.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches target, not pure black.
-      Chrome: Title, axis titles, and tick labels all render in light ink (#F0EFE8 / #B8B7B0), clearly readable against the dark background -- no dark-on-dark failures detected on title, axis labels, ticks, or legend.
-      Data: Diagonal blue confirmed pixel-identical to the light render (#4467A3 at r=1.00) -- data colors hold across themes. Midtone colors on both diverging arms render darker overall (theme-adaptive midpoint anchor is #1A1A17 instead of #FAF8F1, per the style guide's explicit direction that the imprint_div midpoint is theme-adaptive), so the gradient look shifts between renders while the two endpoint hues stay fixed -- this is the correct, spec-mandated behavior, not a defect. Strong-correlation cells keep their thicker outline and contrast-aware text coloring.
+      Background: Warm near-black (#1A1A17), not pure black -- matches target.
+      Chrome: Title, axis titles, and tick labels all render in light ink (#F0EFE8 / #B8B7B0), clearly readable against the dark background -- no dark-on-dark failures on title, axis labels, ticks, or legend.
+      Data: Diagonal blue is pixel-identical to the light render (#4467A3 at r=1.00) -- data colors hold across themes as required. The diverging midpoint anchors to the dark background instead of the light one (per the style guide's theme-adaptive imprint_div midpoint), so the overall gradient reads darker, but the two endpoint hues (#AE3030 red, #4467A3 blue) are unchanged. Strong-correlation cells keep their thicker outline and contrast-aware text coloring.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,9 +66,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (labelFontSize=11, titleFontSize=13,
-          legend 10-11); readable in both themes; title fits comfortably. Legend text
-          is slightly small relative to the 2400x2400 canvas.
+        comment: All font sizes explicitly set (legend bumped to titleFontSize=13/labelFontSize=12,
+          up from attempt 1's 11/10); readable in both themes; title fits. Tick labels
+          (11pt) slightly small relative to bold 13pt axis titles.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -78,8 +82,7 @@ review:
         max: 6
         passed: true
         comment: Cell fills clearly visible; strong-correlation cells get thicker
-          outline + contrast-flipped text for emphasis; annotation text well-sized
-          (fontSize=12).
+          outline + contrast-flipped text; annotation text well-sized (fontSize=12).
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -92,8 +95,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Balanced proportions, masked triangle reads intentionally (spec-recommended),
-          nothing cut off, canvas dimension gate passed.
+        comment: Balanced proportions, masked triangle reads intentionally, nothing
+          cut off, canvas dimension gate passed (2400x2400 exact).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -107,8 +110,8 @@ review:
         max: 2
         passed: true
         comment: 'imprint_div diverging scale (#AE3030 / theme-adaptive PAGE_BG midpoint
-          / #4467A3); pixel-verified r=1.00 renders identical #4467A3 in both themes;
-          backgrounds match #FAF8F1/#1A1A17; chrome theme-correct in both renders.'
+          / #4467A3); r=1.00 diagonal renders identical #4467A3 in both themes; backgrounds
+          match #FAF8F1/#1A1A17; chrome theme-correct in both renders.'
     design_excellence:
       score: 14
       max: 20
@@ -167,7 +170,7 @@ review:
         comment: Title matches 'heatmap-correlation · python · altair · anyplot.ai'
           exactly; legend labeled 'Correlation' with correct gradient.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -175,25 +178,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows diagonal=1.00, strong positive (0.66), strong negative (-0.67),
-          and near-zero (0.01-0.08) correlations -- full range of matrix behavior
+        comment: Shows diagonal=1.00, strong positive (0.61, 0.66), moderate, weak,
+          and negative (-0.23, -0.20) correlations -- full range of matrix behavior
           represented.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Real, neutral business scenario (financial metrics correlation) matching
-          the spec's own ML/feature-analysis use case; generic in that the matrix
-          is randomly generated rather than crafted.
+          the spec's own ML/feature-analysis use case.
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Some pairings are not domain-plausible: Revenue vs Expenses at -0.64
-          (real firms show these positively correlated), Employees near-uncorrelated
-          with Revenue (0.04) despite headcount typically scaling with revenue.'
+        passed: true
+        comment: 'Fixed from attempt 1: latent-factor model now produces economically
+          plausible pairings throughout -- Revenue-Expenses +0.61 and Revenue-Employees
+          +0.58 (both scale with firm size, as real companies show), Profit-Market
+          Cap +0.66, Profit-Debt -0.23. No implausible pairings remain.'
     code_quality:
       score: 10
       max: 10
@@ -247,7 +250,7 @@ review:
         passed: true
         comment: alt.condition() drives per-cell conditional stroke/strokeWidth/text-color
           from a Vega-Lite predicate -- a declarative pattern distinctive to Altair/Vega-Lite.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
