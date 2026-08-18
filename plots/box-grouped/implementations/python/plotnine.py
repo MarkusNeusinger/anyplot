@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
-Library: plotnine 0.15.8 | Python 3.13.13
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 92/100 | Updated: 2026-08-18
 """
 
 import os
