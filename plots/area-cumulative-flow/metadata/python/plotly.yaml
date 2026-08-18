@@ -2,117 +2,131 @@ library: plotly
 language: python
 specification_id: area-cumulative-flow
 created: '2026-05-07T20:55:24Z'
-updated: '2026-05-07T21:12:31Z'
+updated: '2026-08-18T02:58:50Z'
 generated_by: claude-sonnet
-workflow_run: 25521305323
+workflow_run: 32093177824
 issue: 5239
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/plotly/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - Perfect spec compliance — correct CFD implementation with workflow order (Backlog
-    top, Done bottom), monotonic data, and all required features
-  - All font sizes explicitly set per style guide; both themes render correctly with
-    theme-adaptive chrome
-  - Realistic, neutral Kanban board data with plausible proportions and lag between
-    stages
-  - Plotly-native stackgroup with rich hovertemplate and hovermode=x unified for excellent
-    interactivity
+  - Correct stage stacking order per spec — Backlog (earliest) on top, Done (latest)
+    on bottom — with legend traceorder set to 'reversed' so the legend visually matches
+    the on-canvas stack order top-to-bottom.
+  - 'Deliberate bottleneck narrative baked into the synthetic data: the Testing WIP
+    band visibly widens during a modeled QA capacity dip (days 30-64) and narrows
+    again during a catch-up burst (days 65-84) — exactly the analytical signal a CFD
+    exists to surface.'
+  - Theme-adaptive chrome fully threaded through title, axis titles, tick labels,
+    gridlines, legend box (bg/border/font) and font color for both light and dark
+    renders — no dark-on-dark or light-on-light failures.
+  - 'Correct Imprint palette assignment: first trace (Done) is #009E73, remaining
+    stages follow canonical order (#C475FD, #4467A3, #BD8233, #AE3030).'
+  - hovermode='x unified' with a custom per-stage hovertemplate (stage name, formatted
+    date, WIP count) — a genuinely useful interactive touch for a CFD's detail view.
+  - Custom biweekly tick marks keep the 90-day date axis readable instead of relying
+    on auto-ticks that would either crowd or under-label the axis.
   weaknesses:
-  - 'DE-03 is below potential: bands grow uniformly without highlighting interesting
-    dynamics like widening bottleneck stages — the spec notes this is a key CFD insight'
-  - DE-01 limited by standard Plotly typography; no distinctive visual punch to elevate
-    beyond a well-styled default
+  - Each go.Scatter trace passes mode='none' but also sets a 'line' dict (width/color)
+    — with mode='none' no stroke is drawn, so the line config is inert/dead code;
+    either drop it or switch to a mode that actually renders the boundary stroke if
+    a visible band border is intended.
+  - The mid-project bottleneck (widening Testing band) is a strong story but has no
+    annotation calling it out — a small text annotation or shaded x-range over days
+    30-64 would sharpen the data-storytelling focal point further (optional polish,
+    not a defect).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "area-cumulative-flow · plotly · anyplot.ai" in large dark ink, clearly readable. Y-axis label "Cumulative Items" and X-axis label "Date" in dark ink, readable. Tick labels (bi-weekly dates + y-axis counts) in dark secondary ink, readable.
-      Data: Five stacked area fills — Done (#009E73 green, bottom), Testing (#D55E00 orange), Development (#0072B2 blue), Analysis (#CC79A7 pink), Backlog (#E69F00 orange-yellow, top). All fills at 0.80 alpha. Subtle y-axis horizontal grid lines. Legend in upper-left with ELEVATED_BG frame.
+      Background: Warm off-white, consistent with #FAF8F1 — clearly not pure white, not dark.
+      Chrome: Title "area-cumulative-flow · python · plotly · anyplot.ai" in dark ink, top-left, fully legible. "Date" and "Cumulative Items" axis titles dark and readable. Tick labels (bi-weekly dates on x, count values on y) in a softer gray, clearly legible. Horizontal gridlines subtle and visible without competing with data. Legend box (cream fill, thin border) sits in empty whitespace above the rising area band, with entries Backlog/Analysis/Development/Testing/Done in that top-to-bottom order — matching the visual stacking order of the bands.
+      Data: Stacked area bands from bottom to top: Done (#009E73 green), Testing (#C475FD lavender), Development (#4467A3 blue), Analysis (#BD8233 ochre), Backlog (#AE3030 red). First series is confirmed #009E73. The Testing (lavender) band visibly widens between roughly Feb 26–Mar 25, then narrows again — the intended bottleneck/catch-up story.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels and tick labels in light secondary ink (#B8B7B0), readable. No dark-on-dark text failures observed. Legend background switches to #242420 (elevated dark), text readable.
-      Data: Colors are identical to light render — Done green, Testing orange, Development blue, Analysis pink, Backlog yellow-orange. Alpha fills consistent.
+      Background: Warm near-black, consistent with #1A1A17 — clearly not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all rendered in light ink and fully legible against the dark background — no dark-on-dark instances. Legend box uses the dark elevated background (#242420-equivalent) with light-gray text, readable. Gridlines are faint but visible.
+      Data: Same five band colors as the light render (green/lavender/blue/ochre/red), confirming only chrome flipped between themes and category identity was preserved. Same bottleneck/catch-up shape reproduced identically.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 28px, axis labels 22px, ticks 18px,
-          legend 16px'
+        comment: All text readable in both themes; explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Bi-weekly ticks well-spaced, no collisions
+        comment: Legend sits in empty whitespace above the rising area, no collisions
+          with data or other text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked area fills clearly visible
+        comment: Area fill with mode='none' is appropriate for daily-resolution stacked
+          area over 90 days
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito with 0.80 alpha, colorblind-safe
+        comment: Distinct hues per band, positional stacking provides redundant encoding
+          beyond color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well, diagonal CFD shape is inherent
+        comment: Canvas gate passed (3200x1800), good proportions, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cumulative Items and Date labels descriptive
+        comment: Descriptive axis titles with units ('Cumulative Items', 'Date')
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds both
-          themes'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above configured-default baseline: alpha fills, warm backgrounds,
-          ELEVATED_BG legend, left-aligned title'
+        comment: Custom legend styling, unified hover with per-stage tooltip formatting,
+          deliberate margins
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid, legend with border, generous margins
+        comment: L-shaped spines, subtle single-axis grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Realistic scenario but bands grow uniformly — no visual emphasis
-          on bottleneck dynamics
+        passed: true
+        comment: Deliberate bottleneck/catch-up narrative in the data gives the chart
+          a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -122,25 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative flow diagram
+        comment: Stacked area / cumulative flow diagram via stackgroup
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stacking, monotonic data, date axis, legend'
+        comment: Correct stage order, monotonic cumulative counts, WIP bands, legend,
+          dated x-axis
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date x-axis, cumulative counts y-axis, workflow order correct
+        comment: X=date, Y=cumulative items, all stages shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match stages
+        comment: Title matches mandated format exactly; legend labels match stage
+          names
     data_quality:
       score: 15
       max: 15
@@ -150,20 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All CFD aspects shown: monotonic growth, 5 stages, varying band
-          widths, stage lag'
+        comment: Monotonic counts, widening and narrowing bands, realistic stage lag
+          via shift()
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Software team Kanban board, 90 days, neutral business scenario
+        comment: Kanban software-team scenario, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~1.5 items/day, ~145 total, downstream stages lag correctly
+        comment: 0-150 cumulative items over 90 days is sensible for a small team's
+          board
     code_quality:
       score: 10
       max: 10
@@ -173,7 +190,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports, tokens, data, plot, save'
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -185,39 +202,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: os, numpy, pandas, plotly.graph_objects all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and Pythonic
+        comment: No fake UI; minor dead 'line' dict on mode='none' traces noted in
+          weaknesses
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: write_image + write_html to plot-{THEME}.png/.html, current API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: go.Scatter + stackgroup is the idiomatic plotly stacked-area pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: go.Scatter with stackgroup, hovertemplate, hovermode=x unified
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: stackgroup stacking, unified hover mode, HTML export
+        comment: Custom hovertemplate, hovermode='x unified', manual tick spacing
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
@@ -228,3 +247,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - grid-styling
