@@ -61,6 +61,36 @@ const stages = [
   { label: "Done", data: done, fill: "origin" },
 ];
 
+// Day the Review lag starts widening (see lagReview above) — the onset of the
+// growing "In Progress" WIP bottleneck the data was constructed to show.
+const BOTTLENECK_DAY = 45;
+
+// A thin dashed reference line + label marking that onset, drawn with
+// Chart.js's native per-chart plugin hook (no external annotation plugin).
+const bottleneckMarkerPlugin = {
+  id: "bottleneckMarker",
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const x = scales.x.getPixelForValue(dateLabels[BOTTLENECK_DAY], BOTTLENECK_DAY);
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "13px sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText("Bottleneck onset", x + 8, chartArea.top + 6);
+    ctx.restore();
+  },
+};
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -81,19 +111,24 @@ new Chart(canvas, {
       tension: 0,
     })),
   },
+  plugins: [bottleneckMarkerPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
     interaction: { intersect: false, mode: "index" },
+    layout: { padding: { top: 8, right: 24, bottom: 4, left: 4 } },
     plugins: {
       title: {
         display: true,
         text: "area-cumulative-flow · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 25, weight: "bold" },
+        padding: { top: 4, bottom: 18 },
       },
-      legend: { labels: { color: t.ink, font: { size: 16 } } },
+      legend: {
+        labels: { color: t.ink, font: { size: 16 }, usePointStyle: true, pointStyle: "rectRounded", padding: 18 },
+      },
     },
     scales: {
       x: {
