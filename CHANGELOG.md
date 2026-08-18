@@ -244,6 +244,28 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   was reusing the rate limiter's IP resolver — which deliberately returns the *rightmost* forwarded
   entry, ours. Analytics now has its own `visitor_ip`, and `api/request_context.py` records why the
   two must not be merged (#10477).
+- **The daily bot-serving monitor had been red for ten days** — it greps for an exact home-page
+  title, the copy changed to "anyplot.ai — AI-generated plot catalog for 15 libraries", and every
+  scheduled run since 2026-08-09 failed on that one line. Nothing else was wrong, and nobody looked:
+  this run of SEO work edited the workflow twice and cited it repeatedly as the regression cover for
+  changes that have no local verification loop, while it was failing daily. It now matches on the
+  prefix, which still separates the prerendered page from the SPA shell — the property actually
+  under test — and no longer breaks on copy. The trailing-slash check also no longer passes when
+  there is no redirect at all: an empty `%{redirect_url}` printed "OK" and returned success, which
+  Copilot raised on two separate PRs (#10478).
+
+- **The trailing-slash redirect leaked the internal port** — #10473 removed a redirect to
+  `http://api.anyplot.ai/seo-proxy/…` and replaced it with `http://anyplot.ai:8080/…`: a smaller
+  version of the same defect, since nginx builds a `permanent` rewrite's Location from
+  `$scheme://$host:$server_port`, and behind Cloud Run that is plain http on port 8080.
+  `absolute_redirect off` makes the Location relative, which the client resolves against the URL it
+  actually requested — the only value here guaranteed to be right. The daily `bot-serving-check`
+  would have caught this on its next run, since it already rejects an `http://` target; it now
+  rejects an internal port explicitly too. `agentic/docs/project-guide.md` also gains the step that
+  makes this checkable at all: the deploy triggers are **regional** (`europe-west4`), so a
+  `gcloud builds list` without `--region` returns builds from early 2026 and reads as "nothing has
+  deployed for months" — a wrong conclusion drawn in this session and corrected by the repo owner
+  (#10476).
 
 - **Preview images were forbidden to every crawler that follows the rules** — `api.anyplot.ai`
   served a blanket `Disallow: /`, while every prerendered page references its preview image at

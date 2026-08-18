@@ -890,8 +890,43 @@ The project runs on **Google Cloud Platform**:
 ### Automatic Deployment
 
 Push to `main` branch triggers Cloud Build:
-- Changes in `api/`, `core/`, `pyproject.toml` -> Backend redeploy
-- Changes in `app/` -> Frontend redeploy
+- Changes in `api/`, `core/`, `pyproject.toml` -> Backend redeploy (`deploy-api`)
+- Changes in `app/` -> Frontend redeploy (`deploy-app`)
+
+Roughly five minutes from merge to live, per build.
+
+#### Checking whether something actually deployed
+
+The triggers are **regional, in `europe-west4`**, and regional builds do not
+appear in the global build list. Always pass `--region`:
+
+```bash
+gcloud builds list --region=europe-west4 --project=anyplot --limit=10 \
+  --format="table(id.slice(0,8),status,createTime.date('%H:%M'),substitutions.TRIGGER_NAME,substitutions.SHORT_SHA)"
+gcloud builds describe <build-id> --region=europe-west4 --project=anyplot
+```
+
+Omitting `--region` returns a handful of builds from early 2026 and nothing
+since — which reads as "nothing has deployed for months" and is simply the
+wrong list. That mistake has been made and had to be corrected by the repo
+owner.
+
+`.github/workflows/notify-deployment.yml` only **records** a GitHub deployment;
+it does not deploy anything. A green run there says nothing about whether the
+code is live.
+
+The most trustworthy check is neither of the above: probe production and
+compare against the expected behaviour, which is the only method that survives
+a build succeeding while shipping the wrong thing.
+
+```bash
+curl -A "Mozilla/5.0 (compatible; Googlebot/2.1)" -sSI https://anyplot.ai/box-basic/ | head -3
+curl -s https://anyplot.ai/robots.txt | head -5
+```
+
+This matters most for `app/nginx.conf`: nginx behaviour has no local
+verification loop in this repo, so production is the first place a change is
+observable at all.
 
 ### Manual Deployment
 
