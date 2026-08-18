@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: box-grouped
 created: '2026-08-18T09:16:16Z'
-updated: '2026-08-18T09:21:15Z'
+updated: '2026-08-18T09:32:08Z'
 generated_by: claude-sonnet
 workflow_run: 32119243568
 issue: 2017
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/echarts/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - 'Correct grouped box plot structure: 4 departments x 3 experience-level subgroups,
-    side-by-side with consistent box widths across all groups'
-  - Outliers correctly computed via 1.5*IQR fences and rendered with distinct fill/border
-    styling matching each subcategory color
-  - 'Deterministic LCG-based data generation with a realistic performance-score scenario:
-    sensible variance pattern where Senior has higher median and narrower spread than
-    Junior across every department'
-  - 'Imprint palette compliance: Junior (first series) is #009E73, Mid/Senior use
-    canonical palette positions 2/3, and both light and dark renders use theme-correct
-    chrome with identical data colors'
-  - 'Smart x-axis labeling: only the middle subcategory tick per department cluster
-    is labeled, avoiding clutter while still identifying each group'
-  - Explicit font sizing throughout (title 22, legend 16, axis labels 14-16) and good
-    canvas utilization (~85% width) with balanced margins
+  - 'All three Attempt-1 weaknesses fixed: y-axis now reads "Performance Score (0-100)"
+    (VQ-06), a dashed median-trend line plus subtitle now gives the plot an explicit
+    storyline (DE-03), and the manual boxStats computation is now justified with a
+    code comment confirming echarts.dataTool is not bundled by the render harness
+    (verified against automation/js-render/render.mjs, which loads only echarts/dist/echarts.min.js)'
+  - Subtitle "Scores rise and tighten from Junior to Senior in every department" plus
+    the silent dashed trend line connecting each department's Junior->Mid->Senior
+    medians gives the viewer an immediate, unmissable takeaway without cluttering
+    the boxplot itself
+  - 'Correct grouped box plot: 4 departments x 3 experience levels, side-by-side with
+    consistent box widths (boxWidth: ["45%","68%"]) and a gap tick between department
+    clusters so groups read cleanly'
+  - 'Imprint palette compliance: Junior (first series) = #009E73, Mid/Senior follow
+    canonical palette order (#C475FD, #4467A3); identical data colors in both renders,
+    theme-correct chrome (background, text, grid) in both light and dark'
+  - 'Realistic, neutral data: seniority-based baseline/spread differences (tighter,
+    higher scores for Senior) plus IQR-based outliers give real feature coverage (DQ-01)'
+  - Deterministic LCG-seeded data generation (seed=42), clean imports, no fake interactivity
   weaknesses:
-  - Y-axis label 'Performance Score' is descriptive but omits an explicit unit/scale
-    indicator (e.g. 'Performance Score (0-100)') — VQ-06 dock
-  - Box statistics (quantile/boxStats helper functions) are computed manually, reinventing
-    what echarts.dataTool.prepareBoxplotData already provides natively for box-plot
-    data prep — using the built-in utility would be more idiomatic and reduce code
-    duplication (LM-01, CQ-01)
-  - Design is a well-configured, thoughtful default (elevated-bg box fill + colored
-    border, subtle single-axis grid) but still short of a genuine data-storytelling
-    flourish — e.g. a subtle annotation calling out the spread narrowing / median
-    rising from Junior to Senior would strengthen DE-01/DE-03 without adding fake
-    interactivity
-  - Legend swatches are implemented via separate empty scatter series as a workaround
-    for boxplot's legend limitation — functional, but doesn't showcase a feature genuinely
-    distinctive to echarts (LM-02); consider leaning into an echarts-specific capability
-    (e.g. tooltip formatter richness, visualMap, or toolbox) to differentiate from
-    other libraries' box plots
+  - 'Y-axis retains default tick marks while the x-axis explicitly hides them (axisTick:
+    {show:false}) -- a small asymmetry that keeps DE-02 short of a perfect score'
+  - The custom legend is built via three empty scatter series with rect symbols mimicking
+    swatches -- functional and matches the box border colors, but it's a workaround
+    rather than a feature distinctive to echarts (keeps LM-02 modest)
+  - DE-01 is strong but still short of exceptional/publication-ready polish -- e.g.
+    a single deliberate annotation calling out the narrowing IQR at Senior level,
+    or a subtly differentiated treatment for the Senior boxes, would push this further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "box-grouped · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend below title with three colored rect swatches (Junior/Mid/Senior) in dark ink text. Y-axis title "Performance Score" (rotated) and tick labels (0-100 in steps of 20) in a slightly softer ink tone. X-axis shows one department label (Engineering, Sales, Marketing, Support) centered under each cluster of three boxes. Horizontal grid lines are faint but visible; no vertical grid lines.
-      Data: Each department has three side-by-side box-and-whisker plots — Junior (green #009E73), Mid (purple/lilac), Senior (blue) — with a cream-colored (elevated background) fill and a thick colored border, a median line inside, whiskers, and colored outlier dots (visible for Engineering/Support Junior, Sales Mid, Support Senior). All box widths are visually consistent across groups.
-      Legibility verdict: PASS — all title, legend, and axis text is clearly readable against the light background; no light-on-light issues observed.
+      Background: Warm off-white, confirmed #FAF8F1 by pixel sample (250,248,241) at multiple points -- matches spec exactly, not pure white.
+      Chrome: Title "box-grouped · javascript · echarts · anyplot.ai" centered at top in dark ink (fontSize 22), subtitle "Scores rise and tighten from Junior to Senior in every department" directly below in softer ink (fontSize 14), legend with three colored rect swatches (Junior/Mid/Senior) below that. Y-axis title "Performance Score (0-100)" (rotated, with units) and 0-100 tick labels in softer ink; x-axis shows one department label (Engineering, Sales, Marketing, Support) centered under each 3-box cluster. All chrome clearly readable against the light background, no light-on-light issues, nothing clipped at any canvas edge.
+      Data: Each department has three side-by-side box-and-whisker plots -- Junior (green #009E73, first series as required), Mid (light purple #C475FD), Senior (blue #4467A3) -- with cream elevated-background fill, colored border (2.5px), median line, whiskers, and colored outlier dots (e.g. two low outliers under Engineering-Junior, one high outlier under Sales-Mid). A subtle dashed grey line connects each department's Junior->Mid->Senior medians, visually reinforcing the "rises and tightens" story from the subtitle. Box widths are consistent across all groups.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend, now rendered in white/light text against the dark background, fully legible. Y-axis title and tick labels in a lighter soft-gray tone, also legible. X-axis department labels are white and clearly visible. Grid lines remain faint but visible against the dark surface.
-      Data: Same three box colors (green/purple/blue) and outlier markers as the light render — data colors are identical between themes, confirming only chrome flipped. Box fill uses a dark elevated background shade, distinct from the page background, with colored borders standing out clearly.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text (title, legend, axis labels, tick labels) is clearly readable against the dark background, and the brand green remains vivid on both surfaces.
+      Background: Warm near-black, confirmed #1A1A17 by pixel sample (26,26,23) at multiple points -- matches spec exactly, not pure black.
+      Chrome: Identical title/subtitle/legend text now rendered in white/light-gray, fully legible; y-axis title and tick labels in lighter soft-gray, also legible; x-axis department labels white and clearly visible. No dark-on-dark failures anywhere -- every text element has clear contrast against the near-black background.
+      Data: Box fill uses a dark elevated-background shade distinct from the page background; colored borders (green/purple/blue) and outlier dots are pixel-identical in hue to the light render, confirming only chrome flipped as required. The dashed median-trend line remains visible and legible against the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -68,70 +64,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, legend 16, axis labels 14-16);
-          readable in both themes, well-proportioned, no overflow or clipping
+        comment: All font sizes explicitly set (title 22, subtitle 14, legend 16,
+          axis labels 14-16), well-proportioned, no overflow/clipping in either theme
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap in either render
+        comment: No collisions between title, subtitle, legend, axis labels, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box widths (45-68%) and outlier markers (size 12) appropriately sized
-          for 45 samples/subcategory
+        comment: Box widths and outlier markers well sized for 45 samples/subcategory
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple/blue combination is CVD-safe, no red-green-only signaling
+        comment: Green/purple/blue is CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~85% of canvas width with balanced margins; legend sits
-          near the plot
+        comment: Plot area ~72% of mount height, balanced margins, legend near plot
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis label 'Performance Score' is descriptive but lacks an explicit
-          unit/scale indicator
+        passed: true
+        comment: Y-axis now reads "Performance Score (0-100)" with explicit unit/scale
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Junior=#009E73 (first series), Mid/Senior use canonical palette order;
-          theme-correct chrome in both renders
+        comment: Junior=#009E73 (first series), Mid/Senior canonical palette order,
+          theme-correct chrome in both renders (verified via pixel sampling)
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Elevated-bg box fill + colored border is a thoughtful touch above
-          plain defaults, but typography and overall composition stop short of publication-ready
+        passed: true
+        comment: Elevated-bg box fill, colored borders, subtitle, and dashed trend
+          line together read as thoughtful/above-defaults design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle single-axis grid, minimal spines, generous whitespace; y-axis
-          default tick marks and legend keep it from a perfect score
+        passed: true
+        comment: Subtle single-axis grid, minimal chrome, generous whitespace; default
+          y-axis tick marks (unlike x-axis) keep it short of perfect
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        comment: Data is displayed clearly with consistent color grouping but no explicit
-          visual hierarchy or emphasis calling out the Junior-to-Senior trend
+        passed: true
+        comment: Subtitle explicitly states the insight and the dashed median-trend
+          line visually traces it -- viewer immediately sees the Junior->Senior pattern
     spec_compliance:
       score: 15
       max: 15
@@ -147,21 +143,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Side-by-side distinct colors, clear legend, consistent box widths,
-          median/quartile/whisker/outliers all present
+        comment: Distinct colors, clear legend, consistent box widths, median/quartile/whisker/outliers
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x-axis, value on y-axis, all data visible
+        comment: Category on x, value on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels (Junior/Mid/Senior)
-          match subcategories
+        comment: Title matches mandated format exactly, legend labels match subcategories
     data_quality:
       score: 15
       max: 15
@@ -171,20 +166,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows outliers and varying spreads/medians across levels and departments
+        comment: Outliers and varying spreads/medians across levels and departments
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Neutral, plausible business scenario: performance scores by department
-          and seniority'
+        comment: Neutral business scenario (performance scores by department/seniority)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 score scale with sensible seniority-based baseline/spread values
+        comment: 0-100 score with sensible seniority-based baseline/spread
     code_quality:
       score: 9
       max: 10
@@ -193,7 +187,9 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Helper functions (rand/randNormal/quantile/boxStats) reinvent echarts.dataTool.prepareBoxplotData
+        passed: true
+        comment: Helper functions (rand/randNormal/quantile/boxStats) needed since
+          echarts.dataTool is not bundled by the render harness -- confirmed via automation/js-render/render.mjs
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,36 +201,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports, only window.echarts global
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriate complexity
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses mount-node contract correctly, animation:false set
+        comment: Correct mount-node contract, animation:false
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        comment: Correct setOption/series usage but manual box-stats computation instead
-          of echarts.dataTool.prepareBoxplotData
+        passed: true
+        comment: Correct setOption/boxplot series usage; manual box-stats is the idiomatic
+          workaround given the harness only loads the core echarts bundle (dataTool
+          extension unavailable)
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        comment: Generic boxplot + scatter usage; legend-swatch workaround is functional
-          but not distinctive to echarts
-  verdict: REJECTED
+        passed: true
+        comment: Composes boxplot + scatter (outliers) + scatter (legend swatches)
+          + line (median trend) series together with per-series-type tooltip formatting
+          -- echarts' multi-series overlay strength, though the legend-swatch technique
+          itself is a common workaround
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -245,3 +246,4 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
+  - alpha-blending
