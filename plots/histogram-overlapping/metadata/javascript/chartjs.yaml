@@ -1,0 +1,273 @@
+library: chartjs
+language: javascript
+specification_id: histogram-overlapping
+created: '2026-08-18T11:00:56Z'
+updated: '2026-08-18T11:16:51Z'
+generated_by: claude-sonnet
+workflow_run: 32129112920
+issue: 2010
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'The three attempt-1 weaknesses are all concretely resolved: (1) a new meanMarkerPlugin
+    draws a dashed vertical line + ''mean NN'' label per group, making the score-gap
+    insight explicit instead of implicit; (2) layout.padding.right=24 plus the plugin''s
+    own margin gives the rightmost 90-95 bin visible breathing room against the canvas
+    edge, matching the left-side whitespace; (3) group stdDev values are now genuinely
+    different (13 vs 6) so the overlap demonstrates a spread difference, not just
+    a mean shift.'
+  - Bin edges and widths remain shared across both groups (single binWidth=5, computed
+    min/max across all scores), so the two histograms stay directly comparable per
+    the spec's alignment requirement.
+  - Semi-transparent fills at alpha=0.55 sit squarely in the spec's recommended 0.4-0.6
+    range, and the overlap region reads as a clearly distinct blended color in both
+    themes.
+  - 'Correct Imprint palette usage: first series (Morning Section) is #009E73 brand
+    green, second series (Afternoon Section) is palette position 2 (lavender); identical
+    hex values in both light and dark renders, only chrome flips.'
+  - 'Idiomatic low-level chartjs technique for overlapping bars (grouped: false with
+    barPercentage/categoryPercentage=1.0), and the new meanMarkerPlugin uses the afterDatasetsDraw
+    hook correctly (custom canvas draw layered above the bars, respecting chart area
+    bounds).'
+  - Legend refinement (inkSoft color, 14px font, rectRounded point style) softens
+    the legend relative to the title, sharpening the typographic hierarchy that was
+    previously flagged as flat.
+  - All font sizes explicitly set and legible in both themes; mean-marker labels use
+    bold 13px text in the series' own color and remain readable against both the cream
+    and near-black backgrounds.
+  - Deterministic reproducibility via a fixed-seed LCG + Box-Muller transform, explicitly
+    justified by the browser having no seeded RNG.
+  - 'animation: false set correctly, exactly one canvas appended to #container, no
+    fake/simulated interactivity.'
+  weaknesses:
+  - The 'mean 80' dashed marker line happens to align almost exactly with the left
+    border of the tallest Afternoon Section bar (both lavender), so where the line
+    crosses that bar it visually merges with the bar's own stroke instead of reading
+    as a distinct dashed line — a slightly different marker color/tint or a top-only
+    tick would disambiguate it from the bar border.
+  - Design Excellence is now solidly 'well-executed with real polish' (mean markers,
+    refined legend) but still short of a fully bespoke composition — e.g. no additional
+    typographic weight/size differentiation between the axis titles and tick labels
+    beyond color, and no custom font family beyond the sans-serif default.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-overlapping · javascript · chartjs · anyplot.ai" in dark ink, top-centered and fully visible with no clipping. Legend below the title with two rounded-rect swatches: green "Morning Section" and lavender "Afternoon Section", rendered in the softer inkSoft tone, clearly readable. X-axis title "Exam Score" and Y-axis title "Number of Students" in dark ink, both legible. Tick labels (30-95 on X, 0-90 on Y) in a softer dark gray, all readable, with the rightmost "90"/"95" ticks now sitting with comfortable margin from the canvas edge (previously tight). Subtle horizontal gridlines only (no vertical gridlines). Two new dashed vertical mean-marker lines run from the top of the plot area to the bottom, each in its series' own color, labeled "mean 72" (green) and "mean 80" (lavender) near the top — both texts are bold, legible against the cream background, and do not overlap the legend or title.
+      Data: Green semi-transparent bars (Morning Section, #009E73 family) and lavender semi-transparent bars (Afternoon Section, palette position 2) overlap to form a teal blended region roughly across scores 55-85. Each bar has a solid ~1.5px border in its own hue. Bin edges are aligned across both groups. The Afternoon Section distribution is now visibly narrower/taller (lower stdDev=6) than the wider, flatter Morning Section (stdDev=13), so the overlap demonstrates both a mean shift AND a spread difference.
+      Legibility verdict: PASS — all text, including the new mean-marker labels, is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend text, and axis titles rendered in light/off-white ink, fully legible against the dark background. Tick labels in a softer light gray, all readable. Gridlines remain subtle (horizontal only). The same dashed mean-marker lines and "mean 72"/"mean 80" labels appear in identical positions and series colors, clearly legible against the dark background (bold green and bold lavender both read well on near-black).
+      Data: Same green (#009E73) and lavender hues as the light render — data colors are identical; the composited overlap region appears as a darker teal against the dark background (expected alpha-compositing shift, source hues unchanged). Bar borders remain in their series hue for contrast.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, legend, and mean-marker text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
+          13px, legend 14px, mean-marker labels 13px bold); readable in both themes,
+          no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render; mean-marker labels sit
+          clear of legend and bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars sized well for ~300-point-per-group density, alpha=0.55 keeps
+          overlap region legible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs lavender is CVD-safe, distinct borders reinforce separation
+          beyond hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Right-margin fix (layout.padding.right=24) resolved the previously
+          tight right edge; margins now balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Exam Score' / 'Number of Students', unitless quantities
+          so no units needed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series Imprint palette position 2;
+          theme-correct backgrounds and chrome in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Mean-marker annotations and refined legend styling lift this above
+          a bare configured default, though still short of a fully bespoke composition
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend now uses inkSoft color, smaller font, rectRounded point style;
+          Y-axis-only gridline retained
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Explicit mean-marker lines and labels now guide the viewer directly
+          to the score gap, resolving the prior 'implicit only' weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct overlapping-histogram construction via grouped:false bar
+          dataset
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fills, distinct colors, legend, aligned bin edges,
+          matching bin widths/counts — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=exam score bins, Y=student counts, correctly mapped, axes show
+          all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend labels 'Morning Section'/'Afternoon
+          Section' match the data groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now shows both a mean shift AND a genuine spread difference (stdDev
+          13 vs 6), resolving the prior 'similar spread' weakness
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible academic exam-score scenario across two class
+          sections
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores clamped to 0-100, counts consistent with n=300 per group and
+          a 5-point bin width
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/mount/chart flow; the new meanMarkerPlugin is
+          a justified, self-contained addition
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed seed=42 LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; Chart is the pre-loaded global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract exactly (single canvas appended
+          to #container, animation:false)'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct low-level bar-controller configuration (grouped:false + barPercentage/categoryPercentage=1.0)
+          for overlapping bars
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin for mean markers demonstrates deeper
+          Chart.js plugin-API mastery beyond the basic overlap trick
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
