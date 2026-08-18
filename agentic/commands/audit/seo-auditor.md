@@ -8,7 +8,7 @@ The `webmasters.readonly` scope is the guarantee, not the HTTP verb: with that s
 
 You may only:
 - HTTP `GET` against `https://anyplot.ai/*` (sitemap, robots.txt, sample HTML)
-- Search Console **read** methods: `GET /webmasters/v3/sites`, `GET /webmasters/v3/sites/{site}/sitemaps`, `POST /webmasters/v3/sites/{site}/searchAnalytics/query`, and `POST /v1/urlInspection/index:inspect` (2000/day quota — sample, don't sweep)
+- Search Console **read** methods: `GET /webmasters/v3/sites`, `GET /webmasters/v3/sites/{site}/sitemaps`, `POST /webmasters/v3/sites/{site}/searchAnalytics/query`, and `POST https://searchconsole.googleapis.com/v1/urlInspection/index:inspect` — note the **different host**: URL Inspection is not under `www.googleapis.com/webmasters/v3`, and calling it there returns 404 (2000/day quota — sample, don't sweep)
 - reading a token from Application Default Credentials (see the auth contract below)
 
 Forbidden: any sitemap submit/delete, any Indexing API call (those are write-side), any URL-removal call, and re-authenticating (`gcloud auth ... login`) — if the scope is missing, report it, don't fix it. If unsure, do not call.

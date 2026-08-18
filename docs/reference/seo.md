@@ -450,19 +450,23 @@ it carries the crawl and redirect history of the migration to `anyplot.ai`.
    Always keep `cloud-platform` in the scope list. The login overwrites ADC, and dropping the
    scope locks this machine's other Google clients (Cloud SQL, GCS) out.
 
-3. Verify that the property comes back:
+3. Verify that the property comes back, using the snippet below.
 
-   ```bash
-   uv run --with google-auth --with requests python -c "
-   import google.auth
-   from google.auth.transport.requests import AuthorizedSession
-   creds, _ = google.auth.default(scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
-   resp = AuthorizedSession(creds).get('https://www.googleapis.com/webmasters/v3/sites')
-   print(resp.status_code, resp.text[:400])
-   "
-   ```
+The verification snippet is deliberately unindented: pasted with leading whitespace, the
+heredoc terminator stops closing the block and Python rejects the indented program.
 
-   You want HTTP 200 and `sc-domain:anyplot.ai` with `permissionLevel: siteOwner` in the list.
+```bash
+uv run --with google-auth --with requests python - <<'PY'
+import google.auth
+from google.auth.transport.requests import AuthorizedSession
+
+creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/webmasters.readonly"])
+resp = AuthorizedSession(creds).get("https://www.googleapis.com/webmasters/v3/sites")
+print(resp.status_code, resp.text[:400])
+PY
+```
+
+You want HTTP 200 and `sc-domain:anyplot.ai` with `permissionLevel: siteOwner` in the list.
 
 ### Two traps that cost a session
 
