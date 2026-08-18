@@ -49,26 +49,36 @@ chart.setOption({
   },
   radar: {
     indicator: indicators,
+    shape: "circle",
     center: ["50%", "52%"],
-    radius: "74%",
+    radius: "70%",
     splitNumber: 5,
     axisName: { color: t.inkSoft, fontSize: 15 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
-    axisLabel: { show: false },
+    axisLabel: { show: true, color: t.inkSoft, fontSize: 10 },
     splitLine: { lineStyle: { color: t.grid } },
-    splitArea: { show: false },
+    splitArea: {
+      show: true,
+      areaStyle: { color: [t.elevatedBg, "transparent"] },
+    },
   },
   series: [
     {
       type: "radar",
       symbol: "circle",
       symbolSize: 6,
+      emphasis: { focus: "series", lineStyle: { width: 5 } },
       data: earbuds.map((s, i) => ({
         name: s.name,
         value: s.value,
-        lineStyle: { color: t.palette[i], width: 3 },
-        areaStyle: { color: t.palette[i], opacity: 0.22 },
+        // AudioMax Pro (brand series) is the focal product: a bolder
+        // outline plus a soft glow lift it above the other two polygons.
+        lineStyle:
+          i === 0
+            ? { color: t.palette[i], width: 4, shadowBlur: 12, shadowColor: t.palette[i] }
+            : { color: t.palette[i], width: 3 },
+        areaStyle: { color: t.palette[i], opacity: i === 0 ? 0.3 : 0.2 },
         itemStyle: { color: t.palette[i] },
       })),
     },
