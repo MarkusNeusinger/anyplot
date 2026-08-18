@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-08
+Library: pygal 3.1.3 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-08-18
 """
 
 import os
@@ -18,39 +18,39 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 IMPRINT = ("#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477")
 
-# Data - Employee performance scores across departments and experience levels
+# Data - Clinical trial symptom-improvement scores by treatment arm and patient age group
 np.random.seed(42)
 
-departments = ["Engineering", "Marketing", "Sales"]
-experience_levels = ["Junior", "Senior", "Lead"]
+treatment_arms = ["Placebo", "Low Dose", "High Dose"]
+age_groups = ["Under 40", "40-59", "60+"]
 
-# Generate performance distributions with realistic differences
+# Generate improvement-score distributions with realistic dose/age effects
 data = {}
-# Engineering: Higher scores overall, tight distributions
-data[("Engineering", "Junior")] = np.random.normal(72, 8, 50)
-data[("Engineering", "Senior")] = np.random.normal(82, 6, 50)
-data[("Engineering", "Lead")] = np.random.normal(88, 5, 50)
+# Placebo: modest, noisy improvement regardless of age
+data[("Placebo", "Under 40")] = np.random.normal(18, 9, 60)
+data[("Placebo", "40-59")] = np.random.normal(15, 9, 60)
+data[("Placebo", "60+")] = np.random.normal(12, 8, 60)
 
-# Marketing: More variability
-data[("Marketing", "Junior")] = np.random.normal(68, 12, 50)
-data[("Marketing", "Senior")] = np.random.normal(76, 10, 50)
-data[("Marketing", "Lead")] = np.random.normal(84, 8, 50)
+# Low Dose: moderate improvement, slightly weaker response in older patients
+data[("Low Dose", "Under 40")] = np.random.normal(42, 11, 60)
+data[("Low Dose", "40-59")] = np.random.normal(37, 11, 60)
+data[("Low Dose", "60+")] = np.random.normal(30, 10, 60)
 
-# Sales: Widest distributions with outliers
-data[("Sales", "Junior")] = np.random.normal(65, 15, 50)
-data[("Sales", "Senior")] = np.random.normal(78, 12, 50)
-data[("Sales", "Lead")] = np.random.normal(85, 10, 50)
+# High Dose: strongest improvement, response still tapers with age
+data[("High Dose", "Under 40")] = np.random.normal(68, 10, 60)
+data[("High Dose", "40-59")] = np.random.normal(60, 10, 60)
+data[("High Dose", "60+")] = np.random.normal(50, 12, 60)
 
-# Add outliers to show box plot features
-data[("Engineering", "Junior")] = np.append(data[("Engineering", "Junior")], [45, 95])
-data[("Sales", "Senior")] = np.append(data[("Sales", "Senior")], [40, 105])
-data[("Marketing", "Lead")] = np.append(data[("Marketing", "Lead")], [60, 100])
+# Add outliers to show box plot features (non-responders and exceptional responders)
+data[("Placebo", "Under 40")] = np.append(data[("Placebo", "Under 40")], [-8, 45])
+data[("Low Dose", "60+")] = np.append(data[("Low Dose", "60+")], [-2, 62])
+data[("High Dose", "40-59")] = np.append(data[("High Dose", "40-59")], [25, 92])
 
-# Subcategory colors: use Okabe-Ito palette starting with brand green
+# Subcategory colors: Imprint palette starting with brand green, canonical order
 subcategory_colors = IMPRINT[:3]
 
-# Build full color tuple: repeat pattern for each department group
-all_colors = subcategory_colors * len(departments)
+# Build full color tuple: repeat pattern for each treatment-arm group
+all_colors = subcategory_colors * len(treatment_arms)
 
 custom_style = Style(
     background=PAGE_BG,
@@ -59,56 +59,58 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=all_colors,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
     opacity=0.85,
     opacity_hover=1.0,
+    stroke_width=2.5,
 )
 
-# Create box chart with legend showing only 3 experience levels
+# Create box chart with legend showing only 3 age groups
 chart = pygal.Box(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     title="box-grouped · pygal · anyplot.ai",
-    x_title="Department",
-    y_title="Performance Score",
+    x_title="Treatment Arm",
+    y_title="Symptom Improvement Score",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
-    legend_box_size=36,
+    legend_box_size=28,
     truncate_legend=-1,
+    truncate_label=-1,
     show_y_guides=True,
     show_x_guides=False,
-    margin=80,
+    margin=60,
     box_mode="tukey",
     x_label_rotation=0,
-    yrange=(35, 110),
-    range=(35, 110),
-    y_labels=[40, 50, 60, 70, 80, 90, 100, 110],
-    dots_size=8,
+    yrange=(-15, 100),
+    range=(-15, 100),
+    y_labels=[-10, 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+    dots_size=6,
 )
 
-# Track which experience levels have been labeled in legend
-labeled_levels = set()
+# Track which age groups have been labeled in legend
+labeled_groups = set()
 
-# Add the 9 boxes grouped by department
-for dept in departments:
-    for level in experience_levels:
-        values = data[(dept, level)].tolist()
-        # Only first occurrence of each experience level gets a legend entry
-        if level not in labeled_levels:
-            chart.add(level, values)
-            labeled_levels.add(level)
+# Add the 9 boxes grouped by treatment arm
+for arm in treatment_arms:
+    for group in age_groups:
+        values = data[(arm, group)].tolist()
+        # Only first occurrence of each age group gets a legend entry
+        if group not in labeled_groups:
+            chart.add(group, values)
+            labeled_groups.add(group)
         else:
             # Suppress legend entry with None label
             chart.add(None, values)
 
-# X-axis labels: show department name in center of each group
-x_labels = ["", "Engineering", "", "", "Marketing", "", "", "Sales", ""]
+# X-axis labels: show treatment arm name in center of each group
+x_labels = ["", "Placebo", "", "", "Low Dose", "", "", "High Dose", ""]
 chart.x_labels = x_labels
 
 # Save outputs
