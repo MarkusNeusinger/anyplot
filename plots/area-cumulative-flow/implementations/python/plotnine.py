@@ -1,6 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
-Library: plotnine | Python
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 88/100 | Updated: 2026-08-18
 """
 
 import os
