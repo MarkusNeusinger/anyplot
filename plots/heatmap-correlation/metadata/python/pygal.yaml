@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:04:07Z'
-updated: '2026-08-18T16:59:53Z'
+updated: '2026-08-18T17:12:49Z'
 generated_by: claude-sonnet
 workflow_run: 32162154515
 issue: 1948
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
   - 'Diverging colormap is hand-built to match the Imprint imprint_div spec exactly:
@@ -24,46 +24,47 @@ review:
     fixed-range colorbar.
   - Per-cell text color is computed from background luminance (_get_text_color), so
     the 2-decimal correlation values stay readable against both light and dark cell
-    fills without manual tuning.
+    fills without manual tuning — verified down to the near-zero 0.05 cell in both
+    renders.
   - Row-label width and column-label drop are computed dynamically from the longest
-    label string, so long variable names never collide with the axis titles — a genuinely
-    robust layout technique.
+    label string, so long variable names never collide with the axis titles.
+  - 'Attempt-2 fix: the vestigial np.random.seed(42)/numpy import flagged in the previous
+    review is gone — the matrix is now fully hand-authored with zero dead code.'
+  - 'Attempt-2 fix: margin_top (200→60) and label_margin_top (60→20) were reduced,
+    and the vertical whitespace is now balanced — roughly ~16% blank above the grid
+    and ~15% below the rotated column labels, instead of the previous top-heavy imbalance.'
   - 'Realistic, neutral cheminformatics dataset (molecular descriptors: Mol. Weight,
     LogP, TPSA, H-Bond Donors/Acceptors, Rotatable Bonds, Aromatic Rings, LogS) with
     chemically plausible correlation signs and a full spread from -0.80 to 1.00.'
   weaknesses:
-  - 'VQ-05: Excess blank vertical space between the title and the heatmap grid — roughly
-    the top ~18-20% of the 2400x2400 canvas is empty. The custom _plot() adds label_margin_top=60
-    on top of the chart''s own margin_top=200, and pygal separately reserves its own
-    automatic title-height band above that, so three sources of top padding stack.
-    Reduce margin_top to roughly 60-100 and/or drop the separate label_margin_top=60
-    term so the grid grows to fill the reclaimed space and the whitespace is balanced
-    top-to-bottom rather than concentrated above the title.'
-  - 'CQ-01: The correlation matrix is fully hand-authored (no np.random usage despite
-    np.random.seed(42) being called) — the seed call is vestigial dead code since
-    nothing random is generated. Either remove the unused seed line or actually derive
-    the matrix from a seeded random process for genuine reproducibility signal.'
-  - 'LM-01/LM-02: The cell grid, labels, and colorbar are drawn entirely via low-level
-    self.svg.node(...) SVG calls rather than through any pygal higher-level data/series
-    API, so beyond the Style theming and the Graph-subclass extension point, little
-    of pygal''s own chart machinery is exercised — consider leveraging more of pygal''s
-    box/view/scale utilities where possible to make the library usage feel less like
-    raw SVG drawing.'
+  - 'VQ-05: The margin fix balanced the whitespace top-to-bottom, but the total blank
+    vertical space is still large — ~380px (~16%) between title and grid, ~373px (~15%)
+    below the rotated column labels. Consider growing cell_size / grid_size to reclaim
+    more of the freed vertical space into the grid itself (e.g. relax the 0.95 shrink
+    factor or reduce margin_right=320) rather than only recentering the same amount
+    of blank space.'
+  - 'LM-01/LM-02: The cell grid, labels, and colorbar are still drawn entirely via
+    low-level self.svg.node(...) SVG calls rather than through any pygal higher-level
+    data/series API — unchanged from the previous review, though this is a known constraint
+    of pygal lacking a native heatmap type.'
+  - 'CQ-01: The custom Graph subclass with hand-rolled _plot()/_compute() still deviates
+    from the plain imports-data-plot-save KISS shape — justified by pygal''s lack
+    of a native heatmap type, but still a minor structural deduction.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
-      Chrome: Title "heatmap-correlation · pygal · anyplot.ai" in dark ink, clearly legible, centered near the top with a large blank band beneath it before the grid begins. Row labels (left, dark text) and rotated 45° column labels (bottom, dark text) for the 8 molecular descriptors are all fully visible with no clipping. "Molecular Descriptors" axis titles appear on both the x- and y-axis in bold dark text. Colorbar to the right of the grid is labeled "+1.00", " 0.00", "-1.00" with a "Correlation" title above it, all in readable dark/muted tones.
-      Data: 8x8 symmetric correlation matrix, diagonal = 1.00 (darkest blue), off-diagonal cells interpolated between matte-red (negative, e.g. LogP/LogS = -0.80) through a near-cream midpoint (near-zero, e.g. Aromatic Rings/H-Bond Acceptors = 0.05) to blue (positive, e.g. TPSA/H-Bond Acceptors = 0.85). Each cell shows its value to 2 decimal places, with white or dark text automatically chosen per cell for contrast.
+      Background: Warm off-white, matches #FAF8F1 exactly (sampled RGB 250,248,241) — not pure white, not dark.
+      Chrome: Title "heatmap-correlation · pygal · anyplot.ai" in dark ink, clearly legible, centered near the top. Row labels (left, dark text) and rotated 45° column labels (bottom, dark text) for the 8 molecular descriptors are all fully visible with no clipping. "Molecular Descriptors" axis titles appear on both x- and y-axis in bold dark text. Colorbar to the right of the grid is labeled "+1.00", " 0.00", "-1.00" with a "Correlation" title above it, all in readable dark/muted tones. A blank band (~16% of canvas height) separates the title from the grid, and a similar blank band (~15%) sits below the rotated column labels — now balanced top-to-bottom rather than concentrated at the top.
+      Data: 8x8 symmetric correlation matrix, diagonal = 1.00 (darkest blue), off-diagonal cells interpolated between matte-red (negative, e.g. LogP/LogS = -0.80) through a near-cream midpoint (near-zero, e.g. Aromatic Rings/H-Bond Acceptors = 0.05) to blue (positive, e.g. TPSA/H-Bond Acceptors = 0.85). Each cell shows its value to 2 decimal places, with white or dark text automatically chosen per cell for contrast — confirmed via pixel crop that the near-zero 0.05 cell (pale background) still renders legible black text.
       Legibility verdict: PASS — all title, axis, tick, cell-value, and colorbar text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
-      Chrome: Same title, now rendered in light ink, clearly legible against the dark background. Row labels, rotated column labels, and both "Molecular Descriptors" axis titles switch to light/muted gray tones and remain fully readable. Colorbar labels and title also switch to light tones and stay legible. The same top-of-canvas blank band before the grid is present here too.
-      Data: Cell fill colors are pixel-identical to the light render — same matte-red → near-neutral → blue diverging scale, same values in the same positions (e.g. LogP/LogS still -0.80, TPSA/H-Bond Acceptors still 0.85, diagonal still 1.00). Only the page background, text/label colors, and cell-border stroke color (which follows PAGE_BG) have flipped for the theme; the data-color mapping itself is unchanged.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome text (title, labels, tick/colorbar text) uses light ink and reads clearly against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 exactly (sampled RGB 26,26,23) — not pure black, not light.
+      Chrome: Same title, now rendered in light ink, clearly legible against the dark background. Row labels, rotated column labels, and both "Molecular Descriptors" axis titles switch to light/muted gray tones and remain fully readable. Colorbar labels and title also switch to light tones and stay legible. Same balanced blank bands above/below the grid as the light render.
+      Data: Cell fill colors are pixel-identical to the light render's endpoint hues (matte-red #AE3030 and blue #4467A3 stay constant), only the theme-adaptive midpoint (PAGE_BG) shifts from cream to near-black as specified for imprint_div — this is the correct, spec-mandated behavior, not a theme-compliance violation. Same values in the same positions (e.g. LogP/LogS still -0.80, TPSA/H-Bond Acceptors still 0.85, diagonal still 1.00).
+      Legibility verdict: PASS — no dark-on-dark failures; the near-zero 0.05 cell (near-background fill in dark mode) still renders white text at full contrast, confirmed via pixel crop. All chrome text reads clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -96,13 +97,12 @@ review:
           text color.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Roughly the top ~18-20% of the canvas is empty blank space between
-          the title and the grid, from stacked margin_top + label_margin_top + pygal's
-          own title reservation; whitespace is imbalanced (top-heavy) rather than
-          distributed.
+        passed: true
+        comment: 'Improved from the previous attempt: whitespace above the grid (~16%)
+          and below the rotated labels (~15%) is now balanced instead of top-heavy,
+          but the absolute amount of blank vertical space is still fairly large.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -117,7 +117,8 @@ review:
         passed: true
         comment: Correct Imprint imprint_div-style diverging scale (matte-red / theme-adaptive
           midpoint / blue); theme-correct backgrounds and chrome in both renders;
-          data colors identical across themes.
+          data colors identical across themes except the spec-mandated theme-adaptive
+          midpoint.
     design_excellence:
       score: 14
       max: 20
@@ -134,8 +135,8 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Subtle cell gaps, rounded corners, theme-matched stroke; wasted top-margin
-          whitespace keeps this from full marks.
+        comment: Subtle cell gaps, rounded corners, theme-matched stroke, and now-balanced
+          margins; still some wasted vertical whitespace keeps this from full marks.
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -217,14 +218,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Matrix is fully deterministic (hand-authored), though the np.random.seed(42)
-          call is vestigial since no randomness is actually used.
+        comment: Matrix is fully deterministic and hand-authored; the previously-flagged
+          vestigial np.random.seed(42)/numpy import has been removed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, os, sys, and pygal imports, all used.
+        comment: Only os, sys, and pygal imports remain, all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -258,7 +259,7 @@ review:
         passed: true
         comment: Leverages pygal's Style theming system and box/view coordinate transforms,
           which are fairly specific to pygal's architecture.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
