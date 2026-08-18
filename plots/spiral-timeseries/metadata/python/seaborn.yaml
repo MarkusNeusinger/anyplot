@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: spiral-timeseries
 created: '2026-05-07T15:35:12Z'
-updated: '2026-08-18T00:21:37Z'
+updated: '2026-08-18T00:32:01Z'
 generated_by: claude-sonnet
 workflow_run: 32039575709
 issue: 5243
@@ -12,9 +12,14 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spiral-ti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spiral-timeseries/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
+  - Year labels (2020-2024) are now offset just outside each spiral arm's outer edge
+    with a rounded background swatch, so their contrast no longer depends on which
+    color the local spiral band happens to be in that draw
+  - Supplementary-panel axis/tick labels were bumped from 7-8pt to 8-9pt, bringing
+    them in line with the style-guide defaults and improving mobile-thumbnail legibility
   - 'Excellent spec fidelity: Archimedean spiral with earliest year at center, month
     spoke grid, year-start orientation labels, and a colorbar for the value mapping'
   - Correct Imprint palette and theme-adaptive chrome in both renders, with the canonical
@@ -26,76 +31,82 @@ review:
   - Clean, reproducible, KISS code with a fixed seed; canvas lands exactly on the
     2400x2400 square target
   weaknesses:
-  - Bold year labels (2020-2024) are placed directly on top of the color-coded spiral
-    band; move them just outside the outer edge of each arm so contrast doesn't depend
-    on which color falls under the label for a given data draw
-  - Supplementary-panel axis/tick labels (7-8pt) are a bit small relative to the rest
-    of the figure and risk being hard to read at mobile/catalog thumbnail sizes
   - The primary chart (spiral) is built entirely with raw matplotlib LineCollection
-    rather than any seaborn API, since seaborn has no native polar/spiral chart; only
-    the two side panels use seaborn idioms
+    rather than any seaborn API, since seaborn has no native polar/spiral chart type;
+    only the two side panels (regplot, lineplot) use seaborn idioms, which caps Library
+    Mastery
+  - Supplementary-panel tick labels (8pt) are still the smallest text elements in
+    the figure relative to the month-ring labels (12pt) - fine at full resolution
+    but worth keeping in mind if further mobile-thumbnail tuning is ever needed
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 exactly.
-      Chrome: Title "spiral-timeseries · python · seaborn · anyplot.ai" in dark ink, centered above the spiral; month ring labels (Jan-Dec), bold year labels (2020-2024), colorbar label "Daily Avg. Temp. (°C)", and both side-panel titles/axis labels/tick labels are all dark and clearly readable against the light background.
-      Data: Spiral band uses a green-to-blue imprint_seq gradient (#009E73 -> #4467A3) encoding daily temperature; first/only series color is brand green #009E73 in the supplementary panels (regplot scatter+line, lineplot).
+      Background: Warm off-white, matches #FAF8F1 exactly - not pure white.
+      Chrome: Title "spiral-timeseries · python · seaborn · anyplot.ai" in dark ink, centered above the spiral, ~68% of canvas width, not clipped. Month ring labels (Jan-Dec) around the polar plot, bold year labels (2020-2024) now offset just outside each arm's outer edge with a cream background swatch, colorbar label "Daily Avg. Temp. (°C)", and both side-panel titles ("Annual Warming Trend", "Seasonal Cycle") / axis labels ("Year", "Month", "Daily Avg. Temp. (°C)") / tick labels are all dark and clearly readable against the light background. No clipping at any canvas edge.
+      Data: Spiral band uses a green-to-blue imprint_seq gradient (#009E73 -> #4467A3) encoding daily temperature, growing outward from 2020 (center) to 2024 (outer arm). The first/only series color in the supplementary panels (regplot scatter+line, lineplot with sd error band) is brand green #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 exactly.
-      Chrome: All chrome correctly flips to light ink - title, month ring, year labels (white/bold), colorbar label, and side-panel titles/axis/tick labels are all light-colored and clearly readable against the dark background. No dark-on-dark failures found anywhere.
-      Data: Spiral gradient, colorbar, regression line, and seasonal-cycle line use identical colors to the light render - confirmed only chrome changed between themes.
+      Background: Warm near-black, matches #1A1A17 exactly - not pure black.
+      Chrome: All chrome correctly flips to light ink - title, month ring, year labels (now legible via a matching dark background swatch behind each label instead of sitting bare on the colored arm), colorbar label, and side-panel titles/axis/tick labels are all light-colored and clearly readable against the dark background. No dark-on-dark failures found anywhere.
+      Data: Spiral gradient, colorbar, regression line/scatter, and seasonal-cycle line+band use colors identical to the light render - confirmed only chrome (background, text, grid, label swatches) changed between themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; supplementary-panel labels at 7-8pt
-          risk mobile-thumbnail legibility
+        comment: All font sizes explicitly set; supplementary-panel labels bumped
+          to 8-9pt this attempt, readable in both themes; month-ring/title remain
+          the largest hierarchy elements
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Year labels sit on top of the color-coded spiral band; contrast holds
-          here but is data-draw dependent
+        comment: Year labels now carry a background swatch and sit just outside the
+          spiral arm, resolving the prior contrast-dependent overlap with the color
+          band
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line width and marker density well adapted to data volume
+        comment: Spiral linewidth (4.5) prominent; trend-panel scatter uses small
+          markers + low alpha appropriate for ~1825 overplotted points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, no red-green-as-sole-signal
+        comment: Green-to-blue sequential gradient, no red-green as sole signal, good
+          contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas measures exactly 2400x2400, no overflow
+        comment: Canvas measures exactly 2400x2400 (square, appropriate for this symmetric
+          polar plot); balanced 4-panel gridspec composition, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units throughout
+        comment: Descriptive labels with units throughout (Daily Avg. Temp. (°C),
+          Year, Month)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, canonical imprint_seq cmap, correct theme
-          backgrounds in both renders
+        comment: 'Brand green #009E73 first/only series, canonical imprint_seq colormap
+          for the continuous temperature encoding, theme-correct backgrounds and chrome
+          in both renders'
     design_excellence:
       score: 16
       max: 20
@@ -105,21 +116,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom gridspec composition, hand-built polar spiral, thoughtful
-          proportions
+        comment: Custom gridspec composition combining a hand-built polar spiral with
+          two seaborn side panels, thoughtful proportions and color mapping - clearly
+          above a configured default
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Despine, subtle grids, hidden radial ticks/spine, restrained typography
+        comment: Despine on side panels, subtle 15% alpha grids, hidden radial ticks/spine,
+          restrained typography hierarchy
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
         comment: Side panels directly demonstrate the spec's periodicity-plus-trend
-          claim
+          claim, guiding the viewer from the spiral's raw pattern to its decomposed
+          trend and seasonal components
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Archimedean spiral time series
+        comment: Correct Archimedean spiral time series with constant arm spacing
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Color mapping, month grid, year labels, inner-to-outer chronology,
-          colorbar all present
+        comment: Color mapping of value magnitude, radial month grid, cycle-start
+          year labels, inner-to-outer chronology, colorbar all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle=day-of-year, radius=year, color=temperature, correctly mapped
+        comment: Angle=day-of-year, radius=year (cycle), color=temperature - correctly
+          mapped and legible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; colorbar correctly substitutes for legend
+        comment: Title format exact (spiral-timeseries · python · seaborn · anyplot.ai);
+          colorbar correctly substitutes for a legend on continuous data
     data_quality:
       score: 15
       max: 15
@@ -158,21 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Covers spiral construction, color mapping, grid, labeling, colorbar,
-          trend/seasonality
+        comment: Covers spiral construction, color mapping, radial grid, cycle labeling,
+          colorbar, plus trend/seasonality decomposition
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible Northern-Hemisphere daily temperature series, neutral
+        comment: Plausible Northern-Hemisphere daily-average-temperature series, neutral
+          scientific domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1,825 points within spec range, sensible temperature values and trend
-          magnitude
+        comment: 1,825 points within the 100-3000 spec range; seasonal amplitude (~-8
+          to 34°C) and modest +0.4°C/yr warming trend are realistic
     code_quality:
       score: 10
       max: 10
@@ -182,7 +199,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script
+        comment: Flat procedural script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -194,19 +211,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: Every import (cm, LineCollection, LinearSegmentedColormap, Normalize,
+          etc.) is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake UI
+        comment: Appropriately complex for a multi-panel polar composition, no fake
+          UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct savefig call, no bbox_inches=tight
+        comment: Correct plot-{THEME}.png savefig call, bbox_inches left at default
+          (None)
     library_mastery:
       score: 6
       max: 10
@@ -216,15 +236,17 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Primary chart uses raw matplotlib LineCollection, not seaborn API
-          (seaborn has no native polar chart); side panels are idiomatic
+        comment: Primary spiral chart uses raw matplotlib LineCollection since seaborn
+          has no native polar/spiral chart; side panels (regplot, lineplot) are idiomatic
+          seaborn
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: lineplot(errorbar='sd') is a genuinely distinctive seaborn feature
-          but confined to a small side panel
+        comment: sns.lineplot(errorbar='sd') automatic aggregation is a genuinely
+          distinctive seaborn feature, but it's confined to a small side panel rather
+          than the main chart
   verdict: APPROVED
 impl_tags:
   dependencies: []
