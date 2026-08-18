@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:52:22Z'
-updated: '2026-08-18T04:44:22Z'
+updated: '2026-08-18T04:50:58Z'
 generated_by: claude-sonnet
 workflow_run: 32099697158
 issue: 2019
@@ -12,43 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notch
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct notched box plot implementation using seaborn's native notch=True (standard
-    median ± 1.57×IQR/√n calculation), matching the spec's notch-depth requirement
-    exactly.
+  - 'Fixed the prior review''s DQ-03 violation: all Test Score values are now bounded
+    to [0, 100] via np.clip(..., 0, 100) on every cohort''s generating distribution,
+    eliminating the previously-observed >100% values.'
+  - Correct notched box plot via seaborn's native sns.boxplot(notch=True), matching
+    the spec's median ± 1.57×IQR/√n notch-depth requirement exactly.
   - Mean diamond markers (showmeans=True) placed alongside the notched median create
-    a meaningful skew-detection layer — a thoughtful design addition beyond a bare
-    boxplot.
-  - 'Imprint palette applied in canonical order (green → purple → blue → ochre) with
-    the first series correctly at #009E73; both renders are pixel-verified theme-correct
-    (#FAF8F1 light / #1A1A17 dark backgrounds).'
-  - 'Clean KISS code structure: explicit font sizing throughout, reproducible via
-    np.random.seed(42), no deprecated APIs (uses the 0.14+ hue+palette+legend=False
-    pattern).'
+    a genuine skew-detection storytelling layer beyond a bare boxplot.
+  - 'Imprint palette applied in canonical order (green → lavender → blue → ochre)
+    with the first series correctly at #009E73; both renders are theme-correct (#FAF8F1
+    light / #1A1A17 dark backgrounds), with data colors identical across themes.'
+  - 'Clean KISS code structure: explicit font sizing throughout (12pt title, 10pt
+    axis labels, 8pt ticks), reproducible via np.random.seed(42), current 0.14+ hue+palette+legend=False
+    API.'
   weaknesses:
-  - Test Score data for Cohort B and Cohort C exceeds 100% (observed max ~127.8%,
-    with 2 points in Cohort B and 4 points in Cohort C above 100%), which is factually
-    impossible for a metric labeled 'Test Score (%)'. Bound the generating distribution
-    — e.g. np.clip(values, 0, 100) or a Beta distribution scaled to [0, 100] — so
-    no value can exceed the percentage ceiling.
-  - 'Design Excellence is solid (mean-vs-median markers, Imprint palette, clean spines)
-    but stops short of publication-ready: an explicit callout or annotation highlighting
-    the non-overlapping notches between Cohort A and Cohort D (the clearest statistically-significant
-    median difference) would sharpen the data storytelling.'
+  - Cohort B's deliberately-added 'outlier' values (95, 96, 98) no longer render as
+    individual flier points post-clipping — they now fall inside the whisker range,
+    so the code comment describing them as outliers is slightly stale. Not a scoring
+    problem (Cohorts A and D still show clear outliers), but worth trimming the comment
+    or nudging those values higher for accuracy.
+  - 'Design Excellence still stops short of an explicit callout: the non-overlapping
+    notches between Cohort A and Cohort D (the clearest statistically-significant
+    median gap) are visible but not annotated — a small ax.annotate() pointing this
+    out would sharpen the data storytelling further (optional, not required for approval).'
+  - 'Library Mastery is solid but generic-adjacent: the fine-grained meanprops/flierprops/whiskerprops
+    customization is good, but a more distinctive seaborn-only feature (e.g. bootstrapped
+    CI via bootstrap= for notch calculation, or combining with a stripplot overlay)
+    would push LM-02 higher.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1, pixel-verified), not pure white.
-      Chrome: Title "box-notched · python · seaborn · anyplot.ai" in dark ink, centered, ~45% of plot width — clearly readable. X-axis label "Student Cohort" and Y-axis label "Test Score (%)" both dark ink, similarly sized (10pt). Tick labels in soft grey-brown, 8pt, evenly readable. Subtle horizontal gridlines at ~15% alpha, y-axis only. No legend (correctly omitted — categories are already distinguished by the x-axis and color).
-      Data: Four notched boxes (Cohort A-D) in Imprint palette order — green (#009E73), lavender, blue, ochre. Each box shows a pinched notch around the median, a white diamond mean marker, whiskers, and grey circular outlier points (visible above/below whiskers, e.g. a high outlier above 120 for Cohort C and one near 60 for Cohort A). First series (Cohort A) confirmed green #009E73.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no overlaps.
+      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
+      Chrome: Title "box-notched · python · seaborn · anyplot.ai" in dark ink, centered, ~50% of plot width — clearly readable. X-axis label "Student Cohort" and Y-axis label "Test Score (%)" both dark ink, similarly sized (10pt), balanced. Tick labels in soft grey-brown, 8pt, evenly spaced and readable. Subtle horizontal gridlines at low alpha, y-axis only. No legend (correctly omitted — categories are already distinguished by the x-axis and matching box color).
+      Data: Four notched boxes (Cohort A–D) in Imprint palette order — green (#009E73), lavender, blue, ochre. Each box shows a pinched notch around the median, a white diamond mean marker with dark edge, whiskers with caps, and grey circular outlier points where present (a low outlier below the box for Cohort A, one near the bottom for Cohort D). All values now sit within [0, 100] — no box, whisker, or outlier point crosses the 100% ceiling, confirming the np.clip fix landed. First series (Cohort A) confirmed green #009E73.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no overlaps, no clipping at the canvas edges.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17, pixel-verified), not pure black.
+      Background: Warm near-black (~#1A1A17), not pure black, not light.
       Chrome: Same title, axis labels, and tick labels now rendered in light ink/grey tones, fully legible against the dark background. Gridlines subtle and visible. No dark-on-dark text found anywhere — title, axis labels, and ticks all flip correctly to light tones.
-      Data: Box colors are pixel-identical to the light render (green/lavender/blue/ochre unchanged) — only the chrome (background, text, grid) flipped, as required. Mean diamond markers and outlier points remain visible with light-toned edges against the dark surface.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Data: Box colors are visually identical to the light render (green/lavender/blue/ochre unchanged) — only the chrome (background, text, grid) flipped, as required. Mean diamond markers and outlier points remain clearly visible with light-toned edges against the dark surface. Values remain bounded to [0, 100], matching the light render.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed; brand green #009E73 reads well on both surfaces.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -98,7 +103,7 @@ review:
         max: 2
         passed: true
         comment: 'First series #009E73, canonical Imprint order, theme-correct backgrounds
-          pixel-verified in both renders'
+          in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -156,7 +161,7 @@ review:
         comment: Title format correct; legend correctly omitted since x-axis + color
           already identify categories
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -164,8 +169,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows outliers, varying spreads, and a skewed cohort (B) — full feature
-          coverage
+        comment: Shows outliers and varying spreads across the four cohorts
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -174,12 +178,11 @@ review:
         comment: Neutral, comprehensible academic test-score scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Cohort B and C contain values above 100% (max ~127.8%), impossible
-          for a percentage-bounded 'Test Score (%)' metric — unbounded normal distribution
-          was not clipped
+        passed: true
+        comment: 'FIXED: all values now clipped to [0, 100] via np.clip, resolving
+          the previous >100% test-score violation'
     code_quality:
       score: 10
       max: 10
@@ -213,7 +216,7 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, current 0.14+ API
+        comment: Saves plot-{THEME}.png, current 0.14+ API, no bbox_inches='tight'
     library_mastery:
       score: 8
       max: 10
@@ -232,7 +235,7 @@ review:
         passed: true
         comment: Fine-grained meanprops/flierprops/whiskerprops customization uses
           seaborn's matplotlib-backed statistical boxplot depth beyond generic usage
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
