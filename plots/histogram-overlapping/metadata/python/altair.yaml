@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:47:46Z'
-updated: '2026-08-18T10:49:17Z'
+updated: '2026-08-18T10:56:26Z'
 generated_by: claude-sonnet
 workflow_run: 32127925864
 issue: 2010
@@ -12,48 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 86
 review:
   strengths:
-  - Bin edges are correctly aligned across all three departments via a single shared
-    bin encoding (alt.Bin(maxbins=24)), satisfying the spec's core requirement for
-    accurate cross-group comparison.
-  - Adds dashed per-department mean-rule lines using Altair's inline `mean(...)` aggregate
-    encoding shorthand -- a distinctive declarative feature that gives the chart a
-    clear data-storytelling focal point for comparing central tendency at a glance.
-  - 'Palette and theme tokens are correctly applied: Engineering maps to #009E73 (Imprint
-    position 1), background/chrome flips correctly between light and dark, and the
-    canvas lands exactly at 3200x1800 with no cropping or edge clipping.'
-  - 'Clean, idiomatic single-purpose script: no functions/classes, seeded RNG for
-    reproducibility, only necessary imports, and layer-composition used purposefully
-    rather than gratuitously.'
+  - Correct Imprint palette order (Engineering=#009E73, Sales=#C475FD, Support=#4467A3),
+    consistent between light and dark renders — only chrome flips
+  - Single shared x-bin encoding with color faceting guarantees aligned bin edges
+    and matching bin widths across all three groups, exactly as the spec's Notes section
+    requires
+  - 'Distinctive Altair-idiomatic layering: dashed per-department mean rules (alt.layer)
+    plus a legend-bound alt.selection_point for interactive isolation, with the empty-selection
+    default correctly matching the static PNG''s un-highlighted state'
+  - Own-color full-opacity stroke outlines each bar's boundary through the blended
+    fill region, letting overlaps stay readable without needing the legend
+  - Canvas dimensions on-target (3200x1800 gate passed), theme tokens threaded through
+    axis/legend/title configs correctly in both renders
+  - 'Clean, reproducible code: single seed, no helper functions, only used imports
+    (PIL only for the mandatory canvas pad)'
   weaknesses:
-  - With three semi-transparent series overlapping heavily in the 200-450ms range,
-    blended colors (green+blue, blue+purple) create intermediate hues that make it
-    hard to attribute an overlap region to a specific pair of departments without
-    checking the legend -- consider per-category stroke colors instead of a uniform
-    PAGE_BG stroke to help disambiguate overlap boundaries.
-  - Tick label font size (10pt at labelFontSize) is on the small side relative to
-    the 4x-scaled 3200px canvas; verify legibility once the site's 400px thumbnail
-    renders, since 10pt tick text scales down considerably.
-  - Library usage is solid but conventional beyond the mean-rule layering -- no use
-    of Altair-only capabilities like faceting, selection params, or transform_density
-    that would further differentiate it from a generic grammar-of-graphics rendering.
+  - '''Response Time (ms)'' modeling how long a human takes to respond to a support
+    ticket is an implausible unit/scale — department means of 280-420 ms describe
+    network/API latency, not a person answering a ticket (real ticket response times
+    run minutes to hours). Rename the metric to something genuinely millisecond-scale
+    (e.g. API response latency by service tier) or rescale to a plausible ticket-handling
+    unit (minutes/hours).'
+  - 'DE-02 visual refinement is solid but not exceptional: the default Altair axis
+    domain lines (solid left/bottom border) remain, and legend swatches use a plain
+    rectangular box — could be tightened further for a more custom-feeling finish.'
+  - The far-right outlier bin (Sales, ~800-850ms) sits isolated with a large empty
+    gap from the rest of the distribution — consider whether that lone extreme point
+    is adding real signal or just clutter against DQ-01 feature coverage.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "histogram-overlapping · python · altair · anyplot.ai" centered at top, clearly readable. X-axis title "Response Time (ms)" and Y-axis title "Frequency" both in dark ink, fully legible. Tick labels in medium-grey ink, readable. Legend box top-right with "Department" title and three swatches (Engineering, Sales, Support) on a light elevated background with dark text.
-      Data: Three overlapping semi-transparent histogram series -- Engineering (#009E73 green), Sales (#C475FD lavender/purple), Support (#4467A3 blue) -- with dashed vertical mean-rules in matching colors. Bin edges are shared/aligned across all three groups. Overlap regions blend into intermediate hues (teal, muted violet) but remain visually distinguishable from single-series regions.
-      Legibility verdict: PASS
+      Background: Warm off-white cream, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "histogram-overlapping · python · altair · anyplot.ai" centered at top, fully visible and legible. Axis titles "Response Time (ms)" (x) and "Frequency" (y) in dark ink, clearly readable. Tick labels (50-850 on x, 0-50 on y) dark and crisp. Subtle light-gray horizontal gridlines, visible but not dominant. Legend box top-right titled "Department" with three color swatches (Engineering, Sales, Support), dark text on a lightly elevated fill, fully legible.
+      Data: Three overlapping semi-transparent histograms — Engineering (green #009E73), Sales (lavender-purple #C475FD), Support (blue #4467A3) — each with a full-opacity stroke outline of its own color so bar boundaries stay traceable through blended overlap regions (visible teal/blue-violet blends where two distributions intersect). Dashed vertical mean-rules in each department's color mark the center of each distribution. First categorical series (Engineering) correctly uses #009E73.
+      Legibility verdict: PASS — no light-on-light or unreadable text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title renders in near-white ink, clearly readable against the dark surface. Axis titles and tick labels render in light grey/near-white, fully legible -- no dark-on-dark issues. Legend box background is a dark elevated tone (~#242420, confirmed via pixel sampling) with light-grey/near-white text, correctly themed rather than left white.
-      Data: Same three data colors as the light render (Engineering #009E73, Sales #C475FD, Support #4467A3) with matching mean-rule dashes -- confirmed identical across themes, only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/soft ink tones, fully legible against the dark surface. Gridlines are faint but present. Legend box top-right uses an elevated dark fill with light text and light border stroke, fully readable — no dark-on-dark failure anywhere (title, axis labels, tick labels, and legend text all clear).
+      Data: Identical Engineering/Sales/Support colors and mean-rule dash styling to the light render — only the background, gridlines, axis ink, and legend chrome flipped, confirming correct theme-adaptive implementation of the data palette.
+      Legibility verdict: PASS — no dark-on-dark or unreadable text observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,8 +64,7 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes; tick labels (10pt)
-          somewhat small once scaled to a 400px thumbnail
+        comment: Explicit font sizes throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -74,21 +76,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Bar density/opacity (0.55) appropriate for 150 obs/group; shortest
-          bars in a bin can be fully occluded by taller overlapping series
+        comment: Bar density and alpha well chosen for 150-point-per-group data
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Overlap regions blend into intermediate hues, making pairwise attribution
-          harder without the legend
+        passed: true
+        comment: Green/purple/blue Imprint palette, adequate contrast, no red-green
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed at exactly 3200x1800, no overflow or clipping
+        comment: Canvas gate passed; title, axes, legend well-proportioned, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,30 +101,30 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering = #009E73 (Imprint position 1); backgrounds correct
-          per theme; data colors identical across themes'
+        comment: 'First series #009E73, canonical Imprint order, backgrounds match
+          spec, both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Custom Imprint palette, rounded bar corners, layered mean-rules add
-          polish beyond generic defaults
+        comment: Custom palette, mean-rule layer, legend-bound selection add real
+          polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle 0.15-opacity gridlines, no view border/stroke, generous whitespace,
-          themed legend chrome
+        comment: Subtle grid and generous whitespace, but default axis domain lines
+          and plain legend box remain
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Dashed per-department mean-rules create a clear focal point for central-tendency
-          comparison
+        comment: Dashed mean rules give each distribution a clear focal point and
+          aid comparison
     spec_compliance:
       score: 15
       max: 15
@@ -132,45 +133,45 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct overlapping-histogram implementation
+        comment: Correct overlapping histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Semi-transparent fills (0.55), distinct contrasting colors, legend,
-          aligned bin edges, matching bin widths/counts all present
+        comment: Semi-transparent fills, distinct colors, legend, aligned bin edges,
+          matching bin widths — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X = response time values, Y = frequency count, full data range shown
-          including tail outliers
+        comment: X = response time, Y = frequency/count, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format exactly; legend labels match Department
-          categories
+        comment: Title matches mandated format exactly; legend labels match data
     data_quality:
-      score: 15
+      score: 10
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        comment: Three groups with distinct means/spreads and tail outliers exercise
-          the overlapping-histogram use case well
+        comment: Three overlapping distributions plus mean-rule overlay covers the
+          plot type well
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 3
         max: 5
-        comment: Support-ticket response times by department -- plausible and neutral
+        comment: Neutral subject matter, but 'response time' framed as a human ticket-handling
+          metric doesn't fit a millisecond scale
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        comment: Response-time values (50-850ms) are sensible for the stated domain
+        comment: 280-420ms means are implausible for a person responding to a support
+          ticket
     code_quality:
       score: 10
       max: 10
@@ -179,7 +180,7 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat top-level script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -189,18 +190,17 @@ review:
         name: Clean Imports
         score: 2
         max: 2
-        comment: os, altair, numpy, pandas, PIL.Image -- all used
+        comment: Only os, altair, numpy, pandas, PIL (used for mandatory canvas pad)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake UI; mean-line layering is genuine Altair aggregate encoding
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Saves plot-{THEME}.png and .html correctly via current vl-convert
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 8
       max: 10
@@ -209,22 +209,18 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Layer composition, alt.Scale/alt.Bin/alt.Axis/alt.Legend configured
-          idiomatically
+        comment: Layered chart, declarative encodings, alt.Bin/alt.Scale used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: mean(...) inline aggregate encoding shorthand for the rule layer
-          is a distinctive Altair feature; no faceting/selection/transform_density
-          used
+        comment: Legend-bound selection_point and mean-rule layer are genuinely Altair-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -233,3 +229,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
