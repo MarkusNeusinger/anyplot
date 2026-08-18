@@ -36,13 +36,23 @@ df <- tibble::tibble(
 ) %>%
   mutate(
     sentiment = ifelse(nps >= 0, "Promoters lead", "Detractors lead"),
-    department = factor(department, levels = department[order(nps)])
+    department = factor(department, levels = department[order(nps)]),
+    # Direct-label only the two extremes (best/worst department) so the
+    # funnel's endpoints carry their exact score without cluttering the
+    # 14 bars in between.
+    is_extreme = nps == max(nps) | nps == min(nps),
+    extreme_label = ifelse(is_extreme, sprintf("%+d", nps), NA_character_)
   )
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = nps, y = department, fill = sentiment)) +
   geom_col(width = 0.7) +
   geom_vline(xintercept = 0, color = INK_SOFT, linewidth = 0.5) +
+  geom_text(
+    data = dplyr::filter(df, is_extreme),
+    aes(label = extreme_label, hjust = ifelse(nps >= 0, -0.25, 1.25)),
+    size = 2.6, color = INK, fontface = "bold"
+  ) +
   scale_fill_manual(
     values = c(
       "Promoters lead" = IMPRINT_PALETTE[1],
@@ -50,7 +60,7 @@ p <- ggplot(df, aes(x = nps, y = department, fill = sentiment)) +
     ),
     name = NULL
   ) +
-  scale_x_continuous(breaks = seq(-60, 60, 20)) +
+  scale_x_continuous(breaks = seq(-60, 60, 20), expand = expansion(mult = 0.08)) +
   labs(
     title = "bar-diverging · r · ggplot2 · anyplot.ai",
     x = "Net Promoter Score",
@@ -60,15 +70,20 @@ p <- ggplot(df, aes(x = nps, y = department, fill = sentiment)) +
   theme(
     plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
+    panel.border = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor = element_blank(),
     panel.grid.major.x = element_line(color = INK, linewidth = 0.25),
     axis.title = element_text(color = INK, size = 10),
     axis.text = element_text(color = INK_SOFT, size = 8),
     axis.ticks = element_blank(),
-    plot.title = element_text(color = INK, size = 12),
+    plot.title = element_text(color = INK, size = 12, face = "bold"),
+    plot.title.position = "plot",
+    plot.margin = margin(t = 10, r = 18, b = 8, l = 10),
     legend.position = "top",
     legend.justification = "left",
+    legend.margin = margin(t = 2, b = 4),
+    legend.spacing.x = unit(6, "pt"),
     legend.text = element_text(color = INK_SOFT, size = 8),
     legend.key.size = unit(10, "pt")
   )
