@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:40Z'
-updated: '2026-08-18T12:51:44Z'
+updated: '2026-08-18T13:00:00Z'
 generated_by: claude-sonnet
 workflow_run: 32138429563
 issue: 2009
@@ -12,47 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Semantic red/green encoding matches sentiment (positive vs negative) exactly as
-    the spec suggests, with a clear zero-baseline geom_hline separating the two directions
-  - coord_flip with an ordered categorical axis gives clean horizontal bars for the
-    long category labels, and rows are sorted by value so the pattern reads top-to-bottom
-    without extra effort
-  - 'Theme-adaptive chrome is correctly threaded through: backgrounds, grid, axis
-    text, and title all flip between #FAF8F1/#1A1A17 while the data colors (#009E73
-    / #AE3030) stay identical across renders'
-  - Deterministic, dependency-light code — hardcoded data, no functions/classes, only
-    the imports that are actually used
-  - Axis titles are descriptive with units ("Net Satisfaction Score (%)", "Product
-    Category") and the mandated title format is exact
+  - Added redundant per-bar value labels (+72 ... -62) directly addressing the attempt-1
+    VQ-04/DE-03 feedback — sentiment is now legible via bar direction, color, AND
+    explicit signed numbers, and every bar's magnitude is called out rather than just
+    the two extremes
+  - 'Correct diverging bar chart: 12 categories sorted from +72 (Mobile App) down
+    to -62 (Warranty) with a clear geom_hline zero baseline, matching the spec''s
+    request to sort by value and mark the baseline'
+  - 'Theme-adaptive chrome is threaded through correctly — backgrounds, grid, axis
+    text, title, and legend border all flip between #FAF8F1/#1A1A17 while the Imprint
+    data colors (#009E73/#AE3030) stay pixel-identical across light and dark renders'
+  - Clean, deterministic data (realistic customer-satisfaction categories, no randomness)
+    with descriptive unit-bearing axis titles and the exact mandated title format;
+    legend labels match the sentiment field
   weaknesses:
-  - Positive/negative encoding relies on the classic red/green pair, which is a known
-    CVD-confusable combination; direction (left vs right of zero) makes it non-sole-signal
-    so this isn't disqualifying, but a colorblind-safer pair or a value-label redundancy
-    would strengthen VQ-04
-  - Design is competent but generic theme_minimal styling — no annotation calling
-    out the standout categories (e.g. the +72 Mobile App leader or -62 Warranty laggard)
-    that would sharpen the data storytelling
-  - Library mastery is standard grammar-of-graphics usage (geom_bar + geom_hline +
-    coord_flip); nothing distinctly plotnine-specific (e.g. stat layers, facets) is
-    showcased beyond what any ggplot2-family library would do the same way
+  - Import section still uses a heavy importlib.util.spec_from_file/module_from_spec
+    workaround plus per-symbol reassignment (aes = plotnine.aes, coord_flip = plotnine.coord_flip,
+    ...) to dodge the implementations/python/plotnine.py self-shadowing issue. Every
+    other plotnine implementation in the catalog (e.g. violin-box, area-cumulative-flow)
+    solves the same problem with a two-line sys.path filter and a normal `from plotnine
+    import (...)` block — simplify to that pattern
+  - Design is solid but still reads as a well-executed grammar-of-graphics default
+    rather than a distinctive plotnine showcase — no facet/stat layer or extra annotation
+    beyond the per-bar value labels calls out the single best/worst category
+  - panel_grid_major_y (alpha=0.10) renders as fairly visible vertical gridlines in
+    both previews — could be pulled a touch more subtle for a more polished feel
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "bar-diverging · python · plotnine · anyplot.ai" in dark ink, centered top. Y-axis category labels (Mobile App ... Warranty) and X-axis "Net Satisfaction Score (%)" title are both dark and clearly legible against the light background. Subtle vertical gridlines at -40/0/40. Legend box ("Sentiment": Negative/Positive) sits outside the plot area on the right with a thin border, fully readable.
-      Data: 12 horizontal bars sorted from +72 (Mobile App, top) to -62 (Warranty, bottom). Positive bars are Imprint green (#009E73), negative bars are Imprint red (#AE3030). A darker vertical line marks the zero baseline, clearly separating positive and negative regions.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "bar-diverging · python · plotnine · anyplot.ai" centered at top in dark ink, clearly legible. Y-axis "Product Category" with 12 category labels (Mobile App ... Warranty), X-axis "Net Satisfaction Score (%)" with tick labels -40/0/40/80, all in dark/soft-dark ink, clearly legible. Subtle vertical gridlines at tick positions. Legend box "Sentiment" (Negative/Positive) with visible border sits to the right of the plot, fully readable, not overlapping data.
+      Data: 12 horizontal bars sorted from +72 (Mobile App, top) to -62 (Warranty, bottom). Positive bars are Imprint green (#009E73), negative bars are Imprint red (#AE3030). A darker vertical line marks the zero baseline. Each bar has a signed value label (+72, +45, ..., -48, -62) printed just past its end in soft ink, giving a color-independent redundant cue for direction and magnitude.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title, axis labels, and tick labels rendered in light ink (off-white/light gray), clearly legible against the dark background. No dark-on-dark text observed. Legend box border and text also legible in this theme.
-      Data: Same 12 bars, same colors (#009E73 positive / #AE3030 negative) and same sort order as the light render — confirmed identical to the light render, only chrome (background, text, grid, legend frame) flipped.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, tick labels, category labels, and legend now render in light ink (near-white/soft-light), clearly legible against the dark surface — no dark-on-dark issues found anywhere (title, ticks, category labels, value labels, legend text all confirmed readable). Gridlines and zero-baseline line are light-colored and visible but subtle.
+      Data: Bar colors, sort order, value labels, and zero-baseline position are pixel-identical to the light render — confirms only chrome (background/text/grid/legend frame) flipped between themes, not the data-series colors.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,47 +62,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes; readable in both light and dark renders
+        comment: All font sizes explicitly set via theme(); readable in both themes
+          with no overflow, but sizes are on the smaller side rather than perfectly
+          tuned
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, and bars
+        comment: No overlap between bars, labels, category text, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 bars at width=0.7 are clearly distinguishable, appropriate density
+        comment: 12 bars at width=0.7 are clearly visible and well-spaced for the
+          category count
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Red/green pair is CVD-confusable; direction is a redundant signal
-          but the hue choice itself is not colorblind-optimal
+        passed: true
+        comment: 'Red/green pair is CVD-confusable in isolation, but sentiment is
+          now triple-redundant: bar direction (left/right of zero), color, AND explicit
+          signed value labels — hue is no longer the sole signal'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas, good proportions, nothing clipped
+        comment: Plot fills a healthy majority of the 3200x1800 canvas with balanced
+          margins; legend sits near the plot, not isolated
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units, exact mandated title format
+        comment: '''Product Category'' and ''Net Satisfaction Score (%)'' are descriptive
+          with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Positive=#009E73 (canonical first series), Negative=#AE3030 (semantic
-          exception, valid Imprint color), correct light/dark backgrounds
+        comment: Positive=#009E73, Negative=#AE3030 — both Imprint palette members,
+          semantic exception justified by spec's own positive/negative framing; backgrounds
+          and chrome are theme-correct in both renders
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -108,22 +117,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic color mapping and sorted layout show intentional hierarchy
-          beyond plain defaults
+        comment: Semantic color mapping, sorted layout, and value labels show intentional
+          hierarchy, but overall still reads as a competently configured theme_minimal
+          rather than a highly distinctive design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes clutter, grid subtle (alpha 0.10/0.05), generous
-          whitespace
+        comment: theme_minimal, generous whitespace, spines mostly removed; grid could
+          be a touch more subtle
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Sort-by-value plus zero baseline creates a clear narrative, but no
-          annotation highlights the extremes
+        comment: Sort-by-value + zero baseline + per-bar value labels together create
+          a clear, immediately readable narrative from top performer to biggest laggard
     spec_compliance:
       score: 15
       max: 15
@@ -133,27 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar chart
+        comment: Correct diverging bar chart with bars extending in opposite directions
+          from a zero baseline
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Contrasting colors, zero-baseline indicator, horizontal orientation,
-          sorted bars — all spec notes satisfied
+        comment: Contrasting colors, explicit zero-baseline line, and value-sorted
+          bars all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category on y, value on x, all 12 categories shown
+        comment: Category on the flipped y-axis, value on x-axis; all 12 data points
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels (Positive/Negative)
-          match data semantics
+        comment: Title format exactly matches the mandated pattern; legend labels
+          (Negative/Positive) match the sentiment field
     data_quality:
       score: 15
       max: 15
@@ -163,22 +175,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full positive-to-negative range shown across 12 categories
+        comment: Shows both positive and negative values across a wide magnitude range
+          (+72 to -62)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible customer-satisfaction survey scenario, neutral subject
-          matter
+        comment: Customer satisfaction survey across product/service categories —
+          real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values -62 to +72 fit a net-satisfaction-score domain well
+        comment: Net satisfaction scores in the plausible -100..+100 range noted by
+          the spec
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -186,33 +200,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes; Imports -> Data -> Plot -> Save order preserved
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic hardcoded data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (pandas, plotnine components, stdlib boilerplate)
+        comment: Every imported plotnine symbol is used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Unnecessarily heavy importlib.util module-loading workaround plus
+          per-symbol reassignment for what every other plotnine implementation solves
+          with a two-line sys.path filter
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with dpi/width/height matching figure_size
+        comment: Saves plot-{THEME}.png via plot.save() with correct dpi/units, no
+          deprecated calls
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -220,22 +237,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Proper grammar-of-graphics composition: aes, geom_bar, coord_flip,
-          scale_fill_manual, ordered categorical'
+        comment: 'Clean layered grammar-of-graphics usage: geom_bar + geom_hline +
+          two geom_text layers + coord_flip + scale_fill_manual'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Standard geom_bar + geom_hline + coord_flip combo; no facets, stats,
-          or annotation layers to showcase plotnine-specific strengths
+        passed: true
+        comment: Per-layer data override (separate pos_df/neg_df feeding two geom_text
+          layers within one plot object) showcases a ggplot2-family-specific layering
+          capability beyond generic bar-chart code
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - publication-ready
   - grid-styling
