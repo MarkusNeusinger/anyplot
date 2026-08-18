@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Created: 2026-05-07
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-18
 """
 
 import datetime
