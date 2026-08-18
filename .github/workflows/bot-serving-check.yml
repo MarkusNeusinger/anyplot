@@ -28,9 +28,11 @@ permissions:
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    # 7 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
-    # ~10.5 min worst-case; 14 leaves room to report a clean failure.
-    timeout-minutes: 14
+    # 19 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # ~28.5 min worst-case; 32 leaves room to report a clean failure rather
+    # than dying to the job timeout, which reports nothing useful. Recompute
+    # this when adding checks: the ceiling is checks x 90s, plus margin.
+    timeout-minutes: 32
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
@@ -72,6 +74,27 @@ jobs:
           # whether Cloudflare's AI Crawl Control currently 403s these UAs at
           # the edge — an edge-level policy change needs no change here.
           check "$CLAUDEBOT" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
+
+          # User-directed fetchers: a human asked their assistant to open the
+          # page. All of these were verified receiving the empty SPA shell on
+          # 2026-08-18 — an assistant asked about a plot could describe nothing.
+          # Google documents its own as generally ignoring robots.txt, so the
+          # nginx map is the only control point and the only thing this guards.
+          for ua in \
+            "Mozilla/5.0 (compatible; Google-GeminiNotebook)" \
+            "Mozilla/5.0 (compatible; Google-NotebookLM)" \
+            "Mozilla/5.0 (compatible; Gemini-Deep-Research)" \
+            "Mozilla/5.0 (compatible; GoogleAgent-Mariner)" \
+            "meta-externalfetcher/1.1" \
+            "Mozilla/5.0 (compatible; Meta-WebIndexer/1.0)" \
+            "Mozilla/5.0 (compatible; MistralAI-User/1.0; +https://docs.mistral.ai/robots)" \
+            "Mozilla/5.0 (compatible; MistralAI-Index/1.0; +https://docs.mistral.ai/robots)" \
+            "DuckAssistBot/1.2; (+http://duckduckgo.com/duckassistbot.html)" \
+            "Mozilla/5.0 (compatible; Amzn-SearchBot/1.0)" \
+            "Mozilla/5.0 (compatible; Amzn-User/1.0)"
+          do
+            check "$ua" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
+          done
 
           # llms.txt must be served directly, never proxied to the seo backend —
           # including for a mapped crawler UA, which is the whole point of the
