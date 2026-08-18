@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -21,6 +21,9 @@ GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 IMPRINT = ["#009E73", "#C475FD"]
 IMPRINT_LINE = ["rgba(0,158,115,0.75)", "rgba(196,117,253,0.75)"]
 
+# Shared bin edges so both traces align regardless of the underlying data
+BINS = dict(start=141, end=197, size=3)
+
 # Data - heights by gender (realistic scenario showing overlapping distributions)
 np.random.seed(42)
 male_heights = np.random.normal(175, 7, 200)
@@ -37,8 +40,8 @@ fig.add_trace(
         x=male_heights,
         name="Male",
         marker=dict(color=IMPRINT[0], line=dict(color=INK_SOFT, width=1)),
-        opacity=0.5,
-        xbins=dict(size=3),
+        opacity=0.55,
+        xbins=BINS,
     )
 )
 
@@ -47,8 +50,8 @@ fig.add_trace(
         x=female_heights,
         name="Female",
         marker=dict(color=IMPRINT[1], line=dict(color=INK_SOFT, width=1)),
-        opacity=0.5,
-        xbins=dict(size=3),
+        opacity=0.55,
+        xbins=BINS,
     )
 )
 
@@ -63,7 +66,7 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     x=0.02,
-    y=0.96,
+    y=0.99,
     xanchor="left",
     yanchor="top",
     align="left",
@@ -81,7 +84,7 @@ fig.update_layout(
     autosize=False,
     title=dict(
         text="histogram-overlapping · python · plotly · anyplot.ai",
-        font=dict(size=16, color=INK),
+        font=dict(size=18, color=INK),
         x=0.5,
         xanchor="center",
     ),
