@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-08
+Library: plotly 6.9.0 | Python 3.13.12
+Quality: 86/100 | Updated: 2026-08-18
 """
 
 import os
@@ -16,9 +16,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
-# Okabe-Ito palette
+# Imprint palette
 IMPRINT = ["#009E73", "#C475FD", "#4467A3"]
 
 # Data - Employee performance scores by department and experience level
@@ -75,41 +75,48 @@ for i, subcat in enumerate(subcategories):
             name=subcat,
             marker_color=IMPRINT[i],
             boxmean=False,
-            line={"width": 2},
-            marker={"size": 8, "opacity": 0.7},
+            notched=True,
+            line={"width": 1.5},
+            marker={"size": 6, "opacity": 0.7},
             boxpoints="outliers",
         )
     )
 
-# Update layout for 4800x2700 resolution
+# Benchmark line for visual hierarchy — flags a company-wide performance target
+TARGET_SCORE = 75
+fig.add_hline(
+    y=TARGET_SCORE,
+    line={"color": INK_SOFT, "width": 1.5, "dash": "dash"},
+    annotation_text=f"Company target: {TARGET_SCORE}",
+    annotation_position="top left",
+    annotation_font={"size": 10, "color": INK_SOFT},
+)
+
+# Update layout — canonical 3200x1800 landscape canvas
+title_text = "box-grouped · python · plotly · anyplot.ai"
 fig.update_layout(
-    title={
-        "text": "box-grouped · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    title={"text": title_text, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
-        "title": {"text": "Department", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
-        "gridcolor": GRID,
-        "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "title": {"text": "Department", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "showgrid": False,
+        "showline": False,
+        "zeroline": False,
     },
     yaxis={
-        "title": {"text": "Performance Score (0-100)", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Performance Score (0-100)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "gridwidth": 1,
-        "linecolor": INK_SOFT,
-        "zerolinecolor": INK_SOFT,
+        "showline": False,
+        "zeroline": False,
     },
     legend={
-        "title": {"text": "Experience Level", "font": {"size": 20, "color": INK}},
-        "font": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Experience Level", "font": {"size": 10, "color": INK}},
+        "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "borderwidth": 0,
         "x": 1.02,
         "y": 1,
         "xanchor": "left",
@@ -119,9 +126,9 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
-    margin={"l": 100, "r": 200, "t": 100, "b": 100},
+    margin={"l": 80, "r": 140, "t": 90, "b": 70},
 )
 
-# Save as PNG and HTML
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+# Save as PNG and HTML — hard target: 3200x1800 (landscape)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
