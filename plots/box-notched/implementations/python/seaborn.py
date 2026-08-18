@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -28,18 +28,18 @@ cohorts = ["Cohort A", "Cohort B", "Cohort C", "Cohort D"]
 data = []
 
 # Cohort A: strong performance, tight cluster
-data.extend([{"Cohort": "Cohort A", "Test Score": val} for val in np.random.normal(82, 8, 85)])
+data.extend([{"Cohort": "Cohort A", "Test Score": val} for val in np.clip(np.random.normal(82, 8, 85), 0, 100)])
 
 # Cohort B: moderate performance, some high outliers
-cohort_b_base = np.random.normal(75, 12, 75)
+cohort_b_base = np.clip(np.random.normal(75, 12, 75), 0, 100)
 cohort_b_outliers = np.array([95, 96, 98])
 data.extend([{"Cohort": "Cohort B", "Test Score": val} for val in np.concatenate([cohort_b_base, cohort_b_outliers])])
 
 # Cohort C: wide variation in performance
-data.extend([{"Cohort": "Cohort C", "Test Score": val} for val in np.random.normal(70, 15, 80)])
+data.extend([{"Cohort": "Cohort C", "Test Score": val} for val in np.clip(np.random.normal(70, 15, 80), 0, 100)])
 
 # Cohort D: lower performance, tight clustering
-data.extend([{"Cohort": "Cohort D", "Test Score": val} for val in np.random.normal(68, 9, 70)])
+data.extend([{"Cohort": "Cohort D", "Test Score": val} for val in np.clip(np.random.normal(68, 9, 70), 0, 100)])
 
 df = pd.DataFrame(data)
 
