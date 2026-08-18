@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: area-cumulative-flow
 created: '2026-08-18T12:22:02Z'
-updated: '2026-08-18T12:27:56Z'
+updated: '2026-08-18T12:37:35Z'
 generated_by: claude-sonnet
 workflow_run: 32135483315
 issue: 5239
@@ -12,50 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 94
 review:
   strengths:
-  - 'Correct CFD semantics: geom_area(position=''identity'') layered by reversed factor
-    order produces properly nested bands, so each band''s width equals the WIP of
-    exactly that stage, matching the spec''s WIP-band definition precisely.'
-  - Stage capacity throttling (19/15/11/8 items/day per downstream stage) produces
-    a realistic, escalating bottleneck — the Machining and Assembly bands visibly
-    widen over the 90-day window, directly demonstrating the spec's bottleneck-identification
-    use case.
+  - 'All three Attempt-1 weaknesses are fully resolved: a mid-window Assembly capacity
+    surge (days 50-70) now visibly narrows the Machining band alongside the pre-existing
+    widening bands, satisfying the spec''s ''narrowing bands indicate stages draining
+    faster than they fill'' requirement.'
+  - panel_grid_major_y now uses the style guide's translucent RULE rgba token instead
+    of the previous solid INK token, matching the documented grid-styling convention
+    exactly.
+  - A geom_label annotation ('Machining congestion peak') now explicitly calls out
+    the bottleneck focal point, turning an implicit visual pattern into an immediately
+    obvious data story.
+  - 'Correct CFD semantics preserved: geom_area(position=''identity'') layered by
+    reversed factor order produces properly nested bands so each band''s width equals
+    exactly that stage''s WIP, matching the spec''s band-width definition precisely.'
   - Imprint palette applied in exact canonical order (Raw Materials=#009E73, Machining=#C475FD,
-    Assembly=#4467A3, Quality Check=#BD8233, Shipped=#AE3030), consistent and identical
-    across both light and dark renders.
-  - 'Theme-adaptive chrome fully threaded through: backgrounds, axis/tick/legend text
-    colors, and legend box fill all flip correctly between light (#FAF8F1) and dark
-    (#1A1A17) with no dark-on-dark or light-on-light failures.'
-  - Canvas lands at the exact 3200x1800 target with generous, balanced margins; legend
-    sits close to the plot rather than floating isolated.
+    Assembly=#4467A3, Quality Check=#BD8233, Shipped=#AE3030), pixel-identical between
+    light and dark renders; theme-adaptive chrome (backgrounds, axis/tick/legend colors)
+    flips correctly with no dark-on-dark or light-on-light failures.
+  - Canvas lands at the exact 3200x1800 target with balanced margins; legend sits
+    close to the plot in workflow order matching the top-to-bottom band order.
   weaknesses:
-  - Data only demonstrates widening WIP bands (growing bottleneck); the spec's other
-    named behavior -- narrowing bands when a stage 'drains faster than it fills' --
-    is never shown. Vary the capacity/intake ratio partway through the 90-day window
-    (e.g. a mid-period capacity increase or intake dip) so at least one band visibly
-    narrows, for fuller feature coverage.
-  - panel_grid_major_y uses the solid INK token (full-opacity text color) rather than
-    the style guide's translucent RULE token (rgba(...,0.15)). It reads acceptably
-    here, but drifts from the documented grid-styling convention -- switch to an alpha/rgba
-    grid line for consistency.
-  - Data storytelling is implicit only -- the viewer has to notice the widening bottleneck
-    bands unaided. A slightly bolder treatment of the widest band (Machining/Assembly
-    congestion), or a small direct emphasis, would push the story from 'visual hierarchy
-    present' to 'insight immediately obvious'.
+  - 'LM-02 still short of full marks: the identity-position/reversed-factor-order
+    area layering technique is shared across the whole ggplot2 family (also usable
+    in R ggplot2 or plotnine), not something distinctive to lets-plot specifically.
+    A lets-plot-specific feature (e.g. its native interactive tooltip customization,
+    geom_text/geom_label mm-based sizing nuance beyond the default, or bistro/GGBunch
+    composition) would push this higher.'
+  - The Machining band narrows sharply during the days 50-70 surge but stays thin
+    through the end of the series rather than re-widening once the surge ends (the
+    code comment implies it should); not a spec violation since the narrowing requirement
+    is already satisfied, but the post-surge behavior doesn't fully match the code's
+    own stated intent.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "area-cumulative-flow · python · letsplot · anyplot.ai" is dark, bold, and fully visible at the top with margin above it. X-axis "Date" and y-axis "Cumulative Items" labels are dark and clearly legible. Weekly date ticks (Apr 01 ... Jul 01) and y-axis count ticks (0-1,800) are readable in a softer dark gray. Subtle horizontal gridlines run at each y-tick. Legend titled "Stage" sits to the right of the plot with a light elevated box and all five stage names fully legible.
-      Data: Five stacked/layered areas in Imprint order -- Raw Materials (#009E73 green, thin top band), Machining (#C475FD lavender), Assembly (#4467A3 blue), Quality Check (#BD8233 ochre), Shipped (#AE3030 red, largest base band). Bands are separated by thin background-colored borders, giving clean edges. Bands visibly widen from left to right, showing growing WIP/bottleneck in Machining and Assembly.
-      Legibility verdict: PASS -- all text reads clearly against the light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), matching the required light-theme token — not pure white, not dark.
+      Chrome: Title "area-cumulative-flow · python · letsplot · anyplot.ai" is dark and fully legible at the top, spanning roughly half the plot width. Axis titles ("Date", "Cumulative Items") and tick labels (weekly date ticks Apr 01 - Jul 01; count ticks 0-1,800) render in dark/soft-dark ink, clearly legible against the light background. Horizontal gridlines are subtle translucent lines, visible but not dominant. A "Machining congestion peak" annotation label (dark text on a light elevated box) sits inside the plot area near the Machining/Assembly boundary and is fully readable.
+      Data: Five nested area bands in exact Imprint canonical order, from top to bottom: Raw Materials (#009E73, green), Machining (#C475FD, purple), Assembly (#4467A3, blue), Quality Check (#BD8233, amber), Shipped (#AE3030, red) — matching the legend order top-to-bottom. The Machining band visibly widens through mid-May, peaks near the annotation, then narrows sharply through early June (demonstrating the spec's "narrowing band" behavior) while the other bands continue to widen steadily. Legend "Stage" sits in a light elevated box to the right with all five labels legible.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title, axis titles, and legend title render in light off-white and remain fully legible. Tick labels and legend entries render in a softer light gray, still clearly readable. Gridlines are faint light-gray horizontal lines at each y-tick, subtle but visible. Legend box uses a dark elevated fill (#242420) with a soft border.
-      Data: Same five bands in the same colors and same relative widths as the light render -- Raw Materials green through Shipped red are pixel-identical hues to the light version, confirming only chrome (not data color) changed between themes.
-      Legibility verdict: PASS -- no dark-on-dark failures; every title, label, tick, and legend entry is clearly legible against the dark background.
+      Background: Warm near-black (#1A1A17), matching the required dark-theme token — not pure black, not light.
+      Chrome: Title, axis titles, and legend title render in light off-white; tick labels and legend entries render in a softer light gray — all clearly legible. Gridlines are faint light-gray, subtle but visible, same relative weight as the light render's gridlines. The annotation label uses a dark-on-light box (elevated background token) that remains legible against the dark plot background.
+      Data: The five bands are pixel-identical in hue, position, and relative width to the light render — confirming only chrome (background/text/grid/legend frame), not data color, changed between themes. The same widening-then-narrowing Machining band pattern is equally visible.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, ticks, legend, annotation) is clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,76 +68,77 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16, axis_title 12, axis_text
-          10, legend 10-11); readable in both themes with no overflow.
+        comment: Title, axis titles, tick labels, legend, and annotation all clearly
+          readable in both themes; explicit font sizes set throughout.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axes, ticks, legend, or data.
+        comment: No text/data collisions; annotation label sits cleanly within its
+          band without overlapping other elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Solid, clearly visible stacked areas appropriate for a 90-day daily
-          CFD; no overplotting issue for an area chart.
+        comment: Colored stroke lines on top of each area boundary keep even the thinnest
+          (narrowed Machining) band crisply visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct Imprint hues plus PAGE_BG-colored area borders give redundant
-          edge contrast beyond hue alone.
+        comment: Distinct hues with position-based separation between bands; no red-green-only
+          adjacency issue given stack ordering.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the 3200x1800 canvas with balanced
-          margins; legend sits adjacent to the plot, not isolated.
+        comment: Exact 3200x1800 canvas, balanced margins, nothing cut off, title
+          ~50% width.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Date" and "Cumulative Items" are descriptive; unit is implicit
-          in the label (item counts).'
+        comment: Descriptive 'Date' / 'Cumulative Items' axis titles; mandated title
+          format followed exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining series follow canonical Imprint
-          order 2-5; identical data colors across both theme-correct renders.'
+        comment: 'Imprint canonical order, position 1 = #009E73, identical data colors
+          across themes, correct theme-adaptive backgrounds.'
     design_excellence:
-      score: 13
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful use of Imprint palette plus deliberate PAGE_BG-colored
-          area borders and geom_line overlay for crisp band separation -- clearly
-          above library defaults, short of full publication polish.
+        comment: Deliberate area-border/line-overlay technique for clean band separation
+          plus a purposeful bottleneck annotation; short of full publication polish
+          but clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Grid reduced to y-axis-only, L-shaped axis lines only (no top/right
-          spine), elevated legend box -- good refinement; grid uses a solid rather
-          than translucent token (see weaknesses).
+        comment: Y-only translucent RULE-token grid (fixed from the prior solid INK
+          token), L-shaped axis lines, elevated legend box — fully matches the style
+          guide convention now.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Widening WIP bands for Machining/Assembly create a clear visual focal
-          point showing the bottleneck, though nothing calls direct attention to it.
+        comment: Widening/narrowing bands plus an explicit 'Machining congestion peak'
+          annotation make the bottleneck story immediately obvious rather than implicit.
     spec_compliance:
       score: 15
       max: 15
@@ -145,54 +148,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct cumulative flow diagram: stacked, layered cumulative areas
-          by ordered stage.'
+        comment: Correct cumulative flow diagram via nested identity-position areas.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stages stacked earliest-on-top / latest-on-bottom, monotonic non-decreasing
-          per-stage cumulative counts, legend present, reasonable date-interval x-axis.
+        comment: Workflow-ordered stacking (earliest on top), legend, reasonable date-axis
+          intervals all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, cumulative count on y; full 90-day range and full count
-          range visible.
+        comment: X=date, Y=cumulative count, full axis range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          five stage names in the data.
+        comment: Title matches '{spec-id} · python · letsplot · anyplot.ai'; legend
+          labels match stage names in process order.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Demonstrates widening/bottleneck bands well via capacity throttling,
-          but never shows a narrowing band (stage draining faster than it fills),
-          leaving one spec-noted behavior uncovered.
+        comment: Now demonstrates BOTH widening WIP (steady growth) and narrowing
+          WIP (Machining band draining during the Assembly capacity surge) — full
+          spec coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic manufacturing production-line scenario.
+        comment: Plausible, neutral manufacturing production line scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily intake and descending per-stage capacities are plausible for
-          a manufacturing pipeline.
+        comment: 15-25 items/day intake over 90 days yields sensible cumulative totals
+          (~1,800 max).
     code_quality:
       score: 10
       max: 10
@@ -202,32 +203,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: No functions/classes; flat top-level script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) fixed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used.
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the CFD construction; no fake functionality;
-          the z-order reasoning is documented in-line.
+        comment: Appropriate complexity for capacity-throttled cumulative simulation;
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current ggsave API.
+        comment: Saves plot-{THEME}.png and .html via current ggsave API.
     library_mastery:
       score: 7
       max: 10
@@ -237,29 +238,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grammar-of-graphics layering (geom_area + geom_line), factor-level
-          z-ordering, and scale breaks used precisely as intended.
+        comment: Correct grammar-of-graphics layering (geom_area + geom_line + geom_label),
+          factor-level z-ordering, precise scale breaks.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: The identity-position area layering technique is shared with the
-          wider ggplot2 family (plotnine, ggplot2/R), not distinctive to lets-plot
-          specifically; HTML export is used but not showcased beyond the default.
-  verdict: REJECTED
+        comment: The identity-position layering technique and geom_label annotation
+          are shared across the ggplot2 family, not distinctive to lets-plot specifically.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - cumulative-sum
   - time-series
   styling:
   - grid-styling
-  - edge-highlighting
