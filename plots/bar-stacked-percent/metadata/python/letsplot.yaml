@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:50:17Z'
-updated: '2026-08-18T15:00:11Z'
+updated: '2026-08-18T15:10:27Z'
 generated_by: claude-sonnet
 workflow_run: 32150894939
 issue: 2008
@@ -12,58 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - Correct 100% stacked bar implementation via geom_bar(stat="identity", position="fill")
-    with scale_y_continuous(format=".0%") — the canonical lets-plot idiom for this
-    plot type
-  - Categories ordered by descending renewable share (Spain to Poland), giving the
-    chart an intentional narrative reading left-to-right instead of arbitrary/alphabetical
-    ordering
-  - Data is fully deterministic (hardcoded, no randomness) and each country's five
-    components sum to exactly 100, with values that plausibly match real-world energy
-    mixes (e.g. France ~68% nuclear, Poland ~68% coal)
-  - Explicit theme-adaptive tokens (PAGE_BG/INK/INK_SOFT/GRID_COLOR) correctly threaded
-    through plot_background, panel_background, axis_text, axis_title, legend colors
-    for both renders
-  - Y-axis-only grid (panel_grid_major_x = element_blank()) matches the style guide's
-    bar-chart grid guidance
-  - Canvas exported at exactly 3200x1800 via ggsize(800, 450) + scale=4, matching
-    the landscape target
-  - Title format matches the mandated `bar-stacked-percent · python · letsplot · anyplot.ai`
-    pattern exactly, and legend labels match the source data values
+  - Idiomatic lets-plot 100% stacked bar via geom_bar(stat="identity", position="fill")
+    with categorical factor levels ordered consistently across all six bars
+  - Per-segment label ink chosen with scale_color_identity for verified WCAG-AA contrast
+    against every Imprint fill color, correct in both light and dark renders
+  - Countries sorted by descending renewable share, creating a clear visual narrative
+    gradient from Spain (most renewable) to Poland (most coal-dependent)
+  - Data values are realistic and roughly track real-world European energy-mix figures
+    (France's high nuclear share, Poland's high coal share, Spain's high renewables
+    share)
+  - Theme-adaptive chrome correctly threaded through both renders — identical data
+    colors, only background/text/grid flip between light and dark
+  - Small slivers (<5%) have labels suppressed to avoid clutter, keeping every visible
+    label readable
   weaknesses:
-  - A full rectangular panel border (top, right, left, bottom lines) frames the chart
-    area in both renders — the style guide's default is to remove top/right spines
-    (L-shaped frame) or all spines for a cleaner minimalist look; this reads as an
-    un-refined theme_minimal() default rather than an intentional choice.
-  - The legend has a visible box border (legend_background=element_rect(..., color=INK_SOFT))
-    — the Decoration Removal Checklist recommends removing box frames around legends;
-    a borderless or very subtle background would look more polished.
-  - 'Design Excellence is only moderate: beyond the nice renewable-share ordering,
-    there''s no additional visual hierarchy or emphasis (e.g. no callout on the leading/trailing
-    country, no bolder treatment of a focal segment) to push the storytelling further.'
-  - 'Library Mastery is generic: position="fill" + scale_fill_manual + labs is the
-    same recipe any grammar-of-graphics library (ggplot2, plotnine) would use — nothing
-    here is distinctive to lets-plot specifically (e.g. no tooltip customization via
-    `tooltips=`, no `geom_text` percentage labels within segments as the spec suggests
-    considering, no `as_discrete`/`arrange` idioms unique to the library).'
-  - Spec's optional suggestion to add percentage labels within segments ("when space
-    permits") was not attempted — segments are wide enough here that labels would
-    likely fit and would strengthen readability/data quality further.
+  - 'Semantic color mismatch: the Imprint scale is applied in canonical order (Coal=#009E73
+    brand green, Renewables=#BD8233 ochre), which inverts the near-universal reader
+    expectation that green = renewable/clean energy and ochre/brown = fossil fuel.
+    Per the style guide''s semantic-exception rule, reassign the fill mapping so Renewables
+    gets #009E73 and Coal gets a non-green Imprint hue.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bar-stacked-percent · python · letsplot · anyplot.ai" at top-left, ~78% of canvas width, fully visible with no clipping. X-axis title "Country" and Y-axis title "Share of Energy Mix" in dark ink, tick labels ("0%"-"100%", country names) in a lighter soft-gray tone. A thin horizontal grid line runs behind each 10% tick; no vertical gridlines. A full rectangular border frames the plot panel (all four sides visible). Legend "Energy Source" sits to the right inside a bordered off-white box with 5 swatches (Coal, Natural Gas, Nuclear, Renewables, Other).
-      Data: Six vertical 100%-stacked bars (Spain, Germany, Italy, UK, France, Poland), each segmented into 5 colors with thin white separators between segments: green (#009E73, Coal), lavender-purple (#C475FD, Natural Gas), blue (#4467A3, Nuclear), ochre (#BD8233, Renewables), red (#AE3030, Other). First series (Coal) correctly renders in brand green per the hard palette rule.
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
+      Chrome: Bold dark title "bar-stacked-percent · python · letsplot · anyplot.ai" at top-left, spans ~65% of plot width. Y-axis title "Share of Energy Mix" and x-axis title "Country" in dark ink. Tick labels (0%-100% on y, six country names on x) in softer dark-gray ink. Legend titled "Energy Source" sits to the right with 5 color swatches (Coal, Natural Gas, Nuclear, Renewables, Other) on an elevated off-white box. Subtle horizontal gridlines only.
+      Data: Six vertical bars (Spain, Germany, Italy, UK, France, Poland), each stacked to 100% with five colored segments (green, lavender, blue, ochre, red in canonical Imprint order). In-segment "%" labels appear on segments ≥5%, in either black or white ink chosen per-segment for contrast; slivers <5% (e.g. 0% Nuclear in Italy/Poland, 3% Coal in Spain) are unlabeled. First categorical series (Coal) uses #009E73.
+      Legibility verdict: PASS — all title, axis, tick, legend, and in-segment text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and axis tick labels have flipped to light/off-white and soft light-gray tones, fully legible against the dark surface. Grid lines are still subtle (low-opacity light lines). The same rectangular panel border and bordered legend box are present, now in dark tones with light text.
-      Data: The five segment colors (green, purple, blue, ochre, red) are pixel-identical to the light render — only the chrome (background, text, grid, legend box, borders) flipped. Brand green (#009E73) remains clearly visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark text; all title/axis/tick/legend elements are clearly readable against the near-black background.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark surface. Legend box uses the elevated dark surface (#242420) with light text. Gridlines remain subtle.
+      Data: Identical five-segment stacked bars with the same five Imprint hues (green, lavender, blue, ochre, red) as the light render — confirmed colors did not shift between themes. In-segment percentage labels retain the same fixed per-color ink (black on green/lavender/ochre, white on blue/red), which is correct because those labels sit on data segments whose fill does not change with theme.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis, tick, legend, and in-segment label is clearly visible against the dark background.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -74,76 +56,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable in both themes,
-          title fits within ~78% of width without clipping, balanced axis label/tick
-          sizing
+        comment: Explicit font sizes for title/axis/tick/legend; all text readable
+          in both themes; in-segment percentage labels use contrast-aware ink
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments are clearly visible with white separators; sizing appropriate
-          for 6 categories x 5 components
+        comment: Bar segments clearly distinguishable; consistent bar width (0.75);
+          small slivers labeled only when >=5%
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 distinguishable Imprint hues, no red-green-only encoding, alpha=0.9
-          keeps contrast strong
+        comment: Per-segment label ink verified high contrast (>5:1) against every
+          fill color; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization and balanced margins, but a full rectangular
-          panel border eats into the otherwise clean layout
+        comment: 3200x1800 canvas gate passed; title ~65% width; no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; Y-axis communicates percentage via '%'-formatted
-          ticks
+        comment: Descriptive 'Share of Energy Mix' / 'Country' labels; mandated title
+          format correct
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73, remaining 4 in canonical Imprint order,
-          theme-correct chrome and backgrounds in both renders'
+        passed: false
+        comment: 'First series correctly #009E73 and backgrounds theme-correct, but
+          canonical-order mapping assigns green to Coal and ochre to Renewables, inverting
+          the expected green=renewable association'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Thoughtful theme tokens and deliberate category ordering, above a
-          plain default, but not publication-ready polish
+        passed: true
+        comment: Contrast-aware label ink via scale_color_identity, subtle alpha=0.9
+          fills, and intentional country ordering show above-baseline polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Y-axis-only grid is a nice refinement, but the full panel border
-          and bordered legend box are un-refined theme_minimal() defaults that should
-          be removed
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Descending renewable-share ordering creates a clear visual hierarchy/narrative
-          across the six countries
+        comment: Subtle y-only gridlines, generous whitespace, clean elevated legend
+          box
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Countries ordered by descending renewable share creates a clear Spain-to-Poland
+          narrative gradient
     spec_compliance:
       score: 15
       max: 15
@@ -153,28 +133,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar via position="fill"
+        comment: Correct 100% stacked bar via geom_bar(position="fill")
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, consistent component ordering across
-          all bars
+        comment: Distinct harmonious colors, clear legend, in-segment percentage labels,
+          consistent component order across bars
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=country, fill=source, y normalized to 100% correctly; all 6 categories
-          and 5 components visible
+        comment: x=country, y=value normalized via position="fill", fill=source; axes
+          show all data 0-100%
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches mandated format; legend labels match source
-          column values
+        comment: Title matches mandated format; legend labels match source names
     data_quality:
       score: 15
       max: 15
@@ -184,21 +163,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 countries show meaningfully different compositions (coal-heavy
-          Poland, nuclear-heavy France, balanced Spain)
+        comment: 6 categories x 5 components, all normalized correctly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral energy-mix-by-country scenario
+        comment: Plausible and neutral; roughly matches real-world European energy-mix
+          figures
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Each country's components sum to exactly 100; proportions align with
-          real-world energy mixes
+        comment: Sensible 0-100% percentage scale
     code_quality:
       score: 10
       max: 10
@@ -208,33 +186,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes
+        comment: No functions/classes, linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness needed
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported symbol is used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake functionality
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html via current ggsave API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html via current
+          ggsave API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -242,20 +221,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic ggplot-grammar usage of geom_bar/position=fill/scale_fill_manual
+        comment: Standard grammar-of-graphics geom_bar+position_fill pattern, scale_fill_manual,
+          theme() grammar
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic grammar-of-graphics recipe identical to what plotnine/ggplot2
-          would use; no lets-plot-specific feature leveraged
-  verdict: REJECTED
+        passed: true
+        comment: scale_color_identity mapped from a precomputed per-row contrast column
+          is a distinctive lets-plot technique beyond generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
