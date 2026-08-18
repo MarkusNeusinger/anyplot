@@ -64,7 +64,7 @@ const outerData = businessUnits.flatMap((unit) =>
       y: product.value,
       color: Highcharts.color(unit.color).brighten(offset).get(),
     };
-  })
+  }),
 );
 
 // Only the largest product-line slices earn a direct inline label; the rest
@@ -137,7 +137,7 @@ Highcharts.chart("container", {
       data: outerData,
       dataLabels: {
         enabled: true,
-        distance: -20,
+        distance: -55,
         formatter() {
           return this.percentage > outerLabelThreshold ? this.point.name : null;
         },
