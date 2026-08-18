@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -24,7 +24,6 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - realistic financial/economic indicators
-np.random.seed(42)
 variables = ["GDP", "Unemployment", "Inflation", "Interest Rate", "Stock Index", "Consumer Conf.", "Housing", "Exports"]
 n_vars = len(variables)
 
@@ -54,6 +53,7 @@ y_data = []
 values = []
 text_values = []
 text_colors = []
+cell_ij = []
 
 for i, var_y in enumerate(variables):
     for j, var_x in enumerate(variables):
@@ -63,10 +63,26 @@ for i, var_y in enumerate(variables):
             val = corr_matrix[i, j]
             values.append(val)
             text_values.append(f"{val:.2f}")
-            text_colors.append("#FFFFFF" if abs(val) > 0.55 else INK)
+            text_colors.append("#FFFFFF" if abs(val) > 0.45 else INK)
+            cell_ij.append((i, j))
+
+# Highlight the two strongest off-diagonal relationships with a bold outline
+# so the viewer's eye lands on the most important correlations first.
+off_diag = [(idx, abs(v)) for idx, (v, (i, j)) in enumerate(zip(values, cell_ij, strict=True)) if i != j]
+strongest = {idx for idx, _ in sorted(off_diag, key=lambda pair: pair[1], reverse=True)[:2]}
+cell_line_colors = [INK if idx in strongest else PAGE_BG for idx in range(len(values))]
+cell_line_widths = [6 if idx in strongest else 2 for idx in range(len(values))]
 
 source = ColumnDataSource(
-    data={"x": x_data, "y": y_data, "values": values, "text": text_values, "text_color": text_colors}
+    data={
+        "x": x_data,
+        "y": y_data,
+        "values": values,
+        "text": text_values,
+        "text_color": text_colors,
+        "line_color": cell_line_colors,
+        "line_width": cell_line_widths,
+    }
 )
 
 
@@ -116,8 +132,8 @@ rects = p.rect(
     height=0.95,
     source=source,
     fill_color={"field": "values", "transform": mapper},
-    line_color=PAGE_BG,
-    line_width=2,
+    line_color="line_color",
+    line_width="line_width",
 )
 
 # Refined hover tooltip — theme-aware card instead of the plain default table
