@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-overlapping
 created: '2026-08-18T11:02:57Z'
-updated: '2026-08-18T11:08:12Z'
+updated: '2026-08-18T11:18:33Z'
 generated_by: claude-sonnet
 workflow_run: 32129441879
 issue: 2010
@@ -12,54 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - 'Correct overlapping-histogram idiom for ECharts: shared bin edges computed once
-    across both groups, then rendered as two overlaid bar series using barGap: "-100%"
-    / barCategoryGap: "0%" — the standard workaround since ECharts has no native histogram
-    type.'
+  - 'All three Attempt-1 weaknesses were fixed: exam scores are now clamped to a realistic
+    0-100 range (verified max is exactly 100, no overflow into implausible territory),
+    bars gained a page-background edge stroke that sharpens the overlap boundary in
+    both themes, and color-matched dashed mean reference lines with labels now give
+    the chart an explicit data story.'
+  - 'Correct ECharts idiom for overlapping histograms: shared bin edges are computed
+    once across both groups from the combined min/max, then rendered as two bar series
+    overlaid via barGap: "-100%" / barCategoryGap: "0%" — the standard workaround
+    since ECharts has no native histogram type.'
   - Semi-transparent fills (opacity 0.55) on Imprint palette[0] (#009E73) and palette[1]
-    (#C475FD) produce a clearly readable overlap region in both themes, matching the
-    spec's alpha ~0.4-0.6 guidance.
-  - 'Theme chrome fully threaded through tokens (t.ink, t.inkSoft, t.grid) — both
-    renders are legible with correct backgrounds (#FAF8F1 / #1A1A17) and identical
-    data colors.'
-  - 'Clean visual refinement: y-axis line and tick marks hidden, subtle single-axis
-    (y-only) gridlines, generous margins — above bare library defaults.'
-  - Deterministic, seeded LCG random generator with distinct seeds per group (42 /
-    1337) satisfies reproducibility without any external dependency.
-  - Title format and legend labels exactly match spec requirements ("histogram-overlapping
-    · javascript · echarts · anyplot.ai"; "Control group" / "Treatment group").
+    produce a clearly readable, distinguishable overlap region in both light and dark
+    renders, matching the spec's alpha ~0.4-0.6 guidance.
+  - Deterministic, seeded LCG generator with distinct seeds per group (42 / 1337)
+    and a Box-Muller transform for normal distributions; clamping keeps the domain
+    realistic without breaking reproducibility.
+  - Theme chrome fully threaded through tokens - both renders are legible with correct
+    backgrounds, and data colors (including the mean-line colors) are identical between
+    light and dark, only chrome flips.
   weaknesses:
-  - A few Treatment-group samples land above 100 (bin axis runs to ~100-103, visible
-    as a small purple bar past the '100' tick) — exam scores above 100 read as factually
-    implausible for a standard exam without an explicit extra-credit framing; clip
-    or re-seed the generator so both distributions stay within a realistic 0-100 exam
-    range.
-  - Bars have no edge stroke (itemStyle only sets color+opacity, no borderColor) —
-    a subtle white/near-background stroke on each bar would sharpen the overlap boundary
-    per the style guide's 'Data Element Styling' guidance, especially useful for the
-    dark render where the blended overlap region reads a bit muddy.
-  - Design storytelling is present only through the two distributions' natural offset
-    (means ~68 vs ~76) — no explicit visual emphasis (e.g., mean/median reference
-    lines, annotation of the shift) is used to guide the viewer to the key insight,
-    which is the ceiling for Data Storytelling at this stage.
-  - Data-generation helper functions (lcg, normalSamples, toHistogram) deviate from
-    the strict KISS 'no functions' structure — acceptable given the browser has no
-    seeded RNG, but keep an eye on trimming to the minimum necessary.
+  - Data-generation helper functions (lcg, normalSamples, toHistogram, meanOf, binIndexFor)
+    still deviate from the strict CQ-01 "no functions" KISS ideal - acceptable given
+    the browser has no seeded RNG, but keep to the minimum necessary if touched again.
+  - 'Aesthetic sophistication is still fairly close to a well-tuned default: palette
+    + alpha + edge stroke + mean lines are the distinguishing signals, but there is
+    no further refinement (e.g. varied marker treatment, richer legend styling) beyond
+    that.'
+  - X-axis category labels show only the rounded bin start value (e.g. "39", "42")
+    rather than a bin range (e.g. "39-42") - a minor readability nuance, not currently
+    a deduction but worth considering in a future pass.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "histogram-overlapping · javascript · echarts · anyplot.ai" centered at top in dark ink, fully visible, not clipped. Legend below title with two swatches ("Control group" teal, "Treatment group" lavender), clearly readable. X-axis title "Exam Score" and Y-axis title "Frequency" both in dark ink. Tick labels (39, 42, 45 ... 100 on X; 0, 5, 10 ... 35 on Y) in medium-gray, all legible with no overlap. Y-axis has thin horizontal gridlines only, subtle and non-competing with data.
-      Data: Two overlaid, semi-transparent bar "histograms" sharing bin edges. Control group renders in Imprint green (#009E73, opacity ~0.55), peaking around exam score 64-67 with ~31 count. Treatment group renders in Imprint lavender (#C475FD, opacity ~0.55), peaking around exam score 71-74 with ~33 count and shifted right of Control. The overlap region blends into a muted purple-gray that stays visually distinct from both source colors, so the shift between distributions is easy to read directly off the chart.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "histogram-overlapping · javascript · echarts · anyplot.ai" centered at top in dark ink, fully visible, not clipped. Legend below the title with two swatches ("Control group" teal/green, "Treatment group" light purple). "Exam Score" (X) and "Frequency" (Y) axis titles in dark ink; tick labels in medium-gray; horizontal gridlines subtle. Two dashed vertical reference lines labeled "Control mean" and "Treatment mean" in the group's own color, positioned above the bars near the top of the plot area, not overlapping the legend or bars.
+      Data: Two overlaid semi-transparent bar "histograms" sharing bin edges. Control group in Imprint green (#009E73, ~0.55 opacity) peaks around score 64-67 (~31 count); Treatment group in Imprint light purple (palette[1], ~0.55 opacity) peaks further right, around score 71-77 (~28-29 count). The overlap region blends into a distinguishable muted blue-purple, and thin page-background-colored strokes separate adjacent bars, sharpening the overlap boundary. All text is clearly readable against the light background.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light ink/off-white, all clearly visible against the dark surface. Tick labels in light gray, gridlines subtle and visible without dominating. No dark-on-dark text found anywhere in the chart.
-      Data: Identical bar shapes and counts to the light render. Control group is still the same Imprint green (#009E73) and Treatment group the same Imprint lavender (#C475FD) — data colors are unchanged between themes, confirming only chrome flipped. The overlap region again forms a distinguishable, slightly darker purple-blue blend that remains readable on the near-black surface.
-      Legibility verdict: PASS — all text and data elements remain legible on the dark background; brand green reads well on both surfaces.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, legend, and axis labels now rendered in light ink/off-white, clearly legible; tick labels in light gray; gridlines subtle but visible. The "Control mean" / "Treatment mean" labels remain legible in light gray against the dark background, positioned the same as in the light render.
+      Data: Data colors are identical to the light render (Imprint palette[0]/[1]) - only chrome flipped. The green and purple bars remain clearly distinguishable against the near-black background, and the overlap region (a darker muted purple) is still readable, not swallowed by the background. No dark-on-dark text failures found - all chrome elements are light-colored and contrast well.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -70,76 +66,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set via t tokens; readable and well-proportioned
-          in both themes with no overflow or clipping.
+        comment: Explicit font sizes throughout; all text readable in both themes,
+          no dark-on-dark or light-on-light.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data elements.
+        comment: Mean-line labels sit clear of the legend and bar tops; no text/data
+          collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar opacity (0.55) is well-suited to the 220-sample-per-group density;
-          overlap region stays distinguishable.
+        comment: Bars, dashed mean lines, and edge strokes all clearly visible against
+          both backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender is CVD-safe; overlap blend has sufficient luminance
-          contrast from both source colors.
+        comment: Green/purple pairing, not red-green, adequate contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          legend sits directly under the title, close to the plot.
+        comment: Title well within width bounds, balanced axis labels, nothing clipped
+          or overflowing the canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Exam Score" and "Frequency" are descriptive axis titles appropriate
-          to a histogram.'
+        comment: Descriptive axis titles (Exam Score, Frequency); title matches mandated
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (brand green), second is Imprint palette[1]
-          (#C475FD); backgrounds and chrome are theme-correct in both renders.'
+        comment: 'First series is #009E73; theme-correct backgrounds; identical data
+          colors across themes.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured but reads close to a well-tuned default — Imprint
-          colors and alpha are the main sophistication signal.
+        passed: true
+        comment: Imprint palette + alpha + page-background edge stroke give a tuned
+          look, but sophistication is still mostly derived from required tokens rather
+          than extra custom polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis line and tick marks hidden, single subtle y-axis gridline,
-          generous margins — clear refinement above raw defaults, but bars lack an
-          edge stroke.
+        comment: Y-axis line/ticks hidden, subtle single-axis grid, generous margins,
+          and the new edge stroke sharpens the overlap boundary in both themes.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: The visible rightward shift between the two peaks reads as a clear
-          insight through color contrast alone, though no explicit annotation/reference
-          line reinforces it.
+        comment: Color-matched dashed mean lines with labels give a clear, explicit
+          focal point beyond the implicit peak shift - directly addresses prior feedback.
     spec_compliance:
       score: 15
       max: 15
@@ -149,15 +144,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct overlapping-histogram construction via shared-bin overlaid
-          bar series.
+        comment: Overlapping histogram via overlaid bar series.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend, aligned bin edges,
-          and matching bin widths/counts across both groups are all present.
+        comment: Semi-transparent fills, distinct contrasting colors, legend, aligned
+          shared bin edges, matching bin widths/counts - all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -169,33 +163,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels ("Control
-          group"/"Treatment group") match the series.
+        comment: Title matches mandated format exactly; legend labels match series
+          names.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Two distributions with distinct mean/spread and clear overlap region
-          shown; not multimodal but not required for this scenario.
+        comment: Overlap, aligned bins, legend, and mean reference lines together
+          cover the plot type thoroughly.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Control vs. treatment exam scores is a real, neutral, comprehensible
-          A/B-testing scenario.
+        comment: Control vs. treatment exam scores - plausible, neutral A/B-testing
+          scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: A handful of Treatment-group samples exceed 100, which is not a realistic
-          exam score without an extra-credit framing that isn't present.
+        passed: true
+        comment: 'Fixed: values are now clamped to 0-100 (verified max is exactly
+          100, no overflow past the realistic exam-score domain).'
     code_quality:
       score: 9
       max: 10
@@ -205,36 +199,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses lcg/normalSamples/toHistogram helper functions — necessary given
-          the browser has no seeded RNG, but deviates from the strict no-functions
-          ideal.
+        comment: Necessary lcg/normalSamples/toHistogram/meanOf/binIndexFor helpers
+          deviate from the strict no-functions ideal (unavoidable without a browser
+          seeded RNG).
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (42 / 1337) is fully deterministic.
+        comment: Deterministic LCG with fixed seeds (42, 1337).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the echarts global is used.
+        comment: No imports; only uses provided globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for manual binning + overlay; no fake functionality.
+        comment: Appropriate complexity, no fake UI/interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: echarts.init(#container) with no explicit
-          size/devicePixelRatio, animation: false set.'
+        comment: 'Uses chart.setOption with animation: false; correct mount-node contract,
+          no manual file output.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -243,22 +237,25 @@ review:
         max: 5
         passed: true
         comment: 'barGap: "-100%" / barCategoryGap: "0%" overlay is the correct, recommended
-          ECharts idiom for overlapping histograms given no native histogram type.'
+          ECharts idiom for overlapping histograms; markLine used correctly for reference
+          lines.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: The negative-barGap overlay technique is a distinctive ECharts-specific
-          mechanism, though the rest of the option object is fairly generic.
-  verdict: REJECTED
+        comment: markLine annotations and page-background edge stroke add ECharts-specific
+          distinctiveness beyond the base bar overlay, though the rest of the option
+          object remains fairly standard.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
