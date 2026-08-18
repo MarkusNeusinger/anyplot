@@ -239,7 +239,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `absolute_redirect off` makes the Location relative, which the client resolves against the URL it
   actually requested — the only value here guaranteed to be right. The daily `bot-serving-check`
   would have caught this on its next run, since it already rejects an `http://` target; it now
-  rejects an internal port explicitly too (#10476).
+  rejects an internal port explicitly too. `agentic/docs/project-guide.md` also gains the step that
+  makes this checkable at all: the deploy triggers are **regional** (`europe-west4`), so a
+  `gcloud builds list` without `--region` returns builds from early 2026 and reads as "nothing has
+  deployed for months" — a wrong conclusion drawn in this session and corrected by the repo owner
+  (#10476).
 
 - **Preview images were forbidden to every crawler that follows the rules** — `api.anyplot.ai`
   served a blanket `Disallow: /`, while every prerendered page references its preview image at
