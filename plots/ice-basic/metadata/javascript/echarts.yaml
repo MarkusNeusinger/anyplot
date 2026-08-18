@@ -1,0 +1,239 @@
+library: echarts
+language: javascript
+specification_id: ice-basic
+created: '2026-08-17T23:05:43Z'
+updated: '2026-08-17T23:19:43Z'
+generated_by: claude-sonnet
+workflow_run: 32078508303
+issue: 5238
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ice-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Attempt-1 palette bug is fully resolved: legend swatches for "Individual houses
+    (ICE)" and "Average prediction (PDP)" now render in the actual Imprint green /
+    ink colors in both themes, verified by direct visual inspection of both renders.'
+  - 'Faithful ICE implementation: 60 individual house curves at low alpha (0.18) with
+    a bold, opaque PDP overlay in the theme-adaptive ink token, clearly separating
+    individual heterogeneity from the average trend.'
+  - Rug plot along the x-axis shows the observed square-footage distribution, satisfying
+    an optional spec note, cleanly positioned without colliding with axis tick labels.
+  - All font sizes explicitly set; clean L-shaped axis chrome; y-axis-only subtle
+    grid per the style guide; both renders theme-correct with no legibility failures.
+  - 'Deterministic seeded LCG data, KISS structure, correct mount-node contract (no
+    explicit width/height on init, animation: false).'
+  weaknesses:
+  - 'Library Mastery remains generic: many overlaid line series plus one scatter series
+    for the rug is a pattern replicable in almost any charting library. The z-index
+    layering and custom tooltip formatter are modest, welcome touches but not distinctive
+    to ECharts specifically.'
+  - Design Excellence storytelling could go further by color-coding a subset of curves
+    by a second feature (explicitly suggested in the spec notes) to reveal interaction
+    effects, rather than a uniform green fan.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title, legend, axis titles, and tick labels all render in dark ink and are clearly readable. Legend swatches correctly show green (ICE) and black/ink (PDP), matching the actual data colors.
+      Data: ~60 translucent green (#009E73, alpha ~0.18) ICE curves fan out with square footage; bold opaque near-black PDP average curve overlays them; green rug ticks along the bottom show observed feature distribution.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title, legend, axis titles, and tick labels flip to light ink and remain fully legible. No dark-on-dark issues. Legend swatches show green (ICE) and white (PDP), matching rendered data.
+      Data: ICE curve color identical to light render (#009E73); PDP line correctly flips to theme-adaptive light ink; rug ticks remain visible in green.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, well-proportioned, readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or rug marks
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Low alpha ICE lines appropriate for 60-curve density, bold PDP overlay
+          clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green fan vs bold ink/white line distinguishable by luminance, not
+          hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills majority of canvas, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (sq ft, $)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend swatches now match Imprint data colors in both themes; Attempt-1
+          bug fixed
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful ink/green contrast, no longer undercut by legend bug
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, minimal spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold PDP overlay over translucent fan communicates heterogeneity
+          and average trend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ICE plot with individual curves and PDP overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Individual curves, PDP overlay, and rug plot all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=square footage, Y=predicted price, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix, legend labels match
+          data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows heterogeneous slopes, curvature, and overlap patterns across
+          observations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world, neutral house-price-vs-square-footage scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible price range and price-per-sqft saturation for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Sets top-level color: t.palette array per library guide recommendation
+          plus explicit itemStyle'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: z-ordering and custom tooltip formatter are nice but portable pattern
+          overall
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready

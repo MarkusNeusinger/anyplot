@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked: Stacked Area Chart
 Library: letsplot 4.11.0 | Python 3.13.15
-Quality: 89/100 | Updated: 2026-08-17
+Quality: 91/100 | Updated: 2026-08-17
 """
 
 import os
@@ -16,6 +16,8 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_area,
+    geom_text,
+    geom_vline,
     ggplot,
     ggsize,
     labs,
@@ -33,62 +35,77 @@ LetsPlot.setup_html()
 # Theme tokens (see prompts/default-style-guide.md)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Imprint palette (first series always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
+AMBER = "#DDCC77"  # semantic anchor for the campaign-launch event marker
 
-# Data: Monthly revenue by product category over 2 years
+# Data: monthly website visits by acquisition channel, Jan 2023 - Aug 2024
 np.random.seed(42)
-months = pd.date_range("2023-01", periods=24, freq="ME")
+n_months = 20
+months = pd.date_range("2023-01", periods=n_months, freq="ME")
+t = np.arange(n_months)
 
-# Generate revenue data for each product category (in thousands)
-# Largest categories at the bottom for easier reading
-base_electronics = 80 + np.cumsum(np.random.randn(24) * 3)
-base_clothing = 50 + np.cumsum(np.random.randn(24) * 2)
-base_home = 35 + np.cumsum(np.random.randn(24) * 2)
-base_sports = 25 + np.cumsum(np.random.randn(24) * 1.5)
+# Organic search: steady, largest channel with mild seasonality
+organic = 95 + 8 * np.sin(np.linspace(0, 3 * np.pi, n_months)) + np.cumsum(np.random.randn(n_months) * 2)
+organic = np.maximum(organic, 60)
 
-# Add seasonality
-seasonality = 10 * np.sin(np.linspace(0, 4 * np.pi, 24))
-electronics = np.maximum(base_electronics + seasonality, 20)
-clothing = np.maximum(base_clothing + seasonality * 0.7, 15)
-home = np.maximum(base_home + seasonality * 0.5, 10)
-sports = np.maximum(base_sports + seasonality * 0.3, 8)
+# Direct: stable, slowly tapering as other channels grow
+direct = 55 - 0.4 * t + np.cumsum(np.random.randn(n_months) * 1.2)
+direct = np.maximum(direct, 30)
+
+# Social media: a paid campaign launches at month 13, sharply accelerating growth
+campaign_start = 13
+social_pre = 18 + 0.4 * t
+social_post = 18 + 0.4 * campaign_start + (t - campaign_start) * 4.5
+social = np.where(t < campaign_start, social_pre, social_post) + np.cumsum(np.random.randn(n_months) * 1.5)
+social = np.maximum(social, 12)
+
+# Referral: small, flat channel
+referral = 14 + np.cumsum(np.random.randn(n_months) * 0.8)
+referral = np.maximum(referral, 6)
 
 # Create long-format dataframe for lets-plot
 df = pd.DataFrame(
     {
-        "Month": list(months) * 4,
-        "Revenue": np.concatenate([electronics, clothing, home, sports]),
-        "Category": ["Electronics"] * 24 + ["Clothing"] * 24 + ["Home & Garden"] * 24 + ["Sports"] * 24,
+        "MonthNum": np.tile(t, 4),
+        "Visits": np.concatenate([organic, direct, social, referral]),
+        "Channel": ["Organic Search"] * n_months
+        + ["Direct"] * n_months
+        + ["Social Media"] * n_months
+        + ["Referral"] * n_months,
     }
 )
 
-# Convert to numeric for x-axis (months since start)
-df["MonthNum"] = df.groupby("Category").cumcount()
+# Reorder channels for stacking (largest at bottom)
+channel_order = ["Organic Search", "Direct", "Social Media", "Referral"]
+df["Channel"] = pd.Categorical(df["Channel"], categories=channel_order, ordered=True)
 
-# Reorder categories for stacking (largest at bottom)
-category_order = ["Electronics", "Clothing", "Home & Garden", "Sports"]
-df["Category"] = pd.Categorical(df["Category"], categories=category_order, ordered=True)
+# Annotate the story: where the paid social campaign kicks off growth
+stack_top_at_launch = (
+    organic[campaign_start] + direct[campaign_start] + social[campaign_start] + referral[campaign_start]
+)
+callout_y = stack_top_at_launch + 18
 
-# Richer tooltip: category, month, and formatted revenue (lets-plot-distinctive
+# Richer tooltip: bolded channel title plus formatted visits (lets-plot-distinctive
 # interactive feature, beyond a generic ggplot2-style port)
-area_tooltips = layer_tooltips().line("@Category").format("@Revenue", ".0f").line("Revenue|@Revenue k USD")
+area_tooltips = layer_tooltips().title("@Channel").format("@Visits", ".0f").line("Visits|@Visits k")
 
 # Create stacked area chart
 plot = (
-    ggplot(df, aes(x="MonthNum", y="Revenue", fill="Category"))
+    ggplot(df, aes(x="MonthNum", y="Visits", fill="Channel"))
     + geom_area(alpha=0.85, position="stack", size=0.5, color=PAGE_BG, tooltips=area_tooltips)
-    + scale_fill_manual(values=IMPRINT)
-    + scale_x_continuous(
-        name="Month", breaks=[0, 6, 12, 18, 23], labels=["Jan 2023", "Jul 2023", "Jan 2024", "Jul 2024", "Dec 2024"]
+    + geom_vline(xintercept=campaign_start, linetype="dashed", color=AMBER, size=0.8, alpha=0.9)
+    + geom_text(
+        x=campaign_start, y=callout_y, label="Paid social campaign launch", size=4.1, color=INK, hjust=0, nudge_x=0.4
     )
-    + scale_y_continuous(name="Revenue (Thousands USD)")
-    + labs(title="area-stacked · python · letsplot · anyplot.ai", fill="Product Category")
+    + scale_fill_manual(values=IMPRINT)
+    + scale_x_continuous(name="Month", breaks=[0, 6, 12, 19], labels=["Jan 2023", "Jul 2023", "Jan 2024", "Aug 2024"])
+    + scale_y_continuous(name="Website Visits (Thousands)", format=",d")
+    + labs(title="area-stacked · python · letsplot · anyplot.ai", fill="Acquisition Channel")
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -101,7 +118,7 @@ plot = (
         axis_text=element_text(size=10, color=INK_SOFT),
         axis_line_x=element_line(color=INK_SOFT),
         axis_line_y=element_line(color=INK_SOFT),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_title=element_text(size=12, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
