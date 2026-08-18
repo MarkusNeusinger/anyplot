@@ -156,7 +156,7 @@ app.add_middleware(
 )
 
 
-# Record which AI or search agent read which catalogue page.
+# Record which AI or search agent requested which catalogue page.
 #
 # A middleware rather than a router dependency: a dependency runs BEFORE the
 # handler and cannot see the response, so every 404 was recorded as a
@@ -164,7 +164,11 @@ app.add_middleware(
 # longer exists is a signal worth keeping, it just is not a page view.
 @app.middleware("http")
 async def record_bot_fetch(request: Request, call_next):
-    """Report AI/search agent page reads to the bot analytics site."""
+    """Report AI/search agent page requests to the bot analytics site.
+
+    Requests, not reads: the status is recorded rather than filtered on, so a
+    404 is visible as a miss instead of counted as a page view.
+    """
     response: Response = await call_next(request)
     path = request.url.path
     if path.startswith("/seo-proxy"):

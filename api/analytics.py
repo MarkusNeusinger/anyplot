@@ -294,7 +294,7 @@ def track_og_image(
 
 
 def track_bot_fetch(request: Request, path: str, status: int) -> None:
-    """Record an AI or search agent reading a page (fire-and-forget).
+    """Record an AI or search agent requesting a page (fire-and-forget).
 
     Recorded against BOT_DOMAIN, never the main site: every Plausible event
     creates a visitor, and mixing these in is what made the human numbers
@@ -308,7 +308,7 @@ def track_bot_fetch(request: Request, path: str, status: int) -> None:
 
     Args:
         request: FastAPI request, for the UA and forwarded IP
-        path: Public path being read, e.g. "/box-basic/python/matplotlib"
+        path: Public path being requested, e.g. "/box-basic/python/matplotlib"
         status: Response status. Recorded rather than filtered on: an assistant
             asking for a URL that no longer exists is a signal worth having, and
             counting it as a successful read would be a lie. Filter on it in the
