@@ -97,7 +97,7 @@ export function RouteErrorBoundary() {
   }, [shouldAttemptReload]);
 
   if (isRouteErrorResponse(error) && error.status === 404) {
-    return <NotFoundPage />;
+    return <NotFoundPage source="route_error" />;
   }
 
   if (shouldAttemptReload) {

@@ -22,11 +22,15 @@ vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// The real useAnalytics returns useCallback-stable functions. Rebuilding them
+// per render here would give every consumer a fresh identity, which turns any
+// effect that lists trackEvent as a dependency into an infinite render loop —
+// so the mock has to hold the same contract.
+const mockTrackEvent = vi.fn();
+const mockAnalytics = { trackPageview: vi.fn(), trackEvent: mockTrackEvent };
+
 vi.mock('src/hooks', () => ({
-  useAnalytics: () => ({
-    trackPageview: vi.fn(),
-    trackEvent: vi.fn(),
-  }),
+  useAnalytics: () => mockAnalytics,
   useAppData: () => ({
     librariesData: [
       { id: 'matplotlib', name: 'Matplotlib', language: 'python' },
@@ -103,6 +107,10 @@ function mockFetchError() {
 }
 
 describe('SpecPage', () => {
+  beforeEach(() => {
+    mockTrackEvent.mockClear();
+  });
+
   it('shows loading state initially', () => {
     // Never-resolving fetch keeps loading=true
     globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => {}));
@@ -164,6 +172,33 @@ describe('SpecPage', () => {
       expect(screen.getByTestId('spec-detail-view')).toBeInTheDocument();
     });
     expect(screen.queryByTestId('spec-overview')).not.toBeInTheDocument();
+  });
+
+  it('reports impl_missing when the URL names an implementation that is gone', async () => {
+    // The shape a library migration leaves behind: the spec exists, the
+    // library/language pair does not. The visitor is redirected to the hub
+    // rather than shown a 404, so this event is the only trace it leaves.
+    mockParams = { specId: 'scatter-basic', language: 'python', library: 'highcharts' };
+    mockFetchSuccess();
+    render(<SpecPage />);
+
+    await waitFor(() => {
+      expect(mockTrackEvent).toHaveBeenCalledWith('page_not_found', {
+        path: window.location.pathname,
+        source: 'impl_missing',
+      });
+    });
+  });
+
+  it('does not report a miss when the implementation exists', async () => {
+    mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
+    mockFetchSuccess();
+    render(<SpecPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('spec-detail-view')).toBeInTheDocument();
+    });
+    expect(mockTrackEvent).not.toHaveBeenCalledWith('page_not_found', expect.anything());
   });
 
   it('renders description text', async () => {

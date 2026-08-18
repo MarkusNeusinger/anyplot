@@ -100,7 +100,7 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{description}" />
     <meta property="og:image" content="{image}" />
-    <meta property="og:url" content="{url}" />
+    <meta property="og:url" content="{og_url}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="anyplot.ai" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -209,6 +209,42 @@ _BOT_NAV_HTML = (
 )
 
 
+# Google truncates the SERP snippet around 155 characters and rewrites what it
+# cannot use. Spec descriptions in this catalogue run to a median of 395 (max
+# 801), so the sentence that decides the click was never the one being written.
+_META_DESCRIPTION_LIMIT = 155
+
+
+def _meta_description(text: str | None) -> str:
+    """Trim a description to what a search result will actually display.
+
+    Only the meta/OG tag is trimmed; the visible body copy and the JSON-LD keep
+    the full text, because those are content rather than snippet.
+
+    Ends on the last full sentence that fits — but only where that lands past
+    the halfway mark. A description opening with a short sentence ("A Smith
+    chart.") would otherwise yield a snippet of a dozen characters, wasting the
+    slot that decides the click; below that threshold a word-boundary trim of
+    the full text carries more information. The word-boundary fallback also
+    keeps the trim off mid-word, and running on raw text rather than an escaped
+    string means it can never cut through an HTML entity.
+    """
+    text = " ".join((text or "").split())
+    if len(text) <= _META_DESCRIPTION_LIMIT:
+        return text
+
+    window = text[: _META_DESCRIPTION_LIMIT + 1]
+    for stop in (". ", "! ", "? "):
+        end = window.rfind(stop)
+        if end >= _META_DESCRIPTION_LIMIT // 2:
+            return text[: end + 1]
+
+    cut = window.rfind(" ")
+    if cut <= 0:
+        return text[:_META_DESCRIPTION_LIMIT].rstrip() + "\u2026"
+    return text[:cut].rstrip(" ,;:\u2014-") + "\u2026"
+
+
 def _jsonld_script(payload: dict) -> str:
     """Serialize a JSON-LD payload into a <script> element for the template head.
 
@@ -221,13 +257,26 @@ def _jsonld_script(payload: dict) -> str:
 
 
 def _render_bot_html(
-    *, title: str, description: str, image: str, url: str, body: str = "", jsonld: dict | None = None
+    *,
+    title: str,
+    description: str,
+    image: str,
+    url: str,
+    og_url: str | None = None,
+    body: str = "",
+    jsonld: dict | None = None,
 ) -> str:
     """Render a bot-serving page.
 
     Contract per argument:
     - ``title``, ``description``, ``image``, ``url``: text/URL values that
-      must arrive HTML-escaped (same contract the bare template had).
+      must arrive HTML-escaped (same contract the bare template had). ``url``
+      is the canonical.
+    - ``og_url``: the Open Graph URL, defaulting to ``url``. They are separate
+      because they answer different questions: the canonical is what Google
+      should consolidate on, while og:url is where a shared card sends its
+      reader — so a filtered view canonicalises to the bare page but still
+      shares as itself. Google ignores og:url for canonicalisation.
     - ``body``: a trusted, fully-built HTML fragment inserted verbatim (plus
       the site nav). Callers must escape any DB-sourced text BEFORE
       interpolating it into the fragment.
@@ -239,6 +288,7 @@ def _render_bot_html(
         description=description,
         image=image,
         url=url,
+        og_url=og_url if og_url is not None else url,
         jsonld=_jsonld_script(jsonld) if jsonld else "",
         body=f"{body or f'<h1>{title}</h1><p>{description}</p>'}\n{_BOT_NAV_HTML}",
     )
@@ -335,6 +385,7 @@ def _build_spec_hub_html(spec, image: str) -> str:
     spec_id_esc = html.escape(spec.id)
     title_esc = html.escape(spec.title)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    meta_desc_esc = html.escape(_meta_description(spec.description or DEFAULT_DESCRIPTION))
     image_esc = html.escape(image, quote=True)
     hub_url = f"https://anyplot.ai/{spec.id}"
 
@@ -372,7 +423,7 @@ def _build_spec_hub_html(spec, image: str) -> str:
     }
     return _render_bot_html(
         title=f"{title_esc} | anyplot.ai",
-        description=desc_esc,
+        description=meta_desc_esc,
         image=image_esc,
         url=f"https://anyplot.ai/{spec_id_esc}",
         body=body,
@@ -392,6 +443,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     title_esc = html.escape(spec.title)
     lib_name_esc = html.escape(lib_name)
     desc_esc = html.escape(spec.description or DEFAULT_DESCRIPTION)
+    meta_desc_esc = html.escape(_meta_description(spec.description or DEFAULT_DESCRIPTION))
     image_esc = html.escape(image, quote=True)
     hub_url = f"https://anyplot.ai/{spec.id}"
     page_url = f"{hub_url}/{language_id}/{impl.library_id}"
@@ -444,7 +496,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     }
     return _render_bot_html(
         title=f"{title_esc} - {lib_name_esc} | anyplot.ai",
-        description=desc_esc,
+        description=meta_desc_esc,
         image=image_esc,
         url=html.escape(page_url, quote=True),
         body=body,
@@ -501,7 +553,17 @@ async def seo_home(request: Request, db: AsyncSession | None = Depends(optional_
     # Use html.escape to prevent XSS via query params
     query_string = html.escape(str(request.query_params), quote=True) if request.query_params else ""
     image_url = f"{DEFAULT_HOME_IMAGE}?{query_string}" if query_string else DEFAULT_HOME_IMAGE
-    page_url = f"https://anyplot.ai/?{query_string}" if query_string else "https://anyplot.ai/"
+    # The canonical never carries the filter params. It used to, which made every
+    # filter combination self-canonicalising: /?spec=point-basic was indexed as a
+    # page in its own right, competing with the home page it is a view of.
+    #
+    # og:url is a different question and keeps them. Facebook and LinkedIn use it
+    # as the destination of a shared card, so dropping the params there would
+    # land every shared filter link on the bare home page — defeating the same
+    # "tracking shared filtered URLs" this handler parameterises og:image for.
+    # Google does not use og:url for canonicalisation, so the two can differ.
+    page_url = "https://anyplot.ai/"
+    og_page_url = f"https://anyplot.ai/?{query_string}" if query_string else page_url
 
     spec_count = len(await _get_spec_index(db)) if db is not None else None
     return HTMLResponse(
@@ -510,6 +572,7 @@ async def seo_home(request: Request, db: AsyncSession | None = Depends(optional_
             description=html.escape(HOME_DESCRIPTION),
             image=image_url,
             url=page_url,
+            og_url=og_page_url,
             body=_build_home_body(spec_count),
             jsonld=_HOME_JSONLD,
         )
@@ -690,28 +753,37 @@ async def seo_spec_hub(spec_id: str, db: AsyncSession | None = Depends(optional_
 
 @router.get("/seo-proxy/{spec_id}/{language}")
 async def seo_spec_language(spec_id: str, language: str):
-    """Permanent redirect: language-overview URLs now live on the hub with ?language=.
+    """Permanent redirect: language-overview URLs are consolidated onto the hub.
 
     The /{spec_id}/{language} tier was consolidated into /{spec_id} to eliminate
-    duplicate content. Bots following this endpoint get a 301 to the hub proxy;
-    humans get the SPA redirect configured in app/src/router.tsx. The `language`
-    query parameter is dropped because the hub's canonical tag does not include
-    it — Google should consolidate the page, not a filtered variant.
+    duplicate content. Bots following this endpoint get a 301 to the public hub
+    URL; humans get the SPA redirect configured in app/src/router.tsx. The
+    `language` query parameter is dropped because the hub's canonical tag does
+    not include it — Google should consolidate the page, not a filtered variant.
     """
     del language  # referenced for route matching only; deliberately not forwarded
     if not _SPEC_ID_RE.fullmatch(spec_id):
         raise HTTPException(status_code=404, detail="Spec not found")
+    # The Location must be the PUBLIC url, not this router's internal path.
+    # nginx serves crawlers by prepending /seo-proxy to the incoming request
+    # URI (`proxy_pass $seo_backend/seo-proxy$request_uri`), so a Location of
+    # /seo-proxy/{spec} is fetched by the bot as anyplot.ai/seo-proxy/{spec},
+    # arrives here as /seo-proxy/seo-proxy/{spec}, and re-matches this very
+    # route with spec_id="seo-proxy" and language="{spec}" -- which redirects
+    # again, forever. Googlebot recorded the loop as 48 "Redirect error" URLs.
+    #
     # Belt-and-braces redirect-target sanitisation:
     #   1. _SPEC_ID_RE.fullmatch() above already constrains spec_id to
-    #      lowercase alphanum + hyphens.
+    #      lowercase alphanum + hyphens, and requires it to be non-empty.
     #   2. urllib.parse.quote() percent-encodes anything outside [-A-Za-z0-9],
     #      which is a CodeQL-recognised sanitizer for `py/url-redirection`.
     #   3. urlparse() + scheme/netloc check guarantees the assembled URL is
-    #      a same-origin path (no `//evil.com` or `https://evil.com`).
+    #      a same-origin path, and the explicit "//" rejection keeps it from
+    #      being read as a protocol-relative url (`//evil.com`).
     safe_spec = quote(spec_id, safe="-")
-    target = "/seo-proxy/" + safe_spec
+    target = "/" + safe_spec
     parsed = urlparse(target)
-    if parsed.scheme or parsed.netloc or not target.startswith("/seo-proxy/"):
+    if parsed.scheme or parsed.netloc or not target.startswith("/") or target.startswith("//"):
         raise HTTPException(status_code=400, detail="Invalid redirect target")
     return RedirectResponse(url=target, status_code=301)
 

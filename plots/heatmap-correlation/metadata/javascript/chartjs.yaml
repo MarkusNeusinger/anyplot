@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-correlation
+created: '2026-08-18T17:14:46Z'
+updated: '2026-08-18T17:21:54Z'
+generated_by: claude-sonnet
+workflow_run: 32163056591
+issue: 1948
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Custom canvas plugin correctly renders a full correlation heatmap despite Chart.js
+    having no native matrix/heatmap type -- an elegant, idiomatic workaround (hidden
+    scatter chart as category-axis scaffold + afterDraw plugin for cell painting)
+  - Correct Imprint imprint_div diverging palette with proper polarity (positive correlations
+    render blue, negative render red) and a genuinely fixed -1..1 colorbar range,
+    exactly matching the spec's 'fixed colorbar range' requirement
+  - Per-cell luminance-based text color computation guarantees every correlation value
+    label stays legible regardless of fill saturation, in both light and dark renders
+  - Clean lower-triangle + diagonal masking reduces redundancy per the spec's own
+    suggestion, without the chart feeling sparse -- the colorbar and cell grid still
+    fill the vast majority of the canvas
+  - Realistic, neutral business/finance dataset (Revenue, Profit Margin, R&D Spend,
+    Debt Ratio, Market Cap, Volatility) with a good spread of strong positive (0.81),
+    weak (0.10), and negative (-0.52) correlations
+  weaknesses:
+  - Colorbar tick labels ('1', '0', '-1') are set to 14px, slightly smaller than the
+    axis tick labels (15px) and noticeably smaller than the cell value labels (20px)
+    -- bumping to ~16px would tighten the typographic hierarchy
+  - The masked upper triangle leaves a large blank region in the upper-right; an optional
+    emphasis on the single strongest relationship (Revenue / Market Cap, r=0.81) would
+    push data storytelling further
+  - The cell separator stroke (3px, page-background color) reads a touch heavy against
+    the otherwise refined flat-fill cells; 1-2px would feel more polished
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "heatmap-correlation · javascript · chartjs · anyplot.ai" in bold dark ink, clearly visible. Row labels (Revenue, Profit Margin, R&D Spend, Debt Ratio, Market Cap, Volatility) on the left and matching column labels along the bottom, rendered in a soft dark-gray ink -- all fully readable. Colorbar on the right labeled "1" / "0" / "-1" with a vertical "Correlation" title, legible in muted gray/dark ink.
+      Data: Lower-triangle (incl. diagonal) of a 6x6 correlation matrix. Diagonal cells = 1.00 in saturated blue. Off-diagonal cells span from saturated red (most negative, -0.52) through near-white/neutral (near zero, e.g. 0.10) to saturated blue (most positive, 0.81), matching the Imprint imprint_div diverging scale. Each cell's numeric value is overlaid in bold text, colored black or off-white per-cell depending on the fill's luminance -- every value is clearly legible against its own cell background. Upper triangle intentionally left blank (masked) to reduce redundancy.
+      Legibility verdict: PASS -- no text is light-on-light; all chrome and cell-value text is readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title and axis labels rendered in light ink (off-white/light-gray), fully visible against the dark surface. Colorbar numeric labels and "Correlation" title also render in light gray, legible against black.
+      Data: Same lower-triangle correlation matrix with identical cell fill colors to the light render (diagonal blue 1.00, strongest positive 0.81 blue, strongest negative -0.52 red, near-zero 0.10 near-neutral) -- confirmed the data colors are unchanged between themes, only chrome flipped. Per-cell text color again adapts correctly to each cell's fill luminance, so no cell shows dark-on-dark or light-on-light text.
+      Legibility verdict: PASS -- no dark-on-dark failures; all chrome and cell-value text reads clearly against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22, cell values 20 bold, ticks 15,
+          colorbar labels 14/16); clear hierarchy; readable in both themes with no
+          overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells generously sized for a 6-variable matrix; values clearly legible;
+          colorbar appropriately sized
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-cell luminance-based text color plus redundant numeric labels
+          -- never relies on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid + colorbar occupy the large majority of the canvas; nothing
+          clipped; masked triangle follows the spec's own suggestion rather than reading
+          as waste
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real variable names on both axes; colorbar explicitly labeled 'Correlation'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_div diverging colormap with correct polarity (positive=blue,
+          negative=red), identical data colors across themes, correct #FAF8F1/#1A1A17
+          backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully bespoke rendering (no chartjs default to lean on); thoughtful
+          color + typography hierarchy; not quite top-tier polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, no spines, generous whitespace, page-bg cell separators;
+          separator stroke slightly heavy
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Diverging color intensity immediately separates strong from weak
+          relationships; no explicit highlight of the standout correlation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct correlation-matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap centered at zero, 2-decimal cell annotations,
+          symmetric matrix with variable names on both axes, triangular masking, fixed
+          -1..1 colorbar -- all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Row/column mapping correct; diagonal runs top-left to bottom-right
+          as expected
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; colorbar serves as legend
+          and is labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows strong positive, weak/near-zero, and strong negative correlations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic finance/business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and relationships (e.g. Revenue-MarketCap strongly positive,
+          ProfitMargin-Volatility negative) are plausible and internally consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions are required by the canvas-plugin technique itself,
+          not over-engineering, but do move away from pure top-to-bottom script structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hand-authored matrix, no RNG needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a from-scratch matrix renderer; no fake
+          functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no filesystem calls
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scatter-as-scaffold + afterDraw plugin is the correct workaround
+          given chartjs's lack of a native matrix type, though necessarily low-level/manual
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses chartjs's plugin/afterDraw extension point meaningfully, though
+          most visual output is raw canvas drawing rather than chartjs-native rendering
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - gradient-fill

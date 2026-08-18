@@ -107,6 +107,13 @@ export function SpecPage() {
             i => i.library_id === urlLibrary && i.language === urlLanguage
           );
           if (!matched) {
+            // The URL names an implementation that does not exist — the shape a
+            // library migration leaves behind. The visitor is redirected rather
+            // than shown a 404, so nothing else in the app would ever record it.
+            trackEvent('page_not_found', {
+              path: window.location.pathname,
+              source: 'impl_missing',
+            });
             navigate(
               {
                 pathname: specPath(specId!),
@@ -130,7 +137,7 @@ export function SpecPage() {
     };
 
     fetchSpec();
-  }, [specId, urlLanguage, urlLibrary, navigate]);
+  }, [specId, urlLanguage, urlLibrary, navigate, trackEvent]);
 
   // Implementations the carousel cycles through. In detail mode, this is what
   // `<LibraryPills>` walks via prev/next. ALL impls of the spec by default; if
@@ -364,7 +371,7 @@ export function SpecPage() {
   }
 
   if (error === 'Spec not found' || (!error && !specData)) {
-    return <NotFoundPage />;
+    return <NotFoundPage source="spec_missing" />;
   }
   if (error) {
     return (
