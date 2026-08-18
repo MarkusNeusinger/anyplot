@@ -211,6 +211,25 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The SEO proxy no longer invents pages** — `/{spec}/{language}/{library}` served HTTP 200 with
+  a self-referencing canonical for *any* language and library string, because neither segment is
+  validated against a vocabulary: `/bar-basic/klingon/matplotlib` and
+  `/bar-basic/python/erfundenelib` were both indexable pages. That is an unbounded supply of thin
+  near-duplicates competing with the 3,913 real URLs for the same crawl budget, and it is why 161
+  URLs from the highcharts Python→JS migration (#8516) were still indexed months after those
+  implementations were deleted. Unknown combinations now return 404, and the 404 is not cached so
+  a later regen becomes visible immediately. The stale URLs are dropped rather than redirected:
+  measured over 28 days they carry 4.4% of impressions and 10 clicks in total.
+- **A trailing slash sent crawlers to a crawl-blocked URL** — `/box-basic/` answered `307` to
+  `http://api.anyplot.ai/seo-proxy/box-basic`: the internal proxy path, on the API host, over plain
+  http, and that host's `robots.txt` disallows everything. FastAPI's `redirect_slashes` built the
+  Location from the *proxied* request, and `@seo_proxy` set no `X-Forwarded-Proto`, so the scheme
+  came out wrong too. Humans never saw it — only bots take the proxy path — and every inbound link
+  written with a trailing slash, which is common, dead-ended there; some of the 48 Search Console
+  "Redirect error" URLs came from this. nginx now normalises the trailing slash to the canonical URL
+  before any routing, the proxy declares the scheme, and `bot-serving-check` fails if a
+  trailing-slash redirect ever again points at `/seo-proxy` or downgrades to http.
+
 - **AI assistants asked about a plot page saw nothing** — seven user-directed fetchers (eight UA
   patterns; NotebookLM and Mariner each answer to two) were absent from the `$is_bot` map in
   `app/nginx.conf` and received the empty SPA shell instead of the prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,
