@@ -105,7 +105,6 @@ barplot!(
 
 ax.xticks = (1:n_year, years)
 ax.yticks = (0:20:100, ["$(t)%" for t in 0:20:100])
-ylims!(ax, 0, 124)
 
 # --- Segment labels: percentage text where the segment has room -----------
 for j in 1:n_year, i in 1:n_source
@@ -140,6 +139,9 @@ Legend(
     framevisible = false,
     backgroundcolor = PAGE_BG,
 )
+
+# Fix the y-range last so no later plot/legend call can reset it via autolimits.
+ylims!(ax, 0, 124)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
