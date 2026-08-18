@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-overlapping: Overlapping Histograms
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-18
+// Quality: 94/100 | Created: 2026-08-18
 
 const t = window.ANYPLOT_TOKENS;
 
