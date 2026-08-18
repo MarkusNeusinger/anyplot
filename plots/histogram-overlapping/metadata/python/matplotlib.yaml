@@ -2,45 +2,56 @@ library: matplotlib
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:46:52Z'
-updated: '2026-05-08T06:53:38Z'
-generated_by: claude-haiku
-workflow_run: 25541428851
+updated: '2026-08-18T10:46:17Z'
+generated_by: claude-sonnet
+workflow_run: 32127256571
 issue: 2010
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - Perfect visual quality with zero legibility issues in both light and dark themes
-  - Excellent theme adaptation with identical data colors and properly adapted chrome
-  - All specification features correctly implemented with realistic, compelling data
-  - Clean, maintainable code with deterministic seed and proper structure
-  - Professional styling with subtle refinements (grid opacity, spine removal, legend
-    borders)
+  - 'All three attempt-1 weaknesses were addressed: grid is now y-axis-only, Sales
+    distribution is bimodal (demonstrates "shape" comparison from the spec), and a
+    $27k mean gap annotation sharpens the data storytelling'
+  - Imprint palette in exact canonical order across all three groups, pixel-identical
+    data colors between light and dark renders — only chrome flips
+  - Alpha lowered from 0.5 to 0.4 combined with solid edge strokes (edgecolor=color,
+    linewidth=1.8) keeps each distribution traceable even where fills stack
+  - Shared bin edges (bins = np.linspace(20000, 150000, 35)) reused across all three
+    ax.hist() calls give an accurate, directly-comparable overlay per the spec's alignment
+    requirement
+  - Clean, reproducible, KISS-structured code with theme tokens threaded through every
+    chrome element in both themes; no clipping at any canvas edge
   weaknesses:
-  - Design could leverage more distinctive matplotlib features beyond standard library
-    defaults
+  - Triple-overlap region (~65k-95k) still blends into a fairly dark, muddy tone in
+    both themes — consider a slightly lower alpha (e.g. 0.35) or reordering z-order/draw
+    sequence so the outlines read more distinctly through the stack
+  - Design Excellence is solid but not yet publication-grade — a more distinctive
+    matplotlib technique (e.g. inset axes for a zoomed detail, custom patch annotation)
+    would push Library Mastery and Aesthetic Sophistication further
+  - Legend order (Engineering, Marketing, Sales) doesn't follow salary rank; ordering
+    by descending mean would reinforce the story the mean-gap annotation is already
+    telling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct)
-      Chrome: Title, axis labels, tick labels all clearly readable in dark text against light background. Subtle gray gridlines visible. Legend in upper right with light background and border, dark text all readable.
-      Data: Three overlapping distributions shown with semi-transparent bars (alpha=0.5). Engineering (green #009E73), Marketing (orange #D55E00), Sales (blue #0072B2). Bars have subtle edge color for definition. All three series clearly distinguishable despite overlap.
-      Legibility verdict: PASS - all elements readable and well-integrated
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "histogram-overlapping · python · matplotlib · anyplot.ai" centered, dark ink, ~55% width, no clipping. Axis labels and tick labels dark/soft-dark ink, clearly readable. Grid is y-axis-only, subtle. Legend (upper right) has light elevated fill with dark text, fully inside canvas.
+      Data: Three overlapping stepfilled histograms — Engineering (#009E73), Marketing (#C475FD), Sales (#4467A3) — each with a dotted mean-reference line and solid edge stroke. A callout annotation ("$27k mean gap") with double-headed arrow sits in dedicated headroom above the bars.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct)
-      Chrome: Title, axis labels, tick labels all clearly readable in light text against dark background. Subtle gray gridlines visible. Legend styling adapted to dark theme with appropriate contrast.
-      Data: Data colors are identical to light render (#009E73, #D55E00, #0072B2) - only chrome has flipped. All bars equally visible and distinguishable.
-      Legibility verdict: PASS - zero dark-on-dark failures, all text readable, brand green visible and accessible
-
-    Both renders pass theme-readability requirements with high polish and professional appearance.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title, axis labels, tick labels, callout annotation, and legend all render in light off-white/gray tones — clearly legible, no dark-on-dark failures.
+      Data: Colors (#009E73 / #C475FD / #4467A3) pixel-identical to the light render — only chrome (background, text, grid, legend box, annotation box) flipped. Triple-overlap region blends into a darker muddy purple/navy tone in both themes, but distinct colored edge strokes still let each histogram's outline be traced through the overlap.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -48,68 +59,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24pt, labels=20pt, ticks=16pt),
-          perfectly readable in both themes
+        comment: Explicit sizes throughout, readable in both themes, no clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all fully readable
+        comment: Legend and callout annotation sit in dedicated whitespace/headroom
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars optimally sized, overlapping regions visible through transparency
+        comment: Edge strokes help trace silhouettes, but triple-overlap band still
+          blends into a dark mixed tone
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe, alpha blending ensures contrast
+        comment: CVD-safe green/purple/blue combo, distinct edge outlines aid separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout with balanced margins and proper canvas utilization
+        comment: Well-balanced, generous margins, annotation in purpose-built headroom,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct title format
+        comment: Units present, descriptive labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, correct
-          backgrounds and theme-adaptive text'
+        comment: Canonical Imprint order, correct theme-adaptive backgrounds
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks distinctive design choices
+        comment: Above generic defaults but not fully publication-grade
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, subtle grid, generous whitespace, legend styling
+        comment: Grid fixed to y-axis-only, spines removed, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Clear narrative through data choice: Engineering higher/tighter,
-          Marketing moderate, Sales widest with lower base'
+        comment: New mean-gap annotation directly names the key insight
     spec_compliance:
       score: 15
       max: 15
@@ -119,25 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct overlapping histogram with all subtypes
+        comment: Correct overlapping histogram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend, consistent bins
+        comment: alpha=0.4 fills, distinct colors, legend, shared bin edges
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: Correct axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match data
+        comment: Correct title format, matching legend labels
     data_quality:
       score: 15
       max: 15
@@ -147,19 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all distribution shapes and variance patterns
+        comment: Sales now bimodal — demonstrates central tendency, spread, AND shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world salary scenario, neutral and plausible
+        comment: Plausible, neutral department salary comparison
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic salary ranges and standard deviations
+        comment: Sensible $20k-$150k range
     code_quality:
       score: 10
       max: 10
@@ -169,55 +179,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear structure, no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set, deterministic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, current API
+        comment: Correct save pattern, no bbox_inches=tight
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of ax.hist(), proper theme-adaptive styling, custom formatter
+        comment: Correct Axes-method usage, FuncFormatter, styled legend frame
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses ax.xaxis.set_major_formatter() and theme tokens, but mostly
-          standard usage
+        comment: stepfilled + edge strokes + annotate/arrowprops, but short of maximally
+          distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - alpha-blending
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  - iteration-over-groups
+  - explicit-figure
+  dataprep:
+  - binning
   styling:
+  - alpha-blending
+  - edge-highlighting
   - grid-styling
+  - publication-ready
