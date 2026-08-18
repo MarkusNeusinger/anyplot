@@ -1,14 +1,16 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-08
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
+
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -17,7 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette - first series always #009E73
+# Imprint palette - first series always #009E73
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Temperature distributions by region and season
@@ -39,9 +41,7 @@ for region in regions:
         values = np.random.normal(base, season_spread, n)
         # Add realistic outliers (unusual temperature days)
         if np.random.random() > 0.6:
-            values = np.append(
-                values, base + season_spread * np.random.choice([-2.5, 2.5], size=1)
-            )
+            values = np.append(values, base + season_spread * np.random.choice([-2.5, 2.5], size=1))
         values = np.clip(values, -10, 40)
 
         for v in values:
@@ -67,9 +67,10 @@ sns.set_theme(
     },
 )
 
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Create grouped box plot
+# Create grouped box plot, mean diamonds add a distinctive second statistic
+# beyond the median line without cluttering the chart
 sns.boxplot(
     data=df,
     x="Region",
@@ -78,27 +79,29 @@ sns.boxplot(
     palette=IMPRINT,
     ax=ax,
     width=0.7,
-    linewidth=2,
-    fliersize=8,
+    linewidth=1.5,
+    fliersize=4,
     order=regions,
     hue_order=seasons,
+    showmeans=True,
+    meanprops={"marker": "D", "markerfacecolor": INK, "markeredgecolor": PAGE_BG, "markersize": 5},
 )
 
 # Styling
-ax.set_xlabel("Region", fontsize=20, color=INK)
-ax.set_ylabel("Temperature (°C)", fontsize=20, color=INK)
-ax.set_title("box-grouped · seaborn · anyplot.ai", fontsize=24, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
-ax.legend(title="Season", fontsize=14, title_fontsize=16, loc="upper right")
+ax.set_xlabel("Region", fontsize=10, color=INK)
+ax.set_ylabel("Temperature (°C)", fontsize=10, color=INK)
+ax.set_title("box-grouped · python · seaborn · anyplot.ai", fontsize=12, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+# Legend placed outside the axes so it never overlaps the West/Summer boxes
+ax.legend(title="Season", fontsize=8, title_fontsize=8, loc="upper left", bbox_to_anchor=(1.01, 1.0), borderaxespad=0)
 ax.set_ylim(-12, 42)
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8)
 ax.xaxis.grid(False)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+# Trim spines away from the data range for a cleaner, less boxed-in frame
+sns.despine(ax=ax, offset=6)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+fig.subplots_adjust(left=0.09, right=0.85, top=0.90, bottom=0.15)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
