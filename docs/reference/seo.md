@@ -52,7 +52,7 @@ Our solution uses **nginx-based bot detection** to serve pre-rendered HTML with 
 
 ### Detected bots
 
-nginx detects 37 User-Agent patterns, organized by category:
+nginx detects 45 User-Agent patterns, organized by category:
 
 **Social Media:**
 | Bot | User-Agent Pattern |
@@ -77,6 +77,29 @@ nginx detects 37 User-Agent patterns, organized by category:
 | Skype/Teams | `skypeuripreview` |
 | Microsoft Teams | `microsoft teams` |
 | Snapchat | `snapchat` |
+
+**User-directed AI fetchers:**
+
+These arrive because a human asked their assistant to open a page — they are
+not index crawlers. Google documents its own as
+[generally ignoring robots.txt](https://developers.google.com/search/docs/crawling-indexing/google-user-triggered-fetchers),
+so this map is the only control point for them: robots.txt cannot govern what
+they fetch, only this decides what they receive. Every entry below was verified
+receiving the empty SPA shell before it was added (2026-08-18) — an assistant
+asked about a plot page could describe nothing at all.
+
+| Fetcher | User-Agent Pattern |
+|---------|-------------------|
+| Gemini (NotebookLM) | `gemininotebook`, `notebooklm` |
+| Gemini Deep Research | `gemini-deep-research` |
+| Google agents (Mariner) | `googleagent`, `google-agent` |
+| Meta AI | `meta-externalfetcher` |
+| Mistral (Le Chat) | `mistralai-user` |
+| DuckDuckGo AI | `duckassistbot` |
+
+Note the Meta split: `meta-externalfetcher` is the user-directed fetch and is
+served; `meta-externalagent` is the training crawler and is declined in
+robots.txt. They are different agents and belong on different sides.
 
 **Search Engines:**
 | Bot | User-Agent Pattern |

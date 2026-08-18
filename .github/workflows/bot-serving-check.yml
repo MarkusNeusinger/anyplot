@@ -73,6 +73,23 @@ jobs:
           # the edge — an edge-level policy change needs no change here.
           check "$CLAUDEBOT" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
 
+          # User-directed fetchers: a human asked their assistant to open the
+          # page. All of these were verified receiving the empty SPA shell on
+          # 2026-08-18 — an assistant asked about a plot could describe nothing.
+          # Google documents its own as generally ignoring robots.txt, so the
+          # nginx map is the only control point and the only thing this guards.
+          for ua in \
+            "Mozilla/5.0 (compatible; Google-GeminiNotebook)" \
+            "Mozilla/5.0 (compatible; Google-NotebookLM)" \
+            "Mozilla/5.0 (compatible; Gemini-Deep-Research)" \
+            "Mozilla/5.0 (compatible; GoogleAgent-Mariner)" \
+            "meta-externalfetcher/1.1" \
+            "MistralAI-User/1.0" \
+            "Mozilla/5.0 (compatible; DuckAssistBot/1.0)"
+          do
+            check "$ua" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
+          done
+
           # llms.txt must be served directly, never proxied to the seo backend —
           # including for a mapped crawler UA, which is the whole point of the
           # `location = /llms.txt` bypass.

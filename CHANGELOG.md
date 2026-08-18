@@ -199,6 +199,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **AI assistants asked about a plot page saw nothing** — eight user-directed fetchers were absent
+  from the `$is_bot` map in `app/nginx.conf` and received the empty SPA shell instead of the
+  prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,
+  `GoogleAgent-Mariner`, `Meta-ExternalFetcher`, `MistralAI-User` and `DuckAssistBot`, each
+  verified live against the site before the fix. These arrive because a human asked their
+  assistant to open a page, and Google documents its own as generally ignoring robots.txt — so
+  this map, not the crawler policy, is the only control point for them. The daily
+  `bot-serving-check` now covers all of them, since the failure is invisible to every human
+  visitor and would otherwise regress unnoticed.
+
 - **Home-page filter params were self-canonicalising** — the bot page built its canonical from the
   request query string, so `/?spec=point-basic` declared itself a page in its own right rather than
   a view of the home page, and Search Console had it indexed as one (last crawled 2026-05-26). Every
