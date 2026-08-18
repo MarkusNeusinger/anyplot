@@ -16,6 +16,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Fixed
+
+- **Deploy checks could report another project's builds** — the runbook's recipe for
+  "did this actually deploy?" flagged `--region` as the easy thing to forget and treated
+  `--project` as incidental. It is not. A gcloud install whose default project is a
+  different one returns *that* project's builds, and when its triggers happen to carry
+  the same names in the same region, the wrong answer is indistinguishable from the
+  right one — no error, just a credible list of `deploy-api` runs that stop a few days
+  ago. It produced a false "nothing has deployed since the 16th" on a day with a dozen
+  deploys. `agentic/docs/project-guide.md` now names both flags and the context check
+  that settles it.
+
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
 anyplot 3.1 makes the catalogue readable by machines. An assistant asked about a plot can now find
