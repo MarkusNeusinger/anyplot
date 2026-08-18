@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: area-cumulative-flow
 created: '2026-08-18T03:09:19Z'
-updated: '2026-08-18T03:13:24Z'
+updated: '2026-08-18T03:23:48Z'
 generated_by: claude-sonnet
 workflow_run: 32094036957
 issue: 5239
@@ -12,46 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Correct CFD semantics: the lead()-based ymin/ymax construction on geom_ribbon
-    reproduces the exact spec-mandated stacking (Backlog on top, Done on bottom) and
-    represents each stage''s WIP as the vertical gap between adjacent cumulative curves,
-    rather than a naive geom_area stack that would sum values incorrectly.'
-  - 'Palette matches the Imprint canonical order exactly (Backlog=#009E73 first, then
-    #C475FD, #4467A3, #BD8233, #AE3030); both renders are theme-correct with warm
-    off-white/near-black backgrounds and fully legible chrome in both themes.'
-  - 'Data tells the story the spec asks for: capacity tightens down the pipeline (8/7/6/5
-    throughput lambda), so the Backlog band visibly widens over the 90-day series
-    in the render itself, not just in code comments — a genuine, visible bottleneck.'
-  - Canvas is exactly 3200x1800, title matches the mandated format, all five imports
-    (ggplot2/dplyr/tidyr/scales/ragg) are used, and set.seed(42) makes the run reproducible.
+  - Correct stacking order via geom_ribbon(ymin/ymax) rather than relying on geom_area's
+    automatic stack order — the right idiom for the spec's "earliest stage on top"
+    requirement
+  - 'Clean theme-adaptive chrome: identical data colors between light/dark, only chrome
+    (background, ink, grid) flips'
+  - Data generation is genuinely well thought out — a capacity-constrained pipeline
+    simulation that produces a realistic, monotonically widening CFD signature, with
+    clear code comments explaining the WIP logic
+  - Canvas, title format, and legend all match spec/style-guide requirements exactly
   weaknesses:
-  - Axis text/title sizing is on the conservative side (axis.text=8, base_size=7)
-    — a slightly larger axis.text (~9-10) would strengthen legibility at thumbnail/mobile
-    scale without crowding the layout.
-  - Design excellence is solid but stops at 'clean and correct' — no subtitle or annotation
-    calling out the widening-Backlog bottleneck the data already encodes, which would
-    push the storytelling from implicit to explicit.
-  - The right-side legend consumes a fair share of canvas width; direct end-of-band
-    labels near the right edge would be a more distinctive, space-efficient alternative
-    and is worth exploring in a future revision (not a blocking issue).
+  - All five bands widen in lockstep since capacity decreases uniformly down the pipeline
+    (8/7/6/5); varying the capacity profile per stage (e.g. one stage recovering mid-series)
+    would make the "identifying bottlenecks" use case from the spec's Applications
+    section more vivid
+  - No additional refinement layer (e.g. a subtle geom_line tracing the top boundary
+    of the Backlog band, or a light annotation calling out the growing WIP) to push
+    Design Excellence and Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "area-cumulative-flow · r · ggplot2 · anyplot.ai" top-left, dark axis titles ("Date", "Cumulative Items"), soft dark-grey tick labels, subtle horizontal-only gridlines. All chrome is clearly readable against the light background.
-      Data: Five stacked ribbon bands from bottom to top: Done (matte red, widest/lowest, anchored at 0), Testing (ochre), Development (blue), Analysis (lavender), Backlog (brand green #009E73, topmost). Thin light-colored borders separate the bands. The Backlog (green) band visibly widens from left to right, showing a growing bottleneck over the 90-day series. Legend "Stage" at right lists all five stages in top-to-bottom stacking order.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "area-cumulative-flow · r · ggplot2 · anyplot.ai" bold and fully visible top-left; axis titles "Date" / "Cumulative Items" and tick labels (bi-weekly dates, integer counts) all dark ink and clearly readable; subtle horizontal-only gridlines; legend "Stage" box with 5 color swatches at right, fully inside canvas bounds.
+      Data: Five stacked ribbon bands top-to-bottom: Backlog (#009E73 brand green, first series), Analysis (lavender), Development (blue), Testing (ochre), Done (matte red) - bands separated by thin background-colored strokes. Matches Imprint canonical order.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: White/light title and axis titles, light-grey tick labels, subtle light horizontal gridlines — all clearly legible against the dark background. No dark-on-dark text found.
-      Data: Same five bands in identical colors and stacking order as the light render (Done red at bottom through Backlog green at top), separated by thin dark borders (matching the page background, per geom_ribbon(color = PAGE_BG)). Brand green Backlog band remains highly visible and widens over time exactly as in the light render.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, and tick labels now light ink on the dark surface, fully legible; gridlines and axis lines flipped to light tone; legend box uses the dark elevated surface with light text. No dark-on-dark failures found anywhere (title, axis, ticks, legend all checked).
+      Data: Confirmed identical to light render - same green/lavender/blue/ochre/red hues and same band order/positions, only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -59,70 +54,66 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; axis sizing slightly conservative
-          but never illegible
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data/legend collisions in either render
+        comment: No collisions between bands, legend, axes, or title
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Ribbon bands and thin separator borders are clearly visible in both
-          themes
+        comment: Ribbon bands clearly distinguishable with adequate contrast
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Five hues span lightness/hue, not sole red-green signal
+        comment: Green and red bands non-adjacent, no CVD confusion risk
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no clipping, sensible margins
+        comment: Canvas gate passed, title well-proportioned, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive Date / Cumulative Items labels
+        comment: Date / Cumulative Items are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order, first series #009E73, correct theme backgrounds
-          both renders'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom palette, thoughtful theme and comma-formatted axis; polished
-          but not exceptional
+        comment: Custom Imprint palette, deliberate band-separator strokes, restrained
+          theme
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, thin band separators, generous whitespace
+        comment: Spines minimized, subtle horizontal-only grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Widening Backlog band visibly tells the bottleneck story; no explicit
-          annotation calling it out
+        passed: false
+        comment: Bands widen uniformly - no single standout bottleneck stage
     spec_compliance:
       score: 15
       max: 15
@@ -132,51 +123,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct cumulative flow / stacked ribbon diagram
+        comment: Correct cumulative flow diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Correct stage order top-to-bottom, WIP-as-gap semantics, monotonic
-          counts, legend, date breaks
+        comment: Stage order, monotonic counts, distinct colors, legend, date axis
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, cumulative items on Y, full range shown, baseline at 0
+        comment: x=date, y=cumulative items, full series shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match stage
-          names
+        comment: Title format exact match, legend labels match stage names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Monotonic cumulative curves, visible WIP bands, and a genuine growing
-          bottleneck all present
+        comment: 90 days, 5 stages, visible WIP bottleneck signature
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral Kanban pipeline scenario
+        comment: Plausible Kanban board scenario, neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 90 days, 5 stages, item counts scaling to ~800 — sensible for the
-          domain
+        comment: 90-day window within spec range, sensible counts
     code_quality:
       score: 10
       max: 10
@@ -198,19 +186,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All five imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity for the capacity-constrained simulation
+        comment: Well-commented capacity simulation, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png as required
+        comment: Saves plot-{THEME}.png via ragg::agg_png
     library_mastery:
       score: 7
       max: 10
@@ -220,26 +208,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic geom_ribbon + scale_fill_manual + scale_x_date + layered
-          theme()
+        comment: Idiomatic dplyr/tidyr pipeline, scale_x_date, scale_fill_manual
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Deliberate lead()-based ymin/ymax construction is a correct, non-obvious
-          technique for CFD semantics beyond default geom_area stacking
+        passed: false
+        comment: geom_ribbon(ymin/ymax) for custom stack order is distinctive but
+          not pushed further
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - matrix-construction
   - wide-to-long
+  - matrix-construction
   dataprep:
   - cumulative-sum
   - time-series
   styling:
-  - grid-styling
   - edge-highlighting
+  - grid-styling
