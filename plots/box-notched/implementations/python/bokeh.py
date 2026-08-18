@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-notched: Notched Box Plot
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir and p != ""]
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -123,7 +123,7 @@ def _width_for_n(n):
 p = figure(
     width=3200,
     height=1800,
-    title="box-notched · bokeh · anyplot.ai",
+    title="box-notched · python · bokeh · anyplot.ai",
     x_range=categories,
     y_range=(0, 105),
     y_axis_label="Performance Score (0–100)",
@@ -146,7 +146,9 @@ p.yaxis.major_label_text_font_size = "34pt"
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+# No full-rectangle outline — the bottom/left axis lines already form the
+# L-shaped frame convention; a plot-wide outline would add top/right edges.
+p.outline_line_color = None
 
 p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
@@ -251,6 +253,39 @@ for i, s in enumerate(stats):
     # Whisker caps (horizontal lines)
     p.segment(x0=[i - cap_width], x1=[i + cap_width], y0=[upper], y1=[upper], line_color=INK_SOFT, line_width=2)
     p.segment(x0=[i - cap_width], x1=[i + cap_width], y0=[lower], y1=[lower], line_color=INK_SOFT, line_width=2)
+
+# Invisible hover-target quads (whisker-to-whisker) so the HTML export lets
+# readers inspect the exact q1/median/q3/mean/n behind each box on hover.
+hover_source = ColumnDataSource(
+    data={
+        "left": [i - _width_for_n(s["n"]) / 2 for i, s in enumerate(stats)],
+        "right": [i + _width_for_n(s["n"]) / 2 for i, s in enumerate(stats)],
+        "top": [s["upper"] for s in stats],
+        "bottom": [s["lower"] for s in stats],
+        "category": [s["category"] for s in stats],
+        "q1": [s["q1"] for s in stats],
+        "median": [s["q2"] for s in stats],
+        "q3": [s["q3"] for s in stats],
+        "mean": [s["mean"] for s in stats],
+        "n": [s["n"] for s in stats],
+    }
+)
+hover_glyph = p.quad(
+    top="top", bottom="bottom", left="left", right="right", source=hover_source, fill_alpha=0, line_alpha=0
+)
+p.add_tools(
+    HoverTool(
+        renderers=[hover_glyph],
+        tooltips=[
+            ("Department", "@category"),
+            ("n", "@n"),
+            ("Q1", "@q1{0.1f}"),
+            ("Median", "@median{0.1f}"),
+            ("Q3", "@q3{0.1f}"),
+            ("Mean", "@mean{0.1f}"),
+        ],
+    )
+)
 
 # Draw outliers
 outlier_x, outlier_y, outlier_color = [], [], []
