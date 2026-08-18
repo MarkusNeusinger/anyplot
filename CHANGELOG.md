@@ -104,6 +104,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **Repository prose now follows the Google developer documentation style guide** — the
+  `write-docs` skill gains a "Writing style" section anchoring
+  [Google style](https://developers.google.com/style) as the baseline for `docs/`, `README.md`,
+  `agentic/docs/`, changelog entries, and PR/issue text (second person, sentence-case headings,
+  numbered procedures, no emoji in headings, no "just/easy/simply"), with
+  `docs/reference/style-guide.md` staying the exempt authority for website/brand surfaces (its
+  new scope note documents the boundary); `CLAUDE.md` and `.github/copilot-instructions.md`
+  carry the rule in sync. A cleanup pass applies the cheap fixes across the doc corpus —
+  Title Case headings to sentence case, emoji and status glyphs out of headings, banned
+  filler words, README exclamation-mark tone — while procedure restructuring and remaining
+  deviations migrate on touch.
 - **Working guardrails adopted from sibling projects into `CLAUDE.md`** — delegated agents
   default to `model: opus` (Fable only for hard reasoning, Sonnet/Haiku for mechanical work,
   with an explicit decide-and-document vs. return-as-finding split); secret values are never

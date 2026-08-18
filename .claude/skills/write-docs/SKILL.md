@@ -1,6 +1,6 @@
 ---
 name: write-docs
-description: Editing contract for the documentation — where a new doc goes (docs/ vs agentic/docs/), keeping docs/index.md and the CLAUDE.md/copilot-instructions pair in sync, the cross-file sync duties (changelog rule triple, plausible events, contributing), and formatting standards. Use when asked to write, add, update, restructure, or format documentation.
+description: Editing contract for the documentation — where a new doc goes (docs/ vs agentic/docs/), keeping docs/index.md and the CLAUDE.md/copilot-instructions pair in sync, the cross-file sync duties (changelog rule triple, plausible events, contributing), the Google-style writing baseline for repository prose, and formatting standards. Use when asked to write, add, update, restructure, or format documentation.
 ---
 
 # Write or update the docs
@@ -60,6 +60,33 @@ Checklist for adding, renaming, or removing a doc:
   ```bash
   grep -rn '<old term or path>' docs/ agentic/docs/ CLAUDE.md .github/copilot-instructions.md README.md
   ```
+
+## Writing style
+
+Baseline for all repository prose — `docs/`, `README.md`,
+`agentic/docs/`, `CHANGELOG.md` entries, PR and issue text — is the
+[Google developer documentation style guide](https://developers.google.com/style).
+The rules that matter most here (so the skill works offline):
+
+- Second person ("you"), active voice, present tense.
+- **Sentence case for all headings** in `docs/` and `agentic/docs/`
+  ("Backend setup", not "Backend Setup"); prefer task-oriented
+  headings for procedures ("Set up the backend").
+- No emoji or status glyphs (✅/❌) in headings.
+- Procedures are numbered steps, one action per step — manual actions
+  never hide inside code-block comments (`# edit .env` is a step, not
+  a comment).
+- Avoid "just", "simply", "easy", "please", "in order to", "note
+  that"; no ALL-CAPS or exclamation-mark emphasis.
+- Descriptive link text (never "click here"); Oxford comma; American
+  spelling. Contractions are fine.
+
+**Scope boundary:** `docs/reference/style-guide.md` is the
+website/product/brand authority (lowercase UI labels, spaced
+em-dashes, mono voice) and is **exempt** — product surfaces follow
+the house guide, repository docs follow Google style. Existing docs
+migrate **on touch** (the "fix formatting" rule below), no bulk
+rewrites required.
 
 ## Formatting
 

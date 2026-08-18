@@ -10,6 +10,8 @@ The complete design system for **anyplot.ai** — brand identity, frontend visua
 
 The guiding principle throughout: **the website is the neutral frame; the plots are the content.** Every design choice should make room for the data visualizations to do the work — and every interaction should feel native to someone who lives in a terminal or code editor.
 
+**Scope:** this guide governs the product — the anyplot.ai website, UI copy, marketing surfaces, and brand voice. Repository documentation (`docs/`, `README.md`, `agentic/docs/`) follows the [Google developer documentation style guide](https://developers.google.com/style) instead, as anchored in the `write-docs` skill. Where the two overlap, product surfaces follow this guide (lowercase labels, spaced em-dashes, mono voice); repository docs follow Google style (sentence-case headings, second person, numbered procedures).
+
 ---
 
 ## 1. TL;DR
