@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:48:10Z'
-updated: '2026-08-18T10:50:09Z'
+updated: '2026-08-18T10:55:27Z'
 generated_by: claude-sonnet
 workflow_run: 32128095105
 issue: 2010
@@ -12,60 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Correct overlapping-histogram technique: single geom_histogram with position="identity"
-    and a shared fill mapping guarantees identical bin edges/widths across all three
-    groups, exactly matching the spec''s "align bin edges" requirement.'
-  - 'Palette fully compliant: legend order (New Users, Power Users, Regular Users)
-    resolves alphabetically, so the first series renders in #009E73 as required, and
-    positions 2-3 follow the canonical Imprint order (#C475FD, #4467A3) identically
-    in both themes.'
-  - 'Theme-adaptive chrome is flawless in both renders: warm off-white/near-black
-    backgrounds, correctly contrasted text, and a subtle y-axis-only grid at low alpha.'
-  - 'Realistic, well-differentiated data: Power Users are tight and fast (loc=220,
-    scale=50), Regular Users moderate (loc=320, scale=80), New Users slow and spread
-    out (loc=450, scale=120) — the three distributions are visually distinguishable
-    in both central tendency and spread, satisfying the spec''s core intent.'
-  - 'Clean KISS code: no functions/classes, explicit np.random.seed(42), only used
-    imports, explicit font sizes throughout the theme() call, and correct plot-{THEME}.png
-    save with matching figure_size/width/height for the landscape canvas.'
+  - 'Both prior review weaknesses were directly addressed: per-group edge colors (via
+    color="user_group" + scale_color_manual) replace the uniform PAGE_BG edge, and
+    the group/legend order now runs fastest-to-slowest (Power Users → Regular Users
+    → New Users) to tell the response-time story.'
+  - 'Correct overlapping-histogram technique preserved: single geom_histogram(position="identity")
+    with a shared fill mapping guarantees identical bin edges/widths across all three
+    groups.'
+  - 'Palette fully compliant: first series (now Power Users) renders in #009E73, remaining
+    series follow canonical Imprint order identically in both themes.'
+  - Theme-adaptive chrome is flawless in both renders — correctly contrasted text,
+    subtle y-axis-only grid at low alpha, legend box readable in both.
+  - 'Realistic, well-differentiated data with a clear narrative: Power Users tight
+    & fast, Regular Users moderate, New Users slow & spread out.'
+  - Clean KISS code, explicit seed, pd.Categorical ordering is a light-touch addition
+    that doesn't add complexity, correct plot-{THEME}.png save.
   weaknesses:
-  - 'Design Excellence is the main gap (10/20): the plot reads as a well-configured
-    library default rather than a genuinely polished, publication-ready chart. Push
-    DE-01 with more intentional visual hierarchy (e.g. subtle emphasis on one group,
-    refined bar-edge treatment) beyond the current uniform PAGE_BG edge on all three
-    series.'
-  - 'No data storytelling / visual hierarchy (DE-03 2/6): all three groups are given
-    equal visual weight and the legend order is purely alphabetical rather than tied
-    to any narrative (e.g. fastest-to-slowest). Consider a subtle emphasis technique
-    (bolder edge or slightly higher alpha on one group, or reordering the legend to
-    follow response-time rank) so the viewer sees the comparison faster.'
-  - 'VQ-04 color accessibility (1/2): in the triple-overlap zone (~150-400ms) the
-    semi-transparent green/lavender/blue fills blend into muddy, hard-to-separate
-    hues; distinguishing group membership there relies almost entirely on the legend
-    rather than the color itself. Consider per-group edge colors (instead of a uniform
-    PAGE_BG edge) or a slightly lower alpha to reduce blended-hue ambiguity.'
-  - 'LM-02 distinctive features (3/5): usage is solid grammar-of-graphics (position="identity",
-    scale_fill_manual, theme composition) but fairly generic — could lean further
-    into plotnine-specific capabilities to stand out from a generic ggplot2/matplotlib
-    port.'
+  - Design Excellence, while improved (10→14/20), is still the primary remaining gap
+    — the plot reads as a well-executed grammar-of-graphics chart rather than a strikingly
+    polished one. Further DE-01 gains would need a more distinctive compositional
+    idea (e.g., annotated peak markers, a subtitle calling out the fastest/slowest
+    comparison) rather than incremental styling.
+  - 'VQ-03 (5/6): the densest triple-overlap region (~200-260ms) still compresses
+    individual bar visibility somewhat, though this is an inherent tradeoff of overlapping
+    histograms with 3 groups rather than a defect.'
+  - 'LM-02 (3/5): usage remains solid but fairly generic grammar-of-graphics — no
+    plotnine-exclusive feature (e.g., stat_function, geom_density overlay, faceting)
+    is leveraged to distinguish it from a straightforward ggplot2 port.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), matches the required light-theme surface.
-      Chrome: Bold dark title "histogram-overlapping · python · plotnine · anyplot.ai" centered at top, dark axis titles ("Response Time (ms)", "Frequency"), soft dark-gray tick labels, subtle horizontal y-axis-only gridlines, L-shaped axis frame (bottom + left only). Legend box "User Group" sits at the right with a thin ink-colored border and elevated cream fill, listing New Users / Power Users / Regular Users. All chrome is clearly readable against the light background.
-      Data: Three semi-transparent (alpha=0.6) histograms with thin cream-colored bar edges. New Users = green (#009E73), Power Users = lavender (#C475FD), Regular Users = blue (#4467A3) — matches the Imprint palette in canonical order with the alphabetically-first group (New Users) taking the mandatory #009E73 green. Power Users form a tight, tall peak around 200-250ms; Regular Users peak broader around 250-390ms; New Users spread widest from ~400-780ms. Overlap regions blend into muddier mixed hues but the legend disambiguates.
+      Chrome: Bold dark title "histogram-overlapping · python · plotnine · anyplot.ai" centered at top, dark axis titles ("Response Time (ms)", "Frequency"), soft dark-gray tick labels, subtle horizontal y-axis-only gridlines, L-shaped axis frame (bottom + left only). Legend box "User Group" sits at the right with a thin ink-colored border and elevated cream fill, now ordered Power Users / Regular Users / New Users (fastest to slowest). All chrome is clearly readable against the light background.
+      Data: Three semi-transparent (alpha=0.6) histograms, each with a thin edge stroke colored to match its own fill (green/lavender/blue) instead of a uniform background-colored edge, which helps separate bars in the triple-overlap zone. Power Users = green (#009E73), Regular Users = lavender (#C475FD), New Users = blue (#4467A3) — matches the Imprint palette in canonical order with the first legend entry (Power Users) in the mandatory #009E73 green. Power Users form a tight, tall peak around 200-250ms; Regular Users peak broader around 250-390ms; New Users spread widest from ~400-780ms.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), matches the required dark-theme surface.
-      Chrome: Same layout as the light render — title, axis titles, and tick labels now render in light cream/off-white tones, fully legible against the dark background; no dark-on-dark text anywhere. Gridlines and axis lines remain subtle. Legend box uses the dark elevated fill (#242420) with a light border, all legend text readable.
-      Data: Identical data colors to the light render — green (#009E73), lavender (#C475FD), blue (#4467A3) — confirming only chrome (not data colors) flips between themes. Same peak positions and shapes as the light render.
+      Chrome: Same layout as the light render — title, axis titles, and tick labels render in light cream/off-white tones, fully legible against the dark background; no dark-on-dark text anywhere. Gridlines and axis lines remain subtle. Legend box uses the dark elevated fill (#242420) with a light border, all legend text readable, same fastest-to-slowest ordering.
+      Data: Identical data colors and per-group edge strokes to the light render — green (#009E73), lavender (#C475FD), blue (#4467A3) — confirming only chrome (not data colors) flips between themes. Same peak positions and shapes as the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -87,14 +78,16 @@ review:
         max: 6
         passed: true
         comment: Bars visible and bin count (30) reasonable for 150-200 obs/group,
-          but triple-overlap region reduces per-group visibility
+          but densest triple-overlap region still compresses per-group visibility
+          somewhat
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Alpha-blended overlap zone (~150-400ms) produces muddy mixed hues
-          that are hard to separate without the legend
+        comment: Per-group edge strokes (this attempt's fix, replacing the uniform
+          PAGE_BG edge) now clearly demarcate each distribution inside the overlap
+          zone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -114,34 +107,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First legend series is #009E73, remaining series follow canonical
-          Imprint order, backgrounds correct in both themes, data colors identical
-          across themes'
+        comment: 'First legend series (Power Users) is #009E73, remaining series follow
+          canonical Imprint order, backgrounds correct in both themes, data colors
+          identical across themes'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default look; lacks a distinguishing polish
-          or intentional hierarchy
+        passed: true
+        comment: Per-group edge strokes and response-time-ordered legend add intentional
+          polish beyond a plain library default
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-axis-only grid, L-shaped frame, generous whitespace, plus
+          color-matched edge highlighting
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-axis-only grid, L-shaped frame, generous whitespace, bar
-          edge highlighting
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: All three groups given equal visual weight; no emphasis or ordering
-          to guide the viewer to the key comparison
+        comment: Legend and data order now run fastest-to-slowest (Power → Regular
+          → New), giving the viewer an immediate response-time hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -242,15 +235,15 @@ review:
         max: 5
         passed: true
         comment: Idiomatic grammar-of-graphics composition (aes, geom_histogram, scale_fill_manual,
-          labs, theme)
+          scale_color_manual, labs, theme)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: position="identity" is the correct plotnine-specific choice for overlap,
-          but overall usage remains fairly generic
-  verdict: REJECTED
+        comment: position="identity" plus dual color+fill mapping are correct plotnine-specific
+          choices, but overall usage remains fairly generic
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
