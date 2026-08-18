@@ -2,51 +2,57 @@ library: plotnine
 language: python
 specification_id: donut-nested
 created: '2025-12-25T20:05:07Z'
-updated: '2026-05-08T01:13:15Z'
-generated_by: claude-haiku
-workflow_run: 25530765077
+updated: '2026-08-18T07:35:24Z'
+generated_by: claude-sonnet
+workflow_run: 32108260468
 issue: 2015
-python_version: 3.13.13
-library_version: 0.15.4
+language_version: 3.13.15
+library_version: 0.15.8
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotnine/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 90
+quality_score: 88
 review:
   strengths:
-  - Elegant color family approach exactly matching spec requirement (same hue, varying
-    lightness per parent)
-  - Perfect theme adaptation with identical data colors across light and dark renders,
-    only chrome flipping
-  - Excellent text legibility in both renders with no readability failures or dark-on-dark
-    issues
-  - Professional layout with balanced composition, generous spacing, and appropriate
-    visual hierarchy
-  - Realistic, comprehensible budget scenario with authentic department and expense
-    category names
-  - Clean, straightforward code with well-structured helper function for polygon generation
+  - Both severe label collisions flagged in Attempt 2 (Asia Pacific "Consulting"/"Cloud
+    Services" crossing; Europe outer "Cloud Services" vs. inner "$760M · 23%") are
+    fully resolved — verified via zoomed crops of both regions in both themes.
+  - The Attempt 2 dark-theme-only clipping of North America's "Cloud Services" outer
+    label ("oud Service") is fixed — label is now complete and pixel-consistent between
+    light and dark.
+  - Small-share inner-ring label crowding (Latin America / MEA, the two smallest parent
+    segments) is resolved with clean separation via the angle-nudge + smaller-font
+    mechanism.
+  - Legend correctly implemented for all three sub-threshold outer segments, matching
+    the spec's explicit "use legend for smaller ones" guidance.
+  - Per-wedge contrast-aware label coloring and consistent hue-family tonal children
+    continue to work correctly; both renders are fully theme-correct with identical
+    data colors.
   weaknesses:
-  - Library mastery limited by manual geometry construction (polygon coordinates)
-    rather than high-level API usage, though necessary for donut shapes
-  - Text could be marginally larger to achieve VQ-01 score of 8/8 at maximum resolution
-  - Data storytelling could be more explicit through stronger visual emphasis of key
-    budget insights
+  - 'Minor: in the narrow Asia Pacific "Consulting" wedge, the label''s "g" descender
+    lightly touches/crosses the dark segment-border stroke on its right edge in both
+    themes — the label_fits polygon check should apply a small inset margin so text
+    doesn''t brush the border stroke on tightly-fitted labels.'
+  - 'CQ-01: Five helper functions push past a pure import->data->plot->save structure;
+    justified here but worth keeping an eye on if the file grows further.'
+  - 'DE-03: No single strong focal emphasis (e.g., a highlight/callout on the largest
+    region) beyond the natural size-based reading order.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title centered in bold dark text (22pt), parent category names in bold dark text (size 11) centered in inner ring segments, child segment names in softer dark text on outer ring. All text clearly readable.
-      Data: Inner ring shows four parent categories with Okabe-Ito colors (#009E73 for Engineering as position 1, #D55E00, #0072B2, #CC79A7 for positions 2-4). Each parent has color family with varying lightness for child categories. White borders separate segments.
-      Legibility verdict: PASS - All text is clearly readable against light background with excellent contrast. No readability failures.
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title "donut-nested · python · plotnine · anyplot.ai" centered top in dark ink, fully legible. No axes/grid (correct for a donut). Inner-ring bold name + "$XXXM · XX%" value labels all readable and cleanly spaced, including the two smallest adjacent regions (Latin America, MEA) which no longer crowd each other.
+      Data: North America #009E73 (first series, correct), Asia Pacific purple, Europe blue, Latin America amber, MEA red — outer ring uses lighter tonal tints of each parent hue. Outer-ring inline labels (Software, Hardware, Cloud Services, Support, Consulting) confirmed non-colliding via zoomed crops; manual legend (swatch + text) in lower-left margin lists the 3 sub-threshold segments.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and parent labels now in light text (#F0EFE8), child labels in softer light text (#B8B7B0). All text clearly readable against dark background.
-      Data: All data colors identical to light render - parent categories use same Okabe-Ito colors, child color families preserved. White borders remain clearly visible. No dark-on-dark failures present. Perfect theme adaptation.
-      Legibility verdict: PASS - All text is clearly readable against dark background. Theme adaptation successful with no legibility issues.
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title and inner-ring bold labels correctly flipped to light ink; value/outer labels use soft light-gray token. North America's outer "Cloud Services" label (clipped as "oud Service" in Attempt 2's dark render) is now fully legible and identical to the light render.
+      Data: Confirmed pixel-identical data colors to the light render — only chrome flipped, as required. Minor: "Consulting" label's "g" descender lightly touches the dark segment-border stroke on its right edge (both themes, slightly more visible here) — not a text-on-text collision.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,75 +60,69 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22pt, labels 11pt), all readable
-          in both themes, well-scaled for high resolution
+        comment: All text readable in both themes; Attempt 2's dark-only Cloud Services
+          clipping is fixed
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Excellent label positioning with smart culling strategy, all text
-          fully readable
+        comment: Both severe collisions from Attempt 2 resolved; minor border-brush
+          on Consulting label descender
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All segments clearly visible and differentiated, ring separation
-          aids visibility
+        comment: Segments and labels appropriately sized for their density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette ensures CVD safety, good contrast throughout
+        comment: Contrast-aware label coloring, CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect square composition (3600×3600 px), balanced margins, no wasted
-          space
+        comment: Canvas confirmed exactly 2400x2400, no overflow or edge clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted and descriptive, axes appropriately omitted
-          for donut chart
+        comment: Correct mandated title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct, color families with varying lightness,
-          backgrounds #FAF8F1/#1A1A17 perfect, theme-adaptive text correct in both
-          renders'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct backgrounds'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Elegant color family approach, thoughtful hierarchy through hue progression,
-          professional polish, near publication-ready
+        comment: Tonal color families, per-wedge contrast-aware label coloring, font-metric-driven
+          label fitting
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Minimal chrome, white segment borders for definition, generous spacing,
-          very refined
+        comment: Clean chrome, subtle ring-separation borders, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Clear visual hierarchy from parent to child breakdown, color families
-          create natural grouping
+        passed: false
+        comment: Value+share hierarchy guides the reader but no single strong focal
+          emphasis beyond natural size ordering
     spec_compliance:
       score: 15
       max: 15
@@ -132,27 +132,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut chart with proper 2-level hierarchy
+        comment: Correct nested donut
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: color families per parent, aligned segments,
-          label strategy, ring separation'
+        comment: Legend fallback for sub-threshold segments matches spec guidance
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hierarchical values correctly aggregated and mapped
+        comment: Values aggregate correctly parent<-children
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend appropriately omitted with data labels
-          substituting
+        comment: Mandated title format; legend correctly implemented
     data_quality:
       score: 15
       max: 15
@@ -162,82 +160,82 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete nested hierarchy with 4 departments and 3-5 categories each
+        comment: Two hierarchy levels, 5 parents, 2-5 children each
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Budget allocation is realistic, authentic department and category
-          names, neutral business context
+        comment: Plausible, neutral tech-revenue-by-region scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values realistic for corporate budgets, proportions make logical
-          sense
+        comment: Sensible $M values across regions
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → setup → data → geometry → plot → save'
+        comment: Five helper functions exceed pure KISS, justified by manual polygon
+          geometry
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data with no randomization
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extraneous libraries
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured helper function, Pythonic coordinate/angle handling
+        comment: No fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly, current API
+        comment: Correct plot-{THEME}.png output
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct layered geom_polygon + geom_text + identity scales + coord_fixed
+          composition
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses ggplot() + geom idiomatically, polygon approach necessary but
-          not high-level
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Creative use of geom_polygon and coord_fixed, but mathematically-driven
-          rather than distinctively plotnine
+        comment: Clever font-metric label-fitting, but overall approach remains a
+          polygon workaround for a missing native geom
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
+  - custom-legend
   patterns:
-  - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - alpha-blending
   - minimal-chrome
