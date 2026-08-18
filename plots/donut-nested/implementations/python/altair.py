@@ -1,10 +1,11 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
 """
 
 import colorsys
+import math
 import os
 
 import altair as alt
@@ -15,7 +16,9 @@ from PIL import Image
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Direct-on-fill label ink - contrasted against each segment's own color, not
 # the page theme, since a light pastel child segment renders identically in
@@ -83,8 +86,51 @@ df["color"] = outer_colors
 df["formatted_value"] = df["value"].apply(lambda x: f"${x}M")
 inner_df["formatted_value"] = inner_df["value"].apply(lambda x: f"${x}M")
 
-# Show labels only on segments large enough to hold text without collision
-df["label"] = df.apply(lambda row: row["level_2"] if row["value"] >= 150 else "", axis=1)
+# Ring geometry (view units, before scale_factor) - sized to fit the 500x460
+# square inner view with room left for the title above
+INNER_R0, INNER_R1 = 55, 135
+OUTER_R0, OUTER_R1 = 147, 215
+OUTER_LABEL_R = (OUTER_R0 + OUTER_R1) / 2
+
+# Show labels only on segments both large enough (>=150) and geometrically wide
+# enough to hold the text without bleeding past the wedge's own boundary. Text
+# is rendered horizontally regardless of the wedge's angular position, so a
+# wedge whose mid-angle sits near the 3-o'clock/9-o'clock extremes needs far
+# less horizontal offset to push the label past the outer radius than a wedge
+# near 12/6-o'clock - a plain chord-width estimate misses this and was exactly
+# how "Software Licenses" bled into "Consulting" in the prior review. Check
+# both text ends against the wedge's true polar boundary (outer radius AND
+# angular span) instead.
+OUTER_LABEL_FONTSIZE = 10
+AVG_CHAR_PX = 5.6  # empirical average glyph width at this font size
+RADIAL_MARGIN = 2  # px of slack before the outer rim
+
+
+def _label_fits(text, theta_start_deg, theta_end_deg):
+    mid = math.radians((theta_start_deg + theta_end_deg) / 2)
+    x0, y0 = OUTER_LABEL_R * math.sin(mid), -OUTER_LABEL_R * math.cos(mid)
+    half_width = len(text) * AVG_CHAR_PX / 2
+    for x in (x0 - half_width, x0 + half_width):
+        if math.hypot(x, y0) > OUTER_R1 - RADIAL_MARGIN:
+            return False
+        angle = math.degrees(math.atan2(x, -y0)) % 360
+        if not (theta_start_deg - 0.5 <= angle <= theta_end_deg + 0.5):
+            return False
+    return True
+
+
+_total_value = df["value"].sum()
+_cum_value = df["value"].cumsum() - df["value"]
+df["theta_start"] = _cum_value / _total_value * 360
+df["theta_end"] = (_cum_value + df["value"]) / _total_value * 360
+df["label"] = df.apply(
+    lambda row: (
+        row["level_2"]
+        if row["value"] >= 150 and _label_fits(row["level_2"], row["theta_start"], row["theta_end"])
+        else ""
+    ),
+    axis=1,
+)
 
 # Per-segment label ink - pick dark or light text by the fill's own perceived
 # luminance so labels stay legible on every family, from full-saturation
@@ -113,11 +159,6 @@ df["label_color"] = outer_label_colors
 # label layers out of sync and puts a name on the wrong wedge
 inner_df["sort_order"] = range(len(inner_df))
 df["sort_order"] = range(len(df))
-
-# Ring geometry (view units, before scale_factor) - sized to fit the 500x460
-# square inner view with room left for the title above
-INNER_R0, INNER_R1 = 55, 135
-OUTER_R0, OUTER_R1 = 147, 215
 
 # Inner ring (parent categories)
 inner_ring = (
@@ -159,10 +200,11 @@ inner_labels = (
     )
 )
 
-# Labels for outer ring (only on segments large enough to hold text)
+# Labels for outer ring (only on segments large and wide enough to hold text -
+# see _label_fits above)
 outer_labels = (
     alt.Chart(df)
-    .mark_text(radius=(OUTER_R0 + OUTER_R1) / 2, fontSize=10)
+    .mark_text(radius=OUTER_LABEL_R, fontSize=OUTER_LABEL_FONTSIZE)
     .encode(
         theta=alt.Theta("value:Q", stack=True),
         order=alt.Order("sort_order:Q"),
@@ -171,9 +213,33 @@ outer_labels = (
     )
 )
 
+# Legend fallback for segments too small/narrow to carry an inline label (spec:
+# "use legend for smaller ones") - an invisible mark carries a real Color scale
+# so Vega-Lite draws the standard legend from its domain/range, without needing
+# a visible layer of its own
+layers = [inner_ring, outer_ring, inner_labels, outer_labels]
+unlabeled_df = df[df["label"] == ""].copy()
+if not unlabeled_df.empty:
+    unlabeled_df["legend_key"] = unlabeled_df["level_1"] + ": " + unlabeled_df["level_2"]
+    legend_layer = (
+        alt.Chart(unlabeled_df)
+        .mark_point(opacity=0)
+        .encode(
+            color=alt.Color(
+                "legend_key:N",
+                scale=alt.Scale(domain=unlabeled_df["legend_key"].tolist(), range=unlabeled_df["color"].tolist()),
+                legend=alt.Legend(
+                    title=None, orient="bottom", direction="horizontal", symbolType="square", labelFontSize=10
+                ),
+            )
+        )
+    )
+    layers.append(legend_layer)
+
 # Combine all layers
 chart = (
-    alt.layer(inner_ring, outer_ring, inner_labels, outer_labels)
+    alt.layer(*layers)
+    .resolve_scale(color="independent")
     .properties(
         width=500,
         height=460,
@@ -183,6 +249,7 @@ chart = (
     )
     .configure_view(fill=PAGE_BG, stroke=None, strokeWidth=0)
     .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK, titleColor=INK)
 )
 
 # Save
