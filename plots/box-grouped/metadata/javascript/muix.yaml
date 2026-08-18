@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: box-grouped
 created: '2026-08-18T09:08:39Z'
-updated: '2026-08-18T09:13:47Z'
+updated: '2026-08-18T09:21:20Z'
 generated_by: claude-sonnet
 workflow_run: 32119431017
 issue: 2017
@@ -12,54 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
+  - 'Both weaknesses from Attempt 1 were fixed precisely: the Y-axis label now reads
+    "Productivity Index (0-100 scale)" (VQ-06), and a new italic annotation plus per-level
+    dashed median-trend polylines explicitly call out the consistent Senior > Mid
+    > Junior pattern across all four departments (DE-03).'
   - Correctly builds a full grouped box plot from scratch (median, IQR quartile box,
-    1.5x IQR whiskers, outliers) via a custom SVG layer composed on top of MUI X's
-    ChartContainer using useXScale/useYScale — a genuinely distinctive, idiomatic
-    way to extend MUI X beyond its built-in chart types since the community package
-    has no native box plot.
+    1.5x IQR whiskers, hollow outlier circles) via a custom SVG layer composed on
+    top of MUI X's ChartContainer using useXScale/useYScale -- a genuinely distinctive,
+    idiomatic way to extend MUI X beyond its built-in chart types since the community
+    package has no native box plot.
   - 'Palette compliance is correct: first subcategory (Junior) is #009E73 brand green,
     followed by Imprint palette positions 2-3 (lavender, blue) for Mid/Senior; data
-    colors are identical between light and dark renders, and chrome (background, ink,
-    grid) is theme-correct in both.'
-  - Deterministic, realistic productivity-by-seniority dataset that tells a consistent
-    story across all four departments (Senior always highest, Junior always lowest),
-    with a good mix of boxes that do and don't carry outliers to demonstrate plot
-    variety.
+    colors are identical between light and dark renders, and chrome (background, text,
+    grid, legend) is theme-correct in both.'
+  - Deterministic, realistic productivity-by-seniority dataset with a good mix of
+    boxes that do and don't carry outliers, plus consistent box widths across all
+    groups per the spec's explicit requirement.
   - Clean, explicit typographic hierarchy (title 22px, axis labels 16px, ticks/legend
-    14px) and consistent box widths maintained across all groups, matching the spec's
-    explicit requirement.
+    14px, annotation 12px italic) with no overlap between the new annotation/trend
+    lines and existing chart elements.
   weaknesses:
-  - Y-axis label 'Productivity Index' has no unit/scale context (VQ-06) — since it's
-    a composite 0-100 index rather than a physical unit, add a short qualifier like
-    'Productivity Index (0-100 scale)' so the axis is self-explanatory without relying
-    on the tick range.
-  - Design Excellence is competent but still reads as a well-executed standard box-plot
-    treatment rather than something with a distinct focal point — consider a subtle
-    emphasis technique (e.g., a light callout on the consistent Senior > Mid > Junior
-    trend, or a slightly bolder treatment for one series) to push past 'good default'
-    into genuinely distinctive storytelling.
-  - The custom quantile/boxStatistics helper functions are necessary since MUI X has
-    no native box plot, but they do add structure beyond a minimal Imports -> Data
-    -> Plot script — acceptable here given the library constraint, just don't let
-    it grow further.
+  - 'Design Excellence is strong but not yet full publication-tier: the underlying
+    box-mark treatment is unchanged from Attempt 1, so the aesthetic ceiling is still
+    a well-executed standard box plot with an overlay, not a from-scratch distinctive
+    visual system.'
+  - The growing custom quantile/boxStatistics/trend-line SVG logic is justified by
+    MUI X's lack of a native box plot, but keep an eye on further accumulation of
+    helper code as a KISS trade-off.
+  - ChartContainer and its axis/grid children don't set skipAnimation explicitly;
+    harmless here since series=[] and the box marks are static custom SVG, but worth
+    adding as a defensive habit per the library's animation-off rule.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "box-grouped · javascript · muix · anyplot.ai" in dark ink top-left, fully legible. A manually built legend below it shows three swatches (green "Junior", lavender "Mid", blue "Senior"), all readable. X-axis "Department" and Y-axis "Productivity Index" labels are dark and clearly readable, as are the numeric Y tick labels (15-100) and the four department tick labels (Engineering, Sales, Marketing, Support). Subtle horizontal-only gridlines are visible without competing with the data.
-      Data: Four department groups each contain three side-by-side boxes (Junior/Mid/Senior). Boxes use semi-transparent fills with matching-color strokes; median lines are dark/black and sit clearly on top of each fill; whiskers are thin gray lines with caps; open circles in the series color mark outliers (e.g., Engineering-Junior, Sales-Mid, Marketing-Junior, Support-Mid). First series (Junior) is #009E73 green as required.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "box-grouped · javascript · muix · anyplot.ai" top-left in dark ink, fully legible. A manually built legend row (green "Junior", lavender "Mid", blue "Senior") sits just below it. Y-axis label now reads "Productivity Index (0-100 scale)" (fixed from Attempt 1's unit-less "Productivity Index"). X-axis label "Department". Subtle horizontal-only gridlines. A new small italic annotation ("Senior medians (dashed) consistently outperform Mid and Junior") sits top-left inside the plot area, near but not overlapping the y=100 gridline/tick.
+      Data: Four department groups (Engineering, Sales, Marketing, Support), each with three side-by-side boxes -- green (Junior), lavender (Mid), blue (Senior) -- semi-transparent fills with matching-color strokes, dark median lines, thin gray whiskers with caps, hollow outlier circles in the series color. Three new dashed trend polylines (one per level, in that level's color) connect the medians across departments, visually reinforcing the annotation's claim.
+      Legibility verdict: PASS -- all text (title, legend, axis labels, ticks, annotation) reads clearly against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend, now rendered in light ink, fully legible against the dark surface. Axis labels, tick labels, and gridlines all flipped to light/subtle tones with no dark-on-dark elements.
-      Data: The three subcategory colors (green, lavender, blue) are visually identical to the light render — only the chrome flipped as required. Median lines render in light ink against the colored fills (clearly visible), whiskers and outlier circles remain distinguishable against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures observed.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title/legend/axis-label/annotation content, now rendered in light ink (title/axis labels bright, tick labels/annotation softer light gray) -- fully legible against the dark surface. Gridlines are faint light lines, appropriately subtle.
+      Data: The three subcategory colors (green, lavender, blue) are visually identical to the light render -- only chrome flipped, as required. Median lines render in light ink against the colored fills and remain clearly visible (this is the correct theme-adaptive behavior, contrasting with the black median lines in the light render). Whiskers, caps, and outlier circles stay clearly distinguishable against the dark background. Dashed trend lines remain visible at their reduced opacity.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; every text element and every data mark is legible.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -68,75 +68,73 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks/legend
-          14px); readable in both themes, well-proportioned title, no overflow.
+          14px, annotation 12px); readable in both themes with no overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis labels, ticks, or data elements.
+        comment: No overlap, including the newly added annotation and trend lines.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box widths, whisker caps, median lines, and outlier markers are all
-          clearly visible and appropriately sized for 46 points/box.
+        comment: Box widths, whiskers, and outlier markers are well-sized for ~46
+          points per box.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue trio has good contrast and no red-green-only
-          encoding.
+        comment: Good contrast, CVD-safe, no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a healthy majority of the canvas with balanced margins;
-          legend sits close to the plot.
+        comment: Plot fills a good portion of the canvas with balanced margins; legend
+          sits directly under the title, near the plot.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: '''Department'' is fine categorically, but ''Productivity Index''
-          has no unit/scale qualifier.'
+        passed: true
+        comment: 'Fixed from Attempt 1: Y-axis label now reads ''Productivity Index
+          (0-100 scale)'' with an explicit scale qualifier.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint palette positions 2-3 for the rest,
-          identical across themes, backgrounds/chrome theme-correct.'
+        comment: 'First series #009E73 (Junior), Imprint positions 2-3 for Mid/Senior;
+          identical across themes; backgrounds theme-correct.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom-built box plot marks (fill opacity, matching stroke, hollow
-          outlier circles) show real craftsmanship, clearly above a raw library default,
-          but not yet publication-tier.
+        passed: true
+        comment: Custom box marks plus new dashed trend overlay show thoughtful craftsmanship,
+          clearly above defaults, but short of full publication-tier.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Y-axis-only subtle grid, ticks disabled (labels kept), generous whitespace
-          — good refinement, some room for more polish.
+        passed: true
+        comment: Y-axis-only subtle grid, ticks disabled, generous whitespace -- unchanged
+          from Attempt 1, still room for more polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Consistent Senior > Mid > Junior pattern across all four departments
-          creates a clear, immediately visible trend, though no explicit emphasis/annotation
-          calls it out.
+        passed: true
+        comment: 'Fixed from Attempt 1: explicit annotation plus per-level dashed
+          median-trend lines make the Senior > Mid > Junior insight immediately visible
+          without needing to read individual boxes.'
     spec_compliance:
       score: 15
       max: 15
@@ -153,22 +151,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Side-by-side boxes with distinct colors, clear legend, consistent
-          box widths, median/quartile/whisker/outlier all present.
+        comment: Side-by-side boxes with distinct colors, legend, consistent box widths,
+          1.5x IQR whiskers, outliers -- all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category (department), Y = value (productivity index); all data
-          visible within axis range.
+        comment: Department on X, productivity index on Y, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels (Junior/Mid/Senior)
-          match subcategory data.
+        comment: Title format correct; legend labels (Junior/Mid/Senior) match the
+          data.
     data_quality:
       score: 15
       max: 15
@@ -178,21 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows outliers on a meaningful subset of boxes plus varying spreads/medians
-          across departments and levels.
+        comment: Shows outliers and varying spreads across groups; different distributions
+          per department/level.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible business scenario (department productivity by
-          seniority).
+        comment: Neutral, plausible business scenario -- productivity index by department
+          and seniority level.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100 composite index with sensible Junior < Mid < Senior progression
+        comment: 0-100 composite index with realistic seniority-based progression
           and department offsets.
     code_quality:
       score: 9
@@ -202,36 +199,36 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Helper functions (LCG, quantile, boxStatistics) go beyond a flat
-          script, but are necessary since MUI X has no native box plot.
+        passed: true
+        comment: Helper functions (LCG, quantile, boxStatistics, BoxWhiskerLayer)
+          are necessary since MUI X has no native box plot.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic.
+        comment: Fixed-seed LCG (seed 42), fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (ChartContainer, ChartsXAxis/YAxis, ChartsGrid, useXScale/useYScale)
-          are used.
+        comment: All imports (ChartContainer, ChartsXAxis, ChartsYAxis, ChartsGrid,
+          useXScale, useYScale) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriate complexity for a from-scratch
-          box plot layer.
+        comment: No fake UI elements; complexity is appropriate for a hand-built box
+          plot.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the JS/muix harness contract correctly (default export, skipAnimation,
-          sized to ANYPLOT_SIZE).
+        comment: Harness-managed output; skipAnimation is omitted but harmless given
+          series=[] and static custom SVG marks.
     library_mastery:
       score: 8
       max: 10
@@ -241,20 +238,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the documented composition pattern (ChartContainer + axis/grid
-          components + useXScale/useYScale) to extend MUI X to an unsupported chart
-          type.
+        comment: Uses the documented ChartContainer + useXScale/useYScale composition
+          pattern to extend MUI X to an unsupported chart type.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The useXScale/useYScale-driven custom overlay layer is genuinely
-          MUI X-specific and not trivially replicated in another library.
-  verdict: REJECTED
+        comment: The custom overlay layer driven by MUI X's scale hooks is genuinely
+          library-specific and hard to replicate identically in another library.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   - layer-composition
   patterns:
@@ -263,5 +260,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
