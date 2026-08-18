@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Statistics
 
 Random.seed!(42)
 
@@ -44,6 +45,33 @@ end
 
 point_colors = IMPRINT_PALETTE[subgroup_idx]
 
+# Storytelling focal point — find the department where the Senior/Junior
+# experience-tier gap is widest, to call it out with a comparison bracket.
+const BOX_WIDTH     = 0.7
+const BOX_GAP       = 0.3
+const BOX_DODGE_GAP = 0.05
+const N_DODGE       = length(EXPERIENCE_LEVELS)
+
+# Mirrors Makie's internal `compute_x_and_width` dodge formula so the bracket
+# lines up exactly with the boxplot's dodged box positions.
+function dodge_x(category, subgroup_i)
+    eff_width   = BOX_WIDTH * (1 - BOX_GAP)
+    dodge_width = (1 - (N_DODGE - 1) * BOX_DODGE_GAP) / N_DODGE
+    shift       = (dodge_width - 1) / 2 + (subgroup_i - 1) * (dodge_width + BOX_DODGE_GAP)
+    return category + eff_width * shift
+end
+
+dept_gaps = [
+    median(performance_scores[(category_idx .== ci) .& (subgroup_idx .== 3)]) -
+    median(performance_scores[(category_idx .== ci) .& (subgroup_idx .== 1)])
+    for ci in 1:length(DEPARTMENTS)
+]
+standout_ci  = argmax(dept_gaps)
+standout_gap = dept_gaps[standout_ci]
+bracket_x1   = dodge_x(standout_ci, 1)  # Junior box
+bracket_x2   = dodge_x(standout_ci, 3)  # Senior box
+bracket_y    = maximum(performance_scores[category_idx .== standout_ci]) + 4.0
+
 # Plot — see default-style-guide.md "Visual Sizing Defaults" for canvas + sizing values
 title_str = "box-grouped · julia · makie · anyplot.ai"
 
@@ -58,7 +86,7 @@ ax = Axis(
     title             = title_str,
     titlesize         = 20,
     titlecolor        = INK,
-    ylabel            = "Performance Score",
+    ylabel            = "Performance Score (0-100)",
     ylabelsize        = 14,
     ylabelcolor       = INK,
     xticks            = (1:length(DEPARTMENTS), DEPARTMENTS),
@@ -88,6 +116,19 @@ boxplot!(
     whiskercolor  = INK_SOFT,
     markersize    = 6,
 )
+
+bracket!(
+    ax,
+    bracket_x1, bracket_y, bracket_x2, bracket_y;
+    text        = "$(DEPARTMENTS[standout_ci]): Senior +$(round(Int, standout_gap)) vs Junior",
+    offset      = 6,
+    width       = 10,
+    orientation = :up,
+    color       = INK_SOFT,
+    textcolor   = INK,
+    fontsize    = 13,
+)
+ylims!(ax, minimum(performance_scores) - 5.0, maximum(performance_scores) + 16.0)
 
 legend_elements = [PolyElement(color = c, strokecolor = :transparent) for c in IMPRINT_PALETTE]
 Legend(
