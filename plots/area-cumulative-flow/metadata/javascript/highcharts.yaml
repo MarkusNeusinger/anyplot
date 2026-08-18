@@ -1,0 +1,245 @@
+library: highcharts
+language: javascript
+specification_id: area-cumulative-flow
+created: '2026-08-18T03:17:49Z'
+updated: '2026-08-18T03:40:07Z'
+generated_by: claude-sonnet
+workflow_run: 32093779403
+issue: 5239
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/highcharts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Development band is now solidly visible throughout the chart (6-72px thick, data
+    WIP min=2/max=60/mean=35) - a real, verified fix for the worst offender flagged
+    in attempt 1
+  - New dashed xAxis.plotLine with label 'Testing backlog tops 100 items', computed
+    from the actual simulated data, directly answers attempt 1's Design Excellence
+    feedback and gives the chart a clear narrative focal point
+  - 'Correct chart construction retained: stacked area with stacking:''normal'', series
+    ordered Backlog to Done so Backlog sits on top and Done on the bottom of the stack,
+    matching the spec''s required workflow order'
+  - 'WIP-band math remains correct: each series is cumulative[stage] - cumulative[stage+1],
+    correctly reconstructing per-stage WIP'
+  - 'Both backgrounds measure exactly #FAF8F1 / #1A1A17; first series exactly #009E73;
+    data hues pixel-identical between light and dark renders; no dark-on-dark or light-on-light
+    chrome failures'
+  - 'Clean, idiomatic Highcharts usage retained: animation:false on both chart and
+    plotOptions.series, credits.enabled:false, no explicit chart.width/height, deterministic
+    in-memory LCG data generation, no imports/CDN/fetch'
+  weaknesses:
+  - 'The Backlog band fix is incomplete: Backlog has no explicit capacity (CAPACITIES[0]=Infinity)
+    and its inflow is capped only indirectly by Analysis''s capacity (11), which sits
+    barely above the mean daily arrival rate (~12) with real variance, so Backlog
+    WIP fully drains to 0 on 11 of 90 days and stays under 5 items on 32 of 90 days
+    (35% of the chart), overwhelmingly in the first ~65% of the timeline. Development
+    received the equivalent fix (tightened capacity relative to inflow) and is now
+    consistently visible - Backlog needs the same treatment: give it an explicit capacity
+    noticeably below the mean arrival rate (not Infinity), or clamp its daily net
+    change so it maintains a readable minimum WIP floor throughout.'
+  - 'Design Excellence beyond the new plotLine is still generic: default Highcharts
+    area styling with token colors swapped in, no other bespoke polish.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Measures exact #FAF8F1 (250,248,241) - warm off-white, not pure white.
+      Chrome: Bold dark title "area-cumulative-flow · javascript · highcharts · anyplot.ai" centered, no clipping (bbox spans px 1005-2192 of 3200, ~37% width). Y-axis "Cumulative Items" 0-1200; x-axis dates at 14-day intervals. New dashed vertical plotLine labeled "Testing backlog tops 100 items" marks the bottleneck onset day. Legend lists all 5 stages with matching swatches. All text dark-on-light and clearly readable.
+      Data: Five stacked bands top-to-bottom: Backlog (green #009E73), Analysis (purple), Development (blue), Testing (ochre), Done (red). Pixel-sampling across x=5%-97%: Development is now consistently visible (6-72px thick) - fixed vs. attempt 1. Backlog is markedly better in the back third (22-37px from ~day 65 on) but still collapses to 0px on 11/90 days and stays under 5 items on 32/90 days, mostly in the first two-thirds of the timeline. First series exactly #009E73.
+      Legibility verdict: PASS (all chrome text readable; residual issue is a data band, not text)
+
+    Dark render (plot-dark.png):
+      Background: Measures exact #1A1A17 (26,26,23) - warm near-black, not pure black.
+      Chrome: Same layout, all text flipped to light-on-dark - title, axis labels, tick labels, legend, and plotLine label all clearly legible. No dark-on-dark failures.
+      Data: Confirmed pixel-identical to light render (green/purple/blue/ochre/red match); only chrome flipped as expected. Same Backlog intermittent-zero-band issue present (data-scale issue, independent of theme).
+      Legibility verdict: PASS (no dark-on-dark text failures)
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: false
+        comment: Development now consistently visible (fixed); Backlog still 0px on
+          11/90 days, under 5 items on 32/90 days, mostly in first two-thirds of timeline
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive Y-axis title with units, clear date axis
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean token-driven styling, still no bespoke polish beyond theme
+          mapping and the new plotLine
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good grid/whitespace restraint but not distinctive
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New dashed plotLine + label calling out the Testing bottleneck onset
+          gives a clear guided focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked-area cumulative flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, stages stacked in workflow order
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format, legend matches stages
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Four of five stages read clearly across nearly the whole chart; Backlog
+          readable mainly in final third
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible Kanban delivery pipeline scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: false
+        comment: Backlog's dynamic range (0-35) against 0-1200 y-axis still periodically
+          drops to sub-pixel/zero height
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed, Highcharts global used directly
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct native stacked-area idiom, datetime x-axis, shared tooltip
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: New xAxis.plotLine with label is a genuine Highcharts-specific touch,
+          still modest
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling: []
