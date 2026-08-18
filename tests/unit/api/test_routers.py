@@ -829,6 +829,40 @@ class TestSeoProxyRouter:
             response = client.get("/seo-proxy/nonexistent-spec/python/matplotlib")
             assert response.status_code == 404
 
+    def test_seo_spec_implementation_unknown_combination_is_404(self, db_client, mock_spec) -> None:
+        """A real spec with a language/library pair that has no implementation must 404.
+
+        Neither segment is validated against a vocabulary, so a 200 here made
+        every {spec}/{any string}/{any string} URL an indexable page with its
+        own self-referencing canonical.
+        """
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            # Library exists in the catalogue, but not for this language
+            assert client.get("/seo-proxy/scatter-basic/python/highcharts").status_code == 404
+            # Library that does not exist at all
+            assert client.get("/seo-proxy/scatter-basic/python/madeuplib").status_code == 404
+            # Language that does not exist at all
+            assert client.get("/seo-proxy/scatter-basic/klingon/matplotlib").status_code == 404
+
+    def test_seo_spec_implementation_404_is_not_cached(self, db_client, mock_spec) -> None:
+        """A 404 must not populate the cache, or a later real regen stays invisible."""
+        client, _ = db_client
+
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+
+        with (
+            patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.seo.set_cache") as mock_set_cache,
+        ):
+            assert client.get("/seo-proxy/scatter-basic/python/madeuplib").status_code == 404
+            mock_set_cache.assert_not_called()
+
     def test_seo_spec_implementation_fallback_image(self, db_client, mock_spec) -> None:
         """SEO spec implementation should use default image when impl has no preview."""
         client, _ = db_client

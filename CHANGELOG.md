@@ -178,6 +178,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The SEO proxy no longer invents pages** — `/{spec}/{language}/{library}` served HTTP 200 with
+  a self-referencing canonical for *any* language and library string, because neither segment is
+  validated against a vocabulary: `/bar-basic/klingon/matplotlib` and
+  `/bar-basic/python/erfundenelib` were both indexable pages. That is an unbounded supply of thin
+  near-duplicates competing with the 3,913 real URLs for the same crawl budget, and it is why 161
+  URLs from the highcharts Python→JS migration (#8516) were still indexed months after those
+  implementations were deleted. Unknown combinations now return 404, and the 404 is not cached so
+  a later regen becomes visible immediately. The stale URLs are dropped rather than redirected:
+  measured over 28 days they carry 4.4% of impressions and 10 clicks in total.
+
 - **Model↔migration index drift fixed before it could drop production indexes** — seven
   migration-created indexes (`ix_specs_issue`, `ix_specs_tags` GIN, `ix_impls_library_id`,
   `ix_impls_quality_score`, `ix_impls_impl_tags` GIN, `ix_feedback_created_at` DESC,
