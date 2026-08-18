@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' box-grouped: Grouped Box Plot
-#' Library: ggplot2 3.5.1 | R 4.4
-#' Quality: pending | Created: 2026-08-18
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 83/100 | Created: 2026-08-18
 
 library(ggplot2)
 library(dplyr)
