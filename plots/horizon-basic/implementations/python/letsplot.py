@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 71/100 | Updated: 2026-08-18
@@ -41,12 +41,15 @@ for i, name in enumerate(series_names):
     # Add weekly pattern
     weekly = 10 * np.sin(2 * np.pi * hours / 168 + i * 0.5)
     # Add noise
-    noise = np.random.randn(n_points) * 4
+    noise = np.random.randn(n_points) * 1.5
     # Add occasional spikes
     spikes = np.zeros(n_points)
-    spike_indices = np.random.choice(n_points, size=6, replace=False)
-    spikes[spike_indices] = np.random.choice([-1, 1], size=6) * np.random.uniform(20, 35, size=6)
-    values = base + weekly + noise + spikes
+    spike_indices = np.random.choice(n_points, size=4, replace=False)
+    spikes[spike_indices] = np.random.choice([-1, 1], size=4) * np.random.uniform(12, 20, size=4)
+    raw = base + weekly + noise + spikes
+    # Light rolling smoothing so folded bands read as clean intensity
+    # mountains instead of a jagged sawtooth
+    values = pd.Series(raw).rolling(window=5, center=True, min_periods=1).mean().to_numpy()
 
     for h, val in zip(hours, values, strict=True):
         data_records.append({"hour": h, "value": val, "series": name})
@@ -91,10 +94,12 @@ horizon_df = pd.DataFrame(horizon_records)
 horizon_df["series"] = pd.Categorical(horizon_df["series"], categories=series_order, ordered=True)
 
 # Band intensity colors: tints interpolated from the Imprint semantic anchors
-# (brand green = positive/gain, imprint red = negative/loss) toward white,
-# so band colors stay theme-independent while intensity still reads clearly.
+# (brand green = positive/gain, brand blue = negative/loss) toward white, so
+# band colors stay theme-independent while intensity still reads clearly.
+# Blue is used instead of red for the negative direction to avoid a
+# red-green color-vision-deficiency pairing against the brand-green positive.
 brand_rgb = tuple(int(IMPRINT[0][i : i + 2], 16) for i in (1, 3, 5))
-loss_rgb = tuple(int(IMPRINT[4][i : i + 2], 16) for i in (1, 3, 5))
+loss_rgb = tuple(int(IMPRINT[2][i : i + 2], 16) for i in (1, 3, 5))
 
 colors = {}
 for band_idx in range(n_bands):
@@ -112,7 +117,14 @@ plot = (
     ggplot(horizon_df, aes(x="hour", y="value", fill="band"))
     + geom_area(position="identity", alpha=0.85, color=PAGE_BG, size=0.1, tooltips=horizon_tooltips)
     + scale_fill_manual(values=colors, labels=band_labels)
-    + facet_wrap("series", ncol=2, order=0)
+    # Stack every series as a single, full-width, thin horizontal strip
+    # (one row per series) rather than a large multi-column grid — this is
+    # the defining "minimize vertical space" trait of a horizon chart.
+    + facet_grid(y="series", y_order=0)
+    # Only the meaningful zero baseline is labeled per row — with six thin
+    # stacked strips, a top+bottom tick on every row would collide with the
+    # neighboring row's ticks.
+    + scale_y_continuous(breaks=[0], labels=["0"])
     + scale_x_continuous(breaks=[0, 24, 48, 72, 96, 120, 144], labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     + labs(
         title="horizon-basic · python · letsplot · anyplot.ai",
@@ -124,18 +136,22 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major=element_line(color=INK_SOFT, size=0.2),
         panel_grid_minor=element_blank(),
+        panel_spacing_y=3,
+        strip_spacing_y=3,
         plot_title=element_text(size=20, face="bold", color=INK),
         axis_title=element_text(size=14, color=INK),
         axis_text_x=element_text(size=11, color=INK_SOFT),
-        axis_text_y=element_text(size=11, color=INK_SOFT),
+        axis_text_y=element_text(size=9, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.3),
-        strip_text=element_text(size=14, face="bold", color=INK),
+        strip_text=element_text(size=10, face="bold", color=INK),
         legend_position="right",
         legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
-        legend_title=element_text(size=13, face="bold", color=INK),
-        legend_text=element_text(size=11, color=INK_SOFT),
+        legend_title=element_text(size=12, face="bold", color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
+        legend_key_size=12,
     )
     + ggsize(800, 450)
 )
