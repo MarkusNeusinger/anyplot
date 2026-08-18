@@ -2,122 +2,144 @@ library: matplotlib
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:16:01Z'
-updated: '2026-05-07T05:27:02Z'
-generated_by: claude-haiku
-workflow_run: 25477450435
+updated: '2026-08-18T00:53:30Z'
+generated_by: claude-sonnet
+workflow_run: 32085151900
 issue: 1877
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 91
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality across both themes - all text legible, no dark-on-dark
-    or light-on-light failures
-  - Correct Okabe-Ito palette usage - brand green and vermillion properly applied
-    and matching between renders
-  - Excellent theme adaptation - all chrome elements (background, text colors, legend
-    frame) correctly flip between light and dark
-  - Clean, professional design - minimal spine approach, generous spacing, clear visual
-    hierarchy
-  - Realistic, well-scaled data - 8 server metrics with appropriate temporal patterns
-    and variation
+  - 'Excellent theme-adaptive chrome: title, legend, series labels, and tick labels
+    are crisp and fully legible on both the #FAF8F1 light and #1A1A17 dark surfaces
+    (verified via close-up crops of title, legend, axis, and label regions)'
+  - 'Faithful horizon-chart technique: 3 mirrored positive/negative bands with an
+    alpha-ramped intensity encoding (via a reusable mcolors.Normalize-based ramp)
+    and gaussian-smoothed ''mountain-range'' fold, exactly matching the spec''s description'
+  - 'Correct Imprint palette usage: green #009E73 for positive / matte red #AE3030
+    for negative directly matches the style guide''s documented ''sentiment/polarity''
+    semantic-exception convention, identical across both themes'
+  - Clean 8-series stacked layout fits the 3200x1800 canvas with generous, balanced
+    margins and no edge clipping — series labels use a background-matched path-effect
+    stroke so they stay legible over any band color behind them
+  - 'Realistic, well-differentiated synthetic data: 8 distinct server metrics with
+    daily sinusoidal cycles plus localized spikes, giving genuine data-density and
+    feature-coverage variety across rows'
+  - Custom 6-swatch legend (Low/Mid/High x +/-) clearly documents the band-to-magnitude
+    mapping for the reader
   weaknesses:
-  - Design Excellence could show more custom refinement - color scheme and opacity
-    bands are good but could have more intentional stylistic choices
-  - Library Mastery could leverage more distinctive matplotlib features - solid idiomatic
-    usage but doesn't use advanced features like patheffects or custom normalizers
+  - Positive/negative polarity is distinguished purely by hue (green vs. red) with
+    no secondary/redundant encoding — an inherent limitation of the horizon-chart
+    folding technique (both polarities fill from the same zero baseline), but still
+    costs VQ-04 since it is technically a red-green-only signal for sign
+  - The band_alpha() helper function is a minor departure from the KISS 'no functions'
+    code-quality guideline (CQ-01) — could be inlined as a small lookup/comprehension
+    without losing clarity
+  - Series row labels (9pt) and the band legend (7.5pt) sit at or below the style
+    guide's tick/legend text floor (8pt) — legible at full resolution per the crops,
+    but leaves little margin once scaled to a ~400px mobile width across 8 stacked
+    rows
+  - Data storytelling relies solely on the mirrored-color convention with no annotation
+    calling out the most notable spike/anomaly per metric — not required by the spec,
+    but would strengthen the at-a-glance insight (DE-03)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels, series names, and tick labels all rendered in dark text (INK color) - fully readable
-      Data: 8 horizon charts with Okabe-Ito green (#009E73) for positive values and vermillion (#D55E00) for negative values; 3 bands with varying opacity (0.35, 0.60, 0.85); legend shows all 6 intensity levels
-      Legibility verdict: PASS - all elements clearly visible against light background
+      Background: Warm off-white, matches the mandated #FAF8F1 plot surface (confirmed by direct color sampling of the empty canvas area).
+      Chrome: Title "horizon-basic · python · matplotlib · anyplot.ai" is dark ink, centered, fully visible with margin on both edges (no clipping at right edge, confirmed via crop). The 6-swatch band legend ("Low +", "Mid +", "High +", "Low -", "Mid -", "High -") sits inside an elevated-background box with a soft gray border, all text clearly readable. Eight bold series-name labels (CPU Load, Memory, Network I/O, Disk I/O, Requests/s, Latency, Queue Depth, Threads) sit to the right of each row in dark ink with a light-background stroke, staying legible even where they overlap a colored band. Bottom x-axis shows "Time (Hour of Day)" plus hour-of-day tick labels in soft gray, all readable.
+      Data: Each of the 8 stacked rows folds its time series into 3 intensity bands of green (#009E73-based, increasing alpha for higher positive magnitude) above the zero baseline, and 3 intensity bands of matte red (#AE3030-based) for negative magnitude — the folding technique described in the spec. Bands read as a smooth, mountain-range-like silhouette with visible daily cycles and localized spikes per metric.
+      Legibility verdict: PASS — all text (title, legend, series labels, tick labels) is clearly readable against the light background; no light-on-light issues found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, series names, and tick labels all rendered in light text (INK color for dark theme) - fully readable; no dark-on-dark failures detected
-      Data: Identical data colors to light render (green and orange bands with same opacity progression); only chrome elements have adapted to dark theme
-      Legibility verdict: PASS - all elements clearly visible against dark background, proper theme adaptation confirmed
+      Background: Warm near-black, matches the mandated #1A1A17 plot surface.
+      Chrome: Title, legend text, series labels, and tick labels all flip to light ink (#F0EFE8 / #B8B7B0-family tones) and remain fully legible — no dark-on-dark failures found in any close-up crop (title/legend, x-axis ticks, or right-edge series-label column).
+      Data: The green and red band colors are pixel-identical to the light render (only chrome flipped), confirming Imprint palette data-color consistency across themes as required.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; the light-colored ink reads cleanly over the near-black surface with no contrast failures.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All text readable in both themes - title (24pt), labels (20pt), ticks
-          (16pt), series names (18pt)
+        comment: All font sizes explicitly set and legible at full resolution in both
+          themes (verified via crops); series labels (9pt) and legend (7.5pt) run
+          slightly below the style-guide floor, leaving little margin at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Series labels on right with proper spacing, x-axis labels well-distributed,
-          no collisions
+        comment: No text-on-text or text-on-data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Horizon bands clearly visible with effective opacity gradients, colors
-          distinct
+        comment: Bands are visible and intensity-ramped well; some low-variance rows
+          produce thin bands, an inherent data characteristic rather than a sizing
+          error
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Okabe-Ito colors CVD-safe, good contrast between data and background
+        comment: Positive/negative polarity relies solely on green-vs-red hue with
+          no secondary encoding — inherent to the horizon-chart folding technique,
+          partially mitigated by the CVD-tuned Imprint hues
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-proportioned 16:9 layout, generous margins, no content cut off
+        comment: Canvas confirmed exactly 3200x1800px; 8-row layout uses the canvas
+          efficiently with balanced margins, legend near the plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct, axis labels descriptive, series names prominent
+        comment: '''Time (Hour of Day)'' is descriptive; per-row series names function
+          as category labels for a chart type with no traditional y-axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Okabe-Ito colors (#009E73 green, #D55E00 orange), proper
-          backgrounds (#FAF8F1 light, #1A1A17 dark)'
+        comment: 'Green #009E73 / red #AE3030 matches the Imprint semantic-exception
+          convention for polarity; identical data colors across both theme-correct
+          renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        passed: true
-        comment: Intentional design with theme-adaptive colors, opacity encoding,
-          professional labels and legend styling
+        comment: Custom intensity-ramp normalizer, gaussian-smoothed silhouettes,
+          and stroke-protected labels show clear design intent above a configured
+          default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Spines removed appropriately, clean appearance, could have more grid/spine
-          customization
+        comment: All spines removed except the shared bottom axis, generous inter-row
+          spacing via subplots_adjust, no competing grid
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Horizon format effectively communicates compact multi-series comparison
-          with opacity guiding magnitude perception
+        comment: Mirrored color intensity gives an immediate load/idle read per metric;
+          no explicit annotation calls out the most notable event, which would push
+          this further
     spec_compliance:
       score: 15
       max: 15
@@ -126,28 +148,24 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: Correct horizon chart - displays time series compactly using folded
-          bands
+        comment: Correct horizon chart with folded, color-coded bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: 3 bands with mirrored positive/negative coloring, intensity increases
-          with magnitude
+        comment: 3 mirrored bands, magnitude-increasing intensity, zero baseline,
+          8 series all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X-axis shows 24-hour timeline, Y-axis normalized, baseline at zero
+        comment: X=time, folded color bands correctly encode per-row magnitude
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title formatted correctly, legend shows all band levels
+        comment: Title format exact; legend labels (Low/Mid/High x +/-) match the
+          band semantics
     data_quality:
       score: 15
       max: 15
@@ -156,84 +174,79 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: 8 server metrics (CPU, memory, network, disk, requests, latency,
-          queue, threads) with varied patterns
+        comment: Daily cycles plus localized spikes across 8 differentiated metrics
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Dashboard monitoring context realistic and neutral, 24-hour timeline
-          with hourly data
+        comment: Neutral, realistic server-monitoring scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Normalization to [-1.5, 1.5] allows cross-metric comparison appropriately
+        comment: Normalized values are plausible and internally consistent for the
+          domain
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: No unnecessary functions/classes, straightforward script
+        comment: band_alpha() helper is a minor deviation from the strict imports->data->plot->save
+          script shape
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Uses np.random.seed(42) for reproducible data generation
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: All imports used, no unused modules
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: No fake UI, appropriate complexity, no unnecessary abstractions
+        comment: Appropriate complexity for a hard chart type, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png with correct DPI and settings
+        comment: Saves plot-{THEME}.png with bbox_inches left at default
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: true
-        comment: Good use of plt.subplots, fill_between, text, fig.legend, spine management
+        comment: Axes-method usage throughout, proper shared-x subplot faceting
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: true
-        comment: Effective use of fill_between with variable alpha, could leverage
-          more advanced features
+        comment: path_effects.withStroke for background-adaptive label legibility
+          and a custom Normalize-based intensity ramp are matplotlib-distinctive techniques
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scipy
   techniques:
   - subplots
-  - custom-legend
   - annotations
+  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - normalization
+  - time-series
   styling:
   - alpha-blending
+  - minimal-chrome
