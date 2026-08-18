@@ -191,8 +191,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   request query string, so `/?spec=point-basic` declared itself a page in its own right rather than
   a view of the home page, and Search Console had it indexed as one (last crawled 2026-05-26). Every
   filter combination was a candidate. The canonical and `og:url` are now always `https://anyplot.ai/`;
-  `og:image` still carries the params, which is what the tracking they were added for actually needs
-  and is not a canonicalisation signal. Verified that `?view=` and `?language=` on implementation and
+  `og:image` and `og:url` still carry them: neither is a canonicalisation signal, and `og:url` is
+  where a shared card sends its reader, so dropping it there would land every shared filter link on
+  the bare home page and defeat the tracking the params exist for. The bot template's `og:url` and
+  `canonical` slots, previously one value, are now separate — defaulting to identical, so every
+  other handler is unchanged. Verified that `?view=` and `?language=` on implementation and hub
+  pages were already correct. Verified that `?view=` and `?language=` on implementation and
   hub pages were already correct.
 - **`seo-auditor` could never reach Search Console** — its auth contract probed
   `gcloud auth print-access-token`, which mints the gcloud CLI credential; that credential's

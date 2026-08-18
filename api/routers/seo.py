@@ -100,7 +100,7 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{description}" />
     <meta property="og:image" content="{image}" />
-    <meta property="og:url" content="{url}" />
+    <meta property="og:url" content="{og_url}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="anyplot.ai" />
     <meta name="twitter:card" content="summary_large_image" />
@@ -221,13 +221,26 @@ def _jsonld_script(payload: dict) -> str:
 
 
 def _render_bot_html(
-    *, title: str, description: str, image: str, url: str, body: str = "", jsonld: dict | None = None
+    *,
+    title: str,
+    description: str,
+    image: str,
+    url: str,
+    og_url: str | None = None,
+    body: str = "",
+    jsonld: dict | None = None,
 ) -> str:
     """Render a bot-serving page.
 
     Contract per argument:
     - ``title``, ``description``, ``image``, ``url``: text/URL values that
-      must arrive HTML-escaped (same contract the bare template had).
+      must arrive HTML-escaped (same contract the bare template had). ``url``
+      is the canonical.
+    - ``og_url``: the Open Graph URL, defaulting to ``url``. They are separate
+      because they answer different questions: the canonical is what Google
+      should consolidate on, while og:url is where a shared card sends its
+      reader — so a filtered view canonicalises to the bare page but still
+      shares as itself. Google ignores og:url for canonicalisation.
     - ``body``: a trusted, fully-built HTML fragment inserted verbatim (plus
       the site nav). Callers must escape any DB-sourced text BEFORE
       interpolating it into the fragment.
@@ -239,6 +252,7 @@ def _render_bot_html(
         description=description,
         image=image,
         url=url,
+        og_url=og_url if og_url is not None else url,
         jsonld=_jsonld_script(jsonld) if jsonld else "",
         body=f"{body or f'<h1>{title}</h1><p>{description}</p>'}\n{_BOT_NAV_HTML}",
     )
@@ -503,10 +517,15 @@ async def seo_home(request: Request, db: AsyncSession | None = Depends(optional_
     image_url = f"{DEFAULT_HOME_IMAGE}?{query_string}" if query_string else DEFAULT_HOME_IMAGE
     # The canonical never carries the filter params. It used to, which made every
     # filter combination self-canonicalising: /?spec=point-basic was indexed as a
-    # page in its own right, competing with the home page it is a view of. Only
-    # og:image is parameterised — that is what the tracking above actually needs,
-    # and og:image is not a canonicalisation signal.
+    # page in its own right, competing with the home page it is a view of.
+    #
+    # og:url is a different question and keeps them. Facebook and LinkedIn use it
+    # as the destination of a shared card, so dropping the params there would
+    # land every shared filter link on the bare home page — defeating the same
+    # "tracking shared filtered URLs" this handler parameterises og:image for.
+    # Google does not use og:url for canonicalisation, so the two can differ.
     page_url = "https://anyplot.ai/"
+    og_page_url = f"https://anyplot.ai/?{query_string}" if query_string else page_url
 
     spec_count = len(await _get_spec_index(db)) if db is not None else None
     return HTMLResponse(
@@ -515,6 +534,7 @@ async def seo_home(request: Request, db: AsyncSession | None = Depends(optional_
             description=html.escape(HOME_DESCRIPTION),
             image=image_url,
             url=page_url,
+            og_url=og_page_url,
             body=_build_home_body(spec_count),
             jsonld=_HOME_JSONLD,
         )

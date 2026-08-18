@@ -702,18 +702,35 @@ class TestSeoProxyRouter:
 
         They used to: /?spec=point-basic emitted its own canonical and was
         indexed as a page in its own right, competing with the page it is a
-        view of. og:image keeps the params — that is what the tracking needs,
-        and og:image is not a canonicalisation signal.
+        view of. The canonical is now bare — but og:url and og:image are not
+        canonicalisation signals and keep the params, so a shared filter link
+        still lands on the filtered view and still tracks.
         """
         with patch(DB_CONFIG_PATCH, return_value=False):
             response = client.get("/seo-proxy/?spec=point-basic&lib=plotly")
             assert response.status_code == 200
             assert '<link rel="canonical" href="https://anyplot.ai/" />' in response.text
-            assert 'property="og:url" content="https://anyplot.ai/"' in response.text
-            # ...while the tracked image still carries every one of them —
-            # asserting the whole query string, since checking a single param
-            # would stay green if the others were dropped.
+            # og:url is where a shared card sends its reader, so it keeps them
+            assert 'property="og:url" content="https://anyplot.ai/?spec=point-basic&amp;lib=plotly"' in response.text
+            # ...as does the tracked image — asserting the whole query string,
+            # since checking a single param would stay green if the others
+            # were dropped.
             assert "og/home.png?spec=point-basic&amp;lib=plotly" in response.text
+
+    def test_seo_canonical_and_og_url_match_when_unfiltered(self, client: TestClient) -> None:
+        """Without params the two must not drift apart."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/seo-proxy/")
+            assert '<link rel="canonical" href="https://anyplot.ai/" />' in response.text
+            assert 'property="og:url" content="https://anyplot.ai/"' in response.text
+
+    def test_seo_spec_pages_keep_canonical_and_og_url_identical(self, client: TestClient) -> None:
+        """og_url defaults to url, so every other handler is untouched by the split."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            text = client.get("/seo-proxy/scatter-basic/python/matplotlib").text
+            url = "https://anyplot.ai/scatter-basic/python/matplotlib"
+            assert f'<link rel="canonical" href="{url}" />' in text
+            assert f'property="og:url" content="{url}"' in text
 
     def test_seo_plots(self, client: TestClient) -> None:
         """SEO plots page should return HTML with og:tags."""
