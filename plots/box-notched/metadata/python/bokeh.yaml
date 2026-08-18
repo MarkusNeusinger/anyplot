@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:54:33Z'
-updated: '2026-08-18T04:48:27Z'
+updated: '2026-08-18T04:55:54Z'
 generated_by: claude-sonnet
 workflow_run: 32099939237
 issue: 2019
@@ -12,122 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notch
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 96
 review:
   strengths:
+  - Title now uses the mandated four-segment format "box-notched · python · bokeh
+    · anyplot.ai", fixing the attempt-1 gap.
+  - Outline fixed to the L-shaped spine convention (outline_line_color=None, bottom/left
+    axis lines only) instead of the previous full rectangular frame.
+  - New HoverTool with a formatted tooltip (Department, n, Q1, Median, Q3, Mean) driven
+    by an invisible whisker-to-whisker hover-target quad — turns the HTML export into
+    a genuinely useful interactive detail view and directly answers the prior Library
+    Mastery gap.
   - Correct notch computation (±1.57 × IQR / √n) and all standard box-plot elements
     (median, quartiles, 1.5×IQR whiskers, outliers) present and correctly rendered
     in both themes.
   - 'Distinctive design choices: box width scaled by √n signals notch reliability,
     a hollow mean-diamond next to the median notch adds a mean-vs-median comparison,
     and ranking categories by median turns the chart into a leaderboard.'
-  - Theme-adaptive chrome correctly threaded through both renders — Imprint palette
-    data colors are identical between light/dark, only chrome (background, text, grid)
-    flips.
-  - Clean HTML+PNG output pipeline; ColumnDataSource used for outliers; categorical
-    x_range used correctly with descriptive per-category labels (name + n).
+  - 'Theme-adaptive chrome correctly threaded through both renders — Imprint palette
+    data colors are identical between light/dark, only chrome flips; first-ranked
+    category (Marketing) is #009E73.'
   weaknesses:
-  - Title omits the language segment — reads 'box-notched · bokeh · anyplot.ai' instead
-    of the mandated 'box-notched · python · bokeh · anyplot.ai'.
-  - p.outline_line_color draws a full rectangular frame around the plot rather than
-    following the L-shaped spine convention (remove top/right) from the style guide,
-    slightly reducing visual refinement.
-  - No distinctive interactive bokeh features (e.g. HoverTool) used beyond static
-    geometric primitives — a missed opportunity for Library Mastery given bokeh's
-    interactive strengths.
-  - The _width_for_n helper function, while small and well-justified, is a minor structural
-    break from the flat-script KISS convention.
+  - The _width_for_n helper function is a minor structural break from the flat-script
+    KISS convention (still a single small pure function, non-blocking).
+  - DE-01 aesthetic sophistication is strong but not maximal — typography and accent
+    choices remain fairly standard beyond the notch/diamond/ranking touches already
+    present.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches the required light-theme page surface — not pure white.
-      Chrome: Bold dark title "box-notched · bokeh · anyplot.ai" at top-left; italic dark y-axis label "Performance Score (0–100)" and italic x-axis label "Department (ranked by median, n = sample size)"; soft-ink tick labels; horizontal "Median"/"Mean" legend top-right on an elevated cream box with a thin border. All chrome text is clearly readable against the light background.
-      Data: Five notched boxes ranked by descending median — Marketing (green #009E73), Engineering (lavender #C475FD), HR (blue #4467A3), Sales (ochre #BD8233), Operations (matte red #AE3030) — each with a dark median line through a bowtie-shaped notch, a hollow mean-diamond marker just past the notch, I-beam whiskers, and hollow circular outliers colored to match their category with a dark-ink-outlined fill matching the page background. Box widths vary slightly, scaled by √n.
-      Legibility verdict: PASS — no dark-on-light or missing-contrast issues found; verified readable down to the 400px mobile render as well.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "box-notched · python · bokeh · anyplot.ai" top-left (now includes the python segment); italic dark axis labels ("Performance Score (0-100)" / "Department (ranked by median, n = sample size)"); soft-ink tick labels; horizontal "Median"/"Mean" legend top-right on an elevated cream box with a visible border. Only left/bottom axis lines are drawn (L-shaped spine convention, no full rectangular outline) with a subtle horizontal-only grid.
+      Data: Five notched boxes ranked by descending median — Marketing (green #009E73, first/highest-ranked), Engineering (lavender), HR (blue), Sales (ochre), Operations (matte red). Each box shows a bowtie notch around the median line, a hollow mean-diamond marker offset past the notch, I-beam whiskers with caps, and hollow outlier circles (HR has one, Sales has three, Operations none visible). Box widths vary proportionally with sample size (n=45-67).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches the required dark-theme page surface — not pure black.
-      Chrome: Same title/axis-label/legend layout, now rendered in light ink (white/off-white title, soft light-gray tick labels and legend text) against the dark background; legend box uses the dark elevated fill (#242420) with a light border.
-      Data: Identical five category colors and box/notch/whisker/outlier geometry as the light render — confirms data colors are held constant across themes, only chrome flipped. Mean-diamond markers remain hollow with page-background fill and ink outline, correctly adapted to the dark page background.
-      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, ticks, legend) is clearly legible against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout, now in light ink — white/off-white title, light soft-gray tick labels and axis labels, legend box uses the dark elevated fill with light border and light label text. No dark-on-dark failures; every title/label/tick is clearly legible against the dark surface.
+      Data: The five category colors, box widths, notch geometry, whisker/outlier positions, and mean-diamond placements are pixel-identical to the light render — confirms data colors are held constant across themes and only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text readable in both themes, holds up
-          at 400px mobile scale
+        comment: All title/axis/tick/legend text clearly readable in both themes;
+          balanced font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, boxes, outliers, or legend
+        comment: No text/data/legend collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Notches, whiskers, and mean-diamonds all clearly visible; outlier
-          markers appropriately sized
+        comment: Notch, whisker, mean-diamond, and outlier markers all appropriately
+          sized and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Dark ink outlines on box fills aid contrast for the lighter Imprint
-          hues
+        comment: Imprint palette contrast is CVD-safe, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping, well-balanced margins
+        comment: Canvas gate passed (3200x1800); title ~45% width, nothing clipped
+          or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units and context (ranked by median, n =
-          sample size)
+        comment: Descriptive labels with units (0-100 scale, n annotated per category)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
-          in both renders'
+        comment: 'First-ranked category is #009E73; canonical Imprint order; correct
+          theme backgrounds both renders'
     design_excellence:
-      score: 15
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: √n-scaled box width, hollow mean-diamond, leaderboard ranking by
-          median — above-generic design thought
+        comment: sqrt(n)-scaled box width, hollow mean-diamond, leaderboard ranking
+          by median
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Subtle y-grid and generous whitespace, but full rectangular plot
-          outline instead of L-shaped spine convention
+        comment: 'Fixed: L-shaped spine convention (outline_line_color=None), subtle
+          y-only grid, generous whitespace'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Median ranking plus mean/median divergence gives a clear analytical
+        comment: Median ranking + mean/median divergence gives a clear analytical
           narrative
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,21 +141,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 95% CI notches (±1.57×IQR/√n), standard box elements, 1.5×IQR whiskers,
-          outliers, per-category colors all present
+        comment: Notches at 95% CI, quartiles/whiskers/1.5xIQR/outliers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, numeric score on y, all data shown
+        comment: Department on x, performance score on y, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the language segment ('box-notched · bokeh · anyplot.ai'
-          instead of '... · python · bokeh · ...')
+        passed: true
+        comment: 'Fixed: title now includes the python segment; legend labels match
+          (Median/Mean)'
     data_quality:
       score: 15
       max: 15
@@ -165,19 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Median, quartiles, whiskers, outliers, notches, and mean all shown
+        comment: All box-plot elements plus notches, outliers, and mean marker shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance scores across departments — plausible and neutral
+        comment: Employee performance scores across departments, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 45–67 points per category, 5 categories, within spec ranges
+        comment: 0-100 score range sensible; n=45-67 within the spec's 20-500 recommended
+          range
     code_quality:
       score: 9
       max: 10
@@ -187,7 +187,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: One small, justified helper function (_width_for_n)
+        comment: One small helper function (_width_for_n)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,16 +205,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for a manually-composed notched
-          box glyph
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and .html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -222,20 +221,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic quad/patch/segment/scatter composition, ColumnDataSource
-          for outliers, categorical x_range
+        comment: ColumnDataSource, categorical x_range, manual quad/patch box drawing
+          is the standard bokeh approach for notched boxes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Manual glyph composition is solid but no interactive bokeh features
-          (HoverTool, CustomJS) used
+        passed: true
+        comment: 'Fixed: rich HoverTool tooltip (Department/n/Q1/Median/Q3/Mean) via
+          invisible hover-target quads'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - hover-tooltips
   - html-export
   - patches
   patterns:
@@ -246,3 +246,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
