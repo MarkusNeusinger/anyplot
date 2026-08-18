@@ -1,7 +1,7 @@
 """ anyplot.ai
 horizon-basic: Horizon Chart
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-07
+Library: letsplot 4.11.0 | Python 3.13.12
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -20,7 +20,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series ALWAYS #009E73)
+# Imprint palette (first series ALWAYS #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD"]
 
 # Data - Server metrics over 7 days for multiple servers
@@ -53,6 +53,9 @@ for i, name in enumerate(series_names):
 
 df = pd.DataFrame(data_records)
 
+# Order facets by descending volatility so the most erratic server leads the grid
+series_order = df.groupby("series")["value"].std().sort_values(ascending=False).index.tolist()
+
 # Horizon chart parameters - fold values into bands
 n_bands = 3
 max_val = df["value"].abs().max()
@@ -65,14 +68,13 @@ horizon_records = []
 # Band labels for legend
 band_labels = {"pos0": "+Low", "pos1": "+Medium", "pos2": "+High", "neg0": "-Low", "neg1": "-Medium", "neg2": "-High"}
 
-for idx, series in enumerate(series_names):
+for series in series_order:
     series_data = df[df["series"] == series]
     values = series_data["value"].values
     hours_arr = series_data["hour"].values
 
     for band in range(n_bands):
         low = band * band_size
-        high = (band + 1) * band_size
 
         # Process positive values
         pos = np.clip(np.maximum(values, 0) - low, 0, band_size)
@@ -81,62 +83,39 @@ for idx, series in enumerate(series_names):
 
         for h, pv, nv in zip(hours_arr, pos, neg, strict=True):
             if pv > 0.01:
-                horizon_records.append(
-                    {
-                        "hour": h,
-                        "value": pv,
-                        "series": series,
-                        "band": f"pos{band}",
-                        "sign": "positive",
-                        "series_idx": idx,
-                    }
-                )
+                horizon_records.append({"hour": h, "value": pv, "series": series, "band": f"pos{band}"})
             if nv > 0.01:
-                horizon_records.append(
-                    {
-                        "hour": h,
-                        "value": nv,
-                        "series": series,
-                        "band": f"neg{band}",
-                        "sign": "negative",
-                        "series_idx": idx,
-                    }
-                )
+                horizon_records.append({"hour": h, "value": nv, "series": series, "band": f"neg{band}"})
 
 horizon_df = pd.DataFrame(horizon_records)
+horizon_df["series"] = pd.Categorical(horizon_df["series"], categories=series_order, ordered=True)
 
-# Color mapping: Okabe-Ito positions with intensity variation for bands
-# Positive bands: use Okabe-Ito color, varying brightness
-# Negative bands: use dimmer version of the color
+# Band intensity colors: tints interpolated from the Imprint semantic anchors
+# (brand green = positive/gain, imprint red = negative/loss) toward white,
+# so band colors stay theme-independent while intensity still reads clearly.
+brand_rgb = tuple(int(IMPRINT[0][i : i + 2], 16) for i in (1, 3, 5))
+loss_rgb = tuple(int(IMPRINT[4][i : i + 2], 16) for i in (1, 3, 5))
+
 colors = {}
 for band_idx in range(n_bands):
-    color = IMPRINT[0]  # Use first series color for all bands
-    # Positive: increase intensity across bands
-    if band_idx == 0:
-        colors[f"pos{band_idx}"] = "#B3E5B0"  # Light
-    elif band_idx == 1:
-        colors[f"pos{band_idx}"] = "#6BBE77"  # Medium
-    else:
-        colors[f"pos{band_idx}"] = "#009E73"  # Full intensity
+    frac = (band_idx + 1) / n_bands
+    pos_rgb = tuple(round(255 + (brand_rgb[c] - 255) * frac) for c in range(3))
+    neg_rgb = tuple(round(255 + (loss_rgb[c] - 255) * frac) for c in range(3))
+    colors[f"pos{band_idx}"] = "#{:02X}{:02X}{:02X}".format(*pos_rgb)
+    colors[f"neg{band_idx}"] = "#{:02X}{:02X}{:02X}".format(*neg_rgb)
 
-    # Negative: reddish palette for negative deviations
-    neg_color = IMPRINT[1]  # Use second series color for negatives
-    if band_idx == 0:
-        colors[f"neg{band_idx}"] = "#F5C4A0"  # Light
-    elif band_idx == 1:
-        colors[f"neg{band_idx}"] = "#E89354"  # Medium
-    else:
-        colors[f"neg{band_idx}"] = "#AE3030"  # imprint red — full intensity
+# Distinctive lets-plot feature: custom tooltip content (unavailable in plotnine)
+horizon_tooltips = layer_tooltips().title("@series").format("@value", ".1f").line("Band|@band").line("Deviation|@value")
 
 # Create the horizon chart
 plot = (
     ggplot(horizon_df, aes(x="hour", y="value", fill="band"))
-    + geom_area(position="identity", alpha=0.85, color=PAGE_BG, size=0.1)
+    + geom_area(position="identity", alpha=0.85, color=PAGE_BG, size=0.1, tooltips=horizon_tooltips)
     + scale_fill_manual(values=colors, labels=band_labels)
-    + facet_wrap("series", ncol=2)
+    + facet_wrap("series", ncol=2, order=0)
     + scale_x_continuous(breaks=[0, 24, 48, 72, 96, 120, 144], labels=["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
     + labs(
-        title="horizon-basic · letsplot · anyplot.ai",
+        title="horizon-basic · python · letsplot · anyplot.ai",
         x="Day of Week",
         y="Folded Value (stacked bands)",
         fill="Band Intensity",
@@ -147,22 +126,22 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK_SOFT, size=0.2),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=24, face="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text_x=element_text(size=16, color=INK_SOFT),
-        axis_text_y=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=20, face="bold", color=INK),
+        axis_title=element_text(size=14, color=INK),
+        axis_text_x=element_text(size=11, color=INK_SOFT),
+        axis_text_y=element_text(size=11, color=INK_SOFT),
         axis_line=element_line(color=INK_SOFT, size=0.3),
-        strip_text=element_text(size=18, face="bold", color=INK),
+        strip_text=element_text(size=14, face="bold", color=INK),
         legend_position="right",
         legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
-        legend_title=element_text(size=16, face="bold", color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=13, face="bold", color=INK),
+        legend_text=element_text(size=11, color=INK_SOFT),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+# Save as PNG (scale 4x for 3200x1800)
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 
 # Save as HTML for interactive version
 ggsave(plot, f"plot-{THEME}.html")
