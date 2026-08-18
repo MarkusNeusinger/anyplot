@@ -2,116 +2,149 @@ library: pygal
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:48:48Z'
-updated: '2026-05-08T11:06:09Z'
-generated_by: claude-haiku
-workflow_run: 25551677680
+updated: '2026-08-18T15:04:54Z'
+generated_by: claude-sonnet
+workflow_run: 32150483357
 issue: 2008
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Perfect visual quality with explicit font sizing for all elements
-  - 'Excellent spec compliance: correct chart type, all features present, proper title/legend
-    formatting'
-  - Clean, reproducible code with proper theme handling (light/dark rendering)
-  - 'Theme-adaptive chrome works correctly: backgrounds, text colors, and grid adapt
-    properly while data colors remain constant'
-  - Realistic and well-chosen data demonstrating the full range of energy mix compositions
+  - 'Directly and correctly fixed the Attempt-1 weakness: value_formatter now suppresses
+    printed percentages below 7% (`f"{x:.0f}%" if x >= 7 else ""`), so the previously
+    overflowing ''Strongly Disagree'' labels on the thinnest bands (2.5%-6.25%) no
+    longer spill outside their color segment.'
+  - 'Correct 100% stacked bar mechanics: raw Likert response counts are normalized
+    to per-topic percentages and chart.range is fixed to (0, 100), so every bar sums
+    cleanly to 100%.'
+  - 'Well-reasoned, explicitly documented semantic-exception color ramp for the Likert
+    scale (green -> lime -> muted gray -> amber -> red), with #009E73 correctly anchored
+    to the first series (''Strongly Agree''); matches the style guide''s ''sentiment/polarity''
+    exception exactly.'
+  - 'Strong data storytelling: topics are sorted descending by favorable response
+    share (Agree + Strongly Agree), turning the chart into a ranked narrative from
+    the organization''s strongest area to its weakest.'
+  - Theme tokens (PAGE_BG, INK, INK_MUTED) are threaded consistently through the Style
+    object so light/dark chrome flips correctly while all five data colors stay pixel-identical
+    between renders.
+  - 'Clean, deterministic, KISS-structured script: no unused imports, no randomness,
+    no fake interactivity, correct render_to_png + HTML export API usage.'
   weaknesses:
-  - 'Design Excellence is generic: uses library defaults with minimal aesthetic customization'
-  - Data storytelling lacks visual emphasis or focal point; color order follows Okabe-Ito
-    but doesn't create intentional hierarchy
-  - Limited use of distinctive pygal features; implementation could leverage more
-    library-specific capabilities
+  - The rotated x-axis category label 'Management Support' (and similarly 'Recognition'/'Communication')
+    passes very close to the x_title 'Survey Topic' beneath it -- no pixels actually
+    overlap under zoom, but the vertical gap is tight enough to warrant a touch more
+    margin_bottom or x_title offset for comfortable breathing room.
+  - Visual refinement is still fairly standard beyond the color/sort choices -- no
+    additional polish touch (e.g. a subtle max-share callout, alternating category
+    shading, or refined legend swatch styling) that would push this into top-tier
+    design territory.
+  - 'Library mastery is good but not maximal: the value_formatter threshold fix is
+    a solid distinctive use of the API, but pygal''s secondary_range or per-value
+    CSS classes remain unused and could further differentiate label rendering for
+    very thin vs. thick segments.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 (correct surface color)
-      Chrome: Title "bar-stacked-percent · pygal · anyplot.ai" in dark 28px text, clearly readable at top. Y-axis label "Percentage (%)" and X-axis label "Country" in 22px dark text, readable. Tick labels (0%, 10%, 20%, etc. and country names) in 18px dark text, clearly visible.
-      Data: Three components shown - Renewable (green #009E73, position 1), Nuclear (orange #D55E00, position 2), Fossil Fuels (blue #0072B2, position 3). All in Okabe-Ito order. Percentage values displayed within segments. Y-axis grid lines subtle and visible (dotted horizontal lines). 6 countries displayed with varying energy compositions.
-      Legibility verdict: PASS - All text readable, good contrast, grid subtle but visible, no elements overlap
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "bar-stacked-percent · python · pygal · anyplot.ai" is centered at top in dark ink, fully visible, not clipped at the top edge. X-axis title "Survey Topic" and y-axis title "Respondents (%)" are dark and readable. Y-axis tick labels (0%-100% in 10% steps) are dark and legible. X-axis category labels (Team Collaboration, Management Support, Communication, Recognition, Career Growth, Work-Life Balance, Job Security, Compensation) are rotated ~25° in dark ink, fully visible with no chopped characters at the canvas edges. Dashed horizontal y-guides are subtle gray, visible but not dominant. Legend sits below the x-axis title with five square swatches + labels (Strongly Agree, Agree, Neutral, Disagree, Strongly Disagree), all dark text, clearly readable and not overlapping the title above it.
+      Data: Eight vertical 100%-stacked bars, one per survey topic, each divided into five colored segments (teal #009E73 "Strongly Agree" at the bottom, olive/lime "Agree", gray "Neutral", tan/khaki "Disagree", red "Strongly Disagree" at the top). Black percentage value labels are printed inside each segment that is >=7% of the bar; the four thinnest "Strongly Disagree" bands (2.5%-6.25%, first four bars) correctly have their labels suppressed instead of overflowing -- confirms the Attempt-1 overflow weakness is fixed.
+      Legibility verdict: PASS (all chrome and printed value text is readable against the light background; no label overflow observed).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 (correct surface color)
-      Chrome: Title rendered in light #F0EFE8 text, clearly readable against dark background. Axis labels ("Percentage (%)" and "Country") in light text, readable. Tick labels in light text, clearly visible - NO dark-on-dark failures detected. Grid lines visible with light tone.
-      Data: Colors identical to light render - green #009E73, orange #D55E00, blue #0072B2 (Okabe-Ito preserved). Percentage values visible within segments. All segments clearly distinguishable.
-      Legibility verdict: PASS - All text readable with proper contrast, data colors match light render exactly, grid visible, theme adaptation successful
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title, axis titles, tick labels, x-axis category labels, and legend text all render in light/white ink and are clearly legible against the dark background -- no dark-on-dark failures observed anywhere. Dashed y-guides remain subtly visible.
+      Data: Same five segment colors as the light render (teal #009E73, olive/lime, gray, tan, red) in the same stacking order -- confirmed pixel-identical to the light render; only chrome (background + text color) flips between themes. The brand green #009E73 "Strongly Agree" segment reads clearly on the dark surface. Value labels inside segments remain black-on-color and legible; the same 7%-threshold suppression applies, so no thin-segment overflow appears here either.
+      Legibility verdict: PASS (all chrome and data-region text is readable in this theme; no dark-on-dark or light-on-light collisions found).
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          readable in both light and dark themes
+        comment: All chrome text and printed value labels are readable in both themes
+          at explicit font sizes; the Attempt-1 thin-segment overflow is fixed via
+          the >=7% value_formatter threshold.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text; all elements clearly separated
+        comment: No text-on-text or text-on-data overlap under pixel zoom; minor deduction
+          for the tight vertical gap between the rotated 'Management Support' tick
+          label and the 'Survey Topic' x_title beneath it.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars and segments clearly visible and distinguishable by color
+        comment: 8 bars at 3200px width have comfortable spacing; all five segment
+          colors are clearly distinguishable from each other and from both backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette positions 1-3; CVD-safe
+        comment: Sequential-lightness Likert ramp plus consistent left-to-right position
+          and printed percentages means color is never the sole signal; no red-green-only
+          pairing.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas well-utilized; plot ~60% of area; balanced margins
+        comment: Canvas dimension gate passed (3200x1800, no /tmp/anyplot-canvas-gate.txt).
+          Title ~70-75% width as expected for the mandated long title. No overflow
+          beyond canvas bounds; margins accommodate rotated labels and bottom legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units
+        comment: x_title 'Survey Topic' and y_title 'Respondents (%)' are descriptive
+          and include the unit.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito correct; backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome
-          works'
+        comment: 'First added series (#009E73) is brand green; remaining four colors
+          form a documented semantic-exception diverging Likert ramp using only Imprint
+          palette members + anchors. Backgrounds are exactly #FAF8F1/#1A1A17; both
+          renders theme-correct with identical data colors.'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Professional but straightforward; follows library template without
-          distinctive choices
+        passed: true
+        comment: Deliberately reasoned semantic color ramp, tuned font sizes, custom
+          value formatter with a threshold fix. Not yet publication-tier polish.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Library defaults with margin/grid settings; minimal customization
+        passed: true
+        comment: Subtle y-only grid and adequate whitespace, but otherwise a fairly
+          standard stacked-bar treatment with no extra refinement touches.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed but without visual emphasis or focal point
+        passed: true
+        comment: Descending sort by favorable-response share gives the chart a clear
+          ranked narrative; printed percentages aid reading without a stronger additional
+          focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -121,25 +154,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar chart
+        comment: Genuine 100% stacked bar chart; every bar's segments sum to 100%.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: categories, components, proportions, legend'
+        comment: Distinct harmonious colors, clear legend, percentage labels in segments
+          where space permits, consistent component order across all bars -- all spec
+          notes satisfied.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible
+        comment: category -> x-axis topics, component -> stacked segments, value ->
+          normalized percentage. Correct throughout.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match
+        comment: Title exactly matches the mandated 'bar-stacked-percent · python
+          · pygal · anyplot.ai' format; legend labels match the five Likert components.
     data_quality:
       score: 15
       max: 15
@@ -149,19 +186,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all energy mix aspects
+        comment: 8 categories x 5 components, within the spec's 3-12 / 2-6 recommendation;
+          percentages sum to 100 in every bar.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world country data; neutral; comprehensible
+        comment: Employee engagement survey across 8 realistic HR topics is plausible
+          and neutral, not controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic percentages; 0-100% scale correct
+        comment: Underlying response counts (summing to a plausible ~400 respondents
+          per topic) and resulting percentages are sensible for the domain.
     code_quality:
       score: 10
       max: 10
@@ -171,33 +211,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; direct setup
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data
+        comment: Fully deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, pygal, and Style are all used; nothing extraneous.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no fake UI
+        comment: Appropriately simple; no simulated/fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files; current API
+        comment: Saves plot-{THEME}.png via render_to_png and plot-{THEME}.html via
+          render(); current pygal API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -205,19 +246,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic StackedBar usage; Style configuration; theme tokens; percentage
-          range constraint
+        comment: Uses pygal.StackedBar with a full Style object as the library recommends;
+          idiomatic high-level API throughout.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Uses value_formatter; otherwise standard implementation
+        passed: true
+        comment: Uses several pygal-distinctive knobs (print_values with a conditional
+          value_formatter, x_label_rotation, truncate_label, legend_at_bottom) --
+          the threshold-based label suppression is a genuinely distinctive fix for
+          a real rendering problem.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - grid-styling
