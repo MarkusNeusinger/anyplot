@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -143,7 +143,7 @@ chart = pygal.XY(
     style=custom_style,
     width=2400,
     height=2400,
-    title="spiral-timeseries · pygal · anyplot.ai",
+    title="spiral-timeseries · python · pygal · anyplot.ai",
     show_dots=False,
     stroke=True,
     show_x_labels=False,
@@ -158,8 +158,9 @@ chart = pygal.XY(
 for idx, (_, points) in enumerate(arc_runs):
     chart.add(f"run {idx}", points)
 
-# Month guide spokes (data only — no legend entry since show_legend=False)
-chart.add("Month grid", spoke_points)
+# Month guide spokes (data only — no legend entry since show_legend=False).
+# Thin dashed stroke keeps them a subtle background grid behind the data rings.
+chart.add("Month grid", spoke_points, stroke_style={"width": 1, "dasharray": "4,6"})
 
 # --- SVG post-processing: inject permanent month/year labels + a colorbar ---
 svg_bytes = chart.render()
