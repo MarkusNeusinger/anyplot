@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: box-grouped
 created: '2026-08-18T09:03:31Z'
-updated: '2026-08-18T09:08:40Z'
+updated: '2026-08-18T09:20:15Z'
 generated_by: claude-sonnet
 workflow_run: 32119069308
 issue: 2017
@@ -12,142 +12,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 96
 review:
   strengths:
-  - Correct Imprint palette order (green → lavender → blue, positions 1-3) with data
-    colors identical between light and dark renders
-  - Theme-adaptive chrome (ink/inkSoft/grid tokens) applied consistently; median line
-    uses page-bg color for contrast against the colored box fill, verified legible
-    on both light and dark surfaces
-  - 'Proper statistical construction: d3.quantile() for Q1/median/Q3 and explicit
-    1.5×IQR fence-based outlier separation, matching the spec''s explicit requirement
-    for median line, quartile box, whiskers, and outliers'
-  - Dynamic legend centering computed via real DOM getBBox() measurement — idiomatic,
-    robust D3 technique rather than a hard-coded offset
-  - Clean nested band scales (x0 outer / x1 inner) produce consistent box widths across
-    every group
-  - Realistic, neutral synthetic dataset (reaction-time study by task type × age group)
-    with plausible domain values and a clear underlying trend
+  - 'First categorical series is exact brand green #009E73, and Middle/Older use canonical
+    Imprint positions 2-3 (#C475FD, #4467A3) — correct since age groups are abstract
+    categories with no semantic color cue'
+  - 'Both plot backgrounds verified pixel-exact against tokens (#FAF8F1 light / #1A1A17
+    dark); all chrome (title, axis labels, ticks, legend, grid) is theme-adaptive
+    and reads cleanly in both renders'
+  - 'Complete grouped box-plot anatomy: quartile box, median line, 1.5*IQR whiskers
+    with caps, and outliers all present and correctly computed via d3.quantile'
+  - Deterministic in-memory data via a fixed-seed LCG (seed=42) plus Box-Muller normal
+    sampling — fully reproducible, no external dependency
+  - 'Nice data-storytelling touch: the ''+105 ms largest age gap'' callout highlights
+    the task type with the widest Young→Older shift, giving the chart a clear focal
+    point beyond raw data display'
+  - Median line and outlier strokes are drawn in the theme's page-background color,
+    creating a 'cutout' contrast effect that works correctly in both light and dark
+    without hardcoding two separate colors
+  - Legend width is measured via getBBox() and the group is re-centered dynamically,
+    keeping it balanced regardless of label text length
+  - Consistent box widths across all groups (shared x1 band scale), no edge clipping,
+    and good canvas utilization with balanced margins
   weaknesses:
-  - Two outlier points in the Combined / Older (51-70) group render almost exactly
-    on top of each other, producing a slightly merged marker cluster — add a small
-    deterministic horizontal jitter for outliers whose values fall within ~1% of the
-    y-range of another outlier in the same box so individual points stay separable
-  - Design excellence is solid but conventional — no visual-hierarchy device (e.g.
-    a light annotation on the largest age-related gap) calls out the clear trend across
-    task types; a small touch here would elevate data storytelling
-  - Title is proportionally small relative to the canvas (~26% of width) even though
-    it uses the prescribed 22px size and is fully legible — acceptable, but a touch
-    more visual weight would open the typographic hierarchy more clearly
+  - LM-02 (Distinctive Features) is solid but not maxed out — the box/whisker/outlier
+    construction and jittered outlier declustering are good use of D3's low-level
+    control, but nothing here is impossible to approximate in a higher-level box-plot
+    API; a small additional D3-only flourish (e.g. a violin-width overlay via d3.contourDensity,
+    or per-cell tooltips wired through the accompanying HTML) would push this further
+    into 'couldn't easily replicate elsewhere' territory
+  - Y-axis tick labels repeat the unit ('600 ms', '500 ms', ...) even though the axis
+    title already states 'Reaction Time (ms)' — a purely optional trim (e.g. bare
+    numbers on ticks) would reduce minor redundancy, not required
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold centered title "box-grouped · javascript · d3 · anyplot.ai" in dark ink; a 3-item legend
-        (Young 18-30 / Middle 31-50 / Older 51-70) with rounded color swatches sits below the title, dark
-        readable text; "Task Type" x-axis label and rotated "Reaction Time (ms)" y-axis label in dark ink;
-        tick labels in soft dark gray; subtle horizontal gridlines; L-shaped left+bottom axis frame only
-        (top/right spines removed).
-      Data: Four task-type groups (Visual, Auditory, Tactile, Combined) each containing three side-by-side
-        grouped boxes (green Young, lavender Middle, blue Older). Each box shows a colored quartile fill
-        (55% opacity) with matching stroke, a contrasting off-white median line, whisker lines with caps at
-        1.5×IQR, and small circular outliers colored to match their subcategory. First series is #009E73
-        (brand green) as required. Data trends upward from Auditory (lowest reaction times) to Combined
-        (highest), and within each task type from Young → Older, which reads clearly.
-      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the
-        light background; no light-on-light text found.
+      Background: Warm off-white, verified pixel-exact at RGB(250,248,241) = #FAF8F1 — matches the required light surface, not pure white.
+      Chrome: Bold dark title "box-grouped · javascript · d3 · anyplot.ai" centered at top; three-item legend (Young (18-30) green swatch, Middle (31-50) lavender swatch, Older (51-70) blue swatch) centered beneath it; dark axis titles "Task Type" (x) and "Reaction Time (ms)" (y, rotated); dark tick labels on both axes; subtle horizontal gridlines. All chrome elements are clearly legible against the light background.
+      Data: 4 task-type groups (Visual, Auditory, Tactile, Combined) each containing 3 side-by-side boxes (Young/Middle/Older). First series renders in the exact brand green #009E73, second in Imprint lavender #C475FD, third in Imprint blue #4467A3. Each box shows a translucent quartile fill, a contrasting median line, whiskers with caps, and circular outlier points. A dashed callout annotation reads "+105 ms largest age gap" over the Tactile group, connecting the Young and Older box positions.
+      Legibility verdict: PASS — all text reads cleanly against the light background, no overlap, no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and legend, now rendered in light ink (#F0EFE8-class) against the dark surface;
-        tick labels in a lighter soft gray; gridlines remain subtle; same L-shaped axis frame.
-      Data: Identical box/whisker/outlier layout and identical data colors to the light render (verified via
-        pixel crop) — only the chrome (background, text, grid) flips. The median line (rendered in the
-        page-background color) still reads clearly as a contrasting dark line against the lighter box fills
-        when zoomed in; no dark-on-dark failures were found for any title/axis/tick/legend text.
-      Legibility verdict: PASS — all chrome text is clearly readable against the dark background; brand
-        green swatch and data remain vivid and legible; no "dark on dark" failures observed.
-
-    Additional checks performed:
-      - Cropped and zoomed the Combined-group outlier cluster and the median-line region in both themes to
-        confirm marker separation and text/line contrast at full resolution.
-      - Canvas dimension gate: /tmp/anyplot-canvas-gate.txt does not exist → gate passed, PNG is at a valid
-        canonical size; no AR-09 edge clipping observed on any title, axis label, tick label, or legend entry.
+      Background: Warm near-black, verified pixel-exact at RGB(26,26,23) = #1A1A17 — matches the required dark surface, not pure black.
+      Chrome: Same title, legend, and axis labels now rendered in light ink tones (title/axis labels near-white, tick/legend text light gray), fully legible against the dark background. Gridlines are faint and unobtrusive. No dark-on-dark text anywhere — checked title, both axis titles, both tick label columns, and legend text individually.
+      Data: Box colors are pixel-identical to the light render (#009E73 / #C475FD / #4467A3) — only the chrome flipped, confirmed by side-by-side comparison. The median line and outlier-point stroke use the page-background color as their stroke (near-black here vs. off-white in light), which still reads as a clear contrasting line against the more saturated box fills in both themes (verified via a 2x-zoomed crop of the Middle/Older boxes in the Tactile group).
+      Legibility verdict: PASS — all text and data elements are clearly readable in the dark render; no washed-out or invisible elements found.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/axis/tick/legend text explicitly sized (22/16/14px) and
-          readable in both themes
+        comment: All font sizes explicitly set (22px title, 16px axis labels, 14px
+          ticks/legend, 12px callout); readable in both themes; no overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Two outliers in Combined/Older nearly overlap; otherwise no text
-          or data collisions
+        comment: No text/data collisions; legend, callout, and axis labels all clear
+          of the box groups
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box/whisker/outlier sizes appropriate for ~70-point-per-cell density
+        comment: Box widths, whisker caps, and outlier markers sized appropriately
+          for 70-trial-per-cell density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green sole signal
+        comment: Good contrast, CVD-safe Imprint hues, alpha-blended fills plus full-opacity
+          strokes for definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, generous margins, nothing clipped
+        comment: Plot area uses the large majority of the canvas, balanced margins,
+          legend positioned close to the chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (ms)
+        comment: Y-axis has units 'Reaction Time (ms)'; X-axis 'Task Type' is descriptive
+          for the categorical axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical order, first series #009E73, correct theme backgrounds,
-          identical data colors across themes'
+        comment: 'First series exact #009E73; canonical Imprint order for the remaining
+          2 series; backgrounds pixel-verified #FAF8F1/#1A1A17; chrome theme-correct
+          in both renders'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Opacity-blended fills, colored strokes, capped whiskers show polish
-          beyond bare defaults; no unique flourish
+        comment: Thoughtful hierarchy, page-bg 'cutout' median line, storytelling
+          callout — clearly above defaults, just short of full publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines reduced to L-shape, subtle grid, dynamically centered legend,
-          generous top margin
+        comment: Subtle Y-only grid, L-shaped spines, generous whitespace, edge-highlighted
+          outliers, alpha-blended box fills
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Grouped layout makes the age/task trend readable, but no explicit
-          emphasis or annotation on it
+        comment: Age-gap callout creates a clear focal point and interpretive hierarchy
+          beyond a raw data dump
     spec_compliance:
       score: 15
       max: 15
@@ -157,26 +146,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped box plot
+        comment: Correct grouped box plot with all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct subcategory colors, legend, consistent box widths, median/quartile/whisker/outliers
+        comment: Side-by-side distinct colors, legend, consistent box widths, median/quartile/whiskers-at-1.5-IQR/outliers
           all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=category, color=subcategory, y=value as specified
+        comment: Category on X, value on Y, subcategory as color — correct and complete
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match age-group
+        comment: Title matches the mandated format exactly; legend labels match subcategory
           data
     data_quality:
       score: 15
@@ -187,20 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 2-6 categories x 2-4 subcategories satisfied (4x3), all plot elements
-          present
+        comment: Distinct spreads/medians per task-type x age cell, outliers present
+          in several but not all cells
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral reaction-time study
+        comment: Reaction-time cognitive-science study, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 190-620ms values are sensible for the domain
+        comment: Reaction times 180-620ms with plausible age-related slowing and task-complexity
+          ordering (auditory fastest, combined slowest)
     code_quality:
       score: 10
       max: 10
@@ -210,57 +200,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only tiny RNG helper functions, no classes
+        comment: Flat script with only minimal necessary helpers (LCG, normal sampler,
+          outlier declustering)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used
+        comment: Only the global d3 is used, no unused code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity
+        comment: Appropriate complexity for the visualization, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, sized from ANYPLOT_SIZE, no animation/transitions
+        comment: Correctly follows the mount-node contract; no filesystem writes;
+          current d3 7.9 API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Nested scaleBand for grouping, d3-array quantile stats, data-join
+          .join() pattern throughout
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Nested band scales, d3.quantile, standard join pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: getBBox()-driven dynamic legend centering and explicit IQR fence
-          computation go beyond generic usage
+        comment: Manual box-plot construction with custom outlier-declustering algorithm
+          — good use of D3's low-level control, though not maximally unique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
   - edge-highlighting
