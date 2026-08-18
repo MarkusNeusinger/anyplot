@@ -1,13 +1,41 @@
+import { useEffect } from 'react';
+
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 
+import { useAnalytics } from 'src/hooks/useAnalytics';
 import { paths } from 'src/routes/paths';
 import { colors, semanticColors, typography } from 'src/theme';
 
-export function NotFoundPage() {
+/** Where the miss came from — a URL that matches no route is a different
+ *  problem from one that routes fine but names content we no longer have.
+ *
+ *  `impl_missing` is the odd one out: it is reported from SpecPage, which
+ *  redirects the visitor to the hub rather than rendering this page, so the
+ *  event fires without a 404 ever being shown. It is still the same signal —
+ *  a URL naming content that no longer exists — and it is the case a library
+ *  migration actually produces, so it belongs in the same event. */
+export type NotFoundSource =
+  'catch_all' | 'spec_missing' | 'impl_missing' | 'language_params' | 'route_error';
+
+interface NotFoundPageProps {
+  source?: NotFoundSource;
+}
+
+export function NotFoundPage({ source = 'catch_all' }: NotFoundPageProps = {}) {
+  const { trackEvent } = useAnalytics();
+
+  useEffect(() => {
+    // window.location rather than useLocation: this component is also the
+    // fallback inside RouteErrorBoundary, where router context is exactly the
+    // thing that may have failed, and an analytics call must never be the
+    // reason the 404 page itself cannot render.
+    trackEvent('page_not_found', { path: window.location.pathname, source });
+  }, [source, trackEvent]);
+
   return (
     <>
       <Helmet>

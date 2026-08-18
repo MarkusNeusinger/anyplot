@@ -143,6 +143,26 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `feedback_opened` | `path` | FeedbackWidget.tsx | User clicks the floating feedback FAB and the quick mini-stack of 👍 / 👎 / 💬 appears (issue #5662). `path` is `window.location.pathname + search` at open time. |
 | `feedback_submitted` | `path`, `reaction`?, `has_contact`, `spec_id`?, `mode` | FeedbackWidget.tsx | User submits a feedback entry. `reaction` ∈ `thumbs_up`, `thumbs_down`, `bug`, `idea` (omitted if none selected). `mode` is `"quick"` for a one-tap 👍/👎 from the mini-stack, `"full"` for a submit from the detailed dialog. `has_contact` is `"true"`/`"false"` — the contact field is now a free-form name/email/handle, not strictly an email. `spec_id` is set when the current route resolves to a spec page. |
 
+### Diagnostics
+
+| Event | Properties | Source | Description |
+|-------|-----------|--------|-------------|
+| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname`. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the spec itself does not exist), `impl_missing` (the spec exists but not that library/language pair), `language_params` (a `/{spec}/{language}` URL arrived without both segments), `route_error` (the router returned a 404 response). |
+
+Read `source` before `path`. A `catch_all` miss is usually a bad inbound link;
+`impl_missing` is content that used to exist and no longer does, which is the
+pattern a library migration leaves behind and the one worth alerting on.
+
+One asymmetry to know about: `impl_missing` fires without a 404 page ever being
+shown. `SpecPage.tsx` redirects those visitors to the spec hub with a language
+filter, to preserve their intent — so the event is reported from there rather
+than from `NotFoundPage.tsx`. Every other source accompanies a rendered 404.
+
+The bot-facing side of the same URLs answers HTTP 404 from `api/routers/seo.py`,
+but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
+agents with `return 202` on `/api/event`, so nothing they do appears here — this
+event covers humans only.
+
 ### Landing page navigation (`nav_click`)
 
 A single event captures every clickable surface on the chrome and the new

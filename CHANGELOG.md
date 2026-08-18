@@ -18,6 +18,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **Dead URLs are now visible in analytics** — a new `page_not_found` Plausible event fires when a
+  visitor reaches a URL the app cannot serve, carrying the requested `path` and a `source` that
+  separates the kinds of miss: `catch_all` (matches no route — usually a bad inbound link) from
+  `spec_missing` (the route resolved but the content is gone — the pattern a library migration
+  leaves behind), plus `language_params` and `route_error`. Instrumented once inside
+  `NotFoundPage.tsx`, which covers all four call sites, and read from `window.location` rather than
+  router context, because the same component is the fallback inside `RouteErrorBoundary` where that
+  context is what may have failed. A fifth source, `impl_missing`, is reported from `SpecPage.tsx`,
+  which redirects such visitors to the hub instead of rendering a 404 — without it the event would
+  have missed the exact case it was built for, since that silent redirect is what a library
+  migration produces. Documented in `docs/reference/plausible.md` (#10453 covers the crawler-facing
+  half; bots run no JavaScript, so the two never overlap).
 - **Search Console API access, documented and reproducible** — `docs/reference/seo.md` gains a
   "Search Console API access" section: the domain property (`sc-domain:anyplot.ai`), the
   Application Default Credentials login that carries the `webmasters.readonly` scope, a

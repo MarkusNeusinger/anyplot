@@ -25,7 +25,7 @@ const lazySpec = () =>
 
 function SpecLanguageRedirect() {
   const { specId, language } = useParams();
-  if (!specId || !language) return <NotFoundPage />;
+  if (!specId || !language) return <NotFoundPage source="language_params" />;
   return (
     <Navigate
       to={{ pathname: specPath(specId), search: `?language=${encodeURIComponent(language)}` }}
@@ -97,7 +97,7 @@ const router = createBrowserRouter([
           { path: ':specId', lazy: lazySpec },
           { path: ':specId/:language', element: <SpecLanguageRedirect /> },
           { path: ':specId/:language/:library', lazy: lazySpec },
-          { path: '*', element: <NotFoundPage /> },
+          { path: '*', element: <NotFoundPage source="catch_all" /> },
         ],
       },
     ],
