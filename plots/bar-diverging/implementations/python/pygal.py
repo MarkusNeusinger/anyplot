@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-08
+Library: pygal | Python 3.13
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -22,7 +22,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# imprint semantic anchors: green for positive, red for negative
+# Imprint palette: brand green for positive, matte-red semantic anchor for negative
 IMPRINT = ("#009E73", "#AE3030")
 
 # Data - Customer satisfaction survey scores by department
@@ -47,7 +47,9 @@ sorted_data = sorted(zip(departments, scores, strict=True), key=lambda x: x[1])
 sorted_departments = [d[0] for d in sorted_data]
 sorted_scores = [d[1] for d in sorted_data]
 
-# Custom style with theme-adaptive colors and proper font sizing
+# Custom style with theme-adaptive colors and proper font sizing.
+# Title is longer than the 67-char baseline, so its size is scaled down
+# proportionally (see prompts/plot-generator.md "Title fontsize must scale").
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
@@ -55,22 +57,24 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=22,
-    major_label_font_size=18,
-    legend_font_size=16,
-    value_font_size=14,
-    value_label_font_size=14,
-    tooltip_font_size=14,
-    stroke_width=2,
+    opacity=".92",
+    opacity_hover="1",
+    title_font_size=60,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    value_label_font_size=36,
+    tooltip_font_size=32,
+    stroke_width=2.5,
 )
 
 # Create horizontal bar chart (better for long labels)
 chart = pygal.HorizontalBar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="Customer Satisfaction Survey · bar-diverging · pygal · anyplot.ai",
+    title="Customer Satisfaction Survey · bar-diverging · python · pygal · anyplot.ai",
     x_title="Satisfaction Score",
     show_legend=True,
     legend_at_bottom=True,
@@ -81,8 +85,9 @@ chart = pygal.HorizontalBar(
     print_values_position="center",
     value_formatter=lambda x: f"{x:+.0f}" if x else "",
     range=(-100, 100),
-    margin=50,
-    spacing=20,
+    margin=40,
+    spacing=16,
+    truncate_label=-1,
 )
 
 # Add data with color based on positive/negative
