@@ -102,6 +102,18 @@ jobs:
           check "$GOOGLEBOT"   "$ORIGIN/llms.txt" "# anyplot"
           check "$CHATGPTUSER" "$ORIGIN/llms.txt" "# anyplot"
 
+          # A trailing slash must normalise to the canonical URL on THIS host.
+          # It used to 307 to http://api.anyplot.ai/seo-proxy/... — internal
+          # path, wrong host, plain http, and that host disallows all crawling.
+          slash_target=$(curl -sS --max-time 30 -o /dev/null -A "$GOOGLEBOT" \
+            -w '%{redirect_url}' "$ORIGIN/scatter-basic/")
+          case "$slash_target" in
+            *"/seo-proxy"*|http://*)
+              echo "::error::trailing-slash redirect leaks or downgrades: $slash_target"
+              fail=1 ;;
+            *) echo "OK: trailing slash -> $slash_target" ;;
+          esac
+
           # Control: humans must still get the SPA shell
           check "$HUMAN" "$ORIGIN/" '<div id="root">'
 
