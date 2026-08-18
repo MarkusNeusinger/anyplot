@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 94/100 | Updated: 2026-05-08
@@ -42,36 +42,37 @@ sorted_indices = np.argsort(values)
 categories_sorted = [categories[i] for i in sorted_indices]
 values_sorted = values[sorted_indices]
 
-# imprint semantic anchors: green for positive, red for negative
+# Imprint palette: brand green for positive (sentiment positive -> green),
+# matte-red semantic anchor for negative (sentiment negative -> red)
 colors = ["#009E73" if v >= 0 else "#AE3030" for v in values_sorted]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Create horizontal bars
 y_pos = np.arange(len(categories_sorted))
-ax.barh(y_pos, values_sorted, color=colors, height=0.7, edgecolor=INK_SOFT, linewidth=0.8)
+ax.barh(y_pos, values_sorted, color=colors, height=0.7, edgecolor=INK_SOFT, linewidth=0.4)
 
 # Add vertical line at zero
-ax.axvline(x=0, color=INK_SOFT, linewidth=2, alpha=0.8)
+ax.axvline(x=0, color=INK_SOFT, linewidth=1, alpha=0.8)
 
 # Styling
 ax.set_yticks(y_pos)
-ax.set_yticklabels(categories_sorted, fontsize=16, color=INK_SOFT)
-ax.set_xlabel("Net Satisfaction Score", fontsize=20, color=INK)
-ax.set_title("bar-diverging · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
-ax.tick_params(axis="x", labelsize=16, colors=INK_SOFT)
+ax.set_yticklabels(categories_sorted, fontsize=8, color=INK_SOFT)
+ax.set_xlabel("Net Satisfaction Score", fontsize=10, color=INK)
+ax.set_title("bar-diverging · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="x", labelsize=8, colors=INK_SOFT)
 
 # Grid on x-axis only, subtle
-ax.xaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK_SOFT)
+ax.xaxis.grid(True, alpha=0.15, linewidth=0.4, color=INK_SOFT)
 ax.set_axisbelow(True)
 
 # Add value labels at the end of each bar
 for val, y in zip(values_sorted, y_pos, strict=True):
     offset = 3 if val >= 0 else -3
     ha = "left" if val >= 0 else "right"
-    ax.text(val + offset, y, f"{val:+d}", va="center", ha=ha, fontsize=14, color=INK, fontweight="bold")
+    ax.text(val + offset, y, f"{val:+d}", va="center", ha=ha, fontsize=7, color=INK, fontweight="bold")
 
 # Set x-axis limits with padding
 max_abs = max(abs(values_sorted.min()), abs(values_sorted.max()))
@@ -88,12 +89,12 @@ legend_elements = [
     Patch(facecolor="#009E73", edgecolor=INK_SOFT, label="Positive (Satisfied)"),
     Patch(facecolor="#AE3030", edgecolor=INK_SOFT, label="Negative (Dissatisfied)"),
 ]
-leg = ax.legend(handles=legend_elements, loc="lower right", fontsize=16)
+leg = ax.legend(handles=legend_elements, loc="lower right", fontsize=8)
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
-    leg.get_frame().set_linewidth(0.8)
+    leg.get_frame().set_linewidth(0.4)
     plt.setp(leg.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
