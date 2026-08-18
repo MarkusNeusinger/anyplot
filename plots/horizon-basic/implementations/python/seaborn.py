@@ -1,29 +1,36 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.12
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
 
 import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Data - Stock price deviations from 20-day moving average (5 stocks over 90 trading days)
+# Imprint palette — blue (gain) vs. matte red (loss) diverging pair; both are
+# CVD-distinguishable, unlike a green/red pairing that deuteranopes/protanopes
+# cannot tell apart.
+IMPRINT_PALETTE = ["#009E73", "#C475FD", "#4467A3", "#BD8233", "#AE3030", "#2ABCCD", "#954477", "#99B314"]
+GAIN_BASE = IMPRINT_PALETTE[2]  # blue
+LOSS_BASE = IMPRINT_PALETTE[4]  # matte red — semantic anchor for loss
+
+# Data - stock price deviations from 20-day moving average (5 stocks over 90 trading days)
 np.random.seed(42)
 trading_days = 90
 stocks = ["TECH", "FINANCE", "ENERGY", "HEALTHCARE", "RETAIL"]
 
-# Generate realistic stock deviation patterns with seasonality
 data = []
 for stock_idx, stock in enumerate(stocks):
     np.random.seed(42 + stock_idx)
@@ -46,10 +53,9 @@ for stock_idx, stock in enumerate(stocks):
         noise = np.random.randn(trading_days) * 4
         values = base + noise
     else:
-        base = np.zeros(trading_days)
         drift = np.linspace(-8, 8, trading_days)
         noise = np.random.randn(trading_days) * 3
-        values = base + drift + noise
+        values = drift + noise
 
     values = np.clip(values, -15, 15)
     for day, v in enumerate(values):
@@ -57,93 +63,107 @@ for stock_idx, stock in enumerate(stocks):
 
 df = pd.DataFrame(data)
 
-# Horizon chart parameters
+# Horizon chart parameters — 3 intensity bands per polarity, generated from the
+# Imprint gain/loss anchors via seaborn's own sequential-palette builder.
 n_bands = 3
 band_height = 15 / n_bands
+gain_colors = sns.light_palette(GAIN_BASE, n_colors=n_bands + 1)[1:]
+loss_colors = sns.light_palette(LOSS_BASE, n_colors=n_bands + 1)[1:]
 
-# Create figure
-fig, axes = plt.subplots(len(stocks), 1, figsize=(16, 9), sharex=True)
-fig.patch.set_facecolor(PAGE_BG)
-fig.subplots_adjust(hspace=0.06)
+# Theme-adaptive chrome via seaborn's rc-based theme context
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.15,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
-# Color palettes for positive (green) and negative (red)
-positive_colors = ["#E8F5E9", "#66BB6A", "#2E7D32"]
-negative_colors = ["#FFEBEE", "#EF5350", "#C62828"]
+# Plot — one row per stock via seaborn's FacetGrid, hand-filled with folded
+# horizon bands (see prompts/library/seaborn.md "Canvas — hard rule")
+g = sns.FacetGrid(df, row="stock", row_order=stocks, sharex=True, sharey=True, despine=True)
+g.fig.set_size_inches(8, 4.5)
+g.fig.set_dpi(400)
+g.fig.subplots_adjust(hspace=0.06, top=0.85, bottom=0.34, left=0.24, right=0.97)
+g.set_titles("")
 
-for idx, stock in enumerate(stocks):
-    ax = axes[idx]
-    ax.set_facecolor(PAGE_BG)
+for idx, (stock, ax) in enumerate(zip(stocks, g.axes.flat, strict=True)):
     stock_data = df[df["stock"] == stock]
     x = np.arange(len(stock_data))
-    values = stock_data["deviation"].values
+    values = stock_data["deviation"].to_numpy()
 
     ax.set_xlim(0, len(x))
     ax.set_ylim(0, band_height)
 
-    positive_vals = np.maximum(values, 0)
-    negative_vals = np.abs(np.minimum(values, 0))
+    gain_vals = np.maximum(values, 0)
+    loss_vals = np.abs(np.minimum(values, 0))
 
-    # Draw negative bands (red)
     for band_idx in range(n_bands):
         band_min = band_idx * band_height
-        neg_folded = np.clip(negative_vals - band_min, 0, band_height)
-        neg_mask = (negative_vals > band_min) & (values < 0)
-        neg_y = np.where(neg_mask, neg_folded, np.nan)
-        ax.fill_between(x, 0, neg_y, color=negative_colors[band_idx], alpha=0.85, linewidth=0)
 
-    # Draw positive bands (green)
-    for band_idx in range(n_bands):
-        band_min = band_idx * band_height
-        pos_folded = np.clip(positive_vals - band_min, 0, band_height)
-        pos_mask = (positive_vals > band_min) & (values > 0)
-        pos_y = np.where(pos_mask, pos_folded, np.nan)
-        ax.fill_between(x, 0, pos_y, color=positive_colors[band_idx], alpha=0.85, linewidth=0)
+        loss_folded = np.clip(loss_vals - band_min, 0, band_height)
+        loss_mask = (loss_vals > band_min) & (values < 0)
+        ax.fill_between(
+            x, 0, np.where(loss_mask, loss_folded, np.nan), color=loss_colors[band_idx], alpha=0.95, linewidth=0
+        )
+
+        gain_folded = np.clip(gain_vals - band_min, 0, band_height)
+        gain_mask = (gain_vals > band_min) & (values > 0)
+        ax.fill_between(
+            x, 0, np.where(gain_mask, gain_folded, np.nan), color=gain_colors[band_idx], alpha=0.95, linewidth=0
+        )
 
     ax.set_ylabel(stock, fontsize=16, rotation=0, ha="right", va="center", labelpad=15, color=INK)
     ax.set_yticks([])
-
-    # Enhanced grid for better time tracking
     ax.grid(True, axis="x", alpha=0.2, linewidth=0.8, color=INK_SOFT)
     ax.set_axisbelow(True)
-
-    # Style spines
-    for spine in ["top", "right", "left"]:
+    for spine in ("top", "right", "left"):
         ax.spines[spine].set_visible(False)
-    ax.spines["bottom"].set_color(INK_SOFT)
     ax.spines["bottom"].set_visible(idx == len(stocks) - 1)
-    ax.tick_params(axis="x", colors=INK_SOFT, labelsize=16, bottom=(idx == len(stocks) - 1))
+    ax.tick_params(axis="x", labelsize=14, bottom=(idx == len(stocks) - 1))
 
 # X-axis formatting
 tick_positions = np.arange(0, trading_days, 15)
 tick_labels = [f"Day {i}" for i in tick_positions]
-axes[-1].set_xticks(tick_positions)
-axes[-1].set_xticklabels(tick_labels, fontsize=16, color=INK_SOFT)
-axes[-1].set_xlabel("Trading Days (90-day period)", fontsize=20, color=INK)
+last_ax = g.axes.flat[-1]
+last_ax.set_xticks(tick_positions)
+last_ax.set_xticklabels(tick_labels)
+last_ax.set_xlabel("Trading Days (90-day period)", fontsize=18, color=INK)
 
 # Title
-fig.suptitle("horizon-basic · seaborn · anyplot.ai", fontsize=24, y=0.98, fontweight="medium", color=INK)
+g.fig.suptitle("horizon-basic · python · seaborn · anyplot.ai", fontsize=22, y=0.97, fontweight="bold", color=INK)
 
-# Legend
+# Legend — single row anchored below the x-axis label, entirely clear of every facet's data
 legend_patches = [
-    mpatches.Patch(color=positive_colors[0], label="Low positive (0–5 pp)"),
-    mpatches.Patch(color=positive_colors[1], label="Medium positive (5–10 pp)"),
-    mpatches.Patch(color=positive_colors[2], label="High positive (10–15 pp)"),
-    mpatches.Patch(color=negative_colors[0], label="Low negative (0–5 pp)"),
-    mpatches.Patch(color=negative_colors[1], label="Medium negative (5–10 pp)"),
-    mpatches.Patch(color=negative_colors[2], label="High negative (10–15 pp)"),
+    mpatches.Patch(color=gain_colors[0], label="Gain 0-5 pp"),
+    mpatches.Patch(color=gain_colors[1], label="Gain 5-10 pp"),
+    mpatches.Patch(color=gain_colors[2], label="Gain 10-15 pp"),
+    mpatches.Patch(color=loss_colors[0], label="Loss 0-5 pp"),
+    mpatches.Patch(color=loss_colors[1], label="Loss 5-10 pp"),
+    mpatches.Patch(color=loss_colors[2], label="Loss 10-15 pp"),
 ]
-fig.legend(
+g.fig.legend(
     handles=legend_patches,
-    loc="upper right",
-    bbox_to_anchor=(0.98, 0.92),
-    fontsize=14,
-    title="Deviation from 20-day MA (percentage points)",
-    title_fontsize=14,
+    loc="lower center",
+    bbox_to_anchor=(0.5, 0.01),
+    fontsize=15,
     framealpha=0.95,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
-    ncol=2,
+    ncol=3,
+    handlelength=1.4,
+    handletextpad=0.5,
+    columnspacing=1.3,
 )
 
-plt.tight_layout(rect=[0, 0, 1, 0.95])
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+# Save
+g.fig.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
