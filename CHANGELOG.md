@@ -199,6 +199,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Home-page filter params were self-canonicalising** — the bot page built its canonical from the
+  request query string, so `/?spec=point-basic` declared itself a page in its own right rather than
+  a view of the home page, and Search Console had it indexed as one (last crawled 2026-05-26). Every
+  filter combination was a candidate. The canonical and `og:url` are now always `https://anyplot.ai/`;
+  `og:image` and `og:url` still carry them: neither is a canonicalisation signal, and `og:url` is
+  where a shared card sends its reader, so dropping it there would land every shared filter link on
+  the bare home page and defeat the tracking the params exist for. The bot template's `og:url` and
+  `canonical` slots, previously one value, are now separate — defaulting to identical, so every
+  other handler is unchanged. Verified that `?view=` and `?language=` on implementation and hub
+  pages were already correct. Verified that `?view=` and `?language=` on implementation and
+  hub pages were already correct.
 - **Meta descriptions were three times too long to survive a search result** — every prerendered
   page passed the full spec description straight into `<meta name="description">`. Measured across
   40 live pages: median 424 characters, longest 801, and all 40 over Google's ~155-character
