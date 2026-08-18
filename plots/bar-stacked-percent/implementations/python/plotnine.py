@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 49/100 | Updated: 2026-08-18
@@ -97,6 +97,27 @@ def _label_color(fill_hex):
 df["Label"] = df["Share"].astype(str) + "%"
 df["LabelColor"] = df["Company"].map(color_map).map(_label_color)
 
+# Precompute label y-positions explicitly (SC-03/VQ-02 fix): geom_bar and
+# geom_text each calling their own independent position_fill() can derive
+# mismatched per-group cumulative offsets when the source rows are grouped
+# by company rather than interleaved per quarter. Instead, compute the exact
+# fill-stack midpoint per (Quarter, Company) ourselves -- stacked bottom-to-top
+# as Apple/Samsung/Xiaomi/Others, i.e. the reverse of the legend/factor order,
+# matching plotnine's default stacking -- and feed it to geom_text via
+# position="identity" so both layers are guaranteed to agree.
+stack_order_bottom_to_top = ["Apple", "Samsung", "Xiaomi", "Others"]
+stack_rank = {company: rank for rank, company in enumerate(stack_order_bottom_to_top)}
+# .map() on a Categorical column returns a Categorical result that inherits
+# the *original* category order, so sorting by it would sort by category
+# position rather than by the mapped rank value -- cast to plain strings
+# first so the mapped ranks are ordinary integers.
+df["StackRank"] = df["Company"].astype(str).map(stack_rank)
+df = df.sort_values(["Quarter", "StackRank"]).reset_index(drop=True)
+df["Fraction"] = df["Share"] / 100
+cum_top = df.groupby("Quarter", observed=True)["Fraction"].cumsum()
+cum_bottom = cum_top - df["Fraction"]
+df["LabelY"] = (cum_top + cum_bottom) / 2
+
 # Theme-adaptive chrome
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -120,7 +141,7 @@ anyplot_theme = theme(
 plot = (
     ggplot(df, aes(x="Quarter", y="Share", fill="Company"))
     + geom_bar(stat="identity", position=position_fill(), width=0.7)
-    + geom_text(aes(label="Label", color="LabelColor"), position=position_fill(vjust=0.5), size=2.8, show_legend=False)
+    + geom_text(aes(y="LabelY", label="Label", color="LabelColor"), position="identity", size=2.8, show_legend=False)
     + scale_fill_manual(values=color_map)
     + scale_color_identity()
     + scale_y_continuous(labels=percent_format())
