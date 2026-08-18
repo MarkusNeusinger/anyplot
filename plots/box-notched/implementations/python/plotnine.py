@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
-Library: plotnine 0.15.8 | Python 3.13.13
+Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 90/100 | Updated: 2026-08-18
 """
 
