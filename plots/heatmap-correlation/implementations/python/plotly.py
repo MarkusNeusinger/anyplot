@@ -1,6 +1,6 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: plotly 6.9.0 | Python 3.13.13
+Library: plotly 6.9.0 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
 """
 
