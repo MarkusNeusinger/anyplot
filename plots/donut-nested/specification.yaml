@@ -6,7 +6,7 @@ title: Nested Donut Chart
 
 # Specification tracking
 created: 2025-12-25T09:00:37Z
-updated: 2026-05-08T00:53:15Z
+updated: 2026-08-18T06:32:05Z
 issue: 2015
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - donut
-    - pie
   data_type:
     - categorical
     - hierarchical
