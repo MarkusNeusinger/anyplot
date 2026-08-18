@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -29,6 +29,7 @@ element_rect = plotnine.element_rect
 element_text = plotnine.element_text
 geom_bar = plotnine.geom_bar
 geom_hline = plotnine.geom_hline
+geom_text = plotnine.geom_text
 ggplot = plotnine.ggplot
 labs = plotnine.labs
 scale_fill_manual = plotnine.scale_fill_manual
@@ -69,11 +70,20 @@ df["category"] = pd.Categorical(df["category"], categories=df["category"], order
 # Color based on positive/negative (Imprint palette, semantic red/green anchors)
 df["sentiment"] = df["value"].apply(lambda x: "Positive" if x >= 0 else "Negative")
 
+# Value labels give a redundant, color-independent cue for direction/magnitude
+# (not just hue) and call out the standout categories (+72 leader, -62 laggard).
+pos_df = df[df["value"] >= 0].copy()
+pos_df["label"] = pos_df["value"].apply(lambda v: f"+{v}")
+neg_df = df[df["value"] < 0].copy()
+neg_df["label"] = neg_df["value"].apply(lambda v: f"{v}")
+
 # Plot
 plot = (
     ggplot(df, aes(x="category", y="value", fill="sentiment"))
     + geom_bar(stat="identity", width=0.7)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8)
+    + geom_text(pos_df, aes(y="value + 3", label="label"), color=INK_SOFT, size=7, ha="left")
+    + geom_text(neg_df, aes(y="value - 3", label="label"), color=INK_SOFT, size=7, ha="right")
     + coord_flip()
     + scale_fill_manual(values={"Positive": "#009E73", "Negative": "#AE3030"})
     + labs(
