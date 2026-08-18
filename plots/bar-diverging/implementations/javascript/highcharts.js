@@ -36,7 +36,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Net satisfaction score by product category, sorted low to high",
+    text: "Net satisfaction score by product category, sorted low to high (green = above zero, red = below zero)",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
@@ -57,7 +57,8 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false },
     bar: {
-      borderWidth: 0,
+      borderWidth: 1,
+      borderColor: t.pageBg,
       pointPadding: 0.1,
       groupPadding: 0.05,
       dataLabels: {
