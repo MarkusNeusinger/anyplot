@@ -2,124 +2,132 @@ library: bokeh
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:48:28Z'
-updated: '2026-05-08T09:02:37Z'
-generated_by: claude-haiku
-workflow_run: 25546402730
+updated: '2026-08-18T12:49:41Z'
+generated_by: claude-sonnet
+workflow_run: 32138065081
 issue: 2009
-python_version: 3.13.13
-library_version: 3.9.0
+language_version: 3.13.15
+library_version: 3.9.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - Perfect technical execution with all text explicitly sized and readable in both
-    light and dark themes
-  - 'Excellent palette compliance: correct Okabe-Ito colors with perfect theme-adaptive
-    chrome in both renders'
-  - Clear data storytelling through sorting, color contrast, and zero baseline focal
-    point that guides the viewer
-  - Clean, deterministic code following KISS principle with idiomatic Bokeh usage
-  - Realistic, neutral customer satisfaction survey context demonstrating full feature
-    range
+  - 'Correctly implements the diverging structure: bars sorted by value, extending
+    from a clear zero baseline (Span) with opposite alignment for positive/negative
+    value labels'
+  - Semantic color choice (brand green for positive, matte red for negative) matches
+    the documented Imprint 'sentiment/polarity' exception and is reinforced by bar
+    direction and signed +/- value labels, so color is never the sole signal
+  - Theme-adaptive chrome is threaded through consistently — both plot-light.png and
+    plot-dark.png are fully legible with correct backgrounds, ink tokens, and identical
+    data colors
+  - Direct value labels at each bar end make a legend unnecessary and improve at-a-glance
+    readability
+  - 'Idiomatic bokeh usage: ColumnDataSource, HoverTool for HTML-only interactivity,
+    LabelSet for direct labeling, Span for the zero baseline'
+  - Deterministic, seed-free data; clean imports; no fake UI; correct plot-{theme}.png/.html
+    output contract
   weaknesses:
-  - Design could reach publication-level sophistication; zero baseline is a nice touch
-    but additional refinement in typography hierarchy or custom styling would elevate
-    DE-01 above 4/8
-  - Could leverage more distinctive Bokeh features (interactive callbacks, selection
-    tools, custom glyphs) for stronger library mastery score
+  - Y-axis label 'Category' is largely redundant with the self-explanatory category
+    tick labels directly beside it (Product Quality, Tech Support, etc.) — consider
+    dropping it per the style guide's 'redundant axis labels' guidance to reclaim
+    a little left margin
+  - Value labels use the secondary INK_SOFT gray for both positive and negative bars
+    — legible in both themes, but a touch more contrast (or matching each label to
+    its bar's hue) would make the labels pop slightly more at a glance, especially
+    at mobile scale
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), exactly as specified
-      Chrome: Title "bar-diverging · bokeh · anyplot.ai" and axis labels rendered in dark ink (#1A1A17); all perfectly readable against light background
-      Data: 10 horizontal bars with green (#009E73) for positive satisfaction scores extending right, orange (#D55E00) for negative scores extending left; subtle vertical grid at 10% alpha; discrete vertical line at zero baseline; category labels fully readable
-      Legibility verdict: PASS - excellent contrast, no dark-on-dark issues, all elements distinguished
+      Background: Warm off-white, matches #FAF8F1, not pure white and not dark.
+      Chrome: Bold dark title "bar-diverging · bokeh · anyplot.ai" top-left, clearly visible. Italic axis titles "Net Satisfaction Score" (x) and "Category" (y) in dark ink. Category tick labels (Return Policy, Product Quality, ... Tech Support) in soft gray, fully readable. Subtle vertical gridlines at -40/-20/0/20/40/60 on the value axis only; no horizontal gridlines. A solid black vertical line marks the zero baseline.
+      Data: 10 horizontal bars sorted descending by value from +52 (Return Policy, top) to -35 (Tech Support, bottom). Positive bars are brand green (#009E73), negative bars are matte red (#AE3030). Each bar has a signed value label ("+52", "-35", etc.) in soft gray positioned just past the bar end, aligned away from the zero baseline.
+      Legibility verdict: PASS — all title, axis, tick, and data-label text is clearly readable against the light background; no overlap or clipping observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), exactly as specified
-      Chrome: Title and axis labels rendered in light tones (#F0EFE8 primary, #B8B7B0 secondary); all clearly visible against dark background with no dark-on-dark failures
-      Data: Green and orange bar colors are identical to light render (confirming only chrome adapted to theme); zero baseline visible; subtle grid maintained; all category labels remain fully readable in light text
-      Legibility verdict: PASS - perfect theme adaptation with clear text hierarchy and zero contrast failures; brand green #009E73 displays well on dark surface
+      Background: Warm near-black, matches #1A1A17, not pure black and not light.
+      Chrome: Title and axis titles render in light off-white ink; tick and value labels in the lighter secondary gray token. Gridlines and zero-baseline line flip to light-on-dark equivalents. Layout, spacing, and label positions are identical to the light render.
+      Data: Same bar colors and same sorted order as the light render — brand green for positive, matte red for negative — confirming the Imprint categorical data colors are held constant across themes; only chrome (background, text, grid, outline) adapts.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; every text element (title, axis labels, category ticks, value labels) is clearly legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28pt title, 22pt labels, 18pt ticks);
-          perfect readability in both themes
+        comment: All text readable at full size in both themes; explicit font sizes
+          throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlap—all category labels and axis ticks fully distinct and
-          readable
+        comment: No collisions between labels, bars, or axis text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar heights optimally sized with 0.7 spacing; all elements clearly
-          visible
+        comment: Bar height (0.62) and subtle edge stroke give clear, well-proportioned
+          elements for 10 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and orange (#D55E00) have excellent contrast; Okabe-Ito
-          palette is CVD-safe
+        comment: Green/red is reinforced by bar direction and signed value labels,
+          so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent balance; plot fills ~65% of canvas with generous balanced
-          margins
+        comment: Correct 3200x1800 canvas, generous min_border reservations, nothing
+          cut off or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Category'' and ''Net Satisfaction Score'''
+        comment: Descriptive axis titles and mandated chart title present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect: #009E73 (pos.), #D55E00 (neg.), correct backgrounds, theme-adaptive
-          chrome, identical data colors across renders'
+        comment: Brand green first-series, matte-red semantic exception for negative
+          sentiment, correct theme backgrounds
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default with intentional color choice and
-          zero-baseline detail, but not publication-exceptional
+        passed: true
+        comment: Deliberate semantic color mapping and clear typographic hierarchy;
+          not highly novel beyond that
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: subtle grid (10% alpha), L-shaped frame, generous
-          whitespace, zero baseline adds polish'
+        comment: Value-axis-only grid at low alpha, category-axis grid off, subtle
+          bar edge stroke, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy through sorting, color contrast split at zero,
-          and baseline focal point
+        comment: Sort-by-value plus zero baseline plus direct labels create a clear
+          positive/negative narrative
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct diverging bar chart with positive and negative bars
+        comment: Correct diverging bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: opposite-direction bars, contrasting colors,
-          zero baseline'
+        comment: Contrasting colors, horizontal orientation, zero baseline indicator,
+          sorted by value — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Perfect X/Y mapping; all data visible; axes correctly labeled
+        comment: category -> y, value -> x, all 10 categories shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title correct: ''bar-diverging · bokeh · anyplot.ai'''
+        comment: Title format matches sibling bar-diverging implementations; no legend
+          needed since color is self-explanatory via signed labels
     data_quality:
       score: 15
       max: 15
@@ -158,21 +167,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: -35 to +52, both positive and negative, all 10
-          categories'
+        comment: Shows sorted categories, positive/negative divergence, signed labels,
+          zero baseline
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic customer satisfaction survey context (NPS-style); plausible
-          categories and values
+        comment: Plausible, neutral customer-satisfaction NPS-style survey data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct survey satisfaction proportions
+        comment: Values -35 to +52, sensible within the spec's -100 to +100 satisfaction-score
+          domain
     code_quality:
       score: 10
       max: 10
@@ -182,34 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → tokens → data → figure → styling → output; no unnecessary
-          functions'
+        comment: Flat top-to-bottom script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Completely deterministic with hardcoded data
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, time, Path, bokeh, selenium'
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity; no over-engineering
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.html and plot-{THEME}.png'
+        comment: Saves plot-{theme}.png and plot-{theme}.html correctly
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -217,22 +225,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert usage: figure(), hbar(), ColumnDataSource, Span, output_file()/save()'
+        comment: Canonical ColumnDataSource + figure high-level API usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses distinctive features (Span for reference line, ColumnDataSource
-          binding); could leverage more
+        comment: HoverTool, LabelSet, and Span are well-chosen bokeh-distinctive features
+          for this chart type
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
-  techniques: []
+  - pillow
+  techniques:
+  - hover-tooltips
+  - annotations
+  - html-export
   patterns:
   - columndatasource
   dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
