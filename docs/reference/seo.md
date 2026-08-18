@@ -407,6 +407,89 @@ location = /sitemap.xml {
 }
 ```
 
+## Search Console API access
+
+Search Console holds data that no crawl of the site can reproduce: what people actually searched
+for, which URLs Google indexed, and when it last crawled them. Without it the `seo-auditor` in
+`/audit` falls back to `structural-only` mode. Credentials are per-machine, so set this up once
+on every machine you audit from.
+
+### Property and account
+
+The property is a domain property, `sc-domain:anyplot.ai`. Access is tied to the Google account
+that owns it — not to a service account, and not to the repository. Keep the machine-specific
+values in `.env`, which is gitignored:
+
+```bash
+SEARCH_CONSOLE_PROPERTY=sc-domain:anyplot.ai
+SEARCH_CONSOLE_ACCOUNT=owner@example.com
+```
+
+The same account also owns `sc-domain:pyplots.ai`, the site's former domain. Keep that property:
+it carries the crawl and redirect history of the migration to `anyplot.ai`.
+
+### Set up credentials
+
+1. Enable the API on the GCP project. This is already done for `anyplot` and only needs
+   repeating for a new project:
+
+   ```bash
+   gcloud services enable searchconsole.googleapis.com --project=anyplot
+   ```
+
+2. Authenticate with Application Default Credentials. The Search Console API needs the
+   `webmasters.readonly` scope, and ADC is the only credential on this machine that can carry
+   it:
+
+   ```bash
+   gcloud auth application-default login \
+     --scopes=https://www.googleapis.com/auth/cloud-platform,https://www.googleapis.com/auth/webmasters.readonly
+   gcloud auth application-default set-quota-project anyplot
+   ```
+
+   Always keep `cloud-platform` in the scope list. The login overwrites ADC, and dropping the
+   scope locks this machine's other Google clients (Cloud SQL, GCS) out.
+
+3. Verify that the property comes back:
+
+   ```bash
+   uv run --with google-auth --with requests python -c "
+   import google.auth
+   from google.auth.transport.requests import AuthorizedSession
+   creds, _ = google.auth.default(scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
+   resp = AuthorizedSession(creds).get('https://www.googleapis.com/webmasters/v3/sites')
+   print(resp.status_code, resp.text[:400])
+   "
+   ```
+
+   You want HTTP 200 and `sc-domain:anyplot.ai` with `permissionLevel: siteOwner` in the list.
+
+### Two traps that cost a session
+
+**`gcloud auth print-access-token` returns the wrong token.** It mints a token for the gcloud CLI
+credential, whose scope set is fixed (`cloud-platform`, `compute`, `sqlservice.login`) and can
+never include `webmasters.readonly`. Every Search Console call made with it fails, which is why
+audits before 2026-08-18 all reported `structural-only`. Read the token from ADC instead — either
+`google.auth.default()` in a script, or `gcloud auth application-default print-access-token`.
+
+**The localhost callback flow may never complete.** On some machines — WSL2 in particular — the
+default browser flow dies within seconds with `(missing_code) Missing code parameter in
+response`, because a port probe or a browser prefetch reaches `127.0.0.1:8085` before you finish
+the consent screen, and gcloud aborts on the first request without a `code` parameter. Retrying
+does not help. Use `--no-launch-browser` instead and paste the `4/0A…` code that Google displays;
+that code is single-use and PKCE-bound to the waiting process. When you run the login
+non-interactively, hold its stdin open (for example with `tail -f` on a file you append the code
+to), otherwise gcloud crashes with `EOFError` before you can answer the prompt.
+
+### What the API cannot answer
+
+Search Analytics (queries, pages, dates — without the UI's 1000-row cap), the `sitemaps`
+endpoint, and per-URL `urlInspection/index:inspect` (2000 calls per day) are all available. The
+**page indexing report buckets** — "Crawled – currently not indexed", "Discovered – currently not
+indexed", "Duplicate without user-selected canonical" — have no API at all. Those numbers only
+come from a CSV export in the Search Console UI, so ask for one when the question is about
+indexing coverage rather than about ranking.
+
 ## Testing
 
 ### Test bot detection locally
