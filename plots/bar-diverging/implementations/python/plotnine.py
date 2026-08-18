@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-diverging: Diverging Bar Chart
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-08
+Library: plotnine 0.15.8 | Python 3.13.15
+Quality: 89/100 | Updated: 2026-08-18
 """
 
 import importlib.util
@@ -29,6 +29,7 @@ element_rect = plotnine.element_rect
 element_text = plotnine.element_text
 geom_bar = plotnine.geom_bar
 geom_hline = plotnine.geom_hline
+geom_text = plotnine.geom_text
 ggplot = plotnine.ggplot
 labs = plotnine.labs
 scale_fill_manual = plotnine.scale_fill_manual
@@ -66,20 +67,29 @@ df = df.sort_values("value", ascending=True).reset_index(drop=True)
 # Create ordered categorical for proper sorting in plot
 df["category"] = pd.Categorical(df["category"], categories=df["category"], ordered=True)
 
-# Color based on positive/negative (Okabe-Ito palette)
+# Color based on positive/negative (Imprint palette, semantic red/green anchors)
 df["sentiment"] = df["value"].apply(lambda x: "Positive" if x >= 0 else "Negative")
+
+# Value labels give a redundant, color-independent cue for direction/magnitude
+# (not just hue) and call out the standout categories (+72 leader, -62 laggard).
+pos_df = df[df["value"] >= 0].copy()
+pos_df["label"] = pos_df["value"].apply(lambda v: f"+{v}")
+neg_df = df[df["value"] < 0].copy()
+neg_df["label"] = neg_df["value"].apply(lambda v: f"{v}")
 
 # Plot
 plot = (
     ggplot(df, aes(x="category", y="value", fill="sentiment"))
     + geom_bar(stat="identity", width=0.7)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8)
+    + geom_text(pos_df, aes(y="value + 3", label="label"), color=INK_SOFT, size=7, ha="left")
+    + geom_text(neg_df, aes(y="value - 3", label="label"), color=INK_SOFT, size=7, ha="right")
     + coord_flip()
     + scale_fill_manual(values={"Positive": "#009E73", "Negative": "#AE3030"})
     + labs(
         x="Product Category",
         y="Net Satisfaction Score (%)",
-        title="bar-diverging · plotnine · anyplot.ai",
+        title="bar-diverging · python · plotnine · anyplot.ai",
         fill="Sentiment",
     )
     + theme_minimal()
@@ -88,15 +98,15 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        axis_title=element_text(color=INK, size=20),
-        axis_text=element_text(color=INK_SOFT, size=16),
-        plot_title=element_text(color=INK, size=24),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
+        plot_title=element_text(color=INK, size=12),
         legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
-        legend_text=element_text(color=INK_SOFT, size=16),
-        legend_title=element_text(color=INK, size=18),
-        figure_size=(16, 9),
+        legend_text=element_text(color=INK_SOFT, size=8),
+        legend_title=element_text(color=INK, size=9),
+        figure_size=(8, 4.5),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
