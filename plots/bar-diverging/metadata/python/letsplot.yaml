@@ -2,45 +2,58 @@ library: letsplot
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:48:32Z'
-updated: '2026-05-08T09:12:51Z'
-generated_by: claude-haiku
-workflow_run: 25546837853
+updated: '2026-08-18T13:06:54Z'
+generated_by: claude-sonnet
+workflow_run: 32138983855
 issue: 2009
-python_version: 3.13.13
-library_version: 4.9.0
+language_version: 3.13.15
+library_version: 4.11.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/letsplot/plot-dark.html
-quality_score: 93
+quality_score: 94
 review:
   strengths:
-  - Perfect theme-adaptive styling with data colors identical across light/dark renders
-    and chrome flipping correctly
-  - Explicit font sizing throughout (title 28pt, labels 22pt, ticks 18pt) ensures
-    readability at large canvas 4800x2700
-  - Clean data visualization with clear zero baseline and proper color mapping for
-    sentiment using Okabe-Ito palette
-  - Strong spec compliance with all required features present and correctly implemented
-  - Simple, reproducible, and idiomatic letsplot code with proper ggplot2-style grammar
-    of graphics usage
+  - 'Fixed the prior legend-border weakness: legend_background is now fill-only (no
+    color= stroke), so both renders show a clean, frameless legend box.'
+  - Added layer_tooltips() with Category/Score/Sentiment lines on geom_bar — a genuine
+    lets-plot-specific interactive feature that a static grammar-of-graphics library
+    like plotnine cannot replicate, directly addressing the prior Library Mastery
+    feedback.
+  - Value labels were bumped from 3.2mm to 3.6mm and kept bold, creating a clearer
+    visual hierarchy against the 10pt tick labels, especially for short bars near
+    the zero line (e.g. Technical Support at -8).
+  - Alpha-mapped |score| magnitude layered on top of the positive/negative hue split
+    remains a genuinely useful second encoding dimension — the strongest sentiment
+    visually dominates mild responses.
+  - Sorted bars, a clear zero-baseline vline, and direct end-of-bar value labels give
+    an immediately scannable best-to-worst narrative.
+  - 'Both renders are fully theme-correct: matching #FAF8F1/#1A1A17 backgrounds, correct
+    INK/INK_SOFT chrome, and pixel-identical data colors across themes.'
+  - Semantic-exception color mapping (green=Positive/red=Negative) is backed by a
+    redundant positional encoding (bar direction from zero), so hue is never the sole
+    signal.
   weaknesses:
-  - Design Excellence slightly below publication-ready due to minimal custom palette
-    depth beyond Okabe-Ito direct usage
-  - Data storytelling could emphasize insight more through visual hierarchy techniques
-    beyond basic color separation
+  - 'Library Mastery still has room: the core grammar (geom_bar + geom_vline + geom_text
+    + scale_fill_manual) remains largely portable to plotnine. The added tooltips
+    config is a good step, but a bigger lets-plot-only feature (e.g. built-in pan/zoom,
+    or an interactive legend) would differentiate the HTML output further.'
+  - Aesthetic sophistication is solid but stops short of a truly bespoke, publication-grade
+    look — e.g. no custom typography treatment or additional micro-annotation (such
+    as score-band grouping) beyond the alpha encoding.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "bar-diverging · letsplot · anyplot.ai" bold and centered; X-axis label "Net Promoter Score (-100 to +100)" with units; Y-axis label "Category"; all tick labels (category names and score values) clearly visible in dark text; legend "Sentiment" on right with light background
-      Data: 12 horizontal bars extending left (negative, orange #D55E00) and right (positive, green #009E73) from central zero baseline marked with subtle vertical line; bars sorted by value; clear visual separation of positive/negative sentiment
-      Legibility verdict: PASS - All text fully readable against light background; no light-on-light issues; grid subtle but visible on X-axis only
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bar-diverging · letsplot · anyplot.ai" centered at top; dark "Category" y-axis title (rotated) with gray category tick labels (Payment Options, Product Quality, ... Mobile App) down the left; "Net Promoter Score (-100 to +100)" x-axis title with gray numeric ticks (-40 to 80) below; subtle vertical gridlines at each x tick; a bolder dark vertical rule marks the zero baseline; a clean, frameless legend "Sentiment" (Positive/Negative swatches) sits at the right, near the plot, with no visible border box.
+      Data: Bars extend right (green, #009E73 family) for positive scores and left (matte red, #AE3030 family) for negative scores, with fill opacity scaling by |score| so stronger sentiment reads darker/more saturated. Bold gray value labels ("68", "62", ... "-38") sit just past each bar's tip, clearly distinct in weight from the tick labels — confirmed no overlap with the zero-baseline rule even for the smallest bar (Technical Support, -8). First/dominant series color is #009E73 as required.
+      Legibility verdict: PASS — all title, axis, tick, legend, and value-label text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title and axis labels in light color (#F0EFE8); tick labels in light gray (#B8B7B0) with excellent contrast against dark background; legend box has elevated dark background (#242420) with light text; NO dark-on-dark failures observed
-      Data: Identical bar colors to light render - green (#009E73) and orange (#D55E00) prove theme-independent data color handling; zero baseline visible; all bars clearly distinguishable
-      Legibility verdict: PASS - All text clearly readable in dark render; no dark-on-dark issues; brand green maintains visibility
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout and text content as the light render, now in light-gray/off-white (#F0EFE8 primary, #B8B7B0 secondary) — title, axis titles, tick labels, and legend text are all light-colored and clearly legible. The legend panel shows a subtly lighter elevated fill (#242420) against the near-black plot background but carries no stroked border, matching the light render's frameless treatment.
+      Data: Same green/red bars with the same alpha-by-magnitude scaling; bars additionally show a thin white keyline in this render (visible against the dark background, effectively blending into the light background's near-white tone). Data colors are pixel-identical to the light render (#009E73 positive / #AE3030 negative family) — only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures; all tick labels, axis titles, title, and value labels remain clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,47 +64,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 28pt, labels 22pt, ticks 18pt;
-          perfectly readable in both themes
+        comment: All sizes explicit; readable in both themes; value labels (3.6mm,
+          bold) now read as a distinct hierarchy above tick labels, resolving prior
+          attempt's weak spot near the zero line
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All labels fully visible without collision
+        comment: No collisions between value labels, bars, ticks, or the zero-baseline
+          rule, including the shortest bar (-8)
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar width 0.75, alpha 0.95; optimal sizing for data density
+        comment: 12 bars with generous width=0.75 and spacing, all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; excellent contrast; CVD-safe
+        comment: Red/green redundantly encoded by bar direction from zero, not sole
+          signal; Imprint palette is CVD-optimized
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 55-65% of canvas with balanced margins
+        comment: Canvas measured 3200x1800 exactly; plot fills the canvas well, legend
+          sits near the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis includes units; both axes descriptive
+        comment: X-axis label descriptive with implied range/units (Net Promoter Score
+          -100 to +100)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00 (Okabe-Ito order); backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark); all theme-adaptive chrome perfect'
+        comment: 'Positive=#009E73, Negative=#AE3030 (correct semantic-exception mapping);
+          theme-correct #FAF8F1/#1A1A17 chrome in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -99,22 +117,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong design with thoughtful sentiment-color mapping; professional
-          typography; intentional theme-adaptive styling
+        comment: Semantic palette + alpha-encoded magnitude + direct labels go well
+          beyond defaults, but overall polish stops short of a bespoke publication-grade
+          look
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good refinement: subtle X-axis-only grid, vertical zero-line for
-          context, clean minimal approach'
+        comment: Legend border removed per prior feedback; subtle single-axis gridlines,
+          generous whitespace, no frame clutter
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Data sorted by value enhances pattern recognition; color hierarchy
-          clearly separates sentiment
+        comment: Sort order + alpha-magnitude encoding + zero baseline create a clear,
+          immediately readable hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -124,26 +143,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Perfect diverging bar implementation with horizontal orientation
+        comment: Correct horizontal diverging bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging bars from zero, opposite colors, baseline indicator, sorted
-          for clarity
+        comment: Contrasting colors, horizontal orientation, zero-baseline indicator,
+          sorted bars — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned; all data visible and properly mapped
+        comment: x=Score, y=Category, all 12 categories visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title format exact; legend labels match Sentiment values
     data_quality:
       score: 15
       max: 15
@@ -153,20 +172,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both positive and negative values with wide magnitude range
+        comment: 6 positive / 6 negative categories with varied magnitudes from -38
+          to +68
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Customer satisfaction survey; real-world NPS-style scenario; neutral
-          domain
+        comment: Realistic, neutral NPS-style customer satisfaction survey
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for NPS-style scoring; factually correct
+        comment: Values plausible for an NPS-style -100..+100 scale
     code_quality:
       score: 10
       max: 10
@@ -176,33 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear: imports → theme setup → data → plot → save'
+        comment: Linear imports -> data -> plot -> save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data; always produces same result
+        comment: Fully deterministic literal data, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only os, pandas, lets_plot, ggsave used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no over-engineering
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct format: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -210,23 +229,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert ggplot2-style usage: proper aes() mapping, clean layering,
-          idiomatic theme configuration'
+        comment: Expert layered grammar-of-graphics composition (geom_bar + geom_vline
+          + per-layer geom_text + scale_fill_manual + scale_alpha)
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Good use of letsplot-specific: ggsize(), ggsave() with scale, element_*()
-          theme functions'
+        comment: layer_tooltips() with custom Category/Score/Sentiment lines is a
+          genuine lets-plot-only interactive feature added this attempt; a further
+          differentiator (pan/zoom, interactive legend) would push this higher
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
-  patterns:
-  - data-generation
+  - hover-tooltips
+  patterns: []
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
