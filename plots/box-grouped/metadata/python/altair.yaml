@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:54:30Z'
-updated: '2026-08-18T08:49:15Z'
+updated: '2026-08-18T08:56:36Z'
 generated_by: claude-sonnet
 workflow_run: 32117652220
 issue: 2017
@@ -12,7 +12,241 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/altair/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - Department order is sorted by descending Senior-level median score, giving the
+    grouped comparison a clear best-to-worst takeaway (Engineering > Marketing > Sales
+    > Support) instead of arbitrary alphabetical order
+  - 'Correct grouped-box construction via xOffset with all required box-plot elements:
+    median line, IQR box, 1.5*IQR whiskers, and outlier points'
+  - Imprint palette applied in canonical order (Junior=#009E73, Mid=#C475FD, Senior=#4467A3)
+    with an ink-colored median stroke and styled outlier markers (size=28, strokeOpacity=0.7)
+    for extra polish
+  - Theme-adaptive chrome fully threaded through configure_view/configure_axis/configure_title/configure_legend;
+    both renders keep identical data colors and only flip chrome
+  - Mandated title format exact, axis labels descriptive with units (%), reproducible
+    via np.random.seed(42), and canvas correctly padded to 3200x1800 without cropping
+  weaknesses:
+  - 'Legend (''Experience Level'', orient=''top-left'') visually collides with the
+    Engineering group — the tallest group in the sorted order. The Mid (purple) box''s
+    upper whisker/outlier near score ~97-100 is rendered mostly hidden behind the
+    opaque legend panel, with only a sliver poking above the ''Experience Level''
+    text. Since departments are now sorted with the highest-scoring group first, a
+    top-left legend guarantees overlap with the tallest whiskers. Fix: move the legend
+    outside the plot area (default right-side orient, or orient=''right'') or reduce/relocate
+    it so it never sits over the first group''s data envelope.'
+  - Design excellence is solid but still fairly close to library-default altair box
+    plot styling (default grid look, default L-shaped axis frame) beyond the required
+    palette/theme tokens and median/outlier tweaks — a bit more custom visual hierarchy
+    (e.g. subtle annotation calling out the best-performing group, or tighter grid
+    opacity) would elevate it further.
+  - Distinctive-feature usage is functional (xOffset grouping, custom outlier/median
+    styling) but doesn't lean on any altair-unique capability beyond what's needed
+    for a standard grouped box plot.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the light-theme page surface — not pure white.
+      Chrome: Title "box-grouped · python · altair · anyplot.ai" in bold dark ink, centered, clearly legible. X-axis title "Department" and Y-axis title "Performance Score (%)" in bold dark ink. Tick labels (department names, 0-100 score ticks) in medium-gray ink, all readable. Subtle horizontal gridlines only (y-axis), ~10% opacity, don't compete with data. Legend "Experience Level" with green/lavender/blue swatches for Junior/Mid/Senior sits inside the plot, top-left, on an elevated off-white panel.
+      Data: Four departments (Engineering, Marketing, Sales, Support) each with three side-by-side boxes (Junior=green #009E73, Mid=lavender #C475FD, Senior=blue #4467A3). Each box shows a dark median line, IQR box, whiskers to 1.5*IQR, and small hollow circle outliers where present. Departments are ordered by descending Senior median (Engineering highest, Support lowest), giving a clear best-to-worst reading.
+      Legibility verdict: PASS overall, with one caveat — the legend panel partially occludes the top whisker/outlier of the Engineering "Mid" box (near score ~97-100); only a small sliver of that mark is visible above the legend title text. All primary chrome (title, axis labels, ticks, legend text) is otherwise fully readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the dark-theme page surface — not pure black.
+      Chrome: Title, axis titles, and tick labels flip to light ink (#F0EFE8 primary / #B8B7B0 secondary) and remain clearly legible against the dark background — no dark-on-dark text anywhere. Gridlines remain subtle. Legend panel flips to the dark elevated fill (#242420) with light text, fully readable.
+      Data: Identical box colors and layout to the light render (green/lavender/blue, same department order, same statistics) — confirms only chrome flipped between themes, not data colors. Median line/outlier stroke uses the light ink token in dark mode, so it stays visible against the colored boxes.
+      Legibility verdict: PASS overall, with the same caveat as the light render — the legend panel similarly occludes part of the Engineering "Mid" box's top whisker/outlier mark. No dark-on-dark or unreadable-text issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all title/axis/tick/legend text readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Top-left legend panel occludes part of the Engineering Mid box's
+          upper whisker/outlier (~score 97-100) in both renders; core box/median/legend
+          text itself does not overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ink-colored median stroke and styled outlier markers stay visible
+          against all three colored boxes in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 3 hues from the CVD-safe Imprint palette, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title comfortably sized, no overflow, canvas padded correctly to
+          3200x1800, nothing clipped at the frame
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Department / Performance Score (%) both descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom median stroke and outlier styling plus deliberate ordering,
+          but overall still close to a well-themed default box plot
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 10% gridlines, generous whitespace, clean L-shaped axis frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending Senior-median department order creates a clear best-to-worst
+          focal read, though no explicit annotation calls it out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped box plot via mark_boxplot + xOffset
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median, quartile box, 1.5*IQR whiskers, outliers, legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Department on x, Performance Score on y, all combinations shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format exact; legend labels match Junior/Mid/Senior
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All box-plot statistical elements represented, including injected
+          outliers
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral employee-performance-by-department scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 performance scale, sensibly clipped, realistic spread per group
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, straight-line script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, altair, numpy, pandas, PIL.Image all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and .html; current altair 6.x API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: xOffset grouping, mark_boxplot median/outliers config, Scale/Axis/Legend
+          objects — high-level idiomatic API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Functional but standard grouped-box construction; no altair-unique
+          capability beyond what the plot type requires
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques: []
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - publication-ready
