@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
 Library: altair 6.2.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -23,13 +23,28 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 np.random.seed(42)
 
 variables = ["Revenue", "Profit", "Expenses", "Employees", "Market Cap", "Debt", "Assets", "R&D Spend"]
-
-# Generate a random matrix and make it symmetric positive semi-definite
 n = len(variables)
-A = np.random.randn(n, n) * 0.5
-correlation = np.dot(A, A.T)
-D = np.sqrt(np.diag(correlation))
-correlation = correlation / np.outer(D, D)
+
+# Latent-factor model ("company scale", "profitability", "leverage") so relationships
+# read as economically sensible: bigger companies have more Revenue/Expenses/Employees/
+# Assets (scale factor), Profit tracks Market Cap (profitability factor), and Debt scales
+# with leverage independent of profitability.
+loadings = np.array(
+    [
+        [0.82, 0.15, 0.00],  # Revenue
+        [0.20, 0.85, -0.10],  # Profit
+        [0.84, -0.15, 0.05],  # Expenses
+        [0.65, 0.05, 0.00],  # Employees
+        [0.35, 0.82, -0.10],  # Market Cap
+        [0.30, -0.30, 0.78],  # Debt
+        [0.72, 0.10, 0.42],  # Assets
+        [0.42, 0.15, 0.00],  # R&D Spend
+    ]
+)
+idiosyncratic = np.diag(0.30 + 0.15 * np.random.rand(n))
+covariance = loadings @ loadings.T + idiosyncratic
+D = np.sqrt(np.diag(covariance))
+correlation = covariance / np.outer(D, D)
 np.fill_diagonal(correlation, 1.0)
 correlation = np.round(correlation, 2)
 
@@ -80,9 +95,9 @@ heatmap = base.mark_rect().encode(
         scale=alt.Scale(domain=[-1, 1], range=["#AE3030", PAGE_BG, "#4467A3"], domainMid=0),
         legend=alt.Legend(
             title="Correlation",
-            titleFontSize=11,
+            titleFontSize=13,
             titleColor=INK,
-            labelFontSize=10,
+            labelFontSize=12,
             labelColor=INK_SOFT,
             gradientLength=180,
             gradientThickness=14,
@@ -108,11 +123,11 @@ chart = (
     (heatmap + text)
     .properties(
         background=PAGE_BG,
-        width=420,
+        width=412,
         height=460,
         title=alt.Title(title, fontSize=title_fontsize, fontWeight="bold", anchor="middle", color=INK),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=420, continuousHeight=460)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=412, continuousHeight=460)
 )
 
 # Hard target: 2400 x 2400 (square). See prompts/library/altair.md "Canvas".
