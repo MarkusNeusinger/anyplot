@@ -153,6 +153,20 @@ audit sweep across the stack.
 
 ### Changed
 
+- **Implementation pages now show the plot, not the card it sits inside** — the bot page's only
+  image was the 1200×630 `og:image`, in which the render is a thumbnail surrounded by branding
+  chrome with its cell labels barely legible. Right for a shared link, useless to an assistant asked
+  to show the plot. The body now carries the actual render as a `<picture>` with both themes, using
+  the `_400`/`_800`/`_1200` derivatives the pipeline already writes beside every plot, whose suffix
+  is the true pixel width. The full-size original stays out of the `srcset` — its width varies per
+  plot (2400, 3200, 4766 among those measured), so it has no honest `w` descriptor — and gets its
+  own link; `src` points at the 1200px variant so a consumer ignoring `srcset` does not pull a
+  five-megapixel file. `og:image` is unchanged, and attribution is not lost either way: every
+  render's title reads `{spec} · {language} · {library} · anyplot.ai`. Below it, a list names every
+  asset in words — a `<picture>` tells a browser which file to take but tells a reader nothing about
+  which is which — including the **interactive version**, which exists for 2,229 of 3,583
+  implementations, is publicly fetchable, and was mentioned nowhere machine-readable before.
+
 - **`og_image_view` is split by who fetched the image** — a social or messenger preview means a
   human shared a link, which is a product signal and stays on the main site; a search or AI crawler
   fetching the same image is not a share and now goes to `bots.anyplot.ai`. The distinction matters
@@ -250,6 +264,15 @@ audit sweep across the stack.
   interactive don't fit a static-first catalog (#8645).
 
 ### Fixed
+
+- **The sitemap was telling Google nothing had changed** — `lastmod` came from an implementation's
+  `updated` column, which does not move when the page's *rendering* changes. So after a day of work
+  that gave every implementation page the real render, both themes, the interactive version and a
+  rewritten description, the sitemap still reported the old dates, and Google — last seen fetching
+  some of those pages three weeks earlier — had no reason to return. `lastmod` is now the later of
+  the record's date and `TEMPLATE_LAST_CHANGED`, a constant to bump only when the rendered page
+  changes for every URL; claiming 3,900 changes casually is how a site teaches Google to ignore its
+  `lastmod` (#10483).
 
 - **CodeQL alert #103** — an ECharts tooltip called `.replace("\n", " ")` with a string argument,
   which replaces only the first occurrence

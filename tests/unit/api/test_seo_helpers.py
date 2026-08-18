@@ -12,6 +12,7 @@ from unittest.mock import MagicMock
 from api.routers.seo import (
     _HOME_JSONLD,
     _META_DESCRIPTION_LIMIT,
+    TEMPLATE_LAST_CHANGED,
     _build_home_body,
     _build_impl_html,
     _build_sitemap_xml,
@@ -19,7 +20,10 @@ from api.routers.seo import (
     _jsonld_script,
     _lastmod,
     _meta_description,
+    _render_asset_list,
     _render_bot_html,
+    _render_picture,
+    _sized_srcset,
     _spec_index_entries,
     _spec_links_html,
 )
@@ -52,20 +56,21 @@ def _mock_spec(impls: list) -> MagicMock:
 
 
 class TestLastmod:
-    """Tests for _lastmod helper."""
+    """lastmod describes the page, which is not the same as the row behind it."""
 
-    def test_with_datetime(self) -> None:
-        dt = datetime(2025, 3, 15)
-        result = _lastmod(dt)
-        assert result == "<lastmod>2025-03-15</lastmod>"
+    def test_a_record_newer_than_the_template_wins(self) -> None:
+        dt = datetime(2099, 3, 15)
+        assert _lastmod(dt) == "<lastmod>2099-03-15</lastmod>"
 
-    def test_with_none(self) -> None:
-        assert _lastmod(None) == ""
+    def test_an_older_record_is_lifted_to_the_template_date(self) -> None:
+        """The row has not moved, but the page it renders into has."""
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert _lastmod(datetime(2024, 12, 1, 10, 30, 0)) == f"<lastmod>{stamp}</lastmod>"
 
-    def test_with_different_date(self) -> None:
-        dt = datetime(2024, 12, 1, 10, 30, 0)
-        result = _lastmod(dt)
-        assert result == "<lastmod>2024-12-01</lastmod>"
+    def test_without_a_record_date_the_template_date_still_applies(self) -> None:
+        """The page was last modified at least when its template was."""
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert _lastmod(None) == f"<lastmod>{stamp}</lastmod>"
 
 
 class TestBuildSitemapXml:
@@ -112,8 +117,12 @@ class TestBuildSitemapXml:
         assert "<loc>https://anyplot.ai/scatter-basic/python</loc>" not in result
         # Legacy /python/{spec} path must NOT appear
         assert "https://anyplot.ai/python/scatter-basic" not in result
-        assert "<lastmod>2025-03-14</lastmod>" in result
-        assert "<lastmod>2025-03-15</lastmod>" in result
+        # The record's own date is older than the template's, so the page's
+        # lastmod is the template's — the page changed even though the row did not.
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert f"<lastmod>{stamp}</lastmod>" in result
+        assert "<lastmod>2025-03-14</lastmod>" not in result
+        assert "<lastmod>2025-03-15</lastmod>" not in result
 
     def test_spec_without_impls_excluded(self) -> None:
         spec = MagicMock()
@@ -220,8 +229,11 @@ class TestBuildSitemapXml:
         spec.updated = None
 
         result = _build_sitemap_xml([spec])
-        # Should not have lastmod when updated is None
-        assert "<loc>https://anyplot.ai/scatter-basic</loc></url>" in result
+        # A missing `updated` no longer means a missing lastmod: the page was
+        # last modified at least when its template was, and saying nothing left
+        # Google with no reason to recrawl pages whose rendering had changed.
+        stamp = TEMPLATE_LAST_CHANGED.strftime("%Y-%m-%d")
+        assert f"<loc>https://anyplot.ai/scatter-basic</loc><lastmod>{stamp}</lastmod></url>" in result
 
 
 class TestRenderBotHtml:
@@ -488,3 +500,100 @@ class TestMetaDescription:
         escaped = html_module.escape(_meta_description(text))
         # A truncated entity would leave a bare & followed by a non-entity run
         assert re.search(r"&(?!amp;|lt;|gt;|quot;|#x27;)", escaped) is None
+
+
+class TestPlotRender:
+    """The body shows the plot itself, not the social card it sits inside."""
+
+    BASE = "https://storage.googleapis.com/anyplot-images/plots/box-basic/python/altair"
+
+    def _impl(self, dark: bool = True) -> MagicMock:
+        impl = MagicMock()
+        impl.preview_url_light = f"{self.BASE}/plot-light.png"
+        impl.preview_url_dark = f"{self.BASE}/plot-dark.png" if dark else None
+        return impl
+
+    def test_srcset_offers_the_pipeline_widths(self) -> None:
+        """The suffix IS the pixel width — verified against the live renders."""
+        assert _sized_srcset(f"{self.BASE}/plot-light.png") == (
+            f"{self.BASE}/plot-light_400.png 400w, "
+            f"{self.BASE}/plot-light_800.png 800w, "
+            f"{self.BASE}/plot-light_1200.png 1200w"
+        )
+
+    def test_the_full_size_original_is_not_in_the_srcset(self) -> None:
+        """Its width varies per plot (2400, 3200, 4766) — no honest `w` exists."""
+        srcset = _sized_srcset(f"{self.BASE}/plot-light.png")
+        assert f"{self.BASE}/plot-light.png" not in srcset
+
+    def test_default_src_is_the_middle_size(self) -> None:
+        """A consumer ignoring srcset should not pull a 4766px file."""
+        assert f'src="{self.BASE}/plot-light_1200.png"' in _render_picture(self._impl(), "alt")
+
+    def test_dark_variant_is_offered(self) -> None:
+        html_out = _render_picture(self._impl(), "alt")
+        assert 'media="(prefers-color-scheme: dark)"' in html_out
+        assert f"{self.BASE}/plot-dark_800.png 800w" in html_out
+
+    def test_no_source_element_without_a_dark_render(self) -> None:
+        assert "<source" not in _render_picture(self._impl(dark=False), "alt")
+
+    def test_the_full_resolution_stays_reachable(self) -> None:
+        """Left out of the srcset, so it needs its own way in."""
+        assert f'<a href="{self.BASE}/plot-light.png">' in _render_picture(self._impl(), "alt")
+
+
+class TestRenderAssetList:
+    """A <picture> hides which file is which; the list says it in words."""
+
+    BASE = "https://storage.googleapis.com/anyplot-images/plots/bar-basic/python/plotly"
+
+    def _impl(self, interactive: bool = True) -> MagicMock:
+        impl = MagicMock()
+        impl.preview_url_light = f"{self.BASE}/plot-light.png"
+        impl.preview_url_dark = f"{self.BASE}/plot-dark.png"
+        impl.preview_html_light = f"{self.BASE}/plot-light.html" if interactive else None
+        impl.preview_html_dark = f"{self.BASE}/plot-dark.html" if interactive else None
+        return impl
+
+    def test_names_both_themes_explicitly(self) -> None:
+        """A media query tells a browser which file to take, not a reader which is which."""
+        out = _render_asset_list(self._impl())
+        assert f'<a href="{self.BASE}/plot-light.png">Full-resolution render, light theme</a>' in out
+        assert f'<a href="{self.BASE}/plot-dark.png">Full-resolution render, dark theme</a>' in out
+
+    def test_exposes_the_interactive_version(self) -> None:
+        """Two thirds of the catalogue has one and nothing machine-facing mentioned it."""
+        out = _render_asset_list(self._impl())
+        assert f'<a href="{self.BASE}/plot-light.html">Interactive version, light theme</a>' in out
+        assert f'<a href="{self.BASE}/plot-dark.html">Interactive version, dark theme</a>' in out
+
+    def test_a_quoted_spec_title_cannot_break_the_alt_attribute(self) -> None:
+        """Verified through the real builder, not the helper in isolation.
+
+        The helper takes pre-escaped text by contract; what matters is whether
+        the caller honours it, so this drives _build_impl_html with a title that
+        would break the attribute if it did not.
+        """
+        spec = MagicMock()
+        spec.id = "bar-basic"
+        spec.title = 'Bar "Chart" & <b>'
+        spec.description = "d"
+        library = MagicMock()
+        library.language = "python"
+        library.name = "Altair"
+        impl = self._impl()
+        impl.library = library
+        impl.library_id = "altair"
+        spec.impls = [impl]
+
+        out = _build_impl_html(spec, impl, None, "https://api.anyplot.ai/og/x.png")
+        assert 'alt="Bar &quot;Chart&quot; &amp; &lt;b&gt; rendered with Altair"' in out
+        # and not double-escaped into visible noise
+        assert "&amp;quot;" not in out
+
+    def test_omits_what_an_implementation_does_not_have(self) -> None:
+        """A static library must not be advertised as interactive."""
+        out = _render_asset_list(self._impl(interactive=False))
+        assert "Interactive version" not in out
+        assert "Full-resolution render, light theme" in out
