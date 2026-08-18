@@ -1,0 +1,259 @@
+library: makie
+language: julia
+specification_id: bar-stacked-percent
+created: '2026-08-18T15:06:44Z'
+updated: '2026-08-18T15:44:43Z'
+generated_by: claude-sonnet
+workflow_run: 32151311625
+issue: 2008
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Semantic-exception color remap now renders correctly: Renewables=#009E73 (brand
+    green), Coal=#BD8233 (ochre), Natural Gas=#4467A3 (blue), Nuclear=#C475FD (lavender)
+    — confirmed identical in both light and dark PNGs, resolving the attempt-2 dead-code
+    defect'
+  - Crossover callout ("Renewables overtake Coal" at 2022) now renders visibly above
+    the bars with correct headroom from ylims!(ax, 0, 124) called last, right before
+    save — no clipping, no overlap with the legend or bars
+  - Per-segment label color is matched to each segment's actual background lightness
+    (dark ink on ochre/lavender, white on blue/green), giving good contrast on every
+    segment in both themes — fixes the attempt-1 low-contrast complaint
+  - Uses Makie's native barplot!(...; stack = ...) for true 100%-stacked bars — idiomatic
+    and normalizes every bar to exactly 100%
+  - Theme tokens threaded consistently through Figure, Axis, and Legend; both renders
+    are fully legible with no dark-on-dark or light-on-light failures, and canvas
+    is exactly 3200×1800
+  - 'Clean visual design: spines removed, subtle single-axis gridlines, borderless
+    theme-matched legend, generous whitespace, percentage labels skipped below 6%
+    share to avoid clutter'
+  - Plausible, neutral real-world data (illustrative electricity generation mix 2010-2025)
+    spanning the spec's recommended 3-12 categories / 2-6 components range
+  - Code matches rendered output exactly — no fake or dead functionality; deterministic
+    hardcoded data matrix needs no RNG seed
+  weaknesses:
+  - Segment percentage labels (fontsize=12) and tick labels will shrink to only a
+    few px when the 3200px canvas is scaled down to the ~400px mobile preview — consider
+    a slightly larger fontsize floor for the smallest text elements if mobile legibility
+    feedback comes back negative
+  - 'Aesthetic sophistication is solid but not maximal: a single callout and per-segment
+    adaptive label color are the only distinctive storytelling devices — an additional
+    touch (e.g. end-of-series value labels, or subtle emphasis on the Renewables band)
+    could push Design Excellence further'
+  - Library Mastery is good but not exhaustive — no use of more advanced Makie-specific
+    recipes/features beyond native stack= barplot and manual PolyElement legend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "bar-stacked-percent · julia · makie · anyplot.ai" centered at top; dark y-axis label "Share of Electricity Generation (%)" and x-axis label "Year"; soft dark-gray tick labels (0-100% by 20s on Y; 2010/2013/2016/2019/2022/2025 on X); only bottom+left spines shown; subtle horizontal gridlines at each 20% mark. All chrome text is clearly dark-on-cream and readable.
+      Data: Six bars, each stacked into 4 segments summing exactly to 100%. Bottom-to-top order in every bar: Coal (ochre #BD8233, 49%→22%), Natural Gas (blue #4467A3, 27%→22%), Nuclear (lavender #C475FD, 15%→9%), Renewables (green #009E73, 9%→47%) — first categorical/brand color is correctly reassigned to Renewables per the documented semantic-exception rule. Percentage labels are printed inside every segment with contrast-matched text color (dark ink on ochre/lavender, white on blue/green) — all legible. A callout "Renewables overtake Coal" with a short connector line sits above the 2022 bar, inside the extended y-range headroom, with no clipping or overlap with the legend. Frameless legend at right lists all 4 components in swatch+label form, background matched to the plot.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render; title/axis/tick text and spines render in light tones against the dark surface; legend text is light-colored; gridlines remain subtle. No dark-on-dark failures — every chrome element is clearly visible.
+      Data: Same 4-segment stacking order and same data colors as the light render (Coal=ochre, Natural Gas=blue, Nuclear=lavender, Renewables=green) — confirms data colors are held constant across themes, only chrome flipped. Segment percentage labels retain the same contrast-matched dark/light text assignment and remain legible on every segment. The "Renewables overtake Coal" callout renders identically positioned above the 2022 bar, fully visible with correct headroom, matching the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; small segment/tick
+          labels may shrink at ~400px mobile preview
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axis text, callout, legend, or bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars well-sized; percentage labels skipped below 6% share to avoid
+          clutter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-segment label color now matched to background lightness, fixing
+          the prior low-contrast complaint
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, balanced margins, callout headroom well-designed
+          via ylims! called last
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (%), X-axis descriptive (Year)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Justified semantic-exception order (Renewables=#009E73) confirmed
+          rendering correctly; backgrounds theme-correct in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color reasoning and crossover callout now both render, showing
+          real design intent beyond bare defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle single-axis grid, borderless theme-matched
+          legend, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Crossover callout now renders and correctly marks the narrative focal
+          point; green=renewable reinforces intuitive reading
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 100% stacked bar, every bar normalized to exactly 100%
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors, clear legend, in-segment percentage labels, consistent
+          component order across bars
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=year category, Y=0-100% share, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match component names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 components across 6 time points, clearly differentiated trajectories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral electricity-generation-mix scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage shares sensible and follow a real-world decarbonization
+          pattern
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data matrix, no RNG needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie and Colors both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Color remap and callout now match rendered output exactly — no more
+          dead/fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2) — correct pattern
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Native stack= kwarg on barplot!, proper Axis/Legend construction,
+          RGBAf gridcolor
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Native stacking, custom PolyElement legend, conditional segment labeling,
+          crossover annotation — solid but not exhaustive use of Makie-specific recipes
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - grid-styling
