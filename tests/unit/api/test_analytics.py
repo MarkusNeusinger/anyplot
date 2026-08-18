@@ -7,6 +7,7 @@ import pytest
 
 from api.analytics import (
     BOT_DOMAIN,
+    BOT_SENDER_UA,
     DOMAIN,
     PLATFORM_PATTERNS,
     _detect_whatsapp_variant,
@@ -400,12 +401,15 @@ class TestTrackBotFetch:
             }
 
     @pytest.mark.asyncio
-    async def test_resolves_a_forwarded_for_chain_to_one_address(self) -> None:
-        """Multiple proxies append to XFF, so the raw header is not an IP.
+    async def test_reports_the_visitor_not_our_own_infrastructure(self) -> None:
+        """Analytics wants the LEFTMOST forwarded entry — the actual visitor.
 
-        Plausible needs a single address for geolocation, and the rightmost
-        entry is the one a client cannot forge — the same rule the feedback
-        rate limiter uses, which is why both now share one resolver.
+        The opposite of the rate limiter, which takes the rightmost because the
+        leftmost is client-controlled. Plausible documents that it uses "the
+        first valid IP address from the list" and that forwarding "a server,
+        hosting provider, or CDN IP address instead of the actual visitor IP"
+        makes its bot filtering drop the event — so handing it the rightmost
+        entry, which is ours, silently loses the data.
         """
         request = MagicMock()
         request.headers = {
@@ -421,7 +425,7 @@ class TestTrackBotFetch:
             track_bot_fetch(request, "/box-basic")
             await asyncio.sleep(0)
 
-            assert mock_client.post.call_args[1]["headers"]["X-Forwarded-For"] == "10.0.0.9"
+            assert mock_client.post.call_args[1]["headers"]["X-Forwarded-For"] == "203.0.113.7"
 
     @pytest.mark.asyncio
     async def test_sends_nothing_for_a_human(self) -> None:
@@ -486,3 +490,58 @@ class TestOgImageAudienceSplit:
             assert payload["domain"] == BOT_DOMAIN
             assert payload["props"]["assistant"] == assistant
             assert payload["props"]["kind"] == kind
+
+
+class TestBotEventsUseANeutralAgent:
+    """Plausible drops events whose UA it identifies as a bot — verified live."""
+
+    @staticmethod
+    def _request(user_agent: str) -> MagicMock:
+        request = MagicMock()
+        request.headers = {"user-agent": user_agent}
+        request.client.host = "203.0.113.7"
+        return request
+
+    @pytest.mark.asyncio
+    async def test_bot_fetch_does_not_forward_the_crawler_agent(self) -> None:
+        """Forwarding it means the bot site records nothing at all."""
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_bot_fetch(self._request("Mozilla/5.0 (compatible; Claude-User/1.0)"), "/box-basic")
+            await asyncio.sleep(0)
+
+            call = mock_client.post.call_args[1]
+            assert call["headers"]["User-Agent"] == BOT_SENDER_UA
+            # the identity is not lost — it travels in the props
+            assert call["json"]["props"]["assistant"] == "claude"
+
+    @pytest.mark.asyncio
+    async def test_machine_side_og_image_also_uses_it(self) -> None:
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_og_image(
+                self._request("Mozilla/5.0 (compatible; Googlebot/2.1)"), page="spec_detail", spec="box-basic"
+            )
+            await asyncio.sleep(0)
+
+            call = mock_client.post.call_args[1]
+            assert call["json"]["domain"] == BOT_DOMAIN
+            assert call["headers"]["User-Agent"] == BOT_SENDER_UA
+
+    @pytest.mark.asyncio
+    async def test_the_main_site_still_sees_the_real_agent(self) -> None:
+        """A shared link is human behaviour and its platform detection matters."""
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_og_image(self._request("Twitterbot/1.0"), page="spec_detail", spec="box-basic")
+            await asyncio.sleep(0)
+
+            call = mock_client.post.call_args[1]
+            assert call["json"]["domain"] == DOMAIN
+            assert call["headers"]["User-Agent"] == "Twitterbot/1.0"

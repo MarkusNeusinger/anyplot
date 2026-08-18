@@ -30,3 +30,33 @@ def client_ip(request: Request) -> str:
         if entry.strip():
             return entry.strip()
     return request.client.host if request.client else ""
+
+
+def visitor_ip(request: Request) -> str:
+    """Resolve the IP to report to analytics — deliberately not `client_ip`.
+
+    The two answer opposite questions and must not be merged.
+
+    `client_ip` keys rate limiting, so it takes the RIGHTMOST forwarded entry:
+    the leftmost is client-controlled, and trusting it let a caller poison
+    another user's bucket. Analytics needs the opposite — Plausible documents
+    that it uses "the first valid IP address from the list" and that "if you
+    forward a server, hosting provider, or CDN IP address instead of the actual
+    visitor IP, Plausible's bot filtering will drop the event". Handing it the
+    rightmost entry means handing it our own infrastructure's address, and the
+    event is silently discarded.
+
+    Spoofing is not a concern in this direction: a forged value skews a
+    geolocation bucket, where forging the rate-limit key locked people out.
+
+    Order: `cf-connecting-ip`, which Cloudflare overwrites on proxied traffic
+    and is therefore both real and unforgeable; then the leftmost non-empty
+    forwarded entry; then the socket peer.
+    """
+    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
+    if cf_ip:
+        return cf_ip
+    for entry in request.headers.get("x-forwarded-for", "").split(","):
+        if entry.strip():
+            return entry.strip()
+    return request.client.host if request.client else ""
