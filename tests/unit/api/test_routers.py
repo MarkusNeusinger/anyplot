@@ -710,8 +710,10 @@ class TestSeoProxyRouter:
             assert response.status_code == 200
             assert '<link rel="canonical" href="https://anyplot.ai/" />' in response.text
             assert 'property="og:url" content="https://anyplot.ai/"' in response.text
-            # ...while the tracked image still carries them
-            assert "og/home.png?spec=point-basic" in response.text
+            # ...while the tracked image still carries every one of them —
+            # asserting the whole query string, since checking a single param
+            # would stay green if the others were dropped.
+            assert "og/home.png?spec=point-basic&amp;lib=plotly" in response.text
 
     def test_seo_plots(self, client: TestClient) -> None:
         """SEO plots page should return HTML with og:tags."""
