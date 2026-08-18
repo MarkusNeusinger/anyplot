@@ -98,8 +98,10 @@ const labelInkFor = (fill) => (luminance(fill) > 0.42 ? t.ink : t.pageBg);
 // --- Mount -------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
-const cx = 440;
-const cy = 610;
+// Centered lower in the mount (below the title block) so the donut's full
+// vertical extent is available to balance against the legend column.
+const cx = 420;
+const cy = 630;
 const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
 
 const nodes = root.descendants().filter((d) => d.depth > 0);
@@ -114,7 +116,9 @@ g.selectAll("path")
 
 // --- Radial labels on segments large enough to hold text; smaller ones -----
 // --- fall through to the legend below (per spec: label large, legend small) -
-const labelVisible = (d) => (d.x1 - d.x0) * ((radiusFor(d.depth).inner + radiusFor(d.depth).outer) / 2) > 40;
+// Threshold raised alongside the bigger label fontsizes below so labels never
+// crowd a segment too small to hold them.
+const labelVisible = (d) => (d.x1 - d.x0) * ((radiusFor(d.depth).inner + radiusFor(d.depth).outer) / 2) > 46;
 
 const labelTransform = (d) => {
   const deg = ((d.x0 + d.x1) / 2) * (180 / Math.PI);
@@ -129,7 +133,7 @@ g.selectAll("text.segment")
   .attr("transform", labelTransform)
   .attr("text-anchor", "middle")
   .attr("dy", "0.32em")
-  .style("font-size", (d) => (d.depth === 1 ? "15px" : "13px"))
+  .style("font-size", (d) => (d.depth === 1 ? "18px" : "15px"))
   .style("font-weight", (d) => (d.depth === 1 ? "600" : "400"))
   .attr("fill", (d) => labelInkFor(fillFor(d)))
   .text((d) => d.data.name);
@@ -150,16 +154,18 @@ g.append("text")
   .text(`$${grandTotal.toLocaleString("en-US")}K`);
 
 // --- Legend for the segments too small to carry an inline label ------------
+// Rows are vertically centered on the donut's own center (cy) so the block
+// balances against the ring's full height instead of hugging the top.
 const legendItems = nodes.filter((d) => d.depth === 2 && !labelVisible(d));
-const legendX = 890;
-const legendTop = 470;
-const rowH = 34;
+const legendX = 850;
+const rowH = 72;
+const legendTop = cy - ((legendItems.length - 1) * rowH) / 2;
 
 svg
   .append("text")
   .attr("x", legendX)
-  .attr("y", legendTop - 30)
-  .style("font-size", "14px")
+  .attr("y", legendTop - 46)
+  .style("font-size", "16px")
   .style("font-weight", "600")
   .attr("fill", t.inkSoft)
   .text("Smaller categories");
@@ -171,12 +177,12 @@ const legend = svg
   .attr("class", "legend-item")
   .attr("transform", (d, i) => `translate(${legendX},${legendTop + i * rowH})`);
 
-legend.append("rect").attr("width", 16).attr("height", 16).attr("rx", 3).attr("fill", fillFor);
+legend.append("rect").attr("width", 20).attr("height", 20).attr("rx", 4).attr("fill", fillFor);
 legend
   .append("text")
-  .attr("x", 24)
-  .attr("y", 13)
-  .style("font-size", "14px")
+  .attr("x", 28)
+  .attr("y", 15)
+  .style("font-size", "17px")
   .attr("fill", t.inkSoft)
   .text((d) => `${d.parent.data.name} · ${d.data.name} ($${d.data.value}K)`);
 
