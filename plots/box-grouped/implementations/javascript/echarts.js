@@ -18,6 +18,9 @@ function randNormal(mean, std) {
   return mean + std * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 
+// NOTE: echarts.dataTool.prepareBoxplotData is unavailable here -- the harness
+// loads only the core `echarts` bundle, not the separate dataTool extension
+// that mounts it, so quartiles/fences are computed by hand below.
 function quantile(sorted, q) {
   const pos = (sorted.length - 1) * q;
   const base = Math.floor(pos);
@@ -58,6 +61,10 @@ const middleLevelIndex = Math.floor((levels.length - 1) / 2);
 const categories = [];
 const boxItems = [];
 const outlierItems = [];
+// Dashed line connecting each department's Junior->Mid->Senior medians, so the
+// "scores rise and tighten with seniority" trend is visible at a glance
+// instead of something the viewer has to piece together box-by-box.
+const medianTrend = [];
 
 departments.forEach((dept, i) => {
   levels.forEach((level, j) => {
@@ -73,6 +80,7 @@ departments.forEach((dept, i) => {
     const catIndex = categories.length;
     categories.push(j === middleLevelIndex ? dept : "");
     boxItems.push({
+      name: `${level} · ${dept}`,
       value: [
         stats.whiskerLow,
         stats.q1,
@@ -86,8 +94,10 @@ departments.forEach((dept, i) => {
         borderWidth: 2.5,
       },
     });
+    medianTrend.push(stats.median);
     stats.outliers.forEach((v) => {
       outlierItems.push({
+        name: `${level} · ${dept} outlier`,
         value: [catIndex, v],
         itemStyle: {
           color: t.palette[j],
@@ -103,6 +113,7 @@ departments.forEach((dept, i) => {
   if (i < departments.length - 1) {
     categories.push("");
     boxItems.push({ value: [NaN, NaN, NaN, NaN, NaN] });
+    medianTrend.push(null);
   }
 });
 
@@ -117,19 +128,40 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: title,
+    subtext: "Scores rise and tighten from Junior to Senior in every department",
     left: "center",
-    top: 26,
+    top: 20,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
   legend: {
     data: levels,
-    top: 74,
+    top: 92,
     itemWidth: 18,
     itemHeight: 14,
     textStyle: { color: t.ink, fontSize: 16 },
   },
-  tooltip: { trigger: "item" },
-  grid: { left: 130, right: 70, top: 140, bottom: 90 },
+  tooltip: {
+    trigger: "item",
+    formatter: (params) => {
+      if (params.seriesType === "boxplot") {
+        const [low, q1, median, q3, high] = params.data.value;
+        return [
+          `<strong>${params.name}</strong>`,
+          `Max: ${high.toFixed(1)}`,
+          `Q3: ${q3.toFixed(1)}`,
+          `Median: ${median.toFixed(1)}`,
+          `Q1: ${q1.toFixed(1)}`,
+          `Min: ${low.toFixed(1)}`,
+        ].join("<br/>");
+      }
+      if (params.seriesName === "Outliers") {
+        return `<strong>${params.name}</strong><br/>Score: ${params.data.value[1].toFixed(1)}`;
+      }
+      return params.name;
+    },
+  },
+  grid: { left: 130, right: 70, top: 158, bottom: 90 },
   xAxis: {
     type: "category",
     data: categories,
@@ -140,7 +172,7 @@ chart.setOption({
   },
   yAxis: {
     type: "value",
-    name: "Performance Score",
+    name: "Performance Score (0-100)",
     nameLocation: "middle",
     nameGap: 60,
     nameTextStyle: { color: t.ink, fontSize: 16 },
@@ -171,6 +203,17 @@ chart.setOption({
       data: outlierItems,
       symbolSize: 12,
       z: 3,
+    },
+    {
+      name: "Median trend",
+      type: "line",
+      data: medianTrend,
+      connectNulls: false,
+      symbol: "none",
+      silent: true,
+      z: 1,
+      lineStyle: { color: t.inkSoft, width: 1.5, type: "dashed", opacity: 0.6 },
+      tooltip: { show: false },
     },
   ],
 });
