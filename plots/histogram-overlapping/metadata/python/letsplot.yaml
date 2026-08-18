@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: histogram-overlapping
 created: '2025-12-25T21:49:16Z'
-updated: '2026-08-18T10:58:22Z'
+updated: '2026-08-18T11:07:53Z'
 generated_by: claude-sonnet
 workflow_run: 32128604936
 issue: 2010
@@ -12,120 +12,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-overlapping/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - Correctly aligned bin edges across both groups (shared binwidth=20 and boundary),
-    so bars are directly comparable as the spec requires
-  - Mean-line callouts (dashed vlines + labeled annotations) create a clear focal
-    point and quantify the group difference directly in the subtitle
-  - Custom layer_tooltips with formatted lines is a distinctive lets-plot touch that
-    adds real value in the interactive HTML export
-  - 'First categorical series is #009E73 (Control) with #C475FD (Treatment) as the
-    second — correct Imprint palette order and identical across both themes'
-  - Realistic, neutral A/B-test scenario (response times, n=200/group) with appropriate
-    value ranges and reproducible via np.random.seed(42)
+  - 'Both attempt-1 weaknesses are fully resolved: title now reads "histogram-overlapping
+    · python · letsplot · anyplot.ai" and both the four-sided panel_border and the
+    bordered legend_background box are removed (pixel-level check confirms no border
+    stroke color remains at the legend edge, only a clean fill-to-fill transition)'
+  - Correctly aligned bin edges across both groups via shared binwidth=20 and boundary=bin_start,
+    so bars are directly, honestly comparable as required by the spec
+  - Mean-line callouts (dashed vlines + labeled annotations, hjust-aligned away from
+    the lines so they never collide) create a clear analytical focal point and quantify
+    the group difference directly in the subtitle
+  - Custom layer_tooltips with formatted lines (@group, response time, count) is a
+    genuine lets-plot-specific touch that adds real value in the interactive HTML
+    export
+  - 'First categorical series is #009E73 (Control), second is #C475FD (Treatment)
+    — correct Imprint palette order, identical data colors across both themes, only
+    chrome flips'
+  - Realistic, neutral A/B-test scenario (response times, n=200/group) with plausible
+    value ranges, reproducible via np.random.seed(42)
+  - All font sizes explicitly set (theme + annotation), clean minimal chrome (subtle
+    y-only gridlines, thin axis line, no panel border), both renders fully legible
+    with no clipping at any canvas edge
   weaknesses:
-  - 'Title omits the language segment: renders as ''histogram-overlapping · letsplot
-    · anyplot.ai'' but the mandated format (and the convention used across other letsplot
-    implementations, e.g. area-basic, acf-pacf) is ''{spec-id} · python · letsplot
-    · anyplot.ai'' — add ''python ·'' after the spec-id.'
-  - panel_border is not set to element_blank(), so a full four-sided box frame is
-    visible around the plot area in both renders instead of the catalog's default
-    L-shaped (or fully removed) spine treatment — add panel_border=element_blank()
-    to anyplot_theme.
-  - legend_background uses element_rect(fill=ELEVATED_BG, color=INK_SOFT), drawing
-    a visible bordered box around the legend in both themes — the style guide lists
-    'box frames around legends' under elements to remove by default; use element_rect(fill=ELEVATED_BG,
-    color='') or element_blank() instead.
+  - One outlier bin near x=150 sits isolated by a wide empty gap before the main distribution
+    resumes around x=220, breaking the visual flow slightly — not incorrect (plausible
+    3.75-SD outlier), but a minor polish opportunity
+  - X-axis extends to 700 while the rightmost populated bins end around 680, leaving
+    a modest sliver of unused space on the right edge
+  - Mean-line annotations and the custom tooltip content are solid but transferable
+    ggplot2-style techniques rather than something unique to lets-plot beyond the
+    interactivity itself — Library Mastery has room to lean further into lets-plot-distinctive
+    features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with spec.
-      Chrome: Title "histogram-overlapping · letsplot · anyplot.ai" and subtitle "Intervention shifts the mean left by 61 ms" in dark ink, both fully visible and not clipped. Axis titles "Response Time (ms)" / "Count" and tick labels in dark/soft-dark ink are all clearly readable. A full four-sided box frame (panel_border) surrounds the plot area, and the legend ("Condition" with Control/Treatment swatches) sits inside a bordered box — both are un-removed default chrome rather than the catalog's usual L-shaped/borderless treatment. Horizontal grid lines are subtle and only on the y-axis.
-      Data: First series (Control) is #009E73 green, second series (Treatment) is #C475FD purple, semi-transparent (alpha=0.55) so the overlap region reads as a blended teal. Dashed mean-reference lines in matching colors with labeled callouts ("Treatment 386 ms", "Control 447 ms") sit above the bars without overlapping any bar or text.
+      Background: Warm off-white, matches #FAF8F1 (verified via pixel sample: RGB 250,248,241 in the panel area). No pure-white or dark regions.
+      Chrome: Title "histogram-overlapping · python · letsplot · anyplot.ai" and subtitle "Intervention shifts the mean left by 61 ms" render in dark ink, fully visible with no clipping at the top or side edges. Axis titles "Response Time (ms)" / "Count" and all tick labels are clearly readable in dark/soft-dark ink. Legend ("Condition": Control/Treatment swatches) sits in a soft elevated-background box with NO visible border stroke (confirmed by pixel scan — clean fill-to-fill transition, not a bordered box). No four-sided panel border around the plot area (panel_border=element_blank() confirmed visually). Only subtle horizontal gridlines are present.
+      Data: First series (Control) is #009E73 green, second (Treatment) is #C475FD purple, alpha=0.55 so the overlap region blends into a distinguishable teal. Dashed mean-reference lines (green at 447 ms, purple at 386 ms) with labeled callouts sit cleanly above the bars and stop short of the legend box — no overlap with any other element.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with spec.
-      Chrome: Same title/subtitle in light ink (#F0EFE8 / #B8B7B0), fully legible against the dark background — no dark-on-dark failures. Tick labels and axis titles are light-colored and clearly readable. The same un-removed panel border and legend box frame issues from the light render are present here too (rendered in dark tones).
-      Data: Colors are identical to the light render (#009E73 green Control, #C475FD purple Treatment, same alpha) — only chrome flipped as expected. Mean-line callouts remain legible and correctly colored.
+      Background: Warm near-black, matches #1A1A17. No pure-black or light regions.
+      Chrome: Same title/subtitle in light ink (#F0EFE8 / #B8B7B0-equivalent), fully legible — no dark-on-dark failures anywhere (title, axis labels, tick labels, legend text, annotation callouts all clearly visible against the dark background). No panel border and no bordered legend box, matching the light render's chrome treatment (theme-adaptive, not just color-inverted).
+      Data: Data colors are pixel-identical to the light render (#009E73 / #C475FD, same alpha=0.55) — only chrome (background, text, grid, legend fill) flips between themes, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes, no dark-on-dark or light-on-light
-          issues
+        comment: All font sizes explicitly set via theme(); readable at full size
+          and mobile-scale in both themes; title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, annotations, legend, or data
+        comment: No collisions — mean-line callouts stop cleanly below the legend
+          box, verified via pixel crop
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar widths and alpha appropriate for 200-observation groups
+        comment: Bar density and alpha appropriate for n=200/group; mean lines clearly
+          visible as reference
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing is CVD-distinguishable
+        comment: Green/purple pair is CVD-safe, not red-green; alpha blending keeps
+          overlap region distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), title proportion fine, no overflow
-          or clipping
+        comment: No canvas-gate failure; plot fills the canvas well, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) and Count are descriptive with units
+        comment: '"Response Time (ms)" has units; "Count" is appropriate for a histogram
+          y-axis'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, backgrounds correct in both themes'
+        comment: 'First series #009E73, second #C475FD (Imprint order); backgrounds
+          theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Mean-line callouts and custom tooltips show intent, but un-removed
-          panel border and legend box frame read as default/unrefined chrome
+        passed: true
+        comment: Mean-line callouts and custom tooltips show real intent; minor polish
+          gap from the isolated outlier bin and unused right-edge axis space
       - id: DE-02
         name: Visual Refinement
-        score: 1
+        score: 5
         max: 6
-        passed: false
-        comment: panel_border not set to element_blank() (full 4-sided box frame visible),
-          legend_background draws a bordered box around the legend
+        passed: true
+        comment: panel_border and legend border both removed this attempt (pixel-verified);
+          subtle y-only grid, thin axis line
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
         comment: Dashed mean lines + labeled callouts + quantified subtitle create
-          a clear focal point
+          a clear focal point on the group shift
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,27 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Overlapping histogram via geom_histogram(position='identity')
+        comment: Correct overlapping-histogram chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fills, distinct colors, legend, aligned bin edges,
-          matching bin widths — all present
+        comment: Semi-transparent fills (alpha=0.55), distinct contrasting colors,
+          legend, aligned bin edges, matching bin widths/counts — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=response_time, y=count, correct
+        comment: x=response_time, y=count via geom_histogram, both groups fully shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title omits the 'python' language segment required by the mandated
-          format; legend labels are correct
+        passed: true
+        comment: Title now correctly includes the python language segment; legend
+          labels (Control/Treatment) match the data
     data_quality:
       score: 15
       max: 15
@@ -163,19 +174,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 2 groups, 200 obs each, visible distributional difference
+        comment: Shows overlap, transparency, aligned bins, and adds mean-reference
+          lines
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral A/B-test response-time scenario
+        comment: Neutral A/B-test response-time scenario, plausible framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150-680ms range and counts up to 30 are sensible for the domain
+        comment: n=200/group within recommended range, response times in a sensible
+          ms range
     code_quality:
       score: 10
       max: 10
@@ -185,7 +198,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -197,13 +210,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -219,25 +232,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic ggplot grammar, position='identity', scale_fill_manual
+        comment: position="identity" + boundary alignment + scale_fill_manual — idiomatic
+          ggplot-style lets-plot usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom layer_tooltips for the interactive HTML export is a genuine
-          lets-plot-specific touch
-  verdict: REJECTED
+        comment: Custom layer_tooltips is a genuine lets-plot-specific touch; mean-line
+          annotations are transferable ggplot2-style technique rather than library-unique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
   - alpha-blending
+  - edge-highlighting
