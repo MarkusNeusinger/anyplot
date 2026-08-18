@@ -1,7 +1,7 @@
 # anyplot.ai
 # radar-multi: Multi-Series Radar Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 88/100 | Created: 2026-08-17
+# Quality: 88/100 | Updated: 2026-08-18
 
 using CairoMakie
 using Colors
