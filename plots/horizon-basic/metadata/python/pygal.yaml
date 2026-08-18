@@ -2,123 +2,138 @@ library: pygal
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:17:02Z'
-updated: '2026-05-07T05:43:57Z'
-generated_by: claude-haiku
-workflow_run: 25477795528
+updated: '2026-08-18T01:10:20Z'
+generated_by: claude-sonnet
+workflow_run: 32085906103
 issue: 1877
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - Perfect theme adaptation with both renders fully readable; data colors identical
-    while chrome adapts correctly
-  - True horizon chart implementation with proper positive/negative folding and multi-series
-    compact layout
-  - 'Realistic server metrics data with plausible patterns: spikes, maintenance windows,
-    and business-hour trends'
-  - Clean code structure with well-designed custom pygal Graph extension, reproducible
-    seed, no extraneous dependencies
-  - 'High visual quality across all dimensions: text legible in both themes, no overlaps,
-    proper spacing and proportions'
+  - Fully custom horizon-chart implementation via pygal's Graph subclass extension
+    point — a legitimate, documented way to build a chart type pygal doesn't ship
+    natively, rather than faking one with a stock chart type
+  - Rows are sorted by final cumulative excess return (best-to-worst leaderboard),
+    giving the chart a clear narrative focal point and visual hierarchy
+  - Real SVG hover tooltips (native <title> elements per band) rather than simulated
+    interactivity, correctly leveraging pygal's HTML export instead of drawing fake
+    UI
+  - 'Theme-adaptive diverging color scale (imprint_div: matte-red ↔ theme background
+    ↔ blue) correctly implements the spec''s mirrored positive/negative coloring note,
+    with a clear, well-labeled diverging legend (Underperform/Outperform)'
+  - Both light and dark renders are fully legible chrome-wise — title, row labels,
+    tick labels, and legend all pass the theme-readability checklist with no dark-on-dark
+    or light-on-light failures
   weaknesses:
-  - 'VQ-07 Minor: Uses ColorBrewer Blues-Oranges diverging palette instead of BrBG
-    recommended in style guide (acceptable colorblind-safe alternative but non-canonical)'
-  - 'DE-01 to DE-03 Low: Legend is minimal (just colored squares); typography hierarchy
-    could be more refined; overall aesthetic is functional but lacks visual premium
-    polish'
-  - 'LM-02 Low: Extending pygal.Graph is unconventional for horizon charts; could
-    showcase more advanced pygal features or distinctive library usage'
+  - X-axis tick-label font size (30px) is noticeably smaller than the style guide's
+    native-pixel baseline for pygal tick labels (~44) and smaller than the sector
+    row labels (34) and axis title (40) — increase to ~40-44px for better mobile legibility
+    and visual balance with the row labels
+  - The lightest (near-zero) horizon band — especially in early-January data for several
+    sector rows, and on PAGE_BG-colored rows in the dark render — blends closely with
+    its own row's background color, making very small excess-return values hard to
+    distinguish from "no signal"; consider a slightly higher minimum saturation for
+    band 1 so near-zero deviations stay visible against the row background
+  - The custom HorizonChart subclass (_plot/_compute/_lerp_hex) adds real structural
+    complexity beyond a typical KISS plotting script — justified by pygal having no
+    native horizon chart type, but worth noting as the most complex implementation
+    in this batch
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "horizon-basic · pygal · anyplot.ai" in bold dark text (#1A1A17); series labels (CPU Usage, Memory, Network I/O, Disk I/O, Response Time, Error Rate) in dark text; x-axis labels "00:00" through "22:00" in muted tone (#6B6A63); "Time" axis title in dark text. All readable with excellent contrast.
-      Data: ColorBrewer diverging palette — light-to-dark blues for positive values (magnitude shown by intensity), light-to-dark oranges for negative values. Six metrics shown with three-band stacks. Subtle dashed vertical grid lines aid time readability.
-      Legend: Top-right legend shows "Positive" (blue band colors) and "Negative" (orange band colors) with labeled text
-      Legibility verdict: PASS — All text and data elements clearly readable against light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1), matches the required light-theme page surface — not pure white.
+      Chrome: Title "Sector Performance vs Benchmark · horizon-basic · python · pygal · anyplot.ai" in large dark ink, fully readable and un-clipped at the top. Eight bold dark sector-name row labels (Consumer Discretionary, Financials, Energy, Real Estate, Technology, Industrials, Healthcare, Utilities) left-aligned and legible. X-axis date tick labels (Jan 02 ... Jun 18) in muted gray, small but legible. Bold "Trading Day (2024)" axis title below. A diverging color-scale legend top-right with "Underperform" / "Outperform" labels over red and blue swatch groups, separated by a neutral (background-colored, outlined) swatch.
+      Data: Each sector is a horizon row of folded bands — red intensifying with underperformance, blue intensifying with outperformance, folded into 3 bands per polarity against a shared global scale. Rows alternate between a slightly-elevated white and the cream page background (zebra striping) for scanability. Rows are sorted with the best final performer (Consumer Discretionary) on top and the worst (Utilities) on the bottom.
+      Legibility verdict: PASS — all title, row-label, tick-label, and legend text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, series labels, x-axis labels, and "Time" title all adapted to light colors (#F0EFE8 for primary text, #A8A79F for secondary). All readable with excellent contrast against dark background.
-      Data: Blue and orange colors are IDENTICAL to light render — correctly demonstrates theme-independent data colors. Magnitude progression through bands is clear. Grid lines remain visible.
-      Legend: Identical to light render with adjusted text colors
-      Legibility verdict: PASS — All text and data elements clearly readable against dark background; no dark-on-dark failures such as black text on near-black background. Data color consistency confirmed.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme page surface — not pure black.
+      Chrome: Same title, now in light ink, fully readable and un-clipped. Same eight row labels rendered in light text, legible against the dark rows. X-axis date labels and "Trading Day (2024)" axis title rendered in light muted tones, legible. Same top-right diverging legend, swatch colors unchanged, labels now light-colored and readable against the dark background.
+      Data: Data colors (red/blue band endpoints) are visually consistent with the light render — the same hue progression per row and per band, since the diverging scale's fully-saturated endpoints (#AE3030 / #4467A3) are theme-independent; only the near-zero (band-1) tone shifts because its lerp midpoint is intentionally theme-adaptive per the style guide's imprint_div guidance. Zebra striping alternates a slightly-lighter charcoal and the near-black page background.
+      Legibility verdict: PASS — no dark-on-dark text; all title, row-label, tick-label, and legend text remains clearly legible. Minor note: the near-zero band on PAGE_BG-colored rows is low-contrast against its own row background in a few early-data stretches (a data-visibility nuance, not a text-legibility failure).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text clearly readable in both light and dark themes
+        comment: All text readable in both themes; x-axis tick labels at 30px are
+          notably smaller than the style-guide baseline (~44) and than sibling labels
+          — still legible but undersized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing; no text collisions or band overlaps
+        comment: No collisions between labels, legend, or data across either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: All bands and markers clearly distinguishable
+        comment: Near-zero (band-1) horizon fill blends into its own row background
+          in several early-data stretches, especially on PAGE_BG rows in the dark
+          render
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: ColorBrewer Blues-Oranges palette is colorblind-safe
+        comment: Diverging red/blue is CVD-safe; no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions on 4800x2700; well-balanced
+        comment: Canvas gate passed (no drift flag); generous margins, nothing cut
+          off, title within expected width band for the mandated long title
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title and axis labels descriptive and clear
+        comment: Descriptive x-axis title; sector row labels serve as the y semantic
+          in place of a redundant y-axis title
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Uses ColorBrewer Blues-Oranges instead of BrBG per style guide; acceptable
-          but non-canonical. Backgrounds correct.
+        passed: true
+        comment: 'Correctly uses imprint_div (matte-red ↔ theme-adaptive midpoint
+          ↔ blue) for signed continuous data instead of the categorical palette; backgrounds
+          are theme-correct #FAF8F1/#1A1A17'
     design_excellence:
-      score: 11
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom palette shows design intent; overall aesthetic functional
-          but not premium
+        passed: true
+        comment: Highly custom SVG draw with zebra striping, sorted leaderboard rows,
+          and an elegant hand-built diverging legend
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and adequate whitespace; refinement is competent but
-          minimal customization
+        passed: true
+        comment: No spines (fully custom canvas), subtle dashed grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Color effectively encodes polarity; visual hierarchy could be stronger
+        passed: true
+        comment: Sorting rows best-to-worst by final cumulative excess return creates
+          a clear leaderboard narrative and focal point
     spec_compliance:
       score: 15
       max: 15
@@ -128,26 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: True horizon chart with proper folded bands
+        comment: Correct horizon chart, folded bands per row
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: positive/negative encoding, band folding,
-          multi-series, compact layout'
+        comment: 3 bands, mirrored positive/negative coloring, meaningful zero baseline,
+          8 series/126 time points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time (24h), Y=6 metrics; axes properly cover all data
+        comment: X = trading day, folded value bands per series row, all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Format correct; legend identifies Positive/Negative
+        comment: Title matches mandated format with descriptive prefix; diverging
+          legend correctly labeled Underperform/Outperform
     data_quality:
       score: 15
       max: 15
@@ -157,81 +173,89 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Six metrics shown with realistic positive/negative variations
+        comment: Folding, multi-band color intensity, multi-series comparison, and
+          a legend explaining the mapping are all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Plausible server metrics: CPU peaks, memory trends, disk backups,
-          errors'
+        comment: Realistic, neutral sector-vs-benchmark finance scenario with plausible
+          drift/volatility parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Band division (max/3) scales well for data range
+        comment: Cumulative excess-return magnitudes (single-digit to ~20pp) are sensible
+          for a two-quarter sector performance series
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Clean custom class; no unnecessary complexity
+        comment: A Graph subclass with _plot/_compute is the documented pygal mechanism
+          for a chart type outside the stock catalog, but it is real structural complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic via np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, sys, numpy, pygal)
+        comment: Only used imports; sys path juggling is a legitimate workaround for
+          the pygal.py filename shadowing the pygal package
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; SVG manipulation appropriate for custom chart
+        comment: No fake UI; real SVG <title> tooltips
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API
     library_mastery:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Extends Graph class correctly; svg.node() usage proper. Unconventional
-          approach for horizon charts.
+        passed: true
+        comment: Uses pygal's documented Graph-subclass extension point and Style
+          object rather than fighting the library
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Custom chart showcases pygal extensibility; band-folding logic non-trivial
-          but could use more advanced features
+        passed: true
+        comment: Leverages pygal's native SVG hover-tooltip rendering pipeline for
+          the interactive HTML export
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
+  - html-export
   - manual-ticks
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - cumulative-sum
+  - time-series
   styling:
-  - grid-styling
+  - custom-colormap
+  - publication-ready
