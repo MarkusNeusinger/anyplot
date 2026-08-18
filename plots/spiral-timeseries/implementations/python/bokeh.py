@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -19,7 +19,7 @@ for _p in ("", ".", _impl_dir):
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, HoverTool, Label, LinearColorMapper
+from bokeh.models import ColorBar, ColumnDataSource, CustomJS, HoverTool, Label, LinearColorMapper
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -58,6 +58,11 @@ temperature = (
     12.0 + 14.0 * np.sin(2 * np.pi * (day_of_year - 80) / 365) + 0.3 * year_offset + np.random.normal(0, 2.5, n)
 )
 
+# Per-year mean temperature — surfaces the multi-year warming trend as a number
+# alongside each year label, rather than leaving it to be inferred from color alone.
+year_avg_temp = [float(temperature[dates.year == yr].mean()) for yr in range(2019, 2024)]
+warming_delta = year_avg_temp[-1] - year_avg_temp[0]
+
 # Archimedean spiral: r grows linearly with θ; one year ≈ one full revolution
 days_elapsed = (dates - dates[0]).days.values.astype(float)
 num_rev = 5.0
@@ -86,7 +91,7 @@ mapper = LinearColorMapper(palette=IMPRINT_SEQ256, low=t_min, high=t_max)
 p = figure(
     width=2400,
     height=2400,
-    title="spiral-timeseries · bokeh · anyplot.ai",
+    title="spiral-timeseries · python · bokeh · anyplot.ai",
     toolbar_location=None,
     x_range=(-820, 820),
     y_range=(-820, 820),
@@ -143,13 +148,73 @@ for yi in range(5):
         )
     )
 
+# Trend callout — the spiral's empty center hole (r < inner_r) is otherwise
+# unused, so it becomes a compact summary of the multi-year warming trend.
+# This gives the reader an explicit number for the trend the color ramp only
+# implies, without disturbing the month grid or year-label ring.
+p.add_layout(
+    Label(
+        x=0,
+        y=16,
+        text=f"+{warming_delta:.1f}°C",
+        text_align="center",
+        text_baseline="bottom",
+        text_color=INK,
+        text_font_size="34pt",
+        text_font_style="bold",
+    )
+)
+p.add_layout(
+    Label(
+        x=0,
+        y=8,
+        text="warming, 2019 → 2023",
+        text_align="center",
+        text_baseline="top",
+        text_color=INK_MUTED,
+        text_font_size="18pt",
+    )
+)
+
 # Spiral segments colored by temperature
 seg_renderer = p.segment(
     x0="x0", y0="y0", x1="x1", y1="y1", line_color={"field": "temp", "transform": mapper}, line_width=9, source=source
 )
 
+# Hover halo — a CustomJS-driven bokeh-native touch: an initially empty glyph
+# source that the HoverTool's JS callback repositions onto the hovered segment,
+# ringing it in the page's ink color. More distinctive than a bare tooltip since
+# it reinforces exactly which point on the spiral the tooltip refers to.
+halo_source = ColumnDataSource({"x": [], "y": []})
+p.scatter(
+    x="x",
+    y="y",
+    source=halo_source,
+    marker="circle",
+    size=22,
+    fill_color=None,
+    line_color=INK,
+    line_width=3,
+    line_alpha=0.9,
+)
+
 hover = HoverTool(
-    renderers=[seg_renderer], tooltips=[("Date", "@date"), ("Temperature", "@temp{0.1f} °C")], line_policy="interp"
+    renderers=[seg_renderer],
+    tooltips=[("Date", "@date"), ("Temperature", "@temp{0.1f} °C")],
+    line_policy="interp",
+    callback=CustomJS(
+        args={"seg_source": source, "halo_source": halo_source},
+        code="""
+        const indices = cb_data.index.indices
+        if (indices.length > 0) {
+            const i = indices[0]
+            halo_source.data = {x: [seg_source.data['x1'][i]], y: [seg_source.data['y1'][i]]}
+        } else {
+            halo_source.data = {x: [], y: []}
+        }
+        halo_source.change.emit()
+        """,
+    ),
 )
 p.add_tools(hover)
 
