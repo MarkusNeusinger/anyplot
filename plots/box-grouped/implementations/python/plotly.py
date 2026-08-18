@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: plotly 6.9.0 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -74,13 +74,32 @@ for i, subcat in enumerate(subcategories):
             y=y_vals,
             name=subcat,
             marker_color=IMPRINT[i],
-            boxmean=False,
+            boxmean="sd",
             notched=True,
             line={"width": 1.5},
-            marker={"size": 6, "opacity": 0.7},
+            marker={"size": 8, "opacity": 0.85, "line": {"width": 1, "color": PAGE_BG}},
             boxpoints="outliers",
+            jitter=0.4,
+            pointpos=0,
         )
     )
+
+# Second storytelling layer — call out the department with the strongest overall performance
+dept_medians = {cat: float(np.median(np.concatenate([data[cat][s] for s in subcategories]))) for cat in categories}
+best_dept = max(dept_medians, key=dept_medians.get)
+fig.add_annotation(
+    x=best_dept,
+    xref="x",
+    y=0.97,
+    yref="paper",
+    text=f"★ {best_dept}: strongest overall performance",
+    showarrow=False,
+    font={"size": 10, "color": INK},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=4,
+)
 
 # Benchmark line for visual hierarchy — flags a company-wide performance target
 TARGET_SCORE = 75
