@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: altair 6.1.0 | Python 3.13.13
-Quality: 71/100 | Updated: 2026-05-08
+Library: altair 6.2.2 | Python 3.13.12
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -9,9 +9,10 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Theme tokens
+# Theme tokens (Imprint palette — theme-adaptive chrome)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
@@ -23,87 +24,74 @@ np.random.seed(42)
 
 variables = ["Revenue", "Profit", "Expenses", "Employees", "Market Cap", "Debt", "Assets", "R&D Spend"]
 
-# Create realistic correlation matrix
-n = len(variables)
 # Generate a random matrix and make it symmetric positive semi-definite
+n = len(variables)
 A = np.random.randn(n, n) * 0.5
 correlation = np.dot(A, A.T)
-# Normalize to correlation matrix (values between -1 and 1)
 D = np.sqrt(np.diag(correlation))
 correlation = correlation / np.outer(D, D)
-# Set diagonal to 1
 np.fill_diagonal(correlation, 1.0)
-# Round to 2 decimal places
 correlation = np.round(correlation, 2)
 
-# Convert to long format for Altair, masking upper triangle
-rows = []
-for i, var1 in enumerate(variables):
-    for j, var2 in enumerate(variables):
-        # Only include lower triangle (including diagonal) to avoid redundancy
-        if i >= j:
-            rows.append({"Variable 1": var1, "Variable 2": var2, "Correlation": correlation[i, j]})
-
+# Convert to long format for Altair, masking the upper triangle to avoid redundancy
+rows = [
+    {"Variable 1": variables[i], "Variable 2": variables[j], "Correlation": correlation[i, j]}
+    for i in range(n)
+    for j in range(n)
+    if i >= j
+]
 df = pd.DataFrame(rows)
 
-# Create heatmap with diverging color scheme centered at zero
+# Highlight strong correlations (|r| > 0.6) with an ink outline for visual hierarchy
+strong = (alt.datum.Correlation > 0.6) | (alt.datum.Correlation < -0.6)
+
+title = "heatmap-correlation · python · altair · anyplot.ai"
+title_fontsize = round(16 * (67 / len(title) if len(title) > 67 else 1.0))
+
 base = alt.Chart(df).encode(
     x=alt.X(
         "Variable 1:N",
-        title="Variables",
+        title="Financial Metrics",
         sort=variables,
         axis=alt.Axis(
-            labelAngle=0, labelFontSize=18, labelFontWeight="bold", labelColor=INK, titleColor=INK, titleFontSize=22
+            labelAngle=-40,
+            labelFontSize=11,
+            labelColor=INK_SOFT,
+            titleColor=INK,
+            titleFontSize=13,
+            titleFontWeight="bold",
+            grid=False,
         ),
     ),
     y=alt.Y(
         "Variable 2:N",
-        title="Variables",
+        title="Financial Metrics",
         sort=variables,
-        axis=alt.Axis(labelFontSize=18, labelFontWeight="bold", labelColor=INK, titleColor=INK, titleFontSize=22),
-    ),
-)
-
-# Heatmap rectangles
-heatmap = base.mark_rect(stroke=PAGE_BG, strokeWidth=2).encode(
-    color=alt.Color(
-        "Correlation:Q",
-        scale=alt.Scale(scheme="brownbluegreen", domain=[-1, 1]),
-        legend=alt.Legend(
-            title="Correlation",
-            titleFontSize=20,
-            labelFontSize=18,
-            gradientLength=500,
-            gradientThickness=35,
-            fillColor=ELEVATED_BG,
-            strokeColor=INK_SOFT,
+        axis=alt.Axis(
+            labelFontSize=11, labelColor=INK_SOFT, titleColor=INK, titleFontSize=13, titleFontWeight="bold", grid=False
         ),
-    )
-)
-
-# Text annotations with correlation values
-text = base.mark_text(fontSize=16, fontWeight="bold").encode(
-    text=alt.Text("Correlation:Q", format=".2f"),
-    color=alt.condition(
-        (alt.datum.Correlation > 0.6) | (alt.datum.Correlation < -0.6), alt.value(PAGE_BG), alt.value(INK)
     ),
 )
 
-# Add tooltips for interactivity
-heatmap_with_tooltip = base.mark_rect(stroke=PAGE_BG, strokeWidth=2).encode(
+# Heatmap cells: Imprint diverging colormap centered on zero, fixed -1..1 domain
+heatmap = base.mark_rect().encode(
     color=alt.Color(
         "Correlation:Q",
-        scale=alt.Scale(scheme="brownbluegreen", domain=[-1, 1]),
+        scale=alt.Scale(domain=[-1, 1], range=["#AE3030", PAGE_BG, "#4467A3"], domainMid=0),
         legend=alt.Legend(
             title="Correlation",
-            titleFontSize=20,
-            labelFontSize=18,
-            gradientLength=500,
-            gradientThickness=35,
+            titleFontSize=11,
+            titleColor=INK,
+            labelFontSize=10,
+            labelColor=INK_SOFT,
+            gradientLength=180,
+            gradientThickness=14,
             fillColor=ELEVATED_BG,
             strokeColor=INK_SOFT,
         ),
     ),
+    stroke=alt.condition(strong, alt.value(INK), alt.value(PAGE_BG)),
+    strokeWidth=alt.condition(strong, alt.value(2.5), alt.value(1)),
     tooltip=[
         alt.Tooltip("Variable 1:N", title="X Variable"),
         alt.Tooltip("Variable 2:N", title="Y Variable"),
@@ -111,36 +99,36 @@ heatmap_with_tooltip = base.mark_rect(stroke=PAGE_BG, strokeWidth=2).encode(
     ],
 )
 
-# Combine heatmap and text with tooltips
-chart = (
-    (heatmap_with_tooltip + text)
-    .properties(
-        width=1400,
-        height=1200,
-        title=alt.Title(
-            "heatmap-correlation · altair · anyplot.ai", fontSize=28, fontWeight="bold", anchor="middle", color=INK
-        ),
-    )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=1400, continuousHeight=1200)
-    .configure_axis(
-        domainColor=INK_SOFT,
-        tickColor=INK_SOFT,
-        labelColor=INK,
-        labelFontSize=18,
-        titleColor=INK,
-        titleFontSize=22,
-        titleFontWeight="bold",
-        gridColor=INK_SOFT,
-        gridOpacity=0.10,
-    )
-    .configure_title(color=INK, fontSize=28, fontWeight="bold")
-    .configure_legend(
-        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK, labelFontSize=18, titleColor=INK, titleFontSize=20
-    )
+# Correlation value annotations, with contrast-aware text color per cell
+text = base.mark_text(fontSize=12, fontWeight="bold").encode(
+    text=alt.Text("Correlation:Q", format=".2f"), color=alt.condition(strong, alt.value(PAGE_BG), alt.value(INK))
 )
 
-# Save as PNG (square format ~3600x3600)
-chart.save(f"plot-{THEME}.png", scale_factor=2.57)
+chart = (
+    (heatmap + text)
+    .properties(
+        background=PAGE_BG,
+        width=420,
+        height=460,
+        title=alt.Title(title, fontSize=title_fontsize, fontWeight="bold", anchor="middle", color=INK),
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=420, continuousHeight=460)
+)
 
-# Save as HTML for interactivity
+# Hard target: 2400 x 2400 (square). See prompts/library/altair.md "Canvas".
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 2400, 2400
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
