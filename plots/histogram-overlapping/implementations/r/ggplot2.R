@@ -4,7 +4,6 @@
 #' Quality: 82/100 | Created: 2026-08-18
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -32,16 +31,42 @@ df <- tibble::tibble(completion_time = completion_time, design = design)
 
 binwidth <- diff(range(df$completion_time)) / 28
 
+# Group means drive the dashed reference lines and the fastest-design callout
+group_means <- tapply(df$completion_time, df$design, mean)
+mean_df <- tibble::tibble(
+  design    = factor(names(group_means), levels = levels(df$design)),
+  mean_time = as.numeric(group_means)
+)
+fastest <- mean_df[which.min(mean_df$mean_time), ]
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = completion_time, fill = design)) +
   geom_histogram(
     position  = "identity",
     binwidth  = binwidth,
-    alpha     = 0.55,
-    color     = PAGE_BG,
-    linewidth = 0.25
+    alpha     = 0.5,
+    color     = INK_SOFT,
+    linewidth = 0.15
+  ) +
+  geom_vline(
+    xintercept = fastest$mean_time,
+    color      = IMPRINT_PALETTE[which(levels(df$design) == fastest$design)],
+    linetype   = "dashed",
+    linewidth  = 0.6
+  ) +
+  annotate(
+    "text",
+    x        = fastest$mean_time,
+    y        = Inf,
+    label    = sprintf("%s: fastest avg (%.0fs)", fastest$design, fastest$mean_time),
+    hjust    = -0.05,
+    vjust    = 1.6,
+    size     = 3,
+    fontface = "bold",
+    color    = IMPRINT_PALETTE[which(levels(df$design) == fastest$design)]
   ) +
   scale_fill_manual(values = IMPRINT_PALETTE[1:3], name = "UI design") +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
   labs(
     title = "histogram-overlapping · r · ggplot2 · anyplot.ai",
     x     = "Task Completion Time (seconds)",
