@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 horizon-basic: Horizon Chart
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -143,7 +143,7 @@ class HorizonChart(Graph):
                     color = (self.pos_colors if is_positive else self.neg_colors)[band_idx]
 
                     rect = self.svg.node(
-                        horizon_group, "rect", x=cell_x, y=band_y, width=cell_width + 0.5, height=band_height, rx=1
+                        horizon_group, "rect", x=cell_x, y=band_y, width=cell_width + 0.5, height=band_height, rx=3
                     )
                     rect.set("fill", color)
                     rect.set("stroke", "none")
@@ -192,17 +192,19 @@ class HorizonChart(Graph):
         # Diverging color-scale legend (imprint_div): a single compact strip
         # from full red (strong underperformance) through the neutral
         # benchmark swatch to full blue (strong outperformance).
-        swatch = 46
-        gap = 8
+        swatch = 52
+        gap = 12
+        n_neg = len(self.neg_colors)
+        n_pos = len(self.pos_colors)
         stops = list(reversed(self.neg_colors)) + [None] + self.pos_colors
         legend_width = len(stops) * (swatch + gap) - gap
         legend_x = x_offset + available_width - legend_width
-        legend_y = self.view.y(n_series) + 40
-        legend_font_size = 26
+        legend_y = self.view.y(n_series) + 48
+        legend_font_size = 32
 
         for k, color in enumerate(stops):
             sx = legend_x + k * (swatch + gap)
-            rect = self.svg.node(horizon_group, "rect", x=sx, y=legend_y, width=swatch, height=swatch, rx=3)
+            rect = self.svg.node(horizon_group, "rect", x=sx, y=legend_y, width=swatch, height=swatch, rx=5)
             if color is None:
                 rect.set("fill", ELEVATED_BG)
                 rect.set("stroke", INK_MUTED)
@@ -211,14 +213,22 @@ class HorizonChart(Graph):
                 rect.set("fill", color)
                 rect.set("stroke", "none")
 
-        left_label = self.svg.node(horizon_group, "text", x=legend_x, y=legend_y - 10)
-        left_label.set("text-anchor", "start")
+        # Center each label under its own color group (not the whole legend
+        # bar) so a wider, more legible font never collides across groups.
+        neg_block_width = n_neg * (swatch + gap) - gap
+        pos_block_start = legend_x + (n_neg + 1) * (swatch + gap)
+        pos_block_width = n_pos * (swatch + gap) - gap
+        neg_center_x = legend_x + neg_block_width / 2
+        pos_center_x = pos_block_start + pos_block_width / 2
+
+        left_label = self.svg.node(horizon_group, "text", x=neg_center_x, y=legend_y - 16)
+        left_label.set("text-anchor", "middle")
         left_label.set("fill", INK_MUTED)
         left_label.set("style", f"font-size:{legend_font_size}px;font-family:sans-serif")
         left_label.text = "Underperform"
 
-        right_label = self.svg.node(horizon_group, "text", x=legend_x + legend_width, y=legend_y - 10)
-        right_label.set("text-anchor", "end")
+        right_label = self.svg.node(horizon_group, "text", x=pos_center_x, y=legend_y - 16)
+        right_label.set("text-anchor", "middle")
         right_label.set("fill", INK_MUTED)
         right_label.set("style", f"font-size:{legend_font_size}px;font-family:sans-serif")
         right_label.text = "Outperform"
@@ -260,6 +270,10 @@ sector_returns = {}
 for sector_name, drift, volatility in sector_params:
     daily_excess_return = np.random.normal(drift, volatility, n_points)
     sector_returns[sector_name] = np.cumsum(daily_excess_return).tolist()
+
+# Rank rows by final cumulative excess return (best performer on top) so the
+# chart reads as a leaderboard — a clearer focal point than declaration order.
+sector_returns = dict(sorted(sector_returns.items(), key=lambda kv: kv[1][-1], reverse=True))
 
 n_bands = 3
 pos_colors = [_lerp_hex(DIV_MIDPOINT, DIV_POSITIVE, (i + 1) / n_bands) for i in range(n_bands)]
