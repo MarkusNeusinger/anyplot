@@ -72,6 +72,7 @@ hostSeries.forEach((host, hostIndex) => {
       threshold: 0,
       marker: { enabled: false },
       enableMouseTracking: false,
+      showInLegend: false,
       data: host.values.map((v, p) => [START_MS + p * STEP_MS, foldBand(v, band, BAND_HEIGHT)]),
     });
     series.push({
@@ -85,12 +86,39 @@ hostSeries.forEach((host, hostIndex) => {
       threshold: 0,
       marker: { enabled: false },
       enableMouseTracking: false,
+      showInLegend: false,
       data: host.values.map((v, p) => [START_MS + p * STEP_MS, foldBand(-v, band, BAND_HEIGHT)]),
     });
   }
 });
 
+// --- Color key: one legend-only dummy series per band/polarity so the ------
+// blue/red-intensity encoding is self-explanatory without reading the subtitle.
+const keySeries = [
+  { color: negativeColors[2], name: "≥30pp below" },
+  { color: negativeColors[1], name: "15–30pp below" },
+  { color: negativeColors[0], name: "0–15pp below" },
+  { color: positiveColors[0], name: "0–15pp above" },
+  { color: positiveColors[1], name: "15–30pp above" },
+  { color: positiveColors[2], name: "≥30pp above" },
+].map((item) => ({
+  type: "area",
+  yAxis: 0,
+  name: item.name,
+  color: item.color,
+  fillColor: item.color,
+  marker: { enabled: false },
+  enableMouseTracking: false,
+  showInLegend: true,
+  data: [],
+}));
+
 // --- Panels: one compact yAxis strip per host, sharing the datetime xAxis --
+// Row labels are drawn manually in chart.events.load (below) rather than via
+// yAxis.title: Highcharts reserves left-margin space for *every* stacked yAxis
+// title as if they were parallel side-by-side axes, ballooning the left gutter
+// and forcing later rows' titles increasingly off-canvas once that reservation
+// is overridden -- a plain SVG label per row sidesteps that layout entirely.
 const rowHeightPct = 100 / HOSTS.length;
 const yAxis = HOSTS.map((name, hostIndex) => ({
   top: `${hostIndex * rowHeightPct}%`,
@@ -101,25 +129,32 @@ const yAxis = HOSTS.map((name, hostIndex) => ({
   tickLength: 0,
   lineWidth: 0,
   labels: { enabled: false },
-  title: {
-    text: name,
-    align: "middle",
-    rotation: 0,
-    x: -8,
-    style: { color: t.inkSoft, fontSize: "13px", fontWeight: "500" },
-  },
+  title: { text: null },
   plotLines: [{ value: 0, color: t.grid, width: 1, zIndex: 5 }],
 }));
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: { backgroundColor: "transparent", animation: false,
-           style: { fontFamily: "inherit" } },
+           marginLeft: 110, marginRight: 40,
+           style: { fontFamily: "inherit" },
+           events: {
+             load() {
+               const chart = this;
+               HOSTS.forEach((name, hostIndex) => {
+                 const axis = chart.yAxis[hostIndex];
+                 chart.renderer.text(name, chart.plotLeft - 10, axis.top + axis.len / 2 + 4)
+                   .attr({ align: "right", zIndex: 6 })
+                   .css({ color: t.inkSoft, fontSize: "13px", fontWeight: "500" })
+                   .add();
+               });
+             },
+           } },
   credits: { enabled: false },
   colors: t.palette,
   title: { text: "horizon-basic · javascript · highcharts · anyplot.ai",
            style: { color: t.ink, fontSize: "22px", fontWeight: "600" } },
-  subtitle: { text: "CPU deviation from a 50% baseline, folded into 3 bands per host — blue rises above baseline, red falls below, deeper shade means larger swing",
+  subtitle: { text: "CPU deviation from a 50% baseline, folded into 3 bands per host — deeper shade means a larger swing",
               style: { color: t.inkSoft, fontSize: "14px" } },
   xAxis: {
     type: "datetime",
@@ -128,8 +163,19 @@ Highcharts.chart("container", {
     title: { text: "Time (UTC)", style: { color: t.inkSoft, fontSize: "16px" } },
   },
   yAxis,
-  legend: { enabled: false },
+  legend: {
+    enabled: true,
+    layout: "horizontal",
+    align: "center",
+    verticalAlign: "top",
+    y: 46,
+    itemDistance: 14,
+    symbolWidth: 12,
+    symbolHeight: 12,
+    symbolRadius: 2,
+    itemStyle: { color: t.inkSoft, fontSize: "12px", fontWeight: "normal" },
+  },
   tooltip: { enabled: false },
   plotOptions: { series: { animation: false } },
-  series,
+  series: [...series, ...keySeries],
 });
