@@ -108,7 +108,7 @@ jobs:
           slash_target=$(curl -sS --max-time 30 -o /dev/null -A "$GOOGLEBOT" \
             -w '%{redirect_url}' "$ORIGIN/scatter-basic/")
           case "$slash_target" in
-            *"/seo-proxy"*|http://*)
+            *"/seo-proxy"*|http://*|*:8080/*)
               echo "::error::trailing-slash redirect leaks or downgrades: $slash_target"
               fail=1 ;;
             *) echo "OK: trailing slash -> $slash_target" ;;

@@ -232,6 +232,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The trailing-slash redirect leaked the internal port** — #10473 removed a redirect to
+  `http://api.anyplot.ai/seo-proxy/…` and replaced it with `http://anyplot.ai:8080/…`: a smaller
+  version of the same defect, since nginx builds a `permanent` rewrite's Location from
+  `$scheme://$host:$server_port`, and behind Cloud Run that is plain http on port 8080.
+  `absolute_redirect off` makes the Location relative, which the client resolves against the URL it
+  actually requested — the only value here guaranteed to be right. The daily `bot-serving-check`
+  would have caught this on its next run, since it already rejects an `http://` target; it now
+  rejects an internal port explicitly too. `agentic/docs/project-guide.md` also gains the step that
+  makes this checkable at all: the deploy triggers are **regional** (`europe-west4`), so a
+  `gcloud builds list` without `--region` returns builds from early 2026 and reads as "nothing has
+  deployed for months" — a wrong conclusion drawn in this session and corrected by the repo owner
+  (#10476).
+
 - **Preview images were forbidden to every crawler that follows the rules** — `api.anyplot.ai`
   served a blanket `Disallow: /`, while every prerendered page references its preview image at
   `api.anyplot.ai/og/…png`. The image answered HTTP 200 and the host forbade fetching it, so an
