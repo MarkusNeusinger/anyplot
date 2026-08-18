@@ -228,6 +228,47 @@ CWV tracking is production-only and dynamically imported (zero dev/bundle cost).
 
 ---
 
+## AI and crawler traffic (separate site)
+
+Agent traffic is recorded against a **second Plausible site, `bots.anyplot.ai`**,
+never the main one. Every Plausible event creates a visitor, so routing these
+into `anyplot.ai` would re-introduce the inflation that audit 2026-07-08
+(High #7) removed — visitor counts ran ~40% high and the trend lines were
+unusable. The bot site has no tracking script installed and never will: its
+events arrive server-side through the Events API, which is why it shows
+"Setup pending" in the Plausible UI. That is expected, not a broken install.
+
+| Event | Properties | Source | Description |
+|-------|-----------|--------|-------------|
+| `bot_fetch` | `assistant`, `kind`, `path` | `api/routers/seo.py` (router dependency) | An AI assistant or search crawler read a catalogue page. Recorded on `bots.anyplot.ai`. |
+
+`kind` is the property worth filtering on:
+
+| `kind` | Meaning |
+|--------|---------|
+| `user_directed` | A person asked their assistant to open this page. This is a **reader** |
+| `index` | An assistant's search index is building a corpus; no one is waiting |
+| `search` | A classic search crawler (Googlebot, bingbot, …) |
+| `inspection` | Search Console's URL inspection tool |
+| `training` | A training-corpus crawler |
+
+`assistant` carries the vendor (`claude`, `chatgpt`, `gemini`, `mistral`,
+`perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …).
+The taxonomy lives in `AI_AGENTS` in `api/analytics.py`, ordered most-specific
+first because matching is substring-based: `claude-user`, `claude-searchbot`
+and `claudebot` mean three different things and a broader `claude` pattern
+would collapse them.
+
+Search crawlers are included deliberately. Crawl frequency per engine is
+otherwise only visible by sampling Search Console's URL inspection one URL at a
+time — which is how a months-long recrawl gap after the June 2026 outage went
+unnoticed until someone went looking.
+
+Only `/seo-proxy/*` paths count as page reads; `robots.txt` and `sitemap.xml`
+live on the same router and are machine files, not catalogue pages. The
+reported `path` is always the public URL, never the internal `/seo-proxy`
+prefix.
+
 ## Server-side og:image tracking
 
 Social media bots (Twitter, WhatsApp, Teams, etc.) don't execute JavaScript, so og:image requests can only be tracked server-side.

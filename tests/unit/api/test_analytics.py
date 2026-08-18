@@ -1,10 +1,19 @@
 """Tests for server-side Plausible analytics tracking."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from api.analytics import PLATFORM_PATTERNS, _detect_whatsapp_variant, detect_platform, track_og_image
+from api.analytics import (
+    BOT_DOMAIN,
+    PLATFORM_PATTERNS,
+    _detect_whatsapp_variant,
+    detect_ai_agent,
+    detect_platform,
+    track_bot_fetch,
+    track_og_image,
+)
 
 
 class TestDetectPlatform:
@@ -298,3 +307,104 @@ class TestSendPlausibleEvent:
                 url="https://anyplot.ai/",
                 props={},
             )
+
+
+class TestDetectAiAgent:
+    """Which assistant, and on whose behalf."""
+
+    @pytest.mark.parametrize(
+        ("user_agent", "expected"),
+        [
+            # The three Anthropic agents differ only by suffix and mean very
+            # different things — a broader "claude" pattern would collapse them.
+            ("Mozilla/5.0 (compatible; Claude-User/1.0)", ("claude", "user_directed")),
+            ("Mozilla/5.0 (compatible; Claude-SearchBot/1.0)", ("claude", "index")),
+            ("Mozilla/5.0 (compatible; ClaudeBot/1.0)", ("claude", "training")),
+            ("Mozilla/5.0 (compatible; ChatGPT-User/1.0)", ("chatgpt", "user_directed")),
+            ("Mozilla/5.0 (compatible; OAI-SearchBot/1.4)", ("chatgpt", "index")),
+            ("Mozilla/5.0 (compatible; GPTBot/1.4)", ("chatgpt", "training")),
+            ("MistralAI-User/1.0", ("mistral", "user_directed")),
+            ("MistralAI-Index/1.0", ("mistral", "index")),
+            ("Mozilla/5.0 (compatible; Amzn-User/1.0)", ("amazon", "user_directed")),
+            ("Mozilla/5.0 (compatible; Amzn-SearchBot/1.0)", ("amazon", "index")),
+            ("meta-externalfetcher/1.1", ("meta", "user_directed")),
+            ("Mozilla/5.0 (compatible; Meta-WebIndexer/1.0)", ("meta", "index")),
+            # DuckDuckGo's assistant and its search crawler are separate agents
+            ("DuckAssistBot/1.2", ("duckduckgo", "user_directed")),
+            ("Mozilla/5.0 (compatible; DuckDuckBot/1.1)", ("duckduckgo", "search")),
+            # Gemini fetchers embed a full browser UA and identify by suffix
+            ("Mozilla/5.0 (X11) Chrome/126.0 Safari/537.36 Google-GeminiNotebook", ("gemini", "user_directed")),
+            ("Mozilla/5.0 (compatible; Gemini-Deep-Research)", ("gemini", "user_directed")),
+            ("Mozilla/5.0 (compatible; Googlebot/2.1)", ("google", "search")),
+            ("Mozilla/5.0 (compatible; Google-InspectionTool/1.0)", ("google", "inspection")),
+            ("Mozilla/5.0 (compatible; bingbot/2.0)", ("bing", "search")),
+        ],
+    )
+    def test_classifies(self, user_agent: str, expected: tuple[str, str]) -> None:
+        assert detect_ai_agent(user_agent) == expected
+
+    @pytest.mark.parametrize(
+        "user_agent",
+        [
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
+            "Twitterbot/1.0",
+            "Slackbot-LinkExpanding 1.0",
+            "",
+        ],
+    )
+    def test_ignores_humans_and_non_ai_bots(self, user_agent: str) -> None:
+        """Link-preview and social bots are not agents reading the catalogue."""
+        assert detect_ai_agent(user_agent) is None
+
+
+class TestTrackBotFetch:
+    """Recording an agent reading a page."""
+
+    @staticmethod
+    def _request(user_agent: str) -> MagicMock:
+        request = MagicMock()
+        request.headers = {"user-agent": user_agent}
+        request.client.host = "203.0.113.7"
+        return request
+
+    @pytest.mark.asyncio
+    async def test_records_against_the_bot_site_not_the_main_one(self) -> None:
+        """Mixing these into anyplot.ai is what broke the human numbers before."""
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_bot_fetch(self._request("Mozilla/5.0 (compatible; Claude-User/1.0)"), "/box-basic")
+            await asyncio.sleep(0)  # let the fire-and-forget task run
+
+            assert mock_client.post.call_args[1]["json"]["domain"] == BOT_DOMAIN
+
+    @pytest.mark.asyncio
+    async def test_carries_assistant_kind_and_public_path(self) -> None:
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_bot_fetch(self._request("MistralAI-User/1.0"), "/box-basic/python/matplotlib")
+            await asyncio.sleep(0)
+
+            payload = mock_client.post.call_args[1]["json"]
+            assert payload["name"] == "bot_fetch"
+            # the public URL, never this router's /seo-proxy prefix
+            assert payload["url"] == "https://anyplot.ai/box-basic/python/matplotlib"
+            assert payload["props"] == {
+                "assistant": "mistral",
+                "kind": "user_directed",
+                "path": "/box-basic/python/matplotlib",
+            }
+
+    @pytest.mark.asyncio
+    async def test_sends_nothing_for_a_human(self) -> None:
+        with patch("api.analytics.httpx.AsyncClient") as mock_client_class:
+            mock_client = AsyncMock()
+            mock_client_class.return_value.__aenter__.return_value = mock_client
+
+            track_bot_fetch(self._request("Mozilla/5.0 (X11; Linux) Chrome/126.0 Safari/537.36"), "/")
+            await asyncio.sleep(0)
+
+            mock_client.post.assert_not_called()

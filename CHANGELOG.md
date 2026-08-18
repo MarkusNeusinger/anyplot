@@ -18,6 +18,18 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **You can now see which assistants read the catalogue** — a `bot_fetch` event records every AI
+  and search agent that reads a page, with `assistant` (claude, chatgpt, gemini, mistral, …),
+  `path`, and a `kind` that separates the case worth knowing: `user_directed` means a person asked
+  their assistant to open the page and is a **reader**, against `index`, `search`, `inspection` and
+  `training`, which are machines with nobody waiting. Recorded against a **separate Plausible site**
+  (`bots.anyplot.ai`) rather than the main one, because every Plausible event creates a visitor and
+  mixing these in would re-introduce the ~40% inflation that audit 2026-07-08 removed. Classic
+  search crawlers are included on purpose: per-engine crawl frequency is otherwise only visible by
+  sampling Search Console one URL at a time, which is how a months-long recrawl gap went unnoticed.
+  Hooked in as a router dependency rather than per handler, so the next endpoint added cannot go
+  unrecorded.
+
 - **Dead URLs are now visible in analytics** — a new `page_not_found` Plausible event fires when a
   visitor reaches a URL the app cannot serve, carrying the requested `path` and a `source` that
   separates the kinds of miss: `catch_all` (matches no route — usually a bad inbound link) from
