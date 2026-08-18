@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: seaborn 0.13.2 | Python 3.13.15
 Quality: 83/100 | Updated: 2026-08-18
@@ -8,7 +8,9 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
+from scipy.stats import skewnorm
 
 
 # Theme tokens
@@ -39,33 +41,40 @@ sns.set_theme(
 )
 
 # Data - employee response times (ms) by department
+# Marketing carries a mild right skew (occasional slow tickets) so the overlap
+# also demonstrates a shape difference, not just a shift in mean/spread.
 np.random.seed(42)
+group_order = ["Engineering", "Marketing", "Sales"]
 engineering = np.random.normal(450, 80, 200)
-marketing = np.random.normal(520, 100, 180)
+marketing = skewnorm.rvs(a=4, loc=445, scale=90, size=180, random_state=42)
 sales = np.random.normal(480, 60, 160)
 
+df = pd.DataFrame(
+    {
+        "values": np.concatenate([engineering, marketing, sales]),
+        "group": ["Engineering"] * len(engineering) + ["Marketing"] * len(marketing) + ["Sales"] * len(sales),
+    }
+)
+
 # Shared bin edges so all three distributions compare on the same grid
-bin_edges = np.histogram_bin_edges(np.concatenate([engineering, marketing, sales]), bins=25)
+bin_edges = np.histogram_bin_edges(df["values"], bins=25)
 
 # Create plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
-# Plot overlapping histograms
+# Idiomatic long-form overlapping histogram: one call, seaborn's hue/multiple machinery
 sns.histplot(
-    engineering,
+    data=df,
+    x="values",
+    hue="group",
+    hue_order=group_order,
+    multiple="layer",
     bins=bin_edges,
+    palette=IMPRINT[:3],
     alpha=0.55,
-    color=IMPRINT[0],
-    label="Engineering",
     edgecolor=PAGE_BG,
     linewidth=0.5,
     ax=ax,
-)
-sns.histplot(
-    marketing, bins=bin_edges, alpha=0.55, color=IMPRINT[1], label="Marketing", edgecolor=PAGE_BG, linewidth=0.5, ax=ax
-)
-sns.histplot(
-    sales, bins=bin_edges, alpha=0.55, color=IMPRINT[2], label="Sales", edgecolor=PAGE_BG, linewidth=0.5, ax=ax
 )
 
 # Labels and styling
@@ -81,10 +90,32 @@ sns.despine(ax=ax)
 ax.set_axisbelow(True)
 ax.yaxis.grid(True, linewidth=0.8)
 
-# Legend
-legend = ax.legend(fontsize=8, loc="upper right", framealpha=1)
+# Legend (seaborn auto-builds it from hue; drop the "group" title, restyle to match theme)
+sns.move_legend(ax, "upper right", title=None, fontsize=8, frameon=True)
+legend = ax.get_legend()
+legend.get_frame().set_alpha(1)
 for text in legend.get_texts():
     text.set_color(INK)
+
+# Storytelling: call out the fastest department's average response time
+group_means = df.groupby("group")["values"].mean()
+fastest_group = group_means.idxmin()
+fastest_mean = group_means[fastest_group]
+fastest_color = IMPRINT[group_order.index(fastest_group)]
+
+bar_top = ax.get_ylim()[1]
+ax.set_ylim(top=bar_top * 1.18)
+ax.axvline(fastest_mean, color=fastest_color, linestyle="--", linewidth=1.2, alpha=0.8, ymax=0.82)
+ax.annotate(
+    f"{fastest_group}: fastest avg ({fastest_mean:.0f} ms)",
+    xy=(fastest_mean, bar_top),
+    xytext=(fastest_mean, bar_top * 1.08),
+    fontsize=8,
+    fontweight="bold",
+    color=fastest_color,
+    ha="center",
+    va="bottom",
+)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
