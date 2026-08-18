@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-overlapping: Overlapping Histograms
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-08-18
+// Quality: 93/100 | Created: 2026-08-18
 import { BarChart } from "@mui/x-charts/BarChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
