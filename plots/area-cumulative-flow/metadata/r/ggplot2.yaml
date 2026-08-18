@@ -1,0 +1,232 @@
+library: ggplot2
+language: r
+specification_id: area-cumulative-flow
+created: '2026-08-18T03:09:19Z'
+updated: '2026-08-18T03:23:48Z'
+generated_by: claude-sonnet
+workflow_run: 32094036957
+issue: 5239
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct stacking order via geom_ribbon(ymin/ymax) rather than relying on geom_area's
+    automatic stack order — the right idiom for the spec's "earliest stage on top"
+    requirement
+  - 'Clean theme-adaptive chrome: identical data colors between light/dark, only chrome
+    (background, ink, grid) flips'
+  - Data generation is genuinely well thought out — a capacity-constrained pipeline
+    simulation that produces a realistic, monotonically widening CFD signature, with
+    clear code comments explaining the WIP logic
+  - Canvas, title format, and legend all match spec/style-guide requirements exactly
+  weaknesses:
+  - All five bands widen in lockstep since capacity decreases uniformly down the pipeline
+    (8/7/6/5); varying the capacity profile per stage (e.g. one stage recovering mid-series)
+    would make the "identifying bottlenecks" use case from the spec's Applications
+    section more vivid
+  - No additional refinement layer (e.g. a subtle geom_line tracing the top boundary
+    of the Backlog band, or a light annotation calling out the growing WIP) to push
+    Design Excellence and Library Mastery further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "area-cumulative-flow · r · ggplot2 · anyplot.ai" bold and fully visible top-left; axis titles "Date" / "Cumulative Items" and tick labels (bi-weekly dates, integer counts) all dark ink and clearly readable; subtle horizontal-only gridlines; legend "Stage" box with 5 color swatches at right, fully inside canvas bounds.
+      Data: Five stacked ribbon bands top-to-bottom: Backlog (#009E73 brand green, first series), Analysis (lavender), Development (blue), Testing (ochre), Done (matte red) - bands separated by thin background-colored strokes. Matches Imprint canonical order.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title, axis titles, and tick labels now light ink on the dark surface, fully legible; gridlines and axis lines flipped to light tone; legend box uses the dark elevated surface with light text. No dark-on-dark failures found anywhere (title, axis, ticks, legend all checked).
+      Data: Confirmed identical to light render - same green/lavender/blue/ochre/red hues and same band order/positions, only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between bands, legend, axes, or title
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ribbon bands clearly distinguishable with adequate contrast
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green and red bands non-adjacent, no CVD confusion risk
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, title well-proportioned, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Date / Cumulative Items are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Imprint palette, deliberate band-separator strokes, restrained
+          theme
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines minimized, subtle horizontal-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Bands widen uniformly - no single standout bottleneck stage
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stage order, monotonic counts, distinct colors, legend, date axis
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=cumulative items, full series shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match, legend labels match stage names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 90 days, 5 stages, visible WIP bottleneck signature
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible Kanban board scenario, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 90-day window within spec range, sensible counts
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented capacity simulation, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic dplyr/tidyr pipeline, scale_x_date, scale_fill_manual
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: geom_ribbon(ymin/ymax) for custom stack order is distinctive but
+          not pushed further
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - wide-to-long
+  - matrix-construction
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - edge-highlighting
+  - grid-styling
