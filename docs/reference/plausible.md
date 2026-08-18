@@ -147,13 +147,21 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 
 | Event | Properties | Source | Description |
 |-------|-----------|--------|-------------|
-| `page_not_found` | `path`, `source` | NotFoundPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname` at mount. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the route resolved but the spec or implementation does not exist), `language_params` (a `/{spec}/{language}` URL arrived without both segments), `route_error` (the router itself returned a 404 response). |
+| `page_not_found` | `path`, `source` | NotFoundPage.tsx, SpecPage.tsx | A visitor reached a URL the app cannot serve. `path` is `window.location.pathname`. `source` says which kind of miss it was: `catch_all` (the URL matches no route at all), `spec_missing` (the spec itself does not exist), `impl_missing` (the spec exists but not that library/language pair), `language_params` (a `/{spec}/{language}` URL arrived without both segments), `route_error` (the router returned a 404 response). |
 
 Read `source` before `path`. A `catch_all` miss is usually a bad inbound link;
-a `spec_missing` miss is content that used to exist and no longer does, which is
-the pattern a library migration leaves behind. The bot-facing side of the same
-URLs answers HTTP 404 from `api/routers/seo.py`, but crawlers never run
-JavaScript, so nothing they do appears here — this event covers humans only.
+`impl_missing` is content that used to exist and no longer does, which is the
+pattern a library migration leaves behind and the one worth alerting on.
+
+One asymmetry to know about: `impl_missing` fires without a 404 page ever being
+shown. `SpecPage.tsx` redirects those visitors to the spec hub with a language
+filter, to preserve their intent — so the event is reported from there rather
+than from `NotFoundPage.tsx`. Every other source accompanies a rendered 404.
+
+The bot-facing side of the same URLs answers HTTP 404 from `api/routers/seo.py`,
+but crawlers never run JavaScript and `app/nginx.conf` short-circuits bot user
+agents with `return 202` on `/api/event`, so nothing they do appears here — this
+event covers humans only.
 
 ### Landing page navigation (`nav_click`)
 

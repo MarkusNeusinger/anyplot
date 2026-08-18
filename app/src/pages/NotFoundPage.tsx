@@ -11,8 +11,19 @@ import { paths } from 'src/routes/paths';
 import { colors, semanticColors, typography } from 'src/theme';
 
 /** Where the miss came from — a URL that matches no route is a different
- *  problem from one that routes fine but names content we no longer have. */
-export type NotFoundSource = 'catch_all' | 'spec_missing' | 'language_params' | 'route_error';
+ *  problem from one that routes fine but names content we no longer have.
+ *
+ *  `impl_missing` is the odd one out: it is reported from SpecPage, which
+ *  redirects the visitor to the hub rather than rendering this page, so the
+ *  event fires without a 404 ever being shown. It is still the same signal —
+ *  a URL naming content that no longer exists — and it is the case a library
+ *  migration actually produces, so it belongs in the same event. */
+export type NotFoundSource =
+  | 'catch_all'
+  | 'spec_missing'
+  | 'impl_missing'
+  | 'language_params'
+  | 'route_error';
 
 interface NotFoundPageProps {
   source?: NotFoundSource;
