@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: seaborn 0.13.2 | Python 3.13.15
-Quality: 83/100 | Updated: 2026-08-18
+Quality: 92/100 | Updated: 2026-08-18
 """
 
 import os
