@@ -2,51 +2,56 @@ library: matplotlib
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:54:27Z'
-updated: '2026-05-08T03:25:30Z'
-generated_by: claude-haiku
-workflow_run: 25534609983
+updated: '2026-08-18T08:48:49Z'
+generated_by: claude-sonnet
+workflow_run: 32116956597
 issue: 2017
-python_version: 3.13.13
-library_version: 3.10.9
+language_version: 3.13.15
+library_version: 3.11.1
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/matplotlib/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Perfect visual quality: both themes render clearly with excellent text legibility
-    and proper contrast'
-  - 'Flawless spec compliance: all required features implemented correctly'
-  - 'Clean, reproducible code: simple structure with proper seeding and current API
-    usage'
-  - 'Exemplary theme adaptation: data colors preserved, chrome properly flips between
-    themes'
-  - 'Idiomatic matplotlib: correct use of Axes methods, manual positioning for grouping,
-    patch_artist pattern'
+  - Grouped box plot correctly implements every required statistical element (median
+    line, IQR box, 1.5×IQR whiskers, genuine outliers, and distinct mean markers)
+    with consistent box widths across all four departments
+  - Mean-diamond and outlier-flier marker sizes now sit in the reviewer-recommended
+    range (meanprops markersize=7, flierprops markersize=6.5), directly fixing the
+    mobile-legibility gap flagged in attempt 1 (previously 3.5/4)
+  - Extra y-axis headroom (ylim 0–122) keeps the top-right legend clear of tall whiskers/fliers,
+    resolving the crowding risk noted in attempt 1's third weakness
+  - New bold tick label on the top-performing department (Support) adds an explicit
+    focal point on top of the existing median-sorted ordering, sharpening the data
+    storytelling per the repair feedback
+  - 'Full theme-adaptive chrome across both renders — identical Imprint data colors
+    (#009E73 / #C475FD / #4467A3) in light and dark, only chrome (background, text,
+    grid, legend frame) flips'
+  - 'Clean, KISS-structured code: seeded RNG (np.random.seed(42)), only used imports,
+    modern non-deprecated boxplot API (patch_artist, tick positioning via set_xticks/set_xticklabels)'
   weaknesses:
-  - 'Design could be more distinctive: no unique visual enhancements beyond spec requirements'
-  - 'Data storytelling lacks emphasis: could use color highlighting, annotations,
-    or strategic focus to guide viewer attention'
-  - 'Limited design polish: professional but not exceptional in aesthetic sophistication'
+  - 'Design Excellence still trails top marks: beyond the new bold tick label, typography
+    and color treatment remain close to the mandated theme-token defaults — a secondary
+    refinement (e.g. a light delta annotation between top and bottom department, or
+    refined legend framing) would push DE-01/DE-02 higher'
+  - LM-02 distinctive-features usage remains fairly generic — the manual grouped-box
+    positioning and patch coloring approach would port to another library with only
+    minor syntax changes; a matplotlib-unique touch (e.g. a notched-box or violin
+    overlay) would raise this score
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "box-grouped · matplotlib · anyplot.ai" in dark INK (#1A1A17), axis labels "Department" and "Performance Score (0-100)" in dark INK, all tick labels in INK_SOFT (#4A4A44) - all text clearly readable
-      Data: Three box colors in Okabe-Ito order: green (#009E73), orange (#D55E00), blue (#0072B2) with alpha=0.85; whiskers and caps in INK_SOFT at 1.5pt; median lines in INK at 2.5pt; outlier points visible in data colors
-      Grid: Y-axis only, subtle (alpha=0.12), does not compete with data
-      Legend: Upper right with light elevated background (#FFFDF6), labels in INK_SOFT, properly styled frame
-      Spines: Top and right removed (L-shaped frame), left and bottom in INK_SOFT
-      Legibility verdict: PASS - all text readable, high contrast, no legibility issues
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "box-grouped . python . matplotlib . anyplot.ai" renders in dark ink at medium weight, clearly visible at top center, comfortably under 90% of plot width. "Department" (x-axis) and "Performance Score (0-100)" (y-axis) labels are dark ink and fully readable. Tick labels (department names, y-axis 0-120) are legible soft-grey ink; the "Support" tick label (top-performing department) is bolded as an explicit focal point. Subtle horizontal gridlines only, not competing with data. Legend "Experience Level" (Junior/Mid-Level/Senior) sits top-right in a light elevated box with dark-ink text, fully within canvas bounds and clear of the tallest whiskers.
+      Data: Four department groups (Support, Marketing, Engineering, Sales -- sorted by descending median), each with 3 side-by-side boxes. First series (Junior) is Imprint green #009E73, second (Mid-Level) is lavender #C475FD, third (Senior) is blue #4467A3 -- matches Imprint palette positions 1-3 in canonical order. Median lines are dark, mean markers are now clearly visible white diamonds with dark edges (markersize=7, up from 3.5), outlier points are visibly sized colored circles (markersize=6.5) -- e.g. lavender dot near 100 in Engineering/Mid-Level, blue dot near 65 in Engineering/Senior, lavender dot near 35 in Sales/Mid-Level.
+      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues; markers are now visibly larger and readable at a glance.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title, axis labels, and tick labels all in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) - all clearly readable against dark background, no dark-on-dark failures
-      Data: Identical colors to light render - green, orange, blue boxes with same alpha and styling; confirms theme-independent data color preservation
-      Grid: Y-axis grid visible and subtle, theme-adapted with light-colored lines
-      Legend: Dark elevated background (#242420) with light text, maintains legibility
-      Spines: Same styling as light render with light-colored strokes
-      Legibility verdict: PASS - excellent theme adaptation with no readability issues, data colors preserved identically
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title and axis labels render in light off-white ink, tick labels in a softer light grey (with "Support" bolded, matching the light render) -- all clearly legible against the dark surface. Median lines switch to white for contrast against the darker box fills. Legend box uses a dark elevated fill with light text, fully visible and readable, still clear of the tallest whisker.
+      Data: Same three series colors as the light render -- #009E73 (Junior), #C475FD (Mid-Level), #4467A3 (Senior) -- confirmed identical hues/positions across both themes; only chrome (background, text, grid, legend frame, median-line color) flips. Mean-diamond and outlier markers are the same larger size as the light render and remain clearly visible against both the box fills and the dark page background.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all title, axis, tick, and legend text is clearly visible against the near-black background; brand green #009E73 reads well on both surfaces.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,75 +62,81 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text properly themed with explicit font sizes (title 24pt, labels
-          20pt, ticks 16pt), readable in both light and dark renders
+        comment: All font sizes explicitly set (title scales with title length, 10pt
+          axis labels, 8pt ticks/legend); readable in both themes, title well-proportioned
+          (~55% width)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Boxes properly spaced with group_gap=0.4, no text collisions, whiskers
-          and outliers unobstructed
+        comment: No text/text or text/data collisions; legend does not overlap any
+          box, whisker, or outlier
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, whiskers (1.5pt), caps, median lines (2.5pt), and outliers
-          all clearly visible; alpha=0.85 on boxes appropriate
+        comment: Mean-diamond (markersize=7) and flier (markersize=6.5) markers now
+          match the recommended range from attempt 1's feedback and are clearly visible
+          against both box fills and background in both renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal; adequate
-          contrast throughout
+        comment: Good contrast; explicit INK_SOFT edge stroke on all boxes mitigates
+          the lower-contrast lavender/blue fills against the cream background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Figure (16,9)@300dpi = 4800×2700px; generous margins; y-limits (0-110)
-          provide padding; nothing cut off
+        comment: Plot area uses a large, balanced share of the canvas; margins even;
+          extra ylim headroom keeps the legend clear of tall whiskers; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; axis labels clear and include units
+        comment: '"Department" and "Performance Score (0-100)" are descriptive with
+          an explicit scale/unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito positions 1-3 in order, backgrounds
-          correct, theme-adaptive chrome throughout'
+        comment: 'First series is #009E73, positions 2-3 follow canonical Imprint
+          order; backgrounds and chrome are theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Professional styling with intentional choices (custom positioning,
-          alpha values, legend background) but no custom palette flourishes beyond
-          Okabe-Ito
+        comment: Well-configured beyond bare defaults (alpha-blended fills, edge stroking,
+          mean/median distinction, bolded focal tick label), but still reads as a
+          well-configured library default rather than a standout flourish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spine removal, subtle grid, whitespace generous, legend frame refined,
-          but limited sophistication
+        passed: true
+        comment: Subtle y-only grid, L-shaped spines, generous whitespace, and now
+          tuned ylim headroom so the legend never crowds the data -- a genuine incremental
+          polish step over attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear comparison structure via grouping and color, realistic context,
-          but lacks emphasis or annotation for stronger narrative
+        passed: true
+        comment: Departments sorted best-to-worst by median plus a bolded top-department
+          tick label now gives an explicit visual-hierarchy focal point, directly
+          addressing attempt 1's feedback
     spec_compliance:
       score: 15
       max: 15
@@ -135,51 +146,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Grouped box plot correctly implemented
+        comment: Correct grouped box plot with all subtypes (median, IQR box, whiskers,
+          outliers)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: colors, legend, widths, median, quartiles,
-          whiskers, outliers'
+        comment: Side-by-side boxes with distinct colors, clear subcategory legend,
+          consistent box widths, median/quartile/whisker/outlier all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categories, Y: values, proper grouping, all data visible'
+        comment: Categories on x-axis, values on y-axis, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match subcategories
+        comment: Title matches mandated format exactly; legend labels (Junior/Mid-Level/Senior)
+          match the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 categories × 3 subcategories with realistic variation by department
-          and level, includes outliers
+        comment: Shows varying spreads/variance by group plus genuine outliers in
+          several groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance scenario is realistic, neutral, and contextually
-          appropriate
+        comment: Neutral, real-world business scenario (employee performance by department/experience)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Data points (30-60 per group) appropriate, y-range (0-110) provides
-          padding, categories align with spec
+        comment: 0-100 performance-score scale with plausible seniority progression
+          and realistic overlap/variance
     code_quality:
       score: 10
       max: 10
@@ -189,31 +201,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear, straightforward code with no unnecessary functions
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib.pyplot, numpy) are actively used
+        comment: Only os, matplotlib.pyplot, numpy -- all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No unnecessary complexity, no fake UI, idiomatic approach
+        comment: Manual position math is necessary for grouped boxplot in matplotlib,
+          kept concise and readable
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves plot-{THEME}.png, no deprecated boxplot API usage
     library_mastery:
       score: 8
       max: 10
@@ -223,15 +236,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses Axes methods, proper fig/ax pattern, theme token pattern, manual
-          positioning is correct matplotlib idiom
+        comment: Thorough, idiomatic use of ax.boxplot customization (flierprops,
+          medianprops, meanprops, whiskerprops, capprops, boxprops) -- the correct
+          low-level approach since matplotlib has no built-in grouped-boxplot API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Good use of boxplot properties and patch manipulation, but relatively
-          standard implementation
+        comment: showmeans/meanprops diamond-vs-median distinction and manual per-group
+          positioning are matplotlib-specific touches, but the overall approach isn't
+          uniquely irreplicable elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -241,7 +256,9 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
