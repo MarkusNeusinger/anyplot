@@ -2,113 +2,144 @@ library: pygal
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:55:50Z'
-updated: '2026-05-07T22:48:55Z'
-generated_by: claude-haiku
-workflow_run: 25526089487
+updated: '2026-08-18T05:05:28Z'
+generated_by: claude-sonnet
+workflow_run: 32100305690
 issue: 2019
-python_version: 3.13.13
-library_version: 3.1.0
+language_version: 3.13.15
+library_version: 3.1.3
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/pygal/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/pygal/plot-dark.html
-quality_score: 91
+quality_score: 90
 review:
   strengths:
-  - 'Statistical calculations correct: notch_width = 1.57 × IQR / √n, proper whisker
-    formula (1.5×IQR)'
-  - Theme adaptation seamless; both light and dark renders equally readable
-  - Okabe-Ito palette followed exactly, brand green (#009E73) as first color
-  - Clean SVG manipulation with proper namespace handling
-  - High-resolution output at correct sizes for pixel-based rendering
+  - Notch geometry follows the spec formula exactly (±1.57 × IQR / √n) and is visually
+    correct — adjacent boxes with non-overlapping notches are automatically flagged
+    with a significance bracket + dot, delivering the 'quick visual hypothesis test'
+    the spec calls for.
+  - Real synthetic-yet-plausible outliers (baseline, Config B, Config C) and distinct
+    spreads/means per configuration give the notched-box feature set full coverage
+    (median, quartiles, whiskers at 1.5×IQR, outliers, plus a bonus mean-diamond marker).
+  - Pygal has no native notched-box or grouped-bar-overlay primitive; the implementation
+    introspects pygal's own rendered SVG (plot origin, x tick centers, y-value-to-pixel
+    regression) to align a hand-built overlay pixel-perfectly with the axes, regardless
+    of font/margin choices.
+  - 'Imprint palette applied correctly and identically across both themes (Baseline
+    #009E73 through Config D #AE3030, canonical order); chrome (background, ink, muted
+    text, grid) is fully theme-adaptive and both renders are legible.'
+  - 'Clean L-shaped-frame layout: no top/right spine, y-only subtle dashed grid, generous
+    whitespace, bottom legend near the plot, title comfortably sized without clipping.'
   weaknesses:
-  - Design excellence conservative—notched boxes clean but lack distinctive visual
-    refinement
+  - Significance-bracket dot markers (r=7px on a 3200px canvas) shrink to well under
+    1px when scaled to the ~400px mobile preview — nearly invisible at that size.
+    Increase dot radius (or bracket tick length) so the significance markers survive
+    the mobile srcset.
+  - The box/whisker/notch geometry is 100% hand-built SVG overlay rather than pygal's
+    own chart API (pygal.Bar is only used to source axis ticks from an invisible placeholder
+    series) — clever and necessary since pygal lacks native notch support, but it
+    means none of pygal's high-level box-plot API is actually exercised.
+  - One helper function (`y_px`) is defined for the coordinate transform — a minor
+    deviation from the KISS 'no functions' guideline, though justified by how often
+    the mapping is reused across the box/bracket loops.
+  - Every adjacent category pair is flagged significant, which is plausible given
+    the generated means/stds but leaves no non-significant comparison in the example
+    data to show the notch test correctly withholding a claim — a slightly more overlapping
+    pair (e.g. Config B vs. Baseline, which are close in median) would demonstrate
+    the negative case too.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1
-      Chrome: Title "box-notched · pygal · anyplot.ai" is prominent and dark. Axis labels "Server Configuration" and "Response Time (ms)" clearly readable with dark ink. Tick labels dark and visible. Legend at bottom shows all categories.
-      Data: Five notched boxes in Okabe-Ito palette order (green, orange, blue, pink, yellow). Notches clearly indented around median lines. Whiskers extend to data range. Outliers marked as hollow circles. Horizontal grid lines subtle.
-      Legibility verdict: PASS - All text readable, no light-on-light issues
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "box-notched · python · pygal · anyplot.ai" is dark ink text, large and fully visible with comfortable margin from the top edge. Y-axis title "Response Time (ms)" and x-axis title "Server Configuration" are dark, clearly readable. Tick labels (0-220 on y, category names on x) are dark and legible. Bottom legend (5 swatches + labels) is dark text, readable, positioned close to the plot. Grid: thin dashed horizontal lines only (y-axis guides), subtle, not competing with data.
+      Data: 5 notched boxes (Baseline green #009E73, Config A lavender, Config B blue, Config C ochre, Config D red) with top-to-bottom gradient fill, colored stroke, whiskers with caps, hollow outlier circles, white diamond mean markers, and black significance brackets with a dot above each of the 4 adjacent-pair comparisons (all flagged significant). First series is confirmed brand green #009E73.
+      Legibility verdict: PASS — no text is light-on-light; all chrome elements read clearly against the warm cream background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17
-      Chrome: Title, axis labels, and tick labels light-colored and clearly visible. No dark-on-dark failures. Legend at bottom clearly visible.
-      Data: Identical colors to light render—Okabe-Ito palette preserved perfectly. Notches, whiskers, and outliers maintain same visual clarity.
-      Legibility verdict: PASS - All text readable, no dark-on-dark issues, both renders equally readable
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, tick labels, and legend text are all light/off-white (matches INK token #F0EFE8), fully readable against the dark surface. Grid lines are light-colored and subtle. Significance brackets and dots switch from black (light theme) to white (dark theme) via the theme-adaptive INK token — no dark-on-dark elements found.
+      Data: Same 5 box colors as the light render (green, lavender, blue, ochre, red) — confirmed identical hues, only the gradient's underlying page-background-colored diamond/outlier fills flip from cream to near-black to match the new page background, which is correct theme-adaptive behavior, not a data-color change.
+      Legibility verdict: PASS — no dark-on-dark text; all title/axis/tick/legend elements clearly visible on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, labels 22px, ticks 18px, legend 16px, all readable in
-          both themes
+        comment: Explicit font sizes throughout (title/axis/label/legend/value all
+          set via Style); readable in both themes; title fits comfortably without
+          clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Ample spacing, no collisions
+        comment: No text collides with other text, boxes, brackets, or the legend.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All boxes, whiskers, outliers, notches sharp and distinct
+        comment: Boxes/whiskers/markers well-sized for 5 categories, but significance-bracket
+          dot markers (r=7px) risk being nearly invisible at ~400px mobile scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Good contrast, CVD-safe Imprint hues, no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px, generous margins, well-proportioned
+        comment: Balanced margins, chart area uses a healthy portion of the 3200x1800
+          canvas, nothing cut off, legend sits directly under the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format, axis labels descriptive with units
+        comment: Y-axis has units 'Response Time (ms)'; x-axis is descriptive categorical
+          'Server Configuration'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First color #009E73, palette order correct, backgrounds correct,
-          both renders theme-correct'
+        comment: 'First series #009E73, canonical Imprint order through position 5,
+          identical across themes; backgrounds and chrome theme-correct in both renders.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Notched box design intentional and well-executed, but straightforward
-          rather than refined
+        passed: true
+        comment: Custom gradient-filled notched boxes, diamond mean markers, and significance
+          brackets are clearly above library defaults, though the composition stops
+          short of full publication polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clean implementation, box opacity 0.4 is subtle and effective
+        passed: true
+        comment: L-shaped frame (no top/right spine), subtle y-only dashed grid, generous
+          whitespace, legend integrated near the plot.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Clear visual hierarchy, notches immediately communicate confidence
-          intervals
+        passed: true
+        comment: Significance brackets are a genuine visual hypothesis test — exactly
+          the insight a notched box plot exists to deliver — creating a clear focal
+          point above the boxes.
     spec_compliance:
       score: 15
       max: 15
@@ -118,25 +149,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct notched box plot implementation
+        comment: Correct notched box plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Notches, boxes, whiskers (1.5×IQR), outliers, median lines all present
+        comment: Notches at the spec's exact ±1.57×IQR/√n formula, median/quartiles/whiskers
+          at 1.5×IQR, outliers as points, distinct color per category.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis categories, Y-axis response times, all data displayed
+        comment: X = server configuration categories, Y = response time; all 5 categories
+          and their full distributions are shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title matches 'box-notched · python · pygal · anyplot.ai' exactly;
+          legend labels match category names.
     data_quality:
       score: 15
       max: 15
@@ -146,77 +180,90 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All box plot elements shown
+        comment: Shows outliers, varying spreads/means, and a mean-vs-median comparison
+          across categories.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times realistic and neutral
+        comment: Server response-time benchmarking across configurations — real, neutral,
+          comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible range for response times
+        comment: Response times (ms) and spreads are realistic for a web-server latency
+          benchmark.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Straightforward, no unnecessary abstractions
+        comment: Mostly top-to-bottom procedural script, but defines one helper function
+          (y_px) for the coordinate transform.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: os, re, ElementTree, cairosvg, numpy, pygal — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for SVG manipulation
+        comment: Complexity is proportional to the task (working around pygal's lack
+          of native notch support); no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Outputs plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png via cairosvg and plot-{THEME}.html; current
+          pygal API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Style object correct, theme tokens, pygal config idiomatic
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: SVG manipulation somewhat distinctive, cairosvg standard for export
+        passed: true
+        comment: Correct pygal usage for axis/legend geometry, but the actual box-plot
+          marks bypass pygal's chart API entirely in favor of a manual SVG overlay.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Introspects pygal's own rendered SVG (regex-parsed plot origin, tick
+          centers, y-value-to-pixel regression) to build a pixel-perfect overlay —
+          a technique unique to pygal's SVG-native rendering that other libraries
+          couldn't replicate the same way.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - annotations
   - html-export
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - gradient-fill
   - alpha-blending

@@ -2,117 +2,128 @@ library: altair
 language: python
 specification_id: box-notched
 created: '2025-12-25T19:53:11Z'
-updated: '2026-05-07T22:57:44Z'
-generated_by: claude-haiku
-workflow_run: 25525940108
+updated: '2026-08-18T05:03:04Z'
+generated_by: claude-sonnet
+workflow_run: 32100059127
 issue: 2019
-python_version: 3.13.13
-library_version: 6.1.0
+language_version: 3.13.15
+library_version: 6.2.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/python/altair/plot-dark.html
-quality_score: 82
+quality_score: 94
 review:
   strengths:
-  - Perfect spec compliance with all notched box plot features correctly implemented
-  - Excellent visual quality in both light and dark themes with proper theme-adaptive
-    rendering
-  - Correct Okabe-Ito palette with accurate statistical calculations
-  - Clean, readable layout at large canvas size with no text legibility issues
-  - Realistic, well-chosen synthetic data effectively demonstrating the visualization
+  - Notched box geometry (lower box, notch waist, upper box) is correctly hand-assembled
+    via layered mark_bar segments since Altair lacks a native notch primitive, with
+    the ±1.57×IQR/√n formula matching the spec exactly
+  - Mean diamond marker gives a second, clearly distinct central-tendency signal beside
+    the median notch, and is legible in both themes (INK-colored, PAGE_BG stroke)
+  - Categories are sorted by descending median rather than alphabetically, which turns
+    the chart into a ranking story and makes the non-overlapping-notch comparison
+    read left-to-right
+  - Genuine Altair-native interactivity via alt.selection_point(on='mouseover') driving
+    per-department opacity and rich tooltips (Q1/median/Q3/mean/notch bounds/n) in
+    the HTML export, without faking anything in the static PNG
+  - Sample-size (n=) annotations placed in the near-zero whitespace under every box
+    add useful statistical context (notch reliability depends on n) without cluttering
+    the chart
+  - 'Both renders are clean: correct Imprint palette in canonical order (Engineering=#009E73),
+    theme-correct backgrounds/chrome, no clipping, well-balanced canvas'
   weaknesses:
-  - Code doesn't read ANYPLOT_THEME environment variable or generate theme-specific
-    output file names (CQ-05 violation)
-  - Code lacks theme-adaptive chrome configuration (background, axis colors, grid
-    colors) in configure methods
-  - Generic styling with no design refinement beyond default colors (DE-01, DE-02
-    low scores)
-  - No use of distinctive Altair features or advanced visualization patterns (LM-02
-    low score)
+  - Sample-size annotation text (fontSize=9) is noticeably smaller than the rest of
+    the chrome (axis ticks at 10, axis titles at 12) — bump to ~10-11pt so it doesn't
+    get lost, especially at the 400px thumbnail size
+  - The subtitle renders in Vega-Lite's default serif font while the title is bold
+    sans-serif — a minor typographic inconsistency; setting an explicit subtitleFont
+    to match the title's family would tighten the polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "box-notched · altair · anyplot.ai", x-axis label "Department", y-axis label "Performance Score" with tick labels 0, 5, ..., 120 all clearly visible in dark text
-      Data: Four departments with Okabe-Ito colors - Engineering (green #009E73), Marketing (orange #D55E00), Operations (purple #CC79A7), Sales (blue #0072B2). All notched boxes, whiskers, and outlier points clearly visible and distinguishable.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface — not pure white.
+      Chrome: Title "box-notched · python · altair · anyplot.ai" in bold dark ink at top-center, italic serif subtitle "Non-overlapping notches ⇒ medians differ significantly (95% CI) · ◆ = mean" beneath it. X-axis "Department" and Y-axis "Performance Score" titles are dark and bold; tick labels are soft dark gray. Horizontal gridlines are faint and unobtrusive. All chrome is clearly legible against the light background.
+      Data: Four notched boxes (Engineering, Sales, Marketing, Operations, ordered by descending median) in Imprint palette order — Engineering=#009E73 (green), Sales=#4467A3 (blue), Marketing=#C475FD (purple), Operations=#BD8233 (amber). Each box shows a visible notch waist around the median, whisker caps, a black mean diamond, an outlier dot, and a small "n = NN" label beneath. First categorical series is confirmed as #009E73.
+      Legibility verdict: PASS — no light-on-light text anywhere.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Same title and axis labels clearly visible in light text against dark background. No dark-on-dark failures.
-      Data: Data colors identical to light render. Boxes, whiskers, and outliers all clearly distinguishable. Grid remains subtle.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface — not pure black.
+      Chrome: Same title/subtitle text now rendered in light ink (near-white) and soft light gray, both clearly readable against the dark background. Axis titles are bold near-white, tick labels are light gray. Gridlines are faint white at low opacity, still visible without dominating.
+      Data: Same four boxes with identical Imprint palette colors as the light render (Engineering green, Sales blue, Marketing purple, Operations amber) — confirms data colors are theme-invariant. The mean diamond flips to a light/white fill (INK token) so it stays visible against the dark background instead of disappearing. Whisker rules/caps use the light INK_SOFT token, clearly distinguishable from the near-black background.
+      Legibility verdict: PASS — no dark-on-dark text; the mean marker and whisker strokes were correctly re-tokenized for the dark surface, avoiding the common dark-on-dark failure mode.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes, font sizes appropriate (title 28px,
-          axes 22px, ticks 18px)
+        comment: All chrome readable in both themes; n= labels at 9pt are the smallest
+          element on the chart, slightly undersized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: No collisions between text, boxes, mean markers, or n-labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All marks clearly visible (boxes, notches, whiskers, outliers)
+        comment: Whisker caps, notch waist, mean diamond, and outliers all clearly
+          distinguishable at this sample density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe
+        comment: Good contrast, CVD-safe palette, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, generous margins
+        comment: Balanced proportions, no clipping or overflow, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels for Department and Performance Score
+        comment: Descriptive axis titles with units implied (Performance Score)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series green #009E73, Okabe-Ito order maintained, backgrounds
-          #FAF8F1/#1A1A17'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds,
+          data colors identical across themes'
     design_excellence:
-      score: 9
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Generic styling, correct palette but no custom design thought
+        passed: true
+        comment: Hand-built notch geometry, mean marker, and hover interactivity go
+          well beyond a default boxplot
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Minimal customization, grid present but spines not removed
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Notches show statistical significance, colors distinguish categories
+        comment: No visible frame border, subtle horizontal-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Descending-median sort turns the chart into a ranking narrative;
+          notch + mean marker add statistical depth
     spec_compliance:
       score: 15
       max: 15
@@ -128,20 +139,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: notches, box, median, whiskers, outliers,
-          colors'
+        comment: 95% CI notch (±1.57×IQR/√n), quartiles, median, 1.5×IQR whiskers,
+          outliers, per-category color all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct x-axis (departments) and y-axis (scores)
+        comment: Category on X, value on Y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct, no legend needed (axis labels identify categories)
+        comment: Title matches mandated format exactly; legend correctly omitted since
+          color is redundant with the X category
     data_quality:
       score: 15
       max: 15
@@ -151,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: quartiles, median, notches, whiskers, outliers'
+        comment: Quartiles, notch, whiskers, outliers, mean, and sample size all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Employee performance scores, neutral and realistic
+        comment: Department performance scores are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-120 scale appropriate for performance metric
+        comment: 0-100 performance score scale with sensible per-department distributions
+          and n=74-85
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -173,55 +186,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, straightforward flow
+        comment: No functions/classes, flat sequential script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures determinism
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported
+        comment: os, altair, numpy, pandas, PIL.Image all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Correct statistical calculations, no fake UI
+        comment: Appropriate complexity for a manually-assembled notch box; hover
+          interactivity is genuine, not faked
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves to plot.png instead of f'plot-{THEME}.png', doesn't read ANYPLOT_THEME
+        passed: true
+        comment: Saves plot-{THEME}.png and .html via current Altair API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Altair layering used appropriately, manual calculation necessary
-          for notches
+        comment: Correct alt.layer composition and Vega-Lite encodings to work around
+          Altair's lack of a native notch primitive
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No advanced Altair features, basic layering only
-  verdict: REJECTED
+        passed: true
+        comment: alt.selection_point-driven hover opacity is a distinctive, Altair-native
+          interactive feature
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
