@@ -1,16 +1,18 @@
 """ anyplot.ai
 heatmap-correlation: Correlation Matrix Heatmap
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 72/100 | Updated: 2026-05-08
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 88/100 | Updated: 2026-08-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    coord_fixed,
     element_blank,
+    element_rect,
     element_text,
     geom_text,
     geom_tile,
@@ -18,19 +20,26 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    scale_color_identity,
     scale_fill_gradient2,
     theme,
-    theme_minimal,
 )
 
 
 LetsPlot.setup_html()
 
-# Data - Create realistic dataset with meaningful correlations
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MIDPOINT = PAGE_BG  # imprint_div midpoint is theme-adaptive
+
+# Data - realistic dataset with meaningful correlations
 np.random.seed(42)
 n = 200
 
-# Generate correlated variables representing financial metrics
 revenue = np.random.normal(100, 20, n)
 marketing_spend = 0.3 * revenue + np.random.normal(10, 5, n)
 employees = 0.5 * revenue + np.random.normal(20, 10, n)
@@ -40,7 +49,6 @@ market_share = 0.3 * revenue + 0.2 * customer_satisfaction + np.random.normal(15
 innovation_index = np.random.normal(60, 20, n)  # Independent variable
 debt_ratio = -0.4 * profit + np.random.normal(30, 10, n)
 
-# Create DataFrame
 df = pd.DataFrame(
     {
         "Revenue": revenue,
@@ -54,65 +62,78 @@ df = pd.DataFrame(
     }
 )
 
-# Calculate correlation matrix
 corr_matrix = df.corr()
 variables = corr_matrix.columns.tolist()
+var_pos = {v: i for i, v in enumerate(variables)}
 
-# Prepare data for geom_tile (long format) with tooltips
+# Long format for geom_tile; annotation color adapts to per-cell contrast
+# (near-zero cells sit on the theme-adaptive midpoint, extremes on saturated
+# red/blue) rather than a single hardcoded color. Upper triangle is masked
+# (spec: "Consider masking upper or lower triangle to reduce redundancy") —
+# every pair is symmetric, so only the lower triangle + diagonal is kept.
 corr_data = []
-for var1 in variables:
-    for var2 in variables:
-        corr_val = corr_matrix.loc[var1, var2]
+for var_y in variables:
+    for var_x in variables:
+        if var_pos[var_x] > var_pos[var_y]:
+            continue
+        corr_val = corr_matrix.loc[var_y, var_x]
         corr_data.append(
-            {"x": var1, "y": var2, "correlation": corr_val, "label": f"{corr_val:.2f}", "var_x": var1, "var_y": var2}
+            {
+                "x": var_x,
+                "y": var_y,
+                "correlation": corr_val,
+                "label": f"{corr_val:.2f}",
+                "text_color": "#FFFFFF" if abs(corr_val) > 0.5 else INK,
+            }
         )
 
 corr_df = pd.DataFrame(corr_data)
-
-# Set category order to maintain matrix layout
 corr_df["x"] = pd.Categorical(corr_df["x"], categories=variables, ordered=True)
 corr_df["y"] = pd.Categorical(corr_df["y"], categories=variables[::-1], ordered=True)
 
-# Plot - Correlation heatmap with annotations and interactive tooltips
+# Storytelling focal point: outline the strongest off-diagonal correlation
+# so the reader's eye lands on the standout relationship, not just a flat grid.
+off_diagonal = corr_df[corr_df["x"].astype(str) != corr_df["y"].astype(str)]
+strongest = off_diagonal.loc[off_diagonal["correlation"].abs().idxmax()]
+highlight_df = pd.DataFrame([strongest])
+
+# Title — mandated format, scaled per prompts/plot-generator.md
+title = "heatmap-correlation · python · letsplot · anyplot.ai"
+title_fontsize = round(16 * min(1.0, 67 / len(title)))
+
+# Plot — square canvas for a symmetric matrix (600x600 @ scale=4 -> 2400x2400)
 plot = (
     ggplot(corr_df, aes(x="x", y="y", fill="correlation"))
-    + geom_tile(
-        color="white",
-        size=0.5,
-        tooltips="none",  # Disable tile tooltips, use text tooltips instead
-    )
-    + geom_text(
-        aes(label="label"),
-        size=14,
-        color="black",
-        fontface="bold",
-        tooltips={"lines": ["@var_x vs @var_y", "Correlation: @correlation"]},
-    )
+    + geom_tile(color=PAGE_BG, size=1.5)
+    + geom_tile(data=highlight_df, fill=PAGE_BG, alpha=0, color=INK, size=3, tooltips="none")
+    + geom_text(aes(label="label", color="text_color"), size=4.5, fontface="bold", tooltips="none")
+    + scale_color_identity()
     + scale_fill_gradient2(
-        low="#2166AC",  # Blue for negative
-        mid="white",  # White for zero
-        high="#B2182B",  # Red for positive
+        low="#AE3030",  # Imprint diverging — negative correlation
+        mid=MIDPOINT,  # theme-adaptive midpoint
+        high="#4467A3",  # Imprint diverging — positive correlation
         midpoint=0,
         limits=[-1, 1],
         name="Correlation",
     )
-    + labs(x="Financial Metric", y="Financial Metric", title="heatmap-correlation · letsplot · pyplots.ai")
-    + theme_minimal()
+    + labs(x="Financial Metric", y="Financial Metric", title=title)
     + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title=element_text(size=22),
-        axis_text_x=element_text(size=16, angle=45, hjust=1),
-        axis_text_y=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_grid=element_blank(),
+        axis_ticks=element_blank(),
+        axis_line=element_blank(),
+        plot_title=element_text(size=title_fontsize, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text_x=element_text(size=10, color=INK_SOFT, angle=45, hjust=1),
+        axis_text_y=element_text(size=10, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
     )
-    + ggsize(1200, 1200)  # Square format for correlation matrix
-    + coord_fixed()
+    + ggsize(600, 600)
 )
 
-# Save as PNG (scale 3x for 3600x3600 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save interactive HTML with tooltips
-ggsave(plot, "plot.html", path=".")
+# Save (PNG + interactive HTML)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
