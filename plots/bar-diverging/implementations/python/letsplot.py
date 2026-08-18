@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-diverging: Diverging Bar Chart
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 89/100 | Updated: 2026-08-18
@@ -73,21 +73,30 @@ negatives["label_x"] = negatives["Score"] - label_pad
 # encoding dimension on top of the positive/negative hue split.
 plot = (
     ggplot(df, aes(x="Score", y="Category", fill="Sentiment", alpha="AbsScore"))  # noqa: F405
-    + geom_bar(stat="identity", width=0.75)  # noqa: F405
+    + geom_bar(  # noqa: F405
+        stat="identity",
+        width=0.75,
+        tooltips=layer_tooltips()  # noqa: F405
+        .line("@Category")
+        .line("Score|@Score")
+        .line("Sentiment|@Sentiment"),
+    )
     + geom_vline(xintercept=0, color=INK_SOFT, size=1.0)  # noqa: F405
     + geom_text(  # noqa: F405
         aes(x="label_x", y="Category", label="Score"),  # noqa: F405
         data=positives,
         hjust=0,
-        size=3.2,
-        color=INK_SOFT,
+        size=3.6,
+        fontface="bold",
+        color=INK,
     )
     + geom_text(  # noqa: F405
         aes(x="label_x", y="Category", label="Score"),  # noqa: F405
         data=negatives,
         hjust=1,
-        size=3.2,
-        color=INK_SOFT,
+        size=3.6,
+        fontface="bold",
+        color=INK,
     )
     + scale_fill_manual(  # noqa: F405
         values={"Positive": POSITIVE_COLOR, "Negative": NEGATIVE_COLOR}
@@ -113,7 +122,7 @@ plot = (
         axis_line_y=element_line(color=INK_SOFT),  # noqa: F405
         legend_title=element_text(size=10, color=INK),  # noqa: F405
         legend_text=element_text(size=10, color=INK_SOFT),  # noqa: F405
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG),  # noqa: F405
         legend_position="right",
     )
     + ggsize(800, 450)  # noqa: F405
