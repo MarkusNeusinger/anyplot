@@ -56,11 +56,27 @@ p <- ggplot(df, aes(x = department, y = score, fill = experience)) +
     outlier.size  = 1.8,
     outlier.alpha = 0.7
   ) +
+  stat_summary(
+    mapping     = aes(x = department, y = score, group = experience, shape = "Mean"),
+    fun         = mean,
+    geom        = "point",
+    position    = position_dodge(width = 0.75),
+    size        = 2.2,
+    stroke      = 0.6,
+    color       = INK,
+    fill        = PAGE_BG,
+    inherit.aes = FALSE
+  ) +
   scale_fill_manual(values = IMPRINT_PALETTE[1:3], name = "Experience Level") +
+  scale_shape_manual(values = c("Mean" = 23), name = NULL) +
   labs(
     title = "box-grouped · r · ggplot2 · anyplot.ai",
     x     = "Department",
     y     = "Productivity Score"
+  ) +
+  guides(
+    fill  = guide_legend(order = 1),
+    shape = guide_legend(order = 2)
   ) +
   theme_minimal(base_size = 8) +
   theme(
@@ -68,7 +84,7 @@ p <- ggplot(df, aes(x = department, y = score, fill = experience)) +
     panel.background    = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major.x  = element_blank(),
     panel.grid.minor    = element_blank(),
-    panel.grid.major.y  = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.y  = element_line(color = INK_SOFT, linewidth = 0.15),
     axis.title          = element_text(color = INK, size = 10),
     axis.text           = element_text(color = INK_SOFT, size = 8),
     axis.ticks          = element_blank(),
