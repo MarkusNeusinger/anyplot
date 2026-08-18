@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: horizon-basic
 created: '2026-08-18T01:11:23Z'
-updated: '2026-08-18T01:18:08Z'
+updated: '2026-08-18T01:27:23Z'
 generated_by: claude-sonnet
 workflow_run: 32086784881
 issue: 1877
@@ -12,129 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - 'Correct, well-executed horizon-chart folding technique: 3 mirrored bands per
-    sector row with opacity encoding magnitude, matching the spec''s ''folding values
-    into color-coded bands'' description exactly'
-  - Correct use of the Imprint diverging colormap (t.div, red↔neutral↔blue) for signed-deviation
-    continuous data — this is precisely the documented imprint_div use case ('signed
-    deviations'), with a clean gradient legend showing the -15%/0/+15% scale
+  - Sector rows are now sorted by mean deviation (strongest to weakest), fixing the
+    attempt-1 weakness and giving the chart an immediate top-to-bottom pattern instead
+    of requiring the reader to scan all 10 rows
+  - Title fontSize raised from 20 to 26 (now ~50-55% of plot width) and legend/tick
+    text raised from 11-12px to 13-14px, resolving the attempt-1 undersized-chrome
+    feedback
+  - 'Correct, well-executed horizon-chart folding technique: 3 mirrored opacity-graduated
+    bands per sector row, matching the spec''s folding description exactly'
+  - Correct use of the Imprint diverging colormap (t.div, red negative / blue positive)
+    for signed-deviation continuous data, with a clean gradient legend showing the
+    -15%/0/+15% scale
   - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
     backgrounds, readable ink-soft text, identical data colors between light and dark'
-  - Clean small-multiples layout using ECharts' multi-grid pattern (10 synced grids/axes),
-    with sector labels and a shared bottom time axis — idiomatic and well-spaced,
-    no overlap or clipping
-  - Deterministic seeded LCG data generation, no fake interactivity, clean KISS-ish
-    structure with no unused imports
+  - Deterministic seeded LCG data generation with an added mean-reversion term, clean
+    small-multiples layout using ECharts' multi-grid pattern, no overlap or clipping
   weaknesses:
-  - Sector rows are left in the input array's arbitrary order (Technology, Energy,
-    Healthcare, …) rather than sorted/clustered by a meaningful signal (e.g. total
-    deviation magnitude, trend direction, or correlation) — a sort would let the chart
-    reveal an at-a-glance pattern instead of requiring the reader to scan all 10 rows
-  - Title occupies only ~39% of the plot width at fontSize 20 — noticeably smaller
-    than the ~50-70% comfortable range (or ~70-85% typical for the full mandated title
-    string); increasing to ~24-26px would give the title more presence on the 3200px
-    canvas without risking overflow
-  - Diverging-legend tick labels ('-15%', '0', '+15%') and title are set at 11px/12px,
-    smaller than the other chrome text (14-15px) — legible at full resolution but
-    the smallest text on the canvas, worth bumping to ~13-14px for better mobile legibility
-  - Sustained deviations of ±15-18% for multiple sectors over most of the 60-day window
-    (e.g. Energy, Financials) are on the extreme side for 'sector return deviation
-    from average' — tightening the volatility/drift constants would keep the outer
-    band reserved for genuine spikes rather than a persistent state
+  - Sustained extreme deviations (multiple sectors saturating the outer +/-15% band
+    for weeks at a time, e.g. Energy and Financials rows) are still visible in this
+    attempt despite the added mean-reversion term -- the reversion pull (0.05-0.08)
+    looks too weak relative to volatility (0.6-1.5) to meaningfully shorten these
+    runs; consider a stronger reversion coefficient or a tighter volatility range
+    so the outer band is reserved for genuine spikes
+  - The diverging legend still uses hand-built graphic elements (rect + text) rather
+    than ECharts' visualMap component -- a piecewise or continuous visualMap would
+    be a more idiomatic, library-distinctive way to drive both the gradient bar and
+    (optionally) live color mapping
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Sector Return Deviation · horizon-basic · javascript · echarts · anyplot.ai" is dark, centered, fully visible with comfortable margin above/below. 10 sector row labels (Technology, Energy, Healthcare, Financials, Industrials, Materials, Utilities, Consumer, Real Estate, Telecom) in soft dark gray at the left of each row. Bottom x-axis shows date ticks (1/2 … 2/26) only on the last row, as expected for a horizon chart. A diverging color-scale legend ("Deviation from sector avg (%)", -15% to +15%) sits top-right with a clean red→cream→blue gradient bar.
-      Data: Each row folds its time series into 3 stacked opacity bands — red below the sector's own baseline (0), blue above it, with color intensity increasing at greater magnitude (visible as darker/more saturated peaks e.g. Financials, Energy, Consumer late in the series). No markers, smooth mountain-silhouette area fills.
-      Legibility verdict: PASS — all text (title, row labels, tick labels, legend) is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Sector Return Deviation · horizon-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, fully visible and comfortably sized (~50-55% of plot width). 10 sector row labels (Utilities, Industrials, Technology, Healthcare, Materials, Consumer, Real Estate, Telecom, Financials, Energy, sorted top-to-bottom by mean deviation) in dark-gray ink to the left of each row. Date tick labels (1/2, 1/13, 1/24, 2/4, 2/15, 2/26) only on the bottom row, as expected for a horizon chart. Diverging legend "Deviation from sector avg (%)" with a red-to-blue gradient bar and -15%/0/+15% labels sits top-right.
+      Data: Each row folds its time series into 3 mirrored, opacity-graduated bands -- blue above the sector's own baseline (positive deviation), red below it (negative deviation), darker/more saturated where magnitude is larger. Rows are sorted so blue-leaning (Utilities, Industrials) sit at top and red-leaning (Financials, Energy) sit at bottom, revealing a clear pattern at a glance.
+      Legibility verdict: PASS -- all title, row-label, tick-label, and legend text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title, row labels, and legend, now rendered in light ink (off-white/light-gray) against the dark surface. Title and axis date ticks remain fully legible; the diverging legend gradient bar and its tick labels are visible against the dark background without merging into it.
-      Data: Data colors are identical to the light render — same red/blue diverging bands at the same opacity levels and positions (e.g. Energy stays deep red, Telecom/Real Estate trend blue toward the end in both renders), confirming only chrome flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title/label/tick text is clearly readable in light ink against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, row labels, tick labels, and legend now rendered in light ink against the dark surface -- fully legible, no dark-on-dark failures.
+      Data: Band colors and positions are identical to the light render (same red/blue hues, same opacity levels, same sort order) -- confirms only chrome flipped between themes and data colors stayed constant.
+      Legibility verdict: PASS -- all text remains clearly readable against the dark background; no low-contrast or invisible elements observed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 20px, row labels 15px, axis
-          ticks 14px, legend 11-12px); readable and well-proportioned in both themes.
-          Legend/tick text is the smallest chrome element on the canvas.
+        comment: Title, row labels, tick labels, and legend text all explicit and
+          well-sized (13-26px) in both themes; smallest chrome text raised from 11-12px
+          to 13-14px vs attempt 1
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions anywhere on the canvas.
+        comment: No collisions between row labels, bands, or legend across 10 rows
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Area-fill bands are clearly visible and well-sized for 60 points
-          x 10 rows; no markers needed for this chart type.
+        comment: Opacity-graduated bands clearly distinguishable at all magnitude
+          levels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue diverging scale with graduated opacity gives good contrast
-          and is not a red-green-only signal.
+        comment: Red/blue diverging encoding, CVD-safe, not sole red-green signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Rows fill most of the canvas with balanced margins; legend sits near
-          the plot, not isolated; nothing cut off.
+        comment: Canvas gate passed; title ~50-55% width, no overflow or cutoff
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend title states units ('Deviation from sector avg (%)'); date
-          ticks are self-explanatory.
+        comment: Descriptive mandated title; date ticks and legend explain the encoded
+          quantity
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses Imprint imprint_div (t.div) for signed-deviation continuous
-          data — the documented use case; backgrounds and chrome are theme-correct
-          in both renders.
+        comment: Correct use of imprint_div diverging colormap (t.div[0]/t.div[2])
+          for signed deviation data; theme-correct chrome in both renders
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom diverging legend and multi-row layout are clearly above library
-          defaults, though not yet publication-tier polish.
+        comment: Custom diverging legend, multi-row small-multiples layout, refined
+          typography above defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid, no spines, generous row spacing, clean legend construction.
+        comment: No grid competing with data, no spines, generous spacing, polished
+          legend
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Rows are shown in arbitrary input order rather than sorted/clustered
-          to surface a pattern; the story is only visible by scanning all 10 rows.
+        passed: true
+        comment: Rows now sorted by mean deviation, creating an immediate top-to-bottom
+          pattern (fixed vs attempt 1's arbitrary order)
     spec_compliance:
       score: 15
       max: 15
@@ -144,27 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct horizon chart: folded, mirrored bands.'
+        comment: Correct horizon chart with folded, color-coded bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 3 mirrored bands, magnitude-graduated opacity, zero baseline, similarly-scaled
-          series — all present.
+        comment: Mirrored positive/negative coloring, meaningful zero baseline, magnitude-driven
+          intensity
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, value folded correctly into color/height per row.
+        comment: Date on x, folded deviation value on y per row, sign/magnitude on
+          color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; row labels + colorbar
-          legend substitute appropriately for a per-series legend.
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match data semantics
     data_quality:
       score: 12
       max: 15
@@ -174,22 +170,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows both positive and negative deviations at varying magnitudes
-          across sectors, including saturated extremes.
+        comment: 10 series, 60 time points, folded bands, sorted rows -- covers the
+          plot type's key aspects
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Real, neutral finance scenario (sector return deviation) with named
-          real-world sectors.
+        comment: Plausible, neutral sector-return-deviation framing
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: Plausible but some sectors sustain ±15-18% deviation for weeks, which
-          is on the extreme side for this metric.
+        comment: Several sectors still saturate the outer +/-15% band for weeks at
+          a time; the added mean-reversion term did not visibly shorten these runs
     code_quality:
       score: 10
       max: 10
@@ -199,34 +194,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure with small necessary helpers (bandValue, rowTop)
-          idiomatic for JS chart construction.
+        comment: No classes; small helper functions only
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic.
+        comment: Seeded LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only harness globals used.
+        comment: No unused imports; uses global echarts only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a chart type ECharts has no native support
-          for; no fake UI.
+        comment: No fake interactivity; clean layout derivation from mount size
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: no explicit width/height/devicePixelRatio,
-          animation:false.'
+        comment: 'Renders into #container via echarts.init with animation: false'
     library_mastery:
       score: 7
       max: 10
@@ -236,22 +228,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Well-executed multi-grid small-multiples pattern, area styling, graphic
-          layer for custom legend/labels.
+        comment: Well-executed multi-grid small-multiples pattern (10 synced grid/xAxis/yAxis
+          triples)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-grid + graphic-API composition is fairly distinctive to ECharts,
-          though built manually rather than via a native chart type.
-  verdict: REJECTED
+        comment: Multi-grid + graphic-API composition is distinctive but the legend
+          is still hand-built rather than using visualMap
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - custom-legend
-  - layer-composition
-  - annotations
+  - colorbar
   patterns:
   - data-generation
   - iteration-over-groups
