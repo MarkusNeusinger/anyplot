@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 81/100 | Created: 2026-05-07
@@ -29,11 +29,28 @@ dates = pd.date_range("2024-01-02", periods=n_days, freq="D")
 daily_new = np.random.randint(1, 4, n_days)
 backlog_entered = np.cumsum(daily_new).astype(float)
 
-# Each stage has a fixed lag from the previous stage boundary
+# Each stage has a lag from the previous stage boundary. Testing capacity
+# tightens during a mid-period bottleneck (QA understaffed vs. dev throughput),
+# so items linger longer in Development before Testing can absorb them. The
+# lag ramps by at most 1 day/day so the cumulative counts stay non-decreasing.
 analysis_lag = 4  # days after entering backlog before analysis starts
 dev_lag = 8  # days in analysis before development starts
-testing_lag = 12  # days in development before testing starts
+testing_lag_normal = 10  # days in development before testing starts (baseline)
+testing_lag_bottleneck = 22  # days during the QA capacity crunch (peak)
 done_lag = 6  # days in testing before done
+
+ramp = np.arange(testing_lag_normal, testing_lag_bottleneck + 1)
+testing_lag_schedule = np.concatenate(
+    [
+        np.full(30, testing_lag_normal),  # normal flow
+        ramp,  # QA backlog builds up
+        np.full(14, testing_lag_bottleneck),  # crunch plateau
+        ramp[::-1],  # extra QA capacity drains the backlog
+    ]
+)
+testing_lag_schedule = np.concatenate(
+    [testing_lag_schedule, np.full(n_days - len(testing_lag_schedule), testing_lag_normal)]
+)
 
 analysis_entered = np.zeros(n_days)
 dev_entered = np.zeros(n_days)
@@ -41,13 +58,14 @@ testing_entered = np.zeros(n_days)
 done = np.zeros(n_days)
 
 for d in range(n_days):
-    if d >= analysis_lag:
+    if d - analysis_lag >= 0:
         analysis_entered[d] = backlog_entered[d - analysis_lag]
-    if d >= analysis_lag + dev_lag:
+    if d - dev_lag >= 0:
         dev_entered[d] = analysis_entered[d - dev_lag]
-    if d >= analysis_lag + dev_lag + testing_lag:
-        testing_entered[d] = dev_entered[d - testing_lag]
-    if d >= analysis_lag + dev_lag + testing_lag + done_lag:
+    lag = testing_lag_schedule[d]
+    if d - lag >= 0:
+        testing_entered[d] = dev_entered[d - lag]
+    if d - done_lag >= 0:
         done[d] = testing_entered[d - done_lag]
 
 # Band widths (WIP per stage) — stacked bottom-to-top: Done → Backlog
@@ -69,26 +87,26 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=IMPRINT,
-    title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=2,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=3,
 )
 
 # Chart
 chart = pygal.StackedLine(
     style=custom_style,
     fill=True,
-    width=4800,
-    height=2700,
-    title="Kanban Delivery Flow · area-cumulative-flow · pygal · anyplot.ai",
+    width=3200,
+    height=1800,
+    title="area-cumulative-flow · python · pygal · anyplot.ai",
     x_title="Date",
     y_title="Cumulative Item Count",
     show_minor_x_labels=False,
     x_label_rotation=30,
-    margin=100,
+    margin=80,
     show_dots=False,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
