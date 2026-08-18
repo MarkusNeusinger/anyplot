@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-grouped: Grouped Box Plot
-Library: letsplot 4.11.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-08-18
+Library: letsplot 4.11.0 | Python 3.13.15
+Quality: 84/100 | Updated: 2026-08-18
 """
 
 import os
