@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 87/100 | Created: 2026-05-07
+Quality: pending | Updated: 2026-08-18
 """
 
 import os
@@ -19,7 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26, 26, 23, 0.10)" if THEME == "light" else "rgba(240, 239, 232, 0.10)"
 
-# Okabe-Ito palette — first series is always #009E73
+# Imprint palette — first series is always #009E73
 FILL_COLORS = [
     "rgba(0, 158, 115, 0.80)",  # #009E73 Done
     "rgba(196, 117, 253, 0.80)",  # #C475FD Testing
@@ -58,10 +58,21 @@ testing = np.minimum(
     np.maximum.accumulate((dev_s.shift(7, fill_value=0) * 0.88 + test_noise).astype(int).values), development
 )
 
+# QA/release capacity constrained mid-project (ramps down into days 35-64): completion
+# rate drops, widening the Testing WIP band. A ramped, above-baseline catch-up burst
+# (days 65-84) then drains the backlog and narrows the band again — the bottleneck
+# dynamic a CFD exists to reveal.
+done_rate = np.full(n_days, 0.85)
+done_rate[30:35] = np.linspace(0.85, 0.55, 5)
+done_rate[35:65] = 0.55
+done_rate[65:75] = np.linspace(0.55, 0.95, 10)
+done_rate[75:85] = 0.95
+done_rate[85:90] = np.linspace(0.95, 0.85, 5)
+
 done_noise = np.random.normal(0, 0.6, n_days)
 test_s = pd.Series(testing.astype(float))
 done = np.minimum(
-    np.maximum.accumulate((test_s.shift(5, fill_value=0) * 0.85 + done_noise).astype(int).values), testing
+    np.maximum.accumulate((test_s.shift(5, fill_value=0) * done_rate + done_noise).astype(int).values), testing
 )
 
 # WIP per stage = difference between adjacent cumulative bounds
@@ -87,8 +98,8 @@ for name, wip, fill, line_color in zip(stage_names, stage_wip, FILL_COLORS, LINE
             stackgroup="one",
             mode="none",
             fillcolor=fill,
-            line={"width": 1, "color": line_color},
-            hovertemplate=f"<b>{name}</b><br>%{{x|%b %d, %Y}}<br>WIP: %{{y:.0f}}<extra></extra>",
+            line={"width": 1.5, "color": line_color},
+            hovertemplate=f"<b>{name}</b><br>%{{x|%b %d, %Y}}<br>WIP: %{{y:,.0f}} items<extra></extra>",
         )
     )
 
@@ -96,17 +107,18 @@ for name, wip, fill, line_color in zip(stage_names, stage_wip, FILL_COLORS, LINE
 tick_dates = pd.date_range("2024-01-15", "2024-04-13", freq="14D")
 
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "area-cumulative-flow · plotly · anyplot.ai",
-        "font": {"size": 28, "color": INK},
+        "text": "area-cumulative-flow · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.02,
         "xanchor": "left",
         "y": 0.97,
         "yanchor": "top",
     },
     xaxis={
-        "title": {"text": "Date", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Date", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "linecolor": INK_SOFT,
         "showgrid": False,
         "tickvals": tick_dates,
@@ -114,8 +126,8 @@ fig.update_layout(
         "tickangle": 0,
     },
     yaxis={
-        "title": {"text": "Cumulative Items", "font": {"size": 22, "color": INK}},
-        "tickfont": {"size": 18, "color": INK_SOFT},
+        "title": {"text": "Cumulative Items", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "showgrid": True,
@@ -125,7 +137,7 @@ fig.update_layout(
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
-        "font": {"size": 16, "color": INK_SOFT},
+        "font": {"size": 10, "color": INK_SOFT},
         "traceorder": "reversed",
         "x": 0.02,
         "y": 0.88,
@@ -136,9 +148,9 @@ fig.update_layout(
     plot_bgcolor=PAGE_BG,
     font={"color": INK},
     hovermode="x unified",
-    margin={"l": 80, "r": 40, "t": 60, "b": 80},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
 # Save
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
