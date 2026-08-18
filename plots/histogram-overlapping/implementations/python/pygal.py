@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 87/100 | Updated: 2026-08-18
@@ -44,6 +44,10 @@ hist_treatment, _ = np.histogram(treatment_times, bins=bin_edges)
 control_data = [(int(count), float(bin_edges[i]), float(bin_edges[i + 1])) for i, count in enumerate(hist_control)]
 treatment_data = [(int(count), float(bin_edges[i]), float(bin_edges[i + 1])) for i, count in enumerate(hist_treatment)]
 
+# Mean shift, worked into the legend labels below, tells the A/B story at a glance
+control_mean = float(control_times.mean())
+treatment_mean = float(treatment_times.mean())
+
 # Style — theme-adaptive chrome, Imprint palette, sizing tuned for 3200x1800
 custom_style = Style(
     background=PAGE_BG,
@@ -84,13 +88,21 @@ chart = pygal.Histogram(
     show_x_guides=False,
     x_label_rotation=0,
     margin=60,
-    value_formatter=lambda x: f"{x:.0f} sessions",
+    value_formatter=lambda x: f"{x:.0f}",
     tooltip_border_radius=10,
+    tooltip_fancy_mode=True,
+    rounded_bars=4,
+    # Pygal-native interactivity: counts stay hidden in the static PNG and
+    # reveal per-bar on hover in the exported HTML, instead of a plain tooltip.
+    print_values=True,
+    dynamic_print_values=True,
+    print_values_position="top",
 )
 
-# Add data series
-chart.add("Control (current flow)", control_data)
-chart.add("Treatment (streamlined flow)", treatment_data)
+# Add data series - mean shift folded into the legend labels tells the A/B
+# story directly (Treatment moves the mean ~21% faster than Control)
+chart.add(f"Control (current flow, mean {control_mean:.0f}s)", control_data)
+chart.add(f"Treatment (streamlined flow, mean {treatment_mean:.0f}s)", treatment_data)
 
 # Save outputs
 chart.render_to_png(f"plot-{THEME}.png")
