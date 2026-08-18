@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: horizon-basic
 created: '2025-12-24T22:17:57Z'
-updated: '2026-08-18T00:58:55Z'
+updated: '2026-08-18T01:07:48Z'
 generated_by: claude-sonnet
 workflow_run: 32085655033
 issue: 1877
@@ -12,7 +12,264 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
-  strengths: []
-  weaknesses: []
+  strengths:
+  - 'Title now correctly includes the mandated language token: "horizon-basic · python
+    · altair · anyplot.ai".'
+  - band_height is now computed per-series instead of from a shared global max, so
+    low-variance series (Cache) reach the full Low/Medium/High range instead of being
+    flattened into Low — fixes the attempt-1 DQ-01/VQ-03 finding.
+  - 'Genuine horizon-chart technique: folded, mirrored positive/negative area bands
+    with 3 color-intensity steps per polarity, faithfully implementing the spec''s
+    core mechanic.'
+  - Idiomatic, distinctive use of Altair's declarative facet grammar (`.facet(row=alt.Row(...))`)
+    for the row-per-series small-multiples layout.
+  - Realistic, neutral server-monitoring dataset (Web Servers, Database, Cache, API
+    Gateway, Worker) with plausible per-server patterns (daily cycle, spike, threshold-triggered
+    load).
+  - Clean, reproducible, KISS-adjacent script with explicit font sizes, correct save
+    calls for both PNG (padded to exact 3200×1800 canvas) and HTML.
+  - No edge clipping, no text overlap, no readability failures in either theme — all
+    chrome (background, title, axis, legend, facet headers) is correctly theme-adaptive.
+  weaknesses:
+  - 'VQ-07: the Low/Medium band colors are built by interpolating from PAGE_BG (theme-dependent)
+    toward the #4467A3/#AE3030 anchors, so 4 of the 6 discrete legend swatches (Positive/Negative
+    Low and Medium) render as visibly different hex colors in light vs. dark — only
+    the two ''High'' swatches (t=1, where the theme-varying midpoint contributes 0)
+    are pixel-identical across themes. This is a real, code-verifiable violation of
+    the ''data colors must be identical across themes'' rule, even though it technically
+    follows the imprint_div ''theme-adaptive midpoint'' construction described in
+    the style guide for continuous colorbars. That guidance is meant for a smooth
+    continuous gradient fading into the page background, not for a discrete 6-swatch
+    categorical legend where readers compare named color patches directly.'
+  - 'Fix direction for next attempt: interpolate the Low/Medium/High steps toward
+    a FIXED neutral (not the theme-varying PAGE_BG) — e.g. a constant light gray —
+    or better, keep the anchor hex constant across all 3 intensity steps and vary
+    fill-opacity/alpha instead of interpolating the hex itself, so every legend swatch
+    is pixel-identical in both themes while still visually ''fading toward baseline''
+    via alpha compositing over the theme background.'
+  - Facet-row and legend text sit at the small end of the sizing scale (10pt at 4x
+    scale factor); worth double-checking legibility once downscaled to the ~400px
+    mobile thumbnail width given 6 stacked facet rows.
+  - configure_facet(spacing=4) leaves the plot area with a fairly wide top margin
+    between the title and the first facet row relative to otherwise tight facet spacing
+    — minor, not a defect.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — matches the required light-theme surface.
+      Chrome: Bold dark title top-left reading "horizon-basic · python · altair · anyplot.ai" (language token present and correct). Six facet rows (API Gateway, Cache, Database, Web Server 1, Web Server 2, Worker) with dark-gray row labels on the left, x-axis "Time (15-min intervals)" with HH:MM ticks (00:00–22:00+) at the bottom, subtle vertical gridlines within each row, and a bordered legend titled "Intensity" on the right with 6 swatches (Positive/Negative × Low/Medium/High). All title, axis, tick, and legend text is dark and clearly readable against the light background. No clipping at any canvas edge.
+      Data: Mirrored positive (blue-tinted) and negative (red-tinted) folded area bands, 3 intensity steps per polarity. Positive High / Negative High swatches render at the full imprint_div anchor hexes (#4467A3 blue / #AE3030 red). Every series (including previously-flattened Cache) now visibly reaches into the Medium/High bands thanks to per-series band-height normalization — e.g. Cache shows a clear dark-blue "Positive High" spike around 10:00.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — matches the required dark-theme surface.
+      Chrome: Identical layout and text content to the light render, now rendered in light/white tones (title, row labels, axis labels, tick labels, legend text) — all clearly readable against the dark background. No dark-on-dark failures. Legend box uses the dark elevated fill with light border/text.
+      Data: The "Positive High" (#4467A3) and "Negative High" (#AE3030) swatches are pixel-identical to the light render. However, the "Positive/Negative Low" and "Positive/Negative Medium" swatches are NOT identical — they are interpolated toward the theme's own PAGE_BG (#1A1A17 here vs. #FAF8F1 in light), so in the dark render "Positive Low" is a dark navy blue whereas in the light render "Positive Low" is a pale powder blue. This is a real cross-theme data-color inconsistency (see Weaknesses / VQ-07).
+      Legibility verdict: PASS (all text readable; the color-consistency issue is a palette-compliance defect, not a legibility defect)
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes, no overflow;
+          facet-row/legend text at the small end of the scale (10pt) — worth checking
+          at mobile thumbnail width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, row labels, axis ticks, legend, or data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Per-series band_height fix now lets every series (incl. Cache) use
+          the full Low/Medium/High range.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue/red polarity is CVD-distinguishable with good contrast; not
+          reliant on red-green alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization, nothing cut off; modest unused whitespace
+          between title and first facet row.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis descriptive with implicit units (15-min intervals); omitted
+          y-axis is standard/expected for horizon charts.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Anchors match imprint_div (#AE3030/#4467A3), but Low/Medium bands
+          are interpolated toward the theme-varying PAGE_BG, so 4 of 6 legend swatches
+          differ visibly between light and dark — violates the 'identical data colors
+          across themes' rule.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom diverging bands, intentional hierarchy via per-series normalization,
+          clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/strokes removed, subtle grid (10% opacity), compact but intentional
+          facet spacing appropriate for a horizon-chart panel.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-intensity folding plus per-series normalization creates clear
+          focal points (Worker's sustained plateau, Cache's isolated spike); no explicit
+          annotation calling out the insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine horizon chart: folded, mirrored, color-intensity-banded
+          areas per series.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 mirrored bands per polarity, zero/mean baseline, increasing intensity
+          with magnitude all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, series faceted by row, folded value via color — correct
+          for the chart type.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title now correctly reads "horizon-basic · python · altair · anyplot.ai";
+          legend labels match the data's band labels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Every server now reaches the full Low/Medium/High range thanks to
+          per-series band_height normalization.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible server-monitoring scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Value ranges and per-server patterns are plausible for the domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly flat imports → data → plot → save, but introduces a small
+          `_lerp_hex` helper function for the color-ramp construction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, altair, numpy, pandas, PIL all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the technique, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{theme}.png/.html save calls, canvas padded correctly
+          to exact target.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of the declarative Chart/encode/facet API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Declarative row-faceting (`.facet(row=...)`) for small multiples
+          is genuinely distinctive to Altair.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - faceting
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  - binning
+  styling:
+  - custom-colormap
+  - minimal-chrome

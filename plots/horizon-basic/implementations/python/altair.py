@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 horizon-basic: Horizon Chart
 Library: altair 6.2.2 | Python 3.13.15
-Quality: 86/100 | Updated: 2026-08-18
+Quality: 90/100 | Updated: 2026-08-18
 """
 
 import os
