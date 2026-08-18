@@ -697,6 +697,22 @@ class TestSeoProxyRouter:
             assert "1 plot specifications" in response.text
             assert "hundreds of" not in response.text
 
+    def test_seo_home_canonical_ignores_filter_params(self, client: TestClient) -> None:
+        """Filter params must not produce a self-canonicalising copy of the home page.
+
+        They used to: /?spec=point-basic emitted its own canonical and was
+        indexed as a page in its own right, competing with the page it is a
+        view of. og:image keeps the params — that is what the tracking needs,
+        and og:image is not a canonicalisation signal.
+        """
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/seo-proxy/?spec=point-basic&lib=plotly")
+            assert response.status_code == 200
+            assert '<link rel="canonical" href="https://anyplot.ai/" />' in response.text
+            assert 'property="og:url" content="https://anyplot.ai/"' in response.text
+            # ...while the tracked image still carries them
+            assert "og/home.png?spec=point-basic" in response.text
+
     def test_seo_plots(self, client: TestClient) -> None:
         """SEO plots page should return HTML with og:tags."""
         with patch(DB_CONFIG_PATCH, return_value=False):

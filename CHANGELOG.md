@@ -178,6 +178,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Home-page filter params were self-canonicalising** — the bot page built its canonical from the
+  request query string, so `/?spec=point-basic` declared itself a page in its own right rather than
+  a view of the home page, and Search Console had it indexed as one (last crawled 2026-05-26). Every
+  filter combination was a candidate. The canonical and `og:url` are now always `https://anyplot.ai/`;
+  `og:image` still carries the params, which is what the tracking they were added for actually needs
+  and is not a canonicalisation signal. Verified that `?view=` and `?language=` on implementation and
+  hub pages were already correct.
+
 - **Model↔migration index drift fixed before it could drop production indexes** — seven
   migration-created indexes (`ix_specs_issue`, `ix_specs_tags` GIN, `ix_impls_library_id`,
   `ix_impls_quality_score`, `ix_impls_impl_tags` GIN, `ix_feedback_created_at` DESC,

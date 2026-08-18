@@ -501,7 +501,12 @@ async def seo_home(request: Request, db: AsyncSession | None = Depends(optional_
     # Use html.escape to prevent XSS via query params
     query_string = html.escape(str(request.query_params), quote=True) if request.query_params else ""
     image_url = f"{DEFAULT_HOME_IMAGE}?{query_string}" if query_string else DEFAULT_HOME_IMAGE
-    page_url = f"https://anyplot.ai/?{query_string}" if query_string else "https://anyplot.ai/"
+    # The canonical never carries the filter params. It used to, which made every
+    # filter combination self-canonicalising: /?spec=point-basic was indexed as a
+    # page in its own right, competing with the home page it is a view of. Only
+    # og:image is parameterised — that is what the tracking above actually needs,
+    # and og:image is not a canonicalisation signal.
+    page_url = "https://anyplot.ai/"
 
     spec_count = len(await _get_spec_index(db)) if db is not None else None
     return HTMLResponse(
