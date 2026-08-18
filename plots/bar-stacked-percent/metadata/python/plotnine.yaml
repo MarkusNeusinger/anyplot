@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-stacked-percent
 created: '2025-12-25T22:50:12Z'
-updated: '2026-08-18T14:56:13Z'
+updated: '2026-08-18T15:07:49Z'
 generated_by: claude-sonnet
 workflow_run: 32150273058
 issue: 2008
@@ -12,97 +12,126 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-percent/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 49
 review:
   strengths:
-  - Correct idiomatic 100% stacked bar via geom_bar(stat='identity', position=position_fill())
-    with mizani's percent_format() on the y-axis
-  - 'Thoughtful semantic color mapping: Apple/Samsung/Xiaomi get canonical Imprint
-    positions 1-3 (brand green always first), while ''Others'' correctly uses the
-    theme-adaptive `muted` semantic anchor instead of a 4th arbitrary categorical
-    color, matching the anchor''s defined ''other/rest'' role'
-  - Both renders are clean with no clipping, no overlap, and consistent component
-    ordering across all six quarters for easy visual tracking
-  - 'Clean, reproducible, minimal code: no randomness, no unused imports, correct
-    3200x1800 landscape canvas via figure_size=(8, 4.5) at dpi=400'
+  - Correct 100% stacked bar structure via geom_bar(stat="identity", position=position_fill());
+    every bar sums to 100% as required.
+  - WCAG-contrast-aware in-segment label coloring (_relative_luminance/_contrast_ratio/_label_color)
+    is a genuinely sophisticated touch, picking whichever ink extreme has higher contrast
+    against each segment's own fill.
+  - 'Imprint palette used correctly: Apple (first categorical series) is bound to
+    #009E73; "Others" uses the muted semantic-anchor gray with a documented rationale
+    (aggregate rest-of-market bucket, not a distinct company).'
+  - 'Theme-adaptive chrome correctly threaded through both renders: light background
+    #FAF8F1 and dark background #1A1A17 both read correctly, axis/tick/legend text
+    is legible against each background, y-only gridlines are subtle.'
+  - Canvas size correct (3200x1800 landscape, matches figure_size=(8,4.5) target),
+    title format matches the mandated `bar-stacked-percent · python · plotnine · anyplot.ai`
+    pattern, legend order (Others/Xiaomi/Samsung/Apple top-to-bottom) mirrors the
+    visual stacking order.
   weaknesses:
-  - No visual hierarchy or data storytelling beyond the base composition view (DE-03)
-    — no annotation or highlighted trend, and the spec's Notes explicitly suggest
-    percentage labels within segments 'when space permits'; the Apple/Samsung/Xiaomi
-    bands are each roughly 20% tall, which is enough room for a geom_text label layer
-  - Beyond the required position_fill mechanism, no additional distinctive plotnine
-    feature is showcased (LM-02) — e.g. no guide/legend reordering, no coord_flip
-    consideration, no direct segment labeling
-  - Aesthetic polish is solid but fairly restrained beyond the palette choice (DE-01/DE-02)
-    — no additional refinement flourishes (e.g. subtle bar edge stroke, custom legend
-    key styling) beyond the standard theme_minimal + token overrides
+  - 'CRITICAL: In-segment percentage labels (geom_text + position_fill(vjust=0.5))
+    are not reliably aligned with their own bar segment. Verified by cropping and
+    zooming into individual bars in both renders across Q1/Q3/Q4 2023. In the LIGHT
+    render, several bars show TWO labels crammed into one colored segment while the
+    adjacent segment has none at all -- e.g. Q1 2023''s gray "Others" segment shows
+    both "22%" and "23%" (Samsung''s and Apple''s real values) while the blue "Xiaomi"
+    segment is completely unlabeled; Q3 2023''s gray segment shows "20%" twice; Q4
+    2023''s gray segment shows "19%" and "22%" together. In the DARK render every
+    segment gets exactly one label, but the bottom three segments (Apple/Samsung/Xiaomi)
+    are cyclically shifted by one position relative to their true value -- e.g. Q4
+    2023 dark: green "Apple" segment shows "14%" (Xiaomi''s real value, Apple''s real
+    value is 22%), purple "Samsung" segment shows "22%" (Apple''s real value), blue
+    "Xiaomi" segment shows "19%" (Samsung''s real value); only the top "Others" segment
+    shows its own correct value. This is systemic (every bar, both themes) and actively
+    misrepresents the data to the viewer.'
+  - 'Likely root cause: geom_bar''s and geom_text''s independent position_fill() computations
+    are producing different per-group cumulative offsets because the dataframe rows
+    are grouped by company (all-Apple rows, then all-Samsung, then all-Xiaomi, then
+    all-Others) rather than interleaved/sorted to match the stacking order used for
+    the bars. Fix by forcing both layers onto identical offsets -- e.g. precompute
+    the cumulative fill midpoint per (Quarter, Company) as an explicit numeric `y`
+    column (matching the same fill/stack order geom_bar uses) and pass it directly
+    to geom_text(aes(y=label_y), position=''identity'') instead of relying on geom_text''s
+    own position_fill. Verify by re-cropping every bar in both themes and confirming
+    exactly one label lands centered in its own correctly colored segment before resubmitting.'
+  - Because labels show numbers under the wrong segment, the chart currently gives
+    an incorrect visual takeaway (e.g. a viewer reading '14%' from the green Apple
+    segment when Apple's real Q4 2023 share is 22%) -- this undermines the data storytelling
+    and the 'percentage labels within segments' feature the spec suggests, even though
+    the feature is coded, it does not function correctly on-canvas.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correctly not pure white and not dark.
-      Chrome: Title "bar-stacked-percent · python · plotnine · anyplot.ai" in dark ink, centered, ~60% of plot width. Axis titles "Quarter" (x) and "Market Share" (y) in dark ink, tick labels ("Q1 2023"..."Q2 2024", "0%"-"100%") in softer dark gray. Subtle horizontal gridlines at low alpha. Legend box top-right with bordered fill, title "Company", 4 entries (Others, Xiaomi, Samsung, Apple).
-      Data: Six bars, each stacked bottom-to-top as Apple (brand green #009E73) / Samsung (lavender #C475FD) / Xiaomi (blue #4467A3) / Others (dark taupe-gray muted anchor). All bars sum to 100%, consistent ordering across quarters.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white (~#FAF8F1), correct light theme surface.
+      Chrome: Title "bar-stacked-percent · python · plotnine · anyplot.ai" is dark, centered, fully legible. Axis titles "Quarter"/"Market Share" and tick labels are dark/soft-dark and clearly legible. Legend box ("Company": Others/Xiaomi/Samsung/Apple) is clearly readable with a bordered background. Y-axis-only gridlines are subtle.
+      Data: 6 quarterly 100%-stacked bars (Q1 2023 - Q2 2024), 4 components each (Apple green #009E73, Samsung purple, Xiaomi blue, Others muted gray), each bar sums to 100%. BUG: in-segment percentage labels are misplaced -- on multiple bars (Q1, Q3, Q4 2023 confirmed via zoomed crops) two labels land inside a single segment (e.g. Q1's gray "Others" segment shows both "22%" and "23%") while an adjacent segment (blue "Xiaomi") has no label at all. Label text itself is legible/readable (good contrast against each fill), but the values are attached to the wrong segment.
+      Legibility verdict: PASS for chrome text; FAIL for data-label correctness/placement (see weaknesses).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correctly not pure black and not light.
-      Chrome: Title and axis titles in light off-white ink, tick labels in a softer light gray. Gridlines subtle and visible. Legend box uses the elevated dark fill with a light border, same 4 entries.
-      Data: Same stacking order and same green/lavender/blue hues as the light render — Apple/Samsung/Xiaomi colors are pixel-identical to the light render, confirming positions 1-3 of the Imprint palette are theme-independent. "Others" appropriately switches to the lighter warm-gray `muted` anchor value (by design — the muted/neutral semantic anchors are explicitly theme-adaptive per the style guide, unlike the 8 categorical positions).
-      Legibility verdict: PASS — no dark-on-dark text; all title, axis, and tick text is clearly visible against the dark background. Brand green reads well on the dark surface.
+      Background: Warm near-black (~#1A1A17), correct dark theme surface.
+      Chrome: Title, axis titles, and tick labels render in light ink, clearly legible against the dark background -- no dark-on-dark failures observed. Legend box uses an elevated dark background with light text, fully readable.
+      Data: Same 6 quarters/4 components; data fill colors are identical to the light render (Apple #009E73 green, Samsung purple, Xiaomi blue, Others muted gray) -- confirms the Imprint palette is theme-invariant as required. BUG: every segment gets exactly one label (no doubling/blanks like the light render), but zoomed crops of Q1/Q3/Q4 2023 show the bottom three segments (Apple/Samsung/Xiaomi) are cyclically shifted by one position relative to their true share value -- e.g. Q4 2023: green "Apple" shows "14%" (actually Xiaomi's value; Apple's real share is 22%). Only the top "Others" segment consistently shows its own correct value.
+      Legibility verdict: PASS for chrome text (no dark-on-dark); FAIL for data-label correctness/placement (see weaknesses).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Explicit font sizes set for all text roles; readable in both themes,
-          no light-on-light or dark-on-dark issues
+        comment: All glyphs are readable in both themes at good contrast; deducted
+          because mismatched label values create confusing/misleading reading rather
+          than a font-rendering issue.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 0
         max: 6
-        passed: true
-        comment: No text or element collisions in either render
+        passed: false
+        comment: 'Severe: multiple bars have two percentage labels crammed into one
+          colored segment while an adjacent segment has none (light render), or values
+          cyclically misassigned across segments (dark render). Confirmed via zoomed
+          crops of Q1/Q3/Q4 2023 in both themes.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bar width (0.7) and stacking are clearly visible, appropriate for
-          6 categories x 4 components
+        comment: Bar segments and fills are clearly visible and distinct; only the
+          text-label placement is broken.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinguishable Imprint hues plus muted anchor for 'Others'; no red-green-only
-          encoding
+        comment: Imprint palette provides adequate contrast and is CVD-safe; no red-green
+          as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Title ~60% width, balanced axis labels, nothing cut off, canvas 3200x1800
-          confirmed
+        comment: Canvas is exactly 3200x1800; title, axes, and legend fit comfortably
+          with no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Quarter'' and ''Market Share'' are descriptive; y-axis uses percent
-          formatting'
+        comment: Descriptive axis titles (Quarter, Market Share) with percent-formatted
+          y-axis.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for named companies, correct
-          theme-adaptive muted anchor for ''Others'', correct theme backgrounds'
+        comment: 'First series (Apple) = #009E73; Others uses documented muted semantic
+          anchor; backgrounds correct in both themes; data colors identical light/dark.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -110,24 +139,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping for 'Others', but otherwise fairly
-          standard theme_minimal customization
+        comment: Custom contrast-aware label coloring and deliberate semantic color
+          mapping show real design thought, above generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Panel border removed, grid reduced to faint y-major only, generous
-          whitespace via figure sizing
+        comment: Spines/panel border removed, y-only subtle gridlines, generous whitespace
+          around the legend.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 1
         max: 6
         passed: false
-        comment: No annotation, highlighted trend, or in-segment percentage labels
-          despite spec suggesting labels when space permits
+        comment: The mislabeled percentages actively mislead the viewer about each
+          component's true share, undermining the chart's core storytelling purpose.
     spec_compliance:
-      score: 15
+      score: 10
       max: 15
       items:
       - id: SC-01
@@ -135,112 +164,113 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 100% stacked bar via position_fill()
+        comment: Correct 100% stacked bar chart via position_fill().
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Distinct colors, clear legend, consistent component ordering across
-          bars
+        passed: false
+        comment: In-segment percentage labels are implemented in code but render with
+          wrong values/positions in every bar of both themes.
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: x=Quarter (category), y=Share normalized to %, fill=Company (component);
-          all data shown
+        passed: false
+        comment: Bar x/y mapping is correct, but the geom_text layer's y (fill-position)
+          mapping does not match geom_bar's, producing incorrect data-to-position
+          mapping for labels.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match component
-          names
+        comment: Title matches mandated format exactly; legend labels match company
+          names.
     data_quality:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Full composition-over-time view with 4 components across 6 quarters,
-          each summing to 100%
+        passed: false
+        comment: Bars/components/quarters are all present and sum to 100%, but the
+          on-canvas percentage labels do not correctly represent each segment's value.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Smartphone market share by quarter is plausible and neutral
+        comment: Plausible, neutral smartphone market-share-by-quarter scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Share values (12-46%) are sensible for the domain and sum correctly
+        comment: Percentages 0-100%, sensible magnitudes for a market-share domain.
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: Three small helper functions for WCAG contrast add some structure
+          beyond a flat script, though reasonably justified.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness
+        comment: Fully deterministic hardcoded data, no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (pandas, mizani.percent_format, plotnine components)
+        comment: Only imports that are used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        passed: false
+        comment: No fake UI, but the geom_text/position_fill layering has a real functional
+          defect (see weaknesses).
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via plot.save() with correct dpi/width/height
-          for the landscape canvas
+        comment: Saves as plot-{THEME}.png via plot.save() with correct dpi/size.
     library_mastery:
-      score: 7
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 'Grammar-of-graphics idioms: aes mapping, position_fill, scale_fill_manual,
-          scale_y_continuous with percent_format'
+        comment: Uses idiomatic plotnine grammar (position_fill, scale_fill_manual,
+          scale_color_identity), but the text-label layer's position handling is misapplied.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: position_fill is required for the plot type itself rather than a
-          distinctive extra; no additional plotnine-specific flourish (e.g. geom_text
-          labels, guide customization)
-  verdict: APPROVED
+        comment: WCAG-contrast-aware label coloring is a distinctive technique, but
+          its value is undermined by the broken label placement.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - grid-styling
-  - publication-ready
+  - alpha-blending
