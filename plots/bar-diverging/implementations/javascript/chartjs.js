@@ -28,9 +28,35 @@ const negativeColor = t.palette[4]; // #AE3030 matte red — sentiment: disagree
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Title (fontsize scaled for length beyond the 67-char baseline) ---------
-const title = "Employee Engagement Survey · bar-diverging · javascript · chartjs · anyplot.ai";
-const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
+// --- Title (fontsize scaled against this spec's own mandated-title length) --
+// Only shrink once the descriptive prefix pushes the full title past 1.8x the
+// bare mandated suffix ("bar-diverging · javascript · chartjs · anyplot.ai");
+// short spec-ids like this one keep the full base size instead of being
+// over-shrunk against a generic fixed-length reference.
+const mandatedTitle = "bar-diverging · javascript · chartjs · anyplot.ai";
+const title = `Employee Engagement Survey · ${mandatedTitle}`;
+const titleFontSize = Math.round(26 * Math.min(1, (mandatedTitle.length * 1.8) / title.length));
+
+// --- End-of-bar value labels (custom Chart.js plugin, canvas-drawn) ---------
+// Gives every bar an explicit numeric focal point (e.g. Career Growth +62,
+// Compensation -45) instead of relying on axis reading alone.
+const valueLabelsPlugin = {
+  id: "valueLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    const meta = chart.getDatasetMeta(0);
+    ctx.save();
+    ctx.font = "600 13px sans-serif";
+    ctx.textBaseline = "middle";
+    meta.data.forEach((bar, i) => {
+      const value = netScores[i];
+      ctx.fillStyle = value >= 0 ? positiveColor : negativeColor;
+      ctx.textAlign = value >= 0 ? "left" : "right";
+      ctx.fillText(`${value > 0 ? "+" : ""}${value}`, bar.x + (value >= 0 ? 8 : -8), bar.y);
+    });
+    ctx.restore();
+  },
+};
 
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
@@ -47,12 +73,13 @@ new Chart(canvas, {
       },
     ],
   },
+  plugins: [valueLabelsPlugin],
   options: {
     indexAxis: "y",
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 8, right: 24, bottom: 8, left: 8 } },
+    layout: { padding: { top: 20, right: 36, bottom: 16, left: 12 } },
     plugins: {
       title: { display: true, text: title, color: t.ink, font: { size: titleFontSize, weight: "500" } },
       legend: { display: false },
