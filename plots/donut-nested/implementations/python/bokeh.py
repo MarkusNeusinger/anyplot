@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 donut-nested: Nested Donut Chart
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -228,9 +228,14 @@ p.add_tools(
     ),
 )
 
-# Labels for inner ring (departments with values)
+# Labels for inner ring (departments with values) — ink picked per wedge
+# color via contrast_ink(), matching the outer ring's approach, so labels
+# stay readable on both the saturated and pale department wedges.
 inner_label_text = [f"{lbl}\n${val}K" for lbl, val in zip(inner_labels, inner_values, strict=True)]
-inner_label_source = ColumnDataSource(data={"x": inner_x, "y": inner_y, "text": inner_label_text})
+inner_label_ink = [contrast_ink(c) for c in inner_colors]
+inner_label_source = ColumnDataSource(
+    data={"x": inner_x, "y": inner_y, "text": inner_label_text, "ink": inner_label_ink}
+)
 
 inner_labels_set = LabelSet(
     x="x",
@@ -240,7 +245,7 @@ inner_labels_set = LabelSet(
     text_align="center",
     text_baseline="middle",
     text_font_size="20pt",
-    text_color=INK,
+    text_color="ink",
     text_font_style="bold",
 )
 p.add_layout(inner_labels_set)
@@ -273,6 +278,49 @@ outer_labels_set = LabelSet(
     text_color="ink",
 )
 p.add_layout(outer_labels_set)
+
+# Compact legend for outer segments below the on-chart label threshold — the
+# spec calls for "use legend for smaller ones" so no wedge is left
+# unidentifiable in the static PNG.
+below_threshold = [
+    (label, value, dept, color)
+    for label, value, dept, start, end, color in zip(
+        outer_labels, outer_values, outer_dept, outer_start_angle, outer_end_angle, outer_colors, strict=True
+    )
+    if abs(end - start) <= 0.25
+]
+
+if below_threshold:
+    legend_x, legend_row_h = -1.32, 0.09
+    legend_top_y = -1.35 + legend_row_h * len(below_threshold)
+
+    legend_swatch_source = ColumnDataSource(
+        data={
+            "x": [legend_x] * len(below_threshold),
+            "y": [legend_top_y - i * legend_row_h for i in range(len(below_threshold))],
+            "color": [color for _, _, _, color in below_threshold],
+        }
+    )
+    p.scatter(x="x", y="y", source=legend_swatch_source, marker="square", size=16, color="color", line_color=None)
+
+    legend_label_source = ColumnDataSource(
+        data={
+            "x": [legend_x + 0.04] * len(below_threshold),
+            "y": [legend_top_y - i * legend_row_h for i in range(len(below_threshold))],
+            "text": [f"{dept} · {label} (${value}K)" for label, value, dept, _ in below_threshold],
+        }
+    )
+    legend_labels_set = LabelSet(
+        x="x",
+        y="y",
+        text="text",
+        source=legend_label_source,
+        text_align="left",
+        text_baseline="middle",
+        text_font_size="16pt",
+        text_color=INK,
+    )
+    p.add_layout(legend_labels_set)
 
 # Center text showing the grand total
 p.text(
