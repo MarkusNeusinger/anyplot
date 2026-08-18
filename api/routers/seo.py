@@ -433,6 +433,69 @@ def _build_spec_hub_html(spec, image: str) -> str:
     )
 
 
+def _sized_srcset(full_url: str) -> str:
+    """Offer the pipeline's width derivatives for a full-size render URL.
+
+    `plot-light.png` is written alongside `plot-light_400.png`, `_800` and
+    `_1200`, and the suffix is the actual pixel width. The original is left out:
+    its width differs per plot, so it has no honest `w` descriptor.
+    """
+    stem = full_url[:-4] if full_url.endswith(".png") else full_url
+    return ", ".join(f"{stem}_{w}.png {w}w" for w in (400, 800, 1200))
+
+
+def _render_picture(impl, alt: str) -> str:
+    """The actual plot render, both themes, at a size a consumer can choose.
+
+    ``alt`` must arrive HTML-escaped — the same contract ``_render_bot_html``
+    carries, and for the same reason: escaping here instead would double-escape
+    the callers that already do it, turning a quoted spec title into a visible
+    ``&amp;quot;``. ``html.escape`` defaults to ``quote=True``, so a caller that
+    follows the contract is attribute-safe.
+    """
+    light_default = html.escape(
+        impl.preview_url_light[:-4] + "_1200.png"
+        if impl.preview_url_light.endswith(".png")
+        else impl.preview_url_light,
+        quote=True,
+    )
+    source = ""
+    if impl.preview_url_dark:
+        dark_set = html.escape(_sized_srcset(impl.preview_url_dark), quote=True)
+        source = f'<source srcset="{dark_set}" media="(prefers-color-scheme: dark)" />'
+    # src is the 1200px variant so a naive consumer does not pull a 4766px file;
+    # the full original is reachable through the link the body adds beside this.
+    return (
+        f"<picture>{source}"
+        f'<img src="{light_default}" srcset="{html.escape(_sized_srcset(impl.preview_url_light), quote=True)}"'
+        f' alt="{alt}" />'
+        f"</picture>"
+        f"{_render_asset_list(impl)}"
+    )
+
+
+def _render_asset_list(impl) -> str:
+    """Name every asset this implementation has, and say which is which.
+
+    The <picture> above already offers both themes, but only through a media
+    query — an agent parsing the page cannot tell from that which file is the
+    dark one, or that an interactive version exists at all. Two thirds of the
+    catalogue has one (plotly, altair, bokeh, pygal, lets-plot and every
+    JavaScript library), it is publicly fetchable, and until now nothing in the
+    machine-facing page mentioned it.
+    """
+    items = []
+    for url, label in (
+        (impl.preview_url_light, "Full-resolution render, light theme"),
+        (impl.preview_url_dark, "Full-resolution render, dark theme"),
+        (impl.preview_html_light, "Interactive version, light theme"),
+        (impl.preview_html_dark, "Interactive version, dark theme"),
+    ):
+        if url:
+            items.append(f'<li><a href="{html.escape(url, quote=True)}">{label}</a></li>')
+    return f"<h2>Renders</h2><ul>{''.join(items)}</ul>" if items else ""
+
+
 def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     """Full bot page for an implementation detail /{spec_id}/{language}/{library}.
 
@@ -461,10 +524,26 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
             f"{title_esc} in {html.escape(sib_lib_name)} ({html.escape(sib_lang_name)})</a></li>"
         )
 
+    # og:image stays the 1200x630 social card — it is what a shared link needs.
+    # The body carries the actual render, because in that card the plot is a
+    # small thumbnail inside branding chrome: fine for a link preview, useless
+    # to an assistant asked to show the plot. Attribution is not lost, the plot
+    # title itself reads "{spec} · {language} · {library} · anyplot.ai".
+    #
+    # The pipeline already writes _400/_800/_1200 derivatives beside every
+    # render, and their suffix is the true pixel width (verified across square
+    # and wide plots in four languages). The full-size original is NOT in the
+    # srcset: its width varies per plot — 2400, 3200, 4766 — so no honest `w`
+    # descriptor exists for it. It is linked separately instead.
+    if impl.preview_url_light:
+        plot_img = _render_picture(impl, f"{title_esc} rendered with {lib_name_esc}")
+    else:
+        plot_img = f'<img src="{image_esc}" alt="{title_esc} rendered with {lib_name_esc}" width="1200" height="630" />'
+
     body = (
         f"<h1>{title_esc} — {lib_name_esc}</h1>"
         f"<p>{desc_esc}</p>"
-        f'<img src="{image_esc}" alt="{title_esc} rendered with {lib_name_esc}" width="1200" height="630" />'
+        f"{plot_img}"
         + (
             f"<h2>{html.escape(lang_name)} source ({lib_name_esc})</h2><pre><code>{html.escape(code)}</code></pre>"
             if code

@@ -248,6 +248,42 @@ Display names (Matplotlib, Makie.jl, Apache ECharts, …) are derived from
 `core/constants.py` (`LANGUAGES_METADATA` / `LIBRARIES_METADATA`) — never
 hand-maintained in the router.
 
+## What a crawler sees of the plot
+
+Two different images exist per implementation, and the bot page carries both,
+deliberately:
+
+| Image | What it is | Where it appears |
+|---|---|---|
+| `api.anyplot.ai/og/{spec}/{language}/{library}.png` | 1200×630 branded social card; the plot is a thumbnail inside chrome | `og:image`, `twitter:image` |
+| `…/plot-light.png`, `…/plot-dark.png` in GCS | the actual render, full resolution | the page body, as a `<picture>` |
+
+The card is right for a shared link and wrong for an assistant asked to show the
+plot — in it the plot is roughly a third of the frame and the cell labels are
+barely legible. So the body carries the real render instead. Attribution does not
+suffer: every render's own title reads `{spec} · {language} · {library} ·
+anyplot.ai`, so the source travels with the image wherever it is embedded.
+
+Below the image the page lists every asset **in words**, because a `<picture>`
+tells a browser which file to take but tells a reader nothing about which is
+which — and says nothing at all about the interactive version:
+
+- full-resolution render, light and dark
+- interactive version, light and dark, where the library produces one
+
+The interactive HTML exists for **2,229 of 3,583 implementations** (plotly,
+altair, bokeh, pygal, lets-plot and every JavaScript library), is publicly
+fetchable, and was mentioned nowhere in the machine-facing page until this list
+existed. A static library simply gets no such entry.
+
+The pipeline writes `_400`, `_800` and `_1200` derivatives beside each render and
+the suffix is the true pixel width — verified across square and wide plots in all
+four languages. Those three form the `srcset`. The full-size original is **not**
+in it: its width varies per plot (2400, 3200, 4766 among the ones measured), so
+no honest `w` descriptor exists for it. It gets its own link instead, and the
+`src` points at the 1200px variant so a consumer ignoring `srcset` does not pull
+a five-megapixel file.
+
 ## Branded OG images
 
 Dynamically generated preview images with anyplot.ai branding.
