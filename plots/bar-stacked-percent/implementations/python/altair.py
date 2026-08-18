@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-08
@@ -8,6 +8,7 @@ import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -17,7 +18,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette (first series is always #009E73)
+# Imprint palette (first series is always #009E73)
 IMPRINT = ["#009E73", "#C475FD", "#4467A3", "#BD8233"]
 
 # Data - Energy mix by country
@@ -76,11 +77,11 @@ chart = (
     alt.Chart(data)
     .mark_bar(stroke="white", strokeWidth=1)
     .encode(
-        x=alt.X("Country:N", axis=alt.Axis(labelFontSize=18, titleFontSize=22, labelAngle=0), title="Country"),
+        x=alt.X("Country:N", axis=alt.Axis(labelFontSize=10, titleFontSize=12, labelAngle=0), title="Country"),
         y=alt.Y(
             "Value:Q",
             stack="normalize",
-            axis=alt.Axis(labelFontSize=18, titleFontSize=22, format="%"),
+            axis=alt.Axis(labelFontSize=10, titleFontSize=12, format="%"),
             title="Share of Energy Mix (%)",
         ),
         color=alt.Color(
@@ -88,10 +89,10 @@ chart = (
             scale=alt.Scale(domain=["Fossil Fuels", "Nuclear", "Renewables", "Hydro"], range=IMPRINT),
             legend=alt.Legend(
                 title="Energy Source",
-                titleFontSize=18,
-                labelFontSize=16,
+                titleFontSize=10,
+                labelFontSize=10,
                 orient="right",
-                symbolSize=200,
+                symbolSize=80,
                 symbolStrokeWidth=0,
             ),
         ),
@@ -103,10 +104,10 @@ chart = (
         ],
     )
     .properties(
-        width=1600,
-        height=900,
+        width=620,
+        height=320,
         background=PAGE_BG,
-        title=alt.Title("bar-stacked-percent · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
+        title=alt.Title("bar-stacked-percent · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
     .configure_axis(
@@ -116,5 +117,21 @@ chart = (
 )
 
 # Save PNG and HTML
-chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 chart.save(f"plot-{THEME}.html")
+
+# Pad the saved PNG up to the canonical landscape canvas (3200x1800).
+# vl-convert pads the view with title/axis/legend extents outside width/height,
+# so the raw save rarely lands exactly on target - never crop, only pad.
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}x{_h}, exceeds target {TW}x{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
