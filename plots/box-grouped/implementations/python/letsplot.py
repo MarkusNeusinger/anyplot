@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 84/100 | Updated: 2026-08-18
@@ -107,6 +107,8 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major_x=element_blank(),
         panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_minor_x=element_blank(),
+        panel_grid_minor_y=element_blank(),
         plot_title=element_text(size=16, face="bold", color=INK),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
