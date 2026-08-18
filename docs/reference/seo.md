@@ -293,41 +293,30 @@ Uses **MonoLisa** variable font (commercial, not in repo):
 
 ### Frontend (anyplot.ai)
 
-Static file at `app/public/robots.txt`. It carries the full policy — content
-signals, the welcomed AI agents, the declined training collectors — so it holds
-regardless of what Cloudflare does or does not prepend (see
-[AI crawler policy](#ai-crawler-policy)):
+Static file at `app/public/robots.txt`. It carries the full policy — the content
+signals and the one declined agent — so it holds regardless of what Cloudflare
+does or does not prepend (see [AI crawler policy](#ai-crawler-policy)):
 
-Four groups in this order — welcomed AI agents (`ClaudeBot`, `Claude-User`,
-`Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`,
-`Perplexity-User`), declined training collectors (`GPTBot`, `CCBot`,
-`Bytespider`, `Amazonbot`, `meta-externalagent`), opt-out tokens
-(`Google-Extended`, `Applebot-Extended`), and finally the wildcard. The first
+Two groups, in this order: `Bytespider`, declined on bandwidth grounds, then the
+wildcard that allows everyone else. The retrieval-yes / training-no split this
+section used to describe is gone — the policy is open to every operator, so the
+named allow-groups it needed became redundant with `User-agent: *`. The declined
 group verbatim; read the file for the rest:
 
 ```txt
-User-agent: ClaudeBot
-User-agent: Claude-User
-User-agent: Claude-SearchBot
-User-agent: OAI-SearchBot
-User-agent: ChatGPT-User
-User-agent: PerplexityBot
-User-agent: Perplexity-User
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Disallow: /debug
-Disallow: /interactive
-Allow: /
+User-agent: Bytespider
+Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
+Disallow: /
 ```
 
 Three properties of that file are deliberate and should survive any cleanup:
 
-- The `Content-Signal` line is repeated in **every** group, declining ones
-  included. A crawler reads only the group that matches it, so a reservation
-  declared once under `User-agent: *` never reaches a named agent — least of all
-  the training collectors it is aimed at.
-- The named groups come **before** the wildcard group. A spec-compliant crawler
-  picks the most specific match regardless of order, but simpler parsers take
-  the first match and would read `Allow: /` and stop.
+- The `Content-Signal` line is repeated in **every** group. A crawler reads only
+  the group that matches it, so a signal declared once under `User-agent: *`
+  never reaches a named agent.
+- The named group comes **before** the wildcard. A spec-compliant crawler picks
+  the most specific match regardless of order, but simpler parsers take the
+  first match and would read `Allow: /` and stop.
 - Inside each group, `Disallow:` comes **before** `Allow: /` — same reason: with
   the broad allow first, a first-match parser (Python's `urllib.robotparser`,
   for one) hands out `/debug` and `/interactive`.
@@ -338,8 +327,13 @@ Dynamic endpoint at `GET /robots.txt`:
 
 ```txt
 User-agent: *
+Allow: /og/
 Disallow: /
 ```
+
+`/og/` is the exception: every prerendered page references its preview image
+there, so a blanket `Disallow` pointed crawlers at an image they were forbidden
+to fetch. `Allow` comes first for the first-match parsers described above.
 
 **Why block the API?**
 - APIs should not be indexed by search engines
@@ -348,58 +342,70 @@ Disallow: /
 
 ### AI crawler policy
 
-**Decision (issue #9633):** AI agents that *retrieve and cite* are welcome;
-agents that only *collect for training* are declined. anyplot's entire strategy
-is to be consumable by AI agents — `/llms.txt`, the MCP server, MIT-licensed
-code on every page — so blocking the retrieval side works against the product.
-The training reservation stays expressed, and it is the legally load-bearing
-part: `Content-Signal: ai-train=no` is an express reservation of rights under
-Article 4 of EU Directive 2019/790.
+**Decision (2026-08-18, supersedes issue #9633):** everything is open. Retrieval,
+citation, search indexing and model training are permitted for every operator.
+
+The previous policy drew a retrieval-yes / training-no line and expressed the
+training half as a reservation of rights under Article 4 of EU Directive
+2019/790. That line was never coherent here: the catalogue is MIT-licensed and
+published to be reused, so declining a training crawler protected nothing the
+licence had not already given away, while costing reach.
+
+It also had a concrete, unintended consequence. Google offers a single token,
+`Google-Extended`, that governs Gemini **grounding and training together** —
+there is no finer control, verified against Google's crawler documentation. The
+old policy declined it as if it were a training-only token, which kept anyplot
+out of Gemini's answers entirely. `Applebot-Extended` genuinely *is*
+training-only (retrieval and Siri answers ride on `Applebot`), so declining it
+was correct under the old policy and is simply no longer wanted under this one.
 
 | Group | Agents | Policy |
 |---|---|---|
-| Retrieval / citation / user-directed | `ClaudeBot`, `Claude-User`, `Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`, `Perplexity-User` | allowed |
-| Training collectors | `GPTBot`, `CCBot`, `Bytespider`, `Amazonbot`, `meta-externalagent` | declined |
-| Opt-out tokens (vendor crawls under another UA) | `Google-Extended`, `Applebot-Extended` | declined |
+| Everything | search engines, AI assistants, their index and training crawlers, social and link previews | allowed |
+| Bandwidth exception | `Bytespider` | declined |
+| App internals | `/debug`, `/interactive` for all agents | declined |
 
-`GPTBot` is the deliberate borderline call: it is OpenAI's *training* crawler,
-so it sits with the declined group, while ChatGPT's retrieval path
-(`OAI-SearchBot`, `ChatGPT-User`) stays open. Reversing that is a one-group
-edit in `app/public/robots.txt`. Vendor UA roles shift — re-check the current
-role of each agent against Cloudflare's AI Crawl Control categories before
-changing the policy.
+`Bytespider` is the one exception and it is operational, not principled: it is
+documented as ignoring robots.txt and crawls far more aggressively than this
+catalogue can justify serving. The robots group states the intent; Cloudflare
+does the enforcing. If its behaviour changes, the group can go.
 
 #### Cloudflare is the enforcement layer
 
-Measured 2026-07-25 on the live zone: Cloudflare prepends a **managed
-robots.txt** block (`Disallow: /` for ClaudeBot, GPTBot, CCBot, Google-Extended,
-Amazonbot, Applebot-Extended, Bytespider, meta-externalagent,
-CloudflareBrowserRenderingCrawler) *and* answers those user agents with a hard
-`HTTP 403 Your request was blocked.` at the edge — including `Claude-User` and
-`ChatGPT-User`, and including `/llms.txt` itself. The file written for AI agents
-was unreachable to every agent it was written for. Googlebot passes (200).
+The edge can be stricter than this file and answers blocked agents with `HTTP
+403` regardless of what is written here — so **a permission granted in
+`robots.txt` that the dashboard still blocks is a published lie**. Keep the two
+in step.
 
-`api.anyplot.ai` is **not** covered by the block (ClaudeBot gets 200 there), so
-the MCP server stayed reachable.
+Measured on the live zone 2026-08-18 (zone `anyplot.ai` → **AI Crawl Control** →
+Security):
 
-Aligning the edge with this policy is a dashboard action (zone `anyplot.ai` →
-**AI Crawl Control** / Bots): allow the retrieval group, keep the training
-group blocked, and either turn off the managed robots.txt (this repo's file
-already carries the content signals) or leave it on and accept that the live
-file is stricter than the repo's.
+| State | Agents |
+|---|---|
+| Blocked at the edge | `GPTBot`, `CCBot`, `Amazonbot`, `meta-externalagent`, `Bytespider`, `Google-CloudVertexBot`, `PetalBot`, `Anchor Browser`, `Arquivo Web Crawler` |
+| Passing | `Googlebot`, `bingbot`, `Baidu`, `Applebot`, `Claude-User`, `ClaudeBot`, `Claude-SearchBot`, `ChatGPT-User`, `OAI-SearchBot`, `PerplexityBot`, `Perplexity-User`, `DuckAssistBot`, `MistralAI-User`, `Meta-ExternalFetcher`, `archive.org_bot` |
+
+Two things to note. `Google-CloudVertexBot` is blocked at the edge and appears in
+no repo-side policy — an undocumented decision that only exists as a dashboard
+toggle. And unlike the 2026-07-25 measurement, Cloudflare is **no longer
+prepending a managed robots.txt block**: the live file is byte-identical to this
+repo's, and enforcement is purely the 403.
+
+To bring the edge in line with the policy above, unblock everything except
+`Bytespider` in the dashboard.
 
 Verify afterwards:
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)" https://anyplot.ai/llms.txt   # expect 200
-curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; CCBot/2.0; +https://commoncrawl.org/faq/)"   https://anyplot.ai/          # expect 403
+curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; GPTBot/1.4; +https://openai.com/gptbot)" https://anyplot.ai/   # expect 200 once unblocked
+curl -s -o /dev/null -w '%{http_code}\n' -A "Mozilla/5.0 (compatible; Bytespider)" https://anyplot.ai/                              # expect 403
 curl -sA "Mozilla/5.0 (compatible; ClaudeBot/1.0; +claudebot@anthropic.com)" https://anyplot.ai/scatter-basic | grep -o '<title>[^<]*</title>'   # per-route title, not the SPA shell
 ```
 
 The last command is the part this repo owns: `app/nginx.conf` maps the AI UAs
 onto the seo-proxy path, and `.github/workflows/bot-serving-check.yml` guards it
 daily against the Cloud Run origin (origin, not edge — so it reports on the
-nginx map no matter what the zone policy is).
+nginx map no matter what the zone policy is, and will never catch edge drift).
 
 ## Sitemap
 

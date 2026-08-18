@@ -1,73 +1,63 @@
-# Crawler policy — AI crawlers that RETRIEVE and CITE are welcome: anyplot is
-# built to be consumable by AI agents (see /llms.txt and the MCP server at
-# https://api.anyplot.ai/mcp/). Training-only scrapers are declined below.
+# Crawler policy — everything here is open, to humans and machines alike.
 #
-# Cloudflare's AI Crawl Control can PREPEND its own managed block to the live
-# file and additionally answer the blocked user agents with HTTP 403 at the
-# edge, so https://anyplot.ai/robots.txt may be longer and stricter than this
-# file. The policy is therefore spelled out here in full — including the
-# content signals Cloudflare would otherwise supply — so it survives with the
-# managed block turned off. Rationale, dashboard steps and how to verify:
-# docs/reference/seo.md ("AI crawler policy").
+# The catalogue is MIT-licensed and published to be reused: every plot page
+# carries its runnable source, /llms.txt describes the site for agents, and an
+# MCP server at https://api.anyplot.ai/mcp/ exists so assistants can query it
+# directly. Declining the crawlers that make that content findable would
+# contradict the point of publishing it.
 #
-# Two ordering rules in here are load-bearing, both for the same reason —
-# a compliant crawler resolves by specificity, simpler parsers by first match:
+# So this file grants what the licence already grants. Retrieval, citation,
+# search indexing and model training are all permitted, for every operator,
+# without the retrieval-yes / training-no split this file used to draw. That
+# split was never coherent here: the licence permits reuse including training,
+# so declining a training crawler protected nothing while costing reach.
+#
+# It also had one concrete, unintended consequence. Google offers a single
+# token, Google-Extended, that governs Gemini *grounding and training together*
+# — there is no finer control. Declining it kept anyplot out of Gemini's
+# answers entirely, which is the opposite of what a catalogue built for AI
+# consumption wants. Applebot-Extended is training-only and is likewise no
+# longer declined, now that training is permitted.
+#
+# One user agent remains declined, and for an operational reason rather than a
+# policy one — see the group below.
+#
+# Cloudflare's AI Crawl Control enforces at the edge and can be stricter than
+# this file: it answers blocked agents with HTTP 403 regardless of what is
+# written here. Keep the dashboard in step with this file, or the published
+# permission is not the one that applies. Verified edge state and how to check
+# it: docs/reference/seo.md ("AI crawler policy").
+#
+# Two ordering rules are load-bearing, both for the same reason — a compliant
+# crawler resolves by specificity, simpler parsers by first match:
 #   1. Named groups come FIRST, `User-agent: *` last. With the wildcard on top,
-#      a first-match parser would read `Allow: /` and never reach the declining
-#      groups below.
+#      a first-match parser would read `Allow: /` and never reach the group
+#      below.
 #   2. Inside a group, `Disallow:` lines come BEFORE `Allow: /` — otherwise a
 #      first-match parser lets /debug and /interactive through (verified with
 #      Python's urllib.robotparser, which is exactly such a parser).
-
-# Content signals per contentsignals.org. ANY RESTRICTION EXPRESSED HERE IS AN
-# EXPRESS RESERVATION OF RIGHTS UNDER ARTICLE 4 OF EU DIRECTIVE 2019/790.
-# search:   indexing and returning links/excerpts — yes
-# ai-input: retrieval for AI answers, grounding, citation — yes
-# ai-train: training or fine-tuning models — no
 #
-# The signal is repeated in EVERY group below, because a crawler reads only the
-# group that matches it: a reservation declared once under `User-agent: *` would
-# never reach a named agent — least of all the training collectors it is aimed
-# at.
-#
-# AI assistants, AI search and citation crawlers. These send readers back and
-# are the reason /llms.txt exists; the *-User agents fetch only because a human
-# asked their assistant to open the page.
-User-agent: ClaudeBot
-User-agent: Claude-User
-User-agent: Claude-SearchBot
-User-agent: OAI-SearchBot
-User-agent: ChatGPT-User
-User-agent: PerplexityBot
-User-agent: Perplexity-User
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Disallow: /debug
-Disallow: /interactive
-Allow: /
+# Content signals per contentsignals.org:
+#   search:   indexing and returning links/excerpts — yes
+#   ai-input: retrieval for AI answers, grounding, citation — yes
+#   ai-train: training or fine-tuning models — yes
+# The signal is repeated in every group, because a crawler reads only the group
+# that matches it.
 
-# Training-only collectors: they take the catalogue without ever returning a
-# reader, which is what ai-train=no says in prose. GPTBot sits here because it
-# is OpenAI's TRAINING crawler — ChatGPT's retrieval path is
-# OAI-SearchBot/ChatGPT-User above and stays open. Flip this one group if the
-# training stance ever changes.
-User-agent: GPTBot
-User-agent: CCBot
+# Bytespider is declined on bandwidth, not principle. It is documented as
+# ignoring robots.txt and crawling far more aggressively than the catalogue can
+# justify serving, so this line states the intent while Cloudflare's AI Crawl
+# Control does the actual enforcing. If its behaviour changes, this group can
+# go — nothing in the licence or the policy above argues against it.
 User-agent: Bytespider
-User-agent: Amazonbot
-User-agent: meta-externalagent
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
+Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
 Disallow: /
 
-# Opt-out tokens for vendors that crawl under a different user agent
-# (Googlebot / Applebot fetch for search and stay allowed).
-User-agent: Google-Extended
-User-agent: Applebot-Extended
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
-Disallow: /
-
-# Everyone else: search engines, social/link previews, feed readers.
+# Everyone else: search engines, AI assistants and their training crawlers,
+# social and link previews, feed readers. /debug and /interactive are app
+# internals rather than catalogue content and are not worth crawling.
 User-agent: *
-Content-Signal: search=yes,ai-input=yes,ai-train=no,use=reference
+Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
 Disallow: /debug
 Disallow: /interactive
 Allow: /
