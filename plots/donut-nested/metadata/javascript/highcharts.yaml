@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: donut-nested
 created: '2026-08-18T06:54:56Z'
-updated: '2026-08-18T07:10:42Z'
+updated: '2026-08-18T07:20:26Z'
 generated_by: claude-sonnet
 workflow_run: 32108560299
 issue: 2015
@@ -12,117 +12,105 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/highcharts/plot-dark.html
-quality_score: 79
+quality_score: 91
 review:
   strengths:
+  - 'The Attempt-2 label-placement bug is fixed: ''Compute'' and ''Enterprise'' now
+    render at distance:-55, landing cleanly inside the outer ring''s 68%-96% band
+    in both themes instead of floating outside on the background.'
   - Outer ring built with flatMap in the exact same business-unit order as the inner
-    ring, so slice boundaries line up perfectly between rings — meets the spec's alignment
-    requirement precisely.
+    ring, so slice boundaries line up perfectly between rings, matching the spec's
+    alignment requirement.
   - 'Consistent color families per parent via Highcharts.color(unit.color).brighten(offset):
-    same hue, varying lightness — also CVD-friendly since it leans on luminance, not
-    hue.'
+    same hue, varying lightness — CVD-robust since it leans on luminance, not hue.'
   - Deliberate radius gap between rings (64%→68%) gives clean visual separation between
     hierarchy levels, matching the spec's optional suggestion.
-  - 'Fully theme-adaptive palette and chrome: data colors are identical between light/dark;
-    all text/legend/background tokens map correctly, and both renders pass the theme-readability
-    check.'
-  - Tooltip re-enabled with a descriptive pointFormat (name, value, percentage), restoring
-    a native Highcharts strength in the HTML detail view that was disabled in the
-    previous attempt.
+  - 'Fully theme-adaptive palette and chrome: data colors are pixel-identical between
+    light/dark; both renders pass the theme-readability check.'
+  - Threshold-based direct labels (>15% of ring total) correctly identify the two
+    largest outer segments while the other nine fall back to the 11-item legend, satisfying
+    the spec's 'labels on larger segments, legend for smaller' guidance.
+  - Deterministic, clean data derivation with correct value roll-up from children
+    to parent via reduce().
   weaknesses:
-  - 'New defect from this repair: the outer-ring direct data labels for the two slices
-    that now pass the 15% threshold (''Compute'' and ''Enterprise'') render OUTSIDE
-    the donut''s outer edge, floating on the plain background with no leader/connector
-    line — they read as detached from any segment rather than labeling their slice.
-    Verified in both plot-light.png and plot-dark.png at identical pixel positions.
-    The outer series uses innerSize:''68%''/size:''96%'' with dataLabels.distance:-20,
-    which should pull the label 20px inward from the slice''s own outer radius, but
-    for these two large-angle slices the label lands past the 96% radius in the background
-    instead of inside the 68%-96% band. Likely cause: Highcharts'' pie label overlap-avoidance
-    (softenLabelOverlap) shifting the label outward for wide slices, or the distance
-    being computed against the wrong reference radius for a nested multi-series pie.
-    Fix: pull the label further inward (e.g. distance around -60 to -90, or a percentage-based
-    offset relative to the band''s own thickness) and re-render both themes to confirm
-    the label text sits fully inside the colored band for every slice that crosses
-    the label threshold, not just the smaller ones that happened to fit.'
-  - Because the two largest, most prominent outer segments now carry a visually broken
-    label, the spec's 'labels on larger segments' guidance is only nominally satisfied
-    — the feature exists in code but doesn't read correctly on screen.
   - Design Excellence is solid but not yet publication-grade — no additional polish
-    elements push it from 'good' to 'exceptional' (e.g. a subtle focal callout on
-    the top business unit).
+    element (e.g. a small focal callout on the top business unit, extra typography
+    refinement) pushes it from 'good' to 'exceptional'; this has been static across
+    all three attempts.
+  - Only 2 of the 4 parent categories have children counts at the upper half of the
+    spec's 2-5 range (3-3-2-3 split) — a wider spread (e.g. one parent with 5 children)
+    would more fully exercise the spec's stated 2-5 children range.
+  - 'LM-02 remains generic-plus: Highcharts.color().brighten() and the tooltip pointFormat
+    are nice touches but the nested-donut-via-two-pie-series approach itself is replicable
+    in most charting libraries with minor syntax changes.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "donut-nested · javascript · highcharts · anyplot.ai" centered near the top, well within canvas bounds (no clipping). Soft-grey subtitle "Revenue by Business Unit and Product Line ($M)" beneath it. An 11-item legend (Compute, Storage, Networking, Servers, Laptops, Peripherals, Enterprise, SMB, Implementation, Training, Support) sits below the donut in dark-grey text with color swatches, fully inside the canvas with generous clearance from the bottom edge. All chrome text is clearly readable against the light background.
-      Data: Two concentric rings. Inner ring: 4 business-unit slices (Cloud Services = brand green #009E73 first, Hardware = purple, Software Licensing = blue, Consulting = ochre/brown), each with a bold, white-outlined dark-text label sitting inside its own band, fully legible. Outer ring: 11 product-line slices tinted around their parent's hue (same hue family, varying lightness), aligned to their parent's angular boundaries. Two outer slices ("Compute" and "Enterprise") carry a direct text label per the >15%-of-ring threshold, but BOTH of these labels render outside the outer ring's edge, floating on the cream background with no line connecting them back to their slice — a real placement defect, not merely tight margins. All other data is otherwise clearly distinguishable and colors match the Imprint palette.
-      Legibility verdict: PASS for contrast/readability of every text element; FAIL for correct *placement* of the "Compute" and "Enterprise" outer-ring data labels (floating off their slice, ambiguous attribution).
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "donut-nested · javascript · highcharts · anyplot.ai" centered near the top, comfortably within canvas bounds. Soft-grey subtitle "Revenue by Business Unit and Product Line ($M)" beneath it with units. 11-item legend in dark-grey text with color swatches sits below the donut, evenly spaced, no overlap, clear of the canvas edge.
+      Data: Two concentric rings. Inner ring: 4 business-unit slices — Cloud Services = brand green #009E73 (first series, correct), Hardware = lavender, Software Licensing = blue, Consulting = ochre — canonical Imprint order, each with a white-outlined dark-text label inside its own band. Outer ring: 11 product-line slices tinted around their parent's hue (same hue, varying lightness), visually grouping children under their parent. The two qualifying large slices ("Compute" ~20% and "Enterprise" ~15.7% of the outer ring total) now carry direct inline labels that render fully inside the 68%-96% outer band — the Attempt-2 floating-label defect is resolved. Slice boundaries between inner and outer rings align at identical angles, and a thin background-colored gap separates the two rings for visual clarity.
+      Legibility verdict: PASS — all text (title, subtitle, ring labels, legend) is clearly readable against the light background, no overlaps.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in light ink/soft-grey and remain clearly legible; legend text is light-grey on the dark background with no dark-on-dark issues; nothing clipped at any edge.
-      Data: Ring structure and all data colors (green/purple/blue/ochre inner families; matching tint families for the outer ring) are pixel-identical to the light render — only chrome adapted, as required. The same "Compute" and "Enterprise" outer-ring label placement defect reproduces at the identical pixel position as the light render (floating on the dark background outside the ring, disconnected from its slice).
-      Legibility verdict: PASS for contrast/readability of every text element; FAIL for correct placement of the same two outer-ring data labels as in the light render — this is a deterministic layout bug, not a theme-specific contrast failure.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title, subtitle, and legend all render in light ink/grey and remain clearly legible; segment divider strokes and label outlines correctly flip to dark-appropriate tones. No dark-on-dark failures anywhere.
+      Data: All data colors (green/lavender/blue/ochre inner ring; matching tint families in the outer ring) are pixel-identical to the light render — only chrome (background, text, legend) adapted, as required. The "Compute" and "Enterprise" labels reproduce at the same corrected inward position as in the light render, confirming the fix is theme-independent.
+      Legibility verdict: PASS — all text is clearly visible against the near-black background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
-        passed: false
-        comment: Every text element is crisp and high-contrast in both themes, but
-          the 'Compute' and 'Enterprise' outer-ring labels no longer function as legible
-          data labels since they float disconnected from their slice.
+        passed: true
+        comment: All sizes explicitly set (title 22px, subtitle/legend/labels 14px/11px);
+          labels now land inside their ring band at distance:-55, readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: No text-on-text collisions, but two direct data labels render past
-          the ring's outer edge onto the background with no connector — a placement
-          defect that misattributes the label.
+        passed: true
+        comment: Attempt-2's floating-label defect is fixed; no text overlap or disconnected
+          labels observed
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 15 slices (4 inner + 11 outer) are clearly distinguishable via
-          hue-family tinting and white divider strokes in both themes.
+        comment: All 15 slices clearly distinguishable via hue-family tinting in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Intra-family distinction relies on lightness (CVD-robust); white
-          dividers add further separation; no red/green-only encoding.
+        comment: Lightness-based intra-family distinction is CVD-robust; white divider
+          strokes add further separation
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Nothing is clipped at the canvas edge (no AR-09), but the two large
-          outer-ring labels sit outside their intended visual container (the donut
-          band), which is a real layout containment failure on the chart's two most
-          prominent slices.
+        passed: true
+        comment: Donut fills most of the canvas, legend close to plot, nothing clipped,
+          labels now inside their band
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Subtitle is descriptive and includes units ($M).
+        comment: Subtitle is descriptive and includes units ($M)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order, theme-correct
-          chrome (#FAF8F1 / #1A1A17) in both renders, data colors identical between
-          themes.'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome,
+          identical data colors across themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -130,25 +118,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful hue-family tinting, ring-gap spacing, and subtle borderRadius
-          go beyond plain defaults, but stop short of publication-grade polish.
+        comment: Thoughtful hue-family tinting and ring-gap spacing, still short of
+          publication-grade polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: White divider strokes, textOutline labels, and a generous ring gap
-          show attention to detail.
+        comment: White divider strokes, textOutline labels, generous ring gap show
+          attention to detail
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Size-by-value slices and hue-family grouping create a hierarchy,
-          but the floating labels on the two largest slices undercut the intended
-          guide-the-viewer effect.
+        passed: true
+        comment: Size-by-value slices plus hue-family grouping and now-correct large-segment
+          labels create clear visual hierarchy without annotations
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -156,30 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested-donut via two pie series with distinct innerSize/size.
+        comment: Correct nested-donut via two pie series with distinct innerSize/size
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Threshold-based direct labels on larger outer segments were added
-          per the prior review, but both qualifying labels render mis-positioned outside
-          their slice, so the 'labels on larger segments' guidance is only nominally
-          met.
+        passed: true
+        comment: Aggregation, alignment, color families, ring spacing, and now correctly-placed
+          large-segment labels are all present and working
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Inner-ring values correctly summed from children via reduce(); outer/inner
-          boundaries align.
+        comment: Inner-ring values correctly summed from children via reduce(); ring
+          boundaries align
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches required format exactly; legend labels match the 11
-          product-line names.
+          product-line names
     data_quality:
       score: 15
       max: 15
@@ -189,22 +174,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 3-3-2-3 children distribution covers the spec's 2-5 children range;
-          4 parent categories within the 3-6 range.
+        comment: 3-3-2-3 children distribution covers the spec's 2-5 children range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible business-revenue scenario (cloud/hardware/software/consulting
-          business units).
+        comment: Neutral, plausible business-revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic, internally consistent revenue values ($M) with sensible
-          parent/child proportions.
+        comment: Realistic, internally consistent revenue values
     code_quality:
       score: 10
       max: 10
@@ -214,33 +196,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; only small inline map/flatMap/reduce helpers, appropriate
-          for the data shape.
+        comment: Flat script, no functions/classes beyond map/flatMap/reduce
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data — no RNG.
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the global Highcharts and ANYPLOT_TOKENS are used.
+        comment: No imports needed; uses browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; appropriate complexity for a nested donut.
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Calls Highcharts.chart('container', ...) per the mount-node contract;
-          animation disabled on chart and series; no filesystem writes.
+        comment: Correct mount-node usage, no explicit width/height, animation disabled
     library_mastery:
       score: 8
       max: 10
@@ -250,23 +230,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard, well-executed dual-pie nested-donut pattern with correct
-          innerSize/size layering.
+        comment: Standard, well-executed dual-pie nested-donut pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Highcharts.color().brighten() for tint families is a library-specific
-          technique; tooltip re-enabled with a descriptive pointFormat for the interactive
-          HTML output.
-  verdict: REJECTED
+        comment: Highcharts.color().brighten() for tint families; tooltip with descriptive
+          pointFormat
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - nested-donut
+  techniques: []
   patterns:
+  - data-generation
   - iteration-over-groups
-  - groupby-aggregation
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
