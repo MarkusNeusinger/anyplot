@@ -1,7 +1,7 @@
 // anyplot.ai
 // donut-nested: Nested Donut Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-18
+// Quality: 93/100 | Created: 2026-08-18
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;

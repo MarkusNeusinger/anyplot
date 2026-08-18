@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: donut-nested
 created: '2026-08-18T07:05:56Z'
-updated: '2026-08-18T07:12:00Z'
+updated: '2026-08-18T07:20:54Z'
 generated_by: claude-sonnet
 workflow_run: 32109167249
 issue: 2015
@@ -12,57 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/donut-nes
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/donut-nested/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Correct nested-donut structure via Chart.js's two-dataset `weight` property, with
+  - 'The repair fully resolved the attempt-1 layout complaint: the doughnut now sits
+    with balanced left/right padding (layout.padding 50/50) instead of flush against
+    the left canvas edge.'
+  - The repair also addressed the data-storytelling gap by adding a center-hole "Total
+    Budget $91M" label, turning the empty donut hole into a headline figure tying
+    both rings together.
+  - Correct nested-donut structure via Chart.js's two-dataset weight property, with
     departments as the inner ring and expense categories as the outer ring; children
     are grouped and ordered by parent so arc boundaries align radially between rings.
   - Consistent color families per department (parent hue, rising child lightness via
     HSL math) directly implements the spec's 'use consistent color families per parent
     category' note.
-  - Direct on-arc labels (department name + $ total) via a custom afterDatasetsDraw
-    plugin, with the legend covering the finer category breakdown — matches the spec's
-    'labels on larger segments, legend for smaller' guidance.
+  - Direct on-arc labels (department name + $ total, now at a slightly larger 20-21px)
+    via a custom afterDatasetsDraw plugin, with the legend covering the finer category
+    breakdown - matches the spec's 'labels on larger segments, legend for smaller'
+    guidance.
   - 'First categorical series correctly uses Imprint #009E73; remaining departments
     cycle through palette positions 2-4 in canonical order; data colors are identical
     between light and dark renders.'
-  - Both renders are fully readable — white text with a subtle dark stroke on ring
-    labels holds contrast against every department color in both themes.
+  - Both renders are fully readable - white text with a subtle dark stroke on ring
+    labels holds contrast against every department color in both themes, and legend/chrome
+    text flips correctly between light and dark tokens.
   - Realistic, neutral company-budget scenario with plausible relative department
-    sizes ($33M Engineering down to $13M Operations).
+    sizes ($33M Engineering down to $13M Operations) and values that aggregate exactly
+    (children sum to parent totals).
   weaknesses:
-  - The donut sits flush against the left canvas edge (~0px margin) in both renders
-    while the legend column leaves a comfortable margin on the right — unbalanced
-    whitespace. Add explicit `layout.padding` (or otherwise re-center the chart area)
-    so left/right margins are roughly equal.
-  - Sub-department '$XXM' labels (17px CSS / 34 source px) are noticeably smaller
-    than the department name above them and risk becoming hard to read once the PNG
-    is scaled to a ~400px mobile thumbnail — consider bumping to ~19-20px for extra
-    headroom.
-  - 'Data storytelling is capped by the layout: the plot organizes and labels the
-    hierarchy clearly but doesn''t create additional emphasis beyond the direct labels
-    (e.g., the donut''s empty center hole could carry a ''Total: $91M'' label, or
-    the largest department could be visually emphasized).'
-  - 'CQ-01 (KISS structure) note: hexToHsl/hslToHex/childShade plus the ringLabels
-    plugin object add four functions beyond the plain imports-data-plot shape. Justified
-    here by the spec''s explicit color-family requirement, but avoid adding further
-    abstraction in repair.'
+  - 'CQ-01: hexToHsl/hslToHex/childShade plus the ringLabels plugin object add four
+    functions beyond the plain imports-data-plot shape. Justified by the spec''s explicit
+    color-family requirement, but avoid adding further abstraction.'
+  - Sub-department "$XXM" labels are still a touch smaller than the department name
+    above them; fine at full resolution but keep an eye on mobile-thumbnail legibility
+    if this pattern is reused elsewhere.
+  - Color differentiation between children of the same department relies on lightness
+    steps within one hue family, which is a slightly finer distinction under color-vision-deficiency
+    simulation than distinct hues - acceptable here since the white/dark stroke and
+    radial position provide redundant cues.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "donut-nested · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Right-side legend lists all 11 outer-ring category labels in a soft dark-gray, each with a color swatch matching its wedge. Inner-ring department labels (name + $ total) render in bold white text with a subtle dark stroke, legible against every department color.
-      Data: Two concentric rings — inner ring (Engineering, Marketing, Sales, Operations) in the four Imprint hues (green, lavender, blue, ochre); outer ring (11 expense categories) in matching hue families at rising lightness per parent. First series (Engineering/R&D family) is Imprint brand green #009E73. Segments are separated by thin page-background borders.
-      Legibility verdict: PASS. All text is readable; the only visual defect is that the donut is pushed flush against the left canvas edge with almost no left margin, while the legend area has a comfortable right margin — an unbalanced layout, not a legibility failure.
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "donut-nested · javascript · chartjs · anyplot.ai" in dark ink at top, clearly readable. Right-side legend lists the 11 expense-category labels in secondary dark-gray text with color-matched swatches. Inner-ring direct labels (department name + $ total) use white text with a dark stroke, readable against every department color.
+      Data: Inner ring = 4 departments (Engineering #009E73 green, Marketing lavender/purple, Sales blue, Operations ochre) in canonical Imprint order. Outer ring = 11 expense categories, each a lighter shade of its parent's hue, with arc boundaries aligned to the parent ring. Center hole now shows "Total Budget / $91M" tying both rings together (added in this repair). Doughnut has balanced left/right padding around the canvas - no longer flush against the left edge as in attempt 1.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title renders in light ink, clearly readable against the dark background. Legend text switches to a light gray, readable. Inner-ring labels keep the same white-text/dark-stroke treatment, which continues to read well against the (now darker-toned) department colors. No dark-on-dark text found anywhere.
-      Data: Same two-ring structure and identical data colors to the light render — only the background, title, legend text, and segment border color (now page-background dark) flipped; the categorical palette values (green/lavender/blue/ochre families) are unchanged, confirming theme-adaptive chrome without touching data colors.
-      Legibility verdict: PASS. No dark-on-dark or light-on-light failures. Same left-edge margin imbalance as the light render (chart layout, not a theme-specific issue).
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Title and legend text flip to light ink / light gray and remain fully readable against the dark surface. Ring labels keep the same white-text/dark-stroke treatment and still read cleanly; center "Total Budget $91M" label uses theme-adaptive ink tokens and is legible.
+      Data: Department and category colors are pixel-identical to the light render (green/lavender/blue/ochre families) - only chrome (background, title, legend text, borders) flipped, as required. No dark-on-dark or light-on-light failures found.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,77 +73,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, legend 15px, ring labels
-          21/17px); readable in both themes. Sub-labels are on the small side for
-          a mobile-scaled thumbnail.
+        comment: All text readable in both themes; ring labels sized up from attempt
+          1 (17px -> 20-21px)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No collisions between ring labels, center label, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Ring segments and borders clearly visible and well separated.
+        comment: Segments and legend swatches clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good hue separation between department families; white-stroked labels
-          hold contrast on every segment color.
+        comment: Good contrast; white text + dark stroke over saturated fills
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Donut sits flush against the left canvas edge with ~0px margin while
-          the legend side has a comfortable margin — unbalanced whitespace in both
-          renders.
+        passed: true
+        comment: Attempt-1 left-edge flush issue fixed via layout.padding; doughnut
+          now balanced within the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No cartesian axes needed for a donut; title is fully descriptive
-          and correctly formatted.
+        comment: Title matches required format exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining departments follow Imprint palette
-          positions 2-4; backgrounds and chrome are theme-correct in both renders;
-          data colors identical across themes.'
+        comment: 'First series #009E73, canonical order, identical data colors across
+          themes, correct theme backgrounds'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful hue-family + lightness-ramp color design clearly above
-          library defaults; not yet publication-perfect due to the margin issue.
+        comment: Thoughtful hue-family/lightness color design plus a purposeful center
+          total label
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean segment borders and typography, but whitespace is not generously
-          balanced (left-edge crowding).
+        comment: Clean with now-balanced whitespace after the padding fix
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Visual hierarchy via direct labels and color families guides the
-          reader, but there's no additional emphasis/insight beyond the plain breakdown
-          (e.g. empty donut hole, no highlighted department).
+        comment: Center '$91M Total Budget' label gives the chart a clear headline
+          figure, addressing the prior weakness
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested donut via two weighted datasets.
+        comment: Correct nested/multi-ring donut
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 4 parent categories with 2-3 children each, aggregation, color families,
-          ring spacing, and label/legend split all present.
+        comment: Color families per parent, aligned boundaries, labels on large segments
+          + legend for small ones
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Department totals correctly aggregate their children's values; all
-          data visible.
+        comment: level_1/level_2/value mapped correctly; children sum exactly to parent
+          totals
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches spec; legend labels match the 11 outer-ring
-          categories.
+        comment: Title format exact; legend labels match category data
     data_quality:
       score: 14
       max: 15
@@ -181,20 +176,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Varying child counts (2 vs 3) and varying values shown, but stays
-          within the lower half of the spec's 2-5 children range.
+        comment: 4 departments, 2-3 children each - within spec range but not exercising
+          the upper bound
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral company-budget scenario.
+        comment: Plausible, neutral company budget scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible relative department budgets and expense-category splits.
+        comment: Sensible corporate-budget dollar ranges
     code_quality:
       score: 9
       max: 10
@@ -204,32 +199,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Four helper functions (hexToHsl/hslToHex/childShade, ringLabels plugin)
-          beyond plain imports-data-plot, justified by the color-family requirement.
+        comment: Four helper functions/plugin beyond plain data+plot shape, justified
+          by the color-family requirement
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic in-memory data.
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only.
+        comment: No unused imports; only window globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the requested feature set; no fake UI.
+        comment: No fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly; animation disabled.
+        comment: Correct mount-node contract, animation:false
     library_mastery:
       score: 9
       max: 10
@@ -239,23 +234,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses Chart.js's documented multi-dataset `weight` technique for ring
-          nesting and the plugin system for custom drawing — the idiomatic no-external-plugin
-          approach.
+        comment: Two-dataset weighted-doughnut pattern is the idiomatic Chart.js nested-donut
+          technique
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Weight-based ring nesting plus a custom afterDatasetsDraw label plugin
-          are distinctive to Chart.js's architecture.
-  verdict: REJECTED
+        comment: Custom afterDatasetsDraw plugin, generateLabels legend override,
+          dataset weight property
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
-  - nested-donut
   patterns:
   - data-generation
   - iteration-over-groups
