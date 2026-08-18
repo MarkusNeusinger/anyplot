@@ -61,8 +61,14 @@ const series = SERVICES.map((name, k) => {
     const spike = rnd() < 0.04 ? (rnd() < 0.5 ? 1 : -1) * amplitude * 1.4 : 0;
     return wave + noise + spike;
   });
-  return { name, values };
+  const peak = Math.max(...values.map(Math.abs));
+  return { name, values, peak };
 });
+
+// Rows are ordered by peak magnitude (most volatile first) instead of the
+// data-generation order — gives the dense 10-row layout a clear focal point
+// at the top instead of leaving every row visually equal-weight.
+const orderedSeries = [...series].sort((a, b) => b.peak - a.peak);
 
 // --- Band color ramps (Imprint diverging, matching spec's "blue up / red down") ---
 const N_BANDS = 3; // per polarity — 6 bands total, within the spec's "2-4 bands" note
@@ -97,7 +103,7 @@ root.appendChild(title);
 
 const subtitle = document.createElement("div");
 subtitle.textContent = "CPU deviation from 50% baseline · 10 services · 5-minute samples over 10 hours";
-subtitle.style.cssText = `color:${t.inkSoft}; font-size:14px; margin-bottom:12px;`;
+subtitle.style.cssText = `color:${t.inkSoft}; font-size:16px; margin-bottom:12px;`;
 root.appendChild(subtitle);
 
 // Small legend explaining the folded color-intensity bands.
@@ -108,22 +114,22 @@ function legendGroup(label, colors) {
   text.textContent = label;
   wrap.appendChild(text);
   const bar = document.createElement("div");
-  bar.style.cssText = "display:flex; height:14px; border-radius:2px; overflow:hidden;";
+  bar.style.cssText = "display:flex; height:16px; border-radius:2px; overflow:hidden;";
   colors.forEach((c) => {
     const seg = document.createElement("div");
-    seg.style.cssText = `width:24px; height:100%; background:${c};`;
+    seg.style.cssText = `width:26px; height:100%; background:${c};`;
     bar.appendChild(seg);
   });
   wrap.appendChild(bar);
   return wrap;
 }
 const legend = document.createElement("div");
-legend.style.cssText = `display:flex; align-items:center; gap:24px; margin-bottom:14px; font-size:13px; color:${t.inkSoft};`;
+legend.style.cssText = `display:flex; align-items:center; gap:24px; margin-bottom:14px; font-size:15px; color:${t.inkSoft};`;
 legend.appendChild(legendGroup("above baseline, increasing →", posColors));
 legend.appendChild(legendGroup("below baseline, increasing →", negColors));
 root.appendChild(legend);
 
-const LABEL_WIDTH = 148;
+const LABEL_WIDTH = 160;
 
 const rowsWrap = document.createElement("div");
 rowsWrap.style.cssText = "display:flex; flex-direction:column; flex:1 1 auto; min-height:0; gap:5px;";
@@ -167,13 +173,13 @@ function makeBandLayer(parent, values, bandIndex, color) {
   });
 }
 
-series.forEach((s) => {
+orderedSeries.forEach((s) => {
   const row = document.createElement("div");
   row.style.cssText = "display:flex; align-items:stretch; flex:1 1 auto; min-height:0;";
 
   const label = document.createElement("div");
   label.textContent = s.name;
-  label.style.cssText = `flex:0 0 ${LABEL_WIDTH}px; width:${LABEL_WIDTH}px; display:flex; align-items:center; justify-content:flex-end; color:${t.ink}; font-size:14px; padding-right:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
+  label.style.cssText = `flex:0 0 ${LABEL_WIDTH}px; width:${LABEL_WIDTH}px; display:flex; align-items:center; justify-content:flex-end; color:${t.ink}; font-size:16px; padding-right:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;`;
   row.appendChild(label);
 
   const plotWrap = document.createElement("div");
@@ -196,7 +202,7 @@ const axisSpacer = document.createElement("div");
 axisSpacer.style.cssText = `flex:0 0 ${LABEL_WIDTH}px;`;
 axisRow.appendChild(axisSpacer);
 const axisLabels = document.createElement("div");
-axisLabels.style.cssText = `flex:1 1 auto; display:flex; justify-content:space-between; color:${t.inkSoft}; font-size:13px;`;
+axisLabels.style.cssText = `flex:1 1 auto; display:flex; justify-content:space-between; color:${t.inkSoft}; font-size:15px;`;
 const N_TICKS = 6;
 for (let i = 0; i < N_TICKS; i++) {
   const idx = Math.round((i / (N_TICKS - 1)) * (N_POINTS - 1));
