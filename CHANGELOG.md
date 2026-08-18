@@ -232,6 +232,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **CodeQL alert #103** — an ECharts tooltip called `.replace("\n", " ")` with a string argument,
+  which replaces only the first occurrence
+  (`plots/bar-heart-rate-zones/implementations/javascript/echarts.js`). Nothing renders differently
+  today, since every zone label carries exactly one newline; the defect is latent, and a label
+  gaining a second line break would put a raw newline inside the tooltip's HTML. The pattern occurs
+  exactly once across the catalogue — were it recurring it would belong in the generation prompt,
+  since `plots/` is pipeline output and a regeneration overwrites this file (#10480).
+
 - **The bot analytics recorded nothing at all** — Plausible identifies crawler user agents and
   discards their events, so forwarding the real one guaranteed an empty dashboard. Verified against
   the live API: the same event sent as `Claude-User` never appears, sent as a browser agent it does,
