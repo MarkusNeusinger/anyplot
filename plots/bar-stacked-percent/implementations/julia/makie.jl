@@ -17,11 +17,26 @@ const IMPRINT_PALETTE = [
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
 
+# Fixed (non-theme-adaptive) dark ink for segment labels drawn on the lighter
+# Imprint hues — the underlying fill color never changes between themes, so
+# the label color that contrasts against it shouldn't either.
+const LABEL_DARK  = colorant"#1A1A17"
+const LABEL_LIGHT = colorant"#FFFFFF"
+
 # --- Data -----------------------------------------------------------------
 # Global electricity generation mix (TWh, illustrative) — rows are years,
 # columns are sources. Coal share erodes as renewables scale up.
 years   = ["2010", "2013", "2016", "2019", "2022", "2025"]
 sources = ["Coal", "Natural Gas", "Nuclear", "Renewables"]
+
+# Semantic-exception color mapping (style guide "Semantic exception"):
+# renewables carries a strong reader expectation of green, so brand green is
+# reassigned from the ordinal-first series to Renewables, and the remaining
+# canonical hues (positions 2-4) reflow by their own semantic fit — ochre
+# (earth/commodity) for Coal, blue (gas-flame association) for Natural Gas,
+# lavender left for Nuclear.
+source_colors = IMPRINT_PALETTE[[4, 3, 2, 1]]
+label_colors  = [LABEL_DARK, LABEL_LIGHT, LABEL_DARK, LABEL_LIGHT]
 
 generation = [
     42.0 23.0 13.0  8.0
@@ -42,7 +57,7 @@ shares     = 100 .* generation ./ row_totals
 x      = repeat(1:n_year, inner = n_source)
 stack  = repeat(1:n_source, outer = n_year)
 height = vec(permutedims(shares))
-colors = IMPRINT_PALETTE[repeat(1:n_source, outer = n_year)]
+colors = source_colors[repeat(1:n_source, outer = n_year)]
 
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
@@ -74,7 +89,9 @@ ax = Axis(
     leftspinecolor    = INK_SOFT,
     bottomspinecolor  = INK_SOFT,
     xgridvisible      = false,
-    ygridvisible      = false,
+    ygridvisible      = true,
+    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.12),
+    yminorgridvisible = false,
 )
 
 barplot!(
@@ -88,7 +105,7 @@ barplot!(
 
 ax.xticks = (1:n_year, years)
 ax.yticks = (0:20:100, ["$(t)%" for t in 0:20:100])
-ylims!(ax, 0, 100)
+ylims!(ax, 0, 124)
 
 # --- Segment labels: percentage text where the segment has room -----------
 for j in 1:n_year, i in 1:n_source
@@ -101,12 +118,23 @@ for j in 1:n_year, i in 1:n_source
         text     = "$(round(Int, pct))%",
         align    = (:center, :center),
         fontsize = 12,
-        color    = :white,
+        color    = label_colors[i],
     )
 end
 
+# --- Callout: mark where renewables overtake coal --------------------------
+crossover_x = 5  # 2022 — first year Renewables' share exceeds Coal's
+lines!(ax, [crossover_x, crossover_x], [100.0, 104.0]; color = INK_SOFT, linewidth = 1.5)
+text!(
+    ax, Point2f(crossover_x, 106);
+    text     = "Renewables overtake Coal",
+    align    = (:center, :bottom),
+    fontsize = 13,
+    color    = INK,
+)
+
 Legend(
-    fig[1, 2], [PolyElement(color = c) for c in IMPRINT_PALETTE[1:n_source]], sources;
+    fig[1, 2], [PolyElement(color = c) for c in source_colors], sources;
     labelcolor  = INK,
     labelsize   = 13,
     framevisible = false,
