@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 spiral-timeseries: Spiral Time Series Chart
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: pending | Updated: 2026-08-17
+Library: plotly 6.9.0 | Python 3.13.15
+Quality: 87/100 | Updated: 2026-08-18
 """
 
 import os
