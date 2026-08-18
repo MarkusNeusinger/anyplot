@@ -12,6 +12,15 @@ const t = window.ANYPLOT_TOKENS;
 const LABELS = ['Temperature', 'Humidity', 'CO₂ Level', 'PM2.5', 'Noise Level', 'Wind Speed'];
 const N = LABELS.length;
 
+// Fixed chart geometry (square canvas, harness-guaranteed 1200x1200 CSS px) —
+// a single source of truth for both the chart margin and the scatter-marker
+// radius below, so the invisible hover layer lines up with the drawn grid
+// without needing a runtime resync.
+const CHART_MARGIN = [100, 60, 145, 185]; // [top, right, bottom, left]
+const CELL_W = (window.ANYPLOT_SIZE.width - CHART_MARGIN[1] - CHART_MARGIN[3]) / N;
+const CELL_H = (window.ANYPLOT_SIZE.height - CHART_MARGIN[0] - CHART_MARGIN[2]) / N;
+const MARKER_RADIUS = Math.max(Math.min(CELL_W, CELL_H) / 2 - 3, 4);
+
 // Symmetric Pearson correlation matrix, diagonal = 1.00. Only the lower
 // triangle (col <= row) is drawn — masking the upper mirror image reduces
 // redundancy, per the spec's "consider masking upper or lower triangle" note.
@@ -23,6 +32,22 @@ const CORR = [
   [0.05, -0.05, 0.40, 0.35, 1.00, -0.15],
   [-0.25, 0.10, -0.50, -0.60, -0.15, 1.00],
 ];
+
+// Strongest links (off-diagonal, lower triangle) — the most positive and most
+// negative correlations get a heavier border so the matrix has a point of
+// emphasis beyond the raw grid of numbers.
+let maxPos = { value: -Infinity, row: -1, col: -1 };
+let maxNeg = { value: Infinity, row: -1, col: -1 };
+for (let row = 0; row < N; row++) {
+  for (let col = 0; col < row; col++) {
+    const value = CORR[row][col];
+    if (value > maxPos.value) maxPos = { value, row, col };
+    if (value < maxNeg.value) maxNeg = { value, row, col };
+  }
+}
+function isStrongest(row, col) {
+  return (row === maxPos.row && col === maxPos.col) || (row === maxNeg.row && col === maxNeg.col);
+}
 
 // --- Color: imprint_div — negative -1 (red) .. 0 (page bg) .. +1 (blue) ----
 function hexToRgb(hex) {
@@ -92,6 +117,7 @@ function drawAll() {
       const x = chart.plotLeft + col * cellW;
       const y = chart.plotTop + row * cellH;
       const onDiagonal = row === col;
+      const emphasize = isStrongest(row, col);
       const fill = onDiagonal ? t.elevatedBg : corrFill(value);
       const textColor = onDiagonal ? t.inkSoft : corrTextColor(value);
 
@@ -100,8 +126,8 @@ function drawAll() {
           .rect(x + 1, y + 1, cellW - 2, cellH - 2, 3)
           .attr({
             fill,
-            stroke: onDiagonal ? t.inkSoft : 'none',
-            'stroke-width': onDiagonal ? 1 : 0,
+            stroke: emphasize ? t.ink : onDiagonal ? t.inkSoft : 'none',
+            'stroke-width': emphasize ? 2 : onDiagonal ? 1 : 0,
             zIndex: 2,
           })
           .add()
@@ -109,7 +135,7 @@ function drawAll() {
       drawn.push(
         r
           .text(value.toFixed(2), x + cellW / 2, y + cellH / 2 + 6)
-          .attr({ align: 'center', zIndex: 3 })
+          .attr({ align: 'center', zIndex: 2 })
           .css({ color: textColor, fontSize: '18px', fontWeight: onDiagonal ? '500' : '600' })
           .add()
       );
@@ -122,7 +148,7 @@ function drawAll() {
     drawn.push(
       r
         .text(lbl, chart.plotLeft - 12, cy)
-        .attr({ align: 'right', zIndex: 3 })
+        .attr({ align: 'right', zIndex: 2 })
         .css({ color: t.inkSoft, fontSize: '15px' })
         .add()
     );
@@ -135,7 +161,7 @@ function drawAll() {
     drawn.push(
       r
         .text(lbl, cx, chart.plotTop + chart.plotHeight + 16)
-        .attr({ align: 'right', rotation: -40, zIndex: 3 })
+        .attr({ align: 'right', rotation: -40, zIndex: 2 })
         .css({ color: t.inkSoft, fontSize: '15px' })
         .add()
     );
@@ -155,14 +181,14 @@ function drawAll() {
     drawn.push(
       r
         .rect(barLeft + i * segW, barTop, segW + 0.5, barHeight)
-        .attr({ fill: corrFill(value), zIndex: 3 })
+        .attr({ fill: corrFill(value), zIndex: 2 })
         .add()
     );
   }
   drawn.push(
     r
       .rect(barLeft, barTop, barWidth, barHeight)
-      .attr({ fill: 'none', stroke: t.inkSoft, 'stroke-width': 1, zIndex: 4 })
+      .attr({ fill: 'none', stroke: t.inkSoft, 'stroke-width': 1, zIndex: 2 })
       .add()
   );
   [
@@ -173,7 +199,7 @@ function drawAll() {
     drawn.push(
       r
         .text(value.toFixed(0), barLeft + frac * barWidth, barTop + barHeight + 20)
-        .attr({ align: 'center', zIndex: 4 })
+        .attr({ align: 'center', zIndex: 2 })
         .css({ color: t.inkSoft, fontSize: '13px' })
         .add()
     );
@@ -181,10 +207,21 @@ function drawAll() {
   drawn.push(
     r
       .text('Correlation (r)', barLeft + barWidth / 2, barTop - 12)
-      .attr({ align: 'center', zIndex: 4 })
+      .attr({ align: 'center', zIndex: 2 })
       .css({ color: t.inkSoft, fontSize: '14px', fontWeight: '500' })
       .add()
   );
+}
+
+// Invisible scatter layer aligned to each drawn lower-triangle cell so
+// hovering exposes a real Highcharts tooltip — the core bundle has no
+// heatmap/colorAxis module, but a matched-axis scatter series recovers
+// native hover interactivity without disturbing the hand-drawn grid above it.
+const cellPoints = [];
+for (let row = 0; row < N; row++) {
+  for (let col = 0; col <= row; col++) {
+    cellPoints.push({ x: col, y: row, corr: CORR[row][col], rowLabel: LABELS[row], colLabel: LABELS[col] });
+  }
 }
 
 Highcharts.chart('container', {
@@ -192,7 +229,7 @@ Highcharts.chart('container', {
     backgroundColor: 'transparent',
     animation: false,
     style: { fontFamily: 'inherit' },
-    margin: [145, 60, 145, 230],
+    margin: CHART_MARGIN,
     events: { load: drawAll, redraw: drawAll },
   },
   credits: { enabled: false },
@@ -204,10 +241,40 @@ Highcharts.chart('container', {
     text: 'Pairwise Pearson correlation across 6 outdoor sensor readings (lower triangle shown)',
     style: { color: t.inkSoft, fontSize: '14px' },
   },
-  xAxis: { visible: false },
-  yAxis: { visible: false, gridLineWidth: 0 },
+  xAxis: { visible: false, min: -0.5, max: N - 0.5 },
+  yAxis: { visible: false, gridLineWidth: 0, min: -0.5, max: N - 0.5, reversed: true },
   legend: { enabled: false },
-  tooltip: { enabled: false },
-  plotOptions: { series: { animation: false } },
-  series: [],
+  tooltip: {
+    enabled: true,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    borderRadius: 6,
+    style: { color: t.ink, fontSize: '13px' },
+    formatter: function () {
+      const p = this.point;
+      return `<b>${p.rowLabel} × ${p.colLabel}</b><br/>r = ${p.corr.toFixed(2)}`;
+    },
+  },
+  plotOptions: {
+    series: { animation: false },
+    scatter: {
+      enableMouseTracking: true,
+      stickyTracking: false,
+      marker: {
+        enabled: true,
+        symbol: 'circle',
+        radius: MARKER_RADIUS,
+        fillColor: 'rgba(0,0,0,0.001)',
+        lineWidth: 0,
+        states: { hover: { enabled: false } },
+      },
+    },
+  },
+  series: [
+    {
+      type: 'scatter',
+      name: 'Correlation',
+      data: cellPoints,
+    },
+  ],
 });
