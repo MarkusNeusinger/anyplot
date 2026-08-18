@@ -1,5 +1,7 @@
 """Request-scoped helpers shared across routers."""
 
+import ipaddress
+
 from fastapi import Request
 
 
@@ -30,3 +32,51 @@ def client_ip(request: Request) -> str:
         if entry.strip():
             return entry.strip()
     return request.client.host if request.client else ""
+
+
+def visitor_ip(request: Request) -> str:
+    """Resolve the IP to report to analytics — deliberately not `client_ip`.
+
+    The two answer opposite questions and must not be merged.
+
+    `client_ip` keys rate limiting, so it takes the RIGHTMOST forwarded entry:
+    the leftmost is client-controlled, and trusting it let a caller poison
+    another user's bucket. Analytics needs the opposite — Plausible documents
+    that it uses "the first valid IP address from the list" and that "if you
+    forward a server, hosting provider, or CDN IP address instead of the actual
+    visitor IP, Plausible's bot filtering will drop the event". Handing it the
+    rightmost entry means handing it our own infrastructure's address, and the
+    event is silently discarded.
+
+    Spoofing is not a concern in this direction: a forged value skews a
+    geolocation bucket, where forging the rate-limit key locked people out.
+
+    Order: `cf-connecting-ip`, which Cloudflare overwrites on proxied traffic
+    and is therefore both real and unforgeable; then the leftmost non-empty
+    forwarded entry; then the socket peer.
+    """
+    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
+    if _is_ip(cf_ip):
+        return cf_ip
+    for entry in request.headers.get("x-forwarded-for", "").split(","):
+        candidate = entry.strip()
+        if _is_ip(candidate):
+            return candidate
+    return request.client.host if request.client else ""
+
+
+def _is_ip(value: str) -> bool:
+    """Whether the token is a real address.
+
+    Proxies do insert non-addresses — `unknown` is the classic — and Plausible
+    documents that it uses "the first **valid** IP address from the list".
+    Forwarding a non-address gets the event discarded or mis-located, so a
+    malformed entry is skipped rather than passed on.
+    """
+    if not value:
+        return False
+    try:
+        ipaddress.ip_address(value)
+    except ValueError:
+        return False
+    return True
