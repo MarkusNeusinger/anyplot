@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: horizon-basic
 created: '2026-08-18T01:01:47Z'
-updated: '2026-08-18T01:06:40Z'
+updated: '2026-08-18T01:25:57Z'
 generated_by: claude-sonnet
 workflow_run: 32086032025
 issue: 1877
@@ -12,62 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Creative, idiomatic solution to a plot type Highcharts has no native chart for:
-    one yAxis panel per host plus 2x3 stacked, opaque, mouse-tracking-disabled area
-    series per host implements true horizon folding via foldBand()/threshold, not
-    a workaround.'
-  - Correct semantic choice of the diverging Imprint colormap (imprint_div) for signed
-    CPU-deviation data, with band color intensity increasing by magnitude exactly
-    as the spec's Notes section describes ('Color intensity increases with magnitude
-    within each band').
-  - 'Theme chrome is fully compliant — sampled background pixels are exactly #FAF8F1
-    (light) and #1A1A17 (dark), all text uses theme-adaptive tokens, and there is
-    no clipping at the title, right edge, or bottom edge in either render.'
-  - Deterministic Park-Miller LCG for reproducible data; realistic, neutral 'fleet
-    CPU monitoring' scenario that matches one of the spec's own example applications
-    almost verbatim.
-  - No fake interactivity, no legend clutter for what is effectively continuous-encoded
-    data — tooltip/legend correctly disabled since each panel already carries its
-    own row label.
+  - 'Layout imbalance from attempt 1 is fixed: manual chart.events.load row-label
+    rendering plus explicit marginLeft/marginRight replaces the per-yAxis title reservation,
+    giving a tight, balanced left gutter (~7.8% of width) and a near-flush right margin
+    instead of the prior third-of-canvas dead space.'
+  - 'The missing color/magnitude key from attempt 1 is fixed: six legend-only dummy
+    area series (≥ 30pp below … ≥ 30pp above) now make the blue/red intensity encoding
+    self-explanatory without requiring the reader to parse the subtitle.'
+  - Correct, idiomatic semantic choice of the diverging Imprint colormap (imprint_div)
+    for signed CPU-deviation data — band color intensity increases with magnitude
+    exactly as the spec's Notes section describes, and the outermost bands are pinned
+    to the exact div[0]/div[2] hex so the strongest reading is identical across themes.
+  - 'Genuine horizon-chart technique (not a substitute chart type): true band folding
+    via foldBand()/threshold with 2×3 stacked, opaque, mouse-tracking-disabled area
+    layers per host, driven by a deterministic Park-Miller LCG for reproducibility.'
+  - 'Theme chrome is fully compliant in both renders — backgrounds match #FAF8F1/#1A1A17
+    exactly, all text uses theme-adaptive tokens, and no title/row-label/tick text
+    is clipped at any canvas edge (verified by pixel scan: leftmost text starts at
+    ~2.4% of width, well clear of the border).'
   weaknesses:
-  - 'Layout imbalance (VQ-05): the host-name label column reserves a large empty gutter
-    on the left (roughly a third of canvas width is blank before the first label even
-    starts), while the chart area butts almost flush against the right canvas edge
-    with near-zero margin. Whitespace is not balanced around the plot as the style
-    guide requires — tighten the left yAxis.title offset/margin and add a small right-side
-    margin so both sides breathe evenly.'
-  - 'No visible color/magnitude key: the blue-rises/red-falls/deeper-means-bigger
-    encoding is explained only in subtitle prose, with no small legend or scale strip
-    showing the actual band thresholds (0/15/30/45 percentage points). A compact color-key
-    near the title would make the encoding self-explanatory without requiring the
-    reader to parse the subtitle sentence.'
-  - Series count sits at the low end of the spec's suggested range (10 hosts vs. the
-    spec's '5-50 series for effective comparison' and its own 'Dashboard monitoring
-    displaying 50+ system metrics' application) — the example doesn't fully showcase
-    the horizon chart's core value proposition of compacting many series into limited
-    vertical space.
-  - 'CQ-01: makeLcg/foldBand/lerpHex plus nested per-host/per-band loops go beyond
-    the KISS ''Imports -> Data -> Plot -> Save'' ideal. The folding logic genuinely
-    needs a function, but lerpHex() could be dropped by hardcoding the 6 resulting
-    band hex colors as literals since t.div is fixed per render.'
+  - Row-name labels (13px) and legend text (12px) shrink to near-illegibility at the
+    ~400px mobile thumbnail, even though full-resolution legibility is solid — consider
+    a slightly larger row-label size if the mobile crop is a priority.
+  - Series count sits at the low end of the spec's suggested range (10 hosts vs. '5-50
+    series for effective comparison' and the spec's own 'Dashboard monitoring displaying
+    50+ system metrics' application) — doesn't fully showcase the horizon chart's
+    core value of compacting many series into limited vertical space.
+  - 'CQ-01: makeLcg/foldBand/lerpHex plus nested per-host/per-band loops still exceed
+    the flat KISS ideal from the attempt-1 review; lerpHex() in particular could be
+    dropped by hardcoding the 6 resulting band hex literals since t.div is fixed per
+    render.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, sampled pixel (250,248,241) = #FAF8F1, matches spec exactly.
-      Chrome: Title "horizon-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle in softer gray-brown below it, both fully readable and not clipped at the top edge. Ten host-name row labels (api-1, api-2, api-3, api-4, worker-1, worker-2, cache-1, cache-2, db-primary, db-replica) sit in a left gutter, dark-gray, clearly legible, no overlap with the mountain shapes or with each other. X-axis datetime ticks (Jun 10, 02:00 AM ... Jun 11) are dark and readable, fully visible at the right canvas edge (verified via pixel crop — not clipped).
-      Data: Each host panel shows a horizon-folded area series in muted blue (values above the CPU baseline) and muted red/rose (values below), with deeper/more saturated shade for bands further from baseline (e.g. api-2's evening hours and db-primary's afternoon hours show a visibly darker red core inside the lighter red halo). Colors are the interpolated Imprint diverging stops (imprint_div), not the categorical palette — an intentional and spec-appropriate choice since the chart encodes continuous, signed magnitude rather than discrete categories.
+      Background: Warm off-white, matches spec's #FAF8F1 (confirmed by pixel sampling in the attempt-1 review; unchanged base tokens this attempt).
+      Chrome: Title "horizon-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "CPU deviation from a 50% baseline, folded into 3 bands per host — deeper shade means a larger swing" in softer gray-brown below it, both fully readable and not clipped at the top edge. A new horizontal legend (six swatches: "≥30pp below" through "≥30pp above") sits centered just under the subtitle, clearly readable, not overlapping the chart below it. Ten host-name row labels (api-1 … db-replica) sit in a tight left gutter (~7.8% of canvas width), dark-gray, clearly legible, no overlap with the mountain shapes or with each other — leftmost text pixel is at ~2.4% of canvas width, comfortably clear of the edge. X-axis datetime ticks (Jun 10, 02:00 AM … Jun 11) are dark and readable, extending to ~97.5% of canvas width on the right with no clipping.
+      Data: Each host panel shows a horizon-folded area series in muted blue (above baseline) and muted red/rose (below baseline), with deeper/more saturated shade for bands further from baseline (e.g. api-2's evening hours and db-primary's afternoon hours show a visibly darker red core inside a lighter red halo). Colors are the interpolated Imprint diverging stops (imprint_div) rather than the categorical palette — correct, since this is continuous signed-magnitude data, not discrete categories.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, sampled pixel (26,26,23) = #1A1A17, matches spec exactly.
-      Chrome: Title and subtitle flip to light ink/soft-gray and remain fully legible against the dark background; no dark-on-dark failures observed. Row labels and axis tick labels are all light-colored and readable. Same crop check confirms no edge clipping at title or right-edge date ticks.
-      Data: The same blue/red diverging band colors as the light render — confirmed identical hue family and intensity progression (e.g. api-4's midday deep-blue peak and worker-2's early-morning deep-red block both reproduce in the same positions and shades). Only the chrome (background, text) flipped between themes, as required.
+      Background: Warm near-black, matches spec's #1A1A17. Title and subtitle flip to light ink / soft-gray and remain fully legible; legend swatch text is light-colored and readable; row labels and axis tick labels are all light-colored and readable. No dark-on-dark failures observed anywhere, and the same edge-clipping check (title, row labels, right-edge date ticks) passes.
+      Data: Same blue/red diverging band colors as the light render for the deepest bands (pinned to the fixed div[0]/div[2] hex, confirmed identical hue and position, e.g. api-4's midday deep-blue peak and worker-2's early-morning deep-red block reproduce in the same spots). The lighter inner bands are intentionally blended toward each theme's own near-background midpoint (per imprint_div's theme-adaptive midpoint), so the near-baseline shades read a little more saturated on the dark surface than on the light one — this is the documented imprint_div behavior, not a token error, and does not create a legibility problem since it's the two outermost/strongest bands that carry the semantic "big swing" signal and those match exactly across themes.
       Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -75,14 +66,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (13-22px), fully readable in both themes,
-          no overflow
+        comment: All font sizes explicitly set (12-22px), fully readable at full resolution
+          in both themes; row labels/legend shrink near-illegible at the 400px mobile
+          thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between row labels, ticks, title, or data
+        comment: No overlap between row labels, legend, ticks, title, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -98,11 +90,12 @@ review:
           good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Large empty left gutter before row labels vs. near-zero right margin
-          -- unbalanced whitespace
+        passed: true
+        comment: 'Attempt-1 layout imbalance fixed: manual row-label rendering + explicit
+          tight margins give balanced left/right whitespace and near-full canvas utilization,
+          no cutoff'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,10 +108,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Correct semantic use of imprint_div for signed deviation data; backgrounds
-          sampled exactly #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: Correct semantic use of imprint_div for signed deviation data; backgrounds
+          theme-correct; outermost bands pinned identical across themes
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -131,14 +124,15 @@ review:
         name: Visual Refinement
         score: 5
         max: 6
-        comment: No gridlines, no axis chrome per panel, subtle zero baseline plotline,
-          generous inter-panel gap
+        comment: No gridlines, no per-panel axis chrome, subtle zero baseline plotline,
+          tightened balanced margins this attempt
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 6
         max: 6
-        comment: Color intensity immediately highlights which hosts have the largest
-          CPU swings (api-2, db-primary); lacks an explicit magnitude key
+        comment: New color/magnitude legend key (fixed from attempt 1) makes the intensity
+          encoding immediately self-explanatory; color hierarchy highlights hosts
+          with the largest CPU swings
     spec_compliance:
       score: 15
       max: 15
@@ -164,8 +158,8 @@ review:
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exactly matches spec; legend correctly omitted since
-          row labels + subtitle carry the encoding
+        comment: Title format exactly matches spec; new legend correctly labels the
+          6 band levels
     data_quality:
       score: 14
       max: 15
@@ -196,8 +190,8 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Helper functions (makeLcg, foldBand, lerpHex) exceed the flat ideal,
-          though the folding math genuinely needs a function
+        comment: Helper functions (makeLcg, foldBand, lerpHex) still exceed the flat
+          ideal; lerpHex could be hardcoded as literals
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,8 +206,7 @@ review:
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake functionality, complexity is proportional to the folding
-          technique
+        comment: No fake functionality, complexity proportional to the folding technique
       - id: CQ-05
         name: Output & API
         score: 1
@@ -228,21 +221,24 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct area/threshold/multi-yAxis idioms, mouse tracking disabled
-          appropriately per fold layer
+        comment: Correct area/threshold/multi-yAxis idioms; mouse tracking disabled
+          appropriately per fold layer; manual renderer.text sidesteps a real yAxis.title
+          layout limitation
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Per-host yAxis panels stacked into small multiples is a Highcharts-specific
-          technique that implements a chart type the library has no native support
-          for
-  verdict: REJECTED
+        comment: Per-host yAxis panels stacked into small multiples plus a manually
+          constructed color-key legend implement a chart type Highcharts has no native
+          support for
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - manual-ticks
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
