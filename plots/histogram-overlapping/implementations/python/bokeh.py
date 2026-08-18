@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-overlapping: Overlapping Histograms
 Library: bokeh 3.9.2 | Python 3.13.15
 Quality: 88/100 | Updated: 2026-08-18
@@ -16,7 +16,7 @@ from pathlib import Path  # noqa: E402
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, Span  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -52,6 +52,11 @@ ap_hist, _ = np.histogram(ap_south, bins=bins)
 # Prepare data for ColumnDataSource
 bin_centers = (edges[:-1] + edges[1:]) / 2
 
+# Per-group means, used for the dashed focal-point markers below
+us_mean = float(us_east.mean())
+eu_mean = float(eu_west.mean())
+ap_mean = float(ap_south.mean())
+
 data = {
     "bin_left": edges[:-1],
     "bin_right": edges[1:],
@@ -67,7 +72,7 @@ source = ColumnDataSource(data)
 p = figure(
     width=3200,
     height=1800,
-    title="histogram-overlapping · bokeh · anyplot.ai",
+    title="histogram-overlapping · python · bokeh · anyplot.ai",
     x_axis_label="Latency (ms)",
     y_axis_label="Frequency",
     tools="pan,wheel_zoom,box_zoom,reset,hover",
@@ -92,6 +97,7 @@ us_render = p.quad(
     line_width=2,
     line_alpha=0.8,
     legend_label="US-East",
+    muted_alpha=0.05,
 )
 
 eu_render = p.quad(
@@ -106,6 +112,7 @@ eu_render = p.quad(
     line_width=2,
     line_alpha=0.8,
     legend_label="EU-West",
+    muted_alpha=0.05,
 )
 
 ap_render = p.quad(
@@ -120,7 +127,15 @@ ap_render = p.quad(
     line_width=2,
     line_alpha=0.8,
     legend_label="AP-South",
+    muted_alpha=0.05,
 )
+
+# Dashed mean markers - a subtle focal point per region, distinguishing the
+# central tendency of each distribution beyond the raw overlapping bars
+for mean_val, color in ((us_mean, BRAND), (eu_mean, COLOR_2), (ap_mean, COLOR_3)):
+    p.add_layout(
+        Span(location=mean_val, dimension="height", line_color=color, line_dash="dashed", line_width=3, line_alpha=0.9)
+    )
 
 # Configure hover tool
 hover = p.select_one(HoverTool)
@@ -141,7 +156,9 @@ p.yaxis.major_label_text_font_size = "34pt"
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+# Drop the full rectangular frame - the bottom/left axis lines already form
+# an L-shaped frame, which reads cleaner than a boxed-in plot area
+p.outline_line_color = None
 
 p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
@@ -158,16 +175,20 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.15
 p.ygrid.grid_line_alpha = 0.15
 
-# Configure legend
+# Configure legend - click a label to mute that region's histogram, a
+# genuine bokeh-native interaction beyond the static HoverTool tooltips
 p.legend.location = "top_left"
 p.legend.label_text_font_size = "34pt"
 p.legend.spacing = 10
 p.legend.padding = 15
 p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
+p.legend.border_line_alpha = 0.4
+p.legend.border_radius = 6
 p.legend.label_text_color = INK_SOFT
 p.legend.glyph_height = 34
 p.legend.glyph_width = 34
+p.legend.click_policy = "mute"
 
 # Save HTML
 output_file(f"plot-{THEME}.html")
