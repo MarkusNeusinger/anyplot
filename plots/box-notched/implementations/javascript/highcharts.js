@@ -1,7 +1,7 @@
 // anyplot.ai
 // box-notched: Notched Box Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-18
+// Quality: 94/100 | Created: 2026-08-18
 
 const t = window.ANYPLOT_TOKENS;
 
