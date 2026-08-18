@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-08-18
 import { BarChart } from "@mui/x-charts/BarChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 const TITLE = "histogram-overlapping · javascript · muix · anyplot.ai";
@@ -60,6 +61,17 @@ function withAlpha(hex, alpha) {
   return hex + Math.round(alpha * 255).toString(16).padStart(2, "0");
 }
 
+// Storytelling touch: a reference line at each group's mean, snapped to its
+// containing bin label (the x axis is a band scale, so ChartsReferenceLine's
+// `x` must match one of `binLabels` exactly rather than a raw numeric mean).
+function meanBinLabel(samples) {
+  const mean = samples.reduce((sum, v) => sum + v, 0) / samples.length;
+  const idx = Math.min(binCount - 1, Math.max(0, Math.floor((mean - binStart) / BIN_WIDTH)));
+  return binLabels[idx];
+}
+const controlMeanBin = meanBinLabel(controlScores);
+const treatmentMeanBin = meanBinLabel(treatmentScores);
+
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
@@ -77,7 +89,8 @@ export default function Chart() {
           lineHeight: `${TITLE_HEIGHT}px`,
           paddingLeft: 24,
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
+          letterSpacing: -0.2,
           color: t.ink,
         }}
       >
@@ -87,24 +100,29 @@ export default function Chart() {
         width={window.ANYPLOT_SIZE.width}
         height={chartHeight}
         skipAnimation
+        borderRadius={3}
         series={[
           {
             data: controlCounts,
             label: "Control group",
             color: withAlpha(t.palette[0], 0.55),
+            valueFormatter: (v) => `${v} students`,
+            highlightScope: { highlight: "series", fade: "global" },
           },
           {
             data: treatmentCounts,
             label: "Treatment group",
             color: withAlpha(t.palette[1], 0.55),
+            valueFormatter: (v) => `${v} students`,
+            highlightScope: { highlight: "series", fade: "global" },
           },
         ]}
         xAxis={[
           {
             scaleType: "band",
             data: binLabels,
-            label: "Exam Score",
-            labelStyle: { fontSize: 16 },
+            label: "Exam Score (0–100)",
+            labelStyle: { fontSize: 16, fontWeight: 500 },
             tickLabelStyle: { fontSize: 13 },
             categoryGapRatio: 0.05,
             // Overlap the two series' bars instead of placing them side by
@@ -117,7 +135,7 @@ export default function Chart() {
         yAxis={[
           {
             label: "Count",
-            labelStyle: { fontSize: 16 },
+            labelStyle: { fontSize: 16, fontWeight: 500 },
             tickLabelStyle: { fontSize: 14 },
           },
         ]}
@@ -128,9 +146,32 @@ export default function Chart() {
             direction: "row",
             position: { vertical: "top", horizontal: "right" },
             labelStyle: { fontSize: 14 },
+            itemMarkWidth: 14,
+            itemMarkHeight: 14,
+            markGap: 6,
+            itemGap: 18,
+            padding: 6,
           },
         }}
-      />
+      >
+        {/* Storytelling touch: a light dashed reference line at each group's
+            mean, in the theme-adaptive ink color so it reads as structure
+            rather than a third data series. */}
+        <ChartsReferenceLine
+          x={controlMeanBin}
+          label="Control mean"
+          labelAlign="start"
+          lineStyle={{ stroke: withAlpha(t.ink, 0.35), strokeDasharray: "4 4" }}
+          labelStyle={{ fontSize: 11, fill: t.inkSoft }}
+        />
+        <ChartsReferenceLine
+          x={treatmentMeanBin}
+          label="Treatment mean"
+          labelAlign="end"
+          lineStyle={{ stroke: withAlpha(t.ink, 0.35), strokeDasharray: "4 4" }}
+          labelStyle={{ fontSize: 11, fill: t.inkSoft }}
+        />
+      </BarChart>
     </div>
   );
 }
