@@ -2,44 +2,58 @@ library: plotly
 language: python
 specification_id: heatmap-correlation
 created: '2025-12-26T10:03:27Z'
-updated: '2026-05-08T15:10:42Z'
-generated_by: claude-haiku
-workflow_run: 25562197976
+updated: '2026-08-18T17:07:19Z'
+generated_by: claude-sonnet
+workflow_run: 32161426606
 issue: 1948
-python_version: 3.13.13
-library_version: 6.7.0
+language_version: 3.13.15
+library_version: 6.9.0
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 94
 review:
   strengths:
-  - Excellent theme-adaptive implementation with correct color tokens throughout
-  - Rich interactive experience with meaningful hover tooltips showing correlation
-    strength interpretation
-  - Realistic healthcare data with domain-accurate correlations (sleep inversely related
-    to stress, exercise inversely related to heart rate and stress)
-  - Clean, reproducible code with np.random.seed(42) for deterministic output
-  - 'Perfect spec compliance: diverging BrBG colormap, cell annotations, symmetric
-    lower-triangle masking, correct axes'
+  - Correct diverging Imprint colorscale (imprint_div) centered exactly at zero, with
+    the strict upper triangle masked so each unique variable pair is shown once, satisfying
+    the spec's symmetric-matrix and redundancy-reduction notes
+  - 'Theme-adaptive cell-text contrast is computed correctly: cell_text_color() re-derives
+    the actual interpolated RGB for each cell (accounting for the theme-adaptive midpoint
+    stop) and picks ink vs. off-white text by luminance, so annotations stay legible
+    on both the lightest and most saturated cells in both themes'
+  - 'Genuine data storytelling: outlined rectangles highlight |r| >= 0.7 pairs (Heart
+    Rate/Blood Pressure = 0.83, Sleep Hours/Resting O2 = 0.70) with a theme-adaptive
+    INK stroke, giving the viewer an immediate focal point instead of a flat data
+    dump'
+  - Realistic, domain-plausible healthcare correlation data with meaningful directional
+    relationships (Blood Pressure ~ Heart Rate, Sleep Hours ~ -Stress, Exercise inversely
+    related to Heart Rate/Stress) and a fixed -1..1 colorbar range as required
+  - All font sizes explicitly set (title 18, axis titles 13, tick labels 10, colorbar
+    9-11, cell annotations 11) and both PNG/HTML outputs saved with theme-suffixed
+    filenames per the plotly output contract
   weaknesses:
-  - Design excellence is moderate—grid lines could be removed entirely for a cleaner,
-    more minimal heatmap aesthetic typical of the spec type
+  - Near-zero correlation cells (e.g. r=0.02, -0.03, -0.01) interpolate almost exactly
+    to PAGE_BG, so they render as nearly blank squares distinguishable from the page
+    background only by the thin 2px gap/border — an inherent property of a zero-centered
+    diverging scale on weakly-correlated pairs rather than a bug, but worth a light
+    touch (e.g. a hairline cell border) if a future pass wants to make the full matrix
+    boundary more legible at a glance.
+  - The two small helper functions (hex_to_rgb, cell_text_color) mildly depart from
+    a strict single-script KISS structure — justified here by the theme-adaptive contrast
+    requirement, but worth remembering as a minor CQ-01 deduction.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle gray grid lines.
-      Chrome: Title "heatmap-correlation · plotly · anyplot.ai" in dark text (32px), axis labels "Health Metrics" in dark text (24px), all tick labels (18px) clearly readable on light background. Colorbar title "Pearson Correlation" visible with tick values.
-      Data: BrBG diverging colormap showing positive correlations in dark teal (e.g., Heart Rate ↔ Blood Pressure: 0.83), negative correlations in tan/brown (e.g., Exercise ↔ Heart Rate: -0.54), weak correlations in near-white. Diagonal cells (1.00) in dark teal. Lower triangle masked to show only unique values. All 40 visible cells annotated with correlation values in theme-adaptive text colors.
-      Legibility verdict: PASS — all text readable, excellent contrast, no overlaps.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-correlation · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Health Metrics" below rotated tick labels (45deg: Heart Rate, Blood Pressure, Cholesterol, BMI, Sleep Hours, Exercise (hrs), Stress Level, Resting O2); Y-axis title "Health Metrics" rotated on the left with the same variable names as row labels. Colorbar on the right titled "Pearson r" with ticks at -1, -0.5, 0, 0.5, 1.
+      Data: Lower-triangular 8x8 correlation matrix (strict upper triangle masked/empty). Diagonal cells are all dark blue (r=1.00). Off-diagonal cells range from moderate blue (positive, e.g. 0.83, 0.70, 0.55) through near-white/background (weak, e.g. 0.02, -0.04) to muted red (negative, e.g. -0.54, -0.47, -0.40). Each cell is annotated with its 2-decimal correlation value in a text color that auto-contrasts against that cell's fill. Two cells (Blood Pressure/Heart Rate = 0.83 and Resting O2/Sleep Hours = 0.70) carry a black outlined rectangle to highlight the strongest pairs.
+      Legibility verdict: PASS — all title, axis, tick, and cell-annotation text is clearly readable against the light background; no light-on-light text observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with subtle light gray grid lines (rgba with light ink).
-      Chrome: Title in light/white text (32px), axis labels in light text (24px), all tick labels (18px) clearly readable on dark background. Colorbar properly styled with light text.
-      Data: BrBG colormap identical to light render (positive = dark teal, negative = tan/brown, weak = near-white/cream). Diagonal cells (1.00) in dark teal. Annotations in light text colors (light cyan for weak, white for strong correlations). Lower triangle masking preserved.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures, data colors identical to light render, chrome properly inverted.
-
-    Both renders theme-correct and fully legible. ✓
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels as the light render, now rendered in light ink/gray, clearly legible against the dark background. Colorbar labeling and ticks are also light-colored and readable.
+      Data: Identical cell colors and correlation values to the light render (blue-white-red diverging scale unchanged) — confirming the palette itself does not flip with theme. The two highlighted-pair rectangles now use a light/white stroke instead of black, correctly following the theme-adaptive INK token so the border remains visible against the dark chrome.
+      Legibility verdict: PASS — no dark-on-dark failures found; tick labels, axis titles, colorbar text, and cell annotations are all legible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -50,77 +64,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes properly scaled for
-          large canvas (title 32px, labels 24px, ticks 18px, annotations 18px)
+        comment: All font sizes explicitly set; readable in both themes; title occupies
+          ~60% of width, well within range for the mandated string
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; variable names rotated 45° for clarity;
-          annotations fit well within cells
+        comment: No overlapping text; rotated x tick labels are cleanly spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All heatmap cells clearly visible; colorbar prominent; correlation
-          values legible
+        comment: 8x8 cells appropriately sized for the canvas; annotations clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: BrBG diverging colormap is perceptually uniform and colorblind-safe;
-          excellent contrast
+        comment: Red-blue diverging scale is CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions; generous margins (l:140, r:100, t:100, b:150);
-          nothing cut off
+        comment: Heatmap fills ~80% of the square canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows standard format; 'Health Metrics' is descriptive for
-          both axes
+        comment: Descriptive axis titles; colorbar labeled with the correct statistical
+          unit (Pearson r)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'BrBG diverging colormap correct for correlation matrix; backgrounds
-          correct (#FAF8F1 light, #1A1A17 dark); theme-adaptive chrome throughout
-          (INK, INK_SOFT, GRID tokens applied correctly)'
+        comment: imprint_div used correctly for diverging continuous data; theme-correct
+          backgrounds/chrome in both renders
     design_excellence:
-      score: 9
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Solid design with theme-adaptive annotation text colors (darker for
-          weak correlations, lighter for strong)—shows thoughtfulness but not exceptional
-          sophistication
+        passed: true
+        comment: Custom diverging palette plus theme-adaptive contrast logic shows
+          intentional, above-default design
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Minimal customization; grid lines present (standard style); spines
-          visible (not removed)
+        passed: true
+        comment: Grid replaced by subtle cell gaps, no axis lines/spines, generous
+          margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Lower triangle masking reduces redundancy; hover tooltips provide
-          interpretation ('Strong positive', 'Weak negative'); moderate visual hierarchy
+        passed: true
+        comment: Outlined highlight boxes on |r|>=0.7 pairs create a clear focal point
+          beyond raw data display
     spec_compliance:
       score: 15
       max: 15
@@ -130,29 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correlation matrix heatmap—correct chart type
+        comment: Correct correlation heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: diverging colormap (BrBG), cell annotations
-          (2 decimals), symmetric matrix (lower triangle), variable names on both
-          axes'
+        comment: Diverging cmap centered at zero, 2-decimal annotations, symmetric
+          matrix with masked triangle, fixed -1..1 colorbar range — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correctly show all 8 variables; colorbar range fixed -1
-          to 1
+        comment: X/Y both show all variable names; all unique pairs visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'heatmap-correlation · plotly · anyplot.ai' correct format;
-          colorbar labels appropriate
+        comment: Title format matches spec exactly; colorbar correctly labeled
     data_quality:
       score: 15
       max: 15
@@ -162,83 +168,81 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows full range: strong positive (0.83), weak (0.07), negative
-          (-0.54), perfect diagonal (1.00)'
+        comment: Shows strong/moderate/weak, positive and negative correlations, plus
+          the identity diagonal
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Healthcare metrics are plausible and domain-accurate: sleep inversely
-          related to stress (-0.7), exercise inversely related to heart rate and stress,
-          resting O2 correlated with sleep (0.6)'
+        comment: Neutral, real-world healthcare metrics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation values sensible (-1 to 1 range); no outliers
+        comment: Correlation directions and magnitudes are domain-plausible
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No unnecessary functions/classes; straightforward procedural code
+        comment: Two small helper functions for color math, justified by theme-adaptive
+          contrast need
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic synthetic data
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (os, numpy, plotly.graph_objects)
+        comment: Only numpy, plotly.graph_objects, os used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake interactivity; clean hover data construction
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png (scale=3 for 4800×2700px) and plot-{THEME}.html;
-          current Plotly API
+        comment: Saves plot-{THEME}.png and .html with current API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert go.Heatmap usage: colorbar config, tickvals/ticktext, xgap/ygap,
+          custom hovertemplate with customdata'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper use of go.Heatmap with zmin/zmax for fixed color range; high-level
-          API usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Custom hover templates with customdata and strength interpretation
-          show some library mastery; theme-adaptive styling demonstrates understanding
-          of Plotly's color/font options
-  verdict: REJECTED
+        comment: add_shape overlay for data-driven highlight boxes is a genuinely
+          plotly-specific technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -246,3 +250,5 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
+  - edge-highlighting
+  - grid-styling
