@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 box-notched: Notched Box Plot
-Library: altair 6.1.0 | Python 3.13.13
-Quality: pending | Updated: 2026-08-18
+Library: altair 6.2.2 | Python 3.13.15
+Quality: 88/100 | Updated: 2026-08-18
 """
 
 import os
