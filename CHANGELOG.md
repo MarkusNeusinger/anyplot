@@ -143,7 +143,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   from now on rather than in principle: `robots.txt` only began permitting `/og/` in the same
   release, so crawler fetches of the 3,913 preview images would otherwise have arrived in volume on
   the main site, drowning the sharing signal and inflating visitor counts. Machine-side events carry
-  the same `assistant` and `kind` props as `bot_fetch`, so both slice alike.
+  the same `assistant` and `kind` props as `bot_fetch`, so both slice alike (#10475).
 - **The crawler policy is open to every operator** — retrieval, citation, search indexing and model
   training are now permitted for all of them, replacing the retrieval-yes / training-no split from
   #9633. That split was never coherent for an MIT-licensed catalogue published to be reused:
