@@ -1,7 +1,7 @@
 # anyplot.ai
 # bar-stacked-percent: 100% Stacked Bar Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 87/100 | Created: 2026-08-18
+# Quality: 70/100 | Created: 2026-08-18
 
 using CairoMakie
 using Colors
