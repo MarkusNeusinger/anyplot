@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-percent: 100% Stacked Bar Chart
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 85/100 | Updated: 2026-08-18
@@ -15,10 +15,13 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_bar,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
     labs,
+    position_fill,
+    scale_color_identity,
     scale_fill_manual,
     scale_y_continuous,
     theme,
@@ -93,10 +96,26 @@ df["source"] = pd.Categorical(
     df["source"], categories=["Coal", "Natural Gas", "Nuclear", "Renewables", "Other"], ordered=True
 )
 
+# In-segment percentage labels (values already sum to 100 per country); suppress
+# labels on slivers too narrow to hold text cleanly
+df["label"] = df["value"].apply(lambda v: f"{v}%" if v >= 5 else "")
+
+# Per-segment label ink chosen for WCAG AA contrast against each fill color
+LABEL_INK = {
+    "Coal": "#1A1A17",
+    "Natural Gas": "#1A1A17",
+    "Nuclear": "#FFFFFF",
+    "Renewables": "#1A1A17",
+    "Other": "#FFFFFF",
+}
+df["label_color"] = df["source"].map(LABEL_INK)
+
 # Create 100% stacked bar chart with position="fill"
 plot = (
     ggplot(df, aes(x="country", y="value", fill="source"))
     + geom_bar(stat="identity", position="fill", width=0.75, alpha=0.9)
+    + geom_text(aes(label="label", color="label_color"), position=position_fill(vjust=0.5), size=3.5, fontface="bold")
+    + scale_color_identity()
     + scale_fill_manual(values=IMPRINT)
     + scale_y_continuous(format=".0%")
     + labs(
@@ -109,12 +128,13 @@ plot = (
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
         panel_grid_major=element_line(color=GRID_COLOR, size=0.2),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
         plot_title=element_text(size=16, face="bold", color=INK),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=ELEVATED_BG),
         legend_title=element_text(size=12, color=INK),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
