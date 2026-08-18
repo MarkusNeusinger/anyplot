@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 box-grouped: Grouped Box Plot
-Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-08
+Library: letsplot 4.11.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-08-18
 """
 
 import os
@@ -12,14 +12,17 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
     element_line,
     element_rect,
     element_text,
     geom_boxplot,
+    geom_point,
     ggplot,
     ggsave,
     ggsize,
     labs,
+    position_dodge,
     scale_fill_manual,
     theme,
     theme_minimal,
@@ -28,7 +31,7 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Theme tokens
+# Theme tokens (Imprint palette)
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
@@ -72,30 +75,51 @@ df = pd.DataFrame(data)
 df["Experience"] = pd.Categorical(df["Experience"], categories=experience_levels, ordered=True)
 df["Department"] = pd.Categorical(df["Department"], categories=departments, ordered=True)
 
+# Per-group means overlaid as diamonds so the box (median/IQR) and the mean
+# read as two distinct summaries instead of one flat shape per group.
+means = df.groupby(["Department", "Experience"], observed=True)["Performance Score"].mean().reset_index()
+
 # Plot
+dodge = position_dodge(width=0.7)
 plot = (
     ggplot(df, aes(x="Department", y="Performance Score", fill="Experience"))
-    + geom_boxplot(alpha=0.85, outlier_size=3, outlier_alpha=0.7, width=0.7)
+    + geom_boxplot(alpha=0.85, outlier_size=1.3, outlier_alpha=0.6, width=0.7, size=0.6, position=dodge)
+    + geom_point(
+        aes(x="Department", y="Performance Score", group="Experience"),
+        data=means,
+        position=dodge,
+        shape=18,
+        size=3,
+        color=ELEVATED_BG,
+        inherit_aes=False,
+        show_legend=False,
+    )
     + scale_fill_manual(values=IMPRINT)
-    + labs(title="box-grouped · letsplot · anyplot.ai", x="Department", y="Performance Score", fill="Experience Level")
+    + labs(
+        title="box-grouped · python · letsplot · anyplot.ai",
+        x="Department",
+        y="Performance Score",
+        fill="Experience Level",
+    )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
-        plot_title=element_text(size=24, face="bold", color=INK),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        panel_grid_major_x=element_blank(),
+        panel_grid_major_y=element_line(color=INK_SOFT, size=0.3),
+        plot_title=element_text(size=16, face="bold", color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position="right",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
 # Save
-ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.png", scale=4)
 ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images to current directory
