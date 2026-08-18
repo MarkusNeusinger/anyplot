@@ -16,7 +16,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
-## [3.1.0] — 2026-08-18 — Legible to machines
+## [3.1.0] — 2026-08-19 — Legible to machines
 
 anyplot 3.1 makes the catalogue readable by machines. An assistant asked about a plot can now find
 it, open one library's page, read the runnable source, fetch the rendered image and cite the URL —
