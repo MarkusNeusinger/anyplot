@@ -1,4 +1,4 @@
-# 📁 Repository Structure
+# Repository structure
 
 ## Overview
 
@@ -24,7 +24,7 @@ plots/{specification-id}/
 
 ---
 
-## Directory Layout
+## Directory layout
 
 ```
 anyplot/
@@ -157,7 +157,7 @@ anyplot/
 
 ---
 
-## Key Directories Explained
+## Key directories explained
 
 ### `plots/{specification-id}/`
 
@@ -179,7 +179,7 @@ plots/{specification-id}/
 
 **Characteristics**:
 - ✅ Self-contained (spec + metadata + code + quality reports together)
-- ✅ Easy to navigate (one folder = one plot type)
+- ✅ One folder per plot type keeps navigation predictable
 - ✅ Synced to PostgreSQL via `sync-postgres.yml`
 - ✅ No merge conflicts (per-library metadata files)
 - ✅ Quality reports in `metadata/python/{library}.yaml` (review section)
@@ -318,7 +318,7 @@ review:
 - Review feedback persisted for AI to improve on regeneration
 - Extended review data includes `image_description`, `criteria_checklist`, and `verdict` for targeted fixes
 
-### GCS Storage
+### GCS storage
 
 Preview images are stored in Google Cloud Storage (not in repo):
 
@@ -403,7 +403,7 @@ plt.savefig('plot.png', dpi=300)
 **Rules**:
 - No functions, no classes
 - No `if __name__ == '__main__':`
-- Just: imports → data → plot → save
+- Only imports → data → plot → save
 
 ---
 
@@ -503,7 +503,7 @@ plt.savefig('plot.png', dpi=300)
 
 ---
 
-## Naming Conventions
+## Naming conventions
 
 ### Spec IDs
 
@@ -520,20 +520,20 @@ Format: `{type}-{variant}` or `{type}-{variant}-{modifier}`
 - Hyphens as separators
 - Descriptive names (no numbers needed)
 
-### Implementation Files
+### Implementation files
 
 Always named by library: `{library}.py`
 - `matplotlib.py`, `seaborn.py`, `plotly.py`, etc.
 
 ---
 
-## What's NOT in the Repository
+## What's not in the repository
 
-### ❌ Preview Images
+### Preview images
 - **Where**: Google Cloud Storage (`gs://anyplot-images/plots/...`)
 - **Why**: Binary files bloat git history
 
-### ❌ Secrets
+### Secrets
 - **Where**: Environment variables, Cloud Secret Manager
 - **Why**: Security
 - **Note**: `.env.example` shows required variables without values
@@ -542,7 +542,7 @@ Always named by library: `{library}.py`
 
 ---
 
-## Database Sync
+## Database sync
 
 The `sync-postgres.yml` workflow syncs `plots/` to PostgreSQL on push to main:
 

@@ -114,7 +114,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   carry the rule in sync. A cleanup pass applies the cheap fixes across the doc corpus —
   Title Case headings to sentence case, emoji and status glyphs out of headings, banned
   filler words, README exclamation-mark tone — while procedure restructuring and remaining
-  deviations migrate on touch.
+  deviations migrate on touch (#10363).
 - **Working guardrails adopted from sibling projects into `CLAUDE.md`** — delegated agents
   default to `model: opus` (Fable only for hard reasoning, Sonnet/Haiku for mechanical work,
   with an explicit decide-and-document vs. return-as-finding split); secret values are never
