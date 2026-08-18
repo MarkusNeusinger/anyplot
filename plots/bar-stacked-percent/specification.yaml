@@ -6,7 +6,7 @@ title: 100% Stacked Bar Chart
 
 # Specification tracking
 created: 2025-12-25T08:59:14Z
-updated: 2026-05-08T10:39:04Z
+updated: 2026-08-18T14:31:53Z
 issue: 2008
 suggested: MarkusNeusinger
 
@@ -21,7 +21,6 @@ tags:
   domain:
     - general
     - business
-    - marketing
   features:
     - stacked
     - proportional
