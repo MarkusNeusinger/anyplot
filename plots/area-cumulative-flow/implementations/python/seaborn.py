@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 area-cumulative-flow: Cumulative Flow Diagram for Workflow Analytics
-Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 86/100 | Created: 2026-05-07
+Library: seaborn 0.13.2 | Python 3.13.15
+Quality: 78/100 | Updated: 2026-08-18
 """
 
 import os
