@@ -178,6 +178,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Googlebot was walking an infinite redirect on every `/{spec}/{language}` URL** — the handler
+  answered `Location: /seo-proxy/{spec}`, its own internal path. nginx serves crawlers by
+  prepending `/seo-proxy` to the request URI, so the bot fetched `anyplot.ai/seo-proxy/{spec}`,
+  which arrived as `/seo-proxy/seo-proxy/{spec}` and re-matched the same route with
+  `spec_id="seo-proxy"` — redirecting again, forever. `curl -A Googlebot` gives up after 50 hops
+  at `anyplot.ai/seo-proxy/seo-proxy`; a normal user agent never saw it, because only bots take
+  the proxy path. Search Console recorded it as 48 URLs under **Redirect error**. The Location is
+  now the public URL, and a regression test asserts both that it never starts with `/seo-proxy`
+  and that re-entering with the prefix nginx adds resolves instead of bouncing.
+
 - **Model↔migration index drift fixed before it could drop production indexes** — seven
   migration-created indexes (`ix_specs_issue`, `ix_specs_tags` GIN, `ix_impls_library_id`,
   `ix_impls_quality_score`, `ix_impls_impl_tags` GIN, `ix_feedback_created_at` DESC,
