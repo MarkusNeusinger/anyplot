@@ -1,0 +1,267 @@
+library: echarts
+language: javascript
+specification_id: area-cumulative-flow
+created: '2026-08-18T03:19:44Z'
+updated: '2026-08-18T03:36:22Z'
+generated_by: claude-sonnet
+workflow_run: 32094552150
+issue: 5239
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'The requested repair items are all present and well executed: axis-pointer switched
+    from bar-chart-style shadow to cross, a per-band vertical gradient fill (echarts.graphic.LinearGradient)
+    adds visual depth, and a markArea annotation explicitly labels the Development-stage
+    bottleneck.'
+  - 'Correct CFD stacking order preserved: earliest stage (Backlog) on top, latest
+    (Done) on bottom, matching the spec''s required convention.'
+  - 'Imprint palette correctly applied and identical across themes: Backlog (first
+    series) is brand green #009E73, remaining stages follow canonical positions 2-5.'
+  - 'The bottleneck narrative is now explicit and legible: the shaded markArea window
+    aligns with where the Development band visibly widens, and the label text is readable
+    in both themes.'
+  - Canvas is exactly 3200x1800 with generous, balanced margins; no clipped text on
+    any edge in either render.
+  - Fully deterministic via a fixed-seed LCG; monotonic non-decreasing cumulative
+    counts enforced by construction; realistic Kanban/CFD business scenario.
+  weaknesses:
+  - The area-fill gradient is subtle at full resolution (sampled RGB shift is only
+    ~10 units top-to-bottom within a band) — a slightly wider alpha range (e.g. 0.95
+    to 0.4) would make the depth effect read more clearly without hurting legibility.
+  - The markArea annotation box uses a very low-contrast fill (t.ink at 5% opacity)
+    and inkSoft text, so it functions more as a caption than a strong visual focal
+    point — a thin top border or slightly higher-contrast label color would make the
+    bottleneck callout pop more on first glance.
+  - The Analysis and Testing bands remain sliver-thin for the first 10-15 days (low
+    early WIP); this is true to the underlying capacity model and not a defect, but
+    keeps two of the five series hard to distinguish from each other in that opening
+    stretch.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Centered title "area-cumulative-flow · javascript · echarts · anyplot.ai" in dark ink; legend below it lists Backlog / Analysis / Development / Testing / Done with matching color swatches; Y-axis "Cumulative Items", X-axis "Date" with legible tick labels at ~4-day intervals; subtle horizontal-only gridlines. A shaded markArea box spans roughly Feb 14 through the end of the series with the label "Bottleneck: Development WIP widens as Testing throughput caps it" — text is readable against the light gray box.
+      Data: Five stacked bands, bottom to top: Done (matte red, wide and growing), Testing (ochre, thin), Development (blue, wide and visibly widening in the back half — the bottleneck), Analysis (lavender, thin), Backlog (brand green, thin). First series (Backlog) confirmed brand green #009E73. Each band shows a subtle vertical gradient (richer near its own boundary, softer toward the stack), verified via pixel sampling (e.g. RGB(144,162,192) near the top of the Development band fading to RGB(153,169,195) near its bottom).
+      Legibility verdict: PASS — all text clearly readable against the light background, no overlap, no clipping at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis labels rendered in light/off-white text, clearly readable against the dark surface. The markArea annotation box and its inkSoft-colored label text are legible, though lower-contrast (soft gray text on a near-black tinted box) compared to the light render.
+      Data: Band colors and stacking order are pixel-identical to the light render (green/lavender/blue/ochre/red) — only the chrome (background, text, grid) flipped for the theme, confirming Imprint palette compliance.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/axis-label/tick/legend/annotation element is visible, though the annotation text contrast is the least-punchy element in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, legend 16px, axis name
+          14px, ticks/annotation 13px); readable in both themes with no overflow.
+          Annotation-label contrast in dark mode is the softest element, short of
+          perfect.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, legend, axis labels, ticks, or the bottleneck
+          annotation.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: No-symbol lines with stacked area fills suit the 90-point daily series;
+          Analysis/Testing bands are sliver-thin in the first 10-15 days, true to
+          the data but borderline hard to distinguish there.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast between adjacent bands; CVD-safe Imprint hues; no red-green-only
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, plot fills a large majority of the frame
+          with balanced margins, nothing cut off (verified via edge crops).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Date" and "Cumulative Items" are descriptive; count axis doesn''t
+          need a unit suffix.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Backlog) is #009E73; remaining stages follow canonical
+          Imprint order; backgrounds are theme-correct #FAF8F1 / #1A1A17; data colors
+          identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Per-band LinearGradient fill adds real (if subtle) depth beyond flat
+          opacity; semantic stage-order color mapping remains thoughtful.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Hidden y-axis line/ticks, subtle horizontal-only grid, generous whitespace,
+          gradient fills and a slightly heavier 1.5px boundary stroke add polish over
+          the attempt-1 skeleton.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: markArea callout now explicitly labels the Development bottleneck
+          aligned with the visible widening — directly addresses the prior gap; box
+          styling is low-contrast enough that it reads as a caption rather than a
+          strong focal point, short of the top score.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked-area CFD via stacked ECharts line series with areaStyle.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 5 stages present, correct stacking direction, legend, reasonable
+          date-tick intervals, band widths encode WIP.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = date, Y = cumulative items, full data range visible on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches "area-cumulative-flow · javascript · echarts · anyplot.ai"
+          exactly; legend labels match stage names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows widening (Development bottleneck) and narrow (Testing-capped)
+          bands, monotonic cumulative growth across all stages.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible Kanban/software-delivery scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Intake/capacity magnitudes and 90-day horizon are plausible for a
+          small-to-mid delivery team; no logical violations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports/data/init/option flow; the small rand/hexToRgba/bandGradient
+          helpers are the idiomatic JS pattern for a seeded LCG and gradient fill,
+          not over-structuring.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes the data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts global; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a bottleneck-highlighted CFD; no fake
+          UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses chart.setOption with series per the mount-node contract, animation:false
+          set, current ECharts API throughout.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked line+areaStyle CFD pattern, axisPointer now the idiomatic
+          "cross" for a time series, tooltip valueFormatter — expert use of the high-level
+          API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: echarts.graphic.LinearGradient per-band fills and a labeled markArea
+          window are ECharts-distinctive features not trivially replicated in other
+          libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - gradient-fill
