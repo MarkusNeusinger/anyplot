@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: box-grouped
 created: '2025-12-25T19:56:13Z'
-updated: '2026-08-18T08:59:54Z'
+updated: '2026-08-18T09:05:57Z'
 generated_by: claude-sonnet
 workflow_run: 32118355184
 issue: 2017
@@ -12,41 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-group
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-grouped/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Mean-diamond overlay (geom_point with position_dodge, shape=18) cleanly separates
-    the median (box line) from the mean as two distinct visual summaries
-  - 'Imprint palette applied correctly: first series #009E73, canonical order, identical
-    data colors between light/dark renders'
+  - 'Fix confirmed: panel_grid_minor_x/panel_grid_minor_y are now explicitly blanked,
+    so the stray un-themed bright vertical lines that broke the dark render at department-group
+    boundaries in attempt 1 are gone -- both renders now show only the intended subtle
+    y-axis grid'
+  - Mean-diamond overlay (geom_point with position_dodge, shape=18, inherit_aes=False,
+    show_legend=False) cleanly separates the median (box line) from the mean as two
+    distinct visual summaries per subgroup
+  - 'Imprint palette applied correctly: first series (Junior) = #009E73, canonical
+    order continues with #C475FD (Mid-Level) and #4467A3 (Senior); data colors pixel-identical
+    between light and dark renders'
   - Canvas dimensions correct (3200x1800 landscape), title format exactly matches
     the mandated pattern
   - Clean, reproducible, KISS-structured code with correct save/move convention for
-    lets-plot-images/ output
+    lets-plot-images/ output; np.random.seed(42) for determinism
   weaknesses:
-  - 'Dark render only shows four bright vertical lines spanning the full panel height
-    at department-group boundaries, absent from the light render at the same coordinates
-    (pixel-verified). panel_grid_major_x is blanked but panel_grid_minor_x is not,
-    so theme_minimal()''s default minor-grid color is left un-themed -- invisible
-    against light #FAF8F1 but strikingly visible against dark #1A1A17. Fix: add panel_grid_minor_x=element_blank()
-    (and panel_grid_minor_y=element_blank() for safety) to the theme(...) block.'
-  - 'Design Excellence is solid but not top-tier: no additional annotation or emphasis
-    beyond the mean-diamond overlay to push data storytelling further'
+  - 'Design Excellence is solid but not top-tier: the mean-diamond overlay is the
+    only storytelling layer beyond the standard grouped box plot, with no further
+    annotation or emphasis (e.g. callout on the largest Junior-vs-Senior gap) to push
+    data storytelling further'
+  - 'Library Mastery is competent but fairly standard: position_dodge + geom_boxplot
+    + layered geom_point is correct grammar-of-graphics usage but doesn''t showcase
+    a more distinctive lets-plot-only feature (e.g. tooltips config, interactive legend,
+    geom_violin hybrid)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1.
-      Chrome: Bold dark title "box-grouped · python · letsplot · anyplot.ai" top-left, dark axis titles "Department"/"Performance Score", dark tick labels, legend "Experience Level" at right with matching swatches -- all clearly readable.
-      Data: First series (Junior) = #009E73 green, Mid-Level = #C475FD purple, Senior = #4467A3 blue. Box + whiskers + gray outlier dots + white diamond mean markers, all visible.
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "box-grouped · python · letsplot · anyplot.ai" top-left, dark axis titles "Department"/"Performance Score", dark tick labels along both axes, legend "Experience Level" at right with matching swatches for Junior/Mid-Level/Senior -- all clearly readable, no light-on-light issues. Only a subtle horizontal (y-axis) grid is visible; x-axis grid is blanked.
+      Data: Grouped boxplots for 4 departments (Engineering, Marketing, Sales, Operations), each with 3 side-by-side boxes (Junior=#009E73 green, Mid-Level=#C475FD purple, Senior=#4467A3 blue). Median line, quartile box, whiskers, gray semi-transparent outlier dots, and small light-diamond mean markers are all visible and distinguishable per box.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17.
-      Chrome: Light-colored title, axis titles, tick labels, and legend -- all clearly readable, no dark-on-dark failures. HOWEVER: four bright vertical lines run the full panel height at the four department-group boundaries. Pixel-sampled at x=814/1444/2074/2705, y=150: light render shows background color (~245,244,239, i.e. no line), dark render shows bright near-white pixels. This is an unblanked default panel_grid_minor_x artifact, not an intentional theme element.
-      Data: Confirmed pixel-identical box colors (green/purple/blue) to light render.
-      Legibility verdict: PASS (text legible; but chrome has an un-themed stray element -- flagged under VQ-07/DE-02, not a legibility failure)
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Light-colored title, axis titles, and tick labels -- all clearly readable, no dark-on-dark failures. Critically, the four bright un-themed vertical lines at department-group boundaries that were present in attempt 1 (an unblanked panel_grid_minor_x default) are gone in this render -- only the same subtle horizontal grid as the light render remains, confirming the fix (panel_grid_minor_x=element_blank(), panel_grid_minor_y=element_blank()) landed correctly.
+      Data: Box colors (green/purple/blue) are pixel-consistent with the light render -- only chrome flipped, as required. Outlier dots and mean-diamond markers remain visible against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,10 +69,11 @@ review:
         comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Boxes, whiskers, outliers, mean diamonds all visible
+        comment: Boxes, whiskers, outlier dots, mean diamonds all visible; outlier
+          alpha (0.6) slightly soft
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -75,25 +82,26 @@ review:
         comment: Distinguishable, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; dark render has extraneous vertical lines
+        comment: Canvas gate passed; attempt-1 stray-grid artifact confirmed fixed
+          in dark render
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels
+        comment: Descriptive labels, mandated title format
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Data colors and backgrounds correct, but dark chrome has un-themed
-          panel_grid_minor_x lines not present in light
+        passed: true
+        comment: Data colors and backgrounds correct; dark chrome now correctly themed
+          with no un-themed panel_grid_minor artifact
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -101,15 +109,15 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom palette, mean-diamond overlay adds real secondary summary
+        comment: Custom palette, mean-diamond overlay adds a real secondary summary
           layer
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid in light, but dominant/cluttered stray grid lines in
-          dark
+        passed: true
+        comment: Subtle, consistent grid in both themes now that the dark-render clutter
+          is fixed
       - id: DE-03
         name: Data Storytelling
         score: 3
@@ -217,19 +225,17 @@ review:
         max: 5
         passed: false
         comment: Mean overlay is a nice touch but otherwise fairly standard usage
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - position-dodge
-  - stat-summary-overlay
-  - boxplot
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   - groupby-aggregation
-  dataprep:
-  - groupby-aggregation
+  dataprep: []
   styling:
   - publication-ready
   - theme-adaptive-chrome
