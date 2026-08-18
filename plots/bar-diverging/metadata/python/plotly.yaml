@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-diverging
 created: '2025-12-25T22:47:36Z'
-updated: '2026-08-18T12:47:57Z'
+updated: '2026-08-18T12:56:27Z'
 generated_by: claude-sonnet
 workflow_run: 32137885303
 issue: 2009
@@ -12,53 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Correct semantic color mapping per the Imprint style guide''s polarity exception:
+  - 'Directly addresses every weakness from the attempt-1 review: added a data-driven
+    subtitle (net sentiment average, leader, trailer), bold ink-colored outlines on
+    the two extreme bars (Customer Support +72, Return Policy -42) to create a clear
+    focal point, and diagonal marker.pattern hatching on negative bars as a third
+    redundant polarity encoding beyond color and direction.'
+  - 'Correct semantic color mapping per the Imprint sentiment/polarity exception:
     positive bars use brand green (#009E73, slot 1), negative bars use matte red (#AE3030,
-    slot 5) — matching the spec''s ''contrasting colors for positive and negative
-    values'' requirement.'
-  - Bars are sorted by value (ascending, most negative to most positive), exactly
-    matching the spec Notes recommendation for pattern recognition.
-  - Explicit zero baseline via add_vline gives an unambiguous divergence point, and
-    horizontal orientation accommodates the longer department labels as the spec suggests.
-  - 'Redundant encoding beyond color alone: bar direction (left/right of zero) plus
-    explicit +/- signed data labels both convey polarity, mitigating red-green colorblind
-    risk (VQ-04).'
-  - 'Both light and dark renders are fully theme-compliant: correct #FAF8F1/#1A1A17
-    backgrounds, all chrome (title, axis labels, ticks, gridlines, zero-baseline)
-    threaded through theme tokens, identical data colors across themes.'
-  - 'Verified via pixel-level crops: no text clipping at any canvas edge, no overlap
-    between value labels and the zero-baseline line or adjacent bars, generous margins
-    on both sides.'
-  - Canvas gate passed (3200x1800 confirmed via file inspection), correct title format,
-    deterministic hardcoded data (no seed needed), clean minimal imports, correct
-    dual PNG+HTML output pattern.
+    slot 5), both explicitly labeled as a semantic exception in a code comment.'
+  - 'Both renders are fully theme-compliant: correct #FAF8F1/#1A1A17 backgrounds,
+    every chrome element (title, subtitle, axis titles, ticks, gridlines, zero-baseline,
+    outline colors) threaded through theme tokens, identical data colors and hatch
+    treatment across themes.'
+  - 'Verified via pixel crops at native resolution: no text clipping at any canvas
+    edge (title, department labels, +72/+68 value labels all sit comfortably inside
+    the frame), and no overlap between the tightly-packed "-8"/"-15" value labels
+    and the zero-baseline line.'
+  - 'Distinctive Plotly usage beyond the basics: marker.pattern (shape hatching) for
+    a redundant non-color encoding, per-bar line width/color arrays to spotlight extremes,
+    and a richer hovertemplate with customdata (sentiment label + magnitude) for the
+    HTML detail view.'
+  - Bars sorted ascending by value and horizontal orientation for long department
+    labels, both directly matching the spec's Notes recommendations; canvas gate passed
+    (3200x1800 confirmed), clean minimal imports, deterministic hardcoded data.
   weaknesses:
-  - Design excellence is solid but conventional — a well-executed standard diverging
-    bar treatment without additional visual emphasis (e.g., a subtitle/annotation
-    summarizing net sentiment, or highlighting the most extreme bar) that would elevate
-    it further.
-  - Library mastery relies on core go.Bar + add_vline + hovertemplate; doesn't showcase
-    more distinctive Plotly capabilities (e.g. pattern_shape for redundant non-color
-    encoding, richer shape/annotation layering, or custom hover cards with additional
-    context fields) that would demonstrate deeper mastery of the library.
-  - The green/red sentiment mapping is self-evident from the +/- signed data labels,
-    but a one-line note or subtitle could make the color convention explicit for readers
-    who skim past the labels — very minor, not required by spec.
+  - Aesthetic sophistication is much improved but still fundamentally a well-decorated
+    standard diverging-bar layout — no additional compositional element (e.g. a small
+    delta-callout box, icon markers, or secondary reference band) that would push
+    it into a truly distinctive visual identity.
+  - Library mastery leans on marker.pattern + per-bar line arrays + hovertemplate/customdata,
+    which is a solid showcase, but doesn't reach further into Plotly-specific layering
+    (e.g. annotations with arrows for the extreme callouts, or shapes) that would
+    demonstrate even deeper API depth.
+  - The extreme-bar outline emphasis (bold ink border) is a subtle affordance — a
+    reader skimming quickly could miss that Customer Support and Return Policy are
+    specifically flagged as the leader/trailer without reading the subtitle text.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bar-diverging · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Satisfaction Score (-100 to +100)" and y-axis title "Department" both dark ink, readable. Tick labels (department names on y, -100..100 on x) in softer grey-ink, legible. Subtle vertical gridlines at each x tick. Thicker zero-baseline line at x=0.
-      Data: 10 horizontal bars, one per department, sorted ascending by value. Bars right of zero (Customer Support +72, Payment Options +68, Product Quality +58, Website Experience +45, Price Value +31, Product Variety +22) are brand green (#009E73, Imprint slot 1). Bars left of zero (Checkout Process -8, Mobile App -15, Delivery Speed -25, Return Policy -42) are matte red (#AE3030, Imprint slot 5). Each bar has a signed value label ("+72", "-42", etc.) in the same color as its bar, positioned just outside the bar end.
-      Legibility verdict: PASS — all text (title, axis titles, tick labels, department names, data labels) reads clearly against the light background; pixel-crop inspection confirmed no clipping at the left (department labels), right (+72 label), or zero-baseline (-8/-15 labels) regions.
+      Chrome: Bold title "bar-diverging · python · plotly · anyplot.ai" centered at top in dark ink, clearly legible, comfortably within plot width (no overflow). A smaller grey subtitle below reads "Net sentiment +21 avg · Customer Support leads (+72) · Return Policy trails (-42)" — also fully legible. X-axis title "Satisfaction Score (-100 to +100)" and y-axis title "Department" both dark ink, readable. Tick labels (department names on y, -100..100 on x) in softer grey-ink, legible. Subtle vertical gridlines aligned to x-axis ticks. A distinct dark vertical zero-baseline line marks x=0.
+      Data: 10 horizontal bars, one per department, sorted ascending by value. Positive bars (Customer Support +72, Payment Options +68, Product Quality +58, Website Experience +45, Price Value +31, Product Variety +22) are solid brand green (#009E73, Imprint slot 1). Negative bars (Checkout Process -8, Mobile App -15, Delivery Speed -25, Return Policy -42) are matte red (#AE3030, Imprint slot 5) with a diagonal hatch pattern overlaid as a redundant non-color encoding. The top bar (Customer Support, most positive) and bottom bar (Return Policy, most negative) each carry a bold dark outline to spotlight the extremes, matching the subtitle's "leads"/"trails" callouts. Each bar has a signed value label ("+72", "-42", etc.) in the same hue as its bar, positioned just outside the bar end with no overlap onto the zero-baseline or neighboring bars — confirmed via pixel-level crop of the tightly-packed -8/-15 region.
+      Legibility verdict: PASS — all text (title, subtitle, axis titles, tick labels, department names, data labels) reads clearly against the light background; pixel-crop inspection at the left (department labels), right (+72/+68 labels), and zero-baseline (-8/-15 labels) regions confirmed no clipping and no overlap.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light ink (#F0EFE8), clearly legible against the dark background. Axis titles in light ink, tick labels in lighter grey-ink (#B8B7B0), all legible. Gridlines are subtle light lines at low opacity, visible but not competing with data. Zero-baseline line rendered in the theme's soft-ink tone, clearly visible.
-      Data: Identical bar values, ordering, and colors to the light render — brand green #009E73 for positive, matte red #AE3030 for negative, confirming data colors are held constant across themes. Value labels retain their bar's color and remain fully legible.
-      Legibility verdict: PASS — no dark-on-dark failures found; all text elements (title, axis titles, tick labels, department names, data labels) are clearly readable against the near-black surface, and brand green/matte red both read well on the dark background.
+      Chrome: Same title and subtitle, now in light ink (#F0EFE8) / soft grey, clearly legible against the dark background. Axis titles in light ink, tick labels in lighter grey-ink (#B8B7B0), all legible. Gridlines are subtle light lines at low opacity, visible but not competing with data. Zero-baseline line rendered in the theme's soft-ink tone, clearly visible. Extreme-bar outlines switch to a light/white stroke so they remain visible against the dark surface.
+      Data: Identical bar values, ordering, colors, and hatch pattern to the light render — brand green #009E73 for positive, matte red #AE3030 with hatching for negative, confirming data colors are held constant across themes (only chrome adapts). Value labels retain their bar's hue and remain fully legible; no dark-on-dark text found anywhere.
+      Legibility verdict: PASS — no dark-on-dark failures found; all text elements (title, subtitle, axis titles, tick labels, department names, data labels) are clearly readable against the near-black surface, and brand green/matte red both read well on the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,36 +72,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title 20, axis titles 16, ticks/labels
-          12-13); fully readable in both themes.
+        comment: Explicit font sizes throughout (title 20, subtitle 13, axis titles
+          16, ticks/labels 12-13); fully readable in both themes at pixel-crop level.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Pixel-crop check confirms no collisions between value labels, zero-baseline,
-          or bars.
+        comment: Pixel-crop check of the tightly-packed -8/-15 region confirms no
+          collisions between value labels, the zero-baseline, or bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 10 bars with bargap=0.3 are clearly separated and prominent at this
-          canvas size.
+        comment: 10 bars with bargap=0.3 are clearly separated; hatch pattern adds
+          extra visual distinction to negative bars.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red polarity mapping is redundantly encoded via bar direction
-          and explicit +/- signed labels, not color alone.
+        comment: 'Triple redundant polarity encoding: bar direction, diagonal hatch
+          on negatives, and explicit +/- signed labels.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 confirmed, no canvas gate failure, no clipping/overflow
-          at any edge, generous margins.
+        comment: 3200x1800 confirmed (canvas gate passed), no clipping/overflow at
+          any edge, generous margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -115,27 +118,32 @@ review:
           the documented sentiment/polarity semantic exception; correct theme backgrounds
           both renders.
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful semantic color choice and sorted layout, but a fairly
-          conventional diverging-bar treatment overall.
+        passed: true
+        comment: Subtitle context, extreme-bar outlines, and hatch texture elevate
+          it well past a default treatment, though still a fundamentally standard
+          diverging-bar layout.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: L-shaped implicit frame, subtle single-axis gridlines, subtle bar
-          edge borders, generous whitespace.
+        passed: true
+        comment: L-shaped implicit frame, subtle single-axis gridlines, subtle non-extreme
+          bar edges, generous whitespace, tasteful hatch fill.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Sort order plus zero baseline creates a clear focal point, though
-          no additional emphasis technique (e.g. callout) is used.
+        passed: true
+        comment: Subtitle (net sentiment, leader, trailer) plus bold outlines on the
+          extreme bars create a clear, guided focal point — directly resolves the
+          prior attempt's flagged gap.
     spec_compliance:
       score: 15
       max: 15
@@ -166,17 +174,18 @@ review:
         max: 3
         passed: true
         comment: Title matches mandated format; legend appropriately omitted since
-          sign/color meaning is self-evident from the +/- labels.
+          sign/color meaning is self-evident from labels + hatching.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Covers positive/negative, sorting, baseline; no additional annotation
-          of extremes.
+        passed: true
+        comment: Covers positive/negative polarity, sorting, zero baseline, AND explicit
+          extreme-value annotation via subtitle + outline highlighting.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -225,20 +234,23 @@ review:
         passed: true
         comment: write_image + write_html with correct theme-based filenames.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
+        passed: true
         comment: Idiomatic go.Figure/go.Bar/add_vline/automargin usage.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Uses hovertemplate customization and HTML export, but doesn't showcase
-          more distinctive Plotly-specific capabilities.
+        passed: true
+        comment: marker.pattern hatching, per-bar line color/width arrays, and hovertemplate+customdata
+          showcase distinctive Plotly capabilities, resolving the prior attempt's
+          flagged gap.
   verdict: APPROVED
 impl_tags:
   dependencies: []
