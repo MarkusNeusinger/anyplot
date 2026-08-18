@@ -199,6 +199,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A trailing slash sent crawlers to a crawl-blocked URL** — `/box-basic/` answered `307` to
+  `http://api.anyplot.ai/seo-proxy/box-basic`: the internal proxy path, on the API host, over plain
+  http, and that host's `robots.txt` disallows everything. FastAPI's `redirect_slashes` built the
+  Location from the *proxied* request, and `@seo_proxy` set no `X-Forwarded-Proto`, so the scheme
+  came out wrong too. Humans never saw it — only bots take the proxy path — and every inbound link
+  written with a trailing slash, which is common, dead-ended there; some of the 48 Search Console
+  "Redirect error" URLs came from this. nginx now normalises the trailing slash to the canonical URL
+  before any routing, the proxy declares the scheme, and `bot-serving-check` fails if a
+  trailing-slash redirect ever again points at `/seo-proxy` or downgrades to http.
+
 - **AI assistants asked about a plot page saw nothing** — seven user-directed fetchers (eight UA
   patterns; NotebookLM and Mariner each answer to two) were absent from the `$is_bot` map in
   `app/nginx.conf` and received the empty SPA shell instead of the prerendered page: `Google-GeminiNotebook`, `Google-NotebookLM`, `Gemini-Deep-Research`,
