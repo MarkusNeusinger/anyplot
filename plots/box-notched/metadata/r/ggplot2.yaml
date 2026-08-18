@@ -1,0 +1,237 @@
+library: ggplot2
+language: r
+specification_id: box-notched
+created: '2026-08-18T04:55:50Z'
+updated: '2026-08-18T05:08:18Z'
+generated_by: claude-sonnet
+workflow_run: 32100678108
+issue: 2019
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-notched/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-notched/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Notch depth uses ggplot2's default 1.58×IQR/√n calculation, matching the spec's
+    ~1.57×IQR/√n 95% CI formula exactly, and the intentionally varied sample sizes
+    (n=45 to n=180) visibly demonstrate the spec's 'notch reliability improves with
+    n > 20' note directly in the chart
+  - Departments reordered by descending median salary so adjacent boxes and notches
+    are easy to compare — a genuine data-storytelling choice, not a default
+  - 'Complete notched box plot anatomy: median, quartiles, 1.5×IQR whiskers, staplewidth
+    caps, and outlier points with alpha=0.6, all present and correctly configured'
+  - First categorical series correctly maps to Imprint brand green (#009E73) on the
+    highest-median department after reordering; full 5-color Imprint palette used
+    for the remaining categories
+  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, all text
+    legible, INK_SOFT-derived box outlines and outlier points adapt appropriately
+    between themes while the 5 categorical fill colors stay pixel-identical'
+  - 'Clean, idiomatic code: no legend (redundant with x-axis categories), tibble::/scales::
+    namespacing avoids unused library() calls, set.seed(42) for reproducibility, ragg::agg_png
+    device used correctly'
+  weaknesses:
+  - 'Y-axis grid is sparser than the code implies: scale_y_continuous(breaks = scales::breaks_width(25000))
+    should place a break every $25k, but only two gridlines actually render ($50k
+    and $100k) — pixel inspection of both PNGs confirms no gridline at $25k, $75k,
+    or $125k even though the data range (~$20k-$145k) spans well past all of them.
+    Over that ~$120k range, having only one reference line between $50k and $100k
+    makes it harder to read exact values for the Support, Marketing, and Sales boxes
+    that sit outside the labeled band. Verify the breaks_width(25000) call actually
+    produces the intended sequence within the panel''s expanded y-limits (e.g. try
+    an explicit breaks = seq(25000, 150000, 25000) vector, or scales::breaks_pretty(n
+    = 6), and confirm all resulting gridlines render, not just two).'
+  - Aesthetic treatment is solid but fairly close to library defaults beyond the palette
+    and notch/staplewidth choices — a bit more deliberate polish (e.g. slightly refined
+    whisker/cap styling, subtle box width variation reflecting n, or a short data-driven
+    subtitle) would lift it from good to distinctive.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "box-notched · r · ggplot2 · anyplot.ai" is dark ink, fully visible, not clipped at the top edge. X-axis department labels (Engineering, Sales, Finance, Support, Marketing) and y-axis dollar-formatted tick labels ($50k, $100k) are dark/soft-dark and clearly readable against the light background. Only two horizontal gridlines are actually rendered (see weaknesses — breaks_width(25000) does not produce the expected $25k-spaced grid in the saved PNG).
+      Data: Five notched boxes in Imprint palette order — Engineering green (#009E73, highest median after reordering), Sales lavender, Finance blue, Support ochre, Marketing red. Notches are visibly present near each median, with Marketing's notch visibly wider than Engineering's/Finance's larger-n boxes, matching the spec's reliability note. Gray outlier points appear beyond the whiskers on several boxes (e.g. above Engineering, below Sales).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and all axis/tick labels flip to light ink and remain fully readable; gridlines flip to a light tone and are visible where not covered by box fills. No dark-on-dark or light-on-light failures observed. Box outline strokes and outlier point strokes are rendered in the lighter INK_SOFT tone appropriate for the dark surface.
+      Data: Confirmed pixel-identical to the light render — same five Imprint hues (green/lavender/blue/ochre/red) in the same category order, same relative box/notch/outlier positions; only the chrome (background, text, gridlines, outline strokes) changed between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/axis/tick text readable in both themes at full and thumbnail
+          size; fontsizes explicitly set
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Box widths, whisker caps, and outlier point sizes appropriate for
+          the per-category sample sizes (n=45-180)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 5-color Imprint palette is CVD-safe and not used as a sole red/green
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped, but only 2 of the intended $25k-spaced
+          gridlines actually render, leaving the axis under-gridded
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ($ suffix 'k'), correct mandated
+          title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Engineering, post-reorder) is #009E73, remaining series
+          follow canonical Imprint order, backgrounds correct in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Custom palette and intentional median-descending ordering, but otherwise
+          close to theme_minimal defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Spines removed, grid restricted to horizontal major only, generous
+          whitespace; undercut slightly by the sparse gridline rendering
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Descending-median ordering and deliberately varied sample sizes create
+          a clear, purposeful narrative around notch reliability
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct notched box plot via geom_boxplot(notch = TRUE)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Notches, median/quartiles/1.5xIQR whiskers, outlier points, per-category
+          colors all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: x=department, y=salary; all 5 categories shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches mandated format; legend correctly omitted as redundant
+          with x-axis category labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: All notched-box-plot elements present, including a deliberate n-driven
+          notch-width contrast
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Plausible, neutral department salary data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Salary values and spread are realistic for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: 'Only ggplot2 and ragg loaded; tibble::/scales:: used via namespace
+          instead of extra library() calls'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Saves plot-{theme}.png via ragg::agg_png at the correct canvas size
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct high-level geom_boxplot notch/staplewidth/outlier params,
+          scales::dollar_format
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        comment: staplewidth whisker caps and notch tuning are a nice touch beyond
+          generic usage, but not a showcase of deeper ggplot2-specific capability
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
