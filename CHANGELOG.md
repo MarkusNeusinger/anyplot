@@ -247,6 +247,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   edge-state table was stale for the opposite reason: the dashboard unblock it prescribed had since
   been done. A docstring also pointed at `app/src/router.tsx`, which does not exist — the routing
   lives in `app/src/routes/index.tsx` (#10479).
+- **The daily bot-serving monitor had been red for ten days** — it greps for an exact home-page
+  title, the copy changed to "anyplot.ai — AI-generated plot catalog for 15 libraries", and every
+  scheduled run since 2026-08-09 failed on that one line. Nothing else was wrong, and nobody looked:
+  this run of SEO work edited the workflow twice and cited it repeatedly as the regression cover for
+  changes that have no local verification loop, while it was failing daily. It now matches on the
+  prefix, which still separates the prerendered page from the SPA shell — the property actually
+  under test — and no longer breaks on copy. The trailing-slash check also no longer passes when
+  there is no redirect at all: an empty `%{redirect_url}` printed "OK" and returned success, which
+  Copilot raised on two separate PRs (#10478).
 
 - **The trailing-slash redirect leaked the internal port** — #10473 removed a redirect to
   `http://api.anyplot.ai/seo-proxy/…` and replaced it with `http://anyplot.ai:8080/…`: a smaller
