@@ -20,6 +20,8 @@ from api.routers.seo import (
     _lastmod,
     _meta_description,
     _render_bot_html,
+    _render_picture,
+    _sized_srcset,
     _spec_index_entries,
     _spec_links_html,
 )
@@ -488,3 +490,44 @@ class TestMetaDescription:
         escaped = html_module.escape(_meta_description(text))
         # A truncated entity would leave a bare & followed by a non-entity run
         assert re.search(r"&(?!amp;|lt;|gt;|quot;|#x27;)", escaped) is None
+
+
+class TestPlotRender:
+    """The body shows the plot itself, not the social card it sits inside."""
+
+    BASE = "https://storage.googleapis.com/anyplot-images/plots/box-basic/python/altair"
+
+    def _impl(self, dark: bool = True) -> MagicMock:
+        impl = MagicMock()
+        impl.preview_url_light = f"{self.BASE}/plot-light.png"
+        impl.preview_url_dark = f"{self.BASE}/plot-dark.png" if dark else None
+        return impl
+
+    def test_srcset_offers_the_pipeline_widths(self) -> None:
+        """The suffix IS the pixel width — verified against the live renders."""
+        assert _sized_srcset(f"{self.BASE}/plot-light.png") == (
+            f"{self.BASE}/plot-light_400.png 400w, "
+            f"{self.BASE}/plot-light_800.png 800w, "
+            f"{self.BASE}/plot-light_1200.png 1200w"
+        )
+
+    def test_the_full_size_original_is_not_in_the_srcset(self) -> None:
+        """Its width varies per plot (2400, 3200, 4766) — no honest `w` exists."""
+        srcset = _sized_srcset(f"{self.BASE}/plot-light.png")
+        assert f"{self.BASE}/plot-light.png" not in srcset
+
+    def test_default_src_is_the_middle_size(self) -> None:
+        """A consumer ignoring srcset should not pull a 4766px file."""
+        assert f'src="{self.BASE}/plot-light_1200.png"' in _render_picture(self._impl(), "alt")
+
+    def test_dark_variant_is_offered(self) -> None:
+        html_out = _render_picture(self._impl(), "alt")
+        assert 'media="(prefers-color-scheme: dark)"' in html_out
+        assert f"{self.BASE}/plot-dark_800.png 800w" in html_out
+
+    def test_no_source_element_without_a_dark_render(self) -> None:
+        assert "<source" not in _render_picture(self._impl(dark=False), "alt")
+
+    def test_the_full_resolution_stays_reachable(self) -> None:
+        """Left out of the srcset, so it needs its own way in."""
+        assert f'<a href="{self.BASE}/plot-light.png">' in _render_picture(self._impl(), "alt")

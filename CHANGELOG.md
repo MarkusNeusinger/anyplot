@@ -137,6 +137,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **Implementation pages now show the plot, not the card it sits inside** — the bot page's only
+  image was the 1200×630 `og:image`, in which the render is a thumbnail surrounded by branding
+  chrome with its cell labels barely legible. Right for a shared link, useless to an assistant asked
+  to show the plot. The body now carries the actual render as a `<picture>` with both themes, using
+  the `_400`/`_800`/`_1200` derivatives the pipeline already writes beside every plot, whose suffix
+  is the true pixel width. The full-size original stays out of the `srcset` — its width varies per
+  plot (2400, 3200, 4766 among those measured), so it has no honest `w` descriptor — and gets its
+  own link; `src` points at the 1200px variant so a consumer ignoring `srcset` does not pull a
+  five-megapixel file. `og:image` is unchanged, and attribution is not lost either way: every
+  render's title reads `{spec} · {language} · {library} · anyplot.ai`.
+
 - **`og_image_view` is split by who fetched the image** — a social or messenger preview means a
   human shared a link, which is a product signal and stays on the main site; a search or AI crawler
   fetching the same image is not a share and now goes to `bots.anyplot.ai`. The distinction matters
