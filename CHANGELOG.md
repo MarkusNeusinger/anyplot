@@ -27,10 +27,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `app/package.json`, which is always inside the build context, and
   `tests/unit/test_version_sync.py` holds it equal to the `pyproject.toml` `[project]` version.
   That test runs on every PR touching `pyproject.toml`, so release PRs cannot reintroduce the
-  drift that left `app/package.json` at 2.0.0 through the whole 3.x line (#TBD).
+  drift that left `app/package.json` at 2.0.0 through the whole 3.x line (#10486).
 - **The client bundle no longer ships the frontend dependency list** — `global-config.ts` imported
   `package.json` as a default import, which inlined the entire manifest (every dependency name and
-  version range) into a shipped chunk. It now imports only the `version` named export (#TBD).
+  version range) into a shipped chunk. It now imports only the `version` named export (#10486).
 - **The masthead had been advertising v1.0 since the security-headers rollout** — the version next
   to `~/anyplot.ai` comes from the GitHub releases API, and the CSP shipped in the 2026-07-16 audit
   never listed `api.github.com` under `connect-src`. Every browser blocked that request, the hook
