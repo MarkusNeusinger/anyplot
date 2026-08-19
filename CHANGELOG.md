@@ -143,7 +143,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   renders sit indistinguishable from promoted ones. Swapped to `roles/storage.legacyObjectReader`
   (get-only): every render URL keeps working (verified live incl. CORS), only the directory
   listing is gone. Applied 2026-08-19 via gcloud — bucket IAM does not deploy with the repo; the
-  policy and re-apply procedure are recorded in the project guide (#10492).
+  policy and re-apply procedure are recorded in the project guide (#10493).
 
 ### Changed
 
