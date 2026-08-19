@@ -12,6 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
 from api.dependencies import optional_db
+from api.routers.stats import _compute_stats, _refresh_stats
+from api.schemas import StatsResponse
+from core import palette
 from core.config import settings
 from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
 from core.database import ImplRepository, SpecRepository
@@ -891,28 +894,78 @@ async def seo_specs(db: AsyncSession | None = Depends(optional_db)):
     )
 
 
+def _build_libraries_body() -> str:
+    """Real bot body for /libraries, derived from the canonical registry.
+
+    The page was a 29-word stub even though its entire content already sits in
+    core/constants.py (AI-access audit 2026-08-19) — a crawler following
+    llms.txt's "the fifteen supported plotting libraries" link found no such
+    list. Registry-derived, so it can never drift from the actual catalog.
+    """
+    sections = [
+        f"<h1>{_LIBRARY_COUNT} plotting libraries across {len(LANGUAGES_METADATA)} languages</h1>",
+        "<p>Every plot specification on anyplot.ai is implemented once per library below. "
+        'Browse renders per library in the <a href="https://anyplot.ai/plots">gallery</a>.</p>',
+    ]
+    for lang in LANGUAGES_METADATA:
+        libs = [lib for lib in LIBRARIES_METADATA if lib["language_id"] == lang["id"]]
+        if not libs:
+            continue
+        items = "".join(
+            f'<li><a href="{html.escape(str(lib["documentation_url"]), quote=True)}">'
+            f"{html.escape(str(lib['name']))}</a> {html.escape(str(lib['version']))} — "
+            f"{html.escape(str(lib['description']))}</li>"
+            for lib in libs
+        )
+        sections.append(f"<h2>{html.escape(str(lang['name']))}</h2><ul>{items}</ul>")
+    return "".join(sections)
+
+
+_LIBRARIES_BOT_BODY = _build_libraries_body()
+
+
 @router.get("/seo-proxy/libraries")
 async def seo_libraries():
-    """Bot-optimized libraries page with correct og:tags."""
+    """Bot-optimized libraries page: the full registry, not just og:tags."""
     return HTMLResponse(
         _render_bot_html(
             title="libraries | anyplot.ai",
             description="All supported plotting libraries across languages.",
             image=DEFAULT_PLOTS_IMAGE,
             url="https://anyplot.ai/libraries",
+            body=_LIBRARIES_BOT_BODY,
         )
     )
 
 
+# Mirrors the load-bearing facts of app/src/pages/LegalPage.tsx — keep the two
+# in sync when operator, analytics, or hosting details change.
+_LEGAL_BOT_BODY = (
+    "<h1>Legal notice</h1>"
+    "<p>Operator: Markus Neusinger "
+    '(<a href="https://github.com/MarkusNeusinger">GitHub</a>, '
+    '<a href="https://x.com/MarkusNeusinger">X</a>). Full legal notice with '
+    'contact details on the <a href="https://anyplot.ai/legal">interactive page</a>.</p>'
+    "<h2>Privacy</h2>"
+    "<p>Analytics: Plausible Analytics (EU, proxied) — no cookies, no personal data collected. "
+    "Hosting: Google Cloud Run (Netherlands).</p>"
+    "<h2>Transparency</h2>"
+    "<p>The whole stack — specs, pipeline, API and frontend — is open source at "
+    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a>; '
+    "the catalogue content is MIT-licensed.</p>"
+)
+
+
 @router.get("/seo-proxy/legal")
 async def seo_legal():
-    """Bot-optimized legal page with correct og:tags."""
+    """Bot-optimized legal page: operator, privacy and transparency facts."""
     return HTMLResponse(
         _render_bot_html(
             title="Legal | anyplot.ai",
             description="Legal notice, privacy policy, and transparency information for anyplot.ai",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/legal",
+            body=_LEGAL_BOT_BODY,
         )
     )
 
@@ -964,28 +1017,80 @@ async def seo_mcp():
     )
 
 
+# Mirrors app/src/pages/AboutPage.tsx — the pipeline story is the page's
+# content; counts derive from the registry so they cannot drift.
+_ABOUT_BOT_BODY = (
+    "<h1>About anyplot</h1>"
+    f"<p>anyplot.ai is a catalogue of plotting examples across {_LIBRARY_COUNT} libraries "
+    f"in {_LANGUAGE_LIST}. Plot ideas come from humans; AI drafts the specification, "
+    "generates code for every library, and reviews each implementation. Humans approve "
+    "specs and tune the rules.</p>"
+    "<h2>Pipeline</h2>"
+    "<p>idea → spec (AI-drafted, human-approved) → code (AI-generated per library) → "
+    "review (AI-evaluated). When a library ships a new release the pipeline re-runs; when a "
+    "better example pattern emerges the spec is updated and every library regenerates. "
+    "Generated code is never patched by hand.</p>"
+    "<h2>Open</h2>"
+    "<p>Source, specs and pipeline live at "
+    '<a href="https://github.com/MarkusNeusinger/anyplot">github.com/MarkusNeusinger/anyplot</a> '
+    '(MIT). Machine access is documented in <a href="https://anyplot.ai/llms.txt">llms.txt</a>; '
+    "propose a new plot type via a "
+    '<a href="https://github.com/MarkusNeusinger/anyplot/issues/new?labels=spec-request">spec request</a>.</p>'
+)
+
+
 @router.get("/seo-proxy/about")
 async def seo_about():
-    """Bot-optimized about page with correct og:tags."""
+    """Bot-optimized about page: the pipeline story, not just og:tags."""
     return HTMLResponse(
         _render_bot_html(
             title="About | anyplot.ai",
             description="About anyplot.ai — library-agnostic, AI-powered plotting.",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/about",
+            body=_ABOUT_BOT_BODY,
         )
     )
 
 
+# Hex values come straight from core/palette.py — the single source of truth —
+# so the bot page can never disagree with what the plots actually use.
+_PALETTE_SLOT_NAMES = ("green", "lavender", "blue", "ochre", "red", "cyan", "rose", "lime")
+_PALETTE_BOT_BODY = (
+    "<h1>imprint — the anyplot palette</h1>"
+    "<p>A colorblind-safe categorical palette of 8 hues plus 3 semantic anchors, tuned for "
+    "warm-paper rendering and validated against deuteranopia, protanopia and tritanopia. "
+    "Every plot in the catalogue uses it.</p>"
+    "<h2>Categorical hues (slot order)</h2>"
+    "<ol>"
+    + "".join(
+        f"<li>{name} <code>{hex_value}</code></li>"
+        for name, hex_value in zip(_PALETTE_SLOT_NAMES, palette.IMPRINT, strict=True)
+    )
+    + "</ol>"
+    "<h2>Semantic anchors (outside the categorical pool)</h2>"
+    "<ul>"
+    f"<li>amber <code>{palette.AMBER}</code> — warning / caution</li>"
+    f"<li>neutral — theme-adaptive ink: <code>{palette.neutral_for('light')}</code> light / "
+    f"<code>{palette.neutral_for('dark')}</code> dark</li>"
+    f"<li>muted — theme-adaptive soft ink: <code>{palette.muted_for('light')}</code> light / "
+    f"<code>{palette.muted_for('dark')}</code> dark</li>"
+    "</ul>"
+    "<p>Copy-paste snippets for Python, R, Julia and JavaScript are on the "
+    '<a href="https://anyplot.ai/palette">interactive page</a>.</p>'
+)
+
+
 @router.get("/seo-proxy/palette")
 async def seo_palette():
-    """Bot-optimized palette page with correct og:tags."""
+    """Bot-optimized palette page: the actual hex values, not just og:tags."""
     return HTMLResponse(
         _render_bot_html(
             title="imprint palette | anyplot.ai",
             description="Imprint — a colorblind-safe categorical palette of 8 hues plus 3 semantic anchors (amber, neutral, muted). Tuned for warm-paper rendering, validated against deuteranopia / protanopia / tritanopia. The palette every plot on anyplot.ai uses.",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/palette",
+            body=_PALETTE_BOT_BODY,
         )
     )
 
@@ -1007,14 +1112,45 @@ async def seo_map():
 
 
 @router.get("/seo-proxy/stats")
-async def seo_stats():
-    """Bot-optimized stats page with correct og:tags."""
+async def seo_stats(db: AsyncSession | None = Depends(optional_db)):
+    """Bot-optimized stats page: the live catalogue counts, not just og:tags.
+
+    Uses the same cache key the /stats endpoint populates (and the startup
+    prewarm fills), so this adds no extra DB load. Without a DB the body
+    degrades to the registry-derived counts.
+    """
+    if db is not None:
+
+        async def _fetch() -> StatsResponse:
+            return await _compute_stats(db)
+
+        stats = await get_or_set_cache(
+            cache_key("stats"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh_stats
+        )
+        body = (
+            "<h1>anyplot in numbers</h1>"
+            "<ul>"
+            f"<li>{stats.specs} plot specifications</li>"
+            f"<li>{stats.plots} rendered implementations</li>"
+            f"<li>{stats.libraries} libraries across {stats.languages} languages</li>"
+            "</ul>"
+        )
+    else:
+        body = (
+            f"<h1>anyplot in numbers</h1><p>{_LIBRARY_COUNT} libraries across {len(LANGUAGES_METADATA)} languages.</p>"
+        )
+    body += (
+        '<p>Live machine-readable counts: <a href="https://api.anyplot.ai/stats">api.anyplot.ai/stats</a>; '
+        "per-library quality scores and coverage on the "
+        '<a href="https://anyplot.ai/stats">interactive page</a>.</p>'
+    )
     return HTMLResponse(
         _render_bot_html(
             title="Stats | anyplot.ai",
             description="Platform statistics: library scores, coverage, tags, and top implementations.",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/stats",
+            body=body,
         )
     )
 
