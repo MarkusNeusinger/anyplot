@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: area-cumulative-flow
 created: '2026-08-19T21:23:33Z'
-updated: '2026-08-19T21:28:03Z'
+updated: '2026-08-19T21:40:26Z'
 generated_by: claude-sonnet
 workflow_run: 32301932755
 issue: 5239
@@ -12,48 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Stacking order correctly follows the spec''s CFD convention (stack + stackOrder="reverse"):
-    earliest stage "New" renders on top, latest stage "Resolved" renders on bottom,
-    with each band''s width equal to that stage''s WIP.'
-  - 'Palette compliance is exact: first series (New) is brand green #009E73, remaining
-    stages use the Imprint palette in canonical order 2-3-4, identical hues in both
-    light and dark renders.'
-  - 'Both renders are fully legible and theme-correct — warm cream #FAF8F1 background
-    with dark ink in light mode, warm near-black #1A1A17 background with light ink
-    in dark mode, no dark-on-dark or light-on-light failures.'
-  - 'Genuine data storytelling: the Triaged/In Progress bands visibly widen during
-    the simulated day 20-42 development capacity crunch and narrow again afterward,
-    actually demonstrating the bottleneck-detection value the spec calls out.'
-  - Deterministic, self-contained data generation via a realistic queue/capacity simulation
-    (arrivals, per-stage daily throughput caps) — no RNG, no network calls.
-  - The hand-rotated y-axis label sidesteps a documented MUI X gotcha (the built-in
-    axis `label` prop collides with 3-digit tick labels) with a clean, collision-free
-    layout.
+  - 'Correct CFD stacking order: New (earliest) on top, Resolved (latest) on bottom,
+    matching the spec''s required band order'
+  - 'Data tells a real bottleneck story: the Triaged band visibly narrows around May
+    11-15 when dev capacity tightens, then the whole stack accelerates after the staffing
+    boost around day 42 - a genuine CFD insight, not a flat trend'
+  - Cumulative counts are correctly monotonically non-decreasing via a deterministic
+    queue-simulation (advanceQueue), guaranteeing the CFD invariant that an earlier
+    stage's cumulative count never dips below a later stage's
+  - Imprint palette used in canonical order with brand green first (#009E73 for 'New'),
+    identical data colors across both themes, theme-correct chrome (cream/near-black
+    backgrounds, adaptive text) in both renders
+  - Explicit font sizing throughout (title 22px, axis label 16px, tick/legend 14px)
+    plus a documented workaround for MUI X's y-axis label collision with 3-digit ticks
+    (hand-rotated Typography label in a flex column)
+  - Title format exactly matches the mandated 'area-cumulative-flow · javascript ·
+    muix · anyplot.ai' convention, legend labels match the four workflow stages in
+    order
   weaknesses:
-  - Design Excellence is fairly restrained — beyond the data-color palette and the
-    custom rotated y-axis label, the chart leans on MUI X defaults (standard horizontal
-    grid, flat area fills, default legend swatches); a touch more polish (subtle area
-    alpha/gradient, refined spine treatment) would raise DE-01/DE-02.
-  - Stage count sits at the minimum of the spec's 4-8 range; an additional upstream
-    stage (e.g. a raw "Backlog" queue feeding New) would better showcase the multi-stage
-    bottleneck story DQ-01 rewards.
-  - Several helper functions (advanceQueue, per-stage capacity closures) add structure
-    beyond the KISS ideal for a chart script, even though they're justified by the
-    realistic queue simulation they implement.
+  - 'Design Excellence is close to a well-configured library default: aside from the
+    dashed grid, area fillOpacity, and the rotated y-axis label workaround, the chart
+    relies on MUI X''s stock stacked-area look - a custom typography treatment or
+    subtler spine/axis-line styling would push this further above ''default'''
+  - No explicit annotation or callout marks the bottleneck (Triaged band narrowing
+    then the post-staffing-boost acceleration) even though the data was deliberately
+    engineered to show it - a viewer has to notice the shape change themselves rather
+    than being guided to it
+  - 'LM-02 distinctive-feature usage is moderate: stacked area via LineChart''s area+stack+stackOrder
+    is correct MUI X API but is also straightforward to replicate in most other charting
+    libraries; nothing here is uniquely MUI X beyond the axis-label quirk workaround'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "area-cumulative-flow · javascript · muix · anyplot.ai" in bold dark ink top-left; legend (New/Triaged/In Progress/Resolved swatches) centered above the plot; y-axis label "Cumulative ticket count" hand-rotated on the left; x-axis label "Date" centered below; tick labels on both axes in a lighter dark gray. All fully readable against the light background.
-      Data: Four stacked area bands from bottom to top: Resolved (ochre/orange, largest, ~490 at the end), In Progress (blue), Triaged (lavender/purple), New (brand green #009E73, thinnest sliver on top). Bands widen visibly in the Triaged/In Progress region between ~Apr 21 and ~May 15, showing a mid-period bottleneck, then narrow again — matching the simulated capacity crunch in the code.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "area-cumulative-flow · javascript · muix · anyplot.ai" top-left, clearly readable. Row legend below title (New / Triaged / In Progress / Resolved) with color swatches. Y-axis has a rotated "Cumulative ticket count" label plus numeric ticks (0-800, step 50); x-axis has "Date" label plus date ticks (Apr 1 - Jun 7) at 2-day intervals. Subtle dashed horizontal gridlines. All text renders in dark ink against the light background - fully legible.
+      Data: Four stacked area bands from top to bottom: thin green "New" sliver, lavender "Triaged", blue "In Progress", and the large ochre "Resolved" band at the base. The Triaged (lavender) band visibly narrows around Apr 25-May 11 (dev-capacity bottleneck) before widening again once the backlog clears - clear bottleneck signal in the data. First series (New) is the brand green #009E73 as required.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, legend, axis labels and tick labels as the light render, all rendered in light ink/gray tones. Grid lines are subtle but visible against the dark background. No dark-on-dark elements — every text element has clear contrast against the near-black surface.
-      Data: Identical stacking order and identical hues to the light render (green/purple/blue/ochre) — only the chrome (background, text, grid) flipped, confirming theme-adaptive tokens were threaded correctly. The green top sliver and the bottleneck-widening bands read exactly as they do in the light render.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title, legend, axis labels and ticks now rendered in light/off-white text against the dark background - clearly readable, no dark-on-dark issues found. Gridlines remain subtle (light dashed lines at low opacity).
+      Data: Same four bands in identical colors to the light render (green, lavender, blue, ochre) - only the chrome (background, text, grid) flipped as expected. The bottleneck narrowing/widening shape in the Triaged band is equally visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -65,72 +66,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text (title, axis labels, ticks, legend) readable in both themes
-          at explicit font sizes; dense date ticks stay non-overlapping
+        comment: All font sizes explicitly set (title 22px, axis 16px, ticks/legend
+          14px); readable and well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements
+        comment: Legend, title, axes, and data never collide
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: showMark=false is the correct choice for 70 dense daily points; stacked
-          area bands are all clearly distinguishable
+        comment: Area bands sized appropriately for the 70-point daily time series,
+          fillOpacity 0.85 keeps bands distinct without hiding overlap boundaries
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette hues (green/purple/blue/ochre) are CVD-distinguishable,
-          good contrast against both surfaces
+        comment: Imprint palette CVD-safe hues, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed; proportions balanced, no overflow
+        comment: Chart fills a large, well-balanced portion of the 3200x1800 canvas;
+          no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Cumulative ticket count" and "Date" are descriptive'
+        comment: '''Cumulative ticket count'' and ''Date'' are descriptive; unit implied
+          by ''count'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (New) is #009E73, palette used in canonical order,
-          identical across themes, correct backgrounds'
+        comment: 'First series #009E73, remaining series follow canonical Imprint
+          order 2-4; theme-correct backgrounds and chrome in both renders'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom palette and a hand-solved y-axis label collision show some
-          effort, but overall relies on MUI X defaults for chart chrome
+        comment: 'Well-configured library default: Imprint colors, opacity, and dashed
+          grid customized, but overall look is close to stock MUI X stacked area'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Horizontal-only grid is subtle and whitespace is generous, but area
-          fills and legend swatches are default MUI X treatment
+        comment: Subtle dashed grid, generous padding, but spines/frame otherwise
+          standard
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Widening Triaged/In Progress bands during the simulated capacity
-          crunch create a real, readable bottleneck narrative
+        passed: false
+        comment: Visual hierarchy exists (band-width changes reveal the bottleneck)
+          but nothing is annotated to guide the viewer to the insight
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked-area cumulative flow diagram
+        comment: Correct cumulative flow diagram (stacked area over time)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Workflow-order stacking (earliest on top), distinct per-stage colors,
-          legend, reasonable date-interval x-axis ticks
+        comment: Correct stage order (earliest on top), WIP-as-band-width, monotonic
+          cumulative counts, distinct palette, legend, dated x-axis - all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=cumulative ticket count; axes show full data range
+        comment: X = date, Y = cumulative ticket count, all data visible within axis
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels (New/Triaged/In
-          Progress/Resolved) match the stage series
+        comment: Title matches mandated format exactly; legend labels match the four
+          stage names in order
     data_quality:
       score: 14
       max: 15
@@ -170,84 +173,83 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Monotonic cumulative counts, correct WIP-as-band-width, and a visible
-          bottleneck; sits at the low end of the spec's 4-8 stage range
+        comment: Shows both a narrowing bottleneck band and a subsequent widening/draining
+          phase
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral support-ticket triage/dev/release workflow
+        comment: Support-ticket workflow, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 70 days, 4 stages, counts 0-~760 — sensible for the domain and within
-          spec bounds
+        comment: Arrival rates and stage capacities are plausible for a small support
+          team over 70 days
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Several small helper functions (advanceQueue, capacity closures)
-          go beyond a flat script, though justified by the queue simulation
+        comment: Imports -> data-generation helpers (needed for correct monotonic
+          queue simulation) -> single Chart component; no unnecessary classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Fully deterministic (sin-based arrivals, fixed capacities, no RNG)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart, Box, Typography — all used
+        comment: Only LineChart, Box, Typography imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Appropriate complexity for the queue simulation, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract, skipAnimation set, current
-          MUI X area/stack API
+        comment: Correct default-export component contract, skipAnimation set
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct community pattern for stacked areas (LineChart + area:true
-          + stack), theme-adaptive via harness ThemeProvider
+        comment: Correct use of LineChart's area+stack+stackOrder API, valueFormatter,
+          tickLabelStyle, slotProps.legend
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: stackOrder="reverse" for workflow-order bands, per-series valueFormatter,
-          custom y-axis number formatting, and a workaround for a documented axis-label
-          collision gotcha
+        passed: false
+        comment: Stacked-area technique is portable to other libraries, but the documented
+          y-axis label collision workaround shows real MUI X-specific knowledge
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - stacked-area
+  techniques: []
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - cumulative-sum
-  styling: []
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
