@@ -8,6 +8,7 @@ from api.dependencies import require_db
 from api.exceptions import raise_not_found
 from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem, SpecMapItem
 from core.config import settings
+from core.constants import LIBRARY_LANGUAGES
 from core.database import ImplRepository, SpecRepository
 from core.database.connection import get_db_context
 from core.utils import strip_noqa_comments
@@ -204,15 +205,19 @@ async def get_spec(spec_id: str, db: AsyncSession = Depends(require_db)):
 
 
 @router.get("/specs/{spec_id}/{library}/code")
-async def get_impl_code(spec_id: str, library: str, language: str = "python", db: AsyncSession = Depends(require_db)):
-    """Get implementation code for a specific spec + library + language.
+async def get_impl_code(
+    spec_id: str, library: str, language: str | None = None, db: AsyncSession = Depends(require_db)
+):
+    """Get implementation code for a specific spec + library.
 
     Code field is deferred in the main `/specs/{id}` query so it must be
-    fetched here on-demand. `language` disambiguates when the same library_id
-    could exist for multiple languages (today ggplot2 is R and makie is Julia;
-    everything else is Python). Defaults to python for backwards compat with
-    older clients that don't send the param.
+    fetched here on-demand. Library ids are globally unique across languages
+    (core/constants.py), so the language is resolved from the registry when
+    the param is absent — the old `language="python"` default made the obvious
+    URL 404 for every R/Julia/JavaScript library. An explicit `language`
+    still wins for backwards compat with clients that send it.
     """
+    language = language or LIBRARY_LANGUAGES.get(library, "python")
 
     async def _fetch() -> dict:
         return await _build_impl_code(db, spec_id, library, language)

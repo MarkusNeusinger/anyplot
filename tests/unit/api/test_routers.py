@@ -613,22 +613,43 @@ class TestSeoRouter:
     """Tests for SEO router."""
 
     def test_robots_txt(self, client: TestClient) -> None:
-        """robots.txt should block the API but expose the preview images.
+        """robots.txt must leave the read API open to compliant agents.
 
-        Every prerendered page references an image under /og/; a blanket
-        Disallow made those unfetchable for anything that honours robots.txt,
-        so an assistant could read a plot's code but not show its picture.
+        The old blanket Disallow told every robots-compliant AI assistant that
+        the REST endpoints, /openapi.json and the MCP transport were
+        off-limits — on the host llms.txt advertises as the machine interface
+        (AI-access audit 2026-08-19). Only /debug and /proxy stay excluded.
         """
         response = client.get("/robots.txt")
         assert response.status_code == 200
         assert response.headers["content-type"] == "text/plain; charset=utf-8"
         content = response.text
         assert "User-agent: *" in content
-        assert "Disallow: /" in content
-        assert "Allow: /og/" in content
-        # Allow must come first: a first-match parser stops at Disallow: / and
-        # would never reach the exception.
-        assert content.index("Allow: /og/") < content.index("Disallow: /")
+        assert "Allow: /\n" in content
+        assert "Disallow: /debug" in content
+        assert "Disallow: /proxy" in content
+        # No blanket Disallow may survive — that was the defect.
+        assert "Disallow: /\n" not in content
+        # Specific exclusions must precede the catch-all: a first-match parser
+        # stops at Allow: / and would never reach them.
+        assert content.index("Disallow: /debug") < content.index("Allow: /")
+
+    def test_llms_full_txt_without_db(self, client: TestClient) -> None:
+        """llms-full.txt degrades to the header (retrieval recipes) without a DB."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/llms-full.txt")
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/plain")
+        assert "https://api.anyplot.ai/specs/{spec_id}/{library}/code" in response.text
+
+    def test_llms_full_txt_lists_the_catalogue(self, db_client, mock_spec) -> None:
+        client, _ = db_client
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
+            response = client.get("/llms-full.txt")
+        assert response.status_code == 200
+        assert "scatter-basic | Basic Scatter Plot | https://anyplot.ai/scatter-basic | matplotlib" in response.text
 
     def test_sitemap_structure(self, client: TestClient) -> None:
         """Sitemap should return valid XML structure."""
@@ -944,6 +965,13 @@ class TestSeoProxyRouter:
         js_impl.library = MagicMock()
         js_impl.library.language = "javascript"
         js_impl.preview_url = None
+        # Concrete values — the JSON-LD builder serializes these fields
+        js_impl.preview_url_light = None
+        js_impl.preview_url_dark = None
+        js_impl.preview_html_light = None
+        js_impl.preview_html_dark = None
+        js_impl.quality_score = None
+        js_impl.updated = None
         mock_spec.impls = [*mock_spec.impls, js_impl]
 
         mock_spec_repo = MagicMock()
@@ -989,11 +1017,19 @@ class TestSeoProxyRouter:
         mock_impl_no_preview.library_id = "seaborn"
         mock_impl_no_preview.library = mock_library
         mock_impl_no_preview.preview_url = None
+        # Concrete values — the JSON-LD builder serializes these fields
+        mock_impl_no_preview.preview_url_light = None
+        mock_impl_no_preview.preview_url_dark = None
+        mock_impl_no_preview.preview_html_light = None
+        mock_impl_no_preview.preview_html_dark = None
+        mock_impl_no_preview.quality_score = None
+        mock_impl_no_preview.updated = None
 
         mock_spec_no_preview = MagicMock()
         mock_spec_no_preview.id = "scatter-basic"
         mock_spec_no_preview.title = "Basic Scatter Plot"
         mock_spec_no_preview.description = "A basic scatter plot"
+        mock_spec_no_preview.tags = None
         mock_spec_no_preview.impls = [mock_impl_no_preview]
 
         mock_spec_repo = MagicMock()
@@ -2299,3 +2335,84 @@ class TestSpecCodeEndpoint:
             response = client.get("/specs/scatter-basic/matplotlib/code")
             assert response.status_code == 200
             assert response.json()["code"] == "cached code"
+
+    def test_code_resolves_language_from_the_library(self, client: TestClient) -> None:
+        """The obvious URL must work for every library, not only Python.
+
+        The old `language="python"` default made /specs/{id}/ggplot2/code 404
+        for all 7 non-Python libraries — 28% of the catalogue unreachable at
+        the URL an agent naturally constructs (AI-access audit 2026-08-19).
+        Library ids are globally unique, so the registry knows the language.
+        """
+        mock_impl = MagicMock()
+        mock_impl.code = "ggplot(df, aes(x, y)) + geom_point()"
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=mock_impl)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/specs/scatter-basic/ggplot2/code")
+            assert response.status_code == 200
+            assert response.json()["language"] == "r"
+            mock_impl_repo.get_code.assert_awaited_once_with("scatter-basic", "ggplot2", "r")
+
+    def test_code_explicit_language_param_still_wins(self, client: TestClient) -> None:
+        """Backwards compat: clients that send ?language= keep their behavior."""
+        mock_impl = MagicMock()
+        mock_impl.code = "code"
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=mock_impl)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/specs/scatter-basic/ggplot2/code?language=python")
+            assert response.status_code == 200
+            assert response.json()["language"] == "python"
+            mock_impl_repo.get_code.assert_awaited_once_with("scatter-basic", "ggplot2", "python")
+
+    def test_code_unknown_library_falls_back_to_python(self, client: TestClient) -> None:
+        """A library id outside the registry resolves to python and 404s cleanly."""
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_code = AsyncMock(return_value=None)
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.specs.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.specs.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/specs/scatter-basic/no-such-lib/code")
+            assert response.status_code == 404
+
+
+class TestHeadRequests:
+    """HEAD must answer like GET without a body (served by HeadAsGetMiddleware).
+
+    FastAPI's @router.get registers GET-only routes, so every HEAD probe —
+    link checkers, agents preflighting a page before fetching it — answered
+    405 across the whole API, including /health and the seo-proxy pages
+    (AI-access audit 2026-08-19).
+    """
+
+    def test_head_health_answers_200_with_empty_body(self, client: TestClient) -> None:
+        response = client.head("/health")
+        assert response.status_code == 200
+        assert response.text == ""
+
+    def test_head_matches_get_headers(self, client: TestClient) -> None:
+        head = client.head("/robots.txt")
+        get = client.get("/robots.txt")
+        assert head.status_code == 200
+        assert head.headers["content-type"] == get.headers["content-type"]
+        assert head.text == ""
+
+    def test_head_on_a_seo_proxy_page(self, client: TestClient) -> None:
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.head("/seo-proxy/")
+        assert response.status_code == 200
+        assert response.text == ""

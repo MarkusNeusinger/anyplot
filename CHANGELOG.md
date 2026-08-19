@@ -16,7 +16,44 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Added
+
+- **`llms-full.txt` — the whole catalogue in one fetch** — a new
+  `GET /llms-full.txt` lists every spec on one line (id, title, hub URL, implemented
+  libraries) under a header that documents the retrieval recipes that work for *every*
+  HTTP client: the code endpoint, the GCS render URL pattern (light/dark, responsive
+  widths, WebP), OpenAPI and the MCP endpoint. Until now an agent had to walk the 400 KB
+  sitemap or guess URL shapes; the prerendered pages that carry this information are
+  user-agent-gated, so most agents never saw them (AI-access audit 2026-08-19).
+
 ### Fixed
+
+- **The API host no longer forbids itself to AI agents** — `api.anyplot.ai/robots.txt`
+  served `Disallow: /` (only `/og/` excepted), telling every robots-compliant assistant
+  that the REST endpoints, `openapi.json` and the MCP transport were off-limits — on the
+  very host `llms.txt` advertises as the machine interface. The read API is now open;
+  only `/debug` and `/proxy` stay excluded.
+- **Non-Python code is reachable at the obvious URL** — `/specs/{id}/{library}/code`
+  defaulted its `language` parameter to `python`, so the natural URL 404'd for all seven
+  R/Julia/JavaScript libraries (28% of the catalogue) with a misleading "not found".
+  Library ids are globally unique, so the language now resolves from the registry;
+  an explicit `?language=` still wins.
+- **HEAD requests answered 405 across the whole API** — FastAPI's `@router.get` registers
+  GET-only routes, so agents and link checkers that preflight with HEAD concluded every
+  page was unavailable. An ASGI middleware now answers HEAD like GET without a body
+  (and without doubling the documented surface in openapi.json).
+- **Structured data hands agents the plot, not the branding card** — the per-implementation
+  `SoftwareSourceCode` JSON-LD declared the 1200×630 og card as its `image`; it now carries
+  the actual render as an `ImageObject` (full-size + 1200px thumbnail) plus the fields an
+  assistant checks before reusing code: `license` (MIT), `codeRepository`, `dateModified`,
+  `keywords`, `author`, `isBasedOn` — previously present only in the SPA's JSON-LD, which
+  no crawler executes. Spec-hub bot pages likewise show the best real render (with the
+  full asset list) instead of the og collage, and their `ItemList` names each
+  implementation's render URL.
+- **One version, everywhere** — `openapi.json` claimed 1.0.0 and "9 libraries", `/health`
+  said 0.2.0, pyproject said 3.1.0. All surfaces now report the packaged version and a
+  registry-derived library/language count, and `openapi.json` names its production server
+  so the spec is usable standalone.
 
 - **Deploy checks could report another project's builds** — the runbook's recipe for
   "did this actually deploy?" flagged `--region` as the easy thing to forget and treated

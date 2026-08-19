@@ -194,7 +194,7 @@ Backend endpoints that serve HTML with correct meta tags for bots.
 
 | Endpoint | Purpose | og:image |
 |----------|---------|----------|
-| `GET /seo-proxy/` | Home page | Default (`og-image.png`) |
+| `GET /seo-proxy/` | Home page | Default (`api.anyplot.ai/og/home.png`) |
 | `GET /seo-proxy/plots` | Plots page | Default |
 | `GET /seo-proxy/specs` | Specs page | Default |
 | `GET /seo-proxy/legal` | Legal page | Default |
@@ -296,7 +296,7 @@ Dynamically generated preview images with anyplot.ai branding.
 | Endpoint | Description | Dimensions |
 |----------|-------------|------------|
 | `GET /og/{spec_id}.png` | Collage of top 6 implementations | 1200x630 |
-| `GET /og/{spec_id}/{library}.png` | Single branded implementation | 1200x630 |
+| `GET /og/{spec_id}/{language}/{library}.png` | Single branded implementation | 1200x630 |
 
 ### Single implementation image
 
@@ -365,18 +365,18 @@ Dynamic endpoint at `GET /robots.txt`:
 
 ```txt
 User-agent: *
-Allow: /og/
-Disallow: /
+Disallow: /debug
+Disallow: /proxy
+Allow: /
 ```
 
-`/og/` is the exception: every prerendered page references its preview image
-there, so a blanket `Disallow` pointed crawlers at an image they were forbidden
-to fetch. `Allow` comes first for the first-match parsers described above.
-
-**Why block the API?**
-- APIs should not be indexed by search engines
-- Prevents crawling of debug endpoints, docs, and API responses
-- Social media bots (WhatsApp, Twitter, etc.) are unaffected - they fetch og:images directly
+The read API is deliberately open. The earlier blanket `Disallow: /` (with
+only `/og/` excepted) told every robots-compliant AI assistant that the REST
+endpoints, `/openapi.json` and the MCP transport were off-limits — on the very
+host `llms.txt` advertises as the machine interface to the catalogue
+(AI-access audit 2026-08-19). Only `/debug` (internal diagnostics) and
+`/proxy` (a parameterised fetch proxy) stay excluded. `Disallow` lines come
+before the `Allow: /` catch-all for the first-match parsers described above.
 
 ### AI crawler policy
 

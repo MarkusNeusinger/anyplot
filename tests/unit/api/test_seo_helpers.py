@@ -15,6 +15,7 @@ from api.routers.seo import (
     TEMPLATE_LAST_CHANGED,
     _build_home_body,
     _build_impl_html,
+    _build_llms_full,
     _build_sitemap_xml,
     _build_spec_hub_html,
     _jsonld_script,
@@ -43,6 +44,14 @@ def _mock_impl(library_id: str, language: str, preview: str | None = "https://gc
     impl.library = MagicMock()
     impl.library.language = language
     impl.preview_url = preview
+    # Concrete values — the JSON-LD builder serializes these, and a MagicMock
+    # auto-attribute is neither JSON-serializable nor orderable.
+    impl.preview_url_light = preview
+    impl.preview_url_dark = None
+    impl.preview_html_light = None
+    impl.preview_html_dark = None
+    impl.quality_score = 90.0
+    impl.updated = None
     return impl
 
 
@@ -51,6 +60,7 @@ def _mock_spec(impls: list) -> MagicMock:
     spec.id = "scatter-basic"
     spec.title = "Basic Scatter Plot"
     spec.description = "Points on <axes> & friends"
+    spec.tags = {"plot_type": "scatter", "features": ["error-bars"]}
     spec.impls = impls
     return spec
 
@@ -282,6 +292,15 @@ class TestRenderBotHtml:
         result = _render_bot_html(title="t", description="d", image="i", url="u")
         assert "application/ld+json" not in result
 
+    def test_indexable_pages_ask_for_large_image_previews(self) -> None:
+        result = _render_bot_html(title="t", description="d", image="i", url="u")
+        assert '<meta name="robots" content="max-image-preview:large" />' in result
+
+    def test_noindex_replaces_the_robots_content(self) -> None:
+        result = _render_bot_html(title="t", description="d", image="i", url="u", noindex=True)
+        assert '<meta name="robots" content="noindex" />' in result
+        assert "max-image-preview" not in result
+
 
 class TestJsonldScript:
     """Tests for _jsonld_script."""
@@ -315,8 +334,14 @@ class TestBuildSpecHubHtml:
         # display names from core.constants, not raw ids
         assert "in Matplotlib (Python)" in page
         assert "in ggplot2 (R)" in page
-        # preview image in the body
-        assert '<img src="https://api.anyplot.ai/og/scatter-basic.png"' in page
+        # the body shows the best actual render, not the og collage card —
+        # the hub was the one page type where a machine could enumerate every
+        # implementation link yet not reach a single plot image
+        assert '<img src="https://gcs/preview_1200.png"' in page
+        assert "Preview render from the Matplotlib implementation." in page
+        assert '<img src="https://api.anyplot.ai/og/scatter-basic.png"' not in page
+        # the collage card stays the social preview
+        assert '<meta property="og:image" content="https://api.anyplot.ai/og/scatter-basic.png" />' in page
         # description is escaped
         assert "&lt;axes&gt; &amp; friends" in page
 
@@ -329,6 +354,15 @@ class TestBuildSpecHubHtml:
             "https://anyplot.ai/scatter-basic/python/matplotlib",
             "https://anyplot.ai/scatter-basic/r/ggplot2",
         ]
+        # per-item render URLs: one hub fetch enumerates every plot image
+        assert [i["image"] for i in item_list["itemListElement"]] == ["https://gcs/preview.png"] * 2
+
+    def test_hub_without_previews_falls_back_to_card(self) -> None:
+        spec = _mock_spec([_mock_impl("matplotlib", "python", preview=None)])
+        page = _build_spec_hub_html(spec, "https://api.anyplot.ai/og/scatter-basic.png")
+        assert '<img src="https://api.anyplot.ai/og/scatter-basic.png"' in page
+        item_list = _extract_jsonld(page)["@graph"][1]
+        assert "image" not in item_list["itemListElement"][0]
 
 
 class TestBuildImplHtml:
@@ -358,12 +392,56 @@ class TestBuildImplHtml:
         assert source["@type"] == "SoftwareSourceCode"
         assert source["programmingLanguage"] == "Python"
         assert source["url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+        # fields an assistant checks before reusing the code — these lived only
+        # in the SPA's JSON-LD, which no crawler executes
+        assert source["license"] == "https://opensource.org/licenses/MIT"
+        assert source["codeRepository"] == "https://github.com/MarkusNeusinger/anyplot"
+        assert source["isBasedOn"] == "https://anyplot.ai/scatter-basic"
+        # tag bag flattens into keywords (string and list values alike)
+        assert source["keywords"] == ["scatter", "error-bars"]
+
+    def test_jsonld_image_is_the_render_not_the_card(self) -> None:
+        source = _extract_jsonld(self._page())["@graph"][1]
+        image = source["image"]
+        assert image["@type"] == "ImageObject"
+        assert image["contentUrl"] == "https://gcs/preview.png"
+        assert image["thumbnailUrl"] == "https://gcs/preview_1200.png"
+
+    def test_jsonld_without_render_keeps_card_image(self) -> None:
+        impl = _mock_impl("matplotlib", "python", preview=None)
+        spec = _mock_spec([impl])
+        page = _build_impl_html(spec, impl, "code()", "https://api.anyplot.ai/og/card.png")
+        source = _extract_jsonld(page)["@graph"][1]
+        assert source["image"] == "https://api.anyplot.ai/og/card.png"
 
     def test_no_code_no_pre_block(self) -> None:
         page = self._page(code=None)
         assert "<pre>" not in page
         # page is still enriched otherwise
         assert '<a href="https://anyplot.ai/scatter-basic">' in page
+
+
+class TestBuildLlmsFull:
+    """Tests for the llms-full.txt catalogue index."""
+
+    def test_one_line_per_spec_with_sorted_libraries(self) -> None:
+        spec = _mock_spec([_mock_impl("seaborn", "python"), _mock_impl("ggplot2", "r")])
+        text = _build_llms_full([spec])
+        assert "scatter-basic | Basic Scatter Plot | https://anyplot.ai/scatter-basic | ggplot2,seaborn" in text
+
+    def test_specs_without_impls_are_skipped(self) -> None:
+        empty = _mock_spec([])
+        empty.id = "unpublished"
+        text = _build_llms_full([empty, _mock_spec([_mock_impl("matplotlib", "python")])])
+        assert "unpublished" not in text
+        assert "scatter-basic" in text
+
+    def test_header_documents_ua_independent_retrieval(self) -> None:
+        """The header is the point: recipes that work without a crawler UA."""
+        text = _build_llms_full([])
+        assert "https://api.anyplot.ai/specs/{spec_id}/{library}/code" in text
+        assert "https://storage.googleapis.com/anyplot-images/plots/" in text
+        assert "https://api.anyplot.ai/openapi.json" in text
 
 
 class TestSpecIndex:
@@ -554,6 +632,7 @@ class TestRenderAssetList:
         impl.preview_url_dark = f"{self.BASE}/plot-dark.png"
         impl.preview_html_light = f"{self.BASE}/plot-light.html" if interactive else None
         impl.preview_html_dark = f"{self.BASE}/plot-dark.html" if interactive else None
+        impl.updated = None  # serialized into JSON-LD — must not be a MagicMock
         return impl
 
     def test_names_both_themes_explicitly(self) -> None:
