@@ -58,7 +58,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   middleware); `llms-full.txt` lines now list implementations as `{language}/{library}`
   so the render URL is buildable from the file alone; error responses on prerendered
   pages no longer echo the internal `/seo-proxy` path prefix; and MCP `serverInfo` now
-  reports the app version instead of fastmcp's package version (#10489).
+  reports the app version instead of fastmcp's package version (#10490).
 
 - **The API host no longer forbids itself to AI agents** — `api.anyplot.ai/robots.txt`
   served `Disallow: /` (only `/og/` excepted), telling every robots-compliant assistant
