@@ -135,6 +135,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   honest note that prerendered page HTML is gated on a crawler user agent while these URLs are
   not. `anyplot.ai/llms-full.txt` is now proxied to the API's generated catalogue index instead
   of soft-404ing to the homepage shell, and the daily monitor asserts it (#10488).
+- **The five doc pages carry real content for crawlers** — the bot renderings of
+  `/libraries`, `/stats`, `/about`, `/legal` and `/palette` were 29–59-word title+description
+  stubs, so a crawler following llms.txt's own link descriptions found none of the promised
+  content (AI-access audit 2026-08-19). They now serve the full library registry (derived from
+  `core/constants.py`), the live catalogue counts (reusing the cached `/stats` data), the
+  pipeline story, the operator/privacy/transparency facts, and the actual palette hex values
+  (straight from `core/palette.py`) — each derived from its single source of truth so the pages
+  cannot drift.
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 

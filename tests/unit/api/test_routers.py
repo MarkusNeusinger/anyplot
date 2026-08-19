@@ -1048,12 +1048,36 @@ class TestSeoProxyRouter:
             assert "<pre>" not in response.text
 
     def test_seo_about(self, client: TestClient) -> None:
-        """SEO about page should return HTML with og:tags."""
+        """SEO about page must carry the pipeline story, not just og:tags."""
         response = client.get("/seo-proxy/about")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "https://anyplot.ai/about" in response.text
+        # registry-derived count + the pipeline sequence
+        assert "15 libraries" in response.text
+        assert "AI-drafted, human-approved" in response.text
+        assert "never patched by hand" in response.text
+
+    def test_seo_libraries_lists_the_registry(self, client: TestClient) -> None:
+        """The /libraries bot page was a 29-word stub although its whole
+        content sits in core/constants.py (AI-access audit 2026-08-19)."""
+        response = client.get("/seo-proxy/libraries")
+        assert response.status_code == 200
+        # one section per language, every library named with its version
+        for heading in ("<h2>Python</h2>", "<h2>R</h2>", "<h2>Julia</h2>", "<h2>JavaScript</h2>"):
+            assert heading in response.text
+        for lib in ("Matplotlib", "ggplot2", "Makie", "ECharts", "MUI X Charts"):
+            assert lib in response.text
+        assert "https://anyplot.ai/plots" in response.text
+
+    def test_seo_legal_names_operator_and_privacy_facts(self, client: TestClient) -> None:
+        response = client.get("/seo-proxy/legal")
+        assert response.status_code == 200
+        assert "Markus Neusinger" in response.text
+        assert "Plausible Analytics" in response.text
+        assert "no cookies" in response.text
+        assert "Google Cloud Run" in response.text
 
     def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
         """The /mcp page's audience is AI agents — the bot body must carry the
@@ -1073,12 +1097,17 @@ class TestSeoProxyRouter:
             assert tool in response.text
 
     def test_seo_palette(self, client: TestClient) -> None:
-        """SEO palette page should return HTML with og:tags."""
+        """SEO palette page must carry the actual hex values from core/palette.py."""
         response = client.get("/seo-proxy/palette")
         assert response.status_code == 200
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "https://anyplot.ai/palette" in response.text
+        # all 8 categorical hues plus the amber anchor, straight from the module
+        from core import palette
+
+        for hex_value in [*palette.IMPRINT, palette.AMBER]:
+            assert hex_value in response.text
 
     def test_seo_map(self, client: TestClient) -> None:
         """SEO map page should return HTML with og:tags."""
@@ -1088,13 +1117,31 @@ class TestSeoProxyRouter:
         assert "og:title" in response.text
         assert "https://anyplot.ai/map" in response.text
 
-    def test_seo_stats(self, client: TestClient) -> None:
-        """SEO stats page should return HTML with og:tags."""
-        response = client.get("/seo-proxy/stats")
+    def test_seo_stats_without_db_degrades_to_registry_counts(self, client: TestClient) -> None:
+        """Without a DB the stats body still carries the registry-derived counts."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/seo-proxy/stats")
         assert response.status_code == 200
-        assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
-        assert "https://anyplot.ai/stats" in response.text
+        assert "anyplot in numbers" in response.text
+        assert "15 libraries across 4 languages" in response.text
+        assert "https://api.anyplot.ai/stats" in response.text
+
+    def test_seo_stats_with_db_shows_live_counts(self, db_client) -> None:
+        """With a DB the body carries the cached live counts."""
+        from api.schemas import StatsResponse
+
+        client, _ = db_client
+
+        async def _cached(key, factory, **kwargs):
+            return StatsResponse(specs=324, plots=3583, libraries=15, languages=4)
+
+        with patch("api.routers.seo.get_or_set_cache", side_effect=_cached):
+            response = client.get("/seo-proxy/stats")
+        assert response.status_code == 200
+        assert "324 plot specifications" in response.text
+        assert "3583 rendered implementations" in response.text
+        assert "15 libraries across 4 languages" in response.text
 
 
 class TestOgImagesRouter:
