@@ -2,14 +2,7 @@ import { fileURLToPath } from 'node:url';
 
 import { defineConfig } from 'vitest/config';
 
-import { readProjectVersion } from './project-version';
-
 export default defineConfig({
-  // Mirrors vite.config.ts — the test run compiles the same `__APP_VERSION__`
-  // reference in global-config.ts, and vitest does not read vite.config.ts.
-  define: {
-    __APP_VERSION__: JSON.stringify(readProjectVersion()),
-  },
   resolve: {
     alias: {
       src: fileURLToPath(new URL('./src', import.meta.url)),

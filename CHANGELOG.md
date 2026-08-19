@@ -18,6 +18,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The frontend deploy was broken by the version fix that preceded it** — #10485 read the version
+  from the repo-root `pyproject.toml` at build time, but the frontend image is built with
+  `docker build -f app/Dockerfile app`: the build context is `app/` alone, so nothing above it
+  exists and `vite build` died with `ENOENT .../pyproject.toml`. Cloud Build failed, Cloud Run kept
+  serving the previous revision, and the CSP fix never reached anyplot.ai even though every PR
+  check was green — the exact failure mode `CLAUDE.md` warns about. The version now comes from
+  `app/package.json`, which is always inside the build context, and
+  `tests/unit/test_version_sync.py` holds it equal to the `pyproject.toml` `[project]` version.
+  That test runs on every PR touching `pyproject.toml`, so release PRs cannot reintroduce the
+  drift that left `app/package.json` at 2.0.0 through the whole 3.x line (#10486).
+- **The client bundle no longer ships the frontend dependency list** — `global-config.ts` imported
+  `package.json` as a default import, which inlined the entire manifest (every dependency name and
+  version range) into a shipped chunk. It now imports only the `version` named export (#10486).
 - **The masthead had been advertising v1.0 since the security-headers rollout** — the version next
   to `~/anyplot.ai` comes from the GitHub releases API, and the CSP shipped in the 2026-07-16 audit
   never listed `api.github.com` under `connect-src`. Every browser blocked that request, the hook

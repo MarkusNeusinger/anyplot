@@ -5,12 +5,7 @@ import react from '@vitejs/plugin-react-swc';
 import { checker } from 'vite-plugin-checker';
 import { compression } from 'vite-plugin-compression2';
 
-import { readProjectVersion } from './project-version';
-
 export default defineConfig({
-  define: {
-    __APP_VERSION__: JSON.stringify(readProjectVersion()),
-  },
   resolve: {
     alias: {
       src: fileURLToPath(new URL('./src', import.meta.url)),
