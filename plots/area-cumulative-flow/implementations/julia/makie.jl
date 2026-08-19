@@ -46,7 +46,7 @@ dwell_backlog = 4
 analysis_cum = backlog_cum[clamp.(t .- dwell_backlog, 1, n_days)]
 
 crunch = clamp.(1 .- abs.(t .- 50) ./ 25, 0.0, 1.0)
-dwell_development = round.(Int, 5 .+ 10 .* crunch)
+dwell_development = round.(Int, 5 .+ 16 .* crunch)
 development_cum = analysis_cum[clamp.(t .- dwell_development, 1, n_days)]
 
 dwell_testing = 4
@@ -56,6 +56,25 @@ dwell_done = 3
 done_cum = testing_cum[clamp.(t .- dwell_done, 1, n_days)]
 
 zero_cum = zeros(Int, n_days)
+
+# A short centered moving average softens the day-to-day arrival noise into
+# a smoother band silhouette. Averaging is linear, so it preserves both the
+# non-decreasing property of each curve and the ordering between adjacent
+# curves (their pointwise-non-negative difference stays non-negative once
+# averaged) — the CFD's monotonicity and stacking guarantees survive intact.
+function smooth_curve(x::AbstractVector{<:Real}, window::Int)
+    n = length(x)
+    half = window ÷ 2
+    return [sum(x[max(1, i - half):min(n, i + half)]) /
+            (min(n, i + half) - max(1, i - half) + 1) for i in 1:n]
+end
+
+backlog_smooth     = smooth_curve(backlog_cum, 5)
+analysis_smooth    = smooth_curve(analysis_cum, 5)
+development_smooth = smooth_curve(development_cum, 5)
+testing_smooth     = smooth_curve(testing_cum, 5)
+done_smooth        = smooth_curve(done_cum, 5)
+zero_smooth        = Float64.(zero_cum)
 
 # Plot
 fig = Figure(
@@ -67,7 +86,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "area-cumulative-flow · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 24,
     titlecolor         = INK,
     xlabel             = "Date",
     ylabel             = "Cumulative Items",
@@ -90,12 +109,21 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
+# Makie-distinctive touch: shade + label the "hiring crunch" window behind
+# the bands so the Development bottleneck reads at a glance, not just from
+# band thickness. Drawn first so the stacked bands sit on top of it.
+crunch_lo, crunch_hi = t[findfirst(>(0), crunch)], t[findlast(>(0), crunch)]
+vspan!(ax, crunch_lo, crunch_hi; color = RGBAf(INK.r, INK.g, INK.b, 0.06))
+text!(ax, t[argmax(crunch)], maximum(backlog_smooth) * 0.97;
+      text = "Development bottleneck window", align = (:center, :top),
+      color = INK_SOFT, fontsize = 13)
+
 # Bands stacked with the earliest stage on top (per spec: Backlog above,
-# Done below), drawn from the raw cumulative curves rather than summed
-# deltas — the vertical thickness of each band is already the WIP for
-# that stage since counts are monotonically non-decreasing downstream.
-stage_lowers = (analysis_cum, development_cum, testing_cum, done_cum, zero_cum)
-stage_uppers = (backlog_cum, analysis_cum, development_cum, testing_cum, done_cum)
+# Done below), drawn from the smoothed cumulative curves — the vertical
+# thickness of each band is already the WIP for that stage since counts
+# are monotonically non-decreasing downstream.
+stage_lowers = (analysis_smooth, development_smooth, testing_smooth, done_smooth, zero_smooth)
+stage_uppers = (backlog_smooth, analysis_smooth, development_smooth, testing_smooth, done_smooth)
 stage_labels = ("Backlog", "Analysis", "Development", "Testing", "Done")
 
 for i in 1:5
@@ -104,12 +132,12 @@ for i in 1:5
 end
 
 # Thin page-background strokes crisp up the boundaries between bands
-for curve in (backlog_cum, analysis_cum, development_cum, testing_cum, done_cum)
+for curve in (backlog_smooth, analysis_smooth, development_smooth, testing_smooth, done_smooth)
     lines!(ax, day_index, curve; color = PAGE_BG, linewidth = 1.5)
 end
 
 xlims!(ax, 1, n_days)
-ylims!(ax, 0, maximum(backlog_cum) * 1.05)
+ylims!(ax, 0, maximum(backlog_smooth) * 1.05)
 
 tick_idx = 1:15:n_days
 ax.xticks = (Float64.(collect(tick_idx)), Dates.format.(dates[tick_idx], "u dd"))
