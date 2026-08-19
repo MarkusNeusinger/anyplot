@@ -1103,10 +1103,17 @@ class TestSeoProxyRouter:
         assert "text/html" in response.headers["content-type"]
         assert "og:title" in response.text
         assert "https://anyplot.ai/palette" in response.text
-        # all 8 categorical hues plus the amber anchor, straight from the module
+        # all 8 categorical hues plus every semantic anchor, straight from the module
         from core import palette
 
-        for hex_value in [*palette.IMPRINT, palette.AMBER]:
+        anchors = [
+            palette.AMBER,
+            palette.neutral_for("light"),
+            palette.neutral_for("dark"),
+            palette.muted_for("light"),
+            palette.muted_for("dark"),
+        ]
+        for hex_value in [*palette.IMPRINT, *anchors]:
             assert hex_value in response.text
 
     def test_seo_map(self, client: TestClient) -> None:

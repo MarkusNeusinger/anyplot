@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.cache import cache_key, get_cache, get_or_set_cache, set_cache
 from api.dependencies import optional_db
 from api.routers.stats import _compute_stats, _refresh_stats
+from api.schemas import StatsResponse
 from core import palette
 from core.config import settings
 from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA
@@ -1115,7 +1116,7 @@ async def seo_stats(db: AsyncSession | None = Depends(optional_db)):
     """
     if db is not None:
 
-        async def _fetch():
+        async def _fetch() -> StatsResponse:
             return await _compute_stats(db)
 
         stats = await get_or_set_cache(
