@@ -1055,6 +1055,16 @@ class TestSeoProxyRouter:
         assert "og:title" in response.text
         assert "https://anyplot.ai/about" in response.text
 
+    def test_seo_mcp_tells_agents_how_to_connect(self, client: TestClient) -> None:
+        """The /mcp page's audience is AI agents — the bot body must carry the
+        endpoint, a setup snippet and the tool list, not just og:tags."""
+        response = client.get("/seo-proxy/mcp")
+        assert response.status_code == 200
+        assert "https://api.anyplot.ai/mcp/" in response.text
+        assert "claude mcp add" in response.text
+        for tool in ("list_specs", "search_specs_by_tags", "get_spec_detail", "get_implementation"):
+            assert tool in response.text
+
     def test_seo_palette(self, client: TestClient) -> None:
         """SEO palette page should return HTML with og:tags."""
         response = client.get("/seo-proxy/palette")

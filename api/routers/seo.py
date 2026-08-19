@@ -912,15 +912,49 @@ async def seo_legal():
     )
 
 
+# The /mcp page's entire audience is AI agents, yet its bot rendering carried
+# only a title and one-line description — no endpoint URL, no tool list, no
+# setup snippet; everything useful sat behind JS in app/src/pages/McpPage.tsx
+# (AI-access audit 2026-08-19). Keep this body in sync with the MCP tools in
+# api/mcp/server.py and the human page in McpPage.tsx.
+_MCP_BOT_BODY = (
+    "<h1>anyplot MCP server</h1>"
+    "<p>Query the plot catalogue from an AI assistant via the Model Context "
+    "Protocol. Transport: Streamable HTTP at "
+    '<a href="https://api.anyplot.ai/mcp/">https://api.anyplot.ai/mcp/</a> '
+    "(POST JSON-RPC; the endpoint requires an MCP client and answers plain GET "
+    "with an error by design). No authentication, read-only.</p>"
+    "<h2>Setup</h2>"
+    "<pre><code>claude mcp add --transport http anyplot https://api.anyplot.ai/mcp/</code></pre>"
+    "<h2>Tools</h2>"
+    "<ul>"
+    "<li><code>list_specs(limit, offset)</code> — all plot specifications with tags and library counts</li>"
+    "<li><code>search_specs_by_tags(plot_type, data_type, domain, features, library, ...)</code>"
+    " — filter the catalogue by spec- and implementation-level tags</li>"
+    "<li><code>get_spec_detail(spec_id, libraries?)</code> — one spec with its implementations"
+    " (full source code; filter by library ids to keep the payload small)</li>"
+    "<li><code>get_implementation(spec_id, library)</code> — one implementation: runnable code,"
+    " light/dark render URLs, quality score, review data</li>"
+    "<li><code>list_libraries()</code> — the supported plotting libraries</li>"
+    "<li><code>get_tag_values(category)</code> — the vocabulary of any tag category</li>"
+    "</ul>"
+    "<p>Prefer plain HTTP? The same catalogue is served by the "
+    '<a href="https://api.anyplot.ai/openapi.json">JSON API</a> and indexed in '
+    '<a href="https://anyplot.ai/llms-full.txt">llms-full.txt</a>; retrieval '
+    'recipes live in <a href="https://anyplot.ai/llms.txt">llms.txt</a>.</p>'
+)
+
+
 @router.get("/seo-proxy/mcp")
 async def seo_mcp():
-    """Bot-optimized MCP page with correct og:tags."""
+    """Bot-optimized MCP page: endpoint, setup snippet and tool list, not just og:tags."""
     return HTMLResponse(
         _render_bot_html(
             title="MCP Server | anyplot.ai",
             description="Connect your AI assistant to anyplot via the Model Context Protocol (MCP).",
             image=DEFAULT_HOME_IMAGE,
             url="https://anyplot.ai/mcp",
+            body=_MCP_BOT_BODY,
         )
     )
 
