@@ -4,12 +4,38 @@
 > and reviews implementations across fifteen libraries in python, r, julia and javascript.
 > browse, copy, adapt — colorblind-safe by default.
 
-every plot page carries the runnable source code (MIT-licensed). catalog pages are also served
-as prerendered HTML to crawler user agents, so fetching a page URL directly returns the
-per-route title, description and content without executing JavaScript.
+every plot page carries the runnable source code (MIT-licensed). catalog pages are served as
+prerendered HTML to recognised crawler user agents — if your client is not on that list you
+get an empty app shell, so prefer the API and raw URLs below: they work for every client,
+no special user agent required.
+
+## Fetch one plot (worked example)
+
+1. find the spec id: [llms-full.txt](https://anyplot.ai/llms-full.txt) lists every spec on one
+   line (`spec_id | title | hub page | implemented libraries`).
+2. get the source code: `https://api.anyplot.ai/specs/bar-error/seaborn/code` returns JSON with
+   the runnable code (any library id works — the language is resolved automatically).
+3. get the rendered image:
+   `https://storage.googleapis.com/anyplot-images/plots/bar-error/python/seaborn/plot-light.png`
+   (dark theme: `plot-dark.png`; smaller: `plot-light_400.png`, `_800`, `_1200`; WebP: `plot-light.webp`).
+
+## API
+
+base URL: https://api.anyplot.ai — public, read-only, JSON, no auth.
+
+- `GET /specs` — all specs with metadata
+- `GET /specs/{spec_id}` — one spec with all implementations (preview URLs, quality, review)
+- `GET /specs/{spec_id}/{library}/code` — runnable source for one implementation
+- `GET /plots/filter` — every rendered implementation, filterable and pageable
+- [OpenAPI schema](https://api.anyplot.ai/openapi.json) — the full endpoint reference
+
+raw source is also on GitHub (CORS-open):
+`https://raw.githubusercontent.com/MarkusNeusinger/anyplot/main/plots/{spec_id}/implementations/{language}/{library}.{ext}`
+and the spec itself at `.../plots/{spec_id}/specification.md`.
 
 ## Catalog
 
+- [Full catalogue index](https://anyplot.ai/llms-full.txt): one line per spec — ids, titles, libraries
 - [Plot gallery](https://anyplot.ai/plots): every rendered implementation, filterable by library, language and tags
 - [Specifications](https://anyplot.ai/specs): the library-agnostic plot specs the implementations are generated from
 - [Libraries](https://anyplot.ai/libraries): the fifteen supported plotting libraries across four languages

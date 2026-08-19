@@ -28,11 +28,11 @@ permissions:
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    # 19 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
-    # ~28.5 min worst-case; 32 leaves room to report a clean failure rather
+    # 23 checks x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
+    # ~34.5 min worst-case; 38 leaves room to report a clean failure rather
     # than dying to the job timeout, which reports nothing useful. Recompute
     # this when adding checks: the ceiling is checks x 90s, plus margin.
-    timeout-minutes: 32
+    timeout-minutes: 38
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
@@ -96,7 +96,10 @@ jobs:
             "Mozilla/5.0 (compatible; MistralAI-Index/1.0; +https://docs.mistral.ai/robots)" \
             "DuckAssistBot/1.2; (+http://duckduckgo.com/duckassistbot.html)" \
             "Mozilla/5.0 (compatible; Amzn-SearchBot/1.0)" \
-            "Mozilla/5.0 (compatible; Amzn-User/1.0)"
+            "Mozilla/5.0 (compatible; Amzn-User/1.0)" \
+            "Mozilla/5.0 (compatible; Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)" \
+            "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)" \
+            "Grok/1.0"
           do
             check "$ua" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
           done
@@ -106,6 +109,11 @@ jobs:
           # `location = /llms.txt` bypass.
           check "$GOOGLEBOT"   "$ORIGIN/llms.txt" "# anyplot"
           check "$CHATGPTUSER" "$ORIGIN/llms.txt" "# anyplot"
+
+          # llms-full.txt is proxied to the API for EVERY client (mapped or
+          # not) — before, the SPA catch-all soft-404'd it with the homepage
+          # shell. The catalogue-index line proves the API generated it.
+          check "$HUMAN" "$ORIGIN/llms-full.txt" "# anyplot — full catalogue index"
 
           # A trailing slash must normalise to the canonical URL on THIS host.
           # It used to 307 to http://api.anyplot.ai/seo-proxy/... — internal
