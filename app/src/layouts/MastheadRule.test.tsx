@@ -6,11 +6,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
+import { CONFIG } from 'src/global-config';
 import { render, screen, userEvent } from 'src/test-utils';
 
 const trackEvent = vi.fn();
 const cycle = vi.fn();
 const setMode = vi.fn();
+
+// Mutable so a test can drive the null case — the GitHub releases API is
+// unreachable, rate-limited, or simply hasn't answered yet.
+let releaseTag: string | null = 'v1.2.3';
 
 vi.mock('src/hooks', async () => {
   const actual = await vi.importActual<typeof import('src/hooks')>('src/hooks');
@@ -18,7 +23,7 @@ vi.mock('src/hooks', async () => {
     ...actual,
     useAnalytics: () => ({ trackEvent, trackPageview: vi.fn() }),
     useTheme: () => ({ mode: 'system', effective: 'light', isDark: false, setMode, cycle }),
-    useLatestRelease: () => 'v1.2.3',
+    useLatestRelease: () => releaseTag,
   };
 });
 
@@ -38,6 +43,7 @@ describe('MastheadRule', () => {
     trackEvent.mockClear();
     cycle.mockClear();
     setMode.mockClear();
+    releaseTag = 'v1.2.3';
   });
 
   it('fires theme_toggle event with the next mode and cycles', async () => {
@@ -68,6 +74,25 @@ describe('MastheadRule', () => {
       source: 'masthead_release',
       target: 'v1.2.3',
     });
+  });
+
+  it('falls back to the build-time project version when no release tag resolves', () => {
+    releaseTag = null;
+    render(<MastheadRule />);
+
+    // Never a hardcoded literal: the fallback tracks the released version, so a
+    // blocked or rate-limited GitHub API cannot pin the masthead to an old one.
+    expect(screen.getByText(`v${CONFIG.appVersion}`)).toBeInTheDocument();
+    expect(screen.queryByText('v1.0')).toBeNull();
+  });
+
+  it('links the release slot to the releases index while the tag is unresolved', () => {
+    releaseTag = null;
+    const { container } = renderAt('/', <MastheadRule />);
+    const releaseLink = container.querySelector<HTMLAnchorElement>(
+      'a[href="https://github.com/MarkusNeusinger/anyplot/releases"]'
+    );
+    expect(releaseLink).not.toBeNull();
   });
 
   it('keeps the `~/anyplot.ai` root marker visible on xs for short breadcrumbs', () => {

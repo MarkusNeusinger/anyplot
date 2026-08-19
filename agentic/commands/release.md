@@ -38,7 +38,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    `[Unreleased]` compare link to `vX.Y.Z...HEAD` and add the new `[X.Y.Z]` compare link — one
    link per bracketed heading, this step is easy to forget.
 4. **Bump the version** in `pyproject.toml` to `X.Y.Z`, then run `uv lock` so `uv.lock` picks up
-   the project's own version.
+   the project's own version. Bump `app/package.json` to the same `X.Y.Z` — the masthead falls
+   back to it whenever the GitHub releases lookup is unavailable, and
+   `tests/unit/test_version_sync.py` fails the PR if the two drift.
 5. **Open the release PR** (`release: vX.Y.Z` title) and follow the standard PR follow-through
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.
 6. **Tag after merge** (on the updated `main`):

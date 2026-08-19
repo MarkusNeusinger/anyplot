@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 
 import { ThemeToggle } from 'src/components/ThemeToggle';
 import { LANG_EXT, LIB_ABBREV } from 'src/constants';
+import { CONFIG } from 'src/global-config';
 import { useAnalytics, useLatestRelease, useTheme } from 'src/hooks';
 import { paths, RESERVED_TOP_LEVEL, specPath } from 'src/routes/paths';
 import { colors, typography } from 'src/theme';
@@ -115,7 +116,10 @@ export function MastheadRule() {
   const location = useLocation();
   const segments = pathSegments(location.pathname);
   const isLanding = segments.length === 0;
-  const version = releaseTag ?? 'v1.0';
+  // The release tag arrives asynchronously (and can stay null when the GitHub
+  // API is unreachable or rate-limited), so the fallback is on screen for every
+  // cold load. Keep it truthful: the build-time project version, not a literal.
+  const version = releaseTag ?? `v${CONFIG.appVersion}`;
 
   const NEXT_MODE = { system: 'light', light: 'dark', dark: 'system' } as const;
   const handleThemeToggle = () => {

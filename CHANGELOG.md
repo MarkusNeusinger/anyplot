@@ -24,9 +24,35 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   different one returns *that* project's builds, and when its triggers happen to carry
   the same names in the same region, the wrong answer is indistinguishable from the
   right one — no error, just a credible list of `deploy-api` runs that stop a few days
-  ago. It produced a false "nothing has deployed since the 16th" on a day with a dozen
+  ago. It produced a false "nothing has deployed since 2026-08-16" on a day with a dozen
   deploys. `agentic/docs/project-guide.md` now names both flags and the context check
-  that settles it.
+  that settles it (#10484).
+- **The frontend deploy was broken by the version fix that preceded it** — #10485 read the version
+  from the repo-root `pyproject.toml` at build time, but the frontend image is built with
+  `docker build -f app/Dockerfile app`: the build context is `app/` alone, so nothing above it
+  exists and `vite build` died with `ENOENT .../pyproject.toml`. Cloud Build failed, Cloud Run kept
+  serving the previous revision, and the CSP fix never reached anyplot.ai even though every PR
+  check was green — the exact failure mode `CLAUDE.md` warns about. The version now comes from
+  `app/package.json`, which is always inside the build context, and
+  `tests/unit/test_version_sync.py` holds it equal to the `pyproject.toml` `[project]` version.
+  That test runs on every PR touching `pyproject.toml`, so release PRs cannot reintroduce the
+  drift that left `app/package.json` at 2.0.0 through the whole 3.x line (#10486).
+- **The client bundle no longer ships the frontend dependency list** — `global-config.ts` imported
+  `package.json` as a default import, which inlined the entire manifest (every dependency name and
+  version range) into a shipped chunk. It now imports only the `version` named export (#10486).
+- **The masthead had been advertising v1.0 since the security-headers rollout** — the version next
+  to `~/anyplot.ai` comes from the GitHub releases API, and the CSP shipped in the 2026-07-16 audit
+  never listed `api.github.com` under `connect-src`. Every browser blocked that request, the hook
+  returned `null`, and the masthead fell back to a hardcoded `'v1.0'` — so the v3.0.0 and v3.1.0
+  releases both went out to a site claiming to be v1.0. Returning visitors kept seeing a plausible
+  number from their `localStorage` cache, which is why this survived two releases. `api.github.com`
+  is now allowed in `connect-src` (#10485).
+- **The version fallback no longer invents a number** — the fallback is on screen for every cold
+  load while the API call is in flight, and stays there whenever GitHub is unreachable or
+  rate-limits the visitor's IP (60 requests/hour, unauthenticated). It now renders the build-time
+  project version, injected by Vite from the `[project]` version in `pyproject.toml` — the same
+  field the release flow bumps — instead of a literal that nobody would think to update. A test
+  asserts the injected value matches `pyproject.toml`, so the two cannot drift (#10485).
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
