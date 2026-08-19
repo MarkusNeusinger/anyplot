@@ -751,7 +751,8 @@ def _build_llms_full(specs: list) -> str:
         "# anyplot — full catalogue index",
         "#",
         "# One line per plot specification:",
-        "# spec_id | title | hub page | implemented libraries",
+        "# spec_id | title | hub page | implementations as {language}/{library}",
+        "# (plug an implementation's {language}/{library} straight into the render URL below)",
         "#",
         "# Retrieval recipes (any HTTP client, no crawler user agent needed):",
         "#   source code:  https://api.anyplot.ai/specs/{spec_id}/{library}/code",
@@ -761,8 +762,12 @@ def _build_llms_full(specs: list) -> str:
         "#   OpenAPI: https://api.anyplot.ai/openapi.json - MCP endpoint: https://api.anyplot.ai/mcp/",
         "",
     ]
+    # {language}/{library} rather than the bare library id: the render URL
+    # template needs both segments, and without the language every consumer
+    # had to make a second /specs/{id} call just to build an image URL
+    # (live verification 2026-08-19).
     for spec in sorted((s for s in specs if s.impls), key=lambda s: s.id):
-        libraries = ",".join(sorted(i.library_id for i in spec.impls))
+        libraries = ",".join(sorted(f"{i.language_id}/{i.library_id}" for i in spec.impls))
         title = " ".join((spec.title or spec.id).split())
         lines.append(f"{spec.id} | {title} | https://anyplot.ai/{spec.id} | {libraries}")
     return "\n".join(lines) + "\n"

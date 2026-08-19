@@ -70,6 +70,7 @@ def mock_spec():
     """Create a mock spec with implementation."""
     mock_impl = MagicMock()
     mock_impl.library_id = "matplotlib"
+    mock_impl.language_id = "python"
     mock_impl.library = MagicMock()
     mock_impl.library.name = "Matplotlib"
     mock_impl.library.language = "python"
@@ -649,7 +650,9 @@ class TestSeoRouter:
         with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
             response = client.get("/llms-full.txt")
         assert response.status_code == 200
-        assert "scatter-basic | Basic Scatter Plot | https://anyplot.ai/scatter-basic | matplotlib" in response.text
+        assert (
+            "scatter-basic | Basic Scatter Plot | https://anyplot.ai/scatter-basic | python/matplotlib" in response.text
+        )
 
     def test_sitemap_structure(self, client: TestClient) -> None:
         """Sitemap should return valid XML structure."""
@@ -865,6 +868,10 @@ class TestSeoProxyRouter:
         with patch("api.routers.seo.SpecRepository", return_value=mock_spec_repo):
             response = client.get("/seo-proxy/nonexistent-spec")
             assert response.status_code == 404
+            # The error body must echo the PUBLIC path, not this router's
+            # internal /seo-proxy prefix (crawlers were shown the internal
+            # routing on every dead spec URL).
+            assert response.json()["path"] == "/nonexistent-spec"
 
     def test_seo_spec_language_redirects_to_hub(self, client: TestClient) -> None:
         """Language-overview URL should 301-redirect to the cross-language hub.
@@ -1108,6 +1115,24 @@ class TestOgImagesRouter:
                 assert response.status_code == 200
                 assert response.headers["content-type"] == "image/png"
                 assert "max-age=86400" in response.headers["cache-control"]
+
+    def test_og_images_are_cross_origin_readable(self, client: TestClient) -> None:
+        """og cards are public images for foreign origins — chat UIs fetching
+        them in-page got no ACAO at all because the global CORSMiddleware only
+        answers the site's own origins (live verification 2026-08-19)."""
+        with patch("api.routers.og_images.track_og_image"):
+            with patch("api.routers.og_images._get_static_og_image", return_value=b"fake-image"):
+                response = client.get("/og/home.png", headers={"Origin": "https://chat.openai.com"})
+                assert response.status_code == 200
+                assert response.headers["access-control-allow-origin"] == "*"
+
+    def test_og_error_responses_are_cross_origin_readable_too(self, client: TestClient) -> None:
+        """Without the header an og 404 is an opaque response — the caller
+        cannot even read that it was a 404."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/og/no-such-spec.png", headers={"Origin": "https://chat.openai.com"})
+        assert response.status_code >= 400
+        assert response.headers["access-control-allow-origin"] == "*"
 
     def test_get_home_og_image_with_filters(self, client: TestClient) -> None:
         """Should pass filter params to tracking."""
