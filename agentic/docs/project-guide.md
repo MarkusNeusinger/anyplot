@@ -404,11 +404,15 @@ only). It previously held `roles/storage.objectViewer`, whose bundled
 `staging/` prefix, where unreviewed pre-merge renders sit indistinguishable
 from promoted ones (AI-access audit 2026-08-19; changed 2026-08-19). Like the
 CORS policy above, this is bucket metadata that does not deploy with the repo —
-re-apply after a bucket rebuild:
+re-apply after a bucket rebuild. Both commands are needed: adding the get-only
+role does not remove public listability if an `objectViewer` binding exists
+(the removal is a no-op when the binding is already absent):
 
 ```bash
 gcloud storage buckets add-iam-policy-binding gs://anyplot-images \
   --member=allUsers --role=roles/storage.legacyObjectReader
+gcloud storage buckets remove-iam-policy-binding gs://anyplot-images \
+  --member=allUsers --role=roles/storage.objectViewer
 ```
 
 Never grant `allUsers` a role that includes `storage.objects.list`. To verify:
