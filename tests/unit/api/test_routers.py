@@ -1062,7 +1062,14 @@ class TestSeoProxyRouter:
         assert response.status_code == 200
         assert "https://api.anyplot.ai/mcp/" in response.text
         assert "claude mcp add" in response.text
-        for tool in ("list_specs", "search_specs_by_tags", "get_spec_detail", "get_implementation"):
+        for tool in (
+            "list_specs",
+            "search_specs_by_tags",
+            "get_spec_detail",
+            "get_implementation",
+            "list_libraries",
+            "get_tag_values",
+        ):
             assert tool in response.text
 
     def test_seo_palette(self, client: TestClient) -> None:

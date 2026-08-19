@@ -252,9 +252,11 @@ async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> d
     Args:
         spec_id: The specification ID (e.g., "scatter-basic")
         libraries: Optional library ids to include (e.g. ["seaborn", "d3"]).
-            Omit for all. The full response for a 15-library spec carries every
-            implementation's complete source (~0.5 MB) — filter when only some
-            libraries matter.
+            Omit for all; an empty list also means all (agents commonly send []
+            for "no filter", and answering it with zero implementations would
+            read as a missing spec). The full response for a 15-library spec
+            carries every implementation's complete source (~0.5 MB) — filter
+            when only some libraries matter.
 
     Returns:
         Complete spec details including:
