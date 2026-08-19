@@ -589,14 +589,26 @@ def _build_source_code_node(spec, impl, lib_name: str, lang_name: str, page_url:
     return node
 
 
+# Canonical walk order for the tag bag — dict insertion order varies by
+# source/roundtrip, and keywords built from it would make the JSON-LD
+# non-deterministic across renders (noisy for caches and diff-consumers).
+_TAG_CATEGORY_ORDER = ("plot_type", "data_type", "domain", "features")
+
+
 def _spec_keywords(spec) -> list[str]:
-    """Flatten the spec's tag bag ({plot_type, data_type, domain, features}) into a keyword list."""
+    """Flatten the spec's tag bag into a deduplicated, deterministically ordered keyword list."""
+    tags = spec.tags or {}
+    ordered_keys = [k for k in _TAG_CATEGORY_ORDER if k in tags]
+    ordered_keys += sorted(k for k in tags if k not in _TAG_CATEGORY_ORDER)
     keywords: list[str] = []
-    for values in (spec.tags or {}).values():
-        if isinstance(values, str):
-            keywords.append(values)
-        elif isinstance(values, list):
-            keywords.extend(str(v) for v in values)
+    seen: set[str] = set()
+    for key in ordered_keys:
+        values = tags[key]
+        for value in [values] if isinstance(values, str) else values if isinstance(values, list) else []:
+            keyword = str(value)
+            if keyword not in seen:
+                seen.add(keyword)
+                keywords.append(keyword)
     return keywords
 
 

@@ -400,6 +400,18 @@ class TestBuildImplHtml:
         # tag bag flattens into keywords (string and list values alike)
         assert source["keywords"] == ["scatter", "error-bars"]
 
+    def test_jsonld_keywords_are_deterministic_and_deduplicated(self) -> None:
+        """Insertion order of the stored JSON must not leak into the output."""
+        impl = _mock_impl("matplotlib", "python")
+        spec = _mock_spec([impl])
+        # Deliberately scrambled insertion order + a duplicate across categories
+        spec.tags = {"features": ["basic", "scatter"], "domain": ["statistics"], "plot_type": "scatter"}
+        page = _build_impl_html(spec, impl, "code()", "https://api.anyplot.ai/og/card.png")
+        source = _extract_jsonld(page)["@graph"][1]
+        # Canonical category order (plot_type before domain before features),
+        # duplicate "scatter" kept only at its first canonical position
+        assert source["keywords"] == ["scatter", "statistics", "basic"]
+
     def test_jsonld_image_is_the_render_not_the_card(self) -> None:
         source = _extract_jsonld(self._page())["@graph"][1]
         image = source["image"]
