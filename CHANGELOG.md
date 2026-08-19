@@ -137,6 +137,13 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   were served as bare `text/plain`, which a strict client decodes as Latin-1 mojibake. nginx now
   declares `charset utf-8` on text responses in both server blocks, and the daily bot-serving
   monitor asserts it on `llms.txt` (#10492).
+- **The image bucket is no longer publicly listable** — `allUsers` held
+  `roles/storage.objectViewer` on `anyplot-images`, whose bundled `storage.objects.list` let
+  anyone enumerate the whole bucket, including the `staging/` prefix where unreviewed pre-merge
+  renders sit indistinguishable from promoted ones. Swapped to `roles/storage.legacyObjectReader`
+  (get-only): every render URL keeps working (verified live incl. CORS), only the directory
+  listing is gone. Applied 2026-08-19 via gcloud — bucket IAM does not deploy with the repo; the
+  policy and re-apply procedure are recorded in the project guide (#10492).
 
 ### Changed
 

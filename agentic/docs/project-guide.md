@@ -395,6 +395,26 @@ page under `COEP: require-corp` must load the renders with a `crossorigin`
 attribute (or through its own proxy); plain same-tab fetches and `<img>` tags
 are unaffected.
 
+### Bucket public-access policy
+
+Objects are publicly fetchable by URL, but the bucket is NOT publicly listable:
+`allUsers` holds `roles/storage.legacyObjectReader` (grants `storage.objects.get`
+only). It previously held `roles/storage.objectViewer`, whose bundled
+`storage.objects.list` let anyone enumerate the whole bucket — including the
+`staging/` prefix, where unreviewed pre-merge renders sit indistinguishable
+from promoted ones (AI-access audit 2026-08-19; changed 2026-08-19). Like the
+CORS policy above, this is bucket metadata that does not deploy with the repo —
+re-apply after a bucket rebuild:
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://anyplot-images \
+  --member=allUsers --role=roles/storage.legacyObjectReader
+```
+
+Never grant `allUsers` a role that includes `storage.objects.list`. To verify:
+an object URL must return 200 anonymously, while
+`https://storage.googleapis.com/storage/v1/b/anyplot-images/o` must return 401.
+
 ## Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
