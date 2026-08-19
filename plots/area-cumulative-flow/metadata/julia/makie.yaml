@@ -1,0 +1,257 @@
+library: makie
+language: julia
+specification_id: area-cumulative-flow
+created: '2026-08-19T21:59:01Z'
+updated: '2026-08-19T22:23:07Z'
+generated_by: claude-sonnet
+workflow_run: 32305314011
+issue: 5239
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-cumulative-flow/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - 'Full Imprint palette + theme compliance in both renders: first series #009E73,
+    canonical order for the remaining four stages, identical data colors across light/dark,
+    theme-correct chrome (backgrounds, text, grid, legend box) in both'
+  - 'Repair round directly resolved every Attempt 1 weakness: titlesize raised 20→24
+    for stronger hierarchy, a 5-day centered moving average (smooth_curve) removed
+    the daily-noise jaggedness from band edges, and a vspan!+text! callout now gives
+    the bottleneck window an explicit, immediately visible label'
+  - 'Correct CFD semantics: stages stacked earliest-on-top/latest-on-bottom per spec,
+    cumulative counts monotonically non-decreasing, and the time-varying Analysis→Development
+    dwell realistically shows WIP piling up upstream during a capacity crunch — exactly
+    how a downstream bottleneck manifests on a single-column-per-stage CFD'
+  - 'Clean, idiomatic Makie code: band! for stacked areas, page-background separator
+    strokes between bands for crisp boundaries, an axis-derived Legend, and colsize!/grid
+    layout — all explicit and theme-token-driven'
+  - All font sizes explicitly set, fully legible at full resolution in both themes,
+    no overlap, no clipping, legend sits close to the plot
+  weaknesses:
+  - smooth_curve is a defined function, which strictly violates the KISS Imports→Data→Plot→Save
+    (no functions/classes) structure — could be inlined as a broadcasted comprehension
+    instead
+  - DE-01 aesthetic sophistication is strong but not yet top-tier publication-ready
+    — a deeper typographic or fill-treatment pass would push it further
+  - 'LM-02: vspan!+text! annotation is a nice touch but not deeply Makie-unique (axvspan/text
+    equivalents exist in most static libraries); band! plus the grid-based Figure/colsize!
+    layout is the more genuinely distinctive part of this implementation'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "area-cumulative-flow · julia · makie · anyplot.ai" centered at top (titlesize=24, clearly more prominent than Attempt 1's 20pt). "Date" x-axis label and "Cumulative Items" y-axis label both legible in dark ink; tick labels legible in softer dark gray. Subtle horizontal-only gridlines at 100/200/300, top/right spines removed, L-shaped frame. A light grey vspan shades the "Development bottleneck window" behind the bands with a centered caption in soft ink — fully legible, no overlap with data or legend.
+      Data: Five smoothly-edged stacked bands top-to-bottom — green Backlog (#009E73), lavender Analysis (#C475FD), blue Development (#4467A3), ochre Testing (#BD8233), matte red Done (#AE3030, widest, reaching the zero baseline) — separated by thin off-white boundary strokes. The Analysis band visibly widens through the shaded crunch window as items queue up waiting for Development capacity, then narrows again toward the end — a realistic depiction of a downstream Development bottleneck on a single-column-per-stage CFD. Legend titled "Stage" sits immediately right of the plot, frameless, all five labels matching the band order.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, no clipping at any canvas edge.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now render in light/off-white ink (INK / INK_SOFT tokens), clearly legible. Legend uses the dark elevated-background token (#242420) with light label text. The bottleneck-window vspan renders as a barely-lighter charcoal overlay (INK-tinted, alpha 0.06) with the caption still readable in soft light-grey.
+      Data: Band colors and stacking order are pixel-identical to the light render — only chrome (background, text, grid, legend box, vspan tint) flips, confirming data colors stay fixed across themes. Same Analysis-band widening/narrowing pattern visible in the same date range.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, no clipping at any canvas edge.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicit (titlesize=24, labelsize=14, ticklabelsize=12);
+          readable in both themes; title now well-proportioned after the Attempt 1
+          size bump
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, annotation caption, and axis text all fully clear of each
+          other and the data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Five smoothed bands clearly distinguishable, aided by separator strokes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette + white boundary strokes avoid hue-only
+          distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the large majority of the 3200x1800 canvas, balanced margins,
+          legend close to plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Date" / "Cumulative Items" both descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, theme-correct chrome in both
+          renders, data colors identical across themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette application, refined title hierarchy, deliberate
+          annotation layer — clearly above library defaults, though short of top-tier
+          publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Moving-average smoothing removed the Attempt 1 jaggedness; spines
+          removed, grid subtle, legend frameless
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The vspan!+text! callout on the bottleneck window makes the core
+          CFD insight immediately visible, resolving the Attempt 1 "too subtle" feedback
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked-area cumulative flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct stacking order, monotonic counts, distinguishable stage colors,
+          legend, reasonable date-tick intervals
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=cumulative items, all data visible within axis bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec-id · julia · makie · anyplot.ai;
+          legend labels match stage names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both widening and narrowing WIP shown via the time-varying Analysis-to-Development
+          dwell
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic Kanban software-delivery scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible arrival rates, dwell times, and total volume over 90 days
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: smooth_curve is a defined function, which strictly violates the no-functions
+          KISS convention, even though it is small and well-commented
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Dates — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save() API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!, vspan!, text!, axis-derived Legend, grid-based Figure layout
+          with colsize! — comprehensive idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band! stacking plus Makie's declarative grid layout is genuinely
+          distinctive; the vspan!/text! callout technique itself has close equivalents
+          in other static libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
