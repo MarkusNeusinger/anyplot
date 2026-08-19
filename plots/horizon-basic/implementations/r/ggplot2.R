@@ -87,6 +87,13 @@ plot_title  <- "Server Load Deviation · horizon-basic · r · ggplot2 · anyplo
 title_ratio <- if (nchar(plot_title) > 67) 67 / nchar(plot_title) else 1.0
 title_size  <- max(8, round(12 * title_ratio))
 
+# Numeric band-boundary key for the caption, e.g. "1.2 / 2.4 / 3.6 pp".
+band_bounds  <- round(seq_len(n_bands) * band_size, 1)
+plot_caption <- sprintf(
+  "Band color intensity = deviation magnitude (bounds %s pp) · blue = above baseline · red = below baseline",
+  paste(band_bounds, collapse = " / ")
+)
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(folded_df, aes(x = timestamp, y = folded, fill = tier, group = tier)) +
   geom_area(position = "identity") +
@@ -97,8 +104,8 @@ p <- ggplot(folded_df, aes(x = timestamp, y = folded, fill = tier, group = tier)
   labs(
     title   = plot_title,
     x       = "Date",
-    y       = NULL,
-    caption = "Band color intensity = deviation magnitude · blue = above baseline · red = below baseline"
+    y       = "Deviation (pp)",
+    caption = plot_caption
   ) +
   theme_minimal(base_size = 7) +
   theme(
@@ -110,7 +117,7 @@ p <- ggplot(folded_df, aes(x = timestamp, y = folded, fill = tier, group = tier)
     strip.placement   = "outside",
     strip.text.y.left = element_text(color = INK_SOFT, size = 8, angle = 0, hjust = 1),
     axis.title.x      = element_text(color = INK, size = 10),
-    axis.title.y      = element_blank(),
+    axis.title.y      = element_text(color = INK, size = 10),
     axis.text.x       = element_text(color = INK_SOFT, size = 8),
     axis.text.y       = element_blank(),
     axis.ticks.y      = element_blank(),
