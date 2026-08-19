@@ -140,6 +140,22 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <!-- The prerender path is gated on a crawler user-agent allowlist
+           (app/nginx.conf), so any JS-less client NOT on that list lands here.
+           Until now "here" was a completely empty page — Grok's fetcher read
+           exactly that and reported the site as having no content (AI-access
+           audit 2026-08-19). Point such clients at the surfaces that work for
+           everyone. -->
+      <h1>anyplot.ai — the open plot catalogue</h1>
+      <p>
+        This page needs JavaScript. Machine-readable access works without it:
+        <a href="/llms.txt">llms.txt</a> (how to query the catalogue),
+        <a href="/llms-full.txt">llms-full.txt</a> (every spec, one per line),
+        the <a href="https://api.anyplot.ai/openapi.json">JSON API</a>, and the
+        <a href="https://github.com/MarkusNeusinger/anyplot">GitHub repository</a>.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

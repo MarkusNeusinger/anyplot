@@ -90,6 +90,27 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   project version, injected by Vite from the `[project]` version in `pyproject.toml` — the same
   field the release flow bumps — instead of a literal that nobody would think to update. A test
   asserts the injected value matches `pyproject.toml`, so the two cannot drift (#10485).
+- **The crawler allowlist no longer misses documented crawlers — or Grok** — nginx's UA map
+  lacked `Amazonbot` and `meta-externalagent` (both documented crawler tokens; the existing
+  `amzn-*` / `meta-externalfetcher` entries never matched them) and matched xAI only via
+  `grokbot`/`xai-grok`/`grok-deepsearch`, so a bare `Grok` UA fell through to the empty SPA
+  shell — the exact "insufficient relevant content" a user's Grok session reported. The map now
+  matches `~*grok` (subsuming all three), Amazonbot, meta-externalagent, Diffbot and Firecrawl,
+  and the daily bot-serving monitor covers the new tokens (#10488).
+- **JS-less clients no longer see a completely empty page** — the SPA shell was
+  `<div id="root">` with no `<noscript>`, so any fetcher missing from the UA allowlist rendered
+  literally nothing. A noscript block now points such clients at `llms.txt`, `llms-full.txt`,
+  the JSON API and the GitHub repository (#10488).
+
+### Changed
+
+- **llms.txt now tells agents how to actually fetch things** — the file linked nine human-facing
+  HTML pages and named no machine endpoint. New sections document the REST API (base URL, the
+  retrieval endpoints, OpenAPI), the GCS render URL pattern (themes, responsive widths, WebP),
+  the CORS-open GitHub raw source URLs, and a worked three-step "fetch one plot" recipe — plus an
+  honest note that prerendered page HTML is gated on a crawler user agent while these URLs are
+  not. `anyplot.ai/llms-full.txt` is now proxied to the API's generated catalogue index instead
+  of soft-404ing to the homepage shell, and the daily monitor asserts it (#10488).
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
