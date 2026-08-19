@@ -349,6 +349,52 @@ gs://anyplot-images/
 **Interactive libraries** (generate `.html`): plotly, bokeh, altair, highcharts, pygal, letsplot, chartjs, d3, echarts, muix
 **PNG only**: matplotlib, seaborn, plotnine, ggplot2, makie
 
+### Bucket CORS configuration
+
+The `anyplot-images` bucket serves read-only CORS headers so third-party pages
+and AI chat clients can embed the renders with `fetch`/XHR or
+`<img crossorigin>` — without them, browsers block cross-origin image reads
+even though the objects are public (applied 2026-08-19, AI-access audit; the
+bucket previously had no CORS configuration at all). This is bucket metadata,
+not code: it does not deploy with the repo, so re-apply it after any bucket
+rebuild.
+
+To apply the configuration:
+
+1. Save the policy as `cors.json`:
+
+   ```json
+   [
+     {
+       "origin": ["*"],
+       "method": ["GET", "HEAD"],
+       "responseHeader": ["Content-Type", "Cache-Control"],
+       "maxAgeSeconds": 3600
+     }
+   ]
+   ```
+
+2. Apply it to the bucket:
+
+   ```bash
+   gcloud storage buckets update gs://anyplot-images --cors-file=cors.json
+   ```
+
+3. Verify that a cross-origin request gets the header:
+
+   ```bash
+   curl -sI -H "Origin: https://example.com" \
+     "https://storage.googleapis.com/anyplot-images/plots/scatter-basic/python/matplotlib/plot-light.png" \
+     | grep -i access-control-allow-origin   # expect: *
+   ```
+
+To remove it, run `gcloud storage buckets update gs://anyplot-images --clear-cors`.
+
+Known limitation: GCS cannot send `Cross-Origin-Resource-Policy` headers, so a
+page under `COEP: require-corp` must load the renders with a `crossorigin`
+attribute (or through its own proxy); plain same-tab fetches and `<img>` tags
+are unaffected.
+
 ## Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
