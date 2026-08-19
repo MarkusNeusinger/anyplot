@@ -29,10 +29,11 @@ jobs:
   bot-serving:
     runs-on: ubuntu-latest
     # 22 check() calls x (--retry 2 -> up to 3 attempts x --max-time 30) can
-    # reach ~33 min worst-case, plus one non-retried trailing-slash probe
-    # (30s); 38 leaves room to report a clean failure rather than dying to the
-    # job timeout, which reports nothing useful. Recompute this when adding
-    # checks: the ceiling is check() calls x 90s, plus margin.
+    # reach ~33 min worst-case, plus two non-retried probes (llms.txt charset,
+    # trailing slash — 30s each); 38 leaves room to report a clean failure
+    # rather than dying to the job timeout, which reports nothing useful.
+    # Recompute this when adding checks: the ceiling is check() calls x 90s,
+    # plus margin.
     timeout-minutes: 38
     steps:
       - name: Crawler UAs must get 200 + per-route titles
@@ -115,6 +116,16 @@ jobs:
           # not) — before, the SPA catch-all soft-404'd it with the homepage
           # shell. The catalogue-index line proves the API generated it.
           check "$HUMAN" "$ORIGIN/llms-full.txt" "# anyplot — full catalogue index"
+
+          # llms.txt carries UTF-8 punctuation (em dashes, arrows); without an
+          # explicit charset a strict client decodes it as Latin-1 mojibake.
+          ct=$(curl -sS --max-time 30 -A "$GOOGLEBOT" -o /dev/null -w '%{content_type}' "$ORIGIN/llms.txt")
+          case "$ct" in
+            *charset=utf-8*) echo "OK: llms.txt content-type: $ct" ;;
+            *)
+              echo "::error::llms.txt served without utf-8 charset: $ct"
+              fail=1 ;;
+          esac
 
           # A trailing slash must normalise to the canonical URL on THIS host.
           # It used to 307 to http://api.anyplot.ai/seo-proxy/... — internal

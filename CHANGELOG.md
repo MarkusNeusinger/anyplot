@@ -133,6 +133,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `<div id="root">` with no `<noscript>`, so any fetcher missing from the UA allowlist rendered
   literally nothing. A noscript block now points such clients at `llms.txt`, `llms-full.txt`,
   the JSON API and the GitHub repository (#10488).
+- **Text files declare UTF-8** — `llms.txt` and `robots.txt` carry em dashes and arrows but
+  were served as bare `text/plain`, which a strict client decodes as Latin-1 mojibake. nginx now
+  declares `charset utf-8` on text responses in both server blocks, and the daily bot-serving
+  monitor asserts it on `llms.txt` (#10492).
 
 ### Changed
 
