@@ -11,7 +11,10 @@ describe('CONFIG.appVersion', () => {
   // pyproject.toml: the frontend image is built with
   // `docker build -f app/Dockerfile app`, so nothing above app/ exists at build
   // time. tests/unit/test_version_sync.py holds the two fields equal.
+  // Anchored at both ends, matching tests/unit/test_version_sync.py: releases are
+  // plain X.Y.Z triples, so `3.1.0-beta` or `3.1.0.1` reaching the masthead is a
+  // bug, not a variant to tolerate.
   it('is a semver triple, not a placeholder', () => {
-    expect(CONFIG.appVersion).toMatch(/^\d+\.\d+\.\d+/);
+    expect(CONFIG.appVersion).toMatch(/^\d+\.\d+\.\d+$/);
   });
 });
