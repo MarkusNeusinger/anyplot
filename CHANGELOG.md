@@ -18,6 +18,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Deploy checks could report another project's builds** — the runbook's recipe for
+  "did this actually deploy?" flagged `--region` as the easy thing to forget and treated
+  `--project` as incidental. It is not. A gcloud install whose default project is a
+  different one returns *that* project's builds, and when its triggers happen to carry
+  the same names in the same region, the wrong answer is indistinguishable from the
+  right one — no error, just a credible list of `deploy-api` runs that stop a few days
+  ago. It produced a false "nothing has deployed since 2026-08-16" on a day with a dozen
+  deploys. `agentic/docs/project-guide.md` now names both flags and the context check
+  that settles it (#10484).
 - **The frontend deploy was broken by the version fix that preceded it** — #10485 read the version
   from the repo-root `pyproject.toml` at build time, but the frontend image is built with
   `docker build -f app/Dockerfile app`: the build context is `app/` alone, so nothing above it
