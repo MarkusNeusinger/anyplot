@@ -16,6 +16,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Fixed
+
+- **The masthead had been advertising v1.0 since the security-headers rollout** — the version next
+  to `~/anyplot.ai` comes from the GitHub releases API, and the CSP shipped in the 2026-07-16 audit
+  never listed `api.github.com` under `connect-src`. Every browser blocked that request, the hook
+  returned `null`, and the masthead fell back to a hardcoded `'v1.0'` — so the v3.0.0 and v3.1.0
+  releases both went out to a site claiming to be v1.0. Returning visitors kept seeing a plausible
+  number from their `localStorage` cache, which is why this survived two releases. `api.github.com`
+  is now allowed in `connect-src` (#10485).
+- **The version fallback no longer invents a number** — the fallback is on screen for every cold
+  load while the API call is in flight, and stays there whenever GitHub is unreachable or
+  rate-limits the visitor's IP (60 requests/hour, unauthenticated). It now renders the build-time
+  project version, injected by Vite from the `[project]` version in `pyproject.toml` — the same
+  field the release flow bumps — instead of a literal that nobody would think to update. A test
+  asserts the injected value matches `pyproject.toml`, so the two cannot drift (#10485).
+
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
 anyplot 3.1 makes the catalogue readable by machines. An assistant asked about a plot can now find
