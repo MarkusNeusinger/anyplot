@@ -1126,6 +1126,14 @@ class TestOgImagesRouter:
                 assert response.status_code == 200
                 assert response.headers["access-control-allow-origin"] == "*"
 
+    def test_og_error_responses_are_cross_origin_readable_too(self, client: TestClient) -> None:
+        """Without the header an og 404 is an opaque response — the caller
+        cannot even read that it was a 404."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/og/no-such-spec.png", headers={"Origin": "https://chat.openai.com"})
+        assert response.status_code >= 400
+        assert response.headers["access-control-allow-origin"] == "*"
+
     def test_get_home_og_image_with_filters(self, client: TestClient) -> None:
         """Should pass filter params to tracking."""
         with patch("api.routers.og_images.track_og_image") as mock_track:
