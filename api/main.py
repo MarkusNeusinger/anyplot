@@ -56,8 +56,15 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger = logging.getLogger(__name__)
 
 
-# Create MCP HTTP app (needed for lifespan integration)
-mcp_http_app = mcp_server.http_app(path="/")
+# Create MCP HTTP app (needed for lifespan integration).
+# stateless_http is passed EXPLICITLY: the env-var route
+# (FASTMCP_STATELESS_HTTP, formerly setdefault'ed in api/mcp/server.py) never
+# engaged because fastmcp's Settings are instantiated at import time, before
+# that line ran. Without stateless mode every MCP session is pinned to the
+# Cloud Run instance that created it — with max-instances=3 and no session
+# affinity, a session's second request could land elsewhere and fail with
+# "Missing session ID" (verified live; AI-access audit 2026-08-19).
+mcp_http_app = mcp_server.http_app(path="/", stateless_http=True)
 
 
 async def _prewarm_cache() -> None:

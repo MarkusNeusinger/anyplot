@@ -25,8 +25,32 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   widths, WebP), OpenAPI and the MCP endpoint. Until now an agent had to walk the 400 KB
   sitemap or guess URL shapes; the prerendered pages that carry this information are
   user-agent-gated, so most agents never saw them (AI-access audit 2026-08-19) (#10487).
+- **MCP `get_spec_detail` takes a `libraries` filter** — a 15-library spec's full response
+  carries every implementation's complete source (~0.5 MB, a context-window hazard for the
+  agents the tool serves); passing `libraries=["seaborn", "d3"]` now trims it to the
+  implementations actually asked for (#10489).
 
 ### Fixed
+
+- **The MCP server now tells the truth for the whole catalogue** — `get_implementation`
+  called the repository without a language, whose `python` default made all 1,004
+  R/Julia/JavaScript implementations (28% of the catalogue) answer a false "not found";
+  the language now comes from the library's own row. Every discovery tool's `website_url`
+  pointed at `anyplot.ai/python/{spec}`, which 301s into a 404 — now the hub. And
+  `get_spec_detail`'s per-implementation URLs, silently discarded by Pydantic coercion,
+  survive the roundtrip. Stateless HTTP mode is finally real: it is passed explicitly to
+  `http_app()` — the env-var route ran after fastmcp's settings were read and never
+  engaged, leaving MCP sessions pinned to one Cloud Run instance (#10489).
+- **Plot renders embed cross-origin** — the `anyplot-images` GCS bucket sent no CORS
+  headers at all, so chat UIs that fetch image bytes in-page (the way AI assistants
+  inline a remote image) were blocked by the browser even though the objects are public.
+  A read-only bucket CORS policy (`GET`/`HEAD`, any origin) fixes the whole failure
+  class; the policy and re-apply procedure are recorded in the project guide because
+  bucket metadata does not deploy with the repo (#10489).
+- **The bot-served `/mcp` page now says how to connect** — the one page whose entire
+  audience is AI agents rendered as title + one-line description; it now carries the
+  endpoint URL, a `claude mcp add` setup snippet, the six tools, and pointers to the
+  JSON API and llms-full.txt for clients without MCP support (#10489).
 
 - **The API host no longer forbids itself to AI agents** — `api.anyplot.ai/robots.txt`
   served `Disallow: /` (only `/og/` excepted), telling every robots-compliant assistant
