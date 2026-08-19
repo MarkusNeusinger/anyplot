@@ -497,6 +497,13 @@ class TestMcpServerProtocol:
     so breaking changes in the fastmcp API surface will be caught.
     """
 
+    def test_server_reports_the_app_version(self):
+        """serverInfo must carry the app version, not fastmcp's package version."""
+        from api.mcp.server import mcp_server
+        from api.version import APP_VERSION
+
+        assert mcp_server.version == APP_VERSION
+
     @pytest.mark.asyncio
     async def test_all_tools_registered(self):
         """MCP server should have all 6 tools registered."""

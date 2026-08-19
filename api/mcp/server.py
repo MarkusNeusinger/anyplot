@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import NullPool
 
 from api.schemas import ImplementationResponse, SpecDetailResponse, SpecListItem
+from api.version import APP_VERSION
 from core.database import ImplRepository, LibraryRepository, SpecRepository, is_db_configured
 
 
@@ -72,8 +73,10 @@ async def get_mcp_db_session() -> AsyncSession:
 # otherwise (verified live: initialize returned an mcp-session-id and requests
 # without it got HTTP 400; AI-access audit 2026-08-19).
 
-# Initialize FastMCP server
-mcp_server = FastMCP("anyplot")
+# Initialize FastMCP server. Without an explicit version, serverInfo reports
+# the fastmcp PACKAGE version — clients saw "3.4.5" while /health said the app
+# is 3.1.0 (live verification 2026-08-19).
+mcp_server = FastMCP("anyplot", version=APP_VERSION)
 
 
 @mcp_server.tool()

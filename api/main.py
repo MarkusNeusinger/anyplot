@@ -206,6 +206,15 @@ async def add_cache_headers(request: Request, call_next):
 
     path = request.url.path
 
+    # The og cards are public images consumed cross-origin (link previews,
+    # chat UIs embedding via fetch). The global CORSMiddleware answers only the
+    # site's own origins, so foreign origins received no ACAO header at all —
+    # the same in-page-fetch blocker the GCS bucket CORS fix removed (live
+    # verification 2026-08-19). setdefault keeps CORSMiddleware's own header
+    # when the request came from an allowlisted origin.
+    if path.startswith("/og/"):
+        response.headers.setdefault("Access-Control-Allow-Origin", "*")
+
     # Static data — changes only on deploy (10 min cache, 1h stale-while-revalidate)
     if path in ("/libraries", "/languages", "/stats"):
         response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"

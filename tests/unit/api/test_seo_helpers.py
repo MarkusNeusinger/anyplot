@@ -41,6 +41,7 @@ def _extract_jsonld(page: str) -> dict:
 def _mock_impl(library_id: str, language: str, preview: str | None = "https://gcs/preview.png") -> MagicMock:
     impl = MagicMock()
     impl.library_id = library_id
+    impl.language_id = language
     impl.library = MagicMock()
     impl.library.language = language
     impl.preview_url = preview
@@ -439,7 +440,9 @@ class TestBuildLlmsFull:
     def test_one_line_per_spec_with_sorted_libraries(self) -> None:
         spec = _mock_spec([_mock_impl("seaborn", "python"), _mock_impl("ggplot2", "r")])
         text = _build_llms_full([spec])
-        assert "scatter-basic | Basic Scatter Plot | https://anyplot.ai/scatter-basic | ggplot2,seaborn" in text
+        assert (
+            "scatter-basic | Basic Scatter Plot | https://anyplot.ai/scatter-basic | python/seaborn,r/ggplot2" in text
+        )
 
     def test_specs_without_impls_are_skipped(self) -> None:
         empty = _mock_spec([])

@@ -97,6 +97,21 @@ class DatabaseQueryError(AnyplotException):
 # ===== Exception Handlers =====
 
 
+def _public_path(request: Request) -> str:
+    """The path as the client knows it — never this API's internal routing.
+
+    nginx serves crawlers by prepending /seo-proxy to the request URI, so an
+    error on a proxied page echoed the internal prefix back to the crawler
+    (`{"path": "/seo-proxy/{slug}"}` on any dead spec URL — live verification
+    2026-08-19). Logs keep the full internal path; only the reflected JSON is
+    translated.
+    """
+    path = request.url.path
+    if path.startswith("/seo-proxy"):
+        return path.removeprefix("/seo-proxy") or "/"
+    return path
+
+
 async def anyplot_exception_handler(request: Request, exc: AnyplotException) -> JSONResponse:
     """Handle AnyplotException and return a standardized JSON response.
 
@@ -107,7 +122,7 @@ async def anyplot_exception_handler(request: Request, exc: AnyplotException) -> 
         logger.error("Database query failed during '%s' on %s: %s", exc.operation, request.url.path, exc.detail)
     return JSONResponse(
         status_code=exc.status_code,
-        content={"status": exc.status_code, "message": exc.message, "path": request.url.path},
+        content={"status": exc.status_code, "message": exc.message, "path": _public_path(request)},
     )
 
 
@@ -115,7 +130,7 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     """Handle FastAPI HTTPException with standardized format."""
     return JSONResponse(
         status_code=exc.status_code,
-        content={"status": exc.status_code, "message": exc.detail, "path": request.url.path},
+        content={"status": exc.status_code, "message": exc.detail, "path": _public_path(request)},
     )
 
 
@@ -128,7 +143,7 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
     """
     logger.exception("Unhandled exception on %s", request.url.path)
     return JSONResponse(
-        status_code=500, content={"status": 500, "message": "Internal server error", "path": request.url.path}
+        status_code=500, content={"status": 500, "message": "Internal server error", "path": _public_path(request)}
     )
 
 

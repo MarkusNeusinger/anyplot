@@ -51,6 +51,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   audience is AI agents rendered as title + one-line description; it now carries the
   endpoint URL, a `claude mcp add` setup snippet, the six tools, and pointers to the
   JSON API and llms-full.txt for clients without MCP support (#10489).
+- **Live-verification follow-ups** — a 49-check production sweep across every access
+  path (crawler UAs, machine files, REST, images/CORS, JSON-LD, MCP) found four small
+  leftovers: og cards sent no `Access-Control-Allow-Origin` to foreign origins (the same
+  in-page-fetch blocker fixed for the GCS bucket — now `*` via the cache-header
+  middleware); `llms-full.txt` lines now list implementations as `{language}/{library}`
+  so the render URL is buildable from the file alone; error responses on prerendered
+  pages no longer echo the internal `/seo-proxy` path prefix; and MCP `serverInfo` now
+  reports the app version instead of fastmcp's package version (#10489).
 
 - **The API host no longer forbids itself to AI agents** — `api.anyplot.ai/robots.txt`
   served `Disallow: /` (only `/og/` excepted), telling every robots-compliant assistant
