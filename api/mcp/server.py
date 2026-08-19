@@ -64,9 +64,13 @@ async def get_mcp_db_session() -> AsyncSession:
     return _mcp_session_factory()
 
 
-# Enable stateless HTTP mode via environment variable (recommended approach)
-# This allows horizontal scaling without session affinity
-os.environ.setdefault("FASTMCP_STATELESS_HTTP", "true")
+# Stateless HTTP mode is passed explicitly to http_app() in api/main.py.
+# The former `os.environ.setdefault("FASTMCP_STATELESS_HTTP", "true")` here
+# never worked: `from fastmcp import FastMCP` above had already instantiated
+# fastmcp's Settings from the environment, so the late setdefault was read by
+# nobody — sessions stayed instance-pinned despite the comment claiming
+# otherwise (verified live: initialize returned an mcp-session-id and requests
+# without it got HTTP 400; AI-access audit 2026-08-19).
 
 # Initialize FastMCP server
 mcp_server = FastMCP("anyplot")
@@ -105,7 +109,7 @@ async def list_specs(limit: int = 100, offset: int = 0) -> list[dict[str, Any]]:
             item = SpecListItem(
                 id=spec.id, title=spec.title, description=spec.description, tags=spec.tags, library_count=impl_count
             )
-            result.append({**item.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/python/{spec.id}"})
+            result.append({**item.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec.id}"})
 
         return result
     finally:
@@ -233,7 +237,7 @@ async def search_specs_by_tags(
             item = SpecListItem(
                 id=spec.id, title=spec.title, description=spec.description, tags=spec.tags, library_count=impl_count
             )
-            result.append({**item.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/python/{spec.id}"})
+            result.append({**item.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec.id}"})
 
         return result
     finally:
@@ -241,17 +245,21 @@ async def search_specs_by_tags(
 
 
 @mcp_server.tool()
-async def get_spec_detail(spec_id: str) -> dict[str, Any]:
+async def get_spec_detail(spec_id: str, libraries: list[str] | None = None) -> dict[str, Any]:
     """
-    Get full specification details with all implementations.
+    Get full specification details with implementations.
 
     Args:
         spec_id: The specification ID (e.g., "scatter-basic")
+        libraries: Optional library ids to include (e.g. ["seaborn", "d3"]).
+            Omit for all. The full response for a 15-library spec carries every
+            implementation's complete source (~0.5 MB) — filter when only some
+            libraries matter.
 
     Returns:
         Complete spec details including:
         - Spec metadata (title, description, tags, etc.)
-        - All available implementations with code and metadata
+        - The selected implementations with code and metadata
         - Data requirements
         - Applications and notes
 
@@ -272,10 +280,18 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
         if spec is None:
             raise ValueError(f"Specification '{spec_id}' not found")
 
-        # Build implementations list
+        # Build implementations list. Per-impl website URLs are collected
+        # separately and attached AFTER model_dump below: SpecDetailResponse
+        # coerces its `implementations` into ImplementationResponse, which has
+        # no website_url field — merging the key into the dicts before that
+        # coercion silently discarded it, so the tool returned one broken spec
+        # URL and no per-implementation URLs at all (AI-access audit 2026-08-19).
         implementations = []
+        impl_urls: list[str] = []
         for impl in spec.impls:
             if impl.code is None:
+                continue
+            if libraries and impl.library.id not in libraries:
                 continue
 
             impl_response = ImplementationResponse(
@@ -302,12 +318,8 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
                 review_verdict=impl.review_verdict,
                 impl_tags=impl.impl_tags,
             )
-            implementations.append(
-                {
-                    **impl_response.model_dump(),
-                    "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{impl.library.id}",
-                }
-            )
+            implementations.append(impl_response)
+            impl_urls.append(f"{ANYPLOT_WEBSITE_URL}/{spec_id}/{impl.library.language}/{impl.library.id}")
 
         # Build full spec response
         response = SpecDetailResponse(
@@ -325,7 +337,10 @@ async def get_spec_detail(spec_id: str) -> dict[str, Any]:
             implementations=implementations,
         )
 
-        return {**response.model_dump(), "website_url": f"{ANYPLOT_WEBSITE_URL}/python/{spec_id}"}
+        payload = response.model_dump()
+        for impl_dict, url in zip(payload["implementations"], impl_urls, strict=True):
+            impl_dict["website_url"] = url
+        return {**payload, "website_url": f"{ANYPLOT_WEBSITE_URL}/{spec_id}"}
     finally:
         await session.close()
 
@@ -337,11 +352,13 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
 
     Args:
         spec_id: The specification ID (e.g., "scatter-basic")
-        library: The library name (e.g., "matplotlib", "seaborn", "plotly")
+        library: The library id (e.g., "matplotlib", "ggplot2", "makie", "d3" —
+            any of the fifteen supported libraries across Python, R, Julia and
+            JavaScript; ids are globally unique, so no language is needed)
 
     Returns:
         Implementation details including:
-        - Python code
+        - Runnable source code in the library's language
         - Quality score
         - Library metadata (version, generated date, etc.)
         - Preview image URLs
@@ -372,8 +389,11 @@ async def get_implementation(spec_id: str, library: str) -> dict[str, Any]:
             valid_names = [library_obj.id for library_obj in valid_libraries]
             raise ValueError(f"Library '{library}' not found. Valid libraries: {', '.join(valid_names)}")
 
-        # Get implementation
-        impl = await impl_repo.get_by_spec_and_library(spec_id, library)
+        # Get implementation. The language comes from the library's own DB row —
+        # the repository's language_id defaults to "python", which made every
+        # R/Julia/JavaScript implementation (28% of the catalogue) answer a
+        # false "not found" through this tool (AI-access audit 2026-08-19).
+        impl = await impl_repo.get_by_spec_and_library(spec_id, library, lib.language)
         if impl is None or impl.code is None:
             raise ValueError(f"Implementation for '{spec_id}' in library '{library}' not found")
 

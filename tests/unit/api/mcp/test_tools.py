@@ -111,6 +111,8 @@ async def test_list_specs(mock_db_context, mock_spec):
     assert result[0]["id"] == "scatter-basic"
     assert result[0]["title"] == "Basic Scatter Plot"
     assert result[0]["library_count"] == 1
+    # The hub URL — the former /python/{spec} form 301'd into a 404
+    assert result[0]["website_url"] == "https://anyplot.ai/scatter-basic"
 
 
 @pytest.mark.asyncio
@@ -241,6 +243,53 @@ async def test_get_spec_detail(mock_db_context, mock_spec):
     assert len(result["implementations"]) == 1
     assert result["implementations"][0]["library_id"] == "matplotlib"
     assert result["implementations"][0]["code"] == "import matplotlib.pyplot as plt"
+    # Both URL tiers must survive the Pydantic roundtrip: the spec-level URL is
+    # the hub (the /python/{spec} form 301'd into a 404), and the per-impl URL
+    # used to be silently dropped by SpecDetailResponse coercion.
+    assert result["website_url"] == "https://anyplot.ai/scatter-basic"
+    assert result["implementations"][0]["website_url"] == "https://anyplot.ai/scatter-basic/python/matplotlib"
+
+
+def _second_impl(library_id: str, language: str) -> MagicMock:
+    """A second implementation for filter tests, mirroring the fixture's shape."""
+    impl = MagicMock()
+    impl.library.id = library_id
+    impl.library.name = library_id
+    impl.library.language = language
+    impl.code = f"# {library_id} code"
+    impl.preview_url = None
+    impl.preview_html = None
+    impl.preview_url_light = None
+    impl.preview_url_dark = None
+    impl.preview_html_light = None
+    impl.preview_html_dark = None
+    impl.quality_score = 88
+    impl.generated_at = None
+    impl.generated_by = "claude"
+    impl.python_version = None
+    impl.language_version = "4.4.1"
+    impl.library_version = "3.5.1"
+    impl.review_strengths = []
+    impl.review_weaknesses = []
+    impl.review_image_description = None
+    impl.review_criteria_checklist = None
+    impl.review_verdict = "APPROVED"
+    impl.impl_tags = None
+    return impl
+
+
+@pytest.mark.asyncio
+async def test_get_spec_detail_libraries_filter(mock_db_context, mock_spec):
+    """The optional libraries filter trims a multi-megabyte response to what's asked for."""
+    mock_spec.impls = [*mock_spec.impls, _second_impl("ggplot2", "r")]
+    mock_repo = MagicMock()
+    mock_repo.get_by_id_with_code = AsyncMock(return_value=mock_spec)
+
+    with patch("api.mcp.server.SpecRepository", return_value=mock_repo):
+        result = await get_spec_detail("scatter-basic", libraries=["ggplot2"])
+
+    assert [impl["library_id"] for impl in result["implementations"]] == ["ggplot2"]
+    assert result["implementations"][0]["website_url"] == "https://anyplot.ai/scatter-basic/r/ggplot2"
 
 
 @pytest.mark.asyncio
@@ -283,6 +332,42 @@ async def test_get_implementation(mock_db_context, mock_spec):
     assert result["library_id"] == "matplotlib"
     assert result["code"] == "import matplotlib.pyplot as plt"
     assert result["quality_score"] == 92
+    # The language must come from the library's own row, not a python default
+    mock_impl_repo.get_by_spec_and_library.assert_awaited_once_with("scatter-basic", "matplotlib", "python")
+
+
+@pytest.mark.asyncio
+async def test_get_implementation_resolves_non_python_language(mock_db_context, mock_spec):
+    """ggplot2/makie/d3 etc. must resolve through the library's language.
+
+    The repository defaults language_id to "python", so calling it without the
+    language made all 1,004 R/Julia/JavaScript implementations answer a false
+    "not found" through this tool (AI-access audit 2026-08-19).
+    """
+    mock_lib = MagicMock()
+    mock_lib.id = "ggplot2"
+    mock_lib.name = "ggplot2"
+    mock_lib.language = "r"
+
+    mock_impl = _second_impl("ggplot2", "r")
+
+    mock_spec_repo = MagicMock()
+    mock_spec_repo.get_by_id = AsyncMock(return_value=mock_spec)
+    mock_lib_repo = MagicMock()
+    mock_lib_repo.get_by_id = AsyncMock(return_value=mock_lib)
+    mock_impl_repo = MagicMock()
+    mock_impl_repo.get_by_spec_and_library = AsyncMock(return_value=mock_impl)
+
+    with (
+        patch("api.mcp.server.SpecRepository", return_value=mock_spec_repo),
+        patch("api.mcp.server.LibraryRepository", return_value=mock_lib_repo),
+        patch("api.mcp.server.ImplRepository", return_value=mock_impl_repo),
+    ):
+        result = await get_implementation("scatter-basic", "ggplot2")
+
+    mock_impl_repo.get_by_spec_and_library.assert_awaited_once_with("scatter-basic", "ggplot2", "r")
+    assert result["language"] == "r"
+    assert result["website_url"] == "https://anyplot.ai/scatter-basic/r/ggplot2"
 
 
 @pytest.mark.asyncio
