@@ -128,7 +128,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **Text files declare UTF-8** — `llms.txt` and `robots.txt` carry em dashes and arrows but
   were served as bare `text/plain`, which a strict client decodes as Latin-1 mojibake. nginx now
   declares `charset utf-8` on text responses in both server blocks, and the daily bot-serving
-  monitor asserts it on `llms.txt`.
+  monitor asserts it on `llms.txt` (#10492).
 
 ### Changed
 
