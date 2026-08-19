@@ -59,11 +59,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `grokbot`/`xai-grok`/`grok-deepsearch`, so a bare `Grok` UA fell through to the empty SPA
   shell — the exact "insufficient relevant content" a user's Grok session reported. The map now
   matches `~*grok` (subsuming all three), Amazonbot, meta-externalagent, Diffbot and Firecrawl,
-  and the daily bot-serving monitor covers the new tokens.
+  and the daily bot-serving monitor covers the new tokens (#10488).
 - **JS-less clients no longer see a completely empty page** — the SPA shell was
   `<div id="root">` with no `<noscript>`, so any fetcher missing from the UA allowlist rendered
   literally nothing. A noscript block now points such clients at `llms.txt`, `llms-full.txt`,
-  the JSON API and the GitHub repository.
+  the JSON API and the GitHub repository (#10488).
 
 ### Changed
 
@@ -73,7 +73,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   the CORS-open GitHub raw source URLs, and a worked three-step "fetch one plot" recipe — plus an
   honest note that prerendered page HTML is gated on a crawler user agent while these URLs are
   not. `anyplot.ai/llms-full.txt` is now proxied to the API's generated catalogue index instead
-  of soft-404ing to the homepage shell, and the daily monitor asserts it.
+  of soft-404ing to the homepage shell, and the daily monitor asserts it (#10488).
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
