@@ -177,9 +177,16 @@ export default function Chart() {
             legend: {
               direction: "row",
               labelStyle: { fontSize: 14 },
+              itemMarkWidth: 18,
+              itemMarkHeight: 10,
+              markGap: 8,
             },
           }}
-          sx={{ "& .MuiLineElement-root": { strokeWidth: 2.5 } }}
+          sx={{
+            "& .MuiLineElement-root": { strokeWidth: 2.5 },
+            "& .MuiAreaElement-root": { fillOpacity: 0.85 },
+            "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
+          }}
         />
       </Box>
     </Box>
