@@ -142,7 +142,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `core/constants.py`), the live catalogue counts (reusing the cached `/stats` data), the
   pipeline story, the operator/privacy/transparency facts, and the actual palette hex values
   (straight from `core/palette.py`) — each derived from its single source of truth so the pages
-  cannot drift.
+  cannot drift (#10491).
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
