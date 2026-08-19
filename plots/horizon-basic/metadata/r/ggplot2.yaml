@@ -1,0 +1,247 @@
+library: ggplot2
+language: r
+specification_id: horizon-basic
+created: '2026-08-19T22:37:01Z'
+updated: '2026-08-19T22:58:42Z'
+generated_by: claude-sonnet
+workflow_run: 32308729718
+issue: 1877
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Correctly implements the non-trivial horizon-chart folding algorithm (3 mirrored
+    positive/negative bands with progressively darker color per magnitude tier) using
+    only base ggplot2 grammar
+  - 'Diverging band ramp uses PAGE_BG as its theme-adaptive midpoint anchor, exactly
+    matching the style guide''s own imprint_div recipe — verified via pixel sampling
+    that the outermost tier is byte-identical (#4467A3 / #AE3030) between light and
+    dark renders'
+  - 'Both attempt-1 weaknesses resolved: proper y = "Deviation (pp)" axis title with
+    unit, and a numeric color-intensity key in the caption (bounds 0.7 / 1.4 / 2.1
+    pp)'
+  - Clean, reproducible, well-organized single-pass code; canvas gate passed; no edge
+    clipping in either render
+  weaknesses:
+  - Facet-strip server labels (8pt) and caption text (7pt) measure only ~33 source-px
+    tall at 3200x1800, shrinking to ~4px at a ~400px mobile width — below comfortable
+    mobile legibility; consider nudging strip.text.y.left and plot.caption up 1-2pt
+    with a slight panel.spacing.y trim to compensate
+  - A few facets (e.g. api-02, api-03) lean mostly toward one polarity, so the full
+    symmetric positive/negative range reads less distinctly there than on rows like
+    web-01 or db-02
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: bold dark title "Server Load Deviation · horizon-basic · r · ggplot2 · anyplot.ai", rotated "Deviation (pp)" y-axis title, soft-grey facet-strip server labels (web-01..04, api-01..03, db-01/02, cache-01), "Date" x-axis with Jun 01-Jun 07 ticks on bottom facet only, caption with numeric band-boundary key — all clearly readable at native resolution
+      Data: positive deviations ramp pale powder-blue -> saturated #4467A3; negative deviations ramp dusty rose -> saturated #AE3030; darkest tier confirmed via pixel sampling to equal #4467A3 / #AE3030 exactly
+      Legibility verdict: PASS (facet-strip/caption text is small and would shrink further at mobile scale — noted as a weakness, not a failure)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: same title/axis/caption elements flipped to light ink (#F0EFE8 primary, #B8B7B0 secondary) — no dark-on-dark failures found
+      Data: pixel-sampled the darkest/outermost band tier in both renders — identical hex #4467A3 (blue) and #AE3030 (red). The two lighter inner tiers differ numerically between themes because the ramp's other anchor is PAGE_BG itself (theme-adaptive), which is the documented imprint_div midpoint recipe, not a bug.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout; native-resolution legible; facet-strip/caption
+          text (~33 source-px) shrinks to ~4px at 400px mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, ticks, title, caption, or band fills
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All 3 tiers visible in both polarities across most servers; a few
+          facets lean one-sided
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue diverging encoding, CVD-safe, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); efficient use of canvas with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed this attempt: y = "Deviation (pp)" now rendered with unit'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Band ramp built from imprint_div endpoints with theme-adaptive PAGE_BG
+          midpoint; outermost tier byte-identical across themes; correct backgrounds
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom diverging fold-ramp, non-trivial technique, above library
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid removed, spines hidden, tight intentional facet spacing, generous
+          title/caption whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color intensity creates visual hierarchy toward volatile servers;
+          no explicit annotation of the standout server
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizon-chart folding technique
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 bands, mirrored pos/neg coloring, meaningful baseline, similarly-scaled
+          series, in-range series/point counts
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=timestamp, Y=folded deviation magnitude, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Fixed this attempt: caption now states numeric band boundaries,
+          completing the color key; title format correct'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Both polarities and all 3 tiers exercised, though a few servers lean
+          one-sided
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral server-monitoring scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible CPU-load deviation magnitudes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: fold_bands() helper is a justified minimal deviation from the no-functions
+          default
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-commented, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct ggsave with ragg device and plot-{theme}.png naming
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid grammar-of-graphics pipeline with facet_wrap and tidyverse
+          data prep
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Creative facet_wrap + colorRampPalette + layered geom_area implementation
+          of a chart type ggplot2 has no native geom for
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - wide-to-long
+  dataprep:
+  - time-series
+  - binning
+  styling:
+  - minimal-chrome
+  - gradient-fill
