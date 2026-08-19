@@ -12,7 +12,8 @@ no special user agent required.
 ## Fetch one plot (worked example)
 
 1. find the spec id: [llms-full.txt](https://anyplot.ai/llms-full.txt) lists every spec on one
-   line (`spec_id | title | hub page | implemented libraries`).
+   line (`spec_id | title | hub page | implemented libraries`) — search it for a keyword like
+   "bar", or filter by tag via the API (below).
 2. get the source code: `https://api.anyplot.ai/specs/bar-error/seaborn/code` returns JSON with
    the runnable code (any library id works — the language is resolved automatically).
 3. get the rendered image:
@@ -26,7 +27,11 @@ base URL: https://api.anyplot.ai — public, read-only, JSON, no auth.
 - `GET /specs` — all specs with metadata
 - `GET /specs/{spec_id}` — one spec with all implementations (preview URLs, quality, review)
 - `GET /specs/{spec_id}/{library}/code` — runnable source for one implementation
-- `GET /plots/filter` — every rendered implementation, filterable and pageable
+- `GET /plots/filter` — every rendered implementation, filterable and pageable.
+  filter params: `plot=` (plot type, e.g. `plot=bar`), `lib=` (library), `lang=` (language),
+  `spec=` (spec id), `data=` (data type), `dom=` (domain), `feat=` (features);
+  comma-separated values = OR, repeated params = AND; page with `limit=` and `offset=`.
+  example: `https://api.anyplot.ai/plots/filter?plot=bar&lib=seaborn&limit=5`
 - [OpenAPI schema](https://api.anyplot.ai/openapi.json) — the full endpoint reference
 
 raw source is also on GitHub (CORS-open):
