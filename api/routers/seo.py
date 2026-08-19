@@ -117,17 +117,24 @@ BOT_HTML_TEMPLATE = """<!DOCTYPE html>
     <meta charset="UTF-8" />
     <title>{title}</title>
     <meta name="description" content="{description}" />
+    <meta name="robots" content="{robots_content}" />
     <meta property="og:title" content="{title}" />
     <meta property="og:description" content="{description}" />
     <meta property="og:image" content="{image}" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="{title}" />
     <meta property="og:url" content="{og_url}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="anyplot.ai" />
+    <meta property="og:locale" content="en_US" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@MarkusNeusinger" />
+    <meta name="twitter:creator" content="@MarkusNeusinger" />
     <meta name="twitter:title" content="{title}" />
     <meta name="twitter:description" content="{description}" />
     <meta name="twitter:image" content="{image}" />
-    <link rel="canonical" href="{url}" />{robots}{jsonld}
+    <link rel="canonical" href="{url}" />{jsonld}
 </head>
 <body>
 {body}
@@ -304,13 +311,16 @@ def _render_bot_html(
     - ``jsonld``: raw (unescaped) values; ``json.dumps`` handles quoting and
       ``_jsonld_script`` neutralizes ``</``.
     """
+    # max-image-preview:large — without it Google Images/Discover cap the
+    # preview at thumbnail size, which for an image catalogue is on-mission
+    # traffic left on the table. Irrelevant on noindex pages.
     return BOT_HTML_TEMPLATE.format(
         title=title,
         description=description,
         image=image,
         url=url,
         og_url=og_url if og_url is not None else url,
-        robots='\n    <meta name="robots" content="noindex" />' if noindex else "",
+        robots_content="noindex" if noindex else "max-image-preview:large",
         jsonld=_jsonld_script(jsonld) if jsonld else "",
         body=f"{body or f'<h1>{title}</h1><p>{description}</p>'}\n{_BOT_NAV_HTML}",
     )
@@ -420,15 +430,32 @@ def _build_spec_hub_html(spec, image: str) -> str:
             f'<li><a href="{html.escape(impl_url, quote=True)}">'
             f"{title_esc} in {html.escape(lib_name)} ({html.escape(lang_name)})</a></li>"
         )
-        impl_list_items.append(
-            {"@type": "ListItem", "position": position, "name": f"{spec.title} — {lib_name}", "url": impl_url}
-        )
+        item = {"@type": "ListItem", "position": position, "name": f"{spec.title} — {lib_name}", "url": impl_url}
+        # Per-item render URL: one hub fetch enumerates every plot image
+        # instead of costing a follow-up request per implementation.
+        if impl.preview_url_light:
+            item["image"] = impl.preview_url_light
+        impl_list_items.append(item)
 
-    body = (
-        f"<h1>{title_esc}</h1>"
-        f"<p>{desc_esc}</p>"
-        f'<img src="{image_esc}" alt="{title_esc}" width="1200" height="630" />'
-        + (f"<h2>Implementations</h2><ul>{''.join(impl_links)}</ul>" if impl_links else "")
+    # The body shows the best actual render, not the 1200x630 og collage card:
+    # the hub is the sitemap'd, most-shared URL, and until now it was the one
+    # page type where a machine could enumerate 15 implementation links yet
+    # not reach a single plot image (AI-access audit 2026-08-19). The collage
+    # card stays the og:image — link previews are what it was made for.
+    best_impl = max(
+        (i for i in spec.impls if i.preview_url_light), key=lambda i: (i.quality_score or 0, i.library_id), default=None
+    )
+    if best_impl:
+        best_lib_name, _ = _impl_display_names(best_impl)
+        plot_img = (
+            _render_picture(best_impl, title_esc)
+            + f"<p>Preview render from the {html.escape(best_lib_name)} implementation.</p>"
+        )
+    else:
+        plot_img = f'<img src="{image_esc}" alt="{title_esc}" width="1200" height="630" />'
+
+    body = f"<h1>{title_esc}</h1><p>{desc_esc}</p>{plot_img}" + (
+        f"<h2>Implementations</h2><ul>{''.join(impl_links)}</ul>" if impl_links else ""
     )
     jsonld = {
         "@context": "https://schema.org",
@@ -464,6 +491,12 @@ def _sized_srcset(full_url: str) -> str:
     return ", ".join(f"{stem}_{w}.png {w}w" for w in (400, 800, 1200))
 
 
+def _thumb_1200(full_url: str) -> str:
+    """The 1200px derivative for a full-size render URL (the original's width
+    varies per plot, so 1200 is the largest honest fixed size)."""
+    return full_url[:-4] + "_1200.png" if full_url.endswith(".png") else full_url
+
+
 def _render_picture(impl, alt: str) -> str:
     """The actual plot render, both themes, at a size a consumer can choose.
 
@@ -473,12 +506,7 @@ def _render_picture(impl, alt: str) -> str:
     ``&amp;quot;``. ``html.escape`` defaults to ``quote=True``, so a caller that
     follows the contract is attribute-safe.
     """
-    light_default = html.escape(
-        impl.preview_url_light[:-4] + "_1200.png"
-        if impl.preview_url_light.endswith(".png")
-        else impl.preview_url_light,
-        quote=True,
-    )
+    light_default = html.escape(_thumb_1200(impl.preview_url_light), quote=True)
     source = ""
     if impl.preview_url_dark:
         dark_set = html.escape(_sized_srcset(impl.preview_url_dark), quote=True)
@@ -514,6 +542,74 @@ def _render_asset_list(impl) -> str:
         if url:
             items.append(f'<li><a href="{html.escape(url, quote=True)}">{label}</a></li>')
     return f"<h2>Renders</h2><ul>{''.join(items)}</ul>" if items else ""
+
+
+def _build_source_code_node(spec, impl, lib_name: str, lang_name: str, page_url: str, hub_url: str, image: str) -> dict:
+    """SoftwareSourceCode JSON-LD for an implementation page.
+
+    Mirrors the SPA's node in app/src/pages/SpecPage.tsx (license, author,
+    codeRepository, isBasedOn) — crawlers never execute the SPA, so a field
+    living only there is invisible to every bot. `license` in particular is
+    the one field an assistant checks before copying the code.
+
+    `image` is the actual render as an ImageObject, not the 1200x630 og card
+    the meta tags carry: in that card the plot is a thumbnail inside branding
+    chrome, and structured-data consumers were being handed the chrome while
+    the body served the real plot (AI-access audit 2026-08-19). The card
+    remains the og:image — link previews are the surface it was made for.
+    """
+    node = {
+        "@type": "SoftwareSourceCode",
+        "name": f"{spec.title} — {lib_name}",
+        "description": spec.description or DEFAULT_DESCRIPTION,
+        "programmingLanguage": lang_name,
+        "runtimePlatform": lib_name,
+        "codeSampleType": "full solution",
+        "codeRepository": "https://github.com/MarkusNeusinger/anyplot",
+        "license": "https://opensource.org/licenses/MIT",
+        "author": {"@type": "Organization", "name": "anyplot", "url": "https://anyplot.ai"},
+        "isBasedOn": hub_url,
+        "url": page_url,
+        "image": image,
+    }
+    if impl.preview_url_light:
+        node["image"] = {
+            "@type": "ImageObject",
+            "contentUrl": impl.preview_url_light,
+            "thumbnailUrl": _thumb_1200(impl.preview_url_light),
+            "encodingFormat": "image/png",
+            "caption": f"{spec.title} rendered with {lib_name}",
+            "license": "https://opensource.org/licenses/MIT",
+        }
+    if impl.updated:
+        node["dateModified"] = impl.updated.date().isoformat()
+    keywords = _spec_keywords(spec)
+    if keywords:
+        node["keywords"] = keywords
+    return node
+
+
+# Canonical walk order for the tag bag — dict insertion order varies by
+# source/roundtrip, and keywords built from it would make the JSON-LD
+# non-deterministic across renders (noisy for caches and diff-consumers).
+_TAG_CATEGORY_ORDER = ("plot_type", "data_type", "domain", "features")
+
+
+def _spec_keywords(spec) -> list[str]:
+    """Flatten the spec's tag bag into a deduplicated, deterministically ordered keyword list."""
+    tags = spec.tags or {}
+    ordered_keys = [k for k in _TAG_CATEGORY_ORDER if k in tags]
+    ordered_keys += sorted(k for k in tags if k not in _TAG_CATEGORY_ORDER)
+    keywords: list[str] = []
+    seen: set[str] = set()
+    for key in ordered_keys:
+        values = tags[key]
+        for value in [values] if isinstance(values, str) else values if isinstance(values, list) else []:
+            keyword = str(value)
+            if keyword not in seen:
+                seen.add(keyword)
+                keywords.append(keyword)
+    return keywords
 
 
 def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
@@ -583,16 +679,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
                     {"@type": "ListItem", "position": 3, "name": lib_name, "item": page_url},
                 ],
             },
-            {
-                "@type": "SoftwareSourceCode",
-                "name": f"{spec.title} — {lib_name}",
-                "description": spec.description or DEFAULT_DESCRIPTION,
-                "programmingLanguage": lang_name,
-                "runtimePlatform": lib_name,
-                "codeSampleType": "full solution",
-                "url": page_url,
-                "image": image,
-            },
+            _build_source_code_node(spec, impl, lib_name, lang_name, page_url, hub_url, image),
         ],
     }
     return _render_bot_html(
@@ -609,22 +696,25 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
 async def get_robots():
     """Serve robots.txt for the API backend.
 
-    The API itself should not be indexed, but `/og/` must be crawlable: every
-    prerendered page on anyplot.ai references its preview image there, and a
-    blanket Disallow made those images unreachable for anything that honours
-    robots.txt — Google Images, and the AI assistants that explicitly say they
-    comply. The image answered 200 while the host forbade fetching it, so an
-    assistant asked to show a plot could read the code and not the picture.
+    The read API is deliberately open. The previous blanket `Disallow: /`
+    (with only `/og/` excepted) told every robots-compliant agent that the
+    REST endpoints, `/openapi.json` and the MCP transport were off-limits —
+    on the very host `app/public/robots.txt` and llms.txt advertise as the
+    machine interface to the catalogue (AI-access audit 2026-08-19). The API
+    is public, read-only and cached; there is nothing to protect by
+    forbidding it, and compliant AI assistants were the only clients the
+    Disallow actually stopped.
 
-    Link-preview bots were never affected either way; they do not consult
-    robots.txt, which is why this went unnoticed.
+    Only surfaces that are useless or hazardous to crawl stay disallowed:
+    `/debug` (internal diagnostics) and `/proxy` (a parameterised fetch
+    proxy — crawling it just re-downloads GCS objects through the API).
 
-    `Allow` is placed first deliberately. A compliant crawler resolves by
-    specificity and would reach the same answer either way, but simpler
-    first-match parsers would stop at `Disallow: /` and never see the
-    exception — the same ordering rule `app/public/robots.txt` documents.
+    `Disallow` lines are placed before the `Allow: /` catch-all: first-match
+    parsers stop at the first matching rule, so the specific exclusions must
+    precede the blanket allow — the same ordering rule `app/public/robots.txt`
+    documents. Specificity-compliant crawlers reach the same answer either way.
     """
-    return Response(content="User-agent: *\nAllow: /og/\nDisallow: /\n", media_type="text/plain")
+    return Response(content="User-agent: *\nDisallow: /debug\nDisallow: /proxy\nAllow: /\n", media_type="text/plain")
 
 
 @router.get("/sitemap.xml")
@@ -646,6 +736,69 @@ async def get_sitemap(db: AsyncSession | None = Depends(optional_db)):
         cache_key("sitemap_xml"), _fetch, refresh_after=settings.cache_refresh_after, refresh_factory=_refresh_sitemap
     )
     return Response(content=xml, media_type="application/xml")
+
+
+def _build_llms_full(specs: list) -> str:
+    """Whole-catalogue index for AI agents: one line per spec, one fetch.
+
+    llms.txt names the surfaces; this is the llmstxt.org companion file that
+    makes the catalogue enumerable without walking the 400 KB sitemap or
+    fetching every hub page. The header documents the retrieval recipes that
+    work for EVERY client — the prerendered pages are user-agent-gated, these
+    URLs are not (AI-access audit 2026-08-19).
+    """
+    lines = [
+        "# anyplot — full catalogue index",
+        "#",
+        "# One line per plot specification:",
+        "# spec_id | title | hub page | implemented libraries",
+        "#",
+        "# Retrieval recipes (any HTTP client, no crawler user agent needed):",
+        "#   source code:  https://api.anyplot.ai/specs/{spec_id}/{library}/code",
+        "#   spec detail:  https://api.anyplot.ai/specs/{spec_id}",
+        "#   render (PNG): https://storage.googleapis.com/anyplot-images/plots/{spec_id}/{language}/{library}/plot-light.png",
+        "#                 dark theme: plot-dark.png; responsive widths: plot-light_400.png / _800 / _1200; WebP: plot-light.webp",
+        "#   OpenAPI: https://api.anyplot.ai/openapi.json - MCP endpoint: https://api.anyplot.ai/mcp/",
+        "",
+    ]
+    for spec in sorted((s for s in specs if s.impls), key=lambda s: s.id):
+        libraries = ",".join(sorted(i.library_id for i in spec.impls))
+        title = " ".join((spec.title or spec.id).split())
+        lines.append(f"{spec.id} | {title} | https://anyplot.ai/{spec.id} | {libraries}")
+    return "\n".join(lines) + "\n"
+
+
+async def _refresh_llms_full() -> str:
+    """Standalone factory for background llms-full refresh (creates own DB session)."""
+    async with get_db_context() as db:
+        repo = SpecRepository(db)
+        specs = await repo.get_all()
+    return _build_llms_full(specs)
+
+
+@router.get("/llms-full.txt")
+async def get_llms_full(db: AsyncSession | None = Depends(optional_db)):
+    """Serve the full catalogue index (llmstxt.org llms-full.txt convention).
+
+    nginx serves anyplot.ai/llms-full.txt from this endpoint the same way it
+    proxies the prerendered pages, so the file is reachable on the site's own
+    origin for every client.
+    """
+    if db is None:
+        return Response(content=_build_llms_full([]), media_type="text/plain; charset=utf-8")
+
+    async def _fetch() -> str:
+        repo = SpecRepository(db)
+        specs = await repo.get_all()
+        return _build_llms_full(specs)
+
+    text = await get_or_set_cache(
+        cache_key("llms_full_txt"),
+        _fetch,
+        refresh_after=settings.cache_refresh_after,
+        refresh_factory=_refresh_llms_full,
+    )
+    return Response(content=text, media_type="text/plain; charset=utf-8")
 
 
 # =============================================================================

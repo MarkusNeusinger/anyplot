@@ -45,7 +45,9 @@ from api.routers.libraries import _refresh_libraries  # noqa: E402
 from api.routers.plots import _refresh_filter_all  # noqa: E402
 from api.routers.specs import _refresh_specs_list, _refresh_specs_map  # noqa: E402
 from api.routers.stats import _refresh_stats  # noqa: E402
+from api.version import APP_VERSION  # noqa: E402
 from core.config import settings  # noqa: E402
+from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA  # noqa: E402
 from core.database import close_db, init_db, is_db_configured  # noqa: E402
 
 
@@ -119,15 +121,23 @@ async def lifespan(app: FastAPI):
     await close_db()
 
 
-# Create FastAPI application
+# Create FastAPI application. Identity fields derive from the package version
+# and the canonical registry — the hardcoded "1.0.0" / "9 libraries" pair had
+# drifted three releases and six libraries behind reality. `servers` makes the
+# spec self-contained: without it, a client handed only openapi.json has no
+# base URL to resolve the relative paths against.
 app = FastAPI(
     title="anyplot API",
-    description="Backend API for anyplot.ai - plotting gallery across 9 libraries",
-    version="1.0.0",
+    description=(
+        "Backend API for anyplot.ai — the open plot catalogue across "
+        f"{len(LIBRARIES_METADATA)} libraries in {len(LANGUAGES_METADATA)} languages."
+    ),
+    version=APP_VERSION,
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    servers=[{"url": "https://api.anyplot.ai", "description": "Production"}],
 )
 
 # Register exception handlers
@@ -243,11 +253,43 @@ class MCPTrailingSlashMiddleware:
         await self.asgi_app(scope, receive, send)
 
 
-# Wrap the FastAPI app with the middleware
+class HeadAsGetMiddleware:
+    """Answer HEAD requests with the matching GET route's headers and no body.
+
+    FastAPI's @router.get registers GET-only routes (Starlette's plain Route
+    would add HEAD itself), so every HEAD probe — link checkers, agents
+    preflighting a page before fetching it — answered 405 across the whole
+    API, including the seo-proxy pages and /health. An ASGI rewrite rather
+    than adding HEAD to route.methods: the latter would also emit a `head`
+    operation per path into openapi.json, doubling the documented surface.
+    Content-Length from the GET response is kept — that is what HEAD promises.
+    """
+
+    def __init__(self, asgi_app):
+        self.asgi_app = asgi_app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http" and scope["method"] == "HEAD":
+            scope = {**scope, "method": "GET"}
+
+            # Body chunks are emptied but their more_body sequencing is kept —
+            # forcing an early end while a streaming response keeps sending
+            # would violate the ASGI message protocol.
+            async def send_without_body(message):
+                if message["type"] == "http.response.body":
+                    message = {**message, "body": b""}
+                await send(message)
+
+            await self.asgi_app(scope, receive, send_without_body)
+            return
+        await self.asgi_app(scope, receive, send)
+
+
+# Wrap the FastAPI app with the middlewares
 # This must be done after all routers are registered
 # Keep reference to FastAPI instance for tests
 fastapi_app = app
-app = MCPTrailingSlashMiddleware(app)
+app = HeadAsGetMiddleware(MCPTrailingSlashMiddleware(app))
 
 
 if __name__ == "__main__":

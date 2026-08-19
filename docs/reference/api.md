@@ -307,9 +307,24 @@ Returns related specs sorted by Jaccard similarity with preview thumbnails and s
 
 Returns only the code field for a single implementation. Used by the frontend to lazy-load code on demand (code is deferred in the main `/specs/{spec_id}` response).
 
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `language` | string | resolved from the library | Optional override. Library ids are globally unique, so the language is looked up in `core/constants.py` when the parameter is absent — `/specs/{id}/ggplot2/code` works without `?language=r`. |
+
 ---
 
 ## SEO endpoints
+
+### GET `/llms-full.txt`
+
+**Purpose**: Whole-catalogue index for AI agents ([llms.txt convention](https://llmstxt.org/))
+
+One line per spec (`spec_id | title | hub URL | libraries`) plus a header that
+documents the user-agent-independent retrieval recipes (code endpoint, GCS
+image URL pattern, OpenAPI, MCP). nginx serves `anyplot.ai/llms-full.txt` from
+this endpoint.
+
+---
 
 ### GET `/sitemap.xml`
 

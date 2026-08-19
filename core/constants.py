@@ -265,6 +265,11 @@ LIBRARY_FILE_EXTENSION_OVERRIDES = {
 LANGUAGE_NAMES = {lang["id"]: str(lang["name"]) for lang in LANGUAGES_METADATA}
 LIBRARY_NAMES = {lib["id"]: str(lib["name"]) for lib in LIBRARIES_METADATA}
 
+# Library ids are globally unique across languages, so the language of any
+# library is derivable — callers that only know a library id (public API,
+# MCP tools) must resolve through this map instead of defaulting to python.
+LIBRARY_LANGUAGES = {lib["id"]: str(lib["language_id"]) for lib in LIBRARIES_METADATA}
+
 # Interactive libraries that generate HTML previews (not just PNG). The
 # browser-rendered JS libraries (Chart.js, D3, ECharts, Highcharts, and the
 # React MUI X entry) render in a browser; the harness emits both a static PNG

@@ -13,6 +13,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from api.main import app, fastapi_app
+from api.version import APP_VERSION
+from core.constants import LIBRARIES_METADATA
 from core.database import get_db
 from tests.conftest import TEST_IMAGE_URL
 
@@ -86,7 +88,7 @@ class TestRootEndpoint:
 
         data = response.json()
         assert "version" in data
-        assert data["version"] == "0.2.0"
+        assert data["version"] == APP_VERSION
 
     def test_returns_docs_url(self, client: TestClient) -> None:
         """Root endpoint should return docs URL."""
@@ -131,7 +133,7 @@ class TestHealthEndpoint:
         response = client.get("/health")
 
         data = response.json()
-        assert data["version"] == "0.2.0"
+        assert data["version"] == APP_VERSION
 
 
 class TestHelloEndpoint:
@@ -237,13 +239,17 @@ class TestAppConfiguration:
         assert fastapi_app.title == "anyplot API"
 
     def test_app_version(self) -> None:
-        """App should have correct version."""
-        assert fastapi_app.version == "1.0.0"
+        """App version must be the packaged version — the one the release flow bumps."""
+        assert fastapi_app.version == APP_VERSION
 
     def test_app_description(self) -> None:
-        """App should have description."""
+        """Description derives from the registry so it can never drift again."""
         assert "anyplot" in fastapi_app.description.lower()
-        assert "plotting" in fastapi_app.description.lower()
+        assert f"{len(LIBRARIES_METADATA)} libraries" in fastapi_app.description
+
+    def test_openapi_names_its_server(self) -> None:
+        """A client handed only openapi.json needs the base URL inside it."""
+        assert {"url": "https://api.anyplot.ai", "description": "Production"} in fastapi_app.servers
 
 
 class TestSpecsEndpoint:
