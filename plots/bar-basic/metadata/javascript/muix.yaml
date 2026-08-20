@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-basic
 created: '2026-08-20T17:06:19Z'
-updated: '2026-08-20T17:09:46Z'
+updated: '2026-08-20T17:14:31Z'
 generated_by: claude-sonnet
 workflow_run: 32395428460
 issue: 612
@@ -22,8 +22,8 @@ review:
   - Data sorted descending by consumption creates a clear ranking narrative that supports
     the comparison use case from the spec
   - Grid restricted to horizontal-only, legend correctly hidden for a single series,
-    and margins are tuned so the long y-axis label and rotated-free x-axis labels
-    never clip
+    and margins are tuned so the long y-axis label and x-axis category labels never
+    clip
   - Deterministic in-memory dataset with a real-world, neutral topic (Nordic coffee
     consumption) appropriate to the domain and scale
   weaknesses:
