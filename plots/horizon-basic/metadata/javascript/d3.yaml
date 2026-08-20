@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: horizon-basic
+created: '2026-08-20T06:12:55Z'
+updated: '2026-08-20T06:28:17Z'
+generated_by: claude-sonnet
+workflow_run: 32337869194
+issue: 1877
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Implements a true horizon-chart band-fold using per-band translated paths inside
+    a fixed-frame clip-path — a genuinely distinctive, low-level D3 technique that
+    would be hard to replicate in a high-level charting library.
+  - Correctly switched from the categorical palette to the Imprint diverging colormap
+    (t.div) for the signed/diverging temperature-anomaly data, with a documented rationale
+    for the semantic red=warm / blue=cold convention (NOAA/IPCC standard) — directly
+    fixes the VQ-07 issue flagged in the previous review.
+  - Title fontsize scaling formula was corrected (26px baseline instead of 22px) so
+    the descriptive-prefixed title fills a healthy share of the width without overflowing
+    — directly fixes the VQ-01/VQ-05 issue flagged in the previous review.
+  - Clear, well-constructed intensity legend explaining the color-to-magnitude mapping
+    with correctly ordered opacity swatches on both sides of the zero point.
+  - Theme-adaptive chrome is fully correct in both renders (background, ink, grid,
+    legend text); data colors (Imprint diverging stops) are identical between light
+    and dark.
+  - 10-city, 120-day dataset shows genuinely varied per-city patterns (Mumbai warming
+    trend, Perth cool spell, Oslo cold snap) rather than uniform noise.
+  weaknesses:
+  - Legend text ("Anomaly (\u00b0C) \u00b7 3 bands per side" and the -3.8/0/+3.8 tick
+    labels) renders at 12-13px, noticeably smaller than the 14-15px used for the axis
+    ticks and station names elsewhere — inconsistent type hierarchy and the first
+    element to lose legibility at mobile widths; bump to ~14px to match.
+  - Lanes/bands are built with imperative series.forEach + .append() loops rather
+    than D3's idiomatic selection.data(...).join(...) pattern; functionally correct
+    for a one-shot static render but not the most idiomatic modern D3 style (LM-01).
+  - All 10 series are generated from the same mean-reverting random-walk process (only
+    the seed differs) — trajectories look visually distinct but share one underlying
+    statistical shape; a touch more structural variety (e.g. one series with a genuine
+    multi-week trend) would strengthen data feature coverage (DQ-01).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title top-left ("Regional Temperature Anomalies · horizon-basic · javascript · d3 · anyplot.ai"), 10 dark-ink station labels (Berlin, Madrid, Oslo, Cairo, Tokyo, Nairobi, Lima, Perth, Toronto, Mumbai) on the left, a top-right intensity legend ("Anomaly (°C) · 3 bands per side" with -3.8/0/+3.8 tick labels), and bottom x-axis date ticks (Jun 01 .. Sep 01). All chrome text is dark and clearly visible against the light background.
+      Data: Horizon-folded areas per station, blue shades for negative (cold) anomalies and red shades for positive (warm) anomalies, with opacity increasing as magnitude grows within each of the 3 bands. First categorical/semantic color pair pulled from the Imprint diverging stops (t.div[0]/t.div[2]), not the categorical palette — correct for signed continuous data.
+      Legibility verdict: PASS (legend numeric labels are the smallest text at ~12-13px but remain readable at full resolution; slightly undersized relative to the rest of the chrome's 14-15px hierarchy — noted as a weakness, not a failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as light — title, station labels, legend, and x-axis ticks are all rendered in light ink colors (white/light-gray) against the dark background. No dark-on-dark text found anywhere.
+      Data: Blue/red horizon bands are pixel-identical in hue to the light render — confirms only chrome (background + text) flipped, data colors held constant per the Imprint diverging palette rule.
+      Legibility verdict: PASS — all title, axis, station-label, and legend text is clearly legible against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; readable in both themes. Legend text
+          (12-13px) is smaller than axis/label text (14-15px) — minor hierarchy inconsistency,
+          first to weaken at mobile widths.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between station labels, ticks, legend, or data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 120-point-per-series horizon areas render with clear, well-scaled
+          bands across all 10 lanes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/blue diverging Imprint stops, not red-green; distinguishable
+          via hue and opacity.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills ~81% of canvas height, full width; balanced margins;
+          nothing cut off; title fixed to avoid overflow (was flagged in attempt 1).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend explicitly labels the encoded unit ('Anomaly (°C)').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Now correctly uses Imprint diverging stops (t.div) for the signed
+          continuous anomaly data instead of the categorical palette — fixes attempt-1
+          finding. Theme-correct chrome in both renders.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong, above-default design: documented semantic color rationale,
+          well-constructed legend, consistent typography.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle per-lane baseline rules only, no bold grid, no spines beyond
+          a minimal bottom domain line, generous whitespace between lanes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Horizon-fold + varied per-city data choices (Mumbai warming, Perth
+          cool spell) create visual hierarchy guiding the reader, though no explicit
+          annotation/callout highlights the insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizon chart with proper band-folding.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 bands, mirrored positive/negative coloring, meaningful zero baseline,
+          10 series — all spec notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, folded magnitude=value, lane=series; all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          the encoded data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both positive and negative magnitudes across all 3 bands; series
+          differ visually but share one underlying random-walk process.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real, neutral scenario: temperature anomalies across real global
+          weather stations.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ±3.8°C anomaly range and daily granularity are realistic for station
+          temperature-anomaly data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot flow, no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG per series.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 global only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity for a horizon chart.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract; no animation; current d3 v7 API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level use of scales/axes/area/time-format, but lanes/bands
+          built via imperative forEach+append loops rather than selection.data(...).join(...).
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Per-band translated clip-path folding is a genuinely distinctive,
+          low-level D3 technique — the defining feature of a horizon chart, not easily
+          replicated in a high-level library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
