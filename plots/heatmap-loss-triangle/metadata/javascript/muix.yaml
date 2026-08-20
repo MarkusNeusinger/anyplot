@@ -1,0 +1,262 @@
+library: muix
+language: javascript
+specification_id: heatmap-loss-triangle
+created: '2026-08-20T20:50:41Z'
+updated: '2026-08-20T21:07:02Z'
+generated_by: claude-sonnet
+workflow_run: 32415539491
+issue: 4581
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correctly derives the actual/projected boundary from `i + period > 10`, producing
+    the exact top-right-to-bottom-left staircase the spec calls for, verified across
+    all 10 rows in the render.
+  - Custom composition using `useXScale`/`useYScale`/`useZColorScale` band + continuous-color
+    hooks is a genuinely idiomatic way to build a heatmap-style triangle on top of
+    community MUI X, which has no built-in heatmap chart.
+  - Hatching (not just color) distinguishes projected cells from actual ones, so the
+    actual-vs-projected signal survives for colorblind viewers.
+  - Age-to-age development factors are rendered as their own row beneath the triangle,
+    aligned to column boundaries, satisfying the spec's chain-ladder requirement.
+  - Cell text color is chosen per-cell from fill luminance (independent of site theme),
+    keeping all 100 annotated values legible in both light and dark renders.
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    ink, legend frame) flips, as required.
+  weaknesses:
+  - 'File header is duplicated: lines 1-4 are a stale header block (with an old ''Quality:
+    89/100'' line and ''Library: muix 7.29.1 | JavaScript 22.23.2'' format) followed
+    by a second, current header block starting again at line 6. Remove the first block
+    entirely so only one header remains, and move the `//# anyplot-orientation: square`
+    directive to the very first line as the library guide requires.'
+  - With 100 annotated cells at 13px in a 2400x2400 canvas, cell values will be near-illegible
+    once scaled down to the ~400px catalog thumbnail — inherent to the data density
+    the spec requires, but worth a slightly larger cell fontsize or bolder weight
+    if there's headroom.
+  - Design Excellence relies entirely on the mandated Imprint sequential tokens for
+    its palette; there's no additional bespoke color/typography choice beyond composition,
+    so DE-01 is scored on structural sophistication rather than palette invention.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "heatmap-loss-triangle · javascript · muix · anyplot.ai" and subtitle "Accident years 2015-2024 · evaluated as of Dec 2024" render in dark ink, clearly legible. Row labels (2015-2024) and column headers (1-10) are dark and readable. "Age-to-age factors" caption and the 9 factor values (×1.45...×1.00) below the grid are legible in muted ink. Axis captions "Development Period (years since occurrence)" and rotated "Cumulative paid claims ($000s)" are readable. Legend swatches ("Actual (observed)" / "Projected (IBNR estimate)") are clear, with the projected swatch showing the diagonal hatch pattern.
+      Data: 10x10 triangular grid, teal-green (low values, ~825) transitioning to blue (high values, ~2,588) via the sequential Imprint colorbar on the right. First-column/low-value cells read as brand green (#009E73-family). Each cell is annotated with its cumulative value using a thousands separator, in white or near-black text chosen per-cell for contrast against that cell's own fill. Projected cells (lower-right, staircase boundary from top-right to bottom-left) show a diagonal hatch overlay and dashed cell borders; actual cells have solid borders.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title, subtitle, row/column labels, dev-factor row, axis captions, and legend text all render in light ink, clearly legible against the dark background. No dark-on-dark text observed anywhere — every label maintains strong contrast.
+      Data: Identical cell fill colors and identical cumulative values to the light render (verified pixel-for-pixel appearance of the teal-to-blue sequential ramp and per-cell values); only the page background, ink, and legend/axis chrome switched to dark-theme tokens. Hatching and dashed borders on projected cells remain equally visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full resolution; per-cell text
+          color chosen from fill luminance. Dense 100-cell annotation set will shrink
+          hard at 400px thumbnail scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between cell text, axis labels, dev-factor row, legend,
+          or title.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cells sized appropriately for a 10x10 grid; hatch pattern for projected
+          cells is clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Actual/projected distinction uses hatching (texture), not just color;
+          sequential ramp is not red-green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions on 2400x2400 canvas, nothing cut off, balanced margins,
+          no canvas-gate failure.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis captions with units ('years since occurrence', '$000s').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous Imprint sequential ramp built from t.seq stops, correct
+          light/dark backgrounds, data colors identical across themes.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom band+color-scale composition, rounded cells, hatch overlay
+          for projected values — structurally sophisticated, though palette itself
+          is the mandated token set rather than a bespoke choice.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No chartjunk, generous whitespace, subtle muted-ink secondary text;
+          heatmap has no spines/grid to remove.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color intensity + hatching + dev-factor row together tell the chain-ladder
+          story clearly; staircase boundary is visually obvious.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct triangular heatmap for loss development.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Actual/projected distinction, cell annotations, dev-factor row, legend,
+          color-encoded magnitude all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = development period, Y = accident year; all 100 cells shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels ('Actual (observed)'
+          / 'Projected (IBNR estimate)') match spec intent.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All plot-type aspects present: triangle, projection region, factors,
+          colorbar, annotations.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible neutral insurance cumulative-claims data, classic chain-ladder
+          decay in development factors.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values grow from ~$825k to ~$2.588M, sensible for a mid-size claims
+          book.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper components (TriangleCells, DevelopmentFactorRow, LegendSwatches)
+          are justified given no built-in community heatmap chart.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42), fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (ChartContainer, axes, hooks, legend) are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Duplicated header block (lines 1-4 stale, lines 6-10 current) and
+          orientation directive not at the very top of the file — should be cleaned
+          up.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports the component per harness contract; skipAnimation
+          set.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of ChartContainer + band scales + zAxis colorMap + hooks
+          to build a custom composition within community MUI X's constraints.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ContinuousColorLegend and useZColorScale are MUI X-specific and used
+          meaningfully.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - cumulative-sum
+  styling:
+  - custom-colormap
+  - alpha-blending
