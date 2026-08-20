@@ -1,6 +1,7 @@
 // anyplot.ai
 // bar-tornado-sensitivity: Tornado Diagram for Sensitivity Analysis
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 86/100 | Created: 2026-08-20
 
 const t = window.ANYPLOT_TOKENS;
@@ -18,13 +19,27 @@ const parameters = [
   { name: "Debt Interest Rate", low: 13.0, high: 11.7 },
   { name: "Construction Delay", low: 12.9, high: 11.6 },
   { name: "Tax Credit Rate", low: 12.0, high: 12.9 },
-];
+].sort((a, b) => Math.abs(b.high - b.low) - Math.abs(a.high - a.low));
 
 // Sorted descending by impact range so the widest bar lands at the top —
 // Highcharts' "bar" (horizontal) type renders category index 0 at the top.
 const categories = parameters.map((p) => p.name);
-const highDeltas = parameters.map((p) => +(p.high - BASE_VALUE).toFixed(1));
-const lowDeltas = parameters.map((p) => +(p.low - BASE_VALUE).toFixed(1));
+const topParam = parameters[0];
+const topRange = Math.abs(topParam.high - topParam.low).toFixed(1);
+
+// --- Round, evenly-spaced value-axis ticks -----------------------------------
+// The stacked series live in "delta from base" space, but riders should read
+// whole-dollar NPV values on the axis. Compute the round absolute tick values
+// first, then convert each back into delta space for Highcharts' tickPositions.
+const allDeltas = parameters.flatMap((p) => [p.high - BASE_VALUE, p.low - BASE_VALUE]);
+const minAbs = Math.floor(BASE_VALUE + Math.min(...allDeltas));
+const maxAbs = Math.ceil(BASE_VALUE + Math.max(...allDeltas));
+const tickPositions = [];
+for (let v = minAbs; v <= maxAbs; v++) tickPositions.push(+(v - BASE_VALUE).toFixed(4));
+
+function pointEffect(value) {
+  return value >= BASE_VALUE ? "raises" : "lowers";
+}
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -40,6 +55,10 @@ Highcharts.chart("container", {
     text: "bar-tornado-sensitivity · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
+  subtitle: {
+    text: `${topParam.name} is the leading driver of NPV uncertainty (range: $${topRange}M)`,
+    style: { color: t.inkSoft, fontSize: "14px" },
+  },
   xAxis: {
     categories,
     lineColor: t.inkSoft,
@@ -53,10 +72,12 @@ Highcharts.chart("container", {
       style: { color: t.inkSoft, fontSize: "16px" },
     },
     gridLineColor: t.grid,
+    tickPositions,
     labels: {
       style: { color: t.inkSoft, fontSize: "14px" },
       formatter: function () {
-        return "$" + (BASE_VALUE + this.value).toFixed(1) + "M";
+        const v = Math.round((BASE_VALUE + this.value) * 10) / 10;
+        return "$" + (Number.isInteger(v) ? v.toFixed(0) : v.toFixed(1)) + "M";
       },
     },
     plotLines: [
@@ -71,7 +92,7 @@ Highcharts.chart("container", {
           align: "left",
           verticalAlign: "top",
           x: 8,
-          y: 16,
+          y: 4,
           style: { color: t.inkSoft, fontSize: "13px" },
         },
       },
@@ -83,10 +104,18 @@ Highcharts.chart("container", {
   },
   tooltip: {
     formatter: function () {
+      const outcome = BASE_VALUE + this.y;
+      const scenario = this.point.custom.scenario;
+      const effect = pointEffect(outcome);
       return (
-        this.series.name +
-        ": <b>$" +
-        (BASE_VALUE + this.y).toFixed(1) +
+        "<b>" +
+        this.point.category +
+        "</b><br/>" +
+        scenario +
+        " input " +
+        effect +
+        " NPV to <b>$" +
+        outcome.toFixed(1) +
         "M</b>"
       );
     },
@@ -98,7 +127,15 @@ Highcharts.chart("container", {
   series: [
     {
       name: "High input scenario",
-      data: highDeltas,
+      data: parameters.map((p, i) => ({
+        y: +(p.high - BASE_VALUE).toFixed(1),
+        custom: { scenario: "High" },
+        // A subtle frame on the single highest-impact parameter draws the eye
+        // to the tornado's key takeaway without adding a separate annotation.
+        borderWidth: i === 0 ? 2 : 0,
+        borderColor: i === 0 ? t.ink : undefined,
+        dataLabels: i === 0 ? { style: { fontWeight: "800" } } : undefined,
+      })),
       color: t.palette[0],
       dataLabels: {
         enabled: true,
@@ -111,7 +148,13 @@ Highcharts.chart("container", {
     },
     {
       name: "Low input scenario",
-      data: lowDeltas,
+      data: parameters.map((p, i) => ({
+        y: +(p.low - BASE_VALUE).toFixed(1),
+        custom: { scenario: "Low" },
+        borderWidth: i === 0 ? 2 : 0,
+        borderColor: i === 0 ? t.ink : undefined,
+        dataLabels: i === 0 ? { style: { fontWeight: "800" } } : undefined,
+      })),
       color: t.palette[1],
       dataLabels: {
         enabled: true,
