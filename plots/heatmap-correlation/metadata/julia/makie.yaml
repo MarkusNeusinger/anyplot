@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-correlation
 created: '2026-08-20T09:04:11Z'
-updated: '2026-08-20T09:08:07Z'
+updated: '2026-08-20T09:23:12Z'
 generated_by: claude-sonnet
 workflow_run: 32350935074
 issue: 1948
@@ -12,49 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Correct diverging Imprint colormap (#AE3030 → theme-adaptive midpoint → #4467A3)
-    with colorrange fixed to (-1, 1) exactly as the spec requires'
-  - Upper triangle masked (nan_color = :transparent) to remove the redundant mirrored
-    half while keeping variable names on both axes
-  - Per-cell annotation color is chosen from the actual cell luminance, so the 2-decimal
-    correlation labels stay legible against both the saturated red/blue extremes and
-    the near-neutral middle of the colormap, in both themes
-  - 'Realistic portfolio-diversification dataset: 8 asset classes driven by two latent
-    macro factors plus idiosyncratic noise, producing a plausible spread of correlations
-    from ~0.83 (US/Int''l Equities) down to near-zero (Cash)'
-  - Canvas lands exactly on the 2400x2400 square target with no edge clipping on the
-    rotated x tick labels or the colorbar
-  - 'Theme-adaptive chrome fully threaded through: background, title, tick labels,
-    and spines correctly flip between the FAF8F1 light and 1A1A17 dark tokens while
-    data colors stay identical'
+  - 'Directly resolved both attempt-1 weaknesses: near-zero cells now get a thin PAGE_BG
+    stroke via poly!/Rect2f (heatmap! doesn''t expose per-cell strokewidth/strokecolor
+    in this Makie version), giving clean cell separation in both themes'
+  - 'New focal-point device: the strongest off-diagonal correlation (US Equities /
+    Int''l Equities, 0.83) is rendered with a larger, bold annotation, giving the
+    matrix a clear visual hierarchy beyond the standard diagonal-at-1.0 pattern'
+  - 'Correct diverging Imprint colormap (#AE3030 -> theme-adaptive midpoint -> #4467A3)
+    with colorrange fixed to (-1, 1) exactly as the spec requires, identical between
+    light and dark'
+  - Upper triangle masked while keeping variable names on both axes, exactly matching
+    the spec's redundancy-reduction suggestion
+  - Per-cell annotation color chosen from actual cell luminance, keeping the 2-decimal
+    correlation labels legible against both saturated extremes and the near-neutral
+    middle of the colormap in both themes
+  - Realistic portfolio-diversification dataset (8 asset classes driven by two latent
+    macro factors plus idiosyncratic noise) producing a plausible, non-controversial
+    spread of correlations
+  - Canvas lands exactly on the 2400x2400 square target with no edge clipping on rotated
+    x labels or the colorbar
+  - Theme-adaptive chrome fully threaded through background, title, tick labels, and
+    spines while data colors stay identical between themes
   weaknesses:
-  - In the dark render, several near-zero correlation cells (e.g. 0.03, -0.01, -0.09)
-    sit so close to the theme-adaptive midpoint that they nearly blend into the page
-    background, making individual cell boundaries harder to distinguish at a glance
-    — a subtle 1px stroke between cells (e.g. `strokewidth = 1, strokecolor = PAGE_BG`
-    on the heatmap) would restore separation without touching the palette
-  - Design execution is competent but fairly conventional for a masked correlation
-    heatmap — no additional visual-hierarchy device (e.g. ordering assets by cluster
-    similarity, or subtly emphasizing the strongest off-diagonal correlations) beyond
-    the standard triangle mask and diagonal-at-1.0 pattern
+  - '`using ColorSchemes` is imported but never referenced directly in the script
+    — cgrad(...) and get(...) on the resulting gradient are provided via PlotUtils
+    (re-exported by Makie), so this is an unused import; remove it for CQ-03 cleanliness'
+  - Layout is still a conventional masked-triangle correlation heatmap with a full
+    four-sided spine frame retained rather than more minimal chrome; the poly!-based
+    per-cell rendering is a solid workaround but heatmap! remains the more idiomatic
+    Makie primitive for this plot type
+  - Design excellence, while improved, still relies mainly on the two devices added
+    this round (cell stroke, single bolded focal cell) — a further pass could vary
+    annotation weight/size across a small tier of top correlations, or use spine removal
+    for a cleaner frame, to push refinement further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title "heatmap-correlation · julia · makie · anyplot.ai" reads clearly at top; rotated (45°) x-axis category labels and horizontal y-axis category labels for all 8 asset classes are dark/soft-grey and fully legible; colorbar on the right is labeled "Pearson correlation" with ticks from -1.0 to 1.0, all readable.
-      Data: Masked lower-triangle correlation matrix in the Imprint diverging colormap — deep blue at the diagonal (1.00), blues for positive correlations (e.g. 0.83 US/Int'l Equities), near-white for near-zero cells, and dusty red for negative correlations (e.g. -0.22 Treasuries/Commodities). Each filled cell is annotated with its value to 2 decimal places, in either dark or light text chosen for contrast against that cell's fill color.
-      Legibility verdict: PASS — no light-on-light or unreadable text anywhere.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "heatmap-correlation · julia · makie · anyplot.ai" at top, centered, comfortably sized. Rotated (45°) x tick labels and horizontal y tick labels list all 8 asset names (US Equities, Int'l Equities, Corp Bonds, Treasuries, Real Estate, Commodities, Gold, Cash) in a soft dark grey. A four-sided ink-soft spine frames the plot area. Colorbar on the right labeled "Pearson correlation" with ticks from -1.0 to 1.0.
+      Data: Masked lower-triangle correlation matrix (incl. diagonal). Diverging Imprint scale — deep blue at the diagonal (1.00) and for positive correlations, near-white/cream for near-zero, dusty red for negative. Each filled cell has a thin cream stroke separating it from its neighbors, and every cell is annotated with its value to 2 decimal places in dark or light text chosen per-cell for contrast. The strongest off-diagonal pair (US Equities / Int'l Equities, 0.83, bottom-left) is rendered in a visibly larger, bold typeface as a focal point.
+      Legibility verdict: PASS — all title, tick, and cell-annotation text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and axis/tick labels flip to light ink/soft-grey tones and remain clearly visible against the dark surface; colorbar and its ticks/label are equally legible.
-      Data: Data colors are identical to the light render — same blue/white/red diverging scale and colorrange (-1, 1), confirming only chrome flipped. Per-cell text again adapts to light or dark based on the cell's own luminance, so labels stay readable even where the diverging colormap approaches the dark-theme midpoint (which is deliberately close to the page background, per the theme-adaptive diverging spec).
-      Legibility verdict: PASS — no dark-on-dark failures found; all annotation text remains readable, including in the near-midpoint cells where contrast is tightest.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, tick labels, spines, and colorbar all flip to light-ink / soft-grey tokens and remain fully legible; same layout and content as the light render.
+      Data: Colors are identical to the light render — same diverging colormap and fixed (-1, 1) colorrange, confirming only chrome flipped. Cell strokes now use the near-black PAGE_BG token, which keeps individual cells (including near-zero ones close to the theme-adaptive diverging midpoint) visually separated instead of blending into the background — this directly addresses the attempt-1 weakness about faint cell boundaries in dark mode. The bolded 0.83 focal cell is equally prominent here in white bold text.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome and per-cell annotation text reads clearly against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -62,8 +70,7 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; per-cell annotation color adapts
-          to cell luminance so labels stay readable in both themes
+        comment: All title, tick, and cell-annotation text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -72,41 +79,40 @@ review:
         comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Near-zero cells in dark theme blend slightly with the page background,
-          making cell boundaries a bit harder to trace; still fully readable
+        comment: New per-cell stroke fixes the attempt-1 dark-theme blending issue
+          for near-zero cells
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red-blue diverging scale (not red-green), CVD-safe, adequate contrast
+        comment: Diverging red/blue with white/cream midpoint; CVD-safe, no red-green
+          as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 2400x2400 square canvas, no clipping on rotated tick labels
-          or colorbar
+        comment: Square 2400x2400 canvas, no gate flag, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly; variable names serve as axis
-          labels as expected for a correlation matrix
+        comment: Descriptive asset names on both axes, colorbar labeled with units-equivalent
+          'Pearson correlation'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Uses the mandated Imprint diverging colormap (#AE3030 / theme-adaptive
-          midpoint / #4467A3), fixed colorrange (-1,1), correct FAF8F1/1A1A17 chrome
-          in both themes'
+        comment: 'imprint_div (#AE3030 -> theme midpoint -> #4467A3) used correctly;
+          backgrounds match theme tokens exactly'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -114,22 +120,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Luminance-adaptive annotation text is a genuine polish touch above
-          generic defaults, but overall layout is a conventional masked-triangle heatmap
+        comment: Cell stroke + focal-point emphasis add real polish, but the overall
+          composition remains a conventional masked-triangle heatmap
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Full four-sided spine frame retained rather than a more refined minimal
-          chrome; grid appropriately disabled
+        passed: true
+        comment: Cell strokes and luminance-adaptive text are refined touches; four-sided
+          spine frame still retained
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Triangle mask and diagonal-at-1.0 give some hierarchy, but no further
-          emphasis (e.g. ordering, highlighting strongest correlations)
+        passed: true
+        comment: Bolded strongest-correlation cell now gives a clear focal point on
+          top of the triangle mask and diagonal-at-1.0
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct correlation-matrix heatmap
+        comment: Correct correlation heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diverging colormap centered at zero, 2-decimal cell annotations,
-          masked triangle, fixed -1..1 colorbar — all present
+        comment: Diverging colormap, 2-decimal cell annotations, symmetric-data triangle
+          masking, fixed -1..1 colorbar range
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Symmetric matrix with all variable pairs shown via the lower triangle
-          plus diagonal
+        comment: All 8 variables shown on both axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; colorbar labeled 'Pearson correlation'
+        comment: Title format 'heatmap-correlation · julia · makie · anyplot.ai' matches
+          spec exactly
     data_quality:
       score: 15
       max: 15
@@ -169,24 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full range from strong positive (0.83) through near-zero to moderate
-          negative (-0.22) correlations across 8 assets
+        comment: Full range of positive, negative, and near-zero correlations represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral portfolio-diversification scenario with sensible
-          asset classes
+        comment: Plausible, neutral portfolio-diversification scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correlation magnitudes realistic for the asset relationships depicted
-          (e.g. equities highly correlated, cash near-independent)
+        comment: Correlation magnitudes realistic for the named asset classes
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -194,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -203,17 +206,17 @@ review:
         comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports (Colors, ColorSchemes, Printf, Random, Statistics) are
-          used
+        passed: false
+        comment: using ColorSchemes is imported but never referenced — unused import
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: poly!-per-cell workaround is well-commented and justified, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -221,7 +224,7 @@ review:
         passed: true
         comment: Saves plot-$(THEME).png via current CairoMakie API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -229,14 +232,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis/heatmap!/Colorbar/text! composition
+        comment: poly!/text! composition is a deliberate, justified deviation from
+          heatmap! to get per-cell strokes
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Luminance-based per-cell text color via cgrad get() is a nice touch
-          but not a deep Makie-specific feature showcase
+        passed: true
+        comment: Manual per-cell stroke + luminance-adaptive text color + conditional
+          focal-point styling show deeper Makie composition
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -244,6 +248,7 @@ impl_tags:
   - colorbar
   - annotations
   - manual-ticks
+  - patches
   patterns:
   - data-generation
   - matrix-construction
@@ -251,3 +256,4 @@ impl_tags:
   - correlation-matrix
   styling:
   - custom-colormap
+  - edge-highlighting
