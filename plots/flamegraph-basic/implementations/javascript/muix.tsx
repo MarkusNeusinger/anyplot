@@ -1,7 +1,7 @@
 // anyplot.ai
 // flamegraph-basic: Flame Graph for Performance Profiling
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-20
+// Quality: 96/100 | Created: 2026-08-20
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
