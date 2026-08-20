@@ -1,0 +1,256 @@
+library: echarts
+language: javascript
+specification_id: heatmap-correlation
+created: '2026-08-20T09:35:35Z'
+updated: '2026-08-20T09:48:43Z'
+generated_by: claude-sonnet
+workflow_run: 32353849174
+issue: 1948
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Diagonal self-correlation cells are now muted (opacity 0.4) and unlabeled, sharpening
+    visual hierarchy toward the meaningful off-diagonal correlations exactly as the
+    prior review requested
+  - Grid margins were tightened (right margin 190→ 60) and the visualMap colorbar
+    repositioned/enlarged (itemHeight 480→ 650) into the blank upper-right triangle
+    the mask leaves behind, meaningfully improving canvas utilization
+  - Label-contrast helper code was flattened from five small functions to two, closer
+    to a KISS imports→data→plot structure while still preserving the genuinely useful
+    WCAG-contrast-based per-cell text coloring
+  - Per-cell text color is computed dynamically via a WCAG contrast check against
+    the interpolated imprint_div fill, so every correlation value stays legible across
+    the whole diverging range
+  - Upper-triangle masking removes the redundant mirrored half of the matrix as the
+    spec suggests, and the fixed [-1, 1] colorbar with theme-adaptive midpoint is
+    correctly implemented
+  - Realistic, neutral wellness-metrics dataset (sleep, resting HR, VO2 max, body
+    fat, stress, hydration) with a good, physiologically sensible mix of correlation
+    strengths and signs
+  weaknesses:
+  - Even after tightening margins, the masked upper-triangle wedge still leaves a
+    sizeable blank area beyond the colorbar strip in the top-right of the square canvas
+    — could shrink further or grow cell size to use that space
+  - 'Library Mastery is only generic-to-moderate: the continuous visualMap piecewise
+    coloring is standard ECharts heatmap usage rather than a feature unique to the
+    library'
+  - Diagonal muting helps focus but the plot still doesn't call out or emphasize the
+    single strongest correlation (VO2 Max vs Resting HR, -0.71) — a subtle highlight
+    (border, bolder text) would push data storytelling further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-correlation · javascript · echarts · anyplot.ai" centered at top in dark ink at explicit fontsize, clearly readable. Y-axis variable names (Sleep Hours, Resting HR, Daily Steps, VO2 Max, Body Fat %, Stress Score, Hydration) render in soft dark gray, fully legible with no overlap. X-axis labels are the same variable names rotated ~40°, legible with no collisions. Colorbar sits inside the masked upper-right wedge, labeled "1.0" / "-1.0" in soft dark gray.
+      Data: Lower-triangle matrix shaded via the red-white-blue imprint_div diverging scale. Diagonal (self-correlation, 1.00) cells are now visibly muted/faded (opacity 0.4) and carry no text label, clearly de-emphasized relative to the off-diagonal cells. Strong negative correlations (e.g. -0.71 VO2 Max vs Resting HR) render deep red; weak correlations render near-white. Each off-diagonal cell is annotated with its correlation value to 2 decimals; text color flips between near-black and near-white per cell to preserve contrast against that cell's fill.
+      Legibility verdict: PASS — all title, axis, tick, colorbar, and cell-label text is clearly readable against the light background; no light-on-light instances found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now rendered in light ink, clearly readable. Axis variable names render in light gray, fully legible on the dark surface. Colorbar labels "1.0"/"-1.0" also render in light gray, readable.
+      Data: The diverging cell colors are visually identical to the light render (same red/white/blue endpoints and identical value-to-color mapping) — only chrome (background, axis text, colorbar text) flipped to the dark theme. Diagonal cells remain muted/unlabeled, matching the light render's hierarchy. Cell value labels again alternate between dark and light text per cell to preserve contrast; no dark-on-dark instances found.
+      Legibility verdict: PASS — all chrome and data-label text reads clearly on the dark background; brand-adjacent diverging colors are consistent across both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; title scales
+          with length to avoid overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Rotated x-axis labels, cell annotations, and colorbar text do not
+          overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cell sizes appropriate for a 7x7 matrix, all values readable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-cell label color computed via WCAG contrast against the cell
+          fill
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid right margin tightened (190->60) and the colorbar repositioned/enlarged
+          into the masked wedge, giving a balanced, well-utilized square canvas
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive variable names on both axes, correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div used correctly with theme-adaptive midpoint; chrome theme-correct
+          in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dynamic contrast-aware label coloring is a genuinely sophisticated,
+          above-default technique
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Masked triangle, thin cell separators, generous margins, no unnecessary
+          grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Muted, unlabeled diagonal cells now sharpen focus toward the informative
+          off-diagonal correlations; a highlight on the single strongest correlation
+          would push this further
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct correlation heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap centered at zero, 2-decimal cell annotations,
+          masked triangle, fixed [-1,1] colorbar range - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Variables correctly mapped to both axes, diagonal = 1.00
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar end labels correctly describe the
+          value range
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Good mix of strong/weak, positive/negative correlations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible wellness-tracking metrics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation magnitudes and signs are physiologically sensible (e.g.
+          Resting HR vs VO2 Max strongly negative)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Contrast-calculation helpers flattened from five functions to two;
+          close to a flat imports->data->plot script while keeping a real accessibility
+          computation
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the echarts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Helper functions serve a real accessibility purpose, not over-engineering
+          or fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no devicePixelRatio
+          override
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic setOption with heatmap series and continuous visualMap
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Continuous visualMap piecewise coloring plus computed per-cell contrast
+          text color is a distinctive combination, though not unique to ECharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
