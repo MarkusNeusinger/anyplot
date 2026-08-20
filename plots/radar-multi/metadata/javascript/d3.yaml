@@ -1,0 +1,241 @@
+library: d3
+language: javascript
+specification_id: radar-multi
+created: '2026-08-20T07:32:52Z'
+updated: '2026-08-20T07:45:58Z'
+generated_by: claude-sonnet
+workflow_run: 32344036462
+issue: 2026
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Both attempt-1 weaknesses fully resolved: gridline value labels (20-100) now
+    sit in the dedicated gap between the Value and Sound Quality spokes, clear of
+    every data marker, with an added italic "Score (0-100)" caption removing the previous
+    scale ambiguity'
+  - 'Clear visual hierarchy: the top-scoring series (Aria Pro, computed dynamically
+    via d3.mean rather than hardcoded) is emphasized with a thicker 4px stroke, larger
+    7px markers, and higher 0.3 fill-opacity versus 2.5px/5.5px/0.18 for the others,
+    giving the chart a genuine focal point'
+  - 'Correct Imprint palette in canonical order (green #009E73 / lavender #C475FD
+    / blue #4467A3) with alpha-blended fills that keep all three overlapping polygons
+    legible'
+  - 'Full spec feature checklist met: reference gridlines at 20/40/60/80/100, polygons
+    closed via d3.curveLinearClosed, fill+stroke per series, legend, outer-edge axis
+    labels with cosine-based text-anchor logic to avoid left/right overlap'
+  - 'Clean, idiomatic D3: d3.lineRadial + scaleOrdinal + .join() pattern, deterministic
+    hardcoded data, no fake interactivity, theme tokens threaded correctly through
+    window.ANYPLOT_TOKENS'
+  weaknesses:
+  - Aesthetic sophistication is solid but still fairly conventional for a radar chart
+    (rounded legend swatches, standard grid) rather than a distinctive bespoke treatment
+  - The '60' gridline label sits close to where the Sonic Wave and Bass Nova polygon
+    edges cross in the gap region — not touching, but there is little breathing room
+    if a future data update shifts those values slightly closer to that ring
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "radar-multi · javascript · d3 · anyplot.ai" in bold dark ink, centered top, fully legible. Six axis labels (Sound Quality, Battery Life, Comfort, Noise Cancel., Build Quality, Value) in dark medium-weight text at the outer edge, all readable with correctly balanced left/right/center anchoring. Radial gridline value labels (20/40/60/80/100) plus an italic "Score (0-100)" caption are placed in the open gap between the Value and Sound Quality spokes, in soft gray text, clear of all data markers and axis labels.
+      Data: Three semi-transparent filled polygons — Aria Pro (brand green #009E73, emphasized with a thicker stroke and larger white-stroked dots as the computed top-scoring series), Sonic Wave (lavender #C475FD), Bass Nova (navy blue #4467A3) — each closed and rendered with fill + stroke. Legend at the bottom center with rounded color swatches and dark labels, evenly spaced, well clear of the canvas edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title and all axis labels render in light/near-white text, clearly legible, no dark-on-dark issues. Gridline value labels and the "Score (0-100)" caption remain in a soft light-gray tone in the same gap position, fully legible. Legend uses the same swatches with light text labels.
+      Data: Data colors (green, lavender, navy blue) are visually identical to the light render — only chrome (background, text, grid) flipped, confirming theme-adaptive tokens were threaded correctly. The emphasized Aria Pro series remains the clear focal point.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; prior gridline-label crowding resolved
+          by relocating labels to the axis gap
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, markers, or legend after the label-placement
+          fix
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers appropriately sized for sparse (18-point) data; top series
+          further emphasized with larger dots
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe green/lavender/blue combination
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 2400x2400 square canvas, nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels, correct title format, added scale caption
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, correct theme backgrounds, identical data
+          colors across themes
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded legend swatches, gap-placed scale caption, angle-based label
+          anchoring, white-stroke markers; solid polish, not groundbreaking
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines, generous whitespace, clean grid/spoke rendering
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Data-driven emphasis on the top-scoring series creates a clear focal
+          point among the overlapping polygons
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-series radar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Alpha fills, distinct colors, legend, gridlines at 20/40/60/80/100,
+          outer-edge labels, closed polygons, fill+stroke
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 6 axes, 3 series correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 axes, 3 series within recommended range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral fictional headphone models
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible 0-100 scores, varied distribution across series
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No named functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only global d3 used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.lineRadial, scaleOrdinal, .join() pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Data-driven focal-series computation, custom angle-based label anchoring,
+          gap-aware gridline label placement
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
