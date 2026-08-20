@@ -55,7 +55,7 @@ radar_df <- tibble::tibble(
 # Alternating ring bands (drawn back-to-front: wide band first, then a
 # narrower band painted in the page color to punch out the "gap") give the
 # grid a touch of depth beyond the mandated gridlines alone. Strengthened
-# from the previous alpha=0.05 (barely perceptible) to 0.09.
+# from alpha=0.09 (still barely perceptible) to 0.16 for a visible band.
 ring_hi <- data.frame(attribute = factor(attributes, levels = attributes), score = 80)
 ring_lo <- data.frame(attribute = factor(attributes, levels = attributes), score = 60)
 
@@ -66,12 +66,22 @@ ring_lo <- data.frame(attribute = factor(attributes, levels = attributes), score
 # straight through 3 of the 6 labels ("Camera", "Value", "Durability").
 label_df <- data.frame(attribute = factor(attributes, levels = attributes), score = 116)
 
+# Each phone's single strongest attribute, ringed with an open halo below,
+# reinforces the caption's "each phone leads on a different axis" claim
+# directly in the encoding — not just as caption text.
+leader_idx <- tapply(seq_len(nrow(radar_df)), radar_df$phone, function(idx) idx[which.max(radar_df$score[idx])])
+leader_df <- radar_df[unlist(leader_idx), ]
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(radar_df, aes(x = attribute, y = score, group = phone, color = phone, fill = phone)) +
-  geom_polygon(data = ring_hi, aes(x = attribute, y = score), inherit.aes = FALSE, fill = INK, alpha = 0.09) +
+  geom_polygon(data = ring_hi, aes(x = attribute, y = score), inherit.aes = FALSE, fill = INK, alpha = 0.16) +
   geom_polygon(data = ring_lo, aes(x = attribute, y = score), inherit.aes = FALSE, fill = PAGE_BG) +
   geom_polygon(alpha = 0.25, linewidth = 1.0) +
   geom_point(size = 3.8) +
+  geom_point(
+    data = leader_df, aes(x = attribute, y = score, color = phone),
+    inherit.aes = FALSE, shape = 1, size = 7.5, stroke = 1.6, show.legend = FALSE
+  ) +
   geom_text(
     data = label_df, aes(x = attribute, y = score, label = attribute),
     inherit.aes = FALSE, color = INK, size = 10 / .pt
