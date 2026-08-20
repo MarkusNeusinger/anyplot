@@ -1,0 +1,251 @@
+library: muix
+language: javascript
+specification_id: pictogram-basic
+created: '2026-08-20T22:59:00Z'
+updated: '2026-08-20T23:03:46Z'
+generated_by: claude-sonnet
+workflow_run: 32425898740
+issue: 4674
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Clever, correct pictogram construction: circles are rendered via a custom MUI
+    X scatter slot with a clipPath-based partial-fill technique for fractional remainders,
+    matching the spec''s ''partial icons represent fractional remainders'' requirement
+    precisely.'
+  - Exact per-category values ('35 t', '22 t', ...) are aligned in a clean right-hand
+    column, plus a legend subtitle stating the icon-to-unit ratio ('● = 5 tons of
+    fruit'), satisfying the spec's unit-legend requirement.
+  - 'Theme handling is clean: icons are identical brand green (#009E73) in both renders,
+    and title/labels/background are correctly theme-adaptive with no dark-on-dark
+    or light-on-light failures.'
+  - Rows are left-aligned per category exactly as the spec requests, mirroring a horizontal
+    bar chart layout with category labels on the y-axis and no unnecessary x-axis
+    chrome.
+  weaknesses:
+  - Missing `skipAnimation` prop on <ScatterChart> — prompts/library/muix.md mandates
+    it on every chart component as a second belt against mid-tween screenshots; relying
+    solely on the harness's prefers-reduced-motion emulation is a spec violation even
+    though this run happened to render cleanly.
+  - Legend indicator '●' in the subtitle ('● = 5 tons of fruit') is rendered in the
+    muted secondary ink color instead of the brand green (#009E73) used for the actual
+    icons — the bullet glyph doesn't visually match what it explains.
+  - Categories are not sorted by value (Apples 35, Oranges 22, Bananas 18, Mangoes
+    27, Grapes 14) — sorting descending would strengthen the at-a-glance comparison
+    typical of ISOTYPE-style pictograms.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "Weekly Fruit Harvest · pictogram-basic · javascript · muix · anyplot.ai" in bold dark ink, centered at top; subtitle "● = 5 tons of fruit" in muted gray beneath it; category labels (Apples, Oranges, Bananas, Mangoes, Grapes) on a thin left-hand axis line; per-row value labels ("35 t", "22 t", "18 t", "27 t", "14 t") aligned in a right-hand column. All text is dark on the light surface and clearly readable.
+      Data: Five rows of brand-green (#009E73) filled circles, one circle per 5 tons, with a clipped partial circle (outlined remainder) representing the fractional leftover for Oranges, Bananas, Mangoes, and Grapes. Rows are left-aligned for easy row-to-row comparison, matching a horizontal-bar-chart layout.
+      Legibility verdict: PASS — no overlap, no clipping, all text crisp against the cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title and subtitle layout, now in light ink (#F0EFE8 title / lighter gray subtitle) against the dark surface; category and value labels are light-colored and fully legible; the thin y-axis line is visible but subtle.
+      Data: Icons are the identical brand green (#009E73) as the light render — confirmed unchanged data color, only chrome flipped. Partial-icon outlines remain visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark text, no unreadable elements; all chrome correctly inverted for the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title scaled by length, 16px categories,
+          18px value labels, 14px subtitle); readable in both themes and well-proportioned.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between icons, category labels, value labels, or title/subtitle.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 42px-radius circles are prominent and well-sized for 5 sparse rows
+          of icons.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green series, no red-green reliance, good contrast on
+          both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced portion of the canvas; nothing cut off;
+          margins consistent.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Category labels descriptive; unit (tons per icon) explicit via subtitle
+          and per-row value labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds are #FAF8F1/#1A1A17;
+          chrome theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom pictogram construction (clipPath partial fill)
+          clearly above library defaults; not quite publication-grade polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid, minimal chrome, generous whitespace, but the legend bullet
+          color mismatch (gray '●' vs. green icons) is a detail miss.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Partial-fill affordance and aligned value column create visual hierarchy,
+          but categories aren't sorted by value so there's no single clear focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pictogram/isotype chart, custom-built since MUI X has no
+          native icon-array chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Consistent unit legend, partial icons, left-aligned rows, category
+          labels on left — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = icon count, Y = category, matches horizontal-bar-like layout
+          requested by spec.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend/subtitle correctly explains the unit-per-icon
+          convention.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both full icons and partial/fractional icons across multiple
+          categories.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible farm-co-op weekly harvest scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Tonnages and icon-unit ratio are sensible for a small farm co-op.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward top-level data/derivation, one required default-export
+          component plus the necessary custom slot renderer.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ScatterChart, Box, Typography imported and used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant clipPath-based partial-icon solution, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Missing mandatory `skipAnimation` prop on <ScatterChart> per prompts/library/muix.md.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ScatterChart's slots API with xScale/yScale, axis config,
+          and valueFormatter.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'The slots={{scatter: ...}} override with direct xScale/yScale access
+          is a genuinely MUI X-specific mechanism for custom mark rendering.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
