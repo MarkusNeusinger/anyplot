@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: phase-diagram-pt
+created: '2026-08-20T21:58:06Z'
+updated: '2026-08-20T22:15:01Z'
+generated_by: claude-sonnet
+workflow_run: 32421273028
+issue: 4666
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Physically accurate P-T phase diagram for water: solid-liquid, liquid-gas, and
+    solid-gas boundaries are derived from Clausius-Clapeyron relations calibrated
+    to the real triple point (273.16 K / 611.73 Pa) and critical point (647.1 K /
+    22.064 MPa), including water''s correctly modeled anomalous negative-slope fusion
+    curve.'
+  - 'Both attempt-1 weaknesses are cleanly fixed: x-axis gridlines are now removed
+    (y-axis-only grid, matching the style guide''s line-chart rule), and a subtle
+    ink-tinted rectangle now shades the Supercritical Fluid corner (T > critical T,
+    P > critical P) via a Highcharts render event — reinforcing the region boundary
+    without any add-on module.'
+  - 'Zero clipping or overlap in either render, exact Imprint palette compliance (first
+    series #009E73, canonical order for the three boundary series), and fully theme-adaptive
+    chrome verified on both light and dark backgrounds.'
+  - 'Thoughtful annotation approach: triple/critical points marked with diamond markers
+    plus direct dataLabels, phase regions labeled in-place with italic text instead
+    of a redundant legend, and the title fontsize dynamically scales with the mandated
+    title''s length.'
+  - Correctly implemented logarithmic pressure axis spanning the full physically relevant
+    range with sensible headroom, and a subtitle surfacing the key reference-point
+    values.
+  weaknesses:
+  - Line weight is uniform (3px) across all three boundary curves; a slight emphasis
+    on the liquid-gas boundary (the one terminating at the critical point) would sharpen
+    the visual hierarchy further.
+  - No callout draws attention to the physically notable fact that the solid-liquid
+    boundary has a negative slope (water's well-known anomaly vs. most substances)
+    — a small annotation would add a touch more data storytelling, though it is not
+    required by the spec.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Water Phase Diagram · phase-diagram-pt · javascript · highcharts · anyplot.ai" and a gray subtitle with triple/critical point values, both clearly legible. Axis titles "Temperature (K)" and "Pressure (Pa)" in medium-gray, tick labels (200-700 on x, 0.1-1G logarithmic on y) in lighter gray, all readable. Only horizontal (y-axis) gridlines are present now — subtle warm-gray, not competing with data; the vertical gridlines from attempt 1 have been removed. Legend at bottom lists the three boundary series with matching color swatches. A faint gray-tinted rectangle now shades the top-right "Supercritical Fluid" corner (T > critical T, P > critical P).
+      Data: Three curves — green "Solid-Liquid boundary" (near-vertical, bending left with rising pressure, correctly showing water's anomalous negative fusion slope), lavender/purple "Liquid-Gas boundary" (smooth curve from triple point to critical point), and blue "Solid-Gas boundary" (sublimation curve). First series is confirmed #009E73 brand green. Diamond markers mark the Triple Point and Critical Point with direct text labels, both fully inside the canvas with no clipping. Italic gray labels "Solid", "Liquid", "Gas", and "Supercritical Fluid" sit inside their respective regions with no overlap with curves, markers, or each other.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues found; checked title, axis, tick, legend, and annotation text including the top-right "Critical Point" / "Supercritical Fluid" cluster near the canvas edge — no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle rendered in light/near-white and soft light-gray respectively, both clearly legible against the dark surface. Axis titles, tick labels, and legend text all switch to light tones — no dark-on-dark failures found anywhere. Only horizontal gridlines present, consistent with the light render. The supercritical-region shading is visible as a slightly lighter gray rectangle against the near-black background, still legible and unobtrusive.
+      Data: Identical green/lavender/blue curve colors to the light render — confirmed only chrome (background, text, gridlines, marker outline, region shade) flipped between themes; data hues are pixel-identical.
+      Legibility verdict: PASS — all text reads clearly on the dark background, including the italic region labels and the diamond-marker annotations; brand green remains vivid and distinguishable on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full res; title/axis/tick/legend/annotation
+          text all clear, no clipping near edges.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, markers, curves, or the new region
+          shading in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3px lines and radius-7 diamond markers are clearly visible; smooth
+          analytical curves appropriately rendered as lines, not markers.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 3 distinct hues (green/purple/blue), no red-green as sole signal,
+          sufficient contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, no cut-off elements, title within expected width
+          range, canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (K, Pa).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order, correct theme
+          backgrounds, both renders theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Subtitle with reference values, adaptive title fontsize formula,
+          italic in-place region labels, and the new supercritical shading — above-average
+          polish; uniform line weight across boundaries keeps it just below top marks.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: vertical gridlines removed, now y-axis-only
+          per the style guide''s line-chart rule. Generous whitespace and subtle grid.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: the supercritical-fluid region is now visually
+          shaded, reinforcing the boundary beyond label placement alone. Clear hierarchy
+          via distinct colors and marked reference points.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct P-T phase diagram with logarithmic pressure axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: labeled solid/liquid/gas regions, triple
+          point, critical point, supercritical fluid region, log pressure axis, correct
+          negative-slope fusion curve.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x, pressure on y, axes show all curve data with sensible
+          headroom.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format compliant with optional descriptive prefix; legend labels
+          match the boundary series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three boundaries, both special points, and the supercritical
+          region are shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, well-known substance (water) with textbook-accurate
+          constants.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically accurate K/Pa values derived from real thermodynamic relations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no unnecessary functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only globals and plain math.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the physics calculations and the render-event
+          shading, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, chart+series animation disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Logarithmic axis, scatter+dataLabels annotation pattern, correct
+          core-bundle-only usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom render-event region shading is a good pragmatic use of Highcharts'
+          core renderer API without reaching for an unavailable add-on module (plotBands
+          would have needed a rectangular region across the whole axis; this renderer.rect
+          approach correctly clips to the T>critical AND P>critical corner).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
