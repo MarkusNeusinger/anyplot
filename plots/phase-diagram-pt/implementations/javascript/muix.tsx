@@ -11,7 +11,13 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 const W = window.ANYPLOT_SIZE.width;
 const H = window.ANYPLOT_SIZE.height;
-const TITLE_H = 54;
+const TITLE_H = 60;
+
+// ChartsYAxis places the rotated axis label at `tickFontSize + tickSize + 10`
+// px from the axis line (its only lever for that offset, independent of the
+// actual rendered tick fontSize, which tickLabelStyle controls below) — sized
+// to clear the widest pressure tick label ("100 kPa").
+const Y_AXIS_LABEL_OFFSET_PX = 85;
 
 // --- Data (representative water phase diagram, deterministic) --------------
 // Boundary curves follow the Clausius-Clapeyron relation (sublimation,
@@ -123,7 +129,7 @@ function PhaseAnnotations() {
   };
   const regionLabel = {
     fill: t.ink,
-    fontSize: 30,
+    fontSize: 22,
     fontWeight: 600,
     opacity: 0.5,
     textAnchor: "middle",
@@ -216,7 +222,7 @@ export default function Chart() {
           alignItems: "center",
           justifyContent: "center",
           color: t.ink,
-          fontSize: 22,
+          fontSize: 34,
           fontWeight: 500,
           flexShrink: 0,
         }}
@@ -252,11 +258,7 @@ export default function Chart() {
             label: "Pressure (Pa, log scale)",
             labelStyle: { fontSize: 18 },
             tickLabelStyle: { fontSize: 15 },
-            // tickFontSize only drives the axis's internal label-offset math
-            // (not the rendered tick size, which tickLabelStyle controls) —
-            // bumped so the rotated axis title clears the wide "100 kPa"
-            // tick text instead of overlapping it.
-            tickFontSize: 85,
+            tickFontSize: Y_AXIS_LABEL_OFFSET_PX,
             tickInterval: [1, 10, 100, 1e3, 1e4, 1e5, 1e6, 1e7, 1e8],
             valueFormatter: formatPressure,
           },
