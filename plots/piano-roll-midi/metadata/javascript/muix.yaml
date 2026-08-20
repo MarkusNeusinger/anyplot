@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: piano-roll-midi
+created: '2026-08-20T22:38:16Z'
+updated: '2026-08-20T22:43:38Z'
+generated_by: claude-sonnet
+workflow_run: 32424332834
+issue: 4565
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/piano-roll-midi/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Custom piano-roll rendering built correctly on MUI X's compose API (ChartContainer
+    + useXScale/useYScale/useZColorScale/useDrawingArea) — the right approach since
+    no built-in MUI X chart type covers a piano roll, and it stays entirely within
+    the community @mui/x-charts surface
+  - Alternating black/white key row shading and beat/measure grid lines (with stronger
+    measure-boundary lines) both faithfully implement the spec's piano-roll conventions
+  - 'Velocity color-coded with the correct imprint_seq continuous gradient (#009E73
+    -> #4467A3), identical between light and dark renders, with a clean ContinuousColorLegend
+    (Soft/Loud) placed near the plot'
+  - Deterministic, musically coherent example data (I-vi-IV-V progression with bass/comping/melody
+    layers) that builds a visible crescendo in velocity across the 8 measures, giving
+    the plot a real visual storyline without relying on annotations
+  - Pitch axis auto-fits to the data range with a small margin and note-name tick
+    labels (C3/C4/C5), rather than showing the full 0-127 MIDI range
+  - All font sizes explicitly set (title 22px, tick labels 14px, axis labels 15px,
+    legend 14px) and legible in both themes, including at the ~400px mobile-scaled
+    preview
+  weaknesses:
+  - ChartContainer does not set skipAnimation — the muix library rules require it
+    as a mandatory 'belt' alongside the harness's prefers-reduced-motion emulation;
+    current renders happen to land on the final frame, but add skipAnimation to ChartContainer
+    for robustness.
+  - Visual refinement is good but still fairly close to MUI X axis defaults (visible
+    axis lines/ticks) rather than a fully custom, spines-removed treatment — a touch
+    more chrome reduction (e.g. thinner/lighter axis lines) would push Design Excellence
+    further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white and not dark.
+      Chrome: Title "piano-roll-midi · javascript · muix · anyplot.ai" in dark bold text top-left, "Pitch" y-axis label and "Time (measures)" x-axis label in dark gray, C3/C4/C5 tick labels on the y-axis, M1-M8 tick labels on the x-axis, a green->blue "Soft"/"Loud" continuous legend bar top-right. All chrome text is clearly dark-on-light and fully readable.
+      Data: Horizontal rounded rectangles (notes) positioned by pitch (y) and time (x), width encoding duration. Fill color runs from brand green (#009E73, soft/low velocity) to blue (#4467A3, loud/high velocity) via the imprint_seq gradient — first/softest notes are green, loudest notes near measures 7-8 are blue. Subtle gray bands alternate behind the notes to mark piano black-key rows; vertical grid lines mark beats, with a stronger line at each measure boundary.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black and not light.
+      Chrome: Same title, axis labels, and tick labels now rendered in light gray/white text on the dark background. Legend and its "Soft"/"Loud" labels are light-colored and clearly visible. Grid lines and measure lines are subtle but visible against the dark background.
+      Data: Note colors are pixel-identical to the light render (green #009E73 -> blue #4467A3 gradient) — only the chrome (background, text, grid) flipped as expected. No dark-on-dark or light-on-light failures anywhere; every text element is legible against its background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, ticks 14px, axis labels
+          15px, legend 14px); readable in both themes and at ~400px mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Note bars well-sized and clearly separated with padding + page-background
+          stroke.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential gradient is CVD-safe; no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the large majority of the canvas with balanced margins,
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Pitch' and 'Time (measures)' axis labels with meaningful
+          tick units (note names, measure numbers).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct imprint_seq gradient (#009E73 -> #4467A3) for single-polarity
+          velocity data, identical across themes; theme-correct backgrounds/chrome.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette and layout, custom row shading and grid hierarchy;
+          strong but not FiveThirtyEight-level innovation.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and generous whitespace, but axis chrome still fairly
+          close to MUI X defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Velocity gradient builds a clear crescendo arc across the 8 measures,
+          visible at a glance without annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct piano-roll grid: horizontal note bars by pitch/time.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Note names on y-axis, alternating key-row shading, beat/measure gridlines,
+          sequential velocity color, auto-fit pitch range all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time (beats/measures), Y=pitch correctly mapped; all notes visible
+          within axis range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels (Soft/Loud)
+          correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows chords, sustained bass notes, short melodic notes, and a full
+          velocity range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral I-vi-IV-V chord progression with bass/comping/melody
+          layers.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: MIDI pitch and velocity values within valid, musically plausible
+          ranges.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean top-down structure (data -> derived stats -> helper components
+          -> Chart); component functions are unavoidable and idiomatic for MUI X's
+          compose API.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/functionality; appropriate complexity for a custom chart
+          type.
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Missing mandatory skipAnimation on ChartContainer per muix.md's 'both
+          belts' rule.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses MUI X's documented compose API (ChartContainer + scale hooks)
+          correctly, the recommended pattern for chart types the library doesn't ship
+          out of the box.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: useXScale/useYScale/useZColorScale/useDrawingArea + ContinuousColorLegend
+          are MUI X-specific composition primitives, not generic chart-library features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - publication-ready
+  - grid-styling
