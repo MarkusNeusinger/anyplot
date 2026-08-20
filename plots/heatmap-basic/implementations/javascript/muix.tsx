@@ -19,7 +19,16 @@ const t = window.ANYPLOT_TOKENS;
 const SIZE = window.ANYPLOT_SIZE;
 
 // --- Data: correlation matrix between business metrics (in-memory, deterministic) ---
-const metrics = ["Revenue", "Marketing", "CSAT", "Headcount", "R&D", "Mkt Share", "OpEx", "Churn"];
+const metrics = [
+  "Revenue",
+  "Marketing",
+  "CSAT",
+  "Headcount",
+  "R&D",
+  "Mkt Share",
+  "OpEx",
+  "Churn",
+];
 
 // Upper-triangular correlation coefficients (row i vs. columns i+1..n-1); mirrored below.
 const upperTriangle = [
@@ -36,8 +45,18 @@ const n = metrics.length;
 const cells = [];
 for (let row = 0; row < n; row += 1) {
   for (let col = 0; col < n; col += 1) {
-    const value = row === col ? 1 : upperTriangle[Math.min(row, col)][Math.max(row, col) - Math.min(row, col) - 1];
-    cells.push({ id: `${row}-${col}`, x: metrics[col], y: metrics[row], value });
+    const value =
+      row === col
+        ? 1
+        : upperTriangle[Math.min(row, col)][
+            Math.max(row, col) - Math.min(row, col) - 1
+          ];
+    cells.push({
+      id: `${row}-${col}`,
+      x: metrics[col],
+      y: metrics[row],
+      value,
+    });
   }
 }
 
@@ -54,16 +73,27 @@ function lerp(a, b, ratio) {
 function imprintDivInterpolator(stops) {
   const [low, mid, high] = stops.map(hexToRgb);
   return (position) => {
-    const [start, end, localRatio] = position < 0.5 ? [low, mid, position / 0.5] : [mid, high, (position - 0.5) / 0.5];
-    const [r, g, b] = [0, 1, 2].map((channel) => lerp(start[channel], end[channel], localRatio));
+    const [start, end, localRatio] =
+      position < 0.5
+        ? [low, mid, position / 0.5]
+        : [mid, high, (position - 0.5) / 0.5];
+    const [r, g, b] = [0, 1, 2].map((channel) =>
+      lerp(start[channel], end[channel], localRatio),
+    );
     return `rgb(${r}, ${g}, ${b})`;
   };
 }
 
+// Cell text must stay legible against that cell's own fill luminance regardless
+// of the current site theme, so pick between the two fixed Imprint ink literals
+// (light-mode ink / dark-mode ink) rather than the theme-dependent `t.ink`.
+const CELL_TEXT_ON_LIGHT_FILL = "#1A1A17";
+const CELL_TEXT_ON_DARK_FILL = "#F0EFE8";
+
 function textColorFor(fill) {
   const [r, g, b] = fill.match(/[\d.]+/g).map(Number);
   const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 140 ? t.ink : "#FAF8F1";
+  return luminance > 140 ? CELL_TEXT_ON_LIGHT_FILL : CELL_TEXT_ON_DARK_FILL;
 }
 
 // --- Cells (custom composition: MUI X band scales + z-axis colour scale) --------------
@@ -82,12 +112,24 @@ function HeatmapCells() {
         const fill = colorScale(cell.value);
         return (
           <g key={cell.id}>
-            <rect x={x} y={y} width={width} height={height} fill={fill} rx={4} />
+            <rect
+              x={x}
+              y={y}
+              width={width}
+              height={height}
+              fill={fill}
+              rx={4}
+            />
             <ChartsText
               text={cell.value.toFixed(2)}
               x={x + width / 2}
               y={y + height / 2}
-              style={{ fontSize: 15, fill: textColorFor(fill), textAnchor: "middle", dominantBaseline: "central" }}
+              style={{
+                fontSize: 15,
+                fill: textColorFor(fill),
+                textAnchor: "middle",
+                dominantBaseline: "central",
+              }}
             />
           </g>
         );
@@ -98,7 +140,9 @@ function HeatmapCells() {
 
 // --- Chart (default-exported component — the harness mounts it) ----------------------
 const TITLE = "heatmap-basic · javascript · muix · anyplot.ai";
-const MARGIN = { top: 150, right: 170, bottom: 150, left: 170 };
+const MARGIN = { top: 150, right: 200, bottom: 150, left: 170 };
+const LEGEND_CAPTION_X = SIZE.width - 26;
+const LEGEND_CAPTION_Y = SIZE.height / 2;
 
 export default function Chart() {
   return (
@@ -107,6 +151,7 @@ export default function Chart() {
       height={SIZE.height}
       series={[]}
       margin={MARGIN}
+      skipAnimation
       xAxis={[
         {
           scaleType: "band",
@@ -127,7 +172,16 @@ export default function Chart() {
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
         },
       ]}
-      zAxis={[{ colorMap: { type: "continuous", min: -1, max: 1, color: imprintDivInterpolator(t.div) } }]}
+      zAxis={[
+        {
+          colorMap: {
+            type: "continuous",
+            min: -1,
+            max: 1,
+            color: imprintDivInterpolator(t.div),
+          },
+        },
+      ]}
     >
       <HeatmapCells />
       <ChartsXAxis />
@@ -140,10 +194,26 @@ export default function Chart() {
         labelStyle={{ fontSize: 13, fill: t.inkSoft }}
       />
       <ChartsText
+        text="Correlation coefficient"
+        x={LEGEND_CAPTION_X}
+        y={LEGEND_CAPTION_Y}
+        style={{
+          fontSize: 12,
+          fill: t.inkSoft,
+          textAnchor: "middle",
+          angle: -90,
+        }}
+      />
+      <ChartsText
         text={TITLE}
         x={SIZE.width / 2}
-        y={48}
-        style={{ fontSize: 22, fontWeight: 600, fill: t.ink, textAnchor: "middle" }}
+        y={50}
+        style={{
+          fontSize: 26,
+          fontWeight: 600,
+          fill: t.ink,
+          textAnchor: "middle",
+        }}
       />
     </ChartContainer>
   );
