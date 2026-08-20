@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-basic
 created: '2026-08-20T17:04:36Z'
-updated: '2026-08-20T17:08:47Z'
+updated: '2026-08-20T17:17:17Z'
 generated_by: claude-sonnet
 workflow_run: 32395191838
 issue: 612
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-basic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'First series correctly uses Imprint brand green #009E73, and data colors are
-    identical across light and dark renders'
-  - 'Both themes are fully theme-adaptive: warm off-white/near-black backgrounds,
-    correct ink/inkSoft chrome, subtle grid opacity'
-  - Data is sorted descending by headcount, giving the chart an immediate, readable
-    ranking story without needing annotations
-  - Realistic, neutral business scenario (department headcount) with plausible, well-scaled
-    values
-  - Clean, minimal KISS code structure with explicit font sizing throughout and no
-    fake interactivity
-  - Correct mandated title format and appropriately omits the legend for a single-series
-    chart
+  - Clean, idiomatic Highcharts implementation with theming tokens correctly threaded
+    through title, axes, grid, tooltip, and data labels for both light and dark themes
+    — no dark-on-dark or light-on-light failures in either render.
+  - 'Effective data storytelling: descending sort by value plus a Highcharts.color().brighten()-derived
+    highlight on the top-ranked department (Engineering) directly matches the spec''s
+    "highlight specific bars to draw attention" guidance, and stays palette-compliant
+    since it''s derived from #009E73 rather than a foreign color.'
+  - Deterministic, realistic headcount data (31-186) with a sensible descending scale
+    and a spec-exact title.
+  - 'Value labels above bars for precise reading, consistent bar/group padding, subtle
+    rounded corners, and animation: false correctly set on both chart and series per
+    the harness contract.'
   weaknesses:
-  - 'Design Excellence is at library-default level: flat single-color bars with only
-    a subtle borderRadius, no additional visual hierarchy device beyond bar order
-    (e.g. color emphasis on the top category, subtle value-driven opacity) — reads
-    as ''correct'' rather than ''polished'''
-  - tooltip.enabled is set to false, which removes Highcharts' native hover-tooltip
-    entirely from the interactive HTML output; since dataLabels already show values
-    this is a defensible choice for the static PNG, but it forfeits a distinctive
-    Highcharts interactivity feature that would strengthen Library Mastery (LM-02)
-    — consider re-enabling a lightly styled tooltip for the HTML view
-  - No other Highcharts-distinctive touches (e.g. per-point color emphasis via colorByPoint
-    on a highlighted bar, negativeColor, custom dataLabel formatter) are used beyond
-    the basic column + dataLabels combination — usage is idiomatic but generic
-  - Grid/margin utilization is generous on the right side past the last category;
-    could tighten slightly for a marginally denser layout, though this is a minor
-    issue
+  - Design Excellence is solid but not exceptional — no additional refinement beyond
+    the highlight bar and rounded corners (e.g. a subtle reference/average plotLine,
+    more deliberate typography hierarchy) that would push DE-01/DE-02 higher.
+  - Library Mastery could lean on more distinctive Highcharts capabilities (e.g. yAxis.plotLines
+    for an average marker, custom dataLabels.formatter) to better showcase what sets
+    Highcharts apart from a generic bar-chart renderer.
+  - Feature coverage (DQ-01) is complete for a basic ranking bar chart but doesn't
+    add an extra informational layer (e.g. a benchmark/average line) that would round
+    it out further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-basic · javascript · highcharts · anyplot.ai" is bold, dark ink, centered, fully visible with no clipping. Y-axis title "Headcount" (rotated) and x-axis category labels (Engineering, Sales, Support, Marketing, Operations, Finance) are dark/soft-gray and clearly legible. Horizontal gridlines are subtle and do not compete with the bars. Data labels (186, 142, 97, 68, 54, 31) sit cleanly above each bar with no overlap.
-      Data: All six bars render in the Imprint brand green #009E73, consistent height-to-value mapping, descending order from Engineering (186) to Finance (31). Bar widths are uniform with even spacing.
-      Legibility verdict: PASS — no light-on-light or unreadable text anywhere.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "bar-basic · javascript · highcharts · anyplot.ai" is bold dark text, clearly legible. Y-axis title "Headcount" (rotated) legible; y-axis ticks 0-200 with subtle horizontal gridlines; x-axis category labels (Engineering, Sales, Support, Marketing, Operations, Finance) dark and legible.
+      Data: Six columns sorted descending by value (186, 142, 97, 68, 54, 31). Top bar (Engineering) rendered in a brightened mint-green highlight; remaining five bars use the solid brand green #009E73. Data labels with exact values sit above each bar in dark gray, readable.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis title, and tick/category labels have flipped to light-colored text (near-white for title, soft light gray for ticks/axis-title) and remain fully legible against the dark background. Gridlines are still subtle and visible. Data labels above bars flip to a light gray tone and remain readable.
-      Data: Bars remain the identical Imprint green #009E73 as in the light render — confirmed no hue shift between themes.
-      Legibility verdict: PASS — no dark-on-dark failures observed; every text element is clearly readable.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title, axis title, tick labels, and data labels all switch to light gray/white and remain clearly legible against the dark background. No dark-on-dark failures observed.
+      Data: Colors identical to the light render — brightened mint highlight on Engineering, solid #009E73 on the rest — confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,74 +59,70 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via tokens; readable in both themes;
-          relies on library defaults for nothing
+        comment: All text explicitly sized and readable in both themes; nothing dark-on-dark
+          or light-on-light
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axis labels, ticks, or data labels
+        comment: No collisions between labels, bars, or data labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 6 sparse categories with wide, well-spaced bars — appropriate for
-          the data density
+        comment: Consistent bar widths, adequate pointPadding/groupPadding spacing,
+          value labels visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series in brand green, no red-green reliance, good contrast
-          on both surfaces
+        comment: Good contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the canvas well with balanced margins, nothing cut
-          off
+        comment: Canvas gate passed (3200x1800), no clipping/overflow, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Headcount'' is a self-describing metric name; no ambiguity about
-          units'
+        comment: Headcount y-axis title with clear unit implication
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds and
-          chrome are theme-correct in both renders'
+        comment: 'Bars use #009E73 (palette[0]); highlighted top bar is a brightened
+          derivative of the same brand hue; backgrounds correct in both themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured library default — subtle rounded corners, but no
-          custom color story or hierarchy beyond a single flat hue
+        passed: true
+        comment: Rounded bar corners, brightened highlight on top bar, no default
+          Highcharts look — solid but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, no boxed frame, tuned point/group padding — more refined
-          than raw defaults but not fully polished
+        comment: No column borders, subtle single-axis gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Descending sort order creates an immediate ranking story without
-          requiring annotations
+        comment: Descending sort + brightened top bar creates a clear ranking focal
+          point
     spec_compliance:
       score: 15
       max: 15
@@ -142,27 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct vertical bar/column chart via Highcharts 'column' type
+        comment: Correct vertical column/bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Consistent bar widths, value labels above bars, single color, adequate
-          spacing — all spec notes satisfied
+        comment: Consistent widths, value labels, single-color-with-highlight, adequate
+          spacing
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on x-axis, headcount values on y-axis, all data visible
+        comment: Categories on x, headcount on y, y-axis starts at 0
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend correctly omitted
-          for a single series
+        comment: Title matches mandated format; legend correctly omitted for single
+          series
     data_quality:
       score: 14
       max: 15
@@ -172,21 +162,19 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows a realistic descending spread of six departments; no edge cases
-          like negative or zero values but none are required for this spec
+        comment: Covers core bar-chart ranking use case well; no extra reference element
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible department-headcount scenario
+        comment: Plausible, neutral department headcounts
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and relative proportions (Engineering largest, Finance smallest)
-          align with plausible real-world org structure
+        comment: Values (31-186) sensible for department headcounts
     code_quality:
       score: 10
       max: 10
@@ -196,34 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports (tokens) -> data -> chart, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded in-memory data
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses the provided ANYPLOT_TOKENS global
+        comment: No imports beyond the provided Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately concise, no over-engineering, no fake functionality
+        comment: Clean, appropriately simple, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly follows the mount-node contract; animation disabled on
-          chart and series; credits disabled
+        comment: 'Correct mount-node contract, animation: false on chart and series'
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,22 +218,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level Highcharts.chart() config with themed axes and
-          dataLabels
+        comment: Idiomatic column config, custom tooltip formatting, token-driven
+          theming
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic column+dataLabels usage; tooltip is disabled entirely, forfeiting
-          Highcharts' distinctive hover-tooltip system in the HTML output with no
-          other distinctive touch to replace it
-  verdict: REJECTED
+        comment: Nice use of Highcharts.color().brighten() for highlight, but otherwise
+          standard column-chart API surface
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - annotations
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
