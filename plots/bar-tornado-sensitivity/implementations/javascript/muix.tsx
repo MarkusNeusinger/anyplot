@@ -41,7 +41,10 @@ const currencyFormatter = new Intl.NumberFormat("en-US", {
 
 const TITLE_HEIGHT = 60;
 const TITLE = "NPV Sensitivity Analysis · bar-tornado-sensitivity · javascript · muix · anyplot.ai";
-const TITLE_FONT_SIZE = Math.round(22 * Math.min(1, 67 / TITLE.length));
+// Base multiplier raised from the 22px style-guide default so this long
+// descriptive+mandated title still reads with strong visual presence once
+// scaled down by the length ratio (review feedback: title was ~39% of width).
+const TITLE_FONT_SIZE = Math.round(30 * Math.min(1, 67 / TITLE.length));
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -63,11 +66,16 @@ export default function Chart() {
           currencyFormatter.format(item.seriesId === "low" ? lowValues[item.dataIndex] : highValues[item.dataIndex])
         }
         colors={[t.palette[0], t.palette[1]]}
+        borderRadius={4}
         yAxis={[{ scaleType: "band", data: parameters }]}
         xAxis={[
           {
             label: "Net Present Value",
             valueFormatter: (v) => currencyFormatter.format(BASE_NPV + v),
+            // Widen the vertical grid to ~$0.2M increments (was ~$0.1M / ~15
+            // lines) so the background stays subtle and doesn't compete with
+            // the bars.
+            tickMinStep: 200_000,
           },
         ]}
         series={[
