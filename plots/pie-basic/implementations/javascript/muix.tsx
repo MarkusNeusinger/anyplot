@@ -10,6 +10,7 @@
 // Quality: pending | Created: 2026-08-20
 
 import { PieChart } from "@mui/x-charts/PieChart";
+import { DefaultChartsLegend } from "@mui/x-charts/ChartsLegend";
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -42,6 +43,18 @@ const LABEL_FILLS = [
   "#FFFFFF",
   "#1A1A17",
 ];
+
+// The exploded slice lives in a second, appended series (see below), which
+// would otherwise push it to the end of the auto-generated legend. Reorder
+// the legend items to match the pie's clockwise slice order instead, so the
+// exploded, most-important category ("Organic Search") leads the legend.
+const LEGEND_ORDER = CATEGORIES.map((c) => c.id);
+function OrderedLegend(props) {
+  const ordered = [...props.seriesToDisplay].sort(
+    (a, b) => LEGEND_ORDER.indexOf(a.itemId) - LEGEND_ORDER.indexOf(b.itemId),
+  );
+  return <DefaultChartsLegend {...props} seriesToDisplay={ordered} />;
+}
 
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -126,6 +139,7 @@ export default function Chart() {
         colors={t.palette}
         skipAnimation
         margin={MARGIN}
+        slots={{ legend: OrderedLegend }}
         series={[
           {
             id: "main",
@@ -159,6 +173,7 @@ export default function Chart() {
             itemMarkHeight: 14,
             markGap: 6,
             itemGap: 20,
+            labelStyle: { fontSize: 13, fill: t.ink },
           },
         }}
         sx={{
