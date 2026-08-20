@@ -79,6 +79,24 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: {
+      // Soft background tint for the Supercritical Fluid corner (T > critical T
+      // AND P > critical P) — the one region whose boundary is a straight
+      // rectangle rather than a curve, so a flat shade stays physically honest.
+      render() {
+        if (this.supercriticalShade) return;
+        const left = this.xAxis[0].toPixels(CRITICAL_T, false);
+        const right = this.plotLeft + this.plotWidth;
+        const plotAreaTop = this.plotTop;
+        const criticalPTop = this.yAxis[0].toPixels(CRITICAL_P, false);
+        if (right > left && criticalPTop > plotAreaTop) {
+          this.supercriticalShade = this.renderer
+            .rect(left, plotAreaTop, right - left, criticalPTop - plotAreaTop)
+            .attr({ fill: Highcharts.color(t.ink).setOpacity(0.08).get(), zIndex: -1 })
+            .add();
+        }
+      },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -96,8 +114,7 @@ Highcharts.chart("container", {
     max: 720,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    gridLineWidth: 1,
-    gridLineColor: t.grid,
+    gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
   yAxis: {
