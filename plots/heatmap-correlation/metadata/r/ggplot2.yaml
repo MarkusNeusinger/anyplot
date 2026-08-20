@@ -1,0 +1,277 @@
+library: ggplot2
+language: r
+specification_id: heatmap-correlation
+created: '2026-08-20T08:29:47Z'
+updated: '2026-08-20T08:48:28Z'
+generated_by: claude-sonnet
+workflow_run: 32348731188
+issue: 1948
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Fixed hairline tile borders (color = HAIRLINE, ink at 15% alpha, theme-independent)
+    now correctly resolve attempt 1's weakness — near-zero-correlation cells stay
+    visually anchored to the grid in both themes instead of fading into the page background
+  - 'Correct diverging imprint_div palette using the exact style-guide recipe (#AE3030
+    to theme-adaptive midpoint to #4467A3), with a fixed -1..1 colorbar range for
+    consistent cross-plot interpretation'
+  - Smart per-cell text-contrast logic (scale_color_manual keyed on abs(correlation)
+    > 0.55) keeps every annotation legible against both saturated and pale tile fills,
+    in both themes
+  - Lower-triangle masking cleanly reduces redundancy per the spec's suggestion, coord_fixed
+    keeps cells square, and descriptive display_labels replace terse mtcars variable
+    codes
+  - Clean, idiomatic tidyverse pipeline (cor() -> pivot_longer() -> filter()), reproducible,
+    using a real, neutral dataset (mtcars) appropriate for a multicollinearity-detection
+    use case
+  - 'Backgrounds verified pixel-exact against the style guide: light corner samples
+    to #FAF8F1, dark corner samples to #1A1A17'
+  weaknesses:
+  - 'Diagonal-cell desaturation does not render: the code sets a second geom_tile
+    layer with a literal fill = DIAG_FILL ("#5C5B54") for is_diag rows, intended to
+    mute the uninformative self-correlation cells (per the inline comment). Pixel-sampled
+    directly from the saved PNGs, every diagonal cell in BOTH plot-light.png and plot-dark.png
+    comes back RGB(68,103,163) = #4467A3 -- exactly scale_fill_gradient2''s ''high''
+    stop, not the intended gray. All 8 diagonal cells were sampled independently (MPG,
+    Displacement, Horsepower, Weight, Gears, Carburetors) with identical results,
+    so this is not a one-off render glitch. The visual effect is unchanged from attempt
+    1: diagonal 1.00 cells still carry the same full-saturation blue as genuine high
+    off-diagonal correlations, undercutting the storytelling intent the comment claims
+    to achieve. For the next revision: verify with ggplot_build(p)$data[[2]]$fill
+    (or an equivalent build-time inspection) whether the literal fill is actually
+    reaching the draw step before assuming the ggplot2 call is correct -- a fixed-color
+    layer mixed with an active continuous fill scale on the same aesthetic can require
+    an identity mapping (aes(fill = I(DIAG_FILL))) or a separate scale (e.g. via ggnewscale::new_scale_fill())
+    to reliably bypass scale_fill_gradient2, since apparently the plain `fill = DIAG_FILL`
+    parameter is being swallowed here.'
+  - 'Related palette point for whichever fix is applied: DIAG_FILL ("#5C5B54") is
+    a custom hex not in the Imprint categorical palette or the 3 semantic anchors.
+    It happens to not violate VQ-07 today only because it never actually renders.
+    If the diagonal-fill bug gets fixed, swap the hardcoded gray for the theme-adaptive
+    `muted` anchor (#6B6A63 light / #A8A79F dark) -- built exactly for this ''other/rest/disabled,
+    recede behind the data'' role -- instead of a fixed custom hex, to stay palette-compliant.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-sampled at the canvas corner as RGB(250,248,241) = #FAF8F1 exactly matching the style guide.
+      Chrome: Title "heatmap-correlation · r · ggplot2 · anyplot.ai" in dark ink, clearly legible. Y-axis category labels (MPG, Displacement, Horsepower, Axle Ratio, Weight, 1/4 Mile Time, Gears, Carburetors) in soft dark gray, horizontal, not overlapping. X-axis labels rotated ~35 degrees, same soft gray, not clipped at the bottom or side edges. Colorbar legend "Correlation" on the right with clear 1.0/0.5/0.0/-0.5/-1.0 ticks.
+      Data: Lower-triangle-only correlation matrix (upper triangle masked, per spec). Off-diagonal cells range from matte red (negative, e.g. Weight/MPG = -0.87) through a near-background midpoint (near-zero, e.g. Axle Ratio/1-4 Mile Time = 0.09) to saturated blue (strong positive, e.g. Displacement/Weight = 0.89), each annotated to 2 decimal places with contrast-aware text color. Every cell now carries a thin, theme-independent hairline border (new since attempt 1), so even near-zero cells stay visually anchored to the grid instead of blending into the page background. Diagonal cells all read "1.00" in the same saturated blue as genuine high off-diagonal correlations (pixel-verified as #4467A3) -- the code's attempt to desaturate them (DIAG_FILL = "#5C5B54") does not actually render; see Weaknesses.
+      Legibility verdict: PASS (all text readable; the one open issue is a color-mapping bug, not a legibility failure)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-sampled at the canvas corner as RGB(26,26,23) = #1A1A17 exactly matching the style guide.
+      Chrome: Title, axis labels, and colorbar text all render in light ink/gray (#F0EFE8 / #B8B7B0 tokens) -- no dark-on-dark failures found anywhere, including the low-correlation cells whose fill is close to the page background (e.g. "-0.09", "-0.17", "0.09" all render in clearly legible light text against their near-black or dark-maroon fills, confirmed via cropped close-ups).
+      Data: Data colors are identical to the light render (e.g. Weight/MPG still -0.87 in matte red, Displacement/Weight still 0.89 in blue) -- only chrome flipped, as required. Hairline borders (theme-adaptive rgba ink at 15% alpha) are now visible around every tile, including near-zero cells, resolving attempt 1's "boundaries nearly disappear" weakness. Diagonal cells again read "1.00" in the same #4467A3 blue as genuine strong positive correlations rather than the intended muted gray -- identical defect to the light render.
+      Legibility verdict: PASS (all text readable in both themes; no theme-adaptation failures)
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes at explicit font sizes; attempt
+          1's faint near-zero-cell boundary issue is resolved by the new hairline
+          border
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, ticks, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 36-cell lower-triangle matrix at generous per-cell size; hairline
+          borders now keep every cell distinct from the background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Diverging red/blue scale plus redundant numeric labels on every cell;
+          not red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400 square, correct choice for a symmetric
+          grid plot); nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive display labels replace raw mtcars codes; title matches
+          mandated format exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_div recipe followed exactly (#AE3030 / theme-adaptive midpoint
+          / #4467A3); backgrounds pixel-verified #FAF8F1 / #1A1A17. The non-compliant
+          custom DIAG_FILL hex never actually reaches the render, so the shipped output
+          stays compliant'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Contrast-aware per-cell text color plus a fixed-tone hairline stroke
+          show deliberate design thought beyond library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines/grid removed, generous margins, refined legend key height,
+          and the new hairline border keeps near-zero cells anchored -- attempt 1's
+          weakness fully resolved
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: 'Lower-triangle masking is a genuine hierarchy choice, but the diagonal-desaturation
+          fix does not render (pixel-verified #4467A3, not the intended muted gray)
+          -- the uninformative diagonal still competes visually with real correlations,
+          unchanged from attempt 1'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct correlation-matrix heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Diverging colormap centered at zero, 2-decimal annotations, fixed
+          -1..1 colorbar, masked upper triangle -- all spec notes satisfied
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Symmetric matrix correctly reshaped; values match real mtcars correlations
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; colorbar clearly labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full lower-triangle matrix with values, colorbar, and axis labels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: mtcars is real, neutral, and appropriate for a multicollinearity-detection
+          use case
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correlation values naturally bounded [-1,1], all realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; straightforward pipeline
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, tidyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: The DIAG_FILL layering added in this attempt doesn't achieve its
+          stated purpose (see Weaknesses) -- an unverified fix shipped with a comment
+          that no longer matches the rendered behavior
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic tidyverse pipeline (cor -> pivot_longer -> filter), geom_tile
+          + scale_fill_gradient2, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Conditional per-cell text color via aes-mapped boolean + scale_color_manual
+          is a distinctive grammar-of-graphics technique; the attempted dual-layer
+          literal-fill technique for the diagonal doesn't function correctly
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - layer-composition
+  patterns:
+  - dataset-loading
+  - wide-to-long
+  dataprep:
+  - correlation-matrix
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - publication-ready
