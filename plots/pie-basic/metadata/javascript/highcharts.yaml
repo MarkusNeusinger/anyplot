@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: pie-basic
+created: '2026-08-20T23:15:12Z'
+updated: '2026-08-20T23:28:27Z'
+generated_by: claude-sonnet
+workflow_run: 32427455835
+issue: 678
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/highcharts/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Genuinely Highcharts-distinctive touch: a custom `chart.renderer.text()` label
+    drawn into the donut hole via the `events.render` hook, re-measured with `getBBox()`
+    and re-centered every render — not a generic pattern available as a one-line option
+    in most other libraries'
+  - 'Data storytelling is now reinforced at three levels that all agree: the exploded/selected
+    green slice, the bold name+percentage data label on that slice, and the center
+    KPI callout ("Market leader / Nimbus Cloud / 31.4%") sitting in the chart''s strongest
+    focal position'
+  - '`connectorShape: "crookedLine"` + `crookDistance` is a Highcharts-specific dataLabels
+    feature, used correctly for the smaller slices'' leader lines'
+  - 'Correct Imprint palette compliance held from attempt 1: brand green `#009E73`
+    is both the largest slice and the exploded one; theme-adaptive chrome (background,
+    ink, subtitle, legend, center label) flips correctly with identical data colors
+    across both renders'
+  - Clean, deterministic, KISS-structured code; realistic neutral market-share data
+    summing to 100% with a sensible "Others" long-tail bucket
+  weaknesses:
+  - The subtitle ("Nimbus Cloud leads at 31.4%") now duplicates the center-label callout
+    verbatim — with the donut center already telling that story, the subtitle could
+    carry a different, complementary fact (e.g. combined top-3 share) instead of repeating
+    the same number a third time
+  - innerSize is a fixed 55% — a small nod to the center-label's exact text footprint
+    (measured via getBBox but not fed back into ring sizing) would tighten the composition
+    further, though current spacing is already clean
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "pie-basic · javascript · highcharts · anyplot.ai" in bold dark ink; subtitle "Cloud infrastructure market share by vendor — Nimbus Cloud leads at 31.4%" in softer gray; legend row of 6 items below the donut in gray text. All clearly readable against the light background.
+      Data: Donut chart, six slices in canonical Imprint palette order — brand green (Nimbus Cloud 31.4%, exploded), lavender (Vertex Systems 22.8%), blue (Halcyon Labs 18.5%), ochre (Ferro Dynamics 12.9%), matte red (Quinta Networks 8.7%), cyan (Others 5.7%). Percentage data labels in dark ink with thin connector leader lines for the smaller slices; the leading slice's label is bold and includes the company name. A center callout inside the donut hole reads "MARKET LEADER / Nimbus Cloud / 31.4%" with the percentage rendered in brand green.
+      Legibility verdict: PASS — no light-on-light text, all elements crisp.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, legend, and data labels all render in light/white tones; the center callout's "MARKET LEADER" micro-label sits in muted gray, "Nimbus Cloud" in bold white, and "31.4%" in the same brand green as the light render.
+      Data: Slice colors are pixel-identical to the light render — only chrome (background, text, slice separator strokes) flips as expected. No dark-on-dark failures — every text element (title, subtitle, legend, data labels, center callout) is clearly legible against the near-black surface.
+      Legibility verdict: PASS — theme-adaptive chrome confirmed correct in both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, legend
+          14px, dataLabels 15px, center label 12/17/24px); fully readable in both
+          themes, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; connector lines route small-slice labels cleanly
+          away from the ring
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All six slices clearly visible and distinguishable; donut ring thickness
+          (45%) is well-proportioned for 6 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; page-background-colored slice borders
+          give clean separation without harsh contrast lines
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Donut + legend fill the square canvas well with balanced margins;
+          legend sits directly under the plot, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes on a pie; title and subtitle are fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for remaining slices,
+          theme-correct backgrounds and chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Donut + custom SVG-rendered center KPI callout with clear typographic
+          hierarchy (micro-label / bold name / large colored value) is a genuine step
+          above a configured default, though the redundant subtitle keeps it short
+          of full publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Background-matched slice borders plus refined center-label typography;
+          only the leftover redundant subtitle keeps this from a perfect score
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The 'market leader' insight is now reinforced at three levels (explode,
+          bold data label, center callout) with the center callout occupying the chart's
+          strongest focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pie/donut chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage labels, distinct colors, legend, and exploded largest
+          slice all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Six categories with values summing to 100%, all represented as slices
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match series
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Range of slice sizes from 31.4% down to 5.7% shows the full spread
+          a pie chart needs to demonstrate
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible cloud-market-share scenario with fictional (non-controversial)
+          vendor names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum exactly to 100% with a sensible descending order and long-tail
+          'Others' bucket
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data → chart structure; the render/formatter callbacks are required
+          Highcharts idioms, not extraneous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the Highcharts global is used, no stray imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The added render-event/centerLabel logic is well-commented and proportionate
+          to the visual payoff, not over-engineered
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of plotOptions.pie, dataLabels formatter, connectorShape,
+          and the renderer/events API — all idiomatic Highcharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The renderer.text()-into-donut-hole pattern driven by the render
+          event, plus crookedLine connectors, are genuinely Highcharts-specific mechanisms
+          not exposed the same way in other charting libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
