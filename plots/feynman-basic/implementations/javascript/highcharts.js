@@ -11,6 +11,8 @@ const t = window.ANYPLOT_TOKENS;
 // data-space grid — time runs left to right, as is conventional.
 const V1 = { x: 2, y: 0 };
 const V2 = { x: 4, y: 0 };
+const V3 = { x: 9, y: 0 };
+const V4 = { x: 11, y: 0 };
 
 const legs = [
   { from: { x: 0, y: 2.6 }, to: V1, style: "straight", color: t.palette[0],
@@ -23,6 +25,17 @@ const legs = [
     label: "μ⁻", align: "right", labelPos: { x: 5.6, y: 2.85 }, arrow: "forward" },
   { from: V2, to: { x: 6, y: -2.6 }, style: "straight", color: t.palette[2],
     label: "μ⁺", align: "right", labelPos: { x: 5.6, y: -2.95 }, arrow: "backward" },
+  // --- Second vertex pair: gg -> H -> b b̄ (gluon fusion / Higgs decay) -------
+  { from: { x: 7, y: 2.6 }, to: V3, style: "curly", color: t.palette[3],
+    label: "g", align: "left", labelPos: { x: 7.4, y: 2.85 }, arrow: null },
+  { from: { x: 7, y: -2.6 }, to: V3, style: "curly", color: t.palette[3],
+    label: "g", align: "left", labelPos: { x: 7.4, y: -2.95 }, arrow: null },
+  { from: V3, to: V4, style: "dashed", color: t.palette[4],
+    label: "H", align: "center", labelPos: { x: 10, y: 0.7 }, arrow: null },
+  { from: V4, to: { x: 13, y: 2.6 }, style: "straight", color: t.palette[0],
+    label: "b", align: "right", labelPos: { x: 12.6, y: 2.85 }, arrow: "forward" },
+  { from: V4, to: { x: 13, y: -2.6 }, style: "straight", color: t.palette[0],
+    label: "b̄", align: "right", labelPos: { x: 12.6, y: -2.95 }, arrow: "backward" },
 ];
 
 // --- Helpers -----------------------------------------------------------------
@@ -56,6 +69,25 @@ function wavyPath(p1, p2, amplitude, wavelengths) {
   return path;
 }
 
+function curlyPath(p1, p2, amplitude, loops) {
+  const dx = p2.x - p1.x;
+  const dy = p2.y - p1.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  const ux = dx / len;
+  const uy = dy / len;
+  const nx = -uy;
+  const ny = ux;
+  const steps = 160;
+  const path = ["M", p1.x, p1.y];
+  for (let i = 1; i <= steps; i++) {
+    const s = i / steps;
+    const along = len * s - amplitude * 0.6 * (1 - Math.cos(2 * Math.PI * loops * s));
+    const normal = amplitude * Math.sin(2 * Math.PI * loops * s);
+    path.push("L", p1.x + ux * along + nx * normal, p1.y + uy * along + ny * normal);
+  }
+  return path;
+}
+
 // Arrowhead centred on (cx, cy), pointing along `angle` (radians).
 function arrowPath(cx, cy, angle, size) {
   const half = size * 0.55;
@@ -79,10 +111,14 @@ function drawDiagram(chart) {
     const p1 = toPx(chart, leg.from);
     const p2 = toPx(chart, leg.to);
 
-    const path = leg.style === "wavy" ? wavyPath(p1, p2, 14, 5) : straightPath(p1, p2);
-    renderer.path(path)
-      .attr({ stroke: leg.color, "stroke-width": 3, fill: "none", "stroke-linejoin": "round" })
-      .add(group);
+    let path;
+    if (leg.style === "wavy") path = wavyPath(p1, p2, 14, 5);
+    else if (leg.style === "curly") path = curlyPath(p1, p2, 12, 6);
+    else path = straightPath(p1, p2);
+
+    const attrs = { stroke: leg.color, "stroke-width": 3, fill: "none", "stroke-linejoin": "round" };
+    if (leg.style === "dashed") attrs["stroke-dasharray"] = "10,7";
+    renderer.path(path).attr(attrs).add(group);
 
     if (leg.arrow) {
       const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
@@ -100,7 +136,7 @@ function drawDiagram(chart) {
       .add(group);
   });
 
-  [V1, V2].forEach((vertex) => {
+  [V1, V2, V3, V4].forEach((vertex) => {
     const p = toPx(chart, vertex);
     renderer.circle(p.x, p.y, 8).attr({ fill: t.ink, stroke: "none" }).add(group);
   });
@@ -132,7 +168,7 @@ Highcharts.chart("container", {
   },
   xAxis: {
     min: -0.5,
-    max: 6.5,
+    max: 13.5,
     startOnTick: false,
     endOnTick: false,
     lineWidth: 0,
@@ -162,8 +198,10 @@ Highcharts.chart("container", {
   tooltip: { enabled: false },
   plotOptions: { series: { animation: false, enableMouseTracking: false, marker: { enabled: false } } },
   series: [
-    { name: "Electron / positron (fermion)", color: t.palette[0], lineWidth: 3, data: [], showInLegend: true },
+    { name: "Electron / positron / b-quark (fermion)", color: t.palette[0], lineWidth: 3, data: [], showInLegend: true },
     { name: "Photon (γ, wavy)", color: t.palette[1], lineWidth: 3, data: [], showInLegend: true },
     { name: "Muon / antimuon (fermion)", color: t.palette[2], lineWidth: 3, data: [], showInLegend: true },
+    { name: "Gluon (g, curly)", color: t.palette[3], lineWidth: 3, data: [], showInLegend: true },
+    { name: "Higgs boson (H, dashed)", color: t.palette[4], lineWidth: 3, dashStyle: "Dash", data: [], showInLegend: true },
   ],
 });
