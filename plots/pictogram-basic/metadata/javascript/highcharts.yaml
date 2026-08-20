@@ -1,0 +1,259 @@
+library: highcharts
+language: javascript
+specification_id: pictogram-basic
+created: '2026-08-20T22:52:32Z'
+updated: '2026-08-20T23:06:51Z'
+generated_by: claude-sonnet
+workflow_run: 32425712654
+issue: 4674
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pictogram-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Clever scatter + dataLabels technique produces authentic pictogram/isotype icons
+    using only the core Highcharts bundle, since the add-on pictogram module isn't
+    loaded
+  - Partial-icon fractional remainders are rendered via reduced dataLabel opacity
+    plus an ink-color textOutline stroke, keeping faint partial icons visible against
+    the light background
+  - Category labels embed both name and value+unit ("Apples — 47k t"), doubling as
+    descriptive axis labels without a separate legend
+  - Alternating row plotBands add subtle visual rhythm beyond icon count/opacity,
+    without competing with the data
+  - Data sorted descending with a larger dataLabel font on the top category creates
+    a clear visual hierarchy / focal point
+  - Correct Imprint palette in canonical order with brand green as the first series;
+    chrome (background, text, grid) is theme-correct in both light and dark renders
+  - Clean, deterministic, KISS-structured code with no imports needed and animation
+    disabled per the harness contract
+  weaknesses:
+  - 'Header comment block is missing the required `// License: Highcharts — commercial
+    license, free for non-commercial use (highcharts.com/license)` line mandated by
+    prompts/library/highcharts.md for every Highcharts snippet — restore it.'
+  - Partial-icon opacity formula (0.45 + 0.15 × remainder) compresses to a narrow
+    0.48–0.57 range across all rows, so a 20%-full icon and an 80%-full icon look
+    almost identical — widen the range (e.g. 0.25 + 0.65 × remainder) so fractional
+    magnitude reads more clearly at a glance.
+  - Icon dataLabel sizing is comparatively modest for such sparse rows (max 10 icons
+    per category); per the data-density heuristic (<50 points → larger, prominent
+    markers) a slightly larger font would give the icons more pictogram-like visual
+    weight.
+  - No per-category icon differentiation beyond color (spec explicitly allows a single
+    default icon type, so this is acceptable, but distinct icon glyphs per fruit would
+    strengthen the isotype metaphor further — optional enhancement, not a requirement).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "pictogram-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly legible. Category labels ("Apples — 47k t", "Bananas — 38k t", "Oranges — 29k t", "Grapes — 21k t", "Strawberries — 14k t") on the left in soft dark gray, all readable. Caption at bottom-left ("Each ● represents 5,000 tons of annual fruit production") in smaller soft-gray italic-weight text, readable. Alternating light-grey plotBands behind the Bananas and Grapes rows for rhythm.
+      Data: Each category is a left-aligned row of colored dot icons (●), one dot per 5k tons, with a final partially-transparent dot for the fractional remainder plus a thin dark outline for contrast. Apples = brand green (#009E73, first series), Bananas = lavender, Oranges = blue, Grapes = ochre, Strawberries = matte red — canonical Imprint palette order.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title now rendered in light/off-white ink, clearly legible. Category labels rendered in light soft-gray, fully readable. Caption text also light-colored and legible. plotBands now render as a slightly lighter dark-grey band, still subtle.
+      Data: Same dot-icon layout and counts as the light render. Colors are pixel-identical to the light render (green/lavender/blue/ochre/red) — only the chrome (background, text, band fill) flipped to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/label/caption text is clearly visible against the near-black background, and the brand green remains vivid on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, category labels 16px,
+          caption 14px, dataLabel icons 34/30px); well-proportioned and readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or icon collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Icons clearly visible and distinguishable; could be slightly larger
+          given the very sparse per-row point counts
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Ink-color textOutline stroke on partial icons keeps low-contrast
+          hues (lavender, ochre) visible; no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, generous vertical use of canvas across the 5 rows,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Category labels include value + unit ("47k t"); caption states the
+          icon-to-unit mapping
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful icon-based encoding, opacity for fractional remainders,
+          emphasized top row — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines/gridlines, subtle row banding, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort plus larger top-row font creates visual hierarchy
+          and an immediate focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine pictogram/isotype chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Unit legend/caption, partial icons, left-aligned grid rows, left-side
+          category labels — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Icon count and category rows correctly encode the data; values echoed
+          in labels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; per-row labels substitute correctly for a legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows full icons and fractional remainders across all 5 categories;
+          single default icon type used (spec-allowed)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fruit production tonnage — real, neutral, comprehensible scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and unit (thousand tons) are plausible for a fruit production
+          report
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> derived icon counts -> chart, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed, only the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: 'Missing the mandatory ''// License: Highcharts …'' header line required
+          by prompts/library/highcharts.md'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly works around the unavailable pictogram module using the
+          core scatter + dataLabels API, matching the library docs' problem-solving
+          guidance
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point dataLabels styling (opacity, textOutline) and plotBands
+          are genuinely Highcharts-flavored techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
