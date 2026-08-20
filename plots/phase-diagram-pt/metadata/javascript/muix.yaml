@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: phase-diagram-pt
 created: '2026-08-20T22:06:27Z'
-updated: '2026-08-20T22:13:16Z'
+updated: '2026-08-20T22:22:56Z'
 generated_by: claude-sonnet
 workflow_run: 32421477810
 issue: 4666
@@ -12,62 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/phase-dia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/phase-diagram-pt/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
   - Physically accurate multi-segment Clausius-Clapeyron sublimation and vaporization
-    curves (the vaporization curve is explicitly anchored through the real 373.15
-    K / 101325 Pa boiling point) plus a Simon-Glatzel melting curve that correctly
-    reproduces water's anomalous negative solid-liquid slope
+    curves (vaporization explicitly anchored through the real 373.15 K / 101325 Pa
+    boiling point) plus a Simon-Glatzel melting curve that correctly reproduces water's
+    anomalous negative solid-liquid slope
   - 'Comprehensive, spec-required annotation set: triple point and critical point
-    both marked with distinct markers and labeled with their real coordinates, all
-    three phase regions labeled, and the supercritical-fluid region indicated with
-    dashed guide lines'
+    both marked with distinct markers and labeled with their real IAPWS coordinates,
+    all three phase regions labeled, and the supercritical-fluid region indicated
+    with dashed guide lines'
   - Correct Imprint palette in canonical order (melting=#009E73, vaporization=#C475FD,
     sublimation=#4467A3), identical data colors across themes, both renders fully
     legible with no dark-on-dark chrome issues
   - Distinctive, non-trivial use of MUI X's useXScale/useYScale hooks to sync custom
     SVG annotations (guide lines, point markers, labels) to the chart's own coordinate
     scales — a technique specific to this library's chart-context API
+  - 'Both attempt-1 weaknesses are now resolved: title fontSize raised to 34 (measured
+    ~52% of plot width, comfortably in the required 50-70% range and now the visually
+    largest text element) and region-label fontSize reduced to 22, restoring the correct
+    typography hierarchy; the yAxis label-offset value was cleaned up into a well-named,
+    well-commented constant (Y_AXIS_LABEL_OFFSET_PX) that documents exactly why tickFontSize
+    is being repurposed'
   weaknesses:
-  - 'Title renders at only ~29% of canvas width (measured: 923px of 3200px) at fontSize=22
-    — far below the ~70-85% expected for the mandated long ''{spec-id} · {lang} ·
-    {lib} · anyplot.ai'' title. Meanwhile the phase-region labels (''Solid''/''Liquid''/''Gas'')
-    use fontSize=30, larger than the title itself, which inverts the required typography
-    hierarchy (title should be the largest text element, per the style guide). Increase
-    the title fontSize to roughly 32-36px CSS (and/or reduce the region-label fontSize
-    to ~22-24) so the title reads as the primary heading and better fills its row.'
-  - yAxis tickFontSize is set to 85, a magic number the code's own comment admits
-    doesn't control the actual rendered tick size (only internal label-offset math)
-    — this is a hacky workaround rather than a clean fix; replace with a properly
-    named constant or adjust axis margin/labelStyle directly instead of an arbitrary
-    large tickFontSize value.
+  - 'tickFontSize: Y_AXIS_LABEL_OFFSET_PX still fundamentally repurposes a prop meant
+    to control rendered tick font size to instead control the rotated-label offset.
+    It is now clearly named and commented, but remains a fragile coupling to ChartsYAxis''s
+    internal offset formula (tickFontSize + tickSize + 10) that could silently break
+    if a future MUI X version changes that internal calculation.'
+  - Title now sits at the low end of the recommended 50-70% plot-width range (~52%)
+    rather than comfortably mid-range — a few more px of fontSize would give it more
+    visual presence as the primary heading, though the hierarchy inversion from attempt
+    1 is fully resolved.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "phase-diagram-pt · javascript · muix · anyplot.ai" is centered at top in dark ink, clearly readable but visually small relative to the canvas (measured ~29% of canvas width). Axis titles "Temperature (K)" (bottom) and "Pressure (Pa, log scale)" (rotated, left) are dark ink and fully readable with units. Tick labels (200-700 on X; 1 Pa-100 MPa on Y, log-formatted) are dark and legible, well spaced, no overlap. Horizontal grid lines are thin and subtle. Legend at bottom center with three colored swatches and labels, all readable, close to the plot.
-      Data: First series (Solid-Liquid/melting) is brand green #009E73, second series (Liquid-Gas/vaporization) is lavender #C475FD, third series (Solid-Gas/sublimation) is blue #4467A3 — matches Imprint canonical order. Triple point and critical point are marked with solid black-filled circles (cream-colored stroke) and annotated with bold labels plus real coordinate values (273.16 K, 611.7 Pa / 647.1 K, 22.06 MPa). Phase region labels "Solid", "Liquid", "Gas" are large, semi-transparent gray text placed in their respective regions; a dashed guide line marks the supercritical-fluid boundary extending from the critical point. All curves are smooth, distinguishable, and converge correctly at the triple point.
-      Legibility verdict: PASS (all text readable; only issue is title being disproportionately small relative to the canvas and to the region-label text, not an unreadability issue)
+      Chrome: Title "phase-diagram-pt · javascript · muix · anyplot.ai" is centered at top in dark ink at fontSize 34, now measured at ~52% of the plot width (up from ~29% of canvas width in attempt 1) — comfortably in the required 50-70% band and clearly the largest text element on the canvas. Axis titles "Temperature (K)" (bottom) and "Pressure (Pa, log scale)" (rotated, left) are dark ink and fully readable with units. Tick labels (200-700 K on X; 1 Pa-100 MPa on Y, log-formatted) are dark and legible, well spaced, no overlap. Horizontal grid lines are thin and subtle. Legend at bottom center with three colored swatches and labels, all readable, close to the plot.
+      Data: First series (Solid-Liquid/melting) is brand green #009E73, second series (Liquid-Gas/vaporization) is lavender #C475FD, third series (Solid-Gas/sublimation) is blue #4467A3 — matches Imprint canonical order. Triple point and critical point are marked with solid black-filled circles (cream-colored stroke) and annotated with bold labels plus real coordinate values (273.16 K, 611.7 Pa / 647.1 K, 22.06 MPa). Phase region labels "Solid", "Liquid", "Gas" are now fontSize 22 (down from 30 in attempt 1), correctly smaller than the title, placed in their respective regions as semi-transparent gray text. A dashed guide line marks the supercritical-fluid boundary extending from the critical point. All curves are smooth, distinguishable, and converge correctly at the triple point.
+      Legibility verdict: PASS (all text readable; the title-size/hierarchy issue from attempt 1 is resolved)
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Title, axis titles, tick labels, legend text, and region labels all flip to light ink/off-white and remain fully readable against the dark background — no dark-on-dark failures detected anywhere. Grid lines remain subtle. Triple/critical point markers flip to a light (near-white) fill with a dark stroke, staying clearly visible against the dark background.
       Data: Data colors are pixel-identical to the light render (#009E73 green, #C475FD lavender, #4467A3 blue) — only chrome flipped, as required.
-      Legibility verdict: PASS (fully readable, no dark-on-dark text; same title-proportion issue as the light render since it stems from the fixed fontSize, not a theme problem)
+      Legibility verdict: PASS (fully readable, no dark-on-dark text; title/hierarchy fix carries over correctly since it stems from fontSize values, not a theme-specific issue)
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 7
         max: 8
-        passed: false
-        comment: All text readable, but title fontSize=22 renders at only ~29% of
-          canvas width (far below the ~70-85% expected for the mandated long title)
-          while phase-region labels use fontSize=30, larger than the title — inverts
-          the required typography hierarchy
+        passed: true
+        comment: All text readable in both themes; title fontSize raised to 34, now
+          ~52% of plot width (up from ~29% of canvas), correct hierarchy restored
+          vs. region labels (fontSize 22)
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -80,8 +82,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Line width 3.5 is well-suited to three boundary curves; triple/critical
-          point markers are large and clearly visible in both themes
+        comment: Line width 3.5 well-suited to three boundary curves; triple/critical
+          point markers large and clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -94,8 +96,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the canvas well, legend sits close to the plot, no
-          cut-off content, no isolated whitespace
+        comment: Plot area fills the 3200x1800 canvas well, legend sits close to the
+          plot, no cut-off content, no isolated whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -111,7 +113,7 @@ review:
         comment: Canonical Imprint order (green/lavender/blue), identical across themes,
           theme-correct chrome in both renders
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -124,12 +126,12 @@ review:
           stays fairly standard
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid, L-shaped frame (no right/top spine),
-          generous whitespace, but the title/region-label size inversion and the tickFontSize=85
-          hack show a lapse in attention to detail
+        comment: Subtle horizontal-only grid, L-shaped frame, generous whitespace;
+          the attempt-1 title/region-label size inversion is fixed, and the tickFontSize
+          offset hack is now named and documented rather than a bare magic number
       - id: DE-03
         name: Data Storytelling
         score: 5
@@ -222,9 +224,10 @@ review:
         score: 1
         max: 2
         passed: true
-        comment: Mostly clean, but the tickFontSize=85 magic-number workaround (documented
-          in the code's own comment as not doing what its name implies) is an inelegant
-          hack
+        comment: tickFontSize is now a named, well-commented constant (Y_AXIS_LABEL_OFFSET_PX)
+          instead of a bare magic number, but the underlying mechanism still repurposes
+          a tick-fontSize prop to control label offset, a fragile coupling to ChartsYAxis
+          internals
       - id: CQ-05
         name: Output & API
         score: 1
@@ -250,7 +253,7 @@ review:
         passed: true
         comment: useXScale/useYScale hooks to overlay scale-synced custom SVG annotations
           is a genuine MUI X-specific technique not easily replicated in another library
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
