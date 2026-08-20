@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-tornado-sensitivity
 created: '2026-08-20T17:27:11Z'
-updated: '2026-08-20T17:33:00Z'
+updated: '2026-08-20T17:42:38Z'
 generated_by: claude-sonnet
 workflow_run: 32397100998
 issue: 4566
@@ -12,59 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-torna
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Correctly implements the tornado shape: bars sorted descending by total range
-    (|high_value - low_value|) with the widest bar at top, verified against the underlying
-    data (Revenue Growth Rate 1.4M range down to Working Capital Change 0.2M).'
-  - 'Base-case vertical reference line is correctly positioned via a stacked-offset
-    technique (values expressed as deltas from BASE_NPV) so it lands exactly on the
-    shared zero point, with a clear theme-adaptive ''Base case: $2.4M'' label.'
-  - Bar labels display the actual resulting low/high dollar values (not the raw offsets)
-    via a custom barLabel callback plus per-series valueFormatter — a thoughtful UX
-    detail beyond the naive approach.
-  - 'Realistically reflects inverse-correlation parameters: for Capital Expenditure,
-    Tax Rate, and Working Capital Change, the ''low'' input scenario correctly produces
-    a higher NPV than the ''high'' scenario, an accurate domain nuance for one-way
-    sensitivity analysis rather than assuming both sides always run the same direction.'
-  - Title fontsize dynamically scales down using the documented linear formula for
-    the long descriptive+mandated title, avoiding overflow while staying legible.
-  - 'Idiomatic MUI X usage: band-scale yAxis, stacked ''delta'' series for the diverging
-    bars, ChartsReferenceLine, theme tokens for all data/chrome colors, and skipAnimation
-    set for a clean static screenshot.'
-  - 'Both renders are theme-correct: warm off-white / near-black backgrounds, all
-    text legible in both themes, and data colors (brand green + lavender) identical
-    across light and dark.'
+  - 'Correctly implements the tornado-bar pattern using MUI X''s stack: "delta" to
+    build floating/diverging bars anchored to a shared zero point that lands exactly
+    on the base case'
+  - 'Bars correctly sorted by total range descending (widest at top: Revenue Growth
+    Rate, narrowest at bottom: Working Capital Change), matching the spec''s required
+    tornado shape'
+  - Demonstrates the full sensitivity-analysis feature set including the 'crossing'
+    case where a parameter's low scenario exceeds the base case (Capital Expenditure,
+    Tax Rate) — not just a one-sided demo
+  - ChartsReferenceLine clearly marks and labels the base case ($2.4M) with theme-adaptive
+    dashed styling
+  - Correct Imprint palette (brand green first, lavender second) with identical data
+    colors and fully theme-correct chrome across both light and dark renders
+  - Title font size is intentionally scaled down via a length-based formula so the
+    long mandated title stays comfortably proportioned (~52% of width) instead of
+    overflowing
+  - In-bar currency-formatted value labels add readability without a cluttered separate
+    annotation layer
   weaknesses:
-  - Title occupies only ~39% of the plot width (measured from the light PNG) — noticeably
-    below the 50-70% target band. The length-scaling formula was applied correctly
-    for the long descriptive+mandated title, but consider nudging the base multiplier
-    up slightly so long titles still read with reasonably strong visual presence.
-  - Vertical grid uses ~$0.1M tick increments, producing roughly 15 grid lines across
-    the full x-axis range — a bit busy for the 'subtle, never competes with data'
-    grid guideline. Consider wider tick spacing (e.g. every $0.2M-0.25M) or lower
-    grid opacity.
-  - Design excellence is solid but conventional — mostly library defaults plus the
-    required reference line and dual-color encoding. Could push further with a more
-    refined visual hierarchy (e.g. bolder treatment for the most influential top bars,
-    more restrained treatment for the narrow bottom bars) to feel more distinctive
-    rather than a correct-but-standard tornado chart.
+  - Visual polish is competent but reads as a well-configured MUI X default rather
+    than a distinctively custom design — could push further with an emphasis treatment
+    on the top 1-2 bars or subtle row banding across the 8 categories
+  - X-axis label 'Net Present Value' doesn't itself carry a unit suffix (relies entirely
+    on the $-formatted tick labels) — adding '(USD)' would remove any ambiguity
+  - Data storytelling relies mainly on the sort order; a callout or subtitle noting
+    the widest driver would sharpen the takeaway further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "NPV Sensitivity Analysis · bar-tornado-sensitivity · javascript · muix · anyplot.ai" centered at top in dark ink; legend ("Low scenario" green swatch, "High scenario" lavender swatch) centered below the title; y-axis parameter labels (Revenue Growth Rate, Discount Rate, Terminal Growth Rate, Operating Margin, Exit Multiple, Capital Expenditure, Tax Rate, Working Capital Change) in dark ink to the left; x-axis "Net Present Value" label with $-formatted compact tick labels ($1.8M...$3.2M) below the plot; dashed vertical reference line at the base case with "Base case: $2.4M" label in dark ink. All chrome text is clearly legible against the light background.
-      Data: Eight horizontal diverging bar pairs, one per parameter, sorted with the widest (Revenue Growth Rate, $1.8M-$3.2M) at the top down to the narrowest (Working Capital Change, $2.3M-$2.5M) at the bottom, producing the characteristic tornado shape. First five parameters have green (low) extending left / lavender (high) extending right of the base line; the last three (Capital Expenditure, Tax Rate, Working Capital Change) correctly flip — lavender (high) extends left, green (low) extends right — reflecting their inverse correlation with NPV. Each bar segment carries a dollar-value label (e.g. "$1.8M", "$3.2M") in dark text, legible against both the green and lavender fills.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "NPV Sensitivity Analysis · bar-tornado-sensitivity · javascript · muix · anyplot.ai" in dark ink, clearly legible and centered, comfortably under the plot width. Legend ("Low scenario" green swatch, "High scenario" purple swatch) sits centered above the chart, fully readable. Y-axis parameter labels (Revenue Growth Rate ... Working Capital Change) and x-axis $-formatted tick labels are dark and crisp against the light background. Vertical gridlines are subtle. The dashed base-case reference line and its "Base case: $2.4M" label are dark ink, clearly visible near the top of the plot.
+      Data: Bars diverge from the $2.4M base line; first series (low scenario) is brand green #009E73, second series (high scenario) is lavender/purple #C475FD — matches the Imprint palette canonical order. Bars are sorted widest-to-narrowest top-to-bottom, correctly forming the tornado shape. In-bar white/dark text shows formatted currency values (e.g. "$1.8M", "$3.2M").
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render — title, legend, axis labels, tick labels, and the "Base case: $2.4M" reference-line label — all rendered in light/off-white ink against the dark background. No dark-on-dark text found anywhere; every chrome element is clearly visible.
-      Data: Identical bar geometry, sort order, and per-parameter direction (including the flipped Capital Expenditure/Tax Rate/Working Capital Change trio) as the light render. Bar fill colors are confirmed identical — brand green #009E73 and lavender — only the chrome (background, text, dashed reference line, grid) flipped to the dark theme. Bar value labels remain legible against both fills in the dark theme.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, legend, y-axis category labels, and x-axis tick labels all render in light/off-white ink, clearly legible against the dark background. The dashed base-case reference line is light-colored with a light "Base case: $2.4M" label, fully readable. No dark-on-dark text detected anywhere in the chrome.
+      Data: Data colors are identical to the light render — green #009E73 and lavender #C475FD in the same series order — confirming only chrome flipped between themes. In-bar labels remain legible against both the green and purple fills.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -72,74 +63,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; explicit font sizes throughout;
-          title fontsize correctly scaled down via the length formula for the long
-          descriptive+mandated title
+        comment: All font sizes explicitly set via sx/labelStyle; readable in both
+          themes; title well-proportioned
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render
+        comment: No overlap between title, legend, reference-line label, bar labels,
+          or axis text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 8 bar pairs at low density render bold and clearly separated
+        comment: Bars sized appropriately for 8 categories, clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs. lavender are distinct hue families (CVD-safe), plus redundant
-          dollar-value text labels — no red-green-only signal
+        comment: Green/purple pairing is CVD-safe, not a red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing clipped, generous left margin for labels; title width measured
-          ~39% of canvas, below the 50-70% target band; grid ticks a bit dense
+        comment: Plot fills a large, balanced portion of the canvas; legend sits close
+          to the chart; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Net Present Value'' axis label with $-formatted, unit-bearing
-          tick labels'
+        comment: Descriptive axis label with currency-formatted ticks conveying units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, second is Imprint lavender;
-          backgrounds #FAF8F1/#1A1A17 confirmed; both renders theme-correct'
+        comment: 'First series is #009E73, second is canonical lavender #C475FD; both
+          renders theme-correct'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Solid, correct execution with dual-color diverging bars and reference
-          line, but relies mostly on library defaults beyond that
+        passed: true
+        comment: Thoughtful title scaling, rounded bars, styled legend — clearly above
+          library defaults, short of full publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: L-shaped spines, generous whitespace, but the $0.1M-increment vertical
-          grid is fairly dense/busy
+        passed: true
+        comment: Subtle vertical grid, L-shaped default axes, reasonable whitespace
+          — some refinement visible, not maximal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorted tornado shape plus the base-case reference line give a clear
-          focal point and hierarchy
+        comment: Sort-by-magnitude and dual-color coding create clear visual hierarchy
+          guiding the reader to the top drivers
     spec_compliance:
       score: 15
       max: 15
@@ -149,27 +138,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal diverging tornado bar chart, correctly implemented
+        comment: Correct horizontal tornado bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Base-case reference line, descending sort by range, two distinct
-          colors, per-bar parameter labels, and optional value labels all present
+        comment: Base-case reference line, descending sort by range, dual colors,
+          y-axis parameter labels, and value labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = NPV output metric, Y = parameter names, all 8 parameters shown
+        comment: X = NPV output, Y = parameter categories, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches mandated format with descriptive prefix; legend labels
-          'Low scenario'/'High scenario' match the data semantics
+          ('Low scenario'/'High scenario') match the series
     data_quality:
       score: 15
       max: 15
@@ -179,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 parameters, low/high/base values, sorted tornado shape — all spec
-          aspects covered
+        comment: Covers both standard and 'crossing' tornado bars (where low > base),
+          demonstrating full feature range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible NPV sensitivity analysis with realistic financial parameters
-          and neutral subject matter
+        comment: NPV sensitivity analysis over standard financial-modeling assumptions
+          — realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Millions-of-dollars scale with sensible spread around a $2.4M base
-          case
+        comment: Values and relative swing magnitudes are plausible for a project-level
+          NPV model
     code_quality:
       score: 10
       max: 10
@@ -204,58 +193,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single default-exported component, no unnecessary abstraction
+        comment: Imports, data, single default-exported component — no unnecessary
+          abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded in-memory data
+        comment: Deterministic, hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (BarChart, ChartsReferenceLine, Box, Typography) are
-          used
+        comment: Only BarChart, ChartsReferenceLine, Box, Typography — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the diverging-bar technique
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports the component per the harness contract; skipAnimation
-          set; current MUI X API
+        comment: Current MUI X API, skipAnimation set, harness-owned rendering respected
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Band-scale yAxis, stacked 'delta' series for divergence, valueFormatter,
-          theme tokens throughout
+        comment: 'Uses stack: "delta" for diverging bars, band-scale y-axis, valueFormatter/barLabel
+          callbacks — strong idiomatic usage'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine and a custom barLabel callback are genuinely
-          distinctive MUI X usage; could push further (e.g. axis highlight, custom
-          tooltip)
+        comment: ChartsReferenceLine plus stacked-delta diverging bars are distinctive
+          MUI X capabilities not trivially replicated elsewhere
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - reference-line
-  - diverging-bars
+  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
