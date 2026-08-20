@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: area-mountain-panorama
 created: '2026-08-20T10:48:12Z'
-updated: '2026-08-20T10:52:44Z'
+updated: '2026-08-20T11:03:54Z'
 generated_by: claude-sonnet
 workflow_run: 32359262156
 issue: 5365
@@ -12,58 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-moun
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-mountain-panorama/javascript/muix/plot-dark.html
-quality_score: 80
+quality_score: 90
 review:
   strengths:
-  - Procedural fractal terrain (midpoint-displacement roughening) produces genuinely
-    jagged, angular ridgelines with per-peak slope asymmetry, matching the spec's
-    explicit ban on Gaussian bell-curve summits
-  - Deterministic seeded PRNG (mulberry32, fixed seeds) gives full reproducibility
-    despite the browser having no native seeded RNG
-  - Optional layered-depth haze ridge (hazier background sub-summits, angularly offset)
-    implements the spec's classic Zermatt-panorama depth cue
-  - Peak labels correctly follow the 'name on top / elevation below' format with a
-    4-tier round-robin vertical stagger that avoids collisions across all 16 closely-spaced
-    summits, plus thin leader lines to each apex
-  - 'Clean theme handling: brand-green-first palette rule respected, theme-adaptive
-    ink/inkSoft/muted tokens threaded through title, ticks, leader lines and footer,
-    correct warm off-white / near-black backgrounds in both renders'
-  - Y-axis lower bound (2500 m) matches the spec's own suggested example, keeping
-    the ridge in the upper portion of the plot
+  - Genuinely jagged, fractal ridge terrain (midpoint-displacement roughening over
+    per-summit control points) with asymmetric flanks and varied prominence — matches
+    the spec's explicit 'not a bell curve' requirement precisely.
+  - All 16 named Wallis peaks from the spec's example are present with accurate real-world
+    elevations (Matterhorn 4478 m, Monte Rosa 4634 m, etc.).
+  - 'Strong focal-point storytelling: the Matterhorn is highlighted with a soft brand-green
+    radial glow, a bolder/larger label, and a thicker leader line and marker, so it
+    immediately reads as the panorama''s anchor summit.'
+  - 'Layered depth cue: a lighter, hazier background ridge (theme-adaptive ''muted''
+    anchor) sits behind the foreground ridge, echoing the classic panorama-photo depth
+    effect called out in the spec notes.'
+  - 16 peak labels are cleanly staggered across 4 shelves with leader lines and show
+    zero overlap despite dense clustering.
+  - 'Theme-correct chrome in both renders: readable title/labels/ticks, correct Imprint
+    palette (first series #009E73), correct #FAF8F1 / #1A1A17 backgrounds, identical
+    data colors across themes.'
+  - Deterministic seeded PRNG (mulberry32) gives full reproducibility without a network/CDN
+    dependency.
   weaknesses:
-  - The Matterhorn (the panorama's stated anchor/focal summit) is not visually distinguished
-    from the other 15 peaks — same color, similar width, not the tallest, not centered
-    — so the spec's 'should read as visually prominent, the focal point of the composition'
-    requirement is unmet. Consider a distinct highlight color/stroke, extra height
-    emphasis, or centering it in the composition.
-  - Saddle/col elevations between many adjacent summits drop very close to the 2650
-    m valley-floor baseline (prominenceRange up to 1450 m), producing an unrealistic
-    'witch's-hat' forest of isolated spikes rather than a connected alpine ridge —
-    real Wallis 4000m cols between neighboring summits sit far higher (~3400-3900
-    m). Reduce the max prominence so cols stay elevated for a more geologically plausible
-    connected-ridge read.
-  - The spec asks to fill the silhouette with 'a dark solid color (photo-like silhouette,
-    evening/dusk feel)'; the implementation correctly uses the mandatory Imprint brand
-    green instead (palette compliance is a hard rule), but as a result the panorama
-    reads as a bright data chart rather than a photographic dusk silhouette.
-  - No legend distinguishes the green foreground ridge from the gray background haze
-    ridge — a first-time viewer must infer the gray shape is a receding background
-    layer.
+  - Peak apex marker dots are quite small relative to the 3200x1800 canvas — could
+    be enlarged slightly (especially the non-focal 6px dots) for stronger element
+    visibility.
+  - No legend or caption clarifies what the lighter background ridge represents; a
+    first-time viewer may read it as stray data rather than an intentional depth layer.
+  - The implementation departs from a simple imports->data->plot->save structure (PRNG,
+    control-point construction, midpoint-displacement roughening, manual pixel-space
+    label overlay) — well justified by the fractal-terrain requirement, but worth
+    noting against the KISS structure criterion.
+  - Title fontsize sits toward the lower end of the expected width band for the long
+    mandated title (~45% of canvas width vs. the typical 70-85%) — still fully legible,
+    just more conservative than necessary.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Title "Wallis Panorama · area-mountain-panorama · javascript · muix · anyplot.ai" in bold dark ink, clearly legible. Rotated "Elevation (m)" y-axis label on the left in dark ink, legible. Dark gray y-axis tick labels (2,500-5,500 in 500m steps) legible. Subtle dashed horizontal gridlines. 16 peak labels (bold name + lighter elevation line below) in dark ink with thin gray leader lines down to each summit apex — all legible, no overlaps observed even in the densely-spaced peak clusters (Alphubel/Allalinhorn/Rimpfischhorn/Strahlhorn and Pollux/Castor/Liskamm/Monte Rosa). Footer caption "Wallis Alps, Switzerland · view toward the Matterhorn from the Gornergrat ridge" in muted gray, legible.
-      Data: Foreground ridge fill is solid brand green (first series = #009E73 as required), with a lighter gray "haze" ridge layered behind it (background sub-summits, offset ~4° east) for depth. Small green apex dots mark each labeled summit.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Wallis Panorama · area-mountain-panorama · javascript · muix · anyplot.ai" in bold dark ink at top-left; rotated "Elevation (m)" y-axis label at far left; dark-ink y-axis tick labels (2,500-5,500 m, 500 m steps); subtle dashed horizontal gridlines; small italic-gray caption "Wallis Alps, Switzerland · view toward the Matterhorn from the Gornergrat ridge" centered at the bottom. All chrome text is clearly legible against the light background.
+      Data: Foreground ridge filled solid brand green (#009E73) with a jagged, angular silhouette of 16 named summits (Weisshorn through Monte Rosa), each with a thin leader line up to a two-line label (name + elevation in meters). A lighter gray-green haze ridge sits behind the main ridge as a background depth layer. The Matterhorn (the stated anchor peak) gets a soft green radial glow, a larger/bolder label, and a thicker leader line and marker, making it the clear visual focal point.
+      Legibility verdict: PASS — all text (title, axis labels, tick labels, peak labels, caption) is dark-on-light and fully readable; no overlaps observed among the 16 peak labels.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Title, axis label, tick labels and all 16 peak labels render in white/light-gray ink — clearly legible against the dark background, no dark-on-dark text found anywhere. Leader lines and gridlines are subtle light-gray, visible but not competing with data. Footer caption legible in muted light gray.
-      Data: Foreground ridge is the identical brand green (#009E73) as the light render; the haze ridge is the identical gray tone, confirming data colors are unchanged between themes — only chrome (background, text, grid) flipped, as required.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis label, tick labels, gridlines and caption as the light render, all re-rendered in light ink (near-white) tones. Gridlines remain subtle dashed lines.
+      Data: Ridge fill is the identical brand green (#009E73) as the light render; the haze ridge uses the theme-adaptive lighter "muted" gray tone appropriate for dark mode. The Matterhorn's glow, bold label, and thicker leader line/marker are preserved identically as the focal-point treatment.
+      Legibility verdict: PASS — title, axis labels, tick labels, peak labels and caption are all light-on-dark and clearly readable; no dark-on-dark text found anywhere in the render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -71,50 +68,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick/peak-label text legible in both themes, no dark-on-dark
-          or light-on-light
+        comment: Font sizes explicitly set (computed title size, tickLabelStyle, per-label
+          sizes); all text readable in both themes. Title width (~45%) sits below
+          the typical 70-85% band for the mandated long title, but stays fully legible
+          with no overflow.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 16 staggered peak labels avoid collision via 4-tier round-robin;
-          dense clusters (Pollux/Castor/Liskamm) stay clean
+        comment: 16 peak labels staggered across 4 shelves with leader lines — zero
+          overlap in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Apex dots and leader lines visible; foreground/haze ridges clearly
-          distinguishable
+        comment: Ridge line, fill, and leader lines are clearly visible; the small
+          (6-10px) apex marker dots could be slightly larger.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Only 2 hues used (brand green + neutral haze gray), no CVD risk
+        comment: Good contrast between ink/inkSoft chrome and green/muted data; no
+          red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; no clipping; good use of landscape canvas
+        comment: Chart fills most of the canvas with balanced margins; nothing cut
+          off; canvas-dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Elevation (m) labeled with units; x-axis intentionally hidden per
-          spec option
+        comment: '"Elevation (m)" includes units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, correct theme backgrounds both renders, data
-          colors identical across themes'
+        comment: 'First series is #009E73 (Imprint), identical between themes; haze
+          ridge correctly uses the theme-adaptive muted semantic anchor; backgrounds
+          are #FAF8F1/#1A1A17; chrome is theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -122,23 +123,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom fractal terrain + layered haze depth shows real design effort
-          beyond defaults
+        comment: Focal-point glow treatment, staggered label shelves, and layered
+          haze depth clearly go beyond a configured default, though it stops short
+          of full publication polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bottom axis hidden, subtle dashed grid, generous whitespace
+        comment: Subtle dashed gridlines, effectively spineless axes (faint 0.4-opacity
+          lines only), generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: No visual hierarchy — Matterhorn (the stated focal summit) isn't
-          emphasized over the other 15 peaks
+        passed: true
+        comment: The glow, bolder label, and thicker leader line/marker on the Matterhorn
+          create an immediate, unmistakable focal point — the panorama's anchor summit
+          is obvious at a glance.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -146,87 +150,95 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled-area mountain-panorama silhouette with labeled peaks
+        comment: Filled-area skyline silhouette with labeled peaks — correct plot
+          type.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Jagged non-Gaussian ridge, staggered labels, leader lines, layered
-          haze all present; Matterhorn focal-point requirement missed
+        comment: Jagged non-Gaussian ridge, per-summit slope asymmetry, staggered
+          labels, leader lines, sensible Y lower bound (2500 m), hidden X axis, optional
+          layered depth all implemented. Fill uses Imprint brand green rather than
+          the spec's suggested 'dark solid color' — a reasonable override given anyplot's
+          mandatory brand-palette rule.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Angle -> x, elevation -> y correctly mapped, full data range shown
+        comment: X = viewing angle (degrees), Y = elevation (m); full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai' format
+        comment: Title matches the mandated format with a descriptive prefix; no legend
+          needed for the two-ridge visual convention.
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Skyline, peaks, labels, layered depth all present
+        comment: 'Shows the full range of panorama features: varied summit prominence,
+          cols, jagged sub-peaks, and layered depth.'
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Real Wallis peak names/elevations, but cols dropping near valley-floor
-          between adjacent 4000ers is geologically implausible
+        comment: Real, neutral Wallis/Zermatt panorama matching the spec's own example
+          exactly.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Elevation range (2650-4634m) sensible for the domain; saddle depth
-          proportions slightly extreme
+        comment: Real-world elevations for every named summit; baseline and axis bounds
+          are geographically sensible.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Helper functions (buildControlPoints, roughen, toPixel) are justified
-          by the fractal-terrain complexity
+        passed: false
+        comment: Multiple helper functions (mulberry32, buildControlPoints, roughen,
+          toPixel, assignTiers) beyond the mandatory Chart component — justified by
+          the fractal-terrain requirement, but a departure from a flat imports->data->plot
+          structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed mulberry32 PRNG
+        comment: Seeded mulberry32 PRNG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart imported
+        comment: Only LineChart imported from @mui/x-charts.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, appropriate complexity for procedural terrain
+        comment: Complexity is appropriate for the fractal-terrain generation task;
+          no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly default-exports a Chart component per the harness contract,
-          no manual mount/savefig calls
+        comment: Correct default-export component contract, skipAnimation set, current
+          MUI X API.
     library_mastery:
       score: 7
       max: 10
@@ -236,16 +248,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct dual-xAxis LineChart area-series usage, skipAnimation, sx
-          overrides
+        comment: Uses LineChart with area series, multi-xAxis (per-series xAxisId),
+          tickLabelStyle, and sx-based per-series styling idiomatically.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-axis overlay of two independent area series plus hand-placed
-          pixel-accurate label/leader overlay computed from the chart's own coordinate
-          space
+        comment: Multi-axis area composition and MUI-classname sx overrides are library-specific,
+          though the peak-label/leader-line system is a generic hand-rolled overlay
+          rather than a built-in MUI X feature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -257,3 +269,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - gradient-fill
