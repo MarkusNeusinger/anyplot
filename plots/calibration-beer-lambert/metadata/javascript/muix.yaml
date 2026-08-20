@@ -1,0 +1,259 @@
+library: muix
+language: javascript
+specification_id: calibration-beer-lambert
+created: '2026-08-20T17:56:00Z'
+updated: '2026-08-20T18:12:11Z'
+generated_by: claude-sonnet
+workflow_run: 32399606515
+issue: 4410
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Legend added (ChartsLegend) that clearly distinguishes the green 'Calibration
+    standards' series from the lavender 'Unknown sample' point via a visual key —
+    resolves attempt 1's SC-04/DE-02 gap.
+  - Invalid, no-op 'tickFontSize' prop removed from the yAxis config, fixing the dead-prop
+    deduction against CQ-04 and LM-01.
+  - Title fontSize increased from 22 to 30, improving its share of plot width from
+    roughly 35% to roughly 48% — a real step toward the style guide's proportion target,
+    though still slightly under the comfortable 50-70% band.
+  - 'All attempt-1 strengths retained: idiomatic hook-based custom SVG overlays (95%
+    prediction-interval band and dashed unknown-sample guide lines via useXScale/useYScale/useDrawingArea),
+    correct theme-adaptive rendering with identical data colors across themes, correct
+    Imprint palette usage (green first series, lavender second), realistic 7-point
+    UV-Vis calibration dataset including the blank, and clean deterministic KISS code.'
+  weaknesses:
+  - The rotated y-axis title 'Absorbance' overlaps the '0.5' and '0.6' tick labels
+    near the vertical center of the axis, in BOTH light and dark renders — the descender/tail
+    of the title text touches the tick numerals. Increase the left margin or the yAxis
+    label offset (e.g. raise the ChartContainer margin.left beyond 132, or set a larger
+    label-to-tick gap via yAxis slotProps) so the rotated title clears the tick labels
+    at every position, not just the ones near the axis ends.
+  - Title still occupies only ~48% of plot width at fontSize=30 (CSS px) — under the
+    ~50-70% comfortable range the style guide expects for this ~59-character mandated
+    title. A further bump to roughly 34-36px would give it a stronger focal presence
+    and better survival at the 400px mobile thumbnail.
+  - Small annotation and tick fonts (12-14px CSS) carried over from attempt 1 remain
+    tight at the 400px mobile thumbnail — consider modestly increasing base font sizes
+    for the equation/annotation text for better small-scale legibility.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold centered title "calibration-beer-lambert · javascript · muix · anyplot.ai" in dark ink at the top, with a legend at the top-right (green square "Calibration standards", lavender square "Unknown sample"); a two-line annotation block below the title ("y = 0.0847x + 0.0015 · R² = 0.9993" and "Shaded band: 95% prediction interval · Unknown: A = 0.60 → c ≈ 7.07 mg/L") in dark/medium gray; x-axis label "Concentration (mg/L)" and y-axis label "Absorbance" in dark ink; horizontal gridlines subtle light gray; bottom-right caption "n = 7 standards (incl. blank)" in light gray. All text is legible against the light background, EXCEPT the rotated y-axis title "Absorbance" visibly touches/overlaps the "0.5" and "0.6" tick labels near the middle of the axis (both remain individually readable, but the collision is a real layout defect).
+      Data: Seven green (#009E73) scatter points along a black OLS regression line, a light-gray shaded 95% prediction-interval band hugging the line, one lavender/purple scatter point marking the "unknown" sample at (7.07, 0.60), and dashed gray guide lines running from that point down to the x-axis and left to the y-axis.
+      Legibility verdict: PASS (with the noted axis-label/tick-label overlap as a layout defect, not a legibility failure)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title now in light/white bold text, same legend top-right; annotation block in light gray; axis labels in light ink; gridlines subtle and still visible against the dark surface; bottom-right caption in light gray. No dark-on-dark failures — every text element has clear contrast against the near-black background. The same "Absorbance" / "0.5" / "0.6" tick-label overlap observed in the light render is present here too (identical layout, theme-independent defect).
+      Data: Colors are identical to the light render — same #009E73 green standards, same lavender unknown point. The regression line flips from black to white (theme-adaptive ink token) and the prediction band flips to a dark-gray fill, both correctly readable on the dark surface; dashed guide lines remain visible in gray.
+      Legibility verdict: PASS (same overlap caveat as the light render)
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Full-size text readable in both themes, but small annotation/tick
+          fonts (12-14px CSS) remain tight at the 400px mobile thumbnail — carried
+          over from attempt 1.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: The rotated y-axis title 'Absorbance' overlaps the '0.5' and '0.6'
+          tick labels in both renders — not severe (both remain readable) but a real
+          collision that needs a wider label margin.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse 7-point series uses prominent 13-15px markers, clearly visible
+          against the band and line.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender standards/unknown are distinguishable without
+          relying on red-green as the sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins, nothing clipped; title fontSize increase brought
+          width proportion closer to the target range (~48%).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units ('Concentration (mg/L)', 'Absorbance');
+          title matches the mandated format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second category from Imprint palette[1], correct
+          FAF8F1/1A1A17 backgrounds, identical data colors across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom prediction-interval band and dashed guide-line annotation
+          go beyond generic defaults, built with real MUI X scale hooks.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace, and now a proper
+          legend; the axis-title/tick overlap is the remaining polish gap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point on the unknown sample via distinct color, dashed
+          guides, and annotation text guiding the reader through the concentration
+          lookup.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter + linear regression fit correctly implements a calibration
+          curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Regression equation + R², prediction-interval band, and unknown-sample
+          dashed guides to both axes are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=concentration, y=absorbance, full data range shown on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly, and a rendered legend
+          now identifies both scatter series/colors.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Standards, regression line, R², prediction band, and unknown-sample
+          readout together cover the full calibration-curve use case.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral UV-Vis pharmaceutical-assay framing.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Absorbance stays under 1.5 (linear Beer-Lambert regime), concentration
+          range sensible for mg/L standards.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes or abstractions; flat functional components.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI, and the previously invalid 'tickFontSize'
+          prop has been removed.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation, sized from
+          window.ANYPLOT_SIZE.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic composition of ChartContainer sub-components and useXScale/useYScale/useDrawingArea
+          hooks; no more invalid props.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG prediction-interval band and guide-line overlay via scale
+          hooks is a genuinely distinctive, non-default MUI X technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
