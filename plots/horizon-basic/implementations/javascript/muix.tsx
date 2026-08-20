@@ -20,8 +20,10 @@ const HALF_HEIGHT = ROW_HEIGHT / 2;
 const ROW_GAP = 10;
 const BAND_COUNT = 3;
 const MAX_DEVIATION = 45; // percentage points from the 24h rolling baseline
-const POINT_COUNT = 48; // hourly readings over 2 days
+const POINT_COUNT = 168; // hourly readings over 7 days
 const ZERO_MARGIN = { top: 0, right: 0, bottom: 0, left: 0 };
+// Upper bound of each band's percentage-point range (e.g. 0-15 / 15-30 / 30-45).
+const BAND_THRESHOLDS = Array.from({ length: BAND_COUNT }, (_, k) => Math.round((MAX_DEVIATION * (k + 1)) / BAND_COUNT));
 
 const TITLE = "horizon-basic · javascript · muix · anyplot.ai";
 const TITLE_FONT_SIZE = Math.round(22 * (TITLE.length > 67 ? 67 / TITLE.length : 1));
@@ -158,7 +160,7 @@ function HorizonRow({ name, positive, negative }) {
         <Typography
           sx={{
             m: 0,
-            fontSize: 15,
+            fontSize: 17,
             fontWeight: 500,
             color: t.ink,
             whiteSpace: "nowrap",
@@ -193,14 +195,23 @@ function HorizonRow({ name, positive, negative }) {
   );
 }
 
-function LegendSwatches({ colors, label, align }) {
+function LegendSwatches({ colors, thresholds, label, align }) {
   return (
     <Box sx={{ display: "flex", alignItems: "center", gap: "6px", flexDirection: align === "left" ? "row-reverse" : "row" }}>
       <Typography sx={{ m: 0, fontSize: 13, color: t.inkSoft, whiteSpace: "nowrap" }}>{label}</Typography>
-      <Box sx={{ display: "flex", gap: "3px" }}>
-        {colors.map((color, i) => (
-          <Box key={i} sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: color }} />
-        ))}
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "2px" }}>
+        <Box sx={{ display: "flex", gap: "3px" }}>
+          {colors.map((color, i) => (
+            <Box key={i} sx={{ width: 14, height: 14, borderRadius: "3px", bgcolor: color }} />
+          ))}
+        </Box>
+        <Box sx={{ display: "flex", gap: "3px" }}>
+          {thresholds.map((th, i) => (
+            <Typography key={i} sx={{ m: 0, fontSize: 11, color: t.inkSoft, width: 14, textAlign: "center", whiteSpace: "nowrap" }}>
+              {th}
+            </Typography>
+          ))}
+        </Box>
       </Box>
     </Box>
   );
@@ -212,7 +223,7 @@ function formatTick(index) {
   return `Day ${day} · ${String(hour).padStart(2, "0")}:00`;
 }
 
-const TICKS = [0, 12, 24, 36, POINT_COUNT - 1];
+const TICKS = [0, Math.round((POINT_COUNT - 1) / 4), Math.round((POINT_COUNT - 1) / 2), Math.round((3 * (POINT_COUNT - 1)) / 4), POINT_COUNT - 1];
 
 export default function Chart() {
   return (
@@ -227,12 +238,20 @@ export default function Chart() {
         justifyContent: "center",
       }}
     >
-      <Typography sx={{ m: 0, mb: "14px", fontSize: TITLE_FONT_SIZE, fontWeight: 600, color: t.ink }}>{TITLE}</Typography>
+      <Typography sx={{ m: 0, fontSize: TITLE_FONT_SIZE, fontWeight: 600, color: t.ink }}>{TITLE}</Typography>
+      <Typography sx={{ m: 0, mb: "14px", fontSize: 14, color: t.inkSoft }}>
+        Deviation from 24h rolling baseline, in percentage points (pp)
+      </Typography>
 
       <Box sx={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: "18px", mb: "20px" }}>
-        <LegendSwatches label="Below baseline" colors={[...NEG_BAND_COLORS].reverse()} align="left" />
+        <LegendSwatches
+          label="Below baseline"
+          colors={[...NEG_BAND_COLORS].reverse()}
+          thresholds={[...BAND_THRESHOLDS].reverse()}
+          align="left"
+        />
         <Box sx={{ width: "1px", height: "16px", bgcolor: t.grid }} />
-        <LegendSwatches label="Above baseline" colors={POS_BAND_COLORS} align="right" />
+        <LegendSwatches label="Above baseline" colors={POS_BAND_COLORS} thresholds={BAND_THRESHOLDS} align="right" />
       </Box>
 
       <Box>
@@ -255,7 +274,7 @@ export default function Chart() {
                 position: "absolute",
                 left: `${(index / (POINT_COUNT - 1)) * 100}%`,
                 transform: index === 0 ? "none" : index === POINT_COUNT - 1 ? "translateX(-100%)" : "translateX(-50%)",
-                fontSize: 13,
+                fontSize: 14,
                 color: t.inkSoft,
                 whiteSpace: "nowrap",
               }}
