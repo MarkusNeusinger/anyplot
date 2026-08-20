@@ -9,19 +9,67 @@ const t = window.ANYPLOT_TOKENS;
 // Each row is the *own* (exclusive) sample count captured for that exact
 // stack path — the standard "folded stack" input format flame graphs use.
 const samples = [
-  { stack: "main;acceptConnections", value: 40 },
-  { stack: "main;acceptConnections;parseHeaders", value: 220 },
-  { stack: "main;acceptConnections;tlsHandshake", value: 150 },
-  { stack: "main;garbageCollect", value: 95 },
-  { stack: "main;logRequest", value: 45 },
-  { stack: "main;routeRequest", value: 30 },
-  { stack: "main;routeRequest;authMiddleware", value: 90 },
-  { stack: "main;routeRequest;handleApi", value: 20 },
-  { stack: "main;routeRequest;handleApi;validateInput", value: 60 },
-  { stack: "main;routeRequest;handleApi;queryDatabase", value: 15 },
-  { stack: "main;routeRequest;handleApi;queryDatabase;executeQuery", value: 340 },
-  { stack: "main;routeRequest;handleApi;queryDatabase;parseResults", value: 180 },
-  { stack: "main;routeRequest;handleApi;serializeResponse", value: 110 },
+  { stack: "main", value: 25 },
+  { stack: "main;acceptConnections", value: 15 },
+  { stack: "main;acceptConnections;tlsHandshake", value: 8 },
+  { stack: "main;acceptConnections;tlsHandshake;certValidation", value: 12 },
+  { stack: "main;acceptConnections;tlsHandshake;cipherNegotiation", value: 10 },
+  { stack: "main;acceptConnections;parseHeaders", value: 45 },
+  { stack: "main;acceptConnections;readSocketBuffer", value: 10 },
+  { stack: "main;acceptConnections;readSocketBuffer;parseFrameHeader", value: 18 },
+  { stack: "main;acceptConnections;readSocketBuffer;bufferAlloc", value: 14 },
+  { stack: "main;routeRequest", value: 12 },
+  { stack: "main;routeRequest;authMiddleware", value: 20 },
+  { stack: "main;routeRequest;authMiddleware;verifyToken", value: 35 },
+  { stack: "main;routeRequest;authMiddleware;loadUserSession", value: 28 },
+  { stack: "main;routeRequest;rateLimitCheck", value: 10 },
+  { stack: "main;routeRequest;rateLimitCheck;checkBucket", value: 16 },
+  { stack: "main;routeRequest;rateLimitCheck;updateBucket", value: 12 },
+  { stack: "main;routeRequest;handleApi", value: 8 },
+  { stack: "main;routeRequest;handleApi;validateInput", value: 10 },
+  { stack: "main;routeRequest;handleApi;validateInput;schemaCheck", value: 30 },
+  { stack: "main;routeRequest;handleApi;validateInput;sanitizeFields", value: 22 },
+  { stack: "main;routeRequest;handleApi;queryDatabase", value: 6 },
+  { stack: "main;routeRequest;handleApi;queryDatabase;acquireConnection", value: 14 },
+  { stack: "main;routeRequest;handleApi;queryDatabase;executeQuery", value: 20 },
+  { stack: "main;routeRequest;handleApi;queryDatabase;executeQuery;planQuery", value: 55 },
+  { stack: "main;routeRequest;handleApi;queryDatabase;executeQuery;fetchRows", value: 40 },
+  {
+    stack: "main;routeRequest;handleApi;queryDatabase;executeQuery;fetchRows;deserializeRow",
+    value: 65,
+  },
+  {
+    stack: "main;routeRequest;handleApi;queryDatabase;executeQuery;fetchRows;rowToObject",
+    value: 48,
+  },
+  { stack: "main;routeRequest;handleApi;queryDatabase;parseResults", value: 70 },
+  { stack: "main;routeRequest;handleApi;cacheLookup", value: 5 },
+  { stack: "main;routeRequest;handleApi;cacheLookup;cacheHit", value: 18 },
+  { stack: "main;routeRequest;handleApi;cacheLookup;cacheMiss", value: 24 },
+  { stack: "main;routeRequest;handleApi;businessLogic", value: 8 },
+  { stack: "main;routeRequest;handleApi;businessLogic;computeDiscounts", value: 42 },
+  { stack: "main;routeRequest;handleApi;businessLogic;applyTaxRules", value: 33 },
+  { stack: "main;routeRequest;handleApi;businessLogic;aggregateTotals", value: 27 },
+  { stack: "main;routeRequest;handleApi;serializeResponse", value: 12 },
+  { stack: "main;routeRequest;handleApi;serializeResponse;jsonEncode", value: 38 },
+  { stack: "main;routeRequest;handleApi;serializeResponse;compressGzip", value: 30 },
+  { stack: "main;routeRequest;handleStatic", value: 6 },
+  { stack: "main;routeRequest;handleStatic;readFile", value: 44 },
+  { stack: "main;routeRequest;handleStatic;setCacheHeaders", value: 9 },
+  { stack: "main;backgroundJobs", value: 10 },
+  { stack: "main;backgroundJobs;garbageCollect", value: 20 },
+  { stack: "main;backgroundJobs;garbageCollect;markPhase", value: 32 },
+  { stack: "main;backgroundJobs;garbageCollect;sweepPhase", value: 28 },
+  { stack: "main;backgroundJobs;logFlush", value: 15 },
+  { stack: "main;backgroundJobs;metricsExport", value: 5 },
+  { stack: "main;backgroundJobs;metricsExport;pushToStatsd", value: 12 },
+  { stack: "main;backgroundJobs;metricsExport;formatMetrics", value: 10 },
+  { stack: "main;logRequest", value: 6 },
+  { stack: "main;logRequest;formatLogLine", value: 8 },
+  { stack: "main;logRequest;formatLogLine;escapeChars", value: 11 },
+  { stack: "main;logRequest;writeToDisk", value: 7 },
+  { stack: "main;logRequest;writeToDisk;flushDisk", value: 13 },
+  { stack: "main;logRequest;writeToDisk;fsync", value: 9 },
 ];
 
 // --- Build the call tree: own time per node, then roll up totals -----------
@@ -90,8 +138,13 @@ const hash = (str) => {
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
   return (h % 1000) / 1000;
 };
-const warmColor = (name) => {
-  const f = hash(name);
+// Blend two signals into the ramp position: `heat` (log-scaled share of total
+// samples) pulls hot frames toward the matte-red end, adding a second layer of
+// storytelling beyond bar width; `hash(name)` keeps same-share siblings visually
+// distinct instead of collapsing them onto one shade.
+const warmColor = (name, share) => {
+  const heat = Math.min(1, Math.log1p(share * 12) / Math.log1p(12));
+  const f = heat * 0.65 + hash(name) * 0.35;
   return f < 0.5 ? lerp(warmStops[0], warmStops[1], f * 2) : lerp(warmStops[1], warmStops[2], (f - 0.5) * 2);
 };
 
@@ -106,7 +159,7 @@ const series = frames.map((frame) => {
     name: frame.real ? frame.name : undefined,
     data,
     stack: "flame",
-    color: frame.real ? warmColor(frame.name) : "transparent",
+    color: frame.real ? warmColor(frame.name, frame.value / rootTotal) : "transparent",
     borderWidth: frame.real ? 1 : 0,
     borderColor: t.pageBg,
     enableMouseTracking: frame.real,
