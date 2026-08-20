@@ -46,6 +46,15 @@ end
 band_height = maximum(maximum(abs.(v)) for v in series_values) / N_BANDS
 band_alphas = range(0.35, 1.0; length = N_BANDS)
 
+# Most notable anomaly, for an explicit storytelling callout below the chart.
+peak_series_idx = argmax([maximum(abs.(v)) for v in series_values])
+peak_series_name = server_names[peak_series_idx]
+peak_values = series_values[peak_series_idx]
+peak_idx = argmax(abs.(peak_values))
+peak_time = t[peak_idx]
+peak_value = peak_values[peak_idx]
+peak_sign = peak_value >= 0 ? "above" : "below"
+
 # --- Plot -----------------------------------------------------------------
 fig = Figure(
     resolution      = (1600, 900),
@@ -59,8 +68,23 @@ Label(
 )
 Label(
     fig[2, 1],
-    "CPU load deviation from 24h baseline, folded into $(N_BANDS) color bands per server — darker fill marks larger deviation";
+    "CPU load deviation from 24h baseline, folded into $(N_BANDS) bands of ≈$(round(band_height, digits = 2))pp each per server — darker fill marks larger deviation";
     fontsize = 13, color = INK_SOFT, halign = :left,
+)
+
+Legend(
+    fig[1:2, 2],
+    [PolyElement(color = POS_COLOR), PolyElement(color = NEG_COLOR)],
+    ["Above baseline", "Below baseline"];
+    framevisible = false,
+    labelsize = 12,
+    labelcolor = INK,
+    patchsize = (14, 10),
+    patchlabelgap = 6,
+    rowgap = 2,
+    tellheight = false,
+    valign = :center,
+    halign = :left,
 )
 
 zero_line = zeros(N_POINTS)
@@ -71,6 +95,7 @@ for (i, name) in enumerate(server_names)
         ylabel              = name,
         ylabelsize          = 13,
         ylabelcolor         = INK,
+        ylabelfont          = (i == peak_series_idx ? :bold : :regular),
         ylabelrotation      = 0,
         backgroundcolor     = PAGE_BG,
         xgridvisible        = false,
@@ -107,6 +132,14 @@ for (i, name) in enumerate(server_names)
 end
 
 rowgap!(fig.layout, 4)
+colgap!(fig.layout, 20)
+
+Label(
+    fig[n_series + 3, 1:2],
+    "Notable: $(peak_series_name) shows the largest deviation of all ten servers — " *
+    "$(round(abs(peak_value), digits = 2))pp $(peak_sign) baseline at $(round(peak_time, digits = 1))h";
+    fontsize = 11, color = INK_SOFT, halign = :left,
+)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
