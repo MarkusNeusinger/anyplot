@@ -102,7 +102,10 @@ function roughen(points, rng, depth, ampPerDegree, persistence) {
 }
 
 const rngFg = mulberry32(20260820);
-const fgControl = buildControlPoints(PEAKS, rngFg, [520, 1450]);
+// Prominence capped so cols between neighboring 4000ers stay well above the
+// valley floor (real Wallis cols sit ~3400-3900 m) — a connected ridge, not
+// isolated witch's-hat spikes.
+const fgControl = buildControlPoints(PEAKS, rngFg, [380, 620]);
 const fgRidge = roughen(fgControl, rngFg, 5, 40, 0.58);
 const fgAngles = fgRidge.map((p) => p.angle);
 const fgElevs = fgRidge.map((p) => Math.round(p.elev));
@@ -245,33 +248,52 @@ export default function Chart() {
         </div>
 
         {peaksPx.map((p) => {
+          // The Matterhorn is the panorama's stated anchor summit — give it a
+          // distinct highlight (bigger ink-stroked apex, soft brand-green glow,
+          // bolder label) so it reads as the composition's focal point, using
+          // only the existing brand green + ink tokens (no new hue).
+          const isFocal = p.name === "Matterhorn";
           const labelTop = MARGIN.top + 14 + LABEL_ROWS[p.tier];
           const lineTop = labelTop + 32;
           const lineHeight = Math.max(0, p.top - lineTop - 5);
           return (
             <div key={p.name}>
+              {isFocal && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: p.left - 55,
+                    top: p.top - 55,
+                    width: 110,
+                    height: 110,
+                    borderRadius: "50%",
+                    background: `radial-gradient(circle, ${t.palette[0]}33 0%, ${t.palette[0]}00 70%)`,
+                    pointerEvents: "none",
+                  }}
+                />
+              )}
               <div
                 style={{
                   position: "absolute",
                   left: p.left - 0.5,
                   top: lineTop,
-                  width: 1,
+                  width: isFocal ? 2 : 1,
                   height: lineHeight,
-                  backgroundColor: t.inkSoft,
-                  opacity: 0.5,
+                  backgroundColor: isFocal ? t.ink : t.inkSoft,
+                  opacity: isFocal ? 0.8 : 0.5,
                   pointerEvents: "none",
                 }}
               />
               <div
                 style={{
                   position: "absolute",
-                  left: p.left - 3,
-                  top: p.top - 3,
-                  width: 6,
-                  height: 6,
+                  left: p.left - (isFocal ? 5 : 3),
+                  top: p.top - (isFocal ? 5 : 3),
+                  width: isFocal ? 10 : 6,
+                  height: isFocal ? 10 : 6,
                   borderRadius: "50%",
                   backgroundColor: t.palette[0],
-                  border: `1.5px solid ${t.pageBg}`,
+                  border: `${isFocal ? 2 : 1.5}px solid ${isFocal ? t.ink : t.pageBg}`,
                   pointerEvents: "none",
                 }}
               />
@@ -286,8 +308,12 @@ export default function Chart() {
                   pointerEvents: "none",
                 }}
               >
-                <div style={{ color: t.ink, fontSize: 14, fontWeight: 700 }}>{p.name}</div>
-                <div style={{ color: t.inkSoft, fontSize: 12 }}>{p.elev} m</div>
+                <div style={{ color: t.ink, fontSize: isFocal ? 17 : 14, fontWeight: isFocal ? 800 : 700 }}>
+                  {p.name}
+                </div>
+                <div style={{ color: t.inkSoft, fontSize: isFocal ? 13 : 12, fontWeight: isFocal ? 700 : 400 }}>
+                  {p.elev} m
+                </div>
               </div>
             </div>
           );
