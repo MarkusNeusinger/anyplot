@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: cartogram-area-distortion
 created: '2026-08-20T18:26:08Z'
-updated: '2026-08-20T18:31:25Z'
+updated: '2026-08-20T18:43:42Z'
 generated_by: claude-sonnet
 workflow_run: 32402185340
 issue: 4671
@@ -12,53 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cartogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cartogram-area-distortion/javascript/highcharts/plot-dark.html
-quality_score: 80
+quality_score: 88
 review:
   strengths:
-  - Clean, idiomatic Highcharts scatter + dataLabels implementation that correctly
-    works around the core bundle's lack of a colorAxis/bubble module
-  - Radius encoding correctly implements area ∝ value via sqrt scaling (MIN_RADIUS/MAX_RADIUS),
-    the defining cartogram encoding
-  - Reproducible, deterministic in-memory data with realistic, neutral US state population
+  - Adds a fixed-size, contiguous reference-tile grid (drawn via chart.renderer, synced
+    to axis pixel mapping on every render) directly behind each circle, giving the
+    reader the equal-area comparison baseline the previous review flagged as missing
+  - Radius encoding correctly implements area ∝ value via sqrt scaling — the defining
+    cartogram encoding — and is now visually legible against the fixed reference tile
+    (CA/TX clearly overflow their tile, MT/ND/SD sit tiny inside theirs)
+  - Theme-adaptive chrome is fully correct in both renders; the three imprint_seq-derived
+    GDP-per-capita tier colors are pixel-identical between light and dark
+  - Idiomatic use of Highcharts' SVG renderer (chart.renderer.g/.rect + xAxis/yAxis.toPixels(),
+    re-drawn on the render event) to extend the core scatter series with a custom
+    overlay — a genuinely Highcharts-specific technique given the core bundle has
+    no maps/colorAxis module
+  - Clean, reproducible, deterministic in-memory data with realistic, neutral US population
     and GDP-per-capita values
-  - Theme-adaptive chrome is correct throughout (t.ink/t.inkSoft/t.inkMuted), and
-    the three GDP-tier colors derived from imprint_seq are pixel-identical between
-    light and dark renders — only chrome flips
-  - Clear legend and caption jointly explain both the size (population) and color
-    (GDP-per-capita tier) encodings
-  - Title format exactly matches the mandated `{spec-id} · {language} · {library}
-    · anyplot.ai` convention
+  - Title format exactly matches the mandated convention; legend and caption jointly
+    explain the size, color, and reference-tile encodings
   weaknesses:
-  - 'Non-contiguous circle layout with large gaps between every circle directly contradicts
-    the spec''s explicit requirement: ''Regions should remain contiguous (sharing
-    borders) after distortion to preserve geographic context.'' This renders a Dorling-style
-    (non-contiguous) cartogram, not the contiguous cartogram the spec centrally describes.'
-  - Missing 'original region outlines or a reference map inset for comparison' — the
-    spec explicitly asks for this and it is entirely absent from both renders. Without
-    any reference to true geography/area, the reader cannot see the actual distortion,
-    which undercuts the core visual point of a cartogram.
-  - Positions are placed on an approximate col/row tile grid rather than true polygon
-    geometry. Given the Highcharts core bundle has no maps/colorAxis module this is
-    an understandable simplification, but combined with the missing contiguity and
-    missing reference map, the chart reads as a bubble chart on a loose grid rather
-    than a cartogram.
-  - Green (imprint_seq low end) is assigned to the lowest GDP-per-capita tier while
-    blue is assigned to the highest — since green commonly reads as 'good/high' to
-    viewers, this ordering is a mildly counter-intuitive semantic pairing worth reconsidering
-    (not a hard violation, since imprint_seq's own low→high ramp direction is followed
-    correctly).
+  - The distorted regions themselves (the circles) still do not touch or share borders
+    with their neighbors — only the undistorted reference tiles are contiguous. The
+    spec's explicit requirement that 'regions should remain contiguous (sharing borders)
+    after distortion' is still not literally met by the distorted shapes; this remains
+    a Dorling-style (non-contiguous) cartogram, now paired with a contiguous baseline
+    rather than being a contiguous cartogram itself. Likely unavoidable with the core
+    Highcharts bundle (no maps/colorAxis module), but worth stating plainly in a code
+    comment if not already resolvable.
+  - Green (imprint_seq low end) is still assigned to the lowest GDP-per-capita tier
+    while blue is the highest tier; since green commonly reads as 'good/high' in a
+    business/economic context, this ordering remains a mildly counter-intuitive semantic
+    pairing (not a palette-compliance violation — VQ-07 scores full marks — just a
+    minor storytelling nit).
+  - Title occupies only ~40% of plot width at the current 22px size, well under the
+    ~70-85% the mandated title string typically fills — not a deduction (no overflow/clipping,
+    fully legible), but there is room to grow the title/subtitle typographic hierarchy
+    for more visual presence per the previous review's DE-01 suggestion.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "cartogram-area-distortion · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. Subtitle "US states resized by population, positioned by approximate geography" in soft gray, readable. Bottom caption "Circle area ∝ population (millions) · fill ∝ GDP-per-capita tier · position preserves rough state geography" in muted gray, readable. Legend below the plot with three color swatches and labels ("GDP per capita < $60k", "$60–74k", "≥ $75k") in soft gray text, readable.
-      Data: 24 US-state circles arranged on an approximate geographic tile grid (WA/OR/CA on the left, TX/MI/TN on the right), circle radius scaled by population (CA and TX are visibly the largest, ND/SD/MT the smallest), fill colored by one of three GDP-per-capita tiers using imprint_seq-derived hues (green = low tier, teal = mid tier, blue = high tier — the first/low tier is #009E73, matching brand green). State abbreviation labels are rendered in dark ink centered inside each circle and are legible against all three fill colors.
-      Legibility verdict: PASS — all text (title, subtitle, caption, legend, in-circle labels) is clearly readable against the light background and against the circle fills.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "cartogram-area-distortion · javascript · highcharts · anyplot.ai" at top; soft-gray subtitle below it; soft-gray caption at the bottom explaining the encoding. All clearly readable against the light background. Legend below the plot lists the three GDP-per-capita tiers plus a "Reference tile" swatch, all legible.
+      Data: 24 US-state circles positioned on an approximate geographic tile grid, each inscribed inside a thin outlined square (the contiguous, equal-size reference tile — same footprint for every state, edges touching neighboring tiles). Circle radius scales with population (CA and TX are visibly largest, ND/SD/MT smallest); fill is one of three imprint_seq-derived tier colors (green low / teal-blue mid / blue high GDP-per-capita), first tier = #009E73. Dark-ink state abbreviation labels sit centered in each circle and are legible against every fill color.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and subtitle render in light ink (white/near-white) and soft light gray respectively, both clearly readable against the dark background. Caption and legend text also render in light gray tones, readable, no dark-on-dark issues found anywhere.
-      Data: Same 24 states, same relative circle sizes, and the exact same three fill hues as the light render (green/teal/blue tiers) — data colors are confirmed identical between the two themes, only the chrome (background + text) flipped. In-circle state-abbreviation labels flip to light ink and remain legible against every fill color.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text elements read clearly in the dark theme.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/caption/legend layout, now rendered in light ink; all clearly readable against the dark background. Reference-tile outlines flip to a light inkSoft stroke and remain subtle but visible. No dark-on-dark failures observed anywhere (title, subtitle, caption, legend, tick-free axes, in-circle labels all pass).
+      Data: Identical circle positions and radii to the light render. The three tier fill colors are pixel-identical to the light render (green/teal-blue/blue) — confirming only chrome flipped, not data colors. In-circle labels flip to light ink and stay legible on every fill.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,75 +71,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes set throughout; all text readable in both themes
-          with no overflow
+        comment: All font sizes explicit, readable in both themes; caption at 13px
+          is the smallest element but still legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; generous spacing between circles
+        comment: No collisions between labels, circles, tiles, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (24 points) rendered with prominent, well-sized markers
-          (radius 16-65px)
+        comment: Circle sizes well adapted to the 24-region grid, clearly distinguishable
+          from smallest to largest
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three visually distinct tier colors, dark/light ink text provides
-          good contrast on fills
+        comment: Green/teal/blue tiers are CVD-distinguishable, not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, nothing cut off, canvas dimension gate passed
+        comment: Grid layout fills canvas well with balanced margins; reference tiles
+          add structure without clutter
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally hidden (appropriate for this layout); title format
-          compliant
+        comment: Axes intentionally hidden (appropriate for a cartogram); title/subtitle/caption
+          fully descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Tier colors correctly derived from imprint_seq, identical across
-          light/dark, correct theme backgrounds
+        comment: 'First tier = #009E73, remaining tiers interpolated from imprint_seq;
+          backgrounds theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured but reads as a standard default scatter/bubble layout,
-          not exceptional polish
+        comment: Reference-tile grid adds a more considered, less generic bubble-chart
+          look than attempt 1, but still short of publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hidden axes, subtle legend, generous whitespace — some refinement
-          beyond defaults
+        comment: Subtle 1.25px reference-tile strokes, hidden axes, generous whitespace,
+          restrained legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size variation creates a clear focal point (CA/TX dominate); story
-          is weakened by the missing distortion-vs-reality comparison
+        comment: Reference tile vs. circle-size comparison now visually communicates
+          the distortion magnitude at a glance, directly fixing the prior review's
+          core storytelling gap
     spec_compliance:
-      score: 11
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -145,52 +148,53 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct cartogram family (area ∝ value) but implements the non-contiguous
-          Dorling variant, not the contiguous cartogram the spec centers on
+        comment: Correct cartogram family (Dorling-style, area ∝ value), but the distorted
+          circles still don't share borders — not the contiguous cartogram variant
+          the spec centers on
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Missing contiguity between regions and missing reference-map/original-outline
-          inset, both explicitly required in the spec Notes
+        passed: true
+        comment: Reference-map/original-outline comparison requirement is now satisfied
+          via the contiguous reference-tile grid; literal contiguity of the distorted
+          shapes is still not achieved
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Position ≈ geography, size = population, color = GDP tier, all mapped
-          clearly
+        comment: Region/value/color all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly correct; legend labels match the tier definitions
+        comment: Title format matches convention exactly; legend labels match data
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Shows size and color variation well but misses the reference-comparison
-          aspect central to a cartogram
+        passed: true
+        comment: Area distortion, secondary color variable, labels, and now the reference-comparison
+          baseline are all covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral US population/GDP scenario
+        comment: Real, neutral US population/GDP-per-capita scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population and GDP-per-capita values and relative proportions are
-          factually plausible
+        comment: Population and GDP-per-capita values are factually plausible and
+          correctly ordered
     code_quality:
       score: 10
       max: 10
@@ -200,7 +204,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> helpers -> chart structure, no unnecessary classes
+        comment: Small top-level helper functions only, no classes; complexity is
+          proportional to the custom-overlay technique
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,22 +217,22 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the Highcharts global
+        comment: No imports beyond the Highcharts global and window tokens
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean helper functions (radiusFor, lerpHex, toPoint), no fake UI
+        comment: No fake UI/interactivity; well-reasoned inline comments on the reference-tile
+          rationale
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart("container", ...) call, animation disabled,
-          no explicit width/height
+        comment: Correct mount-node contract, animation disabled everywhere
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -235,22 +240,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter series with per-point marker.radius and dataLabels is the
-          correct high-level approach given the core bundle's module constraints
+        comment: Scatter + per-point marker.radius + dataLabels + renderer overlay
+          is the correct high-level pattern given the core bundle's missing colorAxis/bubble
+          module
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic technique that could be replicated in any charting library
-          with circle marks
-  verdict: REJECTED
+        comment: chart.renderer.g/.rect synced to axis.toPixels() on the render event
+          is a genuinely Highcharts-specific technique, though the overlay concept
+          itself is replicable in other SVG-based libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - patches
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
+  - minimal-chrome
   - custom-colormap
