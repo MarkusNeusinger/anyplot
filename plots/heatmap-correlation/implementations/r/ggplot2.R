@@ -19,6 +19,12 @@ MIDPOINT     <- PAGE_BG
 # Fill colors (imprint_div extremes) are theme-independent, so the label
 # color that reads on top of them must be fixed rather than theme-adaptive.
 TEXT_ON_FILL <- "#F0EFE8"
+# Hairline tile border: ink at 15% alpha (matches the style guide's rule-divider
+# token), so it stays visible even for near-zero cells whose fill equals PAGE_BG.
+HAIRLINE     <- if (THEME == "light") "#1A1A1726" else "#F0EFE826"
+# Diagonal (self-correlation = 1.00) carries no analytical information; give it
+# a fixed, desaturated fill so it recedes behind the informative off-diagonal cells.
+DIAG_FILL    <- "#5C5B54"
 
 # --- Data --------------------------------------------------------------
 # Feature correlations among car design/performance attributes (mtcars) -
@@ -36,13 +42,21 @@ df <- as.data.frame(cor_matrix) %>%
   mutate(row_var = factor(vars, levels = rev(vars))) %>%
   pivot_longer(cols = -row_var, names_to = "col_var", values_to = "correlation") %>%
   mutate(col_var = factor(col_var, levels = vars)) %>%
-  filter(!is.na(correlation))
+  filter(!is.na(correlation)) %>%
+  mutate(is_diag = as.character(row_var) == as.character(col_var))
 
 # --- Plot ----------------------------------------------------------------
 title_text <- "heatmap-correlation · r · ggplot2 · anyplot.ai"
 
-p <- ggplot(df, aes(x = col_var, y = row_var, fill = correlation)) +
-  geom_tile(color = PAGE_BG, linewidth = 3) +
+p <- ggplot(df, aes(x = col_var, y = row_var)) +
+  geom_tile(
+    data = filter(df, !is_diag), aes(fill = correlation),
+    color = HAIRLINE, linewidth = 0.6
+  ) +
+  geom_tile(
+    data = filter(df, is_diag), fill = DIAG_FILL,
+    color = HAIRLINE, linewidth = 0.6
+  ) +
   geom_text(
     aes(label = sprintf("%.2f", correlation), color = abs(correlation) > 0.55),
     size = 3.3, show.legend = FALSE
