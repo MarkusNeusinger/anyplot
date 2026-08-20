@@ -1,3 +1,7 @@
+// anyplot.ai
+// area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 80/100 | Created: 2026-08-20
 //# anyplot-orientation: landscape
 // anyplot.ai
 // area-mountain-panorama: Mountain Panorama Profile with Labeled Peaks
