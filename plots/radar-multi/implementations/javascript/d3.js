@@ -37,6 +37,12 @@ const radius = Math.min(width, height) / 2 - 180;
 const radiusScale = d3.scaleLinear().domain([0, maxValue]).range([0, radius]);
 const color = d3.scaleOrdinal().domain(series.map((s) => s.name)).range(t.palette);
 
+// Emphasize the highest-scoring series as a visual focal point among the
+// overlapping polygons, computed from the data rather than hardcoded.
+const topSeriesName = series.reduce((top, s) =>
+  d3.mean(s.values) > d3.mean(top.values) ? s : top
+).name;
+
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${cx},${cy})`);
@@ -52,18 +58,37 @@ gridGroup
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
+const axisAngle = (i) => i * angleSlice - Math.PI / 2;
+
+// Place gridline value labels in the gap between the last and first axis
+// spokes, well clear of any axis's data markers regardless of data values.
+const levelLabelAngle = axisAngle(0) - angleSlice / 2;
+const levelLabelCos = Math.cos(levelLabelAngle);
+const levelLabelSin = Math.sin(levelLabelAngle);
+
 gridGroup
   .selectAll(".level-label")
   .data(levels)
   .join("text")
   .attr("class", "level-label")
-  .attr("x", 4)
-  .attr("y", (d) => -radiusScale(d) - 4)
+  .attr("x", (d) => (radiusScale(d) + 6) * levelLabelCos)
+  .attr("y", (d) => (radiusScale(d) + 6) * levelLabelSin)
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "12px")
   .text((d) => d);
 
-const axisAngle = (i) => i * angleSlice - Math.PI / 2;
+g.append("text")
+  .attr("class", "level-caption")
+  .attr("x", (radius + 20) * levelLabelCos)
+  .attr("y", (radius + 20) * levelLabelSin)
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "11px")
+  .style("font-style", "italic")
+  .text("Score (0–100)");
 
 g.append("g")
   .selectAll("line")
@@ -112,9 +137,9 @@ seriesGroup
   .attr("class", "radar-area")
   .attr("d", (d) => radarLine(d.values))
   .attr("fill", (d) => color(d.name))
-  .attr("fill-opacity", 0.22)
+  .attr("fill-opacity", (d) => (d.name === topSeriesName ? 0.3 : 0.18))
   .attr("stroke", (d) => color(d.name))
-  .attr("stroke-width", 3)
+  .attr("stroke-width", (d) => (d.name === topSeriesName ? 4 : 2.5))
   .attr("stroke-linejoin", "round");
 
 seriesGroup
@@ -130,7 +155,7 @@ seriesGroup
       .join("circle")
       .attr("cx", (v, i) => radiusScale(v) * Math.cos(axisAngle(i)))
       .attr("cy", (v, i) => radiusScale(v) * Math.sin(axisAngle(i)))
-      .attr("r", 6)
+      .attr("r", d.name === topSeriesName ? 7 : 5.5)
       .attr("stroke", t.pageBg)
       .attr("stroke-width", 1.5);
   });
