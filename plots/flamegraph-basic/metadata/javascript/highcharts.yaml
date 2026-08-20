@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: flamegraph-basic
 created: '2026-08-20T19:34:33Z'
-updated: '2026-08-20T19:39:59Z'
+updated: '2026-08-20T19:53:23Z'
 generated_by: claude-sonnet
 workflow_run: 32407965736
 issue: 4665
@@ -12,140 +12,152 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegrap
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 78
 review:
   strengths:
-  - 'Creative flame-graph layout implemented as a stacked-bar hack in core Highcharts
-    (no native flamegraph module is loaded): the folded-stack samples are correctly
-    rebuilt into a call tree with own/total rollup, then flattened depth-first into
-    one series per frame with invisible spacer series keeping every deeper row aligned
-    under its parent.'
-  - Deterministic Imprint-anchored warm gradient (hash-interpolated between amber
-    -> ochre -> matte-red) gives each function a distinct but on-brand warm hue, correctly
-    applying the style guide's documented semantic-exception rule for domain-conventional
-    flame-graph coloring.
-  - 'Theme-adaptive chrome is fully correct: title, subtitle, axis labels, tick labels,
-    and tooltip all use ANYPLOT_TOKENS, chart background is transparent so the page
-    surface shows through, and both renders are readable with identical data colors
-    across themes.'
-  - Title format is exact (`flamegraph-basic · javascript · highcharts · anyplot.ai`),
-    canvas usage is efficient with no clipping, and adjacent siblings at the same
-    depth are tiled with minimal gaps (pointPadding 0.02, groupPadding 0) matching
-    the spec's 'directly adjacent' requirement.
-  - Function-name data labels are only shown once a frame exceeds ~2% of total width,
-    correctly implementing the spec's 'labels inside bars when wide enough' rule.
+  - 'Fixed the attempt-1 data-volume weakness: the folded-stack dataset now has 56
+    unique stack traces (up from 13) with call chains up to depth 6 and multiple sibling
+    branches (acceptConnections, routeRequest, backgroundJobs, logRequest), giving
+    the flame graph real breadth and depth to demonstrate.'
+  - Frame color now blends a log-scaled 'heat' signal (share of total samples) with
+    a name hash, so wide/hot frames pull toward matte-red while same-share siblings
+    stay visually distinct — a direct, well-executed response to the attempt-1 storytelling
+    feedback.
+  - 'Creative, correct flame-graph layout built from core Highcharts stacked bars
+    (no flamegraph module loaded): folded-stack samples are correctly rolled up into
+    own/total time, flattened depth-first, and padded with invisible spacer series
+    so every deeper row stays aligned under its parent.'
+  - Theme-adaptive chrome (background, title, subtitle, axis, tooltip) is fully correct
+    in both renders; data colors are pixel-identical between light and dark; exact
+    mandated title format; canvas is used efficiently with no edge clipping.
+  - In-bar labels are correctly suppressed for frames too narrow to hold text, matching
+    the spec's 'labels when the bar is wide enough' requirement.
   weaknesses:
-  - Dataset has only 13 unique stack-trace rows (13 entries in `samples`), well below
-    the spec's suggested 50-500 unique stack traces — the resulting flame graph is
-    shallow (max depth 4) and doesn't fully exercise wide branching or deep nesting.
-    Expand the `samples` array with more call paths and depth to better cover DQ-01
-    (Feature Coverage).
-  - Building the call tree from folded-stack input requires several nontrivial recursive
-    helper functions (`rollUp`, `padDown`, `walk`, plus `lerp`/`hash` for coloring),
-    which moves well past the 'Imports → Data → Plot → Save, no functions' KISS ideal.
-    This is largely inherent to reconstructing a hierarchy from folded-stack data
-    with no native flamegraph series available, but any simplification (e.g. precomputing
-    the frame list as static data instead of deriving it at runtime) would help CQ-01.
-  - Frame coloring is purely hash-based for visual differentiation and carries no
-    semantic meaning — it doesn't highlight the hottest path beyond what bar width
-    already communicates. Tying color intensity to per-frame sample share would add
-    a genuine second layer of data storytelling (DE-03).
-  - The value axis (sample-count / width encoding) has no visible title or unit —
-    the plot relies entirely on the subtitle text ('bar width is share of total samples')
-    to explain what width encodes. An explicit, even minimal, axis annotation would
-    remove ambiguity for a reader who skips the subtitle.
+  - 'Dark-on-dark data-label bug (VQ-01=0): in-bar dataLabels use a hardcoded style.color:
+    ''#1A1A17'' (fixed dark ink, not theme-adaptive) on the assumption the label always
+    sits fully inside the warm-colored bar fill. That assumption breaks whenever a
+    label is wider than its bar box: the overflow spills into the adjacent transparent
+    spacer/border area (borderColor: t.pageBg), which renders as the dark page background
+    (#1A1A17) in dark theme — making the overflowing character(s) invisible against
+    it. Confirmed in plot-dark.png at multiple frames: ''deserializeRow'' (depth 6)
+    loses its leading ''d'', ''computeDiscounts'' (depth 4) loses the mid-word ''u''
+    leaving a visible gap, ''markPhase'' (depth 3) loses its leading ''m'', and the
+    same pattern affects ''parseHeaders'', ''tlsHandshake'', ''verifyToken'', ''jsonEncode'',
+    and ''schemaCheck''. In plot-light.png the same overflow happens but stays legible
+    because the spacer/border color is light there, which is why this passed attempt-1
+    review undetected. Fix by either constraining/truncating labels to their box width
+    (e.g. Highcharts dataLabels ''crop''/''overflow'' tuning or a stricter width-fraction
+    gate before enabling a label), or making the label color theme-adaptive so it
+    stays legible even where it bleeds past the fill into the spacer/border.'
+  - The dataLabels.style.color code comment asserts the label 'sits on the warm data
+    fill (constant across themes), not on the page background' — that assumption is
+    what caused the bug above; the comment should be corrected once the underlying
+    overflow issue is fixed.
+  - 'CQ-01 (KISS) is still low: five recursive/helper functions (rollUp, padDown,
+    walk, lerp, hash) are needed to rebuild the call tree and layout — likely close
+    to unavoidable for a folded-stack flame graph with no native series type, but
+    still far from the flat KISS ideal.'
+  - The heat-based color blend is a nice touch but is highly correlated with bar width
+    (both derive from the same 'share of total samples' signal), so it mostly reinforces
+    rather than adds a genuinely new layer of insight beyond width alone.
+  - The value/width axis (sample count / % of total) remains hidden with no visible
+    axis title or tick values — the encoding is explained only via the subtitle text,
+    not directly on the chart.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "flamegraph-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top, subtitle in muted grey below it ("CPU profile of a request-handling call stack — bar width is share of total samples"). Vertical "Call stack depth" axis title along the left edge, with row category labels "Depth 0 · root" through "Depth 4" in dark grey. No visible value axis (intentionally hidden). All chrome text is clearly legible against the light surface.
-      Data: Five stacked rows of adjacent horizontal bars, widest at the bottom ("main", full width) narrowing upward through routeRequest/handleApi/queryDatabase/executeQuery. Colors are a warm amber-to-ochre-to-matte-red ramp per function (e.g. acceptConnections/garbageCollect in burnt orange, tlsHandshake/handleApi/routeRequest in deep red, authMiddleware/executeQuery/queryDatabase in ochre-yellow). Function names are rendered as centered dark labels inside bars wide enough to hold them; narrow slivers (e.g. a thin bar next to serializeResponse) correctly have no label. First-series-must-be-#009E73 does not apply here — this is the documented semantic-exception case for the conventional warm flame-graph palette.
-      Legibility verdict: PASS — all title, subtitle, axis, and in-bar text is clearly readable with no overlap or clipping.
+      Background: Warm off-white, consistent with #FAF8F1 — correct, not pure white.
+      Chrome: Bold dark title "flamegraph-basic · javascript · highcharts · anyplot.ai" and muted-grey subtitle explaining the width encoding are both clearly readable. The rotated "Call stack depth" axis title and "Depth 0 · root" through "Depth 6" row labels along the left edge are all legible in soft dark ink against the light background.
+      Data: Seven stacked rows of horizontal bars (root at the bottom widening upward from leaves) in a warm amber → ochre → matte-red ramp, matching the spec's convention. In-bar function-name labels are dark ink, mostly readable, though several labels overflow slightly past their bar box into the adjacent light-colored border/spacer gap — legible here only because that gap happens to be light-colored in this theme.
+      Legibility verdict: PASS (all text readable, though the overflow behavior described above is a latent issue that only becomes visible in dark mode).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title now in white/light ink, subtitle in light grey, "Call stack depth" axis title and depth category labels in light grey — all legible against the dark surface. No dark-on-dark failures observed.
-      Data: Identical warm amber/ochre/red palette and identical bar proportions to the light render — confirms data colors are constant across themes as required. In-bar labels remain fixed dark ink (#1A1A17) because they sit on the warm data fill (which doesn't change with theme), not on the page background — this reads correctly since the warm bar colors provide sufficient contrast for dark text in both renders.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; every label (title, subtitle, axis, in-bar) is clearly readable.
+      Background: Warm near-black, consistent with #1A1A17 — correct, not pure black.
+      Chrome: Title, subtitle, axis title, and depth-row labels correctly flip to light ink and remain fully legible — no dark-on-dark chrome failures.
+      Data: Bar colors and proportions are pixel-identical to the light render, confirming data colors don't shift with theme, as required.
+      Legibility verdict: FAIL — several in-bar data labels are partially invisible. The label color is a hardcoded, non-theme-adaptive dark ink (#1A1A17) intended to sit only on the warm bar fill, but multiple labels are wider than their bar box and overflow into the adjacent transparent spacer/border area, which renders as the dark page background in this theme. Where the dark-ink text overlaps that dark area it becomes invisible: "deserializeRow" loses its leading "d" (reads "leserializeRow"), "computeDiscounts" loses the mid-word "u" (visible gap), "markPhase" loses its leading "m" (reads "arkPhase"), and the same pattern recurs on "parseHeaders", "tlsHandshake", "verifyToken", "jsonEncode", and "schemaCheck". This is a textbook dark-on-dark theme-adaptation failure per the review checklist.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 0
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis title
-          16px, ticks 14px, data labels 13px); readable in both themes with no overflow;
-          in-bar label size is slightly conservative for the most prominent frames
+        passed: false
+        comment: 'Multiple in-bar labels (deserializeRow, computeDiscounts, markPhase,
+          parseHeaders, tlsHandshake, verifyToken, jsonEncode, schemaCheck) have characters
+          that are invisible in plot-dark.png because the hardcoded #1A1A17 label
+          color overlaps the dark page-background-colored spacer/border where the
+          label overflows its bar box.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or bar collisions in either render
+        comment: No text-on-text or text-on-data overlap observed in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars sized well for the frame count; sliver frames below ~2% width
-          correctly suppress their label instead of showing unreadable text
+        comment: Bars are well-sized and adjacent with minimal gaps as the spec requires;
+          sliver frames correctly suppress their label instead of rendering illegible
+          tiny text
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; width (not hue) carries the primary signal, and fixed
-          dark labels read cleanly against every warm fill in both themes
+        comment: Warm ramp has good internal contrast; not reliant on red-green as
+          sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas with balanced margins; nothing cut off
+        comment: Chart fills the canvas well with balanced margins, no clipping at
+          the canvas edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Call stack depth'' axis title present; the hidden value axis is
-          explained via the subtitle text instead of a formal axis title'
+        comment: Descriptive 'Call stack depth' axis title; width encoding explained
+          in subtitle
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Warm amber/ochre/matte-red ramp built only from Imprint anchors (documented
-          semantic-exception case), identical across themes; correct theme-adaptive
-          chrome and backgrounds
+        comment: 'Warm palette correctly anchored to Imprint tokens (amber, palette[3],
+          palette[4]) per the domain-convention semantic exception; backgrounds are
+          theme-correct #FAF8F1/#1A1A17 in both renders; data colors identical across
+          themes'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom hash-interpolated warm palette and a genuinely engineered
-          layout solution well above a configured default
+        comment: Custom hash-and-heat-interpolated warm gradient shows real design
+          intent, above a configured default, but the dark-mode label defect undercuts
+          the overall polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Y-axis and legend removed, transparent background, subtle inter-frame
-          borders; some refinement visible but not maximal polish
+        comment: Transparent background, subtle inter-frame borders, no legend clutter;
+          not maximal polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Bar-width hierarchy clearly surfaces the hot path (queryDatabase/executeQuery
-          dominate); color itself is hash-based and doesn't add a second layer of
-          emphasis
+        comment: Heat-based color blend reinforces the hot path, but it's derived
+          from the same 'share of total' signal as bar width, so it mostly restates
+          rather than adds a new layer of insight
     spec_compliance:
       score: 15
       max: 15
@@ -154,93 +166,79 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: 'Correct flame-graph layout: bottom-to-top layering, width-proportional
-          bars'
+        comment: Correct flame-graph layout via stacked bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Warm palette, minimal-gap adjacent siblings, alphabetical (non-temporal)
-          ordering, in-bar labels when wide enough all present
+        comment: Adjacent siblings, warm palette, conditional labels, bottom-to-top
+          layering all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Depth on the categorical axis, sample share on bar width, correctly
-          rolled up from folded-stack input
+        comment: Depth on x-axis, width proportional to samples, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exact; legend intentionally omitted (per-frame identity
-          is conveyed via in-bar labels, not a legend)
+        comment: Exact mandated title format; no legend needed for this single-encoding
+          chart
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Shows branching, depth, and own-vs-total time via spacer padding,
-          but only 13 unique stack traces vs. the spec's suggested 50-500
+        comment: 56 unique stack traces (up from 13 in attempt 1), depth up to 6,
+          multiple branches — fixes the attempt-1 weakness; sits near the low end
+          of the spec's 50-500 guidance
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral web-server request-handling profile
+        comment: Plausible, neutral request-handling CPU profile
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Sample counts and the database-query hot path are realistic for the
-          domain
+        comment: Sample proportions match realistic backend bottleneck patterns (DB
+          query/serialize/deserialize heavy)
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 1
         max: 3
-        passed: false
-        comment: Several recursive helper functions (rollUp, padDown, walk, lerp,
-          hash, warmColor) are needed to reconstruct the hierarchy — likely inherent
-          to the plot type given no native flamegraph series, but far from the flat
-          Imports->Data->Plot->Save ideal
+        comment: Five recursive/helper functions (rollUp, padDown, walk, lerp, hash)
+          needed to rebuild the tree and layout — likely near-unavoidable for this
+          plot type but far from flat KISS
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fully deterministic hard-coded data, no RNG
+        comment: Fully deterministic, hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Only the Highcharts global and ANYPLOT_TOKENS are used
+        comment: Only the Highcharts global and provided tokens are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake functionality; complexity is proportionate to the workaround
-          required
+        comment: The hardcoded, non-theme-adaptive dataLabel color plus an incorrect
+          rationalizing comment is exactly the code smell that produced the VQ-01
+          bug
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Correct mount-node contract, animation disabled, current Highcharts
-          API
+        comment: Correct mount-node contract, animation disabled, credits disabled
     library_mastery:
       score: 8
       max: 10
@@ -249,23 +247,21 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Idiomatic use of stacked bar/stacking/categories given the core-bundle
-          constraint (no treemap/sunburst/flamegraph modules loaded)
+        comment: Creative use of Highcharts stacking + Highcharts.color().rgba blending,
+          though it is a 'hack' around the missing native flamegraph series
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Per-point sparse-array stacking with spacer series to reproduce a
-          flamegraph layout is a Highcharts-specific technique, not trivially portable
+        comment: Sparse per-point stacking with spacer series and native color-blend
+          API usage is fairly distinctive to Highcharts
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - hover-tooltips
   patterns:
   - data-generation
-  - tree-construction
   dataprep: []
   styling:
   - custom-colormap

@@ -1,7 +1,7 @@
 // anyplot.ai
 // flamegraph-basic: Flame Graph for Performance Profiling
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-20
+// Quality: 78/100 | Created: 2026-08-20
 
 const t = window.ANYPLOT_TOKENS;
 
