@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: indicator-ichimoku
 created: '2026-08-20T21:33:40Z'
-updated: '2026-08-20T21:39:19Z'
+updated: '2026-08-20T21:48:01Z'
 generated_by: claude-sonnet
 workflow_run: 32419245137
 issue: 4669
@@ -12,60 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ichimoku/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - All five Ichimoku components (Tenkan-sen, Kijun-sen, Chikou Span, Senkou Span
-    A/B via the Kumo cloud) are correctly implemented, distinctly colored, and clearly
-    legended
-  - Correct forward-shift of Senkou spans (+26 periods) and backward-shift of Chikou
-    span (-26 periods) — matches the spec's shift requirements precisely
-  - Kumo cloud color flips at every A/B crossover (bullish green / bearish red), delivering
-    exactly the 'at-a-glance' trend signal the spec calls for
-  - 'Correct Imprint palette usage: candlesticks/Kumo use the finance semantic exception
-    (brand green #009E73 for bullish, matte red #AE3030 for bearish); indicator lines
-    use canonical palette order (lavender, blue, ochre)'
-  - Theme-correct backgrounds and chrome in both light and dark renders, no text overlap,
-    no edge clipping, descriptive axis labels with units
-  - Idiomatic use of MUI X's ChartContainer + useXScale/useYScale composition pattern
-    — the documented approach for chart types (candlesticks) outside the built-in
-    community surface
-  - Deterministic LCG-seeded data generation, no fetch/network calls, self-contained
-    output
+  - 'Excellent candlestick convention: hollow bullish / solid bearish bodies, a pattern
+    cue redundant with hue for CVD accessibility.'
+  - Kumo cloud is correctly segmented at every Span A/B crossover, with solid (bullish)
+    vs. dashed (bearish) borders and a theme-adaptive opacity bump so the bearish
+    fill reads as clearly on the dark page as the bullish fill.
+  - Senkou Span A/B are shifted exactly 26 periods forward and Chikou Span exactly
+    26 periods backward, matching the spec's definitions precisely.
+  - Clean 7-item legend covers every plotted element (both candle types, both indicator
+    lines, Chikou, both cloud states) without crowding.
+  - Faithful use of the documented ChartContainer + useXScale/useYScale composition
+    pattern for drawing candlesticks and cloud fills outside MUI X's native series
+    types.
   weaknesses:
-  - 'VQ-04: Bullish/bearish direction (candles AND Kumo cloud) is signaled solely
-    via red/green hue with no redundant shape or pattern encoding — a deuteranopia/protanopia
-    viewer loses the core ''at-a-glance'' trend signal the indicator exists to provide.
-    Consider a subtle stroke, texture, or luminance differentiation between the bullish/bearish
-    pairs.'
-  - 'VQ-03: With 130 trading periods packed into the mount width, candlestick bodies
-    render quite thin (~6-7 CSS px) — widen slightly (e.g. bandwidth * 0.7-0.75) for
-    stronger visibility, especially at mobile scaling.'
-  - 'Dark render: the ''Kumo (Bearish)'' red cloud fill (fillOpacity 0.22) reads much
-    more subtly against the near-black background than the bullish green does — the
-    two cloud states aren''t equally legible across themes. Consider a theme-adaptive
-    opacity bump or a stroke on the dark render.'
-  - 'DE-02: Axis lines are still drawn at close to MUI''s default weight/visibility
-    rather than fully minimized — could be lightened further or removed in favor of
-    the horizontal grid alone for a more refined look.'
-  - 'CQ-01: Uses custom React components (Candlesticks, KumoCloud) beyond a flat script
-    structure — reasonably justified since MUI X has no native candlestick and the
-    ChartContainer composition pattern requires this, but noting for the record.'
+  - Title renders at only ~40% of plot width (fontsize auto-shrunk by the length formula)
+    — readable and not a violation, but has room to sit closer to the 50-70% target
+    for stronger visual hierarchy.
+  - Tenkan-sen's lavender line falls below the style guide's own 3:1 WCAG contrast
+    note on the light background; a thin ink-color stroke (as already used for the
+    hollow candle bodies) would tighten the margin further.
+  - Dense unlabeled daily tick marks along the x-axis baseline add minor visual noise;
+    thinning to weekly minor ticks would clean up the axis.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "TechCo Daily Price · indicator-ichimoku · javascript · muix · anyplot.ai" centered at top, fully readable. "Trading Date" (x) and "Price (USD)" (y) axis titles in dark ink, clearly readable. Tick labels ($145-$162 on y, "Jan 2"-"May 24" on x) in a softer dark gray, all legible. Subtle horizontal grid lines, faint axis lines. Legend row at bottom with 7 labeled swatches (Bullish/Bearish Candle, Tenkan-sen, Kijun-sen, Chikou Span, Kumo Bullish/Bearish), all readable.
-      Data: Green (#009E73) and red (#AE3030) candlesticks for up/down days; lavender Tenkan-sen line; blue Kijun-sen line; dashed ochre Chikou Span line (visible for the first ~2/3 of the date range, as expected for a -26 period lag); Kumo cloud fills green when Senkou Span A is above B and red when B is above A, with the cloud correctly projected 26 periods into the future past the last candle.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "TechCo Daily Price · indicator-ichimoku · javascript · muix · anyplot.ai" is dark, bold, centered, fully visible with no clipping. Y-axis "Price (USD)" and x-axis "Trading Date" labels are dark and clearly legible. Tick labels ($145-$162, dated x-ticks every ~13 days) are readable dark-gray text. Legend row (7 items) at the bottom is fully readable dark-gray text on the cream background.
+      Data: Candlesticks alternate hollow-green (bullish, outline #009E73 with page-colored fill) and solid matte-red (bearish, #AE3030) bodies with thin high-low wicks. Tenkan-sen is a lavender line, Kijun-sen a blue line, Chikou Span a dashed ochre line trailing the price action. The Kumo cloud fills green where Span A > Span B and a dashed-bordered red/pink where Span B > Span A, correctly re-segmenting at each crossover, with the cloud projecting into blank future dates beyond the last candle.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light/white text, fully readable against the dark background. Axis titles and tick labels rendered in light gray tones, clearly legible — no dark-on-dark failures observed. Grid lines subtle but visible. Legend text light-colored and readable.
-      Data: Candle, Tenkan-sen, Kijun-sen, Chikou Span, and Kumo cloud colors are identical to the light render (data hues do not shift with theme) — confirmed. One softer note: the bearish (red) Kumo cloud segment is noticeably more subtle against the near-black page than the bullish (green) segment is, making the two cloud states slightly less symmetric in legibility on dark vs. light.
-      Legibility verdict: PASS — all text readable in the dark theme; data colors confirmed identical to light. Minor legibility asymmetry noted for the bearish Kumo fill (not a chrome/text failure).
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels all switch to light cream/gray text, clearly legible against the dark surface. No dark-on-dark text found anywhere (title, axes, ticks, legend all confirmed light-colored). Grid lines are faint and unobtrusive.
+      Data: All data colors (candle green/red, Tenkan lavender, Kijun blue, Chikou ochre dashes, cloud green/red fills) are pixel-identical to the light render — only the chrome flipped, as required. The bearish (red) cloud fill uses a visibly higher opacity than in the light render so it stays equally legible against the near-black page; zoomed inspection confirms it is a clean solid fill, not a rendering artifact.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -73,49 +58,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title, axis, tick, legend); readable
-          in both themes; minor headroom for polish, not flawless
+        comment: 'All text readable in both themes; title auto-shrunk via the length
+          formula. Minor: dense unlabeled daily tick marks add slight clutter at the
+          axis baseline.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or legend/data collisions in either render
+        comment: No collisions between text, indicator lines, candles, or legend.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Candles and lines visible but candlestick bodies are quite thin given
-          130 packed periods
+        comment: Line weights and candle widths well matched to 130-period density;
+          Chikou dash and cloud border dash both clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Bullish/bearish relies solely on red/green hue (candles + Kumo) with
-          no redundant shape/pattern cue for CVD viewers, though this is the spec-mandated
-          finance convention
+        comment: Hollow/solid candle convention and solid/dashed cloud borders give
+          CVD-safe redundant encoding beyond hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well, balanced margins, nothing cut off
+        comment: Canvas exactly 3200x1800; nothing clipped; balanced margins on all
+          sides.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Trading Date'' and ''Price (USD)'' — descriptive with units'
+        comment: Descriptive axis labels with units ('Price (USD)', 'Trading Date').
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for indicator lines, correct
-          finance semantic exception for candles/Kumo, theme-correct chrome and backgrounds
-          in both renders'
+        comment: 'Bullish series is #009E73; bearish uses the semantic red #AE3030
+          (finance up/down exception); backgrounds correct in both themes; data colors
+          identical across themes.'
     design_excellence:
       score: 14
       max: 20
@@ -125,23 +111,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom candlestick + Kumo cloud composition, thoughtful semantic
-          coloring, custom legend — clearly above defaults, short of full publication
-          polish
+        comment: Above-generic polish (hollow/solid candle convention, dark-mode cloud
+          opacity bump, crossover segmentation) but the overall composition still
+          reads as a fairly standard indicator-chart layout.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle horizontal grid, generous whitespace; axis lines not fully
-          minimized
+        comment: Faint spines (20% opacity), subtle horizontal-only grid, generous
+          margins; legend swatches use default MUI Box styling rather than fully bespoke
+          treatment.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Cloud color-coding creates clear visual hierarchy conveying trend
-          direction, no additional annotations
+        comment: Color + dash pattern gives an at-a-glance bullish/bearish cloud read
+          as the spec asks; no additional annotation calls out a specific crossover
+          moment.
     spec_compliance:
       score: 15
       max: 15
@@ -151,27 +139,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Ichimoku overlay on candlestick chart'
+        comment: Candlestick price chart with full Ichimoku overlay, as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All five Ichimoku components present and correctly shifted
+        comment: All 5 lines (Tenkan, Kijun, Senkou A/B, Chikou) plus the color-changing
+          Kumo cloud are present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, price on y, all data visible including future-shifted
-          spans
+        comment: X = trading date, Y = price; axes cover the full data range including
+          the forward cloud projection.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          all series
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match plotted elements exactly.
     data_quality:
       score: 15
       max: 15
@@ -181,57 +170,56 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bullish AND bearish candles, bullish AND bearish Kumo segments, full
-          lagging/leading span coverage
+        comment: All Ichimoku components computed and shown, including correctly shifted
+          forward/backward spans.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Generic 'TechCo' daily equity price — neutral and comprehensible
+        comment: Plausible, neutral fictional-ticker daily price data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range and daily volatility are realistic for a daily equity
-          chart
+        comment: Prices in the $145-$162 range are sensible for an equity.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Uses helper components (Candlesticks, KumoCloud) beyond a flat script
-          — justified by MUI X's composition requirement for candlesticks, but not
-          pure KISS
+        comment: Only the two helper components required by the documented candlestick/cloud
+          composition pattern; no gratuitous abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG PRNG with fixed seed
+        comment: Deterministic fixed-seed LCG PRNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity for the chart type
+        comment: Appropriate complexity for the requirement; no fake/simulated UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export component contract, skipAnimation set
+        comment: Default-exports the component, sizes to ANYPLOT_SIZE, sets skipAnimation;
+          harness handles saving.
     library_mastery:
       score: 9
       max: 10
@@ -241,17 +229,17 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Textbook use of ChartContainer + useXScale/useYScale hooks — the
-          documented MUI X pattern for chart types outside the built-in surface
+        comment: Follows the documented ChartContainer + useXScale/useYScale composition
+          pattern precisely for chart types outside the community series surface.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Candlestick + Kumo overlay via MUI X's scale hooks is a genuinely
-          library-specific technique, not a generic pattern portable unchanged to
-          other libraries
-  verdict: REJECTED
+        comment: Custom hook-driven candlestick and segmented-cloud rendering is a
+          genuinely advanced composition; docked slightly since no built-in MUI X
+          series/marker feature is showcased alongside it.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -265,4 +253,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
