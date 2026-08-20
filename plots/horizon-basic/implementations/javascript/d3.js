@@ -52,8 +52,12 @@ const x = d3.scaleTime().domain(d3.extent(dates)).range([0, iw]);
 // magnitude -> pixel distance folded across `bands` lanes of height laneHeight
 const yBand = d3.scaleLinear().domain([0, maxAbs]).range([0, bands * laneHeight]);
 
-const positiveColor = t.palette[0]; // "#009E73" brand green — warm anomaly
-const negativeColor = t.palette[4]; // "#AE3030" matte red — cold anomaly
+// Temperature anomaly is signed/diverging continuous data, so it must use the
+// Imprint diverging colormap (t.div = [red, theme-adaptive midpoint, blue]),
+// not the categorical palette — and red maps to warm (positive), blue to cold
+// (negative), matching the standard NOAA/IPCC temperature-anomaly convention.
+const positiveColor = t.div[0]; // "#AE3030" matte red — warm anomaly
+const negativeColor = t.div[2]; // "#4467A3" blue — cold anomaly
 
 const root = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
@@ -156,9 +160,10 @@ legend.append("text")
 
 // --- Title ---------------------------------------------------------------------
 // Title fontsize scales linearly off the 67-char mandated-title baseline
-// (default 22px @ 67 chars) so the descriptive prefix never overflows.
+// (default 26px @ 67 chars) so the descriptive prefix never overflows while
+// still filling a healthy share of the plot width.
 const titleText = "Regional Temperature Anomalies · horizon-basic · javascript · d3 · anyplot.ai";
-const titleFontSize = Math.round(22 * Math.min(1, 67 / titleText.length));
+const titleFontSize = Math.round(26 * Math.min(1, 67 / titleText.length));
 svg.append("text")
   .attr("x", margin.left).attr("y", 44)
   .attr("fill", t.ink).style("font-size", `${titleFontSize}px`).style("font-weight", "600")
