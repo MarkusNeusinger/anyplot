@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-tornado-sensitivity
 created: '2026-08-20T17:25:23Z'
-updated: '2026-08-20T17:31:00Z'
+updated: '2026-08-20T17:44:27Z'
 generated_by: claude-sonnet
 workflow_run: 32396870631
 issue: 4566
@@ -12,78 +12,78 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-torna
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-tornado-sensitivity/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
+  - 'The mobile-legibility weakness from attempt 1 is fully resolved: the value axis
+    now uses explicitly-computed round tick positions ($1M increments, e.g. $8M, $9M,
+    $10M...) instead of Highcharts'' auto interval, verified clean and uncrowded at
+    the 400px mobile thumbnail in both themes'
+  - 'Explicit data-storytelling emphasis added since attempt 1: a dynamic subtitle
+    names the leading driver of NPV uncertainty with its impact range, and the top-ranked
+    bar (Electricity Price) gets a bold ink-colored border plus bold data-label weight,
+    giving the viewer an immediate, unmistakable focal point'
   - 'Correct, idiomatic tornado-chart construction: two stacked bar series with delta-from-base
-    values, matching Highcharts'' own canonical tornado pattern'
-  - Bars correctly sorted descending by impact range (|high - low|), producing the
-    classic widest-at-top / narrowest-at-bottom tornado silhouette
-  - Base-case vertical reference line rendered via plotLines with an inline label,
-    exactly matching the spec's 'draw a vertical reference line at the base case value'
-    requirement
+    values, sorted descending by |high - low| to produce the classic widest-at-top
+    / narrowest-at-bottom silhouette'
+  - Base-case vertical reference line rendered via plotLines with an inline '$12.4M'
+    label, exactly matching the spec's reference-line requirement
   - Dual-color encoding (green = high-input scenario, purple = low-input scenario)
-    is applied consistently even for parameters with an inverse relationship (Discount
-    Rate), which is realistic sensitivity-analysis behavior rather than a bug
-  - Data labels show the resulting absolute output value ($ millions) at each bar
-    segment, satisfying the optional 'display resulting output values' feature
+    is applied consistently even for the one parameter with an inverted relationship
+    (Discount Rate), which is realistic sensitivity-analysis behavior rather than
+    a bug
   - Realistic, neutral, well-scaled example data (solar-farm NPV sensitivity across
     8 financial/engineering assumptions) with factually correct direction of effect
     (higher discount rate lowers NPV)
-  - Clean, deterministic, KISS-structured code with no imports beyond the provided
-    tokens and no fake interactivity
   - First categorical series is the mandated Imprint brand green (#009E73), second
     series correctly takes palette position 2 (#C475FD); theme chrome (title/axis/tick/legend
     colors, transparent background) is correctly threaded through both light and dark
-    renders
+    renders with identical data colors
+  - Clean, deterministic, KISS-structured code with no imports beyond the provided
+    tokens and no fake interactivity
   weaknesses:
-  - Value-axis (yAxis) tick labels use Highcharts' auto interval on the delta-from-base
-    data, producing ~16 non-round labels ($8.4M, $8.9M, $9.4M, ...) instead of clean
-    $1M-spaced values; at the ~400px mobile thumbnail width these labels visibly crowd
-    and overlap, hurting mobile legibility. Set an explicit yAxis.tickInterval (e.g.
-    1.0 in the underlying delta space, or a rounder value derived from the data range)
-    so the rendered labels land on whole-dollar increments and there are fewer of
-    them.
-  - 'Design polish is solid but not exceptional: the visual hierarchy relies entirely
-    on the tornado sort order with no additional emphasis (e.g. highlighting the top
-    1-2 highest-impact parameters, or a subtitle calling out the key insight) to actively
-    guide the reader to the takeaway.'
-  - 'Library Mastery is generic: stacking, plotLines, and dataLabels formatters are
-    common patterns available in most charting libraries; consider a Highcharts-distinctive
-    touch (e.g. connector/column range styling, custom point-level colorByPoint override
-    for the inverse-relationship rows, or a more tailored tooltip) to differentiate
-    the implementation.'
+  - 'Library Mastery remains fairly generic: stacking, plotLines, tickPositions, and
+    dataLabels/tooltip formatters are common patterns available in most charting libraries;
+    no Highcharts-distinctive feature (e.g. a custom point-level marker, connector
+    styling, or a series-level renderer hook) differentiates this implementation from
+    what another library could produce with minor syntax changes.'
+  - 'Axis chrome could be pushed slightly further toward full refinement: the category
+    (y) axis line and ticks remain a solid inkSoft stroke rather than being removed
+    or lightened further, and the value-axis grid, while subtle, is still present
+    on every $1M step rather than reduced to only major/labeled positions.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bar-tornado-sensitivity · javascript · highcharts · anyplot.ai" is bold dark text, clearly visible. Y-axis category labels (parameter names: Electricity Price, Discount Rate, Capital Cost, O&M Cost, Panel Degradation Rate, Debt Interest Rate, Construction Delay, Tax Credit Rate) are dark and legible. X-axis title "Project NPV ($ millions)" and its ~16 tick labels ($8.4M...$16.xM) are dark-gray and readable at full resolution. Legend below the chart ("High input scenario" green swatch, "Low input scenario" purple swatch) is legible. A black vertical reference line at the base case with the label "Base case: $12.4M" sits just above the top bar.
-      Data: Bars are horizontal, sorted with the widest (Electricity Price, range 6.8) at the top and the narrowest (Tax Credit Rate, range 0.9) at the bottom, creating the tornado silhouette. First series ("High input scenario") renders in brand green #009E73, second series ("Low input scenario") in lavender #C475FD (Imprint palette position 2). For most rows green sits on the right (higher value) and purple on the left (lower value), except Discount Rate where the relationship inverts (green/high-input scenario produces the lower NPV) — this is a realistic sensitivity-analysis behavior, not a rendering bug. White-on-color data labels inside each bar segment show the resulting NPV (e.g. "$8.9M", "$15.7M").
-      Legibility verdict: PASS — all text is readable against the light background at full resolution. Minor concern: the dense, non-round x-axis tick labels visibly crowd when the image is scaled down to ~400px mobile width (verified against plot-light_400.png), which is a mobile-legibility weakness (see review_weaknesses.json), not a light-vs-dark failure.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-tornado-sensitivity · javascript · highcharts · anyplot.ai" is bold dark text, clearly visible. Subtitle "Electricity Price is the leading driver of NPV uncertainty (range: $6.8M)" is dark-gray and legible, directly calling out the chart's key insight. Y-axis category labels (Electricity Price, Discount Rate, Capital Cost, O&M Cost, Panel Degradation Rate, Debt Interest Rate, Construction Delay, Tax Credit Rate) are dark and legible. X-axis title "Project NPV ($ millions)" and its now-round tick labels ($8M, $9M, $10M ... $16M) are dark-gray and readable — this replaces attempt 1's ~16 non-round auto-interval ticks with clean $1M-spaced values, confirmed uncrowded at the 400px mobile thumbnail. Legend below the chart ("High input scenario" green swatch, "Low input scenario" purple swatch) is legible. A black vertical reference line at the base case with the label "Base case: $12.4M" sits just above the top bar, with no overlap against the subtitle or the bar itself.
+      Data: Bars are horizontal, sorted with the widest (Electricity Price, range 6.8) at the top and the narrowest (Tax Credit Rate, range 0.9) at the bottom, forming the tornado silhouette. First series ("High input scenario") renders in brand green #009E73, second series ("Low input scenario") in lavender #C475FD (Imprint palette position 2). The top bar (Electricity Price) has a bold dark outline and bold-weight data labels, visually distinguishing it as the leading driver — a new emphasis technique versus attempt 1. For most rows green sits on the right (higher value) and purple on the left, except Discount Rate where the relationship inverts (green/high-input scenario yields the lower NPV), which is realistic sensitivity-analysis behavior, not a bug. Dark data labels inside each bar segment show the resulting NPV (e.g. "$8.9M", "$15.7M").
+      Legibility verdict: PASS — all text, including the now-round axis ticks, is readable against the light background at both full resolution and the 400px mobile thumbnail.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text are all rendered in light off-white/gray tones, clearly visible against the dark surface. No dark-on-dark elements found. The base-case reference line is white with a light-gray label, clearly visible.
-      Data: Data colors are identical to the light render — brand green #009E73 for "High input scenario" and lavender #C475FD for "Low input scenario" — confirming the Imprint palette data colors do not shift between themes. Only chrome (background, text, gridlines, reference line color) adapts to the dark theme.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark or light-on-light failures observed. Same mobile tick-crowding caveat as the light render applies equally here (chrome-only issue, unrelated to theme).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text are all rendered in light off-white/gray tones, clearly visible against the dark surface. No dark-on-dark elements found. The base-case reference line is white with a light-gray label, clearly visible and non-overlapping.
+      Data: Data colors are identical to the light render — brand green #009E73 for "High input scenario" and lavender #C475FD for "Low input scenario" — confirming the Imprint palette data colors do not shift between themes; only chrome (background, text, gridlines, reference line, bar-outline color) adapts to the dark theme. The top bar's emphasis outline renders as a light/white stroke on dark, still clearly distinguishing Electricity Price as the leading driver. Data labels (white/light text) remain legible against both the green and purple bar fills.
+      Legibility verdict: PASS — all text is readable against the dark background at both full resolution and the 400px mobile thumbnail; no dark-on-dark or light-on-light failures observed, and the round tick labels show no crowding.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable at full resolution in
-          both themes, but the value axis's ~16 non-round auto-interval tick labels
-          visibly crowd/overlap when scaled to ~400px mobile width.
+        comment: 'Attempt-1 weakness fixed: value axis now uses explicit round tickPositions
+          ($1M increments) instead of ~16 non-round auto-interval labels; confirmed
+          clean and uncrowded at the 400px mobile thumbnail in both themes. All font
+          sizes explicitly set.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements at full resolution.
+        comment: No overlapping text or data elements; the base-case label sits cleanly
+          between the subtitle and the top bar.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -97,7 +97,7 @@ review:
         max: 2
         passed: true
         comment: Green/purple pairing is CVD-safe per the Imprint palette; no red-green-only
-          signal.
+          signal; text-on-fill contrast holds in both themes.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -118,34 +118,37 @@ review:
         max: 2
         passed: true
         comment: 'First series is brand green #009E73, second series is Imprint position
-          2 (#C475FD); backgrounds and chrome are theme-correct in both renders.'
+          2 (#C475FD); backgrounds and chrome are theme-correct and identical data
+          colors across both renders.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful touches (reference line, formatted currency labels) above
-          a bare default, but the mandated Imprint palette and standard stacked-bar
-          approach leave limited room for distinctive aesthetic choices.
+        passed: true
+        comment: 'Strong design above defaults: reference line, currency-formatted
+          labels, dynamic insight subtitle, and a bold emphasis outline on the top
+          bar. Not full publication-ready since the palette is the mandated Imprint
+          set rather than a bespoke scheme.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Minimal grid and spines are good, but the non-round, densely-spaced
-          value-axis ticks undercut the otherwise polished look.
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The descending-width sort inherently creates a clear visual hierarchy
-          (most-impactful parameter at top), though no additional emphasis or callout
-          highlights the single biggest driver.
+        comment: Round, evenly-spaced ticks and minimal chrome fix attempt 1's clutter;
+          category-axis line/ticks remain a visible inkSoft stroke rather than fully
+          removed, so just short of perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'New in this attempt: a dynamic subtitle names the leading driver
+          and its impact range, and the top bar gets a bold outline plus bold labels
+          — the viewer sees the takeaway almost immediately.'
     spec_compliance:
       score: 15
       max: 15
@@ -239,7 +242,7 @@ review:
         comment: Uses Highcharts.chart('container', ...) with animation disabled per
           the mount-node contract; current API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -248,22 +251,23 @@ review:
         max: 5
         passed: true
         comment: 'Matches Highcharts'' own canonical stacked-bar tornado-chart pattern
-          (bar type + stacking: normal + delta-from-base series).'
+          (bar type + stacking: normal + delta-from-base series + plotLines).'
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Stacking, plotLines, and dataLabels formatters are generic patterns
-          available in most charting libraries; no Highcharts-unique feature is leveraged.
-  verdict: REJECTED
+        comment: Custom tooltip formatter and per-point border emphasis are nice touches
+          added in this attempt but remain generic capabilities available in most
+          charting libraries; no feature unique to Highcharts is leveraged.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
+  - edge-highlighting
