@@ -1,13 +1,10 @@
 // anyplot.ai
 // heatmap-loss-triangle: Actuarial Loss Development Triangle
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-20
-//# anyplot-orientation: square
-// anyplot.ai
-// heatmap-loss-triangle: Actuarial Loss Development Triangle
 // Library: Highcharts 12.6.0 | Node 22
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-08-20
+// Quality: 89/100 | Created: 2026-08-20
+
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -166,6 +163,7 @@ Highcharts.chart("container", {
     gridLineWidth: 0,
     lineWidth: 0,
     tickLength: 0,
+    title: { text: "Development Period", style: { color: t.inkSoft, fontSize: "16px" } },
     labels: {
       style: { color: t.inkSoft, fontSize: "12px" },
       formatter: function () {
@@ -187,7 +185,7 @@ Highcharts.chart("container", {
     gridLineWidth: 0,
     lineWidth: 0,
     tickLength: 0,
-    title: { text: null },
+    title: { text: "Accident Year", style: { color: t.inkSoft, fontSize: "16px" } },
     labels: {
       style: { color: t.inkSoft, fontSize: "14px" },
       formatter: function () {
@@ -216,9 +214,9 @@ Highcharts.chart("container", {
       dataLabels: {
         enabled: true,
         formatter: function () {
-          return "$" + this.point.amount.toLocaleString("en-US");
+          return "$" + (this.point.amount / 1e6).toFixed(2) + "M";
         },
-        style: { fontSize: "10px", fontWeight: "500", textOutline: "none" },
+        style: { fontSize: "11px", fontWeight: "600", textOutline: "none" },
       },
       animation: false,
       states: { hover: { enabled: false } },
