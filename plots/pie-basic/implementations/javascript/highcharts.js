@@ -1,7 +1,7 @@
 // anyplot.ai
 // pie-basic: Basic Pie Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-20
+// Quality: 95/100 | Created: 2026-08-20
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
