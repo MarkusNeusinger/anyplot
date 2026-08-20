@@ -1,0 +1,272 @@
+library: makie
+language: julia
+specification_id: horizon-basic
+created: '2026-08-20T05:41:56Z'
+updated: '2026-08-20T05:58:10Z'
+generated_by: claude-sonnet
+workflow_run: 32335921361
+issue: 1877
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/horizon-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Repair fully resolved all three attempt-1 weaknesses: an explicit legend (Above
+    baseline / Below baseline), the band-scale magnitude stated in the subtitle ("folded
+    into 3 bands of ≈4.88pp each"), and an explicit anomaly callout footnote for db-primary'
+  - 'Genuine data storytelling: bold y-axis label plus footnote jointly anchor the
+    chart''s story on db-primary''s peak deviation (14.65pp above baseline at 12.7h)
+    — the viewer has an immediate focal point'
+  - Idiomatic Makie GridLayout small-multiples (fig[row, 1] per server) with band!-based
+    horizon folding and hideydecorations!/hidexdecorations! to keep a single shared
+    x-axis on the bottom row only
+  - band_height is computed once globally across all ten servers (not per-series),
+    so band magnitude is directly comparable server-to-server — the correct way to
+    interpret a horizon chart
+  - 'Correct Imprint semantic-exception palette (brand green #009E73 = above baseline,
+    matte red #AE3030 = below baseline), fully theme-correct chrome in both renders,
+    canvas lands exactly on 3200×1800'
+  - 'Clean, reproducible, KISS code: Random.seed!(42), only used imports, no fake
+    interactivity'
+  weaknesses:
+  - 'Layout is right-heavy: measured pixel bounding box shows the row content (labels
+    + bands) spans only x=681–2080 of the 3200px canvas width (~65%), leaving ~30-35%
+    of the canvas on the right essentially empty apart from the legend — whitespace
+    is concentrated on one side rather than balanced. Widen the Axis/band columns
+    (e.g. via colsize!) or resize the Figure so the plot fills more of the canvas
+    width.'
+  - Positive/negative deviation is still distinguished by hue alone (green vs red)
+    since both polarities fold onto the same baseline rectangle — a residual CVD risk
+    even with the new legend, since the legend clarifies the global meaning but doesn't
+    help per-pixel disambiguation. A subtle secondary cue (thin edge stroke, or slightly
+    different band texture) would help if another repair round happens.
+  - With 10 stacked rows at style-guide font sizes, row labels will be quite small
+    once the PNG is scaled to ~400px mobile width — an inherent tension for dense
+    horizon charts, acceptable here but worth monitoring.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 exactly as required (not pure white).
+      Chrome: bold dark title "horizon-basic · julia · makie · anyplot.ai" top-left, lighter gray subtitle below it stating the folding technique and per-band magnitude ("CPU load deviation from 24h baseline, folded into 3 bands of ≈4.88pp each per server — darker fill marks larger deviation"). A 2-entry legend ("Above baseline" green swatch, "Below baseline" red swatch) sits top-right. Ten left-aligned server-name row labels (api-gateway ... load-balancer, db-primary in bold as the highlighted anomaly) with a single shared "Time (hours)" x-axis (ticks 0/3/6/.../24) on the bottom row only. A footnote below the chart calls out db-primary's largest deviation. All chrome text is dark ink on the cream background.
+      Data: pale-to-saturated green bands for above-baseline deviation (brightest = #009E73) and pale-to-saturated matte-red bands for below-baseline deviation (brightest = #AE3030), 3 alpha-graduated bands per polarity per row, mirrored around a thin zero baseline.
+      Legibility verdict: PASS — all title/subtitle/labels/ticks/legend/footnote text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 exactly as required (not pure black).
+      Chrome: identical layout to the light render — title, subtitle, legend, row labels, x-axis, and footnote all present in the same positions, now rendered in light ink (title/labels light off-white, subtitle/ticks/footnote in the lighter secondary gray token). No dark-on-dark failures observed anywhere; every text element is clearly legible against the near-black surface.
+      Data: band colors are confirmed pixel-identical to the light render — the same green/red hues and alpha progression per band; only the background and text tokens flipped, as required.
+      Legibility verdict: PASS — full legibility confirmed in both themes, data colors identical across themes.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title 22, subtitle/labels 13, xlabel
+          14, xticklabel 12, legend 12); well-proportioned, readable in both themes
+          at full resolution. Minor concern: 10 stacked rows will be quite small when
+          scaled to ~400px mobile width.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3 alpha-graduated bands per polarity are clearly visible and appropriately
+          scaled to the 145-point series density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Above/below baseline is distinguished by hue alone (green vs red)
+          since both polarities fold onto the same baseline rectangle — a residual
+          CVD risk despite the new legend
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: 'Measured: row content spans only ~65% of canvas width (x=681-2080
+          of 3200px); ~30-35% of the canvas on the right is empty apart from the legend
+          — unbalanced whitespace concentrated on one side'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Time (hours)" has units; server-name row labels are self-descriptive
+          categorical identifiers'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint positions 1 (#009E73) and 5 (#AE3030) used correctly as the
+          positive/negative semantic exception; backgrounds and chrome are theme-correct
+          in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom compact GridLayout, alpha-graduated fold palette, deliberate
+          typographic hierarchy (title/subtitle/footnote) — clearly above a configured
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/grid removed, generous vertical whitespace, but horizontal
+          margins are unbalanced (see VQ-05)
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Bold peak-series row label plus explicit footnote ("db-primary shows
+          the largest deviation... 14.65pp above baseline at 12.7h") give the chart
+          a clear, immediate focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct horizon chart: folded bands with mirrored positive/negative
+          coloring'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 3 bands, mirrored pos/neg color, alpha increasing with magnitude,
+          meaningful zero baseline, globally consistent band scale across series
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=time (hours), y=folded deviation magnitude via color; all 10 series
+          and 145 points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend labels ("Above
+          baseline"/"Below baseline") match the data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Wide variety across servers: sustained above-baseline (web-frontend,
+          db-primary), sustained below (search-index), mixed/alternating (api-gateway,
+          cache-redis)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Server CPU-load-deviation dashboard scenario — realistic, neutral,
+          technology domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Deviations up to ~14.65pp from baseline are plausible for CPU load
+          percentage points
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → data → plot → save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a 10-series horizon chart, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic GridLayout small-multiples (fig[row, 1]), hideydecorations!/hidexdecorations!
+          for shared axis
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: band! folding combined with Makie's grid-layout figure composition
+          to build the horizon-chart technique — distinctive to Makie's layout grammar
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - custom-legend
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - minimal-chrome
