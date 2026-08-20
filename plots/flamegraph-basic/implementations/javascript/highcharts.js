@@ -164,11 +164,10 @@ const series = frames.map((frame) => {
     borderColor: t.pageBg,
     enableMouseTracking: frame.real,
     showInLegend: false,
-    // Fixed dark ink, not theme-adaptive: the label sits on the warm data
-    // fill (constant across themes), not on the page background. Highcharts
-    // hides an inside column/bar label it can't fit in the box by default —
-    // exactly the "only when wide enough" behavior the spec asks for, so no
-    // manual width estimate is needed beyond skipping obviously-tiny slivers.
+    // Fixed dark ink, not theme-adaptive: the label is only ever shown once
+    // the post-render fit check below (chart.events.render) confirms it sits
+    // fully inside the warm data fill, which is constant across themes — it
+    // never sits on the theme-flipped page background/spacer border.
     dataLabels: {
       enabled: frame.real && widthFraction > 0.02,
       inside: true,
@@ -180,9 +179,37 @@ const series = frames.map((frame) => {
   };
 });
 
+// Highcharts doesn't hide inside bar/column labels that are wider than their
+// own point box — it just lets them overflow into whatever sits next door
+// (here, the transparent spacer/border, which renders as the theme's page
+// background). A width-fraction heuristic can't predict that reliably because
+// label pixel width depends on the actual rendered glyphs. Instead, measure
+// each label against its bar's real rendered box after every render and hide
+// any label that doesn't fit — the only way to guarantee it never bleeds past
+// the warm fill it depends on for contrast.
+// `type: "bar"` charts render inverted: each point's SVG rect keeps its
+// pre-rotation local coordinates, so `getBBox().width` is the constant row
+// thickness and the bar's actual on-screen length is `getBBox().height`.
+const FIT_PADDING = 12;
+function hideOverflowingLabels() {
+  for (const s of this.series) {
+    for (const point of s.points) {
+      if (!point.dataLabel || !point.graphic) continue;
+      const fits = point.dataLabel.getBBox().width + FIT_PADDING <= point.graphic.getBBox().height;
+      point.dataLabel.attr({ visibility: fits ? "inherit" : "hidden" });
+    }
+  }
+}
+
 // --- Chart -------------------------------------------------------------
 Highcharts.chart("container", {
-  chart: { type: "bar", backgroundColor: "transparent", animation: false, style: { fontFamily: "inherit" } },
+  chart: {
+    type: "bar",
+    backgroundColor: "transparent",
+    animation: false,
+    style: { fontFamily: "inherit" },
+    events: { render: hideOverflowingLabels },
+  },
   credits: { enabled: false },
   title: {
     text: "flamegraph-basic · javascript · highcharts · anyplot.ai",
