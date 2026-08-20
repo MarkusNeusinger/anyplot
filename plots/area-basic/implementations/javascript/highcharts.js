@@ -27,6 +27,30 @@ for (let step = 0; step < 48; step += 1) {
   cpuUtilization.push([timestamp, Math.round(percent * 10) / 10]);
 }
 
+// Call out the daily peak with a highlighted marker + data label.
+let peakIndex = 0;
+for (let i = 1; i < cpuUtilization.length; i += 1) {
+  if (cpuUtilization[i][1] > cpuUtilization[peakIndex][1]) peakIndex = i;
+}
+const [peakX, peakY] = cpuUtilization[peakIndex];
+cpuUtilization[peakIndex] = {
+  x: peakX,
+  y: peakY,
+  marker: {
+    enabled: true,
+    radius: 6,
+    fillColor: t.palette[0],
+    lineColor: t.pageBg,
+    lineWidth: 2,
+  },
+  dataLabels: {
+    enabled: true,
+    format: "Peak {y}%",
+    y: -16,
+    style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+  },
+};
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -73,6 +97,20 @@ Highcharts.chart("container", {
       text: "CPU Utilization (%)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
+    plotBands: [
+      {
+        from: 70,
+        to: 100,
+        color: Highcharts.color(t.amber).setOpacity(0.12).get("rgba"),
+        label: {
+          text: "Elevated load",
+          align: "right",
+          x: -8,
+          y: 14,
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   legend: { enabled: false },
   plotOptions: {
