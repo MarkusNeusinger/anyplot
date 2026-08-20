@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: area-basic
+created: '2026-08-20T16:37:35Z'
+updated: '2026-08-20T16:49:59Z'
+generated_by: claude-sonnet
+workflow_run: 32392661710
+issue: 711
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - The peak call-out (highlighted marker + "Peak 79%" dataLabel) and the amber "Elevated
+    load" plotBand above 70% together create a clear, immediate focal point — the
+    exact fix requested after attempt 1, and it lands well without adding chartjunk.
+  - 'Correct Imprint palette usage — #009E73 brand green identical across both themes
+    — with theme-adaptive chrome fully threaded through title, subtitle, axis labels,
+    gridlines, and the new plotBand label; no dark-on-dark or light-on-light failures
+    in either render.'
+  - Clean, idiomatic Highcharts area chart with a proper gradient fill (Highcharts.color().setOpacity()
+    from 45% to 2%), giving strong visual weight to the "volume" emphasis the spec
+    calls for.
+  - Deterministic seeded LCG produces a realistic, plausible daily CPU-utilization
+    curve (low overnight, single afternoon peak, natural noise) — a neutral, comprehensible
+    scenario.
+  - Explicit font sizing throughout with balanced X/Y axis label and tick sizing,
+    no overlap or clipping in either render; single-series legend correctly omitted
+    per style guide.
+  weaknesses:
+  - Design Excellence is stronger than attempt 1 but still short of full publication-ready
+    polish — the plotBand and peak label are the main custom touches beyond the gradient
+    fill; axis spines/baseline are still fully present rather than minimized.
+  - Library Mastery is solid but not maximal — plotBands with a label plus a per-point
+    marker/dataLabel override are good idiomatic Highcharts constructs, but the implementation
+    doesn't reach for a feature that's uniquely Highcharts (e.g. a second series,
+    plotLines with dashStyle, or zone-based coloring).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "area-basic · javascript · highcharts · anyplot.ai" in bold dark ink; subtitle "Web server CPU utilization, 24-hour sample" in soft gray beneath. X-axis "Time of Day (UTC)" with HH:MM tick labels every 4 hours; Y-axis "CPU Utilization (%)" with 0-100% ticks and subtle horizontal gridlines. All chrome text is dark and clearly readable against the light background.
+      Data: Single green (#009E73) line with a vertical gradient area fill (opaque near the line, fading to near-transparent at the baseline) traces a daily CPU-utilization curve — low (~20%) overnight, ramping through the morning, peaking at 79% near 14:00 (highlighted with a filled dot and a "Peak 79%" dataLabel), then declining into the evening. An amber-tinted plotBand spans 70-100% labeled "Elevated load" in the upper right, giving the chart a clear semantic threshold. No legend (correctly omitted for a single series).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle and axis labels, now rendered in light ink / soft-gray tones — no dark-on-dark text anywhere, including the "Elevated load" plotBand label and the "Peak 79%" dataLabel (rendered in white/light ink).
+      Data: The green line, gradient fill, peak marker, and plotBand position are identical to the light render — only the chrome (background, text, grid, plotBand tint) flipped for the theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis titles
+          16px, tick labels 14px), well-proportioned, readable in both themes, no
+          overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render, including
+          the new peak label and plotBand label.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line + gradient fill clearly visible; the new highlighted peak marker
+          resolves the prior sparse-series marker concern.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe; single-hue series with no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the canvas well with balanced margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (CPU Utilization (%), Time of Day (UTC)).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across light/dark; backgrounds and
+          chrome theme-correct in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gradient fill, semantic threshold band, and peak call-out show clear
+          design intent; strong but not fully publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only gridlines, generous whitespace, gradient fill
+          — good refinement, spines/baseline still present.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak marker + dataLabel and the 'Elevated load' threshold band give
+          the chart a clear, immediate focal point and insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart with filled region below the line.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent gradient fill, gridlines, clear axis labels with
+          units all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time of day, Y = CPU utilization, axes show all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly omitted for single
+          series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows rise, single afternoon peak, and decline for a basic single-series
+          area chart; no secondary variation to showcase further.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Web server CPU utilization is a real, neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 3-97% range with a plausible mid-afternoon workload peak is realistic.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Straightforward imports/data/chart flow; includes a small lcg() helper
+          for seeded randomness, explicitly recommended by the library prompt since
+          the browser has no seedable RNG.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic LCG(42) and fixed timestamps.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals or dead code.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness-owned output contract respected; animation disabled on chart
+          and series.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'High-level Highcharts API: plotOptions.area, plotBands, per-point
+          marker/dataLabels override, Highcharts.color() gradient builder.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotBands with a label plus a per-point marker/dataLabel override
+          are fairly distinctive Highcharts constructs, addressing the prior review's
+          generic-usage feedback.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - gradient-fill
+  - alpha-blending
