@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' radar-multi: Multi-Series Radar Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 83/100 | Created: 2026-08-17
+#' Quality: 91/100 | Updated: 2026-08-20
 
 library(ggplot2)
 library(ragg)
@@ -29,10 +29,13 @@ IMPRINT_PALETTE <- c(
 # coord_polar() munges straight polygon edges into arcs when interpolating
 # between vertices; is_linear = TRUE keeps the radar spokes and value rings
 # as straight-edged polygons, matching the spec's "closed polygon" per axis.
-coord_radar <- function(start = 0, direction = 1) {
+# clip = "off" lets the manually-placed category labels below sit outside
+# the r=100 ring without being clipped by the panel boundary.
+coord_radar <- function(start = 0, direction = 1, clip = "off") {
   ggproto("CoordRadar", CoordPolar,
     theta = "x", r = "y", start = start, direction = sign(direction),
-    is_linear = function(coord) TRUE
+    is_linear = function(coord) TRUE,
+    clip = clip
   )
 }
 
@@ -49,20 +52,45 @@ radar_df <- tibble::tibble(
   )
 )
 
-# Faint alternating ring bands (drawn back-to-front: wide band first, then a
+# Alternating ring bands (drawn back-to-front: wide band first, then a
 # narrower band painted in the page color to punch out the "gap") give the
-# grid a touch of depth beyond the mandated gridlines alone.
+# grid a touch of depth beyond the mandated gridlines alone. Strengthened
+# from alpha=0.09 (still barely perceptible) to 0.16 for a visible band.
 ring_hi <- data.frame(attribute = factor(attributes, levels = attributes), score = 80)
 ring_lo <- data.frame(attribute = factor(attributes, levels = attributes), score = 60)
 
+# Category labels are drawn manually (rather than via the default polar
+# axis.text.x, which ggplot2 always renders exactly at the panel's outer
+# boundary) at score = 116 — clear of the r=100 gridline. The default
+# axis.text.x placement previously made the boundary ring/spoke lines cut
+# straight through 3 of the 6 labels ("Camera", "Value", "Durability").
+label_df <- data.frame(attribute = factor(attributes, levels = attributes), score = 116)
+
+# Each phone's single strongest attribute, ringed with an open halo below,
+# reinforces the caption's "each phone leads on a different axis" claim
+# directly in the encoding — not just as caption text.
+leader_idx <- tapply(seq_len(nrow(radar_df)), radar_df$phone, function(idx) idx[which.max(radar_df$score[idx])])
+leader_df <- radar_df[unlist(leader_idx), ]
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(radar_df, aes(x = attribute, y = score, group = phone, color = phone, fill = phone)) +
-  geom_polygon(data = ring_hi, aes(x = attribute, y = score), inherit.aes = FALSE, fill = INK, alpha = 0.05) +
+  geom_polygon(data = ring_hi, aes(x = attribute, y = score), inherit.aes = FALSE, fill = INK, alpha = 0.16) +
   geom_polygon(data = ring_lo, aes(x = attribute, y = score), inherit.aes = FALSE, fill = PAGE_BG) +
   geom_polygon(alpha = 0.25, linewidth = 1.0) +
-  geom_point(size = 3.2) +
+  geom_point(size = 3.8) +
+  geom_point(
+    data = leader_df, aes(x = attribute, y = score, color = phone),
+    inherit.aes = FALSE, shape = 1, size = 7.5, stroke = 1.6, show.legend = FALSE
+  ) +
+  geom_text(
+    data = label_df, aes(x = attribute, y = score, label = attribute),
+    inherit.aes = FALSE, color = INK, size = 10 / .pt
+  ) +
   coord_radar(start = -pi / 2) +
-  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.18))) +
+  # limits stay open-ended (NA) so the panel's true range grows to fit the
+  # score = 116 label layer above; breaks stop at 100 so no extra gridline
+  # is drawn out there — only the mandated 20/40/60/80/100 rings render.
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.06))) +
   scale_color_manual(values = IMPRINT_PALETTE) +
   scale_fill_manual(values = IMPRINT_PALETTE) +
   labs(
@@ -79,7 +107,10 @@ p <- ggplot(radar_df, aes(x = attribute, y = score, group = phone, color = phone
     axis.ticks         = element_blank(),
     panel.grid.major   = element_line(color = INK, linewidth = 0.3),
     panel.grid.minor   = element_blank(),
-    axis.text.x        = element_text(color = INK, size = 10),
+    # category labels are drawn via geom_text (label_df) instead, so the
+    # built-in polar axis text — always pinned to the panel's outer edge — is
+    # suppressed here to avoid a second, overlapping set of labels.
+    axis.text.x        = element_blank(),
     axis.text.y        = element_text(color = INK_SOFT, size = 8),
     axis.title.y       = element_text(color = INK_SOFT, size = 7, hjust = 0.85, margin = margin(r = 4)),
     plot.title         = element_text(color = INK, size = 12, face = "bold", hjust = 0.5),

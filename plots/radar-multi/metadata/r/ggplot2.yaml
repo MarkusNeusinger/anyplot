@@ -2,9 +2,9 @@ library: ggplot2
 language: r
 specification_id: radar-multi
 created: '2026-08-17T16:56:54Z'
-updated: '2026-08-17T17:15:11Z'
+updated: '2026-08-20T07:25:02Z'
 generated_by: claude-sonnet
-workflow_run: 32047475179
+workflow_run: 32342206048
 issue: 2026
 language_version: 4.4.1
 library_version: 3.5.1
@@ -12,145 +12,122 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-mul
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-multi/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - Unused imports from attempt 1 (library(dplyr), library(tidyr), library(scales))
-    are gone — every remaining import is used.
-  - Y-axis now carries a descriptive 'Score (0-100)' label with units, fixing the
-    previous VQ-06 gap.
-  - New caption ('Each phone leads on a different axis — no single winner across all
-    six attributes') states the comparative insight directly, giving the chart a clear
-    storytelling takeaway.
-  - Marker size increased from 2.5 to 3.2, more prominent for the sparse 18-point
-    dataset.
-  - 'Perfect Imprint palette compliance: first series is #009E73, positions 2-3 follow
-    canonical order (#C475FD, #4467A3), and chrome (background, text, grid, legend
-    box) is correctly theme-adaptive in both renders.'
-  - Custom coord_radar() ggproto extension (is_linear=TRUE) correctly keeps polygon
-    edges straight instead of letting coord_polar() arc-interpolate them — a distinctive,
-    idiomatic ggplot2-specific technique for radar charts.
-  - Realistic, neutral phone-comparison dataset with genuine trade-offs across series
-    (each phone leads on a different axis), avoiding flat/uniform data.
-  - Title and legend format exactly match the spec requirement; all required spec
-    features (filled polygons with alpha, distinct colors, legend, regular gridlines,
-    closed polygons, fill+outline) are present.
+  - Custom coord_radar() ggproto extension keeps spokes and value rings as true straight-edged
+    polygons instead of coord_polar's default arc interpolation, matching the spec's
+    closed-polygon requirement
+  - Manually placed category labels (score=116, outside the r=100 ring) avoid the
+    built-in polar axis text clipping through 3 of 6 labels that the prior attempt
+    suffered from
+  - Leader-attribute halo markers (open circles on each phone's single strongest axis)
+    turn the caption's claim ('each phone leads on a different axis') into a visible
+    encoding, not just caption text
+  - 'Imprint palette applied in correct canonical order across both themes (#009E73
+    Aurora X12, #C475FD Nimbus S8, #4467A3 Ridgeline Pro), identical data hues in
+    light and dark renders'
+  - Alternating ring-band shading (drawn with INK/PAGE_BG punch-out) adds subtle depth
+    beyond the mandated gridlines without competing with the data polygons
+  - Data genuinely differentiates all three series — each phone has a distinct strongest/weakest
+    axis, giving real feature coverage rather than near-identical shapes
   weaknesses:
-  - 'The outer grid ring (and, for ''Durability'', the axis spoke line) visually crosses
-    directly through 3 of the 6 axis category labels — ''Camera'', ''Value'', and
-    ''Durability'' — in both light and dark renders, producing a strikethrough look
-    where the line cuts across the letters. Text stays legible but the collision looks
-    unfinished. Fix: give axis.text.x more clearance from the panel (e.g. axis.text.x
-    = element_text(margin = margin(t = 10, b = 10))) or increase the y-axis expansion
-    (currently expansion(mult = c(0, 0.18))) so category labels sit clear of the outermost
-    gridline in both directions.'
-  - The alternating ring-band effect (ring_hi at alpha=0.05, ring_lo painted in the
-    page color) is barely perceptible at normal viewing size — either strengthen it
-    slightly so it reads as an intentional design touch, or drop it since it isn't
-    currently adding visible depth.
-  - No differential visual weight among the three phone polygons — all three carry
-    identical alpha/linewidth, so beyond the caption text the viewer must still compare
-    all three series from scratch rather than being visually guided to the comparison.
-  - Marker size (3.2) is still on the conservative side for only 18 total data points
-    — a further bump would add more visual pop, especially at thumbnail/mobile scale.
+  - Legend keeps a full box frame (legend.background border in INK_SOFT) — the style
+    guide's decoration checklist recommends removing legend box frames by default;
+    a borderless legend with just generous spacing would read cleaner
+  - Markers (geom_point size=3.8) are visible but not maximally prominent for such
+    sparse data (18 points total across 3 series) — could size up slightly (~4.5-5)
+    per the sparse-data sizing heuristic
+  - coord_radar() is a necessary ggproto extension for ggplot2 (no native geom_radar
+    exists), but it does add a function definition beyond the plain Imports->Data->Plot->Save
+    KISS shape
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold title "radar-multi · r · ggplot2 · anyplot.ai" is dark, centered, fully visible at the top. Six category axis labels (Camera, Performance, Display, Value, Durability, Battery Life) are dark and legible around the polar grid, but the outermost grid ring visibly crosses through the middle of "Camera" and "Value", and the axis spoke line cuts diagonally through "Durability" — a strikethrough effect that survives at full resolution (text remains readable, but the collision is a real visual defect). Radial value ticks (0/20/40/60/80/100) plus a new "Score (0-100)" axis title sit on the left, legible without colliding with the "Battery Life" label. Legend sits centered below the plot in a bordered box with square color-and-dot swatches for "Aurora X12", "Nimbus S8", "Ridgeline Pro" — all readable. A caption below the legend states the comparative insight ("Each phone leads on a different axis — no single winner across all six attributes").
-      Data: Three translucent (alpha ~0.25) filled polygons with matching outline and point markers (size increased to 3.2) — green (#009E73, Aurora X12), lavender (#C475FD, Nimbus S8), blue (#4467A3, Ridgeline Pro). Each phone clearly leads on a different axis (Ridgeline Pro on Camera/Display, Nimbus S8 on Battery Life/Value, Aurora X12 on Performance), consistent with the spec's comparative-analysis intent. A very faint alternating ring band between the 60 and 80 gridlines is present but barely perceptible.
-      Legibility verdict: PASS overall — all text is readable against the light background, no dark-on-light or light-on-light failures, but the grid-ring/label collision on 3 of 6 category labels is a notable cosmetic flaw (see weaknesses).
+      Chrome: Bold dark title "radar-multi · r · ggplot2 · anyplot.ai" centered at top; six category labels (Camera, Performance, Display, Value, Durability, Battery Life) in dark ink placed cleanly outside the r=100 ring with no boundary-line clipping; radial "Score (0-100)" axis with 0/20/40/60/80/100 tick labels in soft grey along the top spoke; bottom legend box (Aurora X12 / Nimbus S8 / Ridgeline Pro) with colored square swatches; italic-style grey caption below the legend. All chrome elements are clearly readable against the light background.
+      Data: Three overlapping filled polygons at alpha ~0.25 with solid outlines — brand green (Aurora X12, #009E73), lavender (Nimbus S8, #C475FD), blue (Ridgeline Pro, #4467A3) — first series is the mandated brand green. Each series also carries one open-circle "leader" halo on its strongest attribute. Subtle alternating ring-band shading sits between the 60 and 80 gridlines for depth.
+      Legibility verdict: PASS — no light-on-light text, no overlap between labels/ticks/legend and the data polygons.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis category labels, and radial tick numbers/axis title all render in light/off-white tones and remain fully legible against the dark background — no dark-on-dark failures observed. The same grid-ring/spoke-line collision through "Camera", "Value", and "Durability" is present and equally visible here. Legend box background flips to the elevated dark surface with light text, fully readable, and the caption is legible in muted light text.
-      Data: Data colors are pixel-identical to the light render — green (#009E73), lavender (#C475FD), blue (#4467A3) — confirming only chrome (not data) flips between themes.
-      Legibility verdict: PASS overall — all text is clearly readable against the dark background; no dark-on-dark or light-on-dark issues found, aside from the same grid/label collision noted in the light render.
+      Chrome: Same title, category labels, tick labels, legend, and caption all flipped to light/off-white and soft-grey tones; legend box border and background flip to the dark elevated surface. All chrome text is clearly legible against the dark background — no dark-on-dark failures observed (title, category labels, and tick numbers are all light-colored and stand out).
+      Data: Identical hues to the light render — brand green, lavender, blue — confirming only chrome (not data colors) changed between themes. Leader halos and ring-band shading are also present and visible in dark mode.
+      Legibility verdict: PASS — all text elements are light-on-dark and fully readable; data colors match the light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes, but the
-          grid-ring/label collision on 3 axes (see VQ-02) makes the result feel less
-          than perfectly proportioned
+        comment: All font sizes explicitly set via theme(); readable in both themes
+          and well-proportioned; title fits without clipping
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: The outer grid ring crosses through 'Camera' and 'Value' labels,
-          and the axis spoke line cuts through 'Durability', in both light and dark
-          renders — text stays legible but the collision is a clear, reproducible
-          overlap
+        passed: true
+        comment: No overlap between category labels, tick labels, legend, and data
+          polygons
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker size increased to 3.2 for the sparse 18-point dataset, more
-          visible than attempt 1 but still on the conservative side
+        comment: Markers (size=3.8) visible and appropriate for sparse data, but could
+          be slightly more prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue combination is CVD-safe, no red-green sole signal,
-          adequate contrast with alpha 0.25 fills
+        comment: Good hue separation, alpha blending handles overlap, not red-green
+          reliant
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Polar plot fills a large majority of the square canvas with balanced
-          margins and legend close to the plot; the axis-label/grid-ring collision
-          indicates panel margin allocated for labels is slightly insufficient
+        comment: Radar chart well-centered, balanced margins, legend near plot, good
+          canvas utilization for the square format
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Category labels are descriptive and the radial axis now carries a
-          'Score (0-100)' title with units, fixing the attempt-1 gap
+        comment: Score (0-100) axis label with explicit range; category labels descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, positions 2-3 follow canonical Imprint
-          order, backgrounds and chrome are theme-correct in both renders'
+        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3), identical across
+          themes, theme-correct backgrounds and chrome in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Bold title, refined legend swatch alpha, and alternating ring bands
-          lift it slightly above a bare default, but the unresolved label/grid-ring
-          collision undercuts the polish claim
+        comment: 'Strong design: custom coord_radar, ring-band depth, leader-halo
+          highlights, manual label placement — clearly above library defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines/ticks removed and legend styled with themed border, but the
-          visible grid-ring/label collision on 3 axes is the opposite of 'every detail
-          polished'
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: New caption explicitly states the comparative insight ('no single
-          winner'), giving the viewer a clear takeaway even though the three series
-          still carry equal visual weight
+        comment: Grid subtle, panel border/spines removed, generous whitespace; legend
+          still keeps a box frame the style guide recommends removing by default
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        comment: Caption states the insight directly and the leader-halo markers encode
+          it visually — viewer immediately sees which phone leads where
     spec_compliance:
       score: 15
       max: 15
@@ -159,116 +136,103 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
         comment: Correct multi-series radar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Filled polygons with alpha, distinct colors, legend, regular gridlines,
-          clear axis labels, closed polygons, fill+outline all present
+        comment: Filled polygons with alpha, distinct colors, legend, 20/40/60/80/100
+          gridlines, outer-edge axis labels, closed polygons, fill+outline all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Categories on angular axis, 0-100 scores on radial axis, all data
-          visible
+        comment: All 6 attributes mapped correctly per series, axes show full data
+          range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title matches required format exactly; legend labels match the phone
-          series
+        comment: Title format exact match; legend labels match phone names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: Each phone leads on different axes, showing real comparative trade-offs,
-          though value ranges cluster in a moderate 45-95 band
+        comment: Each phone has a distinct strongest/weakest axis, no near-identical
+          shapes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, plausible consumer-tech product comparison
+        comment: Neutral, plausible consumer-tech comparison with fictional brand
+          names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Values and relative proportions are all plausible for phone attribute
-          scoring
+        comment: Values plausible on the 0-100 scale, no factual violations
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Linear imports -> theme tokens -> data -> plot -> save; the coord_radar()
-          ggproto extension is a necessary, well-commented exception since ggplot2
-          has no native radar coord
+        comment: Imports->Data->Plot->Save, plus one necessary coord_radar ggproto
+          extension (unavoidable for ggplot2 radar charts)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: set.seed(42) present; data is fully deterministic regardless
+        comment: set.seed(42), deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: Unused library(dplyr)/library(tidyr)/library(scales) removed — every
-          remaining import is used
+        comment: Only ggplot2 and ragg imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Clean, no over-engineering, no fake functionality
+        comment: Appropriate complexity for a radar chart in ggplot2, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
         comment: Saves plot-{theme}.png via ragg::agg_png, current API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        passed: true
-        comment: 'Idiomatic ggplot2 layered grammar: geom_polygon + geom_point + scale_manual
-          + theme composition'
+        comment: 'Expert use of ggplot2 grammar: layered geoms, ggproto coordinate
+          extension, scale/theme composition'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Custom CoordRadar ggproto subclass overriding is_linear is a genuinely
-          ggplot2-specific technique not easily replicated in another library's API
+        comment: Custom CoordPolar extension for straight-edged radar polygons is
+          a distinctive ggplot2-specific technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
   - layer-composition
-  patterns: []
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - minimal-chrome
+  - publication-ready
+  - grid-styling
