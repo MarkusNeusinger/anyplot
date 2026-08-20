@@ -74,6 +74,22 @@ const kijun = closes.map((_, i) => rollingMidpoint(KIJUN_PERIOD, i));
 const senkouB = closes.map((_, i) => rollingMidpoint(SENKOU_B_PERIOD, i));
 const senkouA = closes.map((_, i) => (tenkan[i] != null && kijun[i] != null ? (tenkan[i] + kijun[i]) / 2 : null));
 
+// Most recent Tenkan/Kijun crossover — the classic Ichimoku entry/exit
+// signal — gives the chart a specific focal callout beyond the cloud's
+// general bullish/bearish tint.
+function findLastCrossover() {
+  let result = null;
+  for (let i = TENKAN_PERIOD; i < N - 1; i++) {
+    if (tenkan[i] == null || kijun[i] == null || tenkan[i + 1] == null || kijun[i + 1] == null) continue;
+    const d0 = tenkan[i] - kijun[i];
+    const d1 = tenkan[i + 1] - kijun[i + 1];
+    if (d0 === 0) continue;
+    if ((d0 < 0 && d1 >= 0) || (d0 > 0 && d1 <= 0)) result = { i: i + 1, bullish: d1 >= 0 };
+  }
+  return result;
+}
+const LAST_CROSS = findLastCrossover();
+
 // Chronological x-index: candles sit at i + CLOUD_SHIFT so the chikou span
 // (i - CLOUD_SHIFT) and the leading spans (i + 2*CLOUD_SHIFT) never go
 // negative on the axis, while the spacing between them still reflects the
@@ -193,6 +209,33 @@ function drawAll() {
         .add()
     );
   }
+
+  // Callout: dot + leader line + label on the most recent Tenkan/Kijun cross.
+  if (LAST_CROSS) {
+    const cx = xAxis.toPixels(candleX(LAST_CROSS.i), false);
+    const cy = yAxis.toPixels(kijun[LAST_CROSS.i], false);
+    const dotColor = LAST_CROSS.bullish ? CANDLE_UP : CANDLE_DOWN;
+    const label = LAST_CROSS.bullish ? 'Bullish cross' : 'Bearish cross';
+    const minLabelY = chart.plotTop + 16;
+    const labelY = Math.max(cy - 46, minLabelY);
+    drawn.push(r.path(['M', cx, cy - 6, 'L', cx, labelY + 14]).attr({ stroke: dotColor, 'stroke-width': 1.2, zIndex: 6 }).add());
+    drawn.push(
+      r.circle(cx, cy, 5).attr({ fill: dotColor, stroke: t.elevatedBg, 'stroke-width': 1.5, zIndex: 7 }).add()
+    );
+    const text = r
+      .text(label, cx, labelY)
+      .attr({ align: 'center', zIndex: 9 })
+      .css({ color: t.ink, fontSize: '12px', fontWeight: '600' })
+      .add();
+    const bbox = text.getBBox();
+    drawn.push(
+      r
+        .rect(bbox.x - 6, bbox.y - 4, bbox.width + 12, bbox.height + 6, 4)
+        .attr({ fill: t.elevatedBg, stroke: dotColor, 'stroke-width': 1, zIndex: 8 })
+        .add()
+    );
+    drawn.push(text);
+  }
 }
 
 // --- Chart -------------------------------------------------------------------
@@ -245,6 +288,24 @@ Highcharts.chart('container', {
     series: { animation: false, marker: { enabled: false } },
   },
   series: [
+    {
+      type: 'line',
+      name: 'Up Candle',
+      data: [],
+      color: CANDLE_UP,
+      lineWidth: 6,
+      showInLegend: true,
+      enableMouseTracking: false,
+    },
+    {
+      type: 'line',
+      name: 'Down Candle',
+      data: [],
+      color: CANDLE_DOWN,
+      lineWidth: 6,
+      showInLegend: true,
+      enableMouseTracking: false,
+    },
     {
       type: 'line',
       name: 'Tenkan-sen',
