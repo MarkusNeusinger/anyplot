@@ -8,6 +8,7 @@ import { LinePlot } from "@mui/x-charts/LineChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -169,7 +170,6 @@ export default function Chart() {
           min: yDomainMin,
           max: yDomainMax,
           label: "Absorbance",
-          tickFontSize: 32,
           tickLabelStyle: { fontSize: 14 },
           labelStyle: { fontSize: 16 },
         },
@@ -183,7 +183,14 @@ export default function Chart() {
       <ChartsXAxis />
       <ChartsYAxis />
       <ScatterPlot />
-      <text x={width / 2} y={40} textAnchor="middle" fontSize={22} fontWeight={600} fill={t.ink}>
+      <ChartsLegend
+        direction="row"
+        position={{ horizontal: "right", vertical: "top" }}
+        itemMarkWidth={14}
+        itemMarkHeight={14}
+        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+      />
+      <text x={width / 2} y={44} textAnchor="middle" fontSize={30} fontWeight={600} fill={t.ink}>
         {title}
       </text>
       <text x={140} y={78} fontSize={15} fill={t.inkSoft}>
