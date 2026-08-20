@@ -1,8 +1,7 @@
 // anyplot.ai
 // phase-diagram-pt: Thermodynamic Phase Diagram (Pressure-Temperature)
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-08-20
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-08-20
 
 const t = window.ANYPLOT_TOKENS;
 
