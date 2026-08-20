@@ -1,14 +1,7 @@
 // anyplot.ai
 // feynman-basic: Feynman Diagram for Particle Interactions
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-20
-//
-// MUI X community has no Feynman-diagram primitive, so the diagram is drawn
-// with the supported escape hatch: a <ChartContainer> establishes a linear
-// coordinate space, and every line/vertex/label is an SVG overlay positioned
-// through the chart's own useXScale/useYScale hooks. Everything is community
-// @mui/x-charts — no Pro, no second charting library.
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-08-20
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
