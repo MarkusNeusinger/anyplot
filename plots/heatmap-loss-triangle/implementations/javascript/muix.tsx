@@ -278,7 +278,11 @@ function LegendSwatches() {
 // --- Chart (default-exported component — the harness mounts it) ----------------------
 const TITLE = "heatmap-loss-triangle · javascript · muix · anyplot.ai";
 const MARGIN = { top: 190, right: 300, bottom: 200, left: 150 };
-const LEGEND_CAPTION_X = SIZE.width - 26;
+// The ContinuousColorLegend (translated -28px, ~40px wide) hugs the canvas's
+// right edge, so its column spans roughly [SIZE.width - 132, SIZE.width - 28].
+// Anchor the caption well clear of both that column and the drawing area
+// (which ends at SIZE.width - MARGIN.right) instead of crowding the bar.
+const LEGEND_CAPTION_X = SIZE.width - MARGIN.right / 2;
 const LEGEND_CAPTION_Y = SIZE.height / 2;
 
 export default function Chart() {
