@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-correlation
 created: '2026-08-20T09:35:35Z'
-updated: '2026-08-20T09:39:10Z'
+updated: '2026-08-20T09:48:43Z'
 generated_by: claude-sonnet
 workflow_run: 32353849174
 issue: 1948
@@ -12,45 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-correlation/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
+  - Diagonal self-correlation cells are now muted (opacity 0.4) and unlabeled, sharpening
+    visual hierarchy toward the meaningful off-diagonal correlations exactly as the
+    prior review requested
+  - Grid margins were tightened (right margin 190→ 60) and the visualMap colorbar
+    repositioned/enlarged (itemHeight 480→ 650) into the blank upper-right triangle
+    the mask leaves behind, meaningfully improving canvas utilization
+  - Label-contrast helper code was flattened from five small functions to two, closer
+    to a KISS imports→data→plot structure while still preserving the genuinely useful
+    WCAG-contrast-based per-cell text coloring
   - Per-cell text color is computed dynamically via a WCAG contrast check against
     the interpolated imprint_div fill, so every correlation value stays legible across
-    the whole diverging range instead of relying on one fixed ink color
+    the whole diverging range
   - Upper-triangle masking removes the redundant mirrored half of the matrix as the
-    spec notes suggest, keeping attention on the unique information
-  - Colorbar is fixed to [-1, 1] with clear end labels and uses the theme-adaptive
-    imprint_div midpoint correctly
-  - Title fontsize scales with title length via the linear formula, avoiding overflow
-    for the mandated title string
-  - Realistic, neutral wellness-metrics dataset (sleep, resting HR, VO2 max, etc.)
-    with a good mix of correlation strengths and signs
+    spec suggests, and the fixed [-1, 1] colorbar with theme-adaptive midpoint is
+    correctly implemented
+  - Realistic, neutral wellness-metrics dataset (sleep, resting HR, VO2 max, body
+    fat, stress, hydration) with a good, physiologically sensible mix of correlation
+    strengths and signs
   weaknesses:
-  - Masking the upper triangle leaves a large blank quadrant in the top-right of the
-    square canvas; tightening the grid margins or repositioning chrome so the matrix
-    fills more of the frame would improve canvas utilization
-  - KISS structure is diluted by five helper functions (hexToRgb, lerpRgb, relLuminance,
-    contrast, labelColorFor) for the label-contrast calculation; justified for accessibility
-    but a departure from the flat imports->data->plot pattern
-  - Diagonal self-correlation cells (1.00) are rendered identically to real correlations,
-    missing a chance to mute them and strengthen visual hierarchy toward the meaningful
-    off-diagonal values
+  - Even after tightening margins, the masked upper-triangle wedge still leaves a
+    sizeable blank area beyond the colorbar strip in the top-right of the square canvas
+    — could shrink further or grow cell size to use that space
+  - 'Library Mastery is only generic-to-moderate: the continuous visualMap piecewise
+    coloring is standard ECharts heatmap usage rather than a feature unique to the
+    library'
+  - Diagonal muting helps focus but the plot still doesn't call out or emphasize the
+    single strongest correlation (VO2 Max vs Resting HR, -0.71) — a subtle highlight
+    (border, bolder text) would push data storytelling further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "heatmap-correlation · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Y-axis variable names (Sleep Hours, Resting HR, Daily Steps, VO2 Max, Body Fat %, Stress Score, Hydration) in soft dark gray, fully legible. X-axis labels are the same variable names rotated ~40°, also legible with no overlap. Colorbar on the right labeled "1.0" / "-1.0" in soft dark gray.
-      Data: Lower-triangle matrix of cells shaded via a red-white-blue diverging scale (imprint_div): diagonal cells (1.00) are solid blue, strong negative correlations (e.g. -0.71) are deep red, weak correlations near white/pale. Each cell is annotated with its correlation value to 2 decimals; text color flips between near-black and near-white per cell so it always contrasts against that cell's fill.
-      Legibility verdict: PASS — all title, axis, tick, and cell-label text is clearly readable against the light background; no light-on-light instances found.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "heatmap-correlation · javascript · echarts · anyplot.ai" centered at top in dark ink at explicit fontsize, clearly readable. Y-axis variable names (Sleep Hours, Resting HR, Daily Steps, VO2 Max, Body Fat %, Stress Score, Hydration) render in soft dark gray, fully legible with no overlap. X-axis labels are the same variable names rotated ~40°, legible with no collisions. Colorbar sits inside the masked upper-right wedge, labeled "1.0" / "-1.0" in soft dark gray.
+      Data: Lower-triangle matrix shaded via the red-white-blue imprint_div diverging scale. Diagonal (self-correlation, 1.00) cells are now visibly muted/faded (opacity 0.4) and carry no text label, clearly de-emphasized relative to the off-diagonal cells. Strong negative correlations (e.g. -0.71 VO2 Max vs Resting HR) render deep red; weak correlations render near-white. Each off-diagonal cell is annotated with its correlation value to 2 decimals; text color flips between near-black and near-white per cell to preserve contrast against that cell's fill.
+      Legibility verdict: PASS — all title, axis, tick, colorbar, and cell-label text is clearly readable against the light background; no light-on-light instances found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light ink, clearly readable. Axis variable names rendered in light gray, fully legible on the dark surface. Colorbar labels "1.0"/"-1.0" also in light gray, readable.
-      Data: The diverging cell colors are visually identical to the light render (same red/white/blue endpoints and identical value-to-color mapping) — only the chrome (background, axis text, colorbar text) flipped to the dark theme. Cell value labels again alternate between dark and light text per cell to preserve contrast; no dark-on-dark instances found (e.g. the near-white diagonal-adjacent cells use dark text, deep red/blue cells use light text).
-      Legibility verdict: PASS — all chrome and data-label text reads clearly on the dark background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now rendered in light ink, clearly readable. Axis variable names render in light gray, fully legible on the dark surface. Colorbar labels "1.0"/"-1.0" also render in light gray, readable.
+      Data: The diverging cell colors are visually identical to the light render (same red/white/blue endpoints and identical value-to-color mapping) — only chrome (background, axis text, colorbar text) flipped to the dark theme. Diagonal cells remain muted/unlabeled, matching the light render's hierarchy. Cell value labels again alternate between dark and light text per cell to preserve contrast; no dark-on-dark instances found.
+      Legibility verdict: PASS — all chrome and data-label text reads clearly on the dark background; brand-adjacent diverging colors are consistent across both themes.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -82,11 +89,11 @@ review:
           fill
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good use of canvas overall, but the masked upper triangle leaves
-          a large unused blank quadrant top-right
+        comment: Grid right margin tightened (190->60) and the colorbar repositioned/enlarged
+          into the masked wedge, giving a balanced, well-utilized square canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -101,7 +108,7 @@ review:
         comment: imprint_div used correctly with theme-adaptive midpoint; chrome theme-correct
           in both renders
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -120,11 +127,12 @@ review:
           grid
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Diverging colors and masking highlight strong correlations at a glance,
-          though diagonal cells aren't muted to further sharpen focus
+        comment: Muted, unlabeled diagonal cells now sharpen focus toward the informative
+          off-diagonal correlations; a highlight on the single strongest correlation
+          would push this further
     spec_compliance:
       score: 15
       max: 15
@@ -141,7 +149,7 @@ review:
         max: 4
         passed: true
         comment: Diverging colormap centered at zero, 2-decimal cell annotations,
-          masked triangle, fixed [-1,1] colorbar range — all present
+          masked triangle, fixed [-1,1] colorbar range - all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -179,16 +187,17 @@ review:
         comment: Correlation magnitudes and signs are physiologically sensible (e.g.
           Resting HR vs VO2 Max strongly negative)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Five small helper functions for the contrast calculation depart from
-          a flat imports->data->plot script
+        comment: Contrast-calculation helpers flattened from five functions to two;
+          close to a flat imports->data->plot script while keeping a real accessibility
+          computation
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -231,8 +240,8 @@ review:
         max: 5
         passed: true
         comment: Continuous visualMap piecewise coloring plus computed per-cell contrast
-          text color is a distinctive combination
-  verdict: REJECTED
+          text color is a distinctive combination, though not unique to ECharts
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
