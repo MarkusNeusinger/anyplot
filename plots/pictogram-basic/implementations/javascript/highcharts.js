@@ -1,7 +1,7 @@
 // anyplot.ai
 // pictogram-basic: Pictogram Chart (Isotype Visualization)
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-20
+// Quality: 90/100 | Created: 2026-08-20
 
 const t = window.ANYPLOT_TOKENS;
 
