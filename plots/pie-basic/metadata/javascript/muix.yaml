@@ -1,0 +1,253 @@
+library: muix
+language: javascript
+specification_id: pie-basic
+created: '2026-08-20T23:22:13Z'
+updated: '2026-08-20T23:37:48Z'
+generated_by: claude-sonnet
+workflow_run: 32427640223
+issue: 678
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/pie-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Clever dual-series technique (transparent slice in the main series + an offset
+    single-item overlay series) achieves a true exploded slice while keeping the pie's
+    overall proportions and cumulative angles correct.
+  - Per-slice arc-label fill colors (LABEL_FILLS) were deliberately chosen for contrast
+    against each Imprint palette color, rather than relying on a single default text
+    color.
+  - 'Legend ordering bug from the previous review attempt is fixed: the exploded slice''s
+    legend entry now leads the legend in the pie''s clockwise order instead of trailing
+    at the end.'
+  - Imprint palette used in canonical order with brand green (#009E73) on the largest,
+    exploded slice; data colors are identical between light and dark renders, only
+    chrome flips.
+  - Realistic, neutral dataset (website traffic sources summing cleanly to 100%) with
+    a sensible category count (6, within the 3-8 spec range).
+  - Clean explode gap with no label overlap or edge clipping in either theme; percentage
+    labels are legible even on the smallest 4% slice.
+  weaknesses:
+  - LABEL_FILLS is applied via '.MuiPieArcLabel-root:nth-child(1..6)' selectors, but
+    the DOM likely renders 7 arc-label elements (6 from the main series + 1 from the
+    exploded overlay series) — the exploded slice's own label isn't explicitly covered
+    by a numbered rule and currently only reads correctly by coincidence of MUI's
+    default fill. Prefer an explicit per-item color (e.g. driving fill from the same
+    LABEL_FILLS/CATEGORIES data via arcLabel styling or a valueFormatter) instead
+    of sibling-index CSS selectors tied to render order.
+  - Title spans only ~45% of the plot width, comfortably under the 50-70% guideline
+    — not a defect, but there's a little headroom to size it up slightly for better
+    use of the square canvas.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with the required #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "pie-basic · javascript · muix · anyplot.ai" centered at the top with generous clearance from the canvas edge. Bottom legend row lists all 6 categories (Organic Search, Direct, Social Media, Referral, Paid Search, Email) with colored swatches and dark text, in the same clockwise order as the pie slices.
+      Data: Six wedges in Imprint palette canonical order (green, lavender, blue, ochre, red, cyan). The largest slice, Organic Search (38%, brand green #009E73), is popped outward from the pie's center with a clean gap on both sides — no overlap with neighboring slices. Each slice carries a bold percentage label (38%, 22%, 16%, 12%, 8%, 4%) in a fill color chosen per-slice for contrast (black on green/lavender/ochre/cyan, white on blue/red); all are legible, including the small 4% cyan slice.
+      Legibility verdict: PASS — all title, legend, and arc-label text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with the required #1A1A17 — not pure black, not light.
+      Chrome: Title and legend text render in light/white against the dark background (theme-adaptive via the MUI ThemeProvider). Legend order and content are identical to the light render.
+      Data: Slice colors and arc-label fill colors are pixel-identical to the light render (verified: green, lavender, blue, ochre, red, cyan wedges and their percentage labels are unchanged) — only the page background and text chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; title, legend, and all six arc labels remain clearly legible.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; title, legend, and per-slice percentage
+          labels all readable in both themes, including the smallest 4% slice.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, labels, or the exploded slice's
+          gap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 6 slices and their labels clearly visible and proportionate to
+          the canvas.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Per-slice label fill deliberately chosen for contrast against each
+          background color; positional/label encoding, not color-only.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (2400x2400 square). No cutoff or overflow
+          at any edge; balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes for pie; title present and descriptive via legend + arc
+          labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; canonical Imprint order; backgrounds
+          match #FAF8F1/#1A1A17; data colors identical across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Rounded corner radius, page-bg-matched slice strokes for separation,
+          and per-slice contrast-tuned label colors show intentional polish beyond
+          defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous whitespace via MARGIN, minimal chrome, subtle slice separators.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: The explode-plus-brand-green treatment on the largest category creates
+          a clear focal point, though it's the single hierarchy device used.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct pie chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage labels, distinct colors, legend, and an exploded largest
+          slice are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category/value correctly mapped to slice angle and label.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match category names
+          exactly.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 categories, percentages, legend, and explode all present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Website traffic sources — plausible, neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum cleanly to 100 with a sensible spread (38% down to 4%).
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: No classes; one small OrderedLegend helper and dual-series setup
+          add modest complexity beyond the simplest possible pie.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only PieChart and DefaultChartsLegend imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for an authentic explode effect; no fake/simulated
+          UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Respects the harness mount contract (window.ANYPLOT_SIZE, default
+          export, skipAnimation); current MUI X API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses series/margin/slotProps/sx as intended; the nth-child label-fill
+          selectors are a minor deviation from idiomatic styling (see weaknesses).
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual-series explode technique, custom legend reordering, and per-slice
+          contrast-tuned arc labels go beyond generic PieChart usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
