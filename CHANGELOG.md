@@ -168,7 +168,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **Stray tracked plot renders** — `plots/bar-basic/implementations/python/plot-{dark,light}.png`
   were committed render outputs violating the previews-live-in-GCS rule (flagged by the
   2026-08-17 license audit, removal approved 2026-08-20); the served previews come from GCS and
-  are unaffected.
+  are unaffected (#10503).
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
