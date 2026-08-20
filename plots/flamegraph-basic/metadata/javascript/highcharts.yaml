@@ -1,0 +1,280 @@
+library: highcharts
+language: javascript
+specification_id: flamegraph-basic
+created: '2026-08-20T19:34:33Z'
+updated: '2026-08-20T20:07:07Z'
+generated_by: claude-sonnet
+workflow_run: 32407965736
+issue: 4665
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flamegraph-basic/javascript/highcharts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Correct flame-graph semantics: root at the bottom, depth rows layered upward,
+    sibling bars directly adjacent (pointPadding 0.02 / groupPadding 0), and function-name
+    labels shown only inside bars wide enough to hold them.'
+  - Documented, well-justified semantic-exception warm palette (amber → ochre → matte
+    red) built exclusively from Imprint anchors — no custom hex values — matching
+    the spec's explicit request for conventional flame-graph yellows/oranges/reds.
+  - 'Distinctive Highcharts mastery: a chart.events.render hook measures each data
+    label''s real getBBox() against its bar''s rendered box and hides any label that
+    would overflow, correctly accounting for the transposed coordinate system of an
+    inverted bar chart (width/height swap is explained in a comment).'
+  - Theme-adaptive chrome is correctly threaded through title/subtitle/axis/tooltip
+    via ANYPLOT_TOKENS, and the warm data colors are pixel-identical between the light
+    and dark renders — only chrome flips.
+  - 'Realistic, deterministic synthetic profiling data (63 folded-stack samples with
+    correct exclusive/self-time semantics) that produces a legible hot-path story:
+    the executeQuery → queryDatabase → handleApi → routeRequest → main chain visibly
+    trends toward the hot end of the ramp.'
+  weaknesses:
+  - The fixed dark data-label ink (#1A1A17) sits at borderline WCAG contrast (~3.6:1)
+    against the deepest matte-red frames (e.g. 'main', 'routeRequest', 'handleApi')
+    — still legible in both renders, but a thin light stroke or lighter ink for high-heat
+    frames would be safer.
+  - No grid lines at all — acceptable for the flame-graph convention and not a deduction
+    here, but worth confirming intentional rather than an oversight if this pattern
+    recurs elsewhere.
+  - The tree-build/rollup/color-interpolation helper functions (rollUp, walk, padDown,
+    lerp, hash, warmColor) push CQ-01 (KISS) below the ideal 'no functions' bar —
+    largely unavoidable for a folded-stack → hierarchical flame-graph transform, but
+    flagged for completeness.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "flamegraph-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly
+        readable. Subtitle in muted gray-brown, readable. Left-side "Depth 0 · root" .. "Depth 6" category
+        labels in dark ink, all legible. Vertical "Call stack depth" axis title along the far left margin,
+        readable. No grid lines. Thin vertical axis line at left only (L-shape convention adapted to the
+        inverted/horizontal bar orientation).
+      Data: Stacked horizontal bars per depth row, colored on a continuous amber → ochre → matte-red ramp
+        (log-scaled sample share blended with a name hash for variety among same-share siblings). Root
+        "main" spans full width at the bottom; call stack widens/narrows upward through depth 6. Function
+        names ("main", "routeRequest", "handleApi", "queryDatabase", "executeQuery", "fetchRows",
+        "acceptConnections", "backgroundJobs", "businessLogic") are labeled inside bars wide enough to hold
+        them, in fixed dark ink (#1A1A17) — legible against every fill color, including the darkest
+        matte-red frames, though contrast there is closer to borderline than generous. Narrower nested
+        frames (e.g. under acceptConnections/backgroundJobs) are unlabeled, correctly, since they're too
+        narrow for text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle now render in light ink/gray, clearly readable against the dark surface.
+        "Depth" category labels and the vertical "Call stack depth" axis title are light-colored and
+        legible. No dark-on-dark chrome anywhere.
+      Data: Bar colors are pixel-identical to the light render (same amber/ochre/matte-red ramp per frame)
+        — confirms only chrome flipped, not data colors. The fixed dark data-label ink still sits inside
+        the warm fills (not on the near-black page background), so it remains legible exactly as in the
+        light render — no dark-on-dark failure despite the ink color being constant across themes, since
+        the label backdrop is always the warm bar fill, not the page surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; fixed dark label ink is borderline-contrast
+          (not failing) on the deepest matte-red frames
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/label/data collisions in either render; overflowing labels
+          are dynamically hidden via getBBox() fit check
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and their borders are clearly distinguishable at every depth;
+          sibling frames separated by pageBg-colored borders
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Warm monochromatic ramp is a secondary encoding on top of width/hierarchy,
+          so color-vision deficiency does not block reading the chart; no red-green
+          pairing used
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (no gate file present); good proportions,
+          nothing cut off, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Call stack depth' axis title and depth-per-row category
+          labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Documented semantic-exception warm ramp built strictly from Imprint
+          anchors (amber, ochre palette[3], matte red palette[4]); backgrounds correct
+          in both themes; data colors identical light/dark
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom log-scaled heat + name-hash color interpolation goes well
+          beyond default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, minimal chrome, generous whitespace, subtle pageBg-colored
+          borders between bars
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Heat ramp draws the eye to the hot call path (executeQuery/queryDatabase/handleApi/routeRequest/main)
+          at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine flame graph via stacked horizontal bars, one series per stack
+          frame
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Warm palette, adjacent bars, root-at-bottom layering, in-bar labels
+          when wide enough — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Bar width correctly encodes share of total samples; depth rows correctly
+          map call-stack levels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'flamegraph-basic · javascript · highcharts
+          · anyplot.ai'; legend correctly omitted (63 frames, not legend-appropriate)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Depth, width-share, hierarchy, and self/total-time roll-up are all
+          represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral request-handling CPU profile (TLS, auth, DB query,
+          GC, logging)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 63 folded-stack samples, within the spec's 50-500 unique stack traces
+          range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (rollUp, walk, padDown, lerp, hash, warmColor)
+          — necessary for the folded-stack-to-tree transform, not gratuitous
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; well-commented rationale for non-obvious decisions
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, both animation flags disabled, credits
+          off
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Clever, idiomatic stacked-bar-per-frame construction to render a
+          flame graph within the core bundle (no treemap/sunburst module available)
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: chart.events.render + getBBox() post-render label-fit measurement
+          is a genuinely distinctive, non-generic Highcharts technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - minimal-chrome
