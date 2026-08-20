@@ -117,12 +117,15 @@ const yPad = (yMax - yMin) * 0.08;
 // --- Candlesticks: MUI X has no native candlestick — draw against the
 // shared band scale via useXScale/useYScale, the documented ChartContainer
 // composition pattern for chart types outside the community surface -------
+// Bullish bodies are drawn HOLLOW (page-background fill, colored outline) and
+// bearish bodies SOLID-filled — a fill/outline pattern cue redundant to hue,
+// the classic candlestick convention, so trend direction survives CVD sims.
 function Candlesticks() {
   const xScale = useXScale("x") as any;
   const yScale = useYScale("y") as any;
   if (!xScale || !yScale) return null;
   const bw = xScale.bandwidth();
-  const bodyWidth = bw * 0.6;
+  const bodyWidth = bw * 0.72;
 
   return (
     <g>
@@ -144,7 +147,15 @@ function Candlesticks() {
               stroke={color}
               strokeWidth={1.5}
             />
-            <rect x={cx - bodyWidth / 2} y={bodyTop} width={bodyWidth} height={bodyHeight} fill={color} />
+            <rect
+              x={cx - bodyWidth / 2}
+              y={bodyTop}
+              width={bodyWidth}
+              height={bodyHeight}
+              fill={bullish ? t.pageBg : color}
+              stroke={color}
+              strokeWidth={bullish ? 2 : 0}
+            />
           </g>
         );
       })}
@@ -154,13 +165,17 @@ function Candlesticks() {
 
 // Kumo cloud: the filled area between Senkou Span A and B, split into
 // bullish/bearish segments at every crossover (green when A > B, red when
-// B > A — the spec's "at-a-glance" trend signal)
+// B > A — the spec's "at-a-glance" trend signal). Bearish borders are dashed
+// (solid for bullish) as a pattern cue redundant to hue, and the bearish fill
+// gets a theme-adaptive opacity bump so it reads as clearly on the near-black
+// dark page as the bullish fill does — both cloud states equally legible.
 function KumoCloud() {
   const xScale = useXScale("x") as any;
   const yScale = useYScale("y") as any;
   if (!xScale || !yScale) return null;
   const bw = xScale.bandwidth();
   const cx = (i: number) => xScale(dateLabels[i]) + bw / 2;
+  const isDark = window.ANYPLOT_THEME === "dark";
 
   const segments: { idx: number[]; bullish: boolean }[] = [];
   let current: number[] = [];
@@ -193,6 +208,8 @@ function KumoCloud() {
     <g>
       {segments.map((seg, s) => {
         const color = seg.bullish ? t.palette[0] : t.palette[4];
+        const fillOpacity = seg.bullish ? 0.22 : isDark ? 0.34 : 0.24;
+        const dash = seg.bullish ? undefined : "6 4";
         const top = seg.idx.map((j) => `${cx(j)},${yScale(spanAArr[j]!)}`);
         const bottom = seg.idx
           .slice()
@@ -200,14 +217,22 @@ function KumoCloud() {
           .map((j) => `${cx(j)},${yScale(spanBArr[j]!)}`);
         return (
           <g key={s}>
-            <polygon points={[...top, ...bottom].join(" ")} fill={color} fillOpacity={0.22} />
-            <polyline points={top.join(" ")} fill="none" stroke={color} strokeOpacity={0.55} strokeWidth={1.25} />
+            <polygon points={[...top, ...bottom].join(" ")} fill={color} fillOpacity={fillOpacity} />
+            <polyline
+              points={top.join(" ")}
+              fill="none"
+              stroke={color}
+              strokeOpacity={0.55}
+              strokeWidth={1.25}
+              strokeDasharray={dash}
+            />
             <polyline
               points={seg.idx.map((j) => `${cx(j)},${yScale(spanBArr[j]!)}`).join(" ")}
               fill="none"
               stroke={color}
               strokeOpacity={0.55}
               strokeWidth={1.25}
+              strokeDasharray={dash}
             />
           </g>
         );
@@ -227,13 +252,33 @@ export default function Chart() {
   const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
 
   const legendItems = [
-    { label: "Bullish Candle", swatch: <Box sx={{ width: 14, height: 14, bgcolor: t.palette[0], borderRadius: "2px" }} /> },
+    {
+      label: "Bullish Candle",
+      swatch: <Box sx={{ width: 14, height: 14, bgcolor: t.pageBg, border: `2px solid ${t.palette[0]}`, borderRadius: "2px" }} />,
+    },
     { label: "Bearish Candle", swatch: <Box sx={{ width: 14, height: 14, bgcolor: t.palette[4], borderRadius: "2px" }} /> },
     { label: "Tenkan-sen", swatch: <Box sx={{ width: 22, height: 3, bgcolor: t.palette[1], borderRadius: "2px" }} /> },
     { label: "Kijun-sen", swatch: <Box sx={{ width: 22, height: 3, bgcolor: t.palette[2], borderRadius: "2px" }} /> },
     { label: "Chikou Span", swatch: <Box sx={{ width: 22, height: 0, borderTop: `2.5px dashed ${t.palette[3]}` }} /> },
-    { label: "Kumo (Bullish)", swatch: <Box sx={{ width: 18, height: 14, bgcolor: t.palette[0], opacity: 0.3, borderRadius: "2px" }} /> },
-    { label: "Kumo (Bearish)", swatch: <Box sx={{ width: 18, height: 14, bgcolor: t.palette[4], opacity: 0.3, borderRadius: "2px" }} /> },
+    {
+      label: "Kumo (Bullish)",
+      swatch: <Box sx={{ width: 18, height: 14, bgcolor: t.palette[0], opacity: 0.3, borderRadius: "2px", border: `1.5px solid ${t.palette[0]}` }} />,
+    },
+    {
+      label: "Kumo (Bearish)",
+      swatch: (
+        <Box
+          sx={{
+            width: 18,
+            height: 14,
+            bgcolor: t.palette[4],
+            opacity: 0.3,
+            borderRadius: "2px",
+            border: `1.5px dashed ${t.palette[4]}`,
+          }}
+        />
+      ),
+    },
   ];
 
   return (
@@ -317,7 +362,7 @@ export default function Chart() {
           "& .MuiLineElement-series-chikou": { strokeDasharray: "7 5", strokeWidth: 2.5 },
           "& .MuiLineElement-series-tenkan": { strokeWidth: 2.25 },
           "& .MuiLineElement-series-kijun": { strokeWidth: 2.25 },
-          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.4 },
+          "& .MuiChartsAxis-line": { stroke: t.inkSoft, strokeOpacity: 0.2 },
           "& .MuiChartsGrid-line": { stroke: t.grid },
         }}
       >
