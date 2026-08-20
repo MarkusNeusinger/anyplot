@@ -1,0 +1,261 @@
+library: muix
+language: javascript
+specification_id: feynman-basic
+created: '2026-08-20T19:11:55Z'
+updated: '2026-08-20T19:16:50Z'
+generated_by: claude-sonnet
+workflow_run: 32405169661
+issue: 4667
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Genuinely custom, hand-drawn Feynman diagram (sine-wave photon path, coiled-bezier
+    gluon path, auto-oriented SVG arrow markers) built on ChartContainer's useXScale/useYScale
+    hooks — the documented community escape hatch for chart types MUI X has no built-in
+    primitive for
+  - 'Real, physically accurate QED process (e⁻ e⁺ annihilation → virtual photon →
+    μ⁻ μ⁺ pair) with correct arrow conventions: particle flow forward in time, antiparticle
+    flow backward'
+  - Style key cleanly demonstrates all four spec line-style conventions (fermion,
+    photon, gluon, scalar boson) even though the live process only needs two
+  - Perfect Imprint palette compliance and theme-adaptive chrome — vertex dots use
+    t.ink so they correctly flip black-on-cream (light) to white-on-near-black (dark),
+    and all text/backgrounds are theme-correct in both renders
+  - Clean, deterministic, explicitly-sized code with no fake interactivity and no
+    wasted imports
+  weaknesses:
+  - Live propagators only exercise 2 of the 4 particle-line conventions (fermion,
+    photon); gluon and scalar-boson styles are shown only in the static legend, not
+    as an actual propagator in the depicted process
+  - Vertical whitespace between the subtitle and the diagram's topmost elements is
+    noticeably more generous than the spacing elsewhere in the layout — tightening
+    it slightly would improve rhythm
+  - Library usage leans almost entirely on the useXScale/useYScale scale hooks rather
+    than any of MUI X's higher-level chart-composition surface (ChartsLegend, axis
+    components, tooltip) — understandable for a diagram spec, but keeps distinctive-feature
+    usage narrow
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "feynman-basic · javascript · muix · anyplot.ai" in bold dark ink, subtitle "Electron-positron annihilation -> virtual photon -> muon pair (QED)" in softer dark gray below it, both clearly readable. Vertex dots are solid black, correctly contrasting the light background. Bottom caption and style-key labels are legible soft-gray text.
+      Data: Two fermion lines (e-, e+) in Imprint green (#009E73) enter vertex 1 from the left with mid-line arrowheads; a purple (#C475FD) wavy propagator (gamma*) connects vertex 1 to vertex 2; two more green fermion lines (mu-, mu+) exit vertex 2 to the right, also with arrowheads. First data series is confirmed #009E73. Style key at the bottom shows all four line conventions (fermion/photon/gluon/boson) in their respective Imprint colors.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title and subtitle now rendered in light/off-white ink, fully readable against the dark background. Vertex dots flip to white/near-white fill, correctly contrasting the dark background (no dark-on-dark). Style key and caption text are light gray, legible.
+      Data: Fermion lines are still #009E73 green and the photon propagator is still #C475FD purple — identical to the light render, confirming only chrome (background, text, vertex-dot fill) flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 30, subtitle 17, particle labels
+          24, key labels 15, caption 14); readable in both themes and at scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/element collisions — gamma* label, particle labels, style
+          key, and caption are all cleanly spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines, arrowheads, and vertex dots are clearly visible against both
+          backgrounds; sparse diagram, no overplotting
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green fermion vs purple photon — high contrast, CVD-safe, not a red-green
+          pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagram, axis, and legend together span roughly 90% of canvas height
+          and nearly full width; balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time axis explicitly labeled with directional arrow; appropriate
+          for a diagram type with no numeric axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, subsequent colors follow canonical Imprint
+          order (photon/gluon/boson); backgrounds and chrome are theme-correct in
+          both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Fully custom-drawn diagram (sine-wave photon, bezier-coil gluon,
+          auto-oriented arrow markers) well above library defaults, with intentional
+          color-coded typographic hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart chrome/spines/grid at all, generous whitespace, polished
+          style key; slightly loose spacing between subtitle and diagram body
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear left-to-right time narrative through the physical process,
+          vertex dots and arrows guide the eye through the interaction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Feynman diagram with vertices, propagators, and directional
+          arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct line styles, arrows for particle/antiparticle flow, labeled
+          time axis, vertex dots, propagator labels, symmetric layout — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Vertex/propagator positions map correctly through useXScale/useYScale
+          into a coherent, correctly time-ordered layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'feynman-basic · javascript · muix · anyplot.ai'; style
+          key labels match particle data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Style key demonstrates all four line conventions, but the live process
+          only exercises fermion and photon propagators
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, textbook-standard QED process (e- e+ annihilation to muon pair),
+          neutral scientific content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically correct particle/antiparticle arrow conventions and vertex
+          structure
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Decomposed into small function components, which React's hook rules
+          require here (useXScale/useYScale must run inside the ChartContainer tree)
+          — reasonable, not over-engineered
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer, useXScale, useYScale imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity for a hand-drawn
+          diagram
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: export default component, skipAnimation set, current ChartContainer/hooks
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses the documented community escape-hatch pattern (ChartContainer
+          + scale hooks) correctly for a chart type with no native MUI X primitive
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: useXScale/useYScale is MUI X's headless-hook composition model, fairly
+          distinctive to this library, though the rest of the chart-composition surface
+          (legend/axis components) goes unused
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - annotations
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
