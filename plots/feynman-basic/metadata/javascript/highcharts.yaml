@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: feynman-basic
+created: '2026-08-20T18:55:46Z'
+updated: '2026-08-20T19:10:26Z'
+generated_by: claude-sonnet
+workflow_run: 32404941126
+issue: 4667
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/feynman-basic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Custom SVG renderer used correctly to draw genuine wavy photon and curly gluon
+    paths (parametric sine/cosine math via chart.renderer.path), going well beyond
+    built-in Highcharts series types — the right escape hatch for a plot type with
+    no native series.
+  - 'Correct physics convention: fermion arrowheads encode particle-vs-antiparticle
+    time-flow direction (forward/backward angle reversal), and all four required line
+    styles (straight+arrow, wavy, curly, dashed) are present exactly as the spec''s
+    Notes section requires.'
+  - 'Imprint palette used in canonical order (positions 1-5), first series brand green
+    #009E73; color is reinforced by distinct line style per particle type, giving
+    CVD-safe redundant encoding.'
+  - 'Theme-adaptive chrome throughout: vertex dots flip from black (t.ink light) to
+    white (t.ink dark), title/legend/axis-title colors correctly threaded from tokens
+    — both renders fully legible with no dark-on-dark or light-on-light failures.'
+  - 'Clean, minimal composition: axes fully hidden (lineWidth 0, no ticks/gridlines),
+    generous whitespace, legend cleanly grouped by particle family, no chartjunk.'
+  weaknesses:
+  - The two independent physics processes (e- e+ -> gamma -> mu- mu+, and g g -> H
+    -> b b-bar) are juxtaposed on one canvas with no visual separator or sub-caption,
+    which risks reading as a single continuous six-vertex diagram rather than two
+    distinct textbook examples — consider a subtle vertical divider/rule or two small
+    process captions to disambiguate.
+  - Legend entry 'Electron / positron / b-quark (fermion)' groups three physically
+    distinct particles under one green swatch; correct per the spec's type-based line-style
+    convention, but a first-time viewer may not immediately connect green to the b-quark
+    leg on the far right without reading the legend carefully.
+  - Helper-function structure (toPx/straightPath/wavyPath/curlyPath/arrowPath) is
+    heavier than the typical KISS single-block script, though justified here by the
+    custom-curve math needed for photon/gluon geometry.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: title "feynman-basic · javascript · highcharts · anyplot.ai" in dark ink, bold, top-center, fully readable. Legend on the right lists five particle types with colored swatches, legend text in soft dark gray, fully readable. "time →" caption at bottom center in soft dark gray, fully readable. Vertex dots are solid black (theme ink).
+      Data: two Feynman diagrams side by side. Left diagram: e- (top-left, green straight line with forward arrow) and e+ (bottom-left, green straight line with backward arrow) meet at a vertex, connect via a wavy purple/lavender photon (γ) line to a second vertex, which splits into mu- and mu+ (blue straight lines with arrows). Right diagram: two curly ochre/orange gluon (g) lines meet at a vertex, connect via a red dashed Higgs (H) line to a second vertex, which splits into b and b-bar (green straight lines with arrows, reusing the fermion color). First categorical series (fermion color) is #009E73 green, matching the Imprint palette rule.
+      Legibility verdict: PASS — all title, legend, and inline particle-label text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: title in light ink (near-white), fully readable. Legend text in light gray, fully readable. "time →" caption in light gray, fully readable. Vertex dots flip to solid white (theme ink), correctly theme-adaptive.
+      Data: identical geometry and identical data colors to the light render — green fermion lines, lavender/purple photon, blue muon lines, ochre gluon lines, red dashed Higgs line. Only the chrome (background, vertex-dot fill, title/legend/caption ink) flips; the five categorical data colors are unchanged between renders, satisfying the Imprint palette identity rule.
+      Legibility verdict: PASS — no dark-on-dark text found; all chrome elements correctly use the dark-theme ink tokens.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/legend/label text readable in both themes at explicit CSS
+          px sizes (title 22px, legend/labels 14-20px); no dark-on-dark or light-on-light.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths (3px), arrowheads (20px), and vertex dots (8px radius)
+          all clearly visible against both backgrounds.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color is reinforced by distinct line style per particle type (straight/wavy/curly/dashed)
+          — redundant, CVD-safe encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped, comfortable margins on 3200x1800
+          canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Mandated title format exact; 'time →' caption used in place of a
+          formal x-axis label, appropriate for this diagram type.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for 5 series, backgrounds
+          correct in both themes, data colors identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom parametric SVG paths for photon/gluon and computed arrowheads
+          — genuinely sophisticated, well beyond generic chart defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes/grid fully hidden, generous whitespace, no chartjunk.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear per-diagram hierarchy and time-flow guide, but the two juxtaposed
+          processes lack a divider/caption distinguishing them as separate examples.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine Feynman diagram with vertices and propagators.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All four line styles (straight+arrow, wavy, curly, dashed), vertex
+          dots, propagator labels, and time-axis caption all present per spec Notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Vertex/propagator positions correctly mapped to pixel space via chart.xAxis/yAxis.toPixels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated 'feynman-basic · javascript · highcharts ·
+          anyplot.ai' format exactly; legend labels match particle-type grouping.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all four particle-line types plus arrows and vertex dots, exceeding
+          the spec's single-example minimum by covering two real processes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Both depicted processes (e+e- annihilation to muon pair; gluon-fusion
+          Higgs production to b b-bar) are real, textbook-accurate, and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 vertices, 10 propagators — within spec's stated typical range (2-6
+          vertices, 3-10 propagators).
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions used (toPx, straightPath, wavyPath, curlyPath, arrowPath)
+          — justified by the custom-curve math, heavier than a single-block script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the provided Highcharts/ANYPLOT_TOKENS globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportional to the genuinely custom drawing task;
+          no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container via Highcharts.chart with no explicit width/height;
+          animation disabled at chart and series level.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the documented Highcharts renderer escape hatch (chart.renderer.g/path/text/circle
+          inside the load event) for a plot type with no native series — exactly the
+          recommended idiom.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages toPixels coordinate conversion and the SVG renderer's path/text/circle
+          primitives distinctively rather than generic series config.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
