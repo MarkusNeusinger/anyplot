@@ -1,0 +1,275 @@
+library: highcharts
+language: javascript
+specification_id: calibration-beer-lambert
+created: '2026-08-20T17:52:02Z'
+updated: '2026-08-20T17:59:15Z'
+generated_by: claude-sonnet
+workflow_run: 32399373296
+issue: 4410
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-beer-lambert/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Regression equation and R² are displayed as a precise, clearly formatted subtitle
+    annotation, satisfying the spec's core requirement.
+  - 'Distinctive Highcharts renderer technique: the prediction-interval band is hand-drawn
+    via the chart''s ''render'' event + axis.toPixels() + renderer.path() to work
+    around highcharts-more not being vendored, and the legend gets an honest swatch
+    for it via an empty-data series with legendSymbol: ''rectangle'' — genuine library
+    mastery, not a workaround hack.'
+  - The unknown-sample crosshair (dashed lines to both axes + diamond marker + inline
+    data label 'c ≈ 5.43 mg/L') makes the 'how to read a calibration curve' story
+    immediately clear without adding clutter.
+  - 'Realistic, domain-correct data: a nitrate colorimetric assay at 540 nm with 8
+    standards including a reagent blank, R² = 0.9999, and absorbance values in the
+    typical 0-1 UV-Vis range.'
+  - Theme-adaptive chrome is correctly threaded through title, subtitle, axis titles/labels,
+    legend, and tooltip in both renders; all data colors are identical between light
+    and dark.
+  weaknesses:
+  - 'Palette order is broken without semantic justification: the regression fit /
+    prediction-interval band use t.palette[2] (blue, canonical position 3) instead
+    of t.palette[1] (lavender, canonical position 2) — the style guide requires positions
+    1→N in order unless a real-world color cue applies, and there isn''t one here.'
+  - The 'Unknown Sample' marker uses t.amber, but amber is reserved as the warning/caution
+    semantic anchor, not a general-purpose highlight color — this point isn't a warning.
+    Use the next canonical categorical slot (palette[1], lavender) or a neutral highlight
+    instead.
+  - The 95% prediction-interval band is implemented correctly but reads very subtly
+    at full canvas size (~30px wide within a 1800px-tall plot, ~1% of plot height)
+    because the fit is nearly perfect (R²=0.9999) — easy to miss at a glance. Raising
+    the fill opacity from 0.15 to ~0.22-0.25 would make the feature legible without
+    obscuring data points.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "calibration-beer-lambert · javascript · highcharts · anyplot.ai" in bold dark ink at top center; subtitle "R² = 0.9999 · A = 0.0822·c + 0.0036" in softer grey below it; legend row (Calibration Standards, Regression Fit, 95% Prediction Interval, Unknown Sample) top-left with adequate padding; x-axis titled "Concentration (mg/L NO₃-N)" and y-axis titled "Absorbance", both in medium-grey ink; faint horizontal gridlines only. All text is clearly legible against the light background.
+      Data: 8 green (#009E73) calibration-standard dots rising linearly from (0, ~0.004) to (12, ~0.99); a blue (palette[2]) regression line through them with a very subtle light-blue prediction-interval band hugging it; black dashed crosshair lines converging on an amber diamond "Unknown Sample" marker near (5.43, 0.45), labeled "c ≈ 5.43 mg/L".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title/subtitle/legend/axis-title layout as the light render, now rendered in light ink (near-white for title, soft light-grey for subtitle/ticks/legend/axis titles) — fully readable, no dark-on-dark text anywhere. Gridlines are faint light lines on the dark surface.
+      Data: Same green calibration-standard dots, same blue regression line and prediction band, same amber diamond unknown-sample marker and dashed crosshair — all colors are pixel-identical to the light render; only the chrome (background, text, grid, axis lines) flips to the dark-theme tokens.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle 15px, axis titles
+          16px, ticks/legend 14px); readable in both themes, no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; the unknown-sample label
+          sits cleanly beside its marker.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers and lines are well sized for a sparse (8-point) scatter,
+          but the 95% prediction-interval band is only ~30px wide at full canvas size
+          and easy to miss at a glance.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue/amber are mutually distinguishable without relying on
+          hue alone; no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Verified via pixel measurement: plot area spans ~96% of canvas width
+          and ~79% of canvas height (~76% area), well within the 50-80% target with
+          balanced margins.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has units ('Concentration (mg/L NO₃-N)'); Y-axis is correctly
+          unitless ('Absorbance') per spec.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series is correctly #009E73, and background/chrome are theme-correct
+          in both renders, but the regression line skips palette position 2 (lavender)
+          for position 3 (blue) with no semantic reason, and the amber semantic anchor
+          is used for a non-warning highlight.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, scientific-instrument aesthetic with the regression equation
+          as a subtitle and a deliberate unknown-sample callout; above a configured
+          default but the palette-order slip keeps it short of publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only gridlines, generous whitespace, no boxed legend
+          frame, no top/right border clutter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The dashed crosshair + labeled diamond gives the plot a clear focal
+          point that visually demonstrates concentration determination from absorbance
+          — the core point of a calibration curve.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter standards + regression line, exactly matching a calibration-curve
+          plot type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Regression equation + R² annotation, prediction-interval band, and
+          unknown-sample crosshair with dashed lines to both axes are all present
+          and functioning.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Concentration on X, absorbance on Y, full data range visible within
+          axis bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels (Calibration
+          Standards, Regression Fit, 95% Prediction Interval, Unknown Sample) are
+          clear and correct.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Standards span the full range including a reagent blank, plus fit,
+          interval, and unknown-sample determination — all calibration-curve facets
+          are shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Nitrate colorimetric assay at 540 nm is a real, neutral analytical-chemistry
+          scenario with specific, non-abstract labels.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Absorbance values (0-0.99) and slope are physically plausible for
+          UV-Vis spectrophotometry within the recommended 0-1 absorbance range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat top-level script: data → OLS fit → chart config; the only function
+          is the mandatory Highcharts ''render'' event callback.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded standards array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the provided ANYPLOT_TOKENS/Highcharts globals
+          are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The manual SVG-path band drawing is justified by the missing highcharts-more
+          module and is clearly commented; no fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly delegates PNG/HTML output to the harness; uses current
+          Highcharts.chart() API with animation disabled.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scatter+line combo chart with plotLines, tooltip pointFormat,
+          and legend config all through the standard Highcharts options API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Hand-rolled SVG path via renderer.path() synced to axis.toPixels()
+          on the 'render' event, plus an empty-data series purely for a custom legend
+          swatch — a technique specific to Highcharts' low-level renderer API that
+          isn't easily replicated in other libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - confidence-band
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
