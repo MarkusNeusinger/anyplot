@@ -6,10 +6,12 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// US states on an approximate tile grid (col = west→east, row = north→south),
-// a classic non-contiguous "Dorling" cartogram: circle area ∝ population,
-// position keeps rough geographic layout, fill encodes a GDP-per-capita tier.
-// population in millions (2023 est.), gdpPerCapita in thousand USD.
+// US states on an approximate tile grid (col = west→east, row = north→south).
+// Every state occupies a fixed-size, contiguous reference tile (edges touch
+// its grid neighbors); the circle drawn inside each tile has area ∝ population,
+// so its size relative to the tile is the area distortion. Fill encodes a
+// GDP-per-capita tier. population in millions (2023 est.), gdpPerCapita in
+// thousand USD.
 const states = [
   { name: "WA", col: 0, row: 0, population: 7.9, gdpPerCapita: 87 },
   { name: "OR", col: 0, row: 1, population: 4.2, gdpPerCapita: 71 },
@@ -38,8 +40,8 @@ const states = [
 ];
 
 const maxPopulation = Math.max(...states.map((s) => s.population));
-const MIN_RADIUS = 16;
-const MAX_RADIUS = 65;
+const MIN_RADIUS = 14;
+const MAX_RADIUS = 60;
 
 // Area ∝ value → radius ∝ sqrt(value), the defining cartogram encoding.
 function radiusFor(population) {
@@ -78,6 +80,46 @@ const series = tiers.map((tier) => ({
   data: states.filter((s) => tier.test(s.gdpPerCapita)).map(toPoint),
 }));
 
+// Reference tile: same fixed footprint for every state, so its edges line up
+// contiguously (touching neighbors) with the grid unit — the "undistorted"
+// baseline the population-scaled circle is measured against. Legend entry
+// only; the tiles themselves are drawn via the SVG renderer (below).
+series.push({
+  name: "Reference tile (equal-area baseline, contiguous grid)",
+  color: t.inkSoft,
+  marker: { symbol: "square", radius: 7, fillColor: "transparent", lineColor: t.inkSoft, lineWidth: 1.5 },
+  enableMouseTracking: false,
+  showInLegend: true,
+  data: [],
+});
+
+// Draws one fixed-size square per state, aligned to the grid so adjacent
+// tiles' edges touch — a contiguous baseline grid the distorted circles sit
+// against, making the area distortion legible (spec requires a reference for
+// comparison). Re-run on every render/resize since pixel positions depend on
+// the current axis-to-pixel mapping.
+function drawReferenceTiles(chart) {
+  if (chart._tileGroup) chart._tileGroup.destroy();
+  const group = chart.renderer.g("reference-tiles").attr({ zIndex: 1 }).add();
+  chart._tileGroup = group;
+
+  const xa = chart.xAxis[0];
+  const ya = chart.yAxis[0];
+  const unitW = Math.abs(xa.toPixels(1) - xa.toPixels(0));
+  const unitH = Math.abs(ya.toPixels(1) - ya.toPixels(0));
+  const tile = Math.min(unitW, unitH) * 0.94;
+  const half = tile / 2;
+
+  states.forEach((s) => {
+    const cx = xa.toPixels(s.col);
+    const cy = ya.toPixels(s.row);
+    chart.renderer
+      .rect(cx - half, cy - half, tile, tile, 2)
+      .attr({ fill: "transparent", stroke: t.inkSoft, "stroke-width": 1.25, zIndex: 1 })
+      .add(group);
+  });
+}
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -85,6 +127,7 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: { render: function () { drawReferenceTiles(this); } },
   },
   credits: { enabled: false },
   title: {
@@ -92,11 +135,11 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "US states resized by population, positioned by approximate geography",
+    text: "US states resized by population against a contiguous equal-area reference grid",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   caption: {
-    text: "Circle area ∝ population (millions) · fill ∝ GDP-per-capita tier · position preserves rough state geography",
+    text: "Circle area ∝ population (millions) · fill ∝ GDP-per-capita tier · faint square = undistorted reference tile, same size for every state · position preserves rough state geography",
     style: { color: t.inkMuted || t.inkSoft, fontSize: "13px" },
   },
   xAxis: {
