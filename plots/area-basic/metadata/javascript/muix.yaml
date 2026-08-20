@@ -1,0 +1,250 @@
+library: muix
+language: javascript
+specification_id: area-basic
+created: '2026-08-20T16:44:03Z'
+updated: '2026-08-20T16:59:05Z'
+generated_by: claude-sonnet
+workflow_run: 32392903475
+issue: 711
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-basic/javascript/muix/plot-dark.html
+quality_score: 83
+review:
+  strengths:
+  - 'Correct, idiomatic area-chart construction using MUI X LineChart with area: true
+    and baseline: 0 rather than faking an area with a custom shape'
+  - Custom SVG linear gradient fill (line-to-baseline fade) directly implements the
+    spec's suggested "gradient fill from bottom to line for visual appeal"
+  - ChartsReferenceLine average annotation adds a genuine focal point and light data
+    storytelling beyond the raw trend
+  - Deterministic seeded LCG data generation with realistic weekday/weekend seasonality
+    and a gradual growth trend
+  - 'Both renders are theme-correct: warm cream / near-black backgrounds, all chrome
+    text legible, and the brand green (#009E73) is identical between light and dark'
+  - Legend correctly omitted for the single-series chart per the style guide's redundant-legend
+    rule
+  - Y-axis uses a unit-labeled k-suffix valueFormatter instead of raw four-digit numbers
+  weaknesses:
+  - yAxis.tickFontSize is set to 40 purely as a hack to widen the auto-computed label
+    offset (per the code's own comment referencing MUI X's internal labelRefPoint.x
+    formula), while the actually rendered tick font comes from tickLabelStyle.fontSize=14
+    — this relies on an undocumented internal layout formula instead of a supported
+    margin/width API and is fragile to future MUI X changes; reserve the offset via
+    an explicit margin.left value instead.
+  - The gradient fill's top stop opacity (stopOpacity=0.55) exceeds the spec's suggested
+    semi-transparent range of alpha 0.3-0.5 (Notes section) — bring the peak stop
+    down into that band.
+  - Beyond the gradient and the reference line, most chrome (grid, spines, margins)
+    relies on MUI X defaults rather than deliberate refinement — a bit more intentional
+    grid/spine treatment would raise the visual sophistication further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the required light-theme surface.
+      Chrome: Title "Website Visitors · area-basic · javascript · muix · anyplot.ai" is bold dark ink, top-left, fully readable. Y-axis label "Daily Visitors" (rotated) and X-axis label "Date" are dark ink, clearly readable and similarly sized. Tick labels (0.0k-6.5k on Y, Jan 4-Mar 8 on X) are dark gray, legible. Horizontal gridlines are thin and subtle, not competing with the data.
+      Data: Single series filled with a green gradient (opaque brand green near the line, fading to near-transparent near the baseline), 3px brand-green (#009E73) line on top. A dashed gray "Avg 5.0k" reference line with label sits near the right edge, legible against the cream background.
+      Legibility verdict: PASS — no light-on-light issues anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — matches the required dark-theme surface.
+      Chrome: Same title text now rendered in light/white ink, fully readable. Axis labels and tick labels are light gray / off-white, clearly legible against the dark background. Gridlines are subtle light lines, visible but not dominant.
+      Data: Same brand-green (#009E73) line and gradient fill as the light render — data colors are identical between themes, only chrome flipped. The "Avg 5.0k" dashed reference line and label render in light gray/white, clearly visible — no dark-on-dark failures observed.
+      Legibility verdict: PASS — all text and data elements are clearly distinguishable from the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title/axis/tick
+          fonts sensibly scaled
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line + gradient area clearly visible; markers intentionally hidden
+          (showMark=false) which is reasonable for 60 daily points but slightly reduces
+          per-point readability
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green has strong contrast on both surfaces; no
+          red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no overflow/clipping; axis label sizes balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with implicit unit via k-suffix formatter
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds correct for both themes; data
+          color identical across themes'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom gradient fill and reference-line annotation show intent, but
+          overall polish is moderate for a single-series chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid is subtle and appropriately y-only, but spines/margins largely
+          rely on MUI X defaults rather than deliberate refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Average reference line gives a modest focal point, but no stronger
+          hierarchy or emphasis technique beyond that
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct area chart via LineChart area=true, baseline=0
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent gradient fill, gridlines, labeled axes with units
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=date, y=visitors, full range shown on both axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          omitted for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Trend, seasonality, and average reference all present; could show
+          slightly more variety of area-chart features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral website-traffic scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 3k-6.5k daily visitors is a sensible magnitude
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only the required Chart component plus a small RNG helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: tickFontSize=40 workaround for label offset is a hack against undocumented
+          internal layout math rather than a clean solution
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, harness-mount contract followed correctly
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Area-chart construction itself is idiomatic, but the tickFontSize
+          offset hack undercuts idiomatic-API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine and custom SVG gradient defs go beyond a bare
+          LineChart, though both are relatively common techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - gradient-fill
+  - alpha-blending
