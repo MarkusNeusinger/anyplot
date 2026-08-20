@@ -163,6 +163,13 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   (straight from `core/palette.py`) — each derived from its single source of truth so the pages
   cannot drift (#10491).
 
+### Removed
+
+- **Stray tracked plot renders** — `plots/bar-basic/implementations/python/plot-{dark,light}.png`
+  were committed render outputs violating the previews-live-in-GCS rule (flagged by the
+  2026-08-17 license audit, removal approved 2026-08-20); the served previews come from GCS and
+  are unaffected (#10503).
+
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
 anyplot 3.1 makes the catalogue readable by machines. An assistant asked about a plot can now find

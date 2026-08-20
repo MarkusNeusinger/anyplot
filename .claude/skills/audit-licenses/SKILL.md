@@ -98,10 +98,10 @@ Judgment flags the greps can't raise:
   (largest tracked files, data-URIs by design) — all bucket 1. The
   `file` tool misclassifies ~26 `specification.yaml` as "SPEC" and
   flags the `.claude/commands` symlink — both allowed in the awk net.
-- **One known wart:** `plots/bar-basic/implementations/python/plot-{dark,light}.png`
-  are tracked plot renders violating the previews-live-in-GCS rule —
-  reported 2026-08-17, removal pending the user's decision (they also
-  remain in history either way).
+- Former wart resolved: `plots/bar-basic/implementations/python/plot-{dark,light}.png`
+  were tracked plot renders violating the previews-live-in-GCS rule —
+  reported 2026-08-17, removed 2026-08-20 on the user's decision. They
+  remain in history, covered by the history net below.
 - History net: every history-only binary is a self-generated plot
   render (`plots/*/implementations/*/plot-*.png`, one
   `test_output.png`) — own expression, nothing protected. The
