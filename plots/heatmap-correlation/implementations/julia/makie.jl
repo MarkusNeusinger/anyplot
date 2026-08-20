@@ -43,9 +43,6 @@ end
 
 corr_matrix = cor(returns)
 
-# Mask the upper triangle to drop the mirrored, redundant half
-display_matrix = [(i >= j ? corr_matrix[i, j] : NaN) for i in 1:n_assets, j in 1:n_assets]
-
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
     resolution      = (1200, 1200),
@@ -76,28 +73,37 @@ ax = Axis(
     ygridvisible       = false,
 )
 
-hm = heatmap!(
-    ax, 1:n_assets, 1:n_assets, display_matrix;
-    colormap   = IMPRINT_DIV,
-    colorrange = (-1, 1),
-    nan_color  = :transparent,
-)
+# Strongest off-diagonal pair gets a bolder annotation as a focal point.
+off_diag_pairs = [(i, j) for i in 1:n_assets, j in 1:n_assets if i > j]
+strongest_i, strongest_j = off_diag_pairs[argmax(abs(corr_matrix[i, j]) for (i, j) in off_diag_pairs)]
 
-# Pick ink vs. paper text per cell so labels stay legible against both the
-# saturated red/blue extremes and the near-neutral middle of the colormap.
+# Draw each filled cell as its own rectangle (rather than a single heatmap!)
+# so a thin PAGE_BG stroke can separate cells — Heatmap doesn't support
+# strokewidth/strokecolor in this Makie version, poly! does.
 for i in 1:n_assets, j in 1:n_assets
     if i >= j
         value = corr_matrix[i, j]
         cell_color = get(IMPRINT_DIV, (value + 1) / 2)
+        poly!(ax, Rect2f(i - 0.5, j - 0.5, 1, 1);
+              color = cell_color, strokewidth = 1, strokecolor = PAGE_BG)
+
         luminance = 0.299 * cell_color.r + 0.587 * cell_color.g + 0.114 * cell_color.b
         label_color = luminance > 0.5 ? colorant"#1A1A17" : colorant"#F0EFE8"
+        is_strongest = (i, j) == (strongest_i, strongest_j)
         text!(ax, i, j; text = @sprintf("%.2f", value),
-              align = (:center, :center), fontsize = 15, color = label_color)
+              align = (:center, :center),
+              fontsize = is_strongest ? 19 : 15,
+              font = is_strongest ? :bold : :regular,
+              color = label_color)
     end
 end
 
+limits!(ax, 0.5, n_assets + 0.5, 0.5, n_assets + 0.5)
+
 Colorbar(
-    fig[1, 2], hm;
+    fig[1, 2];
+    colormap       = IMPRINT_DIV,
+    limits         = (-1, 1),
     label          = "Pearson correlation",
     labelcolor     = INK,
     labelsize      = 16,
