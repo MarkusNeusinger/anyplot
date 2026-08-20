@@ -1,3 +1,7 @@
+// anyplot.ai
+// indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-08-20
 //# anyplot-orientation: landscape
 // anyplot.ai
 // indicator-ichimoku: Ichimoku Cloud Technical Indicator Chart
