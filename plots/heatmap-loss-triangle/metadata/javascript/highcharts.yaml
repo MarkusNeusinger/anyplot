@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-loss-triangle
 created: '2026-08-20T20:58:58Z'
-updated: '2026-08-20T21:04:36Z'
+updated: '2026-08-20T21:19:59Z'
 generated_by: claude-sonnet
 workflow_run: 32415307638
 issue: 4581
@@ -12,94 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-l
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-loss-triangle/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Development factors (×1.741, ×1.324, …) are computed directly from the same reportPattern
-    that drives the cell values, and the 55/45 actual-vs-projected split lands exactly
-    on the spec's triangular boundary.
-  - Distinctive chart.events.load + point.update() technique dynamically sizes square
-    markers to tile the grid edge-to-edge regardless of Highcharts' auto-computed
-    axis margins.
-  - Actual vs. projected is encoded redundantly (alpha + amber border), not via hue
-    alone — good CVD accessibility, on top of a correct imprint_seq magnitude gradient.
-  - Per-cell label color is computed from the actual blended fill's relative luminance,
-    keeping every one of the 100 labels legible in both themes.
-  - Realistic, internally consistent chain-ladder data (smoothly decaying development
-    factors, plausible year-over-year ultimate-loss growth).
+  - 'Exact triangular structure: 55 actual + 45 projected cells, verified cell-by-cell
+    against the calendar-year cutoff — matches the spec precisely'
+  - 'Sophisticated contrast-aware data-label coloring: computes relative luminance
+    per blended cell color and switches label ink dynamically, keeping all 100 labels
+    legible in both themes'
+  - Actual vs. projected distinguished through three combined signals (color, opacity,
+    amber border) rather than hue alone — CVD-safe
+  - 'Correct Imprint palette usage: imprint_seq for the continuous magnitude gradient,
+    brand green for the Actual legend swatch, amber reserved for its semantic role'
+  - Realistic, factually sound chain-ladder development factors and deterministic
+    seeded data generation
   weaknesses:
-  - At ~400px mobile width the 100 per-cell dollar labels become illegible smudges
-    — consider a slightly larger/bolder dataLabels font or a more compact number format
-    (e.g. "$1.19M") to buy back legibility at scale-down.
-  - Neither axis has a formal title ("Accident Year" / "Development Period") — yAxis.title.text
-    is explicitly null and xAxis has none; the subtitle covers this contextually but
-    an explicit axis title would fully satisfy VQ-06.
-  - The legend swatches show the fixed series base colors (green / amber), not the
-    actual per-cell gradient fill (color intensity encodes magnitude independently
-    of the actual/projected split) — a one-line clarification would prevent readers
-    from assuming the legend swatch is the literal cell fill.
+  - '[Critical, process] Reviewed render artifacts (plot_images/plot-*.png/.html)
+    are stale — they do not reflect the current commit''s highcharts.js (embedded
+    script still uses toLocaleString and lacks the axis titles present in HEAD bf2e5f0e7).
+    This is a CI render/caching bug, not a code defect, and should be investigated
+    independently of this score.'
+  - 'SC-02: current data-label formatter drops the spec-mandated thousands-separator
+    format in favor of abbreviated millions ($1.19M) — revert to a comma-grouped full
+    value (e.g. Number(amount).toLocaleString(''en-US'')) to stay literal to the spec
+    text.'
+  - Data labels are relatively small for a dense 10x10 grid; still legible now, worth
+    a check once the render staleness above is resolved.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1, not pure white
-      Chrome: title, subtitle, legend, row labels (accident years), column labels (dev periods + factors) all in dark ink, clearly readable
-      Data: 10x10 grid, actual cells = solid green-to-blue sequential gradient (imprint_seq) by magnitude, projected cells = same hues faded via alpha + amber outline; first series color is #009E73
+      Background: warm off-white, consistent with #FAF8F1
+      Chrome: title, subtitle, legend, row/column labels all dark and clearly readable against the light background
+      Data: 10x10 grid; upper-left triangle (Actual) uses an imprint_seq green-to-blue gradient keyed to cumulative amount; lower-right triangle (Projected) is the same base hues blended to ~40% opacity with an amber outline. First categorical series (Actual) legend swatch is #009E73-family green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17, not pure black
-      Chrome: title, subtitle, legend, row/column labels all flip to light cream/gray text, clearly readable against dark background; no dark-on-dark failures
-      Data: fill colors pixel-identical to light render (only chrome flipped); per-cell label color recomputed from luminance of the blended fill so every label stays legible
+      Background: warm near-black, consistent with #1A1A17
+      Chrome: title, subtitle, legend, and axis/tick labels flip to light gray/white; no dark-on-dark labels found
+      Data: same underlying gradient hues as the light render for Actual cells (confirmed identical); Projected cells blend toward dark navy in this theme (intentional per-theme opacity blend against the page background, not a categorical-palette inconsistency)
       Legibility verdict: PASS
+
+    NOTE: Both PNGs/HTMLs reviewed were confirmed (via direct diff of the embedded script in plot-light.html vs. the current highcharts.js source) to be stale artifacts predating the last repair commit (missing xAxis/yAxis titles, old toLocaleString label formatter). Visual scoring above reflects the images as provided; VQ-06 was scored conservatively to account for this.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Explicit sizes, fully legible at full res in both themes; per-cell
-          labels compress at ~400px mobile scale
+        comment: All sizes explicitly set, legible in both themes; data labels small
+          relative to the dense 10x10 grid
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions anywhere
+        comment: No overlapping text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers dynamically sized to tile the grid edge-to-edge
+        comment: Cells tile edge-to-edge, dynamically sized to the mount
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Actual vs projected redundantly encoded via alpha+border, not hue
-          alone
+        comment: Actual vs projected uses color+opacity+border, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills a large, balanced share of the square canvas
+        comment: Balanced margins, legend close to chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 1
         max: 2
         passed: false
-        comment: No formal xAxis/yAxis title text; subtitle covers context instead
+        comment: Source has descriptive axis titles (not visually confirmed due to
+          stale render), no units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, imprint_seq for magnitude, amber semantic
-          anchor for projected, theme-correct chrome'
+        comment: imprint_seq for magnitude, brand green for Actual, theme-correct
+          backgrounds
     design_excellence:
       score: 15
       max: 20
@@ -109,23 +111,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful dual color encoding, clean typography, above library defaults
+        comment: Thoughtful continuous color encoding, contrast-aware label coloring
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: All spines/gridlines/tick marks removed, appropriate for heatmap
-          grid
+        comment: No axis/gridlines, clean edge-to-edge tiling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Actual/projected diagonal boundary and magnitude gradient tell a
-          clear chain-ladder story
+        comment: Gradient + amber highlighting makes the actual/projected split immediately
+          visible
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -133,26 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Scatter+square-marker workaround correctly simulates heatmap grid
-          (module unavailable)
+        comment: Correct triangular loss-development heatmap
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: All spec features present
+        passed: false
+        comment: Data-label formatter drops the spec-mandated thousands-separator
+          format for all 100 cells
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dev period, Y=accident year (reversed), all 100 cells shown
+        comment: Rows=accident year, columns=development period, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact, legend labels accurate
+        comment: Title format exact match; legend labels match
     data_quality:
       score: 15
       max: 15
@@ -162,36 +163,37 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Exactly 55 actual + 45 projected, matching spec's triangular split
+        comment: Exactly 55 actual + 45 projected cells, matching the spec's triangular
+          split
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Genuine, neutral actuarial reserving scenario
+        comment: Neutral, plausible actuarial reserving scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Dev factors decay smoothly, plausible loss growth
+        comment: Development factors decrease monotonically toward 1.0, consistent
+          with real chain-ladder patterns
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Procedural, but several color-math helpers needed for theme-adaptive
-          labels
+        comment: No functions/classes beyond small color helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Deterministic seeded LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -203,40 +205,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: No fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart API usage
+        comment: Correct mount contract, animation:false
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct scatter+marker-override workaround, idiomatic per-point config
+        comment: Scatter+square-marker workaround is correct given the core-only bundle
+          but not the library's natural high-level pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: events.load + point.update() dynamic marker-radius technique is Highcharts-specific
-  verdict: REJECTED
+        comment: Dynamic per-point marker/label styling and contrast-aware label coloring
+          are distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
-  - custom-colormap
