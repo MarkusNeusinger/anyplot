@@ -1,7 +1,7 @@
 // anyplot.ai
 // pictogram-basic: Pictogram Chart (Isotype Visualization)
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-08-20
+// Quality: pending | Created: 2026-08-20
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -15,16 +15,14 @@ const rows = [
   { category: "Strawberries", value: 14 },
 ];
 
-function buildIcons(value) {
+const iconCounts = rows.map(({ value }) => {
   const full = Math.floor(value / UNIT);
   const remainder = (value - full * UNIT) / UNIT;
-  const icons = [];
-  for (let i = 0; i < full; i++) icons.push(1);
-  if (remainder > 0.02) icons.push(0.3 + 0.7 * remainder); // keep faint remainders legible
-  return icons;
-}
-
-const iconCounts = rows.map((row) => buildIcons(row.value));
+  // Cap partial-icon opacity well below full (1.0) so fractional remainders
+  // stay visually distinct from whole icons at a glance.
+  const partial = remainder > 0.02 ? [0.45 + 0.15 * remainder] : [];
+  return [...Array(full).fill(1), ...partial];
+});
 const maxIcons = Math.max(...iconCounts.map((icons) => icons.length));
 
 const categories = rows.map((row) => `${row.category} — ${row.value}k t`);
@@ -35,7 +33,14 @@ const series = rows.map((row, i) => ({
   data: iconCounts[i].map((opacity, x) => ({
     x,
     y: i,
-    dataLabels: { style: { opacity } },
+    dataLabels: {
+      style: {
+        opacity,
+        fontSize: i === 0 ? "34px" : "30px", // emphasize the top category
+        // Thin ink stroke keeps faint partial icons visible on light bg.
+        textOutline: opacity < 1 ? `1px ${t.ink}` : "none",
+      },
+    },
   })),
 }));
 
@@ -75,6 +80,11 @@ Highcharts.chart("container", {
     tickLength: 0,
     title: { text: null },
     labels: { style: { color: t.inkSoft, fontSize: "16px" } },
+    // Alternate subtle row banding for visual rhythm beyond icon count/opacity.
+    plotBands: rows
+      .map((_, i) => i)
+      .filter((i) => i % 2 === 1)
+      .map((i) => ({ from: i - 0.5, to: i + 0.5, color: t.grid })),
   },
   legend: { enabled: false },
   tooltip: { enabled: false },
@@ -88,7 +98,7 @@ Highcharts.chart("container", {
         align: "center",
         verticalAlign: "middle",
         y: 0,
-        style: { fontSize: "30px", fontWeight: "normal", textOutline: "none" },
+        style: { fontWeight: "normal" },
       },
     },
   },
