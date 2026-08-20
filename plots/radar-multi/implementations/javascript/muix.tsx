@@ -62,10 +62,33 @@ function RadarLayer() {
   };
   const polygon = (frac) => axes.map((_, i) => point(frac, i).join(",")).join(" ");
 
+  // Data-storytelling focal point: EchoBudget is the standout trade-off in this
+  // dataset — it trails on every axis except Value, where it clearly leads
+  // (92 vs. 60/55), the classic "budget pick wins on the one thing that
+  // matters most to price-sensitive buyers" story.
+  const echo = series.find((s) => s.label === "EchoBudget");
+  const valueIdx = axes.indexOf("Value");
+  const [calloutX, calloutY] = point(echo.values[valueIdx] / MAX, valueIdx);
+  const calloutAngle = angleOf(valueIdx);
+  const anchorR = R * 0.32;
+  const anchorX = cx + anchorR * Math.cos(calloutAngle);
+  const anchorY = cy + anchorR * Math.sin(calloutAngle);
+
   return (
     <g>
-      {/* Concentric grid rings at each value level — outer ring solid, inner
-          rings lighter/thinner so the nested grid stays subtle at the center */}
+      {/* Alternating background bands for depth — page-bg polygons "erase" every
+          other ring so the grid reads as banded rings rather than a flat wash */}
+      {[...RINGS].reverse().map((level, idx) => (
+        <polygon
+          key={`band-${level}`}
+          points={polygon(level / MAX)}
+          fill={idx % 2 === 0 ? GRID : PAGE_BG}
+          fillOpacity={idx % 2 === 0 ? 0.07 : 1}
+        />
+      ))}
+
+      {/* Concentric grid rings at each value level — opacity eases in toward the
+          outer ring so the nested grid stays light near the center */}
       {RINGS.map((level) => (
         <polygon
           key={`ring-${level}`}
@@ -73,7 +96,7 @@ function RadarLayer() {
           fill="none"
           stroke={GRID}
           strokeWidth={level === MAX ? 2 : 1}
-          strokeOpacity={level === MAX ? 1 : 0.6}
+          strokeOpacity={0.35 + 0.65 * (level / MAX)}
         />
       ))}
 
@@ -112,7 +135,7 @@ function RadarLayer() {
           x={cx + 10}
           y={cy - (level / MAX) * R}
           fill={INK_SOFT}
-          fontSize={14}
+          fontSize={15}
           textAnchor="start"
           dominantBaseline="central"
         >
@@ -147,6 +170,37 @@ function RadarLayer() {
           })}
         </g>
       ))}
+
+      {/* Focal-point callout: highlights EchoBudget's Value lead */}
+      <g>
+        <line
+          x1={anchorX}
+          y1={anchorY}
+          x2={calloutX}
+          y2={calloutY}
+          stroke={echo.color}
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+        />
+        <circle cx={calloutX} cy={calloutY} r={10} fill="none" stroke={echo.color} strokeWidth={2} />
+        <rect
+          x={anchorX - 100}
+          y={anchorY - 32}
+          width={200}
+          height={46}
+          rx={8}
+          fill={PAGE_BG}
+          fillOpacity={0.88}
+          stroke={GRID}
+          strokeWidth={1}
+        />
+        <text x={anchorX} y={anchorY - 13} fill={INK} fontSize={15} fontWeight={700} textAnchor="middle">
+          Best on Value
+        </text>
+        <text x={anchorX} y={anchorY + 8} fill={INK_SOFT} fontSize={13} textAnchor="middle">
+          EchoBudget trails elsewhere
+        </text>
+      </g>
     </g>
   );
 }
