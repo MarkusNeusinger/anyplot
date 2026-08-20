@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-basic: Basic Heatmap
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-20
+// Quality: 86/100 | Created: 2026-08-20
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;

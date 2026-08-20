@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-basic
 created: '2026-08-20T20:16:08Z'
-updated: '2026-08-20T20:20:16Z'
+updated: '2026-08-20T20:26:29Z'
 generated_by: claude-sonnet
 workflow_run: 32412595030
 issue: 691
@@ -12,54 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-basic/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Correctly recovers a real heatmap from the core Highcharts bundle (no heatmap/colorAxis
-    module loaded) by drawing cells with the SVG renderer and layering an invisible
-    matched-axis scatter series underneath for genuine native tooltips — a distinctive,
-    well-documented workaround rather than a fake interactivity simulation
-  - Sequential imprint_seq (green-to-blue) correctly chosen over a diverging scale,
-    matching the spec's own guidance that diverging is only for positive/negative
-    data — page views are single-polarity
-  - Data colors are pixel-identical between light and dark renders; only chrome (background,
-    title, labels, grid gaps) flips per theme, with no dark-on-dark or light-on-light
-    failures
-  - Realistic, neutral B2B dashboard usage pattern (weekday morning/afternoon login
-    peaks, damped weekend activity) built from a deterministic seeded LCG plus two
-    Gaussian curves — clearly plausible and reproducible
-  - Hand-drawn vertical colorbar with min/max labels and axis title is clean and well-integrated
-    into the freed right margin; hour labels thinned to every 3rd tick to avoid crowding
-    24 narrow columns
-  - 'Clean canvas: no edge clipping, comfortable margins, geometry computed once as
-    a shared source of truth (CHART_MARGIN) so labels, grid, and hover layer stay
-    aligned'
+  - Hand-rolled SVG-renderer grid cleverly compensates for the missing native heatmap
+    module while still recovering genuine Highcharts hover tooltips via an invisible
+    matched-axis scatter overlay
+  - 'Sequential Imprint gradient (#009E73 to #4467A3) correctly chosen for single-polarity
+    page-view data, and the data colors are pixel-identical between the light and
+    dark renders'
+  - Deterministic bimodal daily-usage curve (morning + afternoon peaks, weekend damping)
+    produces a realistic, readable spatial pattern rather than uniform noise
+  - Balanced canvas layout (~60% chart fill) with the colorbar integrated cleanly
+    into the freed right margin instead of floating separately
+  - All font sizes explicitly set, including a title formula that scales down for
+    the long mandated string so it does not overflow
   weaknesses:
-  - No per-cell value annotations — with a 7x24=168-cell matrix this is a reasonable
-    tradeoff (text would overlap/be unreadable), and the invisible tooltip layer exposes
-    exact values on hover, but the spec's 'add value annotations when readable' note
-    isn't literally satisfied in the static PNG
-  - Colorbar shows only min/max tick labels with no intermediate gradation markers,
-    slightly limiting precise value reading from the static render alone
-  - Because the heatmap module isn't available, the implementation bypasses Highcharts'
-    high-level series API entirely in favor of low-level renderer.rect() calls plus
-    a decoy scatter series — necessary and well-executed given the constraint, but
-    not 'idiomatic' in the sense of using the library's built-in chart type
+  - No explicit axis titles ('Hour of Day' / 'Day of Week') — only tick labels ('12am',
+    'Mon') are shown, leaving the reader to infer what each axis represents; add small
+    axis-title text draws for full VQ-06 credit
+  - Low-value cells (nights and weekends) render as very similar shades of green,
+    making fine-grained differences hard to distinguish — consider a slightly steeper/non-linear
+    gradient mapping or thin per-cell borders for better differentiation
+  - 'CQ-01 KISS: the SVG-renderer workaround requires several helper functions (gaussian,
+    hourlyBase, hexToRgb, lerp, viewsRgb, viewsFill, drawAll) — largely justified
+    by the missing heatmap module, but still a deviation from the flat import/data/plot
+    ideal'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white, not dark. Matches the design-system light surface.
-      Chrome: Title "Dashboard Page Views · heatmap-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; subtitle in softer gray beneath it, also legible. Day labels (Mon-Sun) at left in dark gray, right-aligned against the grid. Hour labels (12am, 3am, ... 9pm) along the bottom, every 3rd hour, dark gray and readable. Grid "lines" are thin off-white gaps between cells (background showing through), subtle and non-dominant. Colorbar at right titled "Page views" with max (3,230) at top and min (45) at bottom, both legible.
-      Data: 7x24 grid of cells colored on a green-to-blue sequential scale (imprint_seq: #009E73 to #4467A3). Low-value cells (nights, weekends) are solid brand green; high-value cells (weekday 9am-4pm) shift toward blue, forming a clear visual cluster during business hours on weekdays. Weekend rows (Sat/Sun) stay mostly green with only mild blue tinting.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Dashboard Page Views · heatmap-basic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle in soft gray beneath it. Day-of-week labels (Mon-Sun) right-aligned on the left; hour labels (12am, 3am, ... 9pm) along the bottom every 3rd column. "Page views" colorbar label with 45/3,230 endpoints on the right. All text renders in dark ink against the light background.
+      Data: 7x24 grid of cells colored from green (#009E73, low values) to blue (#4467A3, high values). Weekday rows (Mon-Fri) show a clear mid-morning-to-afternoon blue band (9am-6pm), weekend rows (Sat-Sun) stay mostly green/teal. Colors match the vertical colorbar swatch on the right.
+      Legibility verdict: PASS — title, subtitle, axis tick labels, and colorbar text are all clearly readable against the light surface; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black, not light. Matches the design-system dark surface.
-      Chrome: Title now rendered in white/light ink, subtitle in light gray — both clearly legible against the dark background. Day and hour labels are light gray and read cleanly. Grid gaps are now dark (background color), consistent with the light render's technique — no visible seams or contrast issues. Colorbar labels and title are light-colored and legible.
-      Data: Same green-to-blue gradient and same cell-by-cell values as the light render — colors are pixel-identical, confirming only chrome flipped between themes. The weekday 9am-4pm cluster of blue cells is equally visible against the dark background.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed (labels and title are properly light-colored, not left as dark ink).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and subtitle now in light/white text, day and hour tick labels in light gray, colorbar label and endpoint values in light gray. All chrome elements flip to light-on-dark correctly, no dark-on-dark text found.
+      Data: Same 7x24 grid with the identical green-to-blue gradient and identical weekday/weekend pattern as the light render — data colors are unchanged between themes, only the chrome (background, text) flipped.
+      Legibility verdict: PASS — title, subtitle, tick labels, and colorbar text are all clearly readable against the dark surface; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -67,49 +60,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout (title scaled to length, 13-16px chrome);
-          all text readable in both themes.
+        comment: All font sizes explicitly set, readable in both themes; title scales
+          down to avoid overflow for the long mandated string
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, colorbar, or grid.
+        comment: No overlapping text or elements observed
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 168-cell grid is dense but each cell is clearly distinguishable;
-          colorbar sized appropriately.
+        comment: 168 cells are visible and appropriately sized, though adjacent low-value
+          cells are hard to distinguish from each other
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential scale, not solely red-green, adequate lightness
-          contrast at both ends.
+        comment: Green-to-blue sequential gradient, CVD-safe, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No overflow or clipping; margins computed once and shared, grid/labels/colorbar
-          all aligned.
+        comment: Chart fills roughly 60% of the canvas, colorbar integrated into freed
+          margin, balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive title + subtitle; colorbar labeled 'Page views'; day/hour
-          labels present.
+        passed: false
+        comment: No explicit 'Hour of Day' / 'Day of Week' axis titles — only tick
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (t.seq[0..1]) used correctly for single-polarity data;
-          identical data colors across themes; correct theme backgrounds.
+        comment: 'imprint_seq gradient (#009E73 -> #4467A3), identical across light/dark,
+          theme-correct backgrounds'
     design_excellence:
       score: 13
       max: 20
@@ -118,25 +110,25 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Custom-built gradient colorbar and computed geometry show real polish
-          beyond generic defaults.
+        passed: false
+        comment: Thoughtful custom-built gradient and colorbar, clearly above a configured
+          default, but not yet publication-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Axes hidden, grid reduced to subtle background gaps, generous whitespace
-          in freed right margin.
+        passed: false
+        comment: Axes hidden, subtle background-gap grid, generous whitespace; some
+          refinement visible but not fully polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Weekday business-hours cluster reads as a clear focal point against
-          the green baseline.
+        passed: false
+        comment: Weekday vs weekend and morning/afternoon-peak contrast is visually
+          legible without annotations
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,116 +136,115 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine heatmap achieved via renderer-drawn cell grid.
+        comment: Correct color-encoded matrix heatmap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Colorbar and logical row/column order present; correctly used sequential
-          (not diverging) for positive-only data; static per-cell value annotations
-          omitted (tooltip-only) given 168-cell density.
+        comment: Sequential colormap correctly chosen for positive-only data, colorbar
+          legend present, rows/columns ordered logically
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=hour, y=day, value=views; full 7x24 matrix shown.
+        comment: Hour on x, day on y, value on color; full 7x24 matrix shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format with descriptive prefix; colorbar legend
-          correctly labeled.
+        comment: Title format correct with descriptive prefix; colorbar label matches
+          data ('Page views')
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Full matrix populated, no missing cells.
+        comment: Shows temporal pattern and weekday/weekend contrast, though the smooth
+          synthetic curve has no standout outlier
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral B2B dashboard login pattern.
+        comment: Neutral, plausible B2B SaaS dashboard login scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 45-3,230 views/hour is a sensible range for the domain.
+        comment: 45-3,230 hourly views is a realistic range for the stated scenario
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Small, justified helper functions only; no classes.
+        comment: Several helper functions used, largely justified by the SVG-renderer
+          workaround needed since no heatmap module is loaded
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic.
+        comment: Deterministic fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; browser globals only, as required.
+        comment: No imports beyond browser globals, nothing unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Real hover interactivity via invisible scatter layer, not a faked
-          tooltip.
+        comment: Appropriate complexity for the constraint; invisible scatter tooltip
+          layer is genuine interactivity, not fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual save calls; animation:false set at chart and series level
-          per harness contract.
+        comment: Harness-managed output, animation disabled in both required places,
+          current API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Bypasses the high-level heatmap API (unavailable in core bundle)
-          for low-level renderer calls — necessary and well-executed, but not idiomatic
-          use of a built-in series type.
+        comment: Expert use of chart.renderer, load/redraw events, and a matched-axis
+          scatter layer to recover native tooltips
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Invisible matched-axis scatter layer recovering native tooltip interactivity
-          is a clever, distinctive technique for this constraint.
+        comment: Direct SVG renderer access combined with a real Highcharts tooltip
+          is a technique fairly unique to this library's architecture
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - manual-ticks
   - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - custom-colormap
-  - minimal-chrome
