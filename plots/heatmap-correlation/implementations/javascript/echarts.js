@@ -32,43 +32,42 @@ const correlationMatrix = [
 // WCAG contrast against the cell's interpolated imprint_div fill, since the
 // diverging colormap's red and blue endpoints have different luminance and a
 // single fixed text color can't stay legible across the whole range.
-const hexToRgb = (hex) => [
-  parseInt(hex.slice(1, 3), 16),
-  parseInt(hex.slice(3, 5), 16),
-  parseInt(hex.slice(5, 7), 16),
-];
-const lerpRgb = (a, b, frac) => a.map((v, i) => v + (b[i] - v) * frac);
-const relLuminance = ([r, g, b]) => {
+const relLuminance = (r, g, b) => {
   const chan = (v) => {
     const c = v / 255;
     return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
   return 0.2126 * chan(r) + 0.7152 * chan(g) + 0.0722 * chan(b);
 };
-const contrast = (l1, l2) => {
-  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
-  return (hi + 0.05) / (lo + 0.05);
-};
 
-const [redRgb, midRgb, blueRgb] = t.div.map(hexToRgb);
+const [redRgb, midRgb, blueRgb] = t.div.map((hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)));
 const DARK_TEXT = "#1A1A17";
 const LIGHT_TEXT = "#F0EFE8";
-const darkLum = relLuminance(hexToRgb(DARK_TEXT));
-const lightLum = relLuminance(hexToRgb(LIGHT_TEXT));
+const darkLum = relLuminance(26, 26, 23);
+const lightLum = relLuminance(240, 239, 232);
 
 const labelColorFor = (value) => {
-  const cellRgb = value <= 0 ? lerpRgb(midRgb, redRgb, -value) : lerpRgb(midRgb, blueRgb, value);
-  const cellLum = relLuminance(cellRgb);
-  return contrast(cellLum, darkLum) >= contrast(cellLum, lightLum) ? DARK_TEXT : LIGHT_TEXT;
+  const [from, to] = value <= 0 ? [midRgb, redRgb] : [midRgb, blueRgb];
+  const cellLum = relLuminance(...from.map((v, i) => v + (to[i] - v) * Math.abs(value)));
+  const darkContrast = (Math.max(cellLum, darkLum) + 0.05) / (Math.min(cellLum, darkLum) + 0.05);
+  const lightContrast = (Math.max(cellLum, lightLum) + 0.05) / (Math.min(cellLum, lightLum) + 0.05);
+  return darkContrast >= lightContrast ? DARK_TEXT : LIGHT_TEXT;
 };
 
 // Mask the upper triangle to remove the redundant mirrored half — only the
 // diagonal and lower triangle carry a cell, matching the row/column order.
+// Diagonal (self-correlation, always 1.00) is muted and unlabeled so focus
+// stays on the informative off-diagonal correlations.
 const heatmapData = [];
 for (let row = 0; row < variables.length; row++) {
   for (let col = 0; col <= row; col++) {
     const value = correlationMatrix[row][col];
-    heatmapData.push({ value: [col, row, value], label: { color: labelColorFor(value) } });
+    const isDiagonal = col === row;
+    heatmapData.push({
+      value: [col, row, value],
+      label: isDiagonal ? { show: false } : { color: labelColorFor(value) },
+      itemStyle: isDiagonal ? { opacity: 0.4 } : {},
+    });
   }
 }
 
@@ -89,7 +88,7 @@ chart.setOption({
     top: 20,
     textStyle: { color: t.ink, fontSize: titleFontSize, fontWeight: 500 },
   },
-  grid: { left: 170, right: 190, top: 130, bottom: 170 },
+  grid: { left: 170, right: 60, top: 130, bottom: 170 },
   xAxis: {
     type: "category",
     data: variables,
@@ -107,16 +106,20 @@ chart.setOption({
     axisTick: { show: false },
     axisLabel: { color: t.inkSoft, fontSize: 15 },
   },
+  // Placed inside the grid's own top-right column, which the triangle mask
+  // leaves blank for every row but the last — reuses that space instead of
+  // reserving a separate margin, so the matrix itself can fill more of the
+  // canvas.
   visualMap: {
     type: "continuous",
     min: -1,
     max: 1,
     calculable: false,
     orient: "vertical",
-    right: 30,
-    top: "middle",
-    itemHeight: 480,
-    itemWidth: 22,
+    right: 100,
+    top: 150,
+    itemHeight: 650,
+    itemWidth: 24,
     inRange: { color: t.div },
     text: ["1.0", "-1.0"],
     textStyle: { color: t.inkSoft, fontSize: 15 },
