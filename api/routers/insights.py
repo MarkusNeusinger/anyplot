@@ -78,7 +78,13 @@ class TopImpl(BaseModel):
     library_id: str
     language: str
     quality_score: float
+    # `preview_url` is the legacy single-theme field (a synonym for the light
+    # variant). The stats page picks a thumbnail per theme, so both variants
+    # have to travel with the payload — without `preview_url_dark` the grid
+    # falls back to the light render on a dark page.
     preview_url: str | None = None
+    preview_url_light: str | None = None
+    preview_url_dark: str | None = None
 
 
 class TimelinePoint(BaseModel):
@@ -290,6 +296,8 @@ async def _build_dashboard(repo: SpecRepository, impl_repo: ImplRepository) -> D
                             language=impl.library.language if impl.library else "python",
                             quality_score=score,
                             preview_url=impl.preview_url,
+                            preview_url_light=impl.preview_url_light,
+                            preview_url_dark=impl.preview_url_dark,
                         )
                     )
 

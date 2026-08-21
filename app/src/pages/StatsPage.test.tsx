@@ -1,7 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { ThemeContext, type ThemeContextValue } from 'src/hooks/useLayoutContext';
 import { StatsPage } from 'src/pages/StatsPage';
 import { render, screen, userEvent, waitFor } from 'src/test-utils';
+
+const darkThemeValue: ThemeContextValue = {
+  mode: 'dark',
+  effective: 'dark',
+  isDark: true,
+  setMode: vi.fn(),
+  cycle: vi.fn(),
+};
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
@@ -78,7 +87,9 @@ const mockDashboard = {
       library_id: 'matplotlib',
       language: 'python',
       quality_score: 95,
-      preview_url: 'https://example.com/img.png',
+      preview_url: 'https://example.com/img-light.png',
+      preview_url_light: 'https://example.com/img-light.png',
+      preview_url_dark: 'https://example.com/img-dark.png',
     },
   ],
   tag_distribution: {
@@ -230,6 +241,36 @@ describe('StatsPage', () => {
     // "matplotlib" appears in library stats and in top implementation cards
     expect(screen.getAllByText('matplotlib').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('95')).toBeInTheDocument();
+  });
+
+  it('shows the theme-matching top-rated thumbnail in light and in dark mode', async () => {
+    mockFetchSuccess();
+
+    const { unmount } = render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Basic Scatter Plot')).toBeInTheDocument();
+    });
+    expect(screen.getByAltText('Basic Scatter Plot')).toHaveAttribute(
+      'src',
+      'https://example.com/img-light_800.png'
+    );
+    unmount();
+
+    mockFetchSuccess();
+    render(
+      <ThemeContext.Provider value={darkThemeValue}>
+        <StatsPage />
+      </ThemeContext.Provider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Basic Scatter Plot')).toBeInTheDocument();
+    });
+    expect(screen.getByAltText('Basic Scatter Plot')).toHaveAttribute(
+      'src',
+      'https://example.com/img-dark_800.png'
+    );
   });
 
   it('shortens echarts/muix library labels and falls back to name for others', async () => {
