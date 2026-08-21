@@ -32,6 +32,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Top-rated thumbnails follow the theme** — the stats page picks a preview per theme, but
+  `/insights/dashboard` never shipped one: its `TopImpl` response model carried only the
+  legacy `preview_url` (a synonym for the light render), so the top-rated grid showed
+  light-styled plots on a dark page. The model now carries `preview_url_light` and
+  `preview_url_dark`, like every other themed payload in the router (#10536).
 - **The MCP server now tells the truth for the whole catalogue** — `get_implementation`
   called the repository without a language, whose `python` default made all 1,004
   R/Julia/JavaScript implementations (28% of the catalogue) answer a false "not found";

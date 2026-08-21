@@ -2049,6 +2049,30 @@ class TestInsightsRouter:
             assert isinstance(data["score_distribution"], dict)
             assert isinstance(data["tag_distribution"], dict)
 
+    def test_dashboard_top_implementations_carry_themed_previews(self, client: TestClient, mock_spec) -> None:
+        """Top-rated entries must ship both theme variants so the stats grid can follow the theme."""
+        dark_url = "https://example.com/plot-dark.png"
+        mock_spec.impls[0].quality_score = 97.0  # Above the top-rated threshold
+        mock_spec.impls[0].preview_url_dark = dark_url
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+        mock_impl_repo = MagicMock()
+        mock_impl_repo.get_total_code_lines = AsyncMock(return_value=500)
+        mock_impl_repo.get_loc_per_impl = AsyncMock(return_value=[("matplotlib", 50)])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.SpecRepository", return_value=mock_spec_repo),
+            patch("api.routers.insights.ImplRepository", return_value=mock_impl_repo),
+        ):
+            response = client.get("/insights/dashboard")
+            assert response.status_code == 200
+            top = response.json()["top_implementations"]
+            assert len(top) == 1
+            assert top[0]["preview_url_light"] == TEST_IMAGE_URL
+            assert top[0]["preview_url_dark"] == dark_url
+
     def test_potd_without_db(self, client: TestClient) -> None:
         """Plot of the day should return 503 when DB not configured."""
         with patch(DB_CONFIG_PATCH, return_value=False):
