@@ -32,6 +32,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Image structured data carries the licensing fields Google recommends** — Search
+  Console flagged every implementation page's `ImageObject` for missing `creator`,
+  `copyrightNotice`, `creditText`, and `acquireLicensePage`. The bot-page JSON-LD now
+  ships all four (creator/credit: anyplot; MIT copyright notice; `/legal` as the
+  license page), completing the image-metadata rich result beside the existing
+  `license` field.
 - **Top-rated thumbnails follow the theme** — the stats page picks a preview per theme, but
   `/insights/dashboard` never shipped one: its `TopImpl` response model carried only the
   legacy `preview_url` (a synonym for the light render), so the top-rated grid showed
