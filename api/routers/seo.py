@@ -583,6 +583,13 @@ def _build_source_code_node(spec, impl, lib_name: str, lang_name: str, page_url:
             "encodingFormat": "image/png",
             "caption": f"{spec.title} rendered with {lib_name}",
             "license": "https://opensource.org/licenses/MIT",
+            # Google's image-metadata rich result recommends these four beside
+            # `license`; Search Console flags each absence per page. /legal is
+            # the page that states the MIT terms the renders are offered under.
+            "acquireLicensePage": "https://anyplot.ai/legal",
+            "creator": {"@type": "Organization", "name": "anyplot", "url": "https://anyplot.ai"},
+            "creditText": "anyplot.ai",
+            "copyrightNotice": "© anyplot.ai — MIT License",
         }
     if impl.updated:
         node["dateModified"] = impl.updated.date().isoformat()

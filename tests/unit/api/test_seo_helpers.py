@@ -420,6 +420,16 @@ class TestBuildImplHtml:
         assert image["contentUrl"] == "https://gcs/preview.png"
         assert image["thumbnailUrl"] == "https://gcs/preview_1200.png"
 
+    def test_jsonld_image_carries_licensing_metadata(self) -> None:
+        """Google's image-metadata rich result recommends these beside `license`;
+        Search Console flags each missing one per page (2026-08 notice)."""
+        image = _extract_jsonld(self._page())["@graph"][1]["image"]
+        assert image["license"] == "https://opensource.org/licenses/MIT"
+        assert image["acquireLicensePage"] == "https://anyplot.ai/legal"
+        assert image["creator"] == {"@type": "Organization", "name": "anyplot", "url": "https://anyplot.ai"}
+        assert image["creditText"] == "anyplot.ai"
+        assert image["copyrightNotice"] == "© anyplot.ai — MIT License"
+
     def test_jsonld_without_render_keeps_card_image(self) -> None:
         impl = _mock_impl("matplotlib", "python", preview=None)
         spec = _mock_spec([impl])
