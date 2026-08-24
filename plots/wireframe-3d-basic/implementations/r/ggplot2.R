@@ -41,7 +41,7 @@ project_x <- function(x, y, z) x * right_axis[1] + y * right_axis[2] + z * z_lif
 project_y <- function(x, y, z) x * up_axis[1]    + y * up_axis[2]    + z * z_lift * up_axis[3]
 
 # --- Data: ripple surface z = sin(sqrt(x^2 + y^2)) -----------------------------
-grid_n <- 25
+grid_n <- 15
 x_vals <- seq(-6, 6, length.out = grid_n)
 y_vals <- seq(-6, 6, length.out = grid_n)
 
@@ -81,9 +81,10 @@ ticks$px <- project_x(ticks$x, ticks$y, ticks$z)
 ticks$py <- project_y(ticks$x, ticks$y, ticks$z)
 
 # Z ticks sit on the vertical axis line itself; nudge the label text
-# (not the axis line) sideways into the open gap left of the mesh.
+# (not the axis line) sideways into the open gap left of the mesh, well past
+# the Y-axis tick column so the two label groups don't merge into one line.
 z_ticks <- data.frame(x = -6, y = -6, z = z_breaks, label = z_breaks)
-z_ticks$px <- project_x(z_ticks$x, z_ticks$y, z_ticks$z) - 7.6
+z_ticks$px <- project_x(z_ticks$x, z_ticks$y, z_ticks$z) - 13
 z_ticks$py <- project_y(z_ticks$x, z_ticks$y, z_ticks$z)
 
 axis_labels <- data.frame(
@@ -98,15 +99,15 @@ axis_labels$py <- project_y(axis_labels$x, axis_labels$y, axis_labels$z)
 # --- Plot -----------------------------------------------------------------
 p <- ggplot() +
   geom_path(data = surface, aes(px, py, group = y),
-            color = BRAND, linewidth = 0.3, alpha = 0.6, lineend = "round") +
+            color = BRAND, linewidth = 0.3, alpha = 0.35, lineend = "round") +
   geom_path(data = surface, aes(px, py, group = x),
-            color = BRAND, linewidth = 0.3, alpha = 0.6, lineend = "round") +
+            color = BRAND, linewidth = 0.3, alpha = 0.35, lineend = "round") +
   geom_segment(data = axis_lines, aes(x = px, y = py, xend = pxend, yend = pyend),
                color = INK_SOFT, linewidth = 0.6) +
   geom_text(data = ticks, aes(px, py, label = label),
-            color = INK_SOFT, size = 2.8) +
+            color = INK_SOFT, size = 3.3) +
   geom_text(data = z_ticks, aes(px, py, label = label),
-            color = INK_SOFT, size = 2.8) +
+            color = INK_SOFT, size = 3.3) +
   geom_text(data = axis_labels, aes(px, py, label = label),
             color = INK, size = 3.6, fontface = "bold") +
   labs(title = "wireframe-3d-basic · r · ggplot2 · anyplot.ai") +
