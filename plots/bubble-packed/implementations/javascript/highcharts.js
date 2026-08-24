@@ -1,3 +1,7 @@
+// anyplot.ai
+// bubble-packed: Basic Packed Bubble Chart
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-08-24
 //# anyplot-orientation: square
 // anyplot.ai
 // bubble-packed: Basic Packed Bubble Chart
