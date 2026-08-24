@@ -1,0 +1,262 @@
+library: ggplot2
+language: r
+specification_id: wireframe-3d-basic
+created: '2026-08-24T12:45:01Z'
+updated: '2026-08-24T12:58:43Z'
+generated_by: claude-sonnet
+workflow_run: 32727527087
+issue: 1015
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/wireframe-3d-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Grid density and alpha reduced significantly (625->225 points, alpha 0.6->0.35)
+    per prior review feedback, producing a markedly cleaner wireframe read
+  - Z-axis and Y-axis tick label columns now clearly separated (horizontal offset
+    increased -7.6->-13), eliminating the ambiguous shared-column read flagged in
+    Review 1
+  - Tick label font size bumped 2.8mm->3.3mm for better balance against the bold 3.6mm
+    axis titles
+  - Genuinely inventive hand-rolled orthographic camera projection (elevation 30deg
+    / azimuth 45deg) that works around ggplot2's lack of 3D grammar, matching the
+    spec's exact viewing angle request
+  - Clean KISS code, reproducible seed, only ggplot2 + ragg imported, theme-adaptive
+    chrome flips correctly between renders while the mesh color stays identical
+  - 'Full spec compliance: correct plot type, all required features present (grid
+    lines in both x and y directions, labeled X/Y/Z axes with tick marks), correct
+    mandated title format, no legend needed for a single series'
+  weaknesses:
+  - Interior of the mesh, especially near the two central ripple peaks, still shows
+    a moderately dense crosshatch of crossing lines (no depth-sorting/hidden-line
+    removal in the projection) - individual grid cells are hard to trace there even
+    though the overall dome/ripple silhouette reads clearly
+  - Grid resolution (15x15 = 225 points) is below the spec's recommended 20x20-50x50
+    range; a defensible clarity trade-off given the no-occlusion projection technique,
+    but a distance-based alpha/color falloff would let resolution increase without
+    reintroducing clutter
+  - No back/top box edges or floor reference plane - leaves spatial grounding slightly
+    ambiguous (minor, carried over from Review 1, not a blocker)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Title "wireframe-3d-basic · r · ggplot2 · anyplot.ai" centered at top in dark ink (#1A1A17), fully visible with no clipping. Bold "X"/"Y"/"Z" axis labels sit at the three box endpoints in the same dark ink. Muted grey-brown (#4A4A44) tick labels run along the two mirrored X/Y diagonals (-6, -3, 0, 3, 6) and up the vertical Z axis (-1, 0, 1); the Z-tick column is now clearly offset to the left, no longer sharing a screen column with the Y-tick labels.
+      Data: Single-series wireframe mesh entirely in brand green (#009E73), forming a dome/crown-shaped ripple surface with grid lines running in both x and y directions per spec. The overall topology (central peak, concentric dips and rises) reads clearly; the interior near the two central humps still shows a moderate crosshatch of crossing lines from the lack of hidden-line removal, though noticeably less cluttered than a denser 625-point mesh would be.
+      Legibility verdict: PASS - all text is readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Same title, axis labels, and tick labels as the light render, now rendered in light ink (#F0EFE8) / soft grey (#B8B7B0) respectively - fully legible against the dark surface, no dark-on-dark failures anywhere.
+      Data: Mesh color is identical brand green (#009E73) to the light render - only chrome (background, ink) flipped, confirming correct theme-adaptive implementation. Same interior crosshatch density as the light render.
+      Legibility verdict: PASS - all text remains clearly readable, brand green reads well against the dark surface.
+
+    Both renders pass the theme-readability check; data colors are identical between themes and only chrome flips as required.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 12pt, axis labels 3.6mm bold, tick
+          labels bumped 2.8mm->3.3mm); readable at full size in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Z-tick column now clearly separated from the Y-tick column after
+          the offset increase; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid density and alpha halved from Review 1, improving legibility;
+          interior near the central ripple peaks still crosshatches due to no depth-sorting
+          in the projection
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue brand green against theme-adaptive neutral chrome, no
+          red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot and axis box use a healthy share of the canvas,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X/Y/Z bold labels plus numeric tick marks on all three axes; Z vs
+          Y tick ambiguity from Review 1 is fixed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both renders; backgrounds and chrome
+          are theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hand-rolled 3D camera projection is a genuinely sophisticated
+          solve; reduced mesh clutter lets the design read more clearly than Review
+          1
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void chrome is clean and minimal; lower grid density/alpha
+          improved refinement over Review 1's crosshatch texture
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ripple shape and central focal point read more clearly now that density
+          is reduced, though no explicit emphasis/annotation is added
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D wireframe plot type, projected via custom camera
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid lines in both x/y directions, 3D perspective at elevation 30/azimuth
+          45, all three axes labeled with tick marks
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/z correctly mapped through the projection; full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no legend needed for single
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Ripple surface shows multiple peaks/dips across the domain; grid_n=15
+          is below the spec's 20-50 recommendation but a deliberate, documented legibility
+          trade-off
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral mathematical ripple function z = sin(sqrt(x^2+y^2)), matches
+          the spec's own example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Domain and z-range are mathematically correct for the chosen function
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear script: tokens -> camera math -> data -> plot -> save, no
+          functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 + ragg imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a hand-rolled 3D projection, no fake UI
+          or fabricated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current ggplot2 API (linewidth,
+          not size)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_path/geom_segment/geom_text layering and theme_void
+          base
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-rolled camera projection to work around ggplot2's lack of 3D
+          support is distinctive and hard to replicate trivially in another library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
