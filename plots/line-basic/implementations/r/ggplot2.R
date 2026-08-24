@@ -23,16 +23,33 @@ daily_temp_c <- seasonal_curve + rnorm(n_days, mean = 0, sd = 0.7)
 
 df <- tibble::tibble(day = day_of_season, temperature = daily_temp_c)
 
+# Seasonal peak — the single hottest observed reading — anchors a focal
+# annotation that tells the rise-then-fall story.
+peak_day  <- day_of_season[which.max(daily_temp_c)]
+peak_temp <- max(daily_temp_c)
+peak_df   <- tibble::tibble(day = peak_day, temperature = peak_temp)
+
 # --- Plot --------------------------------------------------------------------
 plot_title <- "line-basic · r · ggplot2 · anyplot.ai"
 
 p <- ggplot(df, aes(x = day, y = temperature)) +
-  geom_line(color = BRAND, linewidth = 1.1) +
+  geom_smooth(
+    se = FALSE, method = "loess", formula = y ~ x,
+    color = INK_SOFT, linewidth = 0.6, linetype = "dashed"
+  ) +
+  geom_line(color = BRAND, linewidth = 1.5) +
+  geom_point(data = peak_df, color = BRAND, size = 2.3) +
+  annotate(
+    "text", x = peak_day - 4, y = peak_temp + 1.1,
+    label = sprintf("Peak: %.1f°C", peak_temp),
+    color = INK_SOFT, size = 3, fontface = "italic", hjust = 0.5
+  ) +
   labs(
     title = plot_title,
     x = "Day of Season",
     y = "Temperature (°C)"
   ) +
+  scale_x_continuous(expand = expansion(mult = c(0.01, 0.02))) +
   theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -44,7 +61,7 @@ p <- ggplot(df, aes(x = day, y = temperature)) +
     axis.title         = element_text(color = INK, size = 10),
     axis.text          = element_text(color = INK_SOFT, size = 8),
     axis.ticks         = element_blank(),
-    plot.title         = element_text(color = INK, size = 12),
+    plot.title         = element_text(color = INK, size = 12, face = "bold"),
     plot.margin        = margin(12, 16, 8, 8)
   )
 
