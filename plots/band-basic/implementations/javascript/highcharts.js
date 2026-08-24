@@ -65,6 +65,12 @@ Highcharts.chart("container", {
       text: "Sea Level Rise Since 1900 (mm)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
+    // The stacking trick anchors the invisible spacer series at 0, which would
+    // otherwise force the axis to start at 0 and waste ~40% of the canvas below
+    // the data (~220-550mm). Cropping to a tighter min is safe: the spacer stays
+    // fully transparent, so the stacking math is unaffected — only the visible
+    // viewport tightens.
+    min: 150,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
@@ -105,7 +111,30 @@ Highcharts.chart("container", {
     {
       name: "Projected mean",
       type: "spline",
-      data: years.map((year, i) => [year, centerLine[i]]),
+      data: years.map((year, i) => {
+        const point = [year, centerLine[i]];
+        if (i !== years.length - 1) return point;
+        // Callout on the final projected value gives the trend line a clear
+        // focal point instead of just trailing off at the plot edge.
+        return {
+          x: year,
+          y: centerLine[i],
+          dataLabels: {
+            enabled: true,
+            format: `${centerLine[i]} mm by ${year}`,
+            align: "right",
+            x: -8,
+            y: -12,
+            style: {
+              color: t.ink,
+              fontSize: "14px",
+              fontWeight: "600",
+              textOutline: "none",
+            },
+          },
+          marker: { enabled: true, radius: 5, fillColor: t.palette[0] },
+        };
+      }),
       color: t.palette[0],
       lineWidth: 3,
       showInLegend: true,
