@@ -81,14 +81,39 @@ const criticalDataset = {
   pointStyle: "rectRot",
   pointRadius: 9,
   pointBorderWidth: 2,
-  backgroundColor: "#AE3030",
+  backgroundColor: t.palette[4],
   borderColor: t.pageBg,
+};
+
+// Draws "1x"/"2x"/"3x" labels directly on the engine-order lines, at the
+// point where each line either reaches the right edge or exits the top of
+// the plot area (order lines are steep enough that most exit through the
+// top well before SPEED_MAX).
+const orderLabelPlugin = {
+  id: "orderLabelPlugin",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    ctx.save();
+    ctx.font = "600 13px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    engineOrders.forEach(({ order }) => {
+      const endX = Math.min(SPEED_MAX, (FREQ_MAX * 60) / order);
+      const endY = (order / 60) * endX;
+      const px = Math.min(scales.x.getPixelForValue(endX) - 6, chartArea.right - 4);
+      const py = Math.max(scales.y.getPixelForValue(endY) - 4, chartArea.top + 12);
+      ctx.fillText(`${order}x`, px, py);
+    });
+    ctx.restore();
+  },
 };
 
 // --- Chart -----------------------------------------------------------------
 new Chart(canvas, {
   type: "line",
   data: { datasets: [...modeDatasets, ...orderDatasets, criticalDataset] },
+  plugins: [orderLabelPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
@@ -102,7 +127,26 @@ new Chart(canvas, {
       },
       legend: {
         position: "bottom",
-        labels: { color: t.ink, font: { size: 14 }, usePointStyle: true, boxWidth: 20, padding: 16 },
+        labels: {
+          color: t.ink,
+          font: { size: 14 },
+          usePointStyle: true,
+          boxWidth: 20,
+          padding: 16,
+          // Default generateLabels renders every series as a circle, so the
+          // three engine-order lines are indistinguishable in the legend
+          // even though they use distinct dash patterns on the plot. Swap
+          // those entries to the "line" point style, which respects the
+          // dataset's borderDash when stroked.
+          generateLabels(chart) {
+            const items = Chart.defaults.plugins.legend.labels.generateLabels.call(this, chart);
+            items.forEach((item) => {
+              const dataset = chart.data.datasets[item.datasetIndex];
+              if (dataset.borderDash) item.pointStyle = "line";
+            });
+            return items;
+          },
+        },
       },
     },
     scales: {
