@@ -1,7 +1,7 @@
 // anyplot.ai
 // density-basic: Basic Density Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-24
+// Quality: 94/100 | Created: 2026-08-24
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data: reaction times (ms) in a cognitive test, right-skewed ----------
