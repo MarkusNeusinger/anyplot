@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: campbell-basic
 created: '2026-08-24T19:43:34Z'
-updated: '2026-08-24T19:47:33Z'
+updated: '2026-08-24T19:57:30Z'
 generated_by: claude-sonnet
 workflow_run: 32769236633
 issue: 4241
@@ -12,90 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/chartjs/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - 'First categorical series is brand green #009E73 and all four mode curves use
-    canonical Imprint palette order (positions 1-4), identical between light and dark
-    renders'
-  - Critical speeds computed algebraically as exact line-line intersections (mode.a
-    / (slope - mode.b)) rather than approximated/simulated, then sorted and capped
-    at 10 per the spec's 6-10 range
-  - Natural frequency curves correctly show mixed gyroscopic behavior - 2nd Bending
-    softens (negative slope) while the other three modes stiffen (positive slope),
-    matching the spec's 'some increase, some decrease' requirement
-  - Fully deterministic, in-memory data generation with no RNG at all - reproducible
+  - 'All three attempt-1 weaknesses are fixed: the legend now renders dashed-line
+    swatches for the 1x/2x/3x engine-order entries (generateLabels override with pointStyle:''line'')
+    instead of indistinguishable circles, the critical-speed marker color is sourced
+    from t.palette[4] instead of a hardcoded hex, and a custom orderLabelPlugin now
+    draws ''1x''/''2x''/''3x'' text directly on the excitation lines'
+  - 'Palette compliance is exemplary: first series is brand green #009E73, all four
+    natural-frequency curves follow canonical Imprint order (positions 1-4), and data
+    hues are pixel-identical between light and dark renders while chrome correctly
+    flips'
+  - Critical speeds are computed algebraically as exact line-line intersections (mode.a
+    / (slope - mode.b)), not approximated, then sorted and capped at 10 per the spec's
+    6-10 range
+  - The custom afterDatasetsDraw plugin and generateLabels legend override demonstrate
+    genuine Chart.js plugin-API mastery beyond basic dataset configuration
+  - Fully deterministic, in-memory data generation with no RNG anywhere - reproducible
     by construction
-  - Engine order lines are visually distinguished from natural-frequency curves by
-    color (ink/white vs Imprint hues) and by distinct dash patterns (dotted/dashed/dash-dot),
-    with critical-speed diamonds using a semantic matte-red marker with a page-background
-    edge ring for definition
-  - 'Theme-adaptive chrome fully correct: title/axis/tick colors follow t.ink / t.inkSoft,
-    grid uses t.grid, backgrounds are the warm #FAF8F1 / #1A1A17 surfaces, canvas
-    saved at exact 3200x1800 landscape target'
-  - 'Clean mount-node contract compliance: single canvas appended to #container, animation:
-    false set, no fixed canvas sizing'
+  - 'Theme-adaptive chrome is fully correct: title/axis/tick colors follow t.ink/t.inkSoft,
+    grid uses t.grid, backgrounds are the warm #FAF8F1/#1A1A17 surfaces, canvas saved
+    at the exact 3200x1800 landscape target'
   weaknesses:
-  - Legend swatches for the three engine-order lines (1x/2x/3x) render as identical
-    solid circles (Chart.js usePointStyle defaults to a circle, ignoring borderDash)
-    - a reader can only tell 1x from 2x from 3x by tracing the dash pattern on the
-    plot itself, not from the legend. Consider a custom legend (generateLabels override)
-    that renders a short dashed-line swatch matching each dataset's borderDash.
-  - Critical-speed marker color is the hardcoded literal "#AE3030" instead of referencing
-    t.palette[4] (the same semantic-red slot) - functionally identical output but
-    drifts from the token-based pattern used everywhere else in the file
-  - 'Design excellence is solid but generic for a Campbell diagram: no on-line ''1x''/''2x''/''3x''
-    text labels near the line ends and no optional shading/highlighting around the
-    critical-speed intersections, both called out as spec suggestions to strengthen
-    the visual storytelling'
-  - Two clusters of critical-speed diamonds sit close together (~1700-1800 RPM near
-    60 Hz and near 85 Hz) - not overlapping badly, but a small repulsion/offset would
-    improve clarity at that density
+  - Two clusters of critical-speed diamonds still sit close together (~1700-1800 RPM
+    near 60 Hz and near 85 Hz) - not overlapping badly, but a small radial offset
+    would improve clarity at that density
+  - The spec's optional enhancement - shading or highlighting the critical-speed zones
+    around intersection points - is still not implemented; only the point markers
+    and on-line order labels carry the storytelling
+  - Chart.js default axis border/tick marks remain at default weight with no explicit
+    spine refinement (e.g. removing tick marks, thinning the axis line) beyond the
+    token-based color mapping, keeping visual refinement at a good-but-not-exceptional
+    level
+  - The on-line '1x'/'2x'/'3x' text labels are drawn with a flat fill color and no
+    background pill or halo, so where a label crosses a gridline or another curve
+    near the top of the chart the contrast is slightly reduced
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title "campbell-basic · javascript · chartjs · anyplot.ai" in dark ink, centered, ~45% of plot width. Axis titles "Rotational Speed (RPM)" and "Natural Frequency (Hz)" in dark ink. Tick labels in softer gray-ink, comma-formatted (e.g. "6,000"). Subtle light-gray gridlines on both axes. Bottom legend with 8 entries (4 mode names, 3 engine-order labels, "Critical Speeds"), all in dark ink text.
-      Data: Four solid mode curves in canonical Imprint order - green (1st Bending), lavender/violet (2nd Bending), blue (1st Torsional), ochre (Axial). Three black diagonal reference lines from the origin with distinct dash patterns (dotted/dashed/dash-dot) for 1x/2x/3x engine order. Red rotated-square (diamond) markers at critical-speed intersections. First series confirmed #009E73 green.
-      Legibility verdict: PASS - all title, axis, and tick text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "campbell-basic · javascript · chartjs · anyplot.ai" in dark ink, centered, comfortably within plot width. Axis titles "Rotational Speed (RPM)" and "Natural Frequency (Hz)" in dark ink. Tick labels in softer gray-ink, comma-formatted (e.g. "6,000"). Subtle light gridlines on both axes, clearly visible but not competing with data. Bottom legend with 8 entries (4 mode names as circle swatches, 3 engine-order labels as dashed-line swatches matching their on-plot dash pattern, "Critical Speeds" as a diamond swatch), all in dark ink text.
+      Data: Four solid mode curves in canonical Imprint order - green (1st Bending), lavender/violet (2nd Bending), blue (1st Torsional), ochre (Axial). Three black diagonal reference lines from the origin with distinct dash patterns (dotted/dashed/dash-dot) for 1x/2x/3x engine order, each labeled directly on the line near its upper end ("1x", "2x", "3x" in dark ink). Red rotated-square (diamond) markers with a light edge ring mark critical-speed intersections. First series confirmed #009E73 green.
+      Legibility verdict: PASS - all title, axis, tick, legend, and on-line order-label text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Same title and axis titles now rendered in light ink (near-white), tick labels in a softer light-gray. Gridlines are faint light lines on the dark surface. Engine-order reference lines flip from black to white/off-white (theme-correctly), keeping the same dash patterns. Legend text is light-colored and fully legible.
-      Data: The four mode curve colors (green, lavender, blue, ochre) and the red critical-speed diamonds are pixel-identical to the light render - only chrome elements (background, text, grid, engine-order line color) flipped, as required. No dark-on-dark failures were found; text stays high-contrast against the near-black surface.
-      Legibility verdict: PASS - no dark-on-dark title/label/tick issues; brand green and matte-red markers remain clearly visible.
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Same title and axis titles rendered in light ink (near-white), tick labels in a softer light-gray. Gridlines are faint light lines on the dark surface. Engine-order reference lines flip from black to white/off-white (theme-correctly), keeping the same dash patterns, and their on-line "1x"/"2x"/"3x" labels flip to light ink text, staying legible. Legend text and dashed-line swatches are light-colored and fully legible.
+      Data: The four mode curve colors (green, lavender, blue, ochre) and the red critical-speed diamonds are pixel-identical to the light render - only chrome elements (background, text, grid, engine-order line/label color) flipped, as required. No dark-on-dark failures were found; text stays high-contrast against the near-black surface.
+      Legibility verdict: PASS - no dark-on-dark title/label/tick/legend issues; brand green and matte-red markers remain clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at appropriate sizes; minor deduction
-          only for the indistinguishable engine-order legend swatches
+        comment: All text (title, axes, ticks, legend, and the new on-line order labels)
+          is clearly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text collisions; a couple of critical-speed diamond clusters sit
-          close together around 1700-1800 RPM
+        comment: No text collisions; two critical-speed diamond clusters sit close
+          together around 1700-1800 RPM
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Sparse dataset (50-100 pts/curve) with prominent 3.5px lines and
-          9px diamond critical markers with edge rings - appropriately sized
+        comment: Sparse dataset with prominent 3.5px lines, 9px diamond critical markers
+          with edge rings, and now-legible legend dash swatches plus on-line order
+          labels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant dash-pattern encoding on engine-order lines aids CVD readers;
-          semantic red used only for critical markers
+        comment: Redundant dash-pattern + text-label encoding on engine-order lines
+          aids CVD readers; semantic red used only for critical markers
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -114,34 +112,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order for all 4 modes, correct
-          theme backgrounds in both renders'
+        comment: 'First series #009E73, canonical Imprint order for all 4 modes, critical
+          marker now sourced from t.palette[4], correct theme backgrounds in both
+          renders'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean but default-level polish; no exceptional custom flourishes
-          beyond token-based styling
+        comment: On-line order labels and dashed legend swatches add real polish over
+          attempt 1, but overall look remains token-based-default rather than exceptionally
+          custom
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid and generous whitespace; Chart.js default axis border
-          still present, no spine removal customization
+        comment: Subtle grid and generous whitespace; Chart.js default axis border/tick
+          marks still present, no explicit spine refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Critical-speed diamonds create a clear focal point, but no on-line
-          order labels or highlighted critical zones (spec's optional enhancement)
-          to push the story further
+        comment: On-line order labels plus critical-speed diamonds create a much clearer
+          story than attempt 1, but the spec's optional critical-zone shading is still
+          absent
     spec_compliance:
       score: 15
       max: 15
@@ -158,8 +158,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Mode labels, engine-order labels, distinct critical-speed markers,
-          and clean legend all present
+        comment: Mode labels, engine-order labels (now on-line, not just legend),
+          distinct critical-speed markers, and clean legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -173,7 +173,7 @@ review:
         max: 3
         passed: true
         comment: Title matches mandated format; legend labels match mode/order naming
-          from the spec
+          from the spec and now visually distinguish dash patterns
     data_quality:
       score: 14
       max: 15
@@ -234,7 +234,7 @@ review:
         comment: Correct mount-node contract, animation disabled, current Chart.js
           v4 API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -246,16 +246,19 @@ review:
           a showLine:false scatter-style dataset for markers
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Uses rectRot pointStyle and per-line borderDash arrays, but no plugin/annotation
-          features beyond core datasets
+        comment: Custom afterDatasetsDraw plugin for on-line labels and a generateLabels
+          legend override go beyond basic dataset config, though no further plugin/annotation
+          features are used
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
