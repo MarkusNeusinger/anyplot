@@ -2,12 +2,6 @@
 // waveform-audio: Audio Waveform Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-08-24
-//# anyplot-orientation: landscape
-// anyplot.ai
-// waveform-audio: Audio Waveform Plot
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
@@ -73,6 +67,13 @@ for (let start = 0; start < sampleCount; start += bucketSize) {
   lowerEnvelope.push(bucketMin);
 }
 
+// Locate the loudest syllable (tallest envelope bucket) to call it out visually.
+let peakIndex = 0;
+for (let i = 1; i < upperEnvelope.length; i += 1) {
+  if (upperEnvelope[i] > upperEnvelope[peakIndex]) peakIndex = i;
+}
+const peakTime = bucketTimes[peakIndex];
+
 const title = "Speech Utterance · waveform-audio · javascript · muix · anyplot.ai";
 const titleHeight = 64;
 
@@ -106,13 +107,14 @@ export default function Chart() {
         height={window.ANYPLOT_SIZE.height - titleHeight}
         skipAnimation
         margin={{ top: 20, right: 40, bottom: 60, left: 80 }}
-        grid={{ horizontal: true }}
+        grid={{ horizontal: true, vertical: true }}
         xAxis={[
           {
             data: bucketTimes,
             scaleType: "linear",
             label: "Time (s)",
             valueFormatter: (value) => `${value.toFixed(2)}s`,
+            tickNumber: 10,
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
           },
@@ -131,7 +133,7 @@ export default function Chart() {
             id: "upper-envelope",
             data: upperEnvelope,
             area: true,
-            showMark: false,
+            showMark: ({ index }) => index === peakIndex,
             curve: "linear",
             color: t.palette[0],
             label: "Amplitude",
@@ -150,11 +152,24 @@ export default function Chart() {
           "& .MuiAreaElement-root": { fillOpacity: 0.55 },
           "& .MuiLineElement-root": { strokeWidth: 1.25 },
           "& .MuiChartsGrid-horizontalLine": { stroke: t.grid },
+          "& .MuiChartsGrid-verticalLine": { stroke: t.grid, opacity: 0.4 },
+          "& .MuiMarkElement-root": {
+            fill: t.palette[0],
+            stroke: t.pageBg,
+            strokeWidth: 2,
+          },
         }}
       >
         <ChartsReferenceLine
           y={0}
           lineStyle={{ stroke: t.inkSoft, strokeWidth: 1.5, opacity: 0.6 }}
+        />
+        <ChartsReferenceLine
+          x={peakTime}
+          label="Loudest syllable"
+          labelAlign="start"
+          labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeWidth: 1, strokeDasharray: "4 4", opacity: 0.5 }}
         />
       </LineChart>
     </div>
