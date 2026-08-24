@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 85/100 | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 
 const t = window.ANYPLOT_TOKENS;
 const TITLE = "density-basic · javascript · muix · anyplot.ai";
@@ -43,7 +44,10 @@ const n = finishTimes.length;
 const meanTime = finishTimes.reduce((sum, v) => sum + v, 0) / n;
 const variance =
   finishTimes.reduce((sum, v) => sum + (v - meanTime) ** 2, 0) / (n - 1);
-const bandwidth = 1.06 * Math.sqrt(variance) * n ** (-1 / 5);
+// Multiplier bumped well above the textbook 1.06 so the sparse right tail
+// (a handful of very slow finishers) decays smoothly instead of showing a
+// spurious secondary bump around individual outlier points.
+const bandwidth = 1.8 * Math.sqrt(variance) * n ** (-1 / 5);
 
 const dataMin = Math.min(...finishTimes);
 const dataMax = Math.max(...finishTimes);
@@ -66,6 +70,10 @@ const density = grid.map(
     (n * bandwidth),
 );
 
+// Focal-point annotation: mark the modal (peak-density) finish time.
+const peakIndex = density.indexOf(Math.max(...density));
+const peakFinishTime = Math.round(grid[peakIndex]);
+
 export default function Chart() {
   const chartHeight = window.ANYPLOT_SIZE.height - TITLE_HEIGHT;
 
@@ -82,7 +90,7 @@ export default function Chart() {
           lineHeight: `${TITLE_HEIGHT}px`,
           paddingLeft: 24,
           fontSize: 22,
-          fontWeight: 500,
+          fontWeight: 600,
           color: t.ink,
         }}
       >
@@ -130,7 +138,15 @@ export default function Chart() {
           "& .MuiAreaElement-root": { fillOpacity: 0.35 },
           "& .MuiLineElement-root": { strokeWidth: 3 },
         }}
-      />
+      >
+        <ChartsReferenceLine
+          x={peakFinishTime}
+          label={`Peak ≈ ${peakFinishTime} min`}
+          labelAlign="end"
+          labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4" }}
+        />
+      </LineChart>
     </div>
   );
 }
