@@ -70,6 +70,22 @@ g.append("g")
   .call((sel) => sel.selectAll("line").attr("stroke", t.grid).attr("stroke-opacity", 0.6));
 
 // --- Area + line --------------------------------------------------------------
+// Vertical fill gradient (denser near the curve, fading toward the baseline)
+// for more visual depth than a flat fill-opacity.
+const gradientId = "density-fill-gradient";
+svg
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", gradientId)
+  .attr("x1", "0%")
+  .attr("y1", "0%")
+  .attr("x2", "0%")
+  .attr("y2", "100%")
+  .call((grad) => {
+    grad.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.45);
+    grad.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.05);
+  });
+
 const area = d3
   .area()
   .x((d) => x(d[0]))
@@ -81,7 +97,7 @@ const line = d3
   .x((d) => x(d[0]))
   .y((d) => y(d[1]));
 
-g.append("path").datum(density).attr("d", area).attr("fill", t.palette[0]).attr("fill-opacity", 0.25);
+g.append("path").datum(density).attr("d", area).attr("fill", `url(#${gradientId})`);
 g.append("path")
   .datum(density)
   .attr("d", line)
@@ -99,8 +115,48 @@ g.append("g")
   .attr("y1", ih)
   .attr("y2", ih - 12)
   .attr("stroke", t.palette[0])
-  .attr("stroke-width", 1)
-  .attr("stroke-opacity", 0.35);
+  .attr("stroke-width", 1.4)
+  .attr("stroke-opacity", 0.5);
+
+// --- Peak annotations: call out the two-population (bimodal) shape ----------
+const maxDensity = d3.max(density, (d) => d[1]);
+const localMaxima = [];
+for (let i = 1; i < density.length - 1; i++) {
+  const dCur = density[i][1];
+  if (dCur > density[i - 1][1] && dCur > density[i + 1][1] && dCur > maxDensity * 0.3) {
+    localMaxima.push(density[i]);
+  }
+}
+const peaks = localMaxima
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 2)
+  .sort((a, b) => a[0] - b[0]);
+const peakLabels = ["Competitive finishers", "Recreational finishers"];
+
+const peakGroup = g.append("g");
+peaks.forEach(([px, py], i) => {
+  const cx = x(px);
+  const cy = y(py);
+  peakGroup
+    .append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 5)
+    .attr("fill", t.amber)
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 2);
+  if (peakLabels[i]) {
+    peakGroup
+      .append("text")
+      .attr("x", cx)
+      .attr("y", cy - 16)
+      .attr("text-anchor", "middle")
+      .attr("fill", t.inkSoft)
+      .style("font-size", "13px")
+      .style("font-weight", "600")
+      .text(peakLabels[i]);
+  }
+});
 
 // --- Axes -----------------------------------------------------------------
 const xAxis = g
