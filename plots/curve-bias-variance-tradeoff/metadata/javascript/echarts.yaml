@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: curve-bias-variance-tradeoff
 created: '2026-08-24T20:25:37Z'
-updated: '2026-08-24T20:30:39Z'
+updated: '2026-08-24T20:41:54Z'
 generated_by: claude-sonnet
 workflow_run: 32773294096
 issue: 4134
@@ -12,102 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bia
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/echarts/plot-dark.html
-quality_score: 81
+quality_score: 89
 review:
   strengths:
-  - 'Correct, canonical conceptual chart: decreasing Bias², increasing Variance, flat
-    Irreducible Error, and the U-shaped Total Error are all present and mathematically
-    consistent (totalError = bias + variance + irreducible everywhere).'
-  - Underfitting/overfitting zones are shaded with markArea and clearly labeled, giving
-    the plot a clear narrative structure beyond a bare line chart.
-  - The optimal-complexity point is marked three ways (vertical markLine, dashed guide,
-    and a markPoint dot on the Total Error curve) and the formula annotation is included
-    per spec.
-  - First categorical series correctly uses Imprint brand green (#009E73) for Bias²,
-    and canvas gate passed (3200×1800) with clean, uncut margins in both renders.
+  - 'Color collision from attempt 1 is genuinely fixed: pixel-sampling confirms Bias²=#009E73,
+    Variance=#4467A3, Total Error=#AE3030, Irreducible Error=#954477 — four distinct
+    colors, all set explicitly per series (no more index-based auto-color fallback
+    via a non-existent t.muted token).'
+  - Direct on-plot curve labels added via endLabel for all four series, satisfying
+    the spec's 'label each curve directly on the plot' requirement in addition to
+    the legend.
+  - 'Strong data storytelling: shaded underfitting/overfitting zones, a markLine +
+    markPoint + dashed guide all marking the optimal-complexity point, and the Total
+    Error = Bias² + Variance + Irreducible Error formula annotation give the chart
+    a clear narrative.'
+  - Canvas gate passed cleanly (3200×1800), both renders are fully theme-adaptive
+    with no dark-on-dark/light-on-light failures, and the brand green correctly anchors
+    the first series (Bias²).
   weaknesses:
-  - 'Color collision bug: `t.muted` is used for the Irreducible Error line/markArea
-    color (echarts.js lines 32 and 106), but `window.ANYPLOT_TOKENS` (see automation/js-render/render.mjs
-    themeTokens()) never defines a `muted` key — only pageBg, elevatedBg, ink, inkSoft,
-    grid, palette[8], amber, seq, div. Because `t.muted` is `undefined`, ECharts silently
-    falls back to index-based auto-coloring from the top-level `color` array ([palette[0],
-    palette[2], palette[4], t.muted]), and series index 2 (Irreducible Error) lands
-    on the same slot as palette[4] used explicitly by Total Error. Pixel-sampled both
-    legend swatches at RGB(174,48,48) = #AE3030 — identical. Irreducible Error and
-    Total Error are now visually distinguishable only by dash pattern and line width,
-    not color. Fix: drop the `t.muted` reference and assign Irreducible Error a real,
-    distinct Imprint palette slot (e.g. `t.palette[6]` or `t.palette[3]`) that is
-    not already used by another series in this chart.'
-  - Spec explicitly asks to 'use annotations to label each curve directly on the plot'
-    — the implementation relies solely on the top legend, with no direct in-plot labels
-    near each curve's line. Add small end-of-line text labels (or graphic elements)
-    near each curve's rightmost point in addition to the legend.
+  - The repair fix for the color collision reached into non-adjacent palette slots
+    (palette[0,2,4,6] = green/blue/matte-red/rose) instead of using canonical order
+    (palette[0,1,2,3] = green/lavender/blue/ochre). Matte red for Total Error has
+    a loose semantic justification ('error'), but Irreducible Error landing on rose
+    has none — this reads as slot cherry-picking rather than a semantic exception.
+    Prefer canonical order palette[0..3] unless a specific series has a strong real-world
+    color association.
+  - 'Design excellence is still mostly default: no custom typography beyond the standard
+    weight hierarchy, grid limited to y-axis only (fine), but nothing pushes past
+    ''competent'' toward genuinely distinctive polish.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches the required light-theme surface.
-      Chrome: Title "curve-bias-variance-tradeoff · javascript · echarts · anyplot.ai" is dark and centered at top, clearly legible. Legend (Bias², Variance, Irreducible Error, Total Error) sits below the title in dark ink, legible. X-axis "Model Complexity" and Y-axis "Prediction Error" titles are dark and legible; tick labels are a softer dark gray, legible against the light background. Horizontal gridlines are faint and unobtrusive. The italic formula annotation "Total Error = Bias² + Variance + Irreducible Error" top-left is legible.
-      Data: Bias² is Imprint brand green (#009E73, correct first-series color) and decreases smoothly from complexity 1→20. Variance is blue (#4467A3) and increases smoothly, crossing Bias² around complexity ≈8. Total Error is a thicker matte red (#AE3030) U-shaped curve with a filled dot marking the minimum near complexity ≈5.3. Irreducible Error is a flat dashed line near y≈0.35. A left green-tinted "Underfitting zone" and a right gray/blue-tinted "Overfitting zone" are shaded via markArea, separated by a dashed vertical "Optimal complexity" guide line. Pixel-sampling the legend swatches shows Irreducible Error and Total Error render as the exact same RGB (174,48,48) — a real color-collision bug (see weaknesses), distinguishable only by dash pattern/line width, not hue.
-      Legibility verdict: PASS (all text readable; the color issue is a palette/accessibility defect, not a legibility failure).
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "curve-bias-variance-tradeoff · javascript · echarts · anyplot.ai" is dark, centered, fully legible. Legend (Bias², Variance, Irreducible Error, Total Error) is dark and legible. Axis titles "Model Complexity" / "Prediction Error" and tick labels are dark/soft-dark, all readable. Zone labels "Underfitting zone" / "Overfitting zone" and the italic formula annotation are legible gray text. The "Optimal complexity" label along the dashed vertical guide line is legible (rotated).
+      Data: Pixel-sampled the four end-of-curve on-plot labels directly: Bias²=(0,158,115)=#009E73 (brand green, correct first-series color), Variance=(68,103,163)=#4467A3 (blue), Total Error=(174,48,48)=#AE3030 (matte red), Irreducible Error=(149,68,119)=#954477 (rose). All four are now distinct — the attempt-1 collision (Irreducible Error and Total Error both rendering as #AE3030 due to a nonexistent t.muted token) is confirmed fixed.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches the required dark-theme surface.
-      Chrome: Title, legend, and axis titles switch to light ink and remain clearly legible against the dark background — no dark-on-dark failures observed. Tick labels are a softer light gray, legible. Gridlines are faint white at low opacity, appropriately subtle. The vertical "Optimal complexity" guide line correctly switches to white/light for contrast on this background. Zone shading (green-tinted underfitting / dark blue-tinted overfitting) is visible without being distracting.
-      Data: All four curve colors are identical to the light render (Bias² green, Variance blue, Total Error matte red, Irreducible Error also matte red) — confirms data colors are theme-invariant as required, but also confirms the same Irreducible Error / Total Error color collision persists here (same root cause, independent of theme).
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; the color-collision defect is a palette-compliance issue, not a legibility one).
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, legend, and axis titles correctly flip to light ink (#F0EFE8-ish) and remain clearly legible against the dark surface. Tick labels and gridlines are appropriately soft/subtle, no dark-on-dark failures anywhere (dashed optimal-complexity guide line renders in light chrome color, zone labels are legible light-gray on the tinted zone backgrounds).
+      Data: Confirmed identical to light render — Bias² green, Variance blue, Total Error matte-red, Irreducible Error rose all hold the same hex values; only chrome (background, text, grid) flipped as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; rotated 'Optimal complexity' label
-          is small but legible.
+        comment: All text (title, legend, axis titles, ticks, zone labels, formula
+          annotation) is clearly legible in both themes at appropriate sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements.
+        comment: End-of-curve labels, legend, zone labels, and formula annotation
+          are all spaced with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weights (2.5-4px) and 60-point sampling give smooth, clearly
-          visible curves.
+        comment: Line widths (2.5-4px) are appropriate for 60-point smooth curves;
+          markers correctly hidden except the single optimal-point marker
       - id: VQ-04
         name: Color Accessibility
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Irreducible Error and Total Error render as the identical RGB(174,48,48)
-          due to the t.muted bug — distinguishable only by dash/width, not color.
+        passed: true
+        comment: Four series now render as distinct, CVD-safe Imprint hues; no red-green-only
+          pairing since dash style also differentiates Irreducible Error
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); no overflow or clipping.
+        comment: Canvas gate passed (3200x1800); no clipping, generous margins in
+          both renders
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Model Complexity, Prediction Error).
+        comment: Descriptive 'Model Complexity' / 'Prediction Error' axis titles;
+          title matches mandated format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: Irreducible Error does not resolve to a valid distinct Imprint palette
-          color — undefined t.muted token causes an accidental palette-index collision
-          with Total Error.
+        comment: Brand green correctly anchors the first series, but the other three
+          series use non-adjacent palette slots (0,2,4,6) instead of canonical order
+          (0,1,2,3) without a strong semantic justification for all of them
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -115,24 +116,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Shaded zones, formula callout, and optimal-point marker show above-generic
-          effort, but the color bug undercuts polish.
+        comment: Zone shading, formula callout, and end labels show effort but overall
+          polish is still fairly standard
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle horizontal-only gridlines and generous whitespace; nothing
-          exceptional beyond defaults.
+        comment: Subtle y-axis gridlines and generous whitespace, nothing beyond that
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Underfitting/overfitting zones and the highlighted optimal point
-          create a clear narrative focal point.
+        comment: Zones + optimal-point marker (line + label + dot) + direct curve
+          labels give a strong, clear narrative
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,26 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line theoretical curve chart.
+        comment: Correct bias-variance decomposition line chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Missing direct on-plot curve labels (spec asks for annotations labeling
-          each curve directly, not just a legend).
+        passed: true
+        comment: All 4 curves, optimal-complexity marker, formula, shaded zones, and
+          now direct on-plot curve labels are present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = model complexity, Y = prediction error, all series shown.
+        comment: X=Model Complexity, Y=Prediction Error, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match series.
+        comment: Title matches mandated format exactly; legend labels match series
+          names
     data_quality:
       score: 15
       max: 15
@@ -169,22 +170,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All required curves, zones, optimal marker, and formula are present.
+        comment: Bias², Variance, Irreducible Error, Total Error, optimal point, and
+          zones all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Theoretical/synthetic data is appropriate and neutral for this conceptual
-          ML plot.
+        comment: Plausible, textbook-shaped curves; neutral, non-controversial ML-education
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Complexity 1-20, error 0-6 are sensible ranges for the shape shown.
+        comment: Complexity 1-20, error 0-6, sensible illustrative ranges
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -192,34 +194,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic formulas, no randomness.
+        comment: Deterministic closed-form curves, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the echarts global is used.
+        comment: No imports; uses only the provided globals
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: References a token (t.muted) that does not exist in the ANYPLOT_TOKENS
-          contract, causing a real visual defect.
+        passed: true
+        comment: Attempt-1's nonexistent t.muted reference is gone; every series color
+          is now an explicit, valid token reference
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, harness saves plot-{theme}.png/.html.
+        comment: Follows the mount-node contract, animation:false set, no devicePixelRatio
+          override
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -227,24 +230,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of grid/legend/axis config; the undefined-token bug
-          is the one lapse.
+        comment: Proper use of value axes, endLabel, markArea/markLine/markPoint
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Good use of ECharts' markArea + markLine + markPoint combo for zones
-          and the optimal point.
-  verdict: REJECTED
+        passed: true
+        comment: Combines markArea + markLine + markPoint + endLabel — a rich, genuinely
+          ECharts-idiomatic feature set
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - publication-ready
   - alpha-blending
+  - edge-highlighting
