@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bubble-basic
 created: '2026-08-24T17:53:28Z'
-updated: '2026-08-24T17:58:29Z'
+updated: '2026-08-24T18:07:08Z'
 generated_by: claude-sonnet
 workflow_run: 32758671921
 issue: 755
@@ -12,81 +12,75 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
+  - 'Fixed the attempt-1 legibility gap: the size-legend value labels ("13", "56",
+    "99") now render at bold 15px instead of 13px, surviving the ~400px mobile thumbnail
+    downscale'
+  - 'Added a genuine data-storytelling layer: a computed "best value" product (highest
+    quality-per-dollar) is highlighted with full opacity, a thicker brand-green stroke,
+    and a connector-line annotation — resolves the attempt-1 DE-03 gap with a real
+    insight, not decoration'
+  - More idiomatic Chart.js usage via scriptable per-point options (backgroundColor/borderColor/borderWidth
+    as functions of dataIndex) plus a formatted tooltip callback — moves LM-02 beyond
+    generic canvas drawing
   - Area-proportional bubble sizing (sqrt of interpolated area, not linear radius)
-    — matches the spec's explicit accuracy requirement
-  - Includes a genuine size legend (custom afterDraw plugin) that maps three reference
-    values (min, mid, max) to bubble sizes with labels — satisfies the spec's 'include
-    a size legend' note that many bubble implementations skip
-  - Alpha 0.55 for overlap handling lands squarely in the spec-recommended 0.5-0.7
-    range, and per-bubble stroke matches the page background so overlapping circles
-    stay visually separable
-  - Correct Imprint palette usage (#009E73 first/only series) with theme-correct chrome
-    in both renders — background, title, axis, and tick colors all flip correctly
-    between light and dark with identical data color
-  - 'Clean mount-node contract compliance: single canvas appended once, animation
-    disabled, no fixed width/height set on the canvas or container'
+    matches the spec's explicit accuracy requirement
+  - Alpha 0.55 (0.9 for the highlighted bubble) lands in the spec-recommended 0.5-0.7
+    overlap-handling range, with page-background-matched strokes keeping overlapping
+    bubbles separable
+  - Correct Imprint palette usage (#009E73) with theme-correct chrome in both renders;
+    data colors identical between light and dark, only chrome flips
   - Deterministic in-memory data via a tiny seeded LCG (seed=42), no network/file
-    access
+    access; clean mount-node contract with animation disabled
   weaknesses:
-  - Size-legend value labels ('13', '56', '99') are drawn at 13px CSS — at the ~400px
-    mobile thumbnail this text is barely legible; bump the legend font a couple px
-    or increase weight so it survives the mobile srcset downscale
-  - 'No data-storytelling layer beyond the raw scatter-of-bubbles encoding: the price/quality/sales
-    relationship is visible but nothing (e.g. a subtle trend cue, a highlighted standout
-    bubble, or an annotation on the strongest outlier) helps the viewer land on the
-    insight faster'
-  - The dense top-right and mid-price clusters (roughly price 100-140 and 200-220)
-    have 4-6 overlapping bubbles stacked on each other; with 70 points at similar
-    sizes in those regions, individual products become hard to distinguish even with
-    alpha — consider a touch more separation (jitter or slightly increased alpha contrast)
-    in the densest bands
-  - 'LM-02: the afterDraw legend plugin is a reasonable use of Chart.js''s plugin
-    hook but is a fairly generic canvas-drawing technique achievable in most canvas-based
-    libraries; a more Chart.js-distinctive touch (e.g. leveraging built-in scriptable
-    options, custom tooltip callbacks visible in the HTML view, or the legend plugin
-    registry) would push Library Mastery further'
+  - The size-legend header text ("Monthly sales (units)") is still drawn at 13px —
+    only the numeric value labels were bumped to bold 15px; bump the header a couple
+    px too for full mobile-thumbnail consistency
+  - The mid-price cluster (~$100-140, quality 5.5-6.5) still has several bubbles stacked
+    closely on top of each other; a touch more separation or a slightly stronger stroke
+    contrast in the densest band would help individual bubbles read more distinctly
+  - Visual refinement (DE-02) is still fairly close to a well-configured default look
+    — no distinctive chrome/typography choices beyond the spec-required elements
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Title "bubble-basic · javascript · chartjs · anyplot.ai" in dark ink, centered top, fully visible with no clipping. X-axis title "Price ($)" and Y-axis title "Quality Rating (1-10)" in dark ink with units. Tick labels in soft dark grey, subtle light grid lines. A custom size legend ("Monthly sales (units)" + three sample circles labeled 13/56/99) sits in the top-left of the plot area, in a region with no data, so it does not overlap any bubbles.
-      Data: ~70 semi-transparent green (#009E73) bubbles with thin light-colored (page-background-colored) strokes, sized by area to represent monthly sales volume, positioned by price (x) and quality rating (y). A general upward price-quality trend is visible with noise.
-      Legibility verdict: PASS (all title/axis/tick text and legend text are readable against the light background; legend numeric labels are small but legible at full resolution).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-basic · javascript · chartjs · anyplot.ai" is centered, dark, and fully visible with no clipping. Axis titles "Price ($)" and "Quality Rating (1-10)" carry units and are dark/legible. Tick labels are soft dark grey. Grid lines are subtle. A custom size legend ("Monthly sales (units)" + three sample circles labeled 13/56/99, now bold 15px) sits top-left in an empty data region. A "Best value" annotation with a connector line points to a highlighted, full-opacity bubble in the low-price/mid-quality region.
+      Data: ~70 semi-transparent green (#009E73) bubbles, area-scaled by monthly sales volume, positioned by price (x) and quality rating (y). First/only series is the mandated brand green.
+      Legibility verdict: PASS — all text (title, axis titles, ticks, legend labels, annotation) is readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Title, axis titles, and tick labels all rendered in light ink, fully readable against the dark background — no dark-on-dark text anywhere. Grid lines are subtle and visible. Size legend text is light-colored and readable in the same top-left position.
-      Data: Bubbles are the same #009E73 green, same positions and sizes as the light render — data colors are identical between themes, only chrome (background/text/grid) flipped. Bubble strokes now match the dark page background, preserving the same separation effect as the light render.
-      Legibility verdict: PASS (no dark-on-dark failures observed; all text elements clearly legible).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels flip to light ink and stay fully readable — no dark-on-dark failures found anywhere. Grid lines remain subtle but visible. The size legend text and "Best value" annotation stay light and legible in the same top-left/highlight positions.
+      Data: The bubbles are the identical #009E73 green at identical positions and sizes to the light render — only chrome (background, text, grid, bubble stroke color) flips, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; brand green reads clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, no overflow/clipping, but the small
-          canvas-drawn legend value labels (13px) get hard to read at the ~400px mobile
-          thumbnail
+        comment: Legend value labels bumped to bold 15px, fixing the attempt-1 mobile-thumbnail
+          legibility gap; legend header text still 13px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; bubble overlap is data
-          overlap by design, not a text issue
+        comment: No text-on-text or text-on-data collisions; legend and annotation
+          placed in empty regions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Spec-recommended alpha (0.55) with matching-background strokes keeps
-          overlapping bubbles distinguishable at this density
+        comment: Spec-recommended alpha (0.55, 0.9 for highlight) with background-matched
+          strokes keeps overlapping bubbles distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -99,46 +93,45 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins; legend sits
-          inline within the plot area, not isolated
+        comment: Correct 3200x1800 canvas, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive and include units
+        comment: Both axis titles descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (Imprint), identical across themes; backgrounds
-          are theme-correct in both renders'
+        comment: 'First/only series is #009E73 (Imprint), identical across themes;
+          theme-correct backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom size legend and background-matched bubble strokes go beyond
-          a generic default bubble chart
+        comment: Custom size-legend plugin, scriptable per-point styling, and highlight
+          annotation go well beyond a generic default bubble chart
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: No chart frame/spines, subtle grid, generous whitespace; still fairly
-          close to library-default look overall
+          close to a well-configured default look overall
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted — no visual hierarchy or emphasis
-          singles out an insight
+        passed: true
+        comment: New 'best value' annotation (highest quality-per-dollar) gives the
+          viewer a clear focal point beyond the raw scatter-of-bubbles encoding
     spec_compliance:
       score: 15
       max: 15
@@ -148,13 +141,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Chart.js 'bubble' type
+        comment: Correct Chart.js bubble type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based sizing, alpha in spec range, size legend, min/max visibility
+        comment: Area-based sizing, spec-range alpha, size legend, min/max visibility
           all present
       - id: SC-03
         name: Data Mapping
@@ -169,7 +162,7 @@ review:
         max: 3
         passed: true
         comment: Title format exactly matches the mandated pattern; custom size legend
-          substitutes correctly for a series legend
+          correctly substitutes for a series legend
     data_quality:
       score: 15
       max: 15
@@ -186,7 +179,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Neutral product price/quality/sales scenario
+        comment: Neutral product price/quality/sales scenario, matches the spec's
+          suggested application
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -216,7 +210,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused globals/imports
+        comment: No unused globals
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -229,10 +223,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          API
+        comment: 'Correct mount-node contract, animation: false, current Chart.js
+          API'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -243,20 +237,20 @@ review:
         comment: Proper bubble dataset shape, plugin registration, and options structure
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses the plugin afterDraw hook, but the technique is fairly generic
-          canvas drawing rather than something uniquely Chart.js
-  verdict: REJECTED
+        comment: Scriptable per-point options and a formatted tooltip callback are
+          more Chart.js-distinctive than the prior generic afterDraw-only approach
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
