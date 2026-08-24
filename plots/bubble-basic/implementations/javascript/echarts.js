@@ -14,29 +14,46 @@ function rand() {
   return seed / 0x7fffffff;
 }
 
-// Market analysis: R&D investment vs. revenue growth, bubble size = market share.
+// Market analysis: R&D investment vs. revenue growth, bubble size = a relative
+// market-strength index (0-100 scale, scored independently per company — not a
+// literal share of one shared 100% pie).
 const companyCount = 65;
 const bubbles = [];
 for (let i = 0; i < companyCount; i++) {
   const rdSpend = 5 + rand() * 95; // R&D investment, $M
   const noise = (rand() - 0.5) * 14;
   const growthRate = Math.max(1, 3 + rdSpend * 0.18 + noise); // revenue growth, %
-  const marketShare = 8 + rand() * 92; // market share, %
-  bubbles.push([rdSpend, growthRate, marketShare]);
+  const marketIndex = 8 + rand() * 92; // relative market-strength index
+  bubbles.push([rdSpend, growthRate, marketIndex]);
 }
 
-const shareValues = bubbles.map((b) => b[2]);
-const shareMin = Math.min(...shareValues);
-const shareMax = Math.max(...shareValues);
+const indexValues = bubbles.map((b) => b[2]);
+const indexMin = Math.min(...indexValues);
+const indexMax = Math.max(...indexValues);
 
 // Scale bubble diameter by sqrt(value) so on-screen AREA (not radius) is
-// proportional to market share.
+// proportional to the market index.
 const minDiameter = 14;
 const maxDiameter = 92;
-const sizeScale = maxDiameter / Math.sqrt(shareMax);
+const sizeScale = maxDiameter / Math.sqrt(indexMax);
 function diameterFor(value) {
   return Math.max(minDiameter, sizeScale * Math.sqrt(value));
 }
+
+// Data-storytelling focal point: the company with the best revenue growth per
+// R&D dollar invested is drawn as a separate, fully-opaque, ink-outlined series
+// on top of the rest so it reads as the chart's standout performer.
+let standoutIdx = 0;
+let bestRatio = -Infinity;
+bubbles.forEach((b, i) => {
+  const ratio = b[1] / b[0];
+  if (ratio > bestRatio) {
+    bestRatio = ratio;
+    standoutIdx = i;
+  }
+});
+const standout = bubbles[standoutIdx];
+const restBubbles = bubbles.filter((_, i) => i !== standoutIdx);
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -44,9 +61,9 @@ const chart = echarts.init(document.getElementById("container"));
 // --- Size legend (three reference bubbles drawn as graphic elements) -------
 const legendCx = size.width - 130;
 const legendSamples = [
-  { value: shareMin, cy: size.height * 0.26 },
-  { value: (shareMin + shareMax) / 2, cy: size.height * 0.48 },
-  { value: shareMax, cy: size.height * 0.72 },
+  { value: indexMin, cy: size.height * 0.26 },
+  { value: (indexMin + indexMax) / 2, cy: size.height * 0.48 },
+  { value: indexMax, cy: size.height * 0.72 },
 ];
 
 const legendGraphics = [
@@ -55,7 +72,7 @@ const legendGraphics = [
     left: legendCx - 100,
     top: size.height * 0.14,
     style: {
-      text: "Market Share (%)",
+      text: "Relative Market Index",
       fill: t.inkSoft,
       fontSize: 14,
       fontWeight: "bold",
@@ -74,7 +91,7 @@ const legendGraphics = [
     left: legendCx + maxDiameter / 2 + 14,
     top: sample.cy - 8,
     style: {
-      text: `${Math.round(sample.value)}%`,
+      text: `${Math.round(sample.value)}`,
       fill: t.inkSoft,
       fontSize: 13,
     },
@@ -115,7 +132,7 @@ chart.setOption({
   series: [
     {
       type: "scatter",
-      data: bubbles,
+      data: restBubbles,
       symbolSize: (value) => diameterFor(value[2]),
       itemStyle: {
         color: t.palette[0],
@@ -123,6 +140,27 @@ chart.setOption({
         borderColor: t.pageBg,
         borderWidth: 1.5,
       },
+    },
+    {
+      type: "scatter",
+      data: [standout],
+      symbolSize: (value) => diameterFor(value[2]),
+      itemStyle: {
+        color: t.palette[0],
+        opacity: 0.95,
+        borderColor: t.ink,
+        borderWidth: 2.5,
+      },
+      label: {
+        show: true,
+        formatter: "Best growth per R&D $",
+        position: "top",
+        distance: 10,
+        color: t.ink,
+        fontSize: 13,
+        fontWeight: "bold",
+      },
+      z: 10,
     },
   ],
   graphic: legendGraphics,
