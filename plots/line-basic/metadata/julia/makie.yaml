@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: line-basic
 created: '2026-08-24T13:21:24Z'
-updated: '2026-08-24T13:39:03Z'
+updated: '2026-08-24T13:52:55Z'
 generated_by: claude-sonnet
 workflow_run: 32731229050
 issue: 653
@@ -12,64 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 78
+quality_score: 92
 review:
   strengths:
-  - 'Correct plot type and full spec coverage: a single-line hourly temperature series
-    with clean markers, descriptive axis labels with units, and subtle gridlines.'
-  - Theme-adaptive chrome is implemented correctly and identically in structure between
-    renders — backgrounds (#FAF8F1/#1A1A17), text tokens, spines, and gridline opacity
-    all flip correctly with zero regressions.
-  - 'First (and only) series uses brand green #009E73 exactly, identical between light
-    and dark renders, with strong contrast on both surfaces.'
-  - Custom hourly tick formatting ("0:00", "4:00", ...) is a nice idiomatic touch
-    that fits the time-of-day domain.
-  - 'Realistic, plausible, neutral data: a smooth diurnal temperature curve (min ~3°C
-    overnight, peak ~23°C midday) with small naturalistic noise — good DQ-01/02/03
-    coverage.'
-  - Canvas lands exactly on the 3200×1800 landscape target; no clipping or overflow
-    anywhere in either render.
-  - Reproducible (Random.seed!(42)), KISS script structure, no unused imports, correct
-    plot-{theme}.png output naming.
+  - Peak highlight, midday shading, and annotation label are now fully visible and
+    correctly rendered in both themes -- the attempt 2 rendering defect (invisible
+    vspan!, oversized marker, and text! label) is resolved.
+  - Canvas lands exactly on the 3200x1800 landscape target; both renders pass the
+    theme-readability check with warm off-white (#FAF8F1) / warm near-black (#1A1A17)
+    backgrounds and correctly flipped chrome tokens (title, axis labels, ticks, grid).
+  - 'Data color is #009E73 and byte-identical between light and dark renders; only
+    chrome and the shading tint adapt to theme.'
+  - Grid is now Y-axis-only per the style guide (xgridvisible = false), addressing
+    the reviewer's prior feedback.
+  - 'Clean, reproducible code: no unused imports, Random.seed!(42), single-file KISS
+    structure, correct plot-$(THEME).png output with current size=/px_per_unit API.'
   weaknesses:
-  - 'The three ''focal point'' elements the code adds beyond the base line — the midday
-    vspan! shading (lines 69, hours 10.5–15.5), the enlarged/stroked peak scatter!
-    marker (line 77, markersize=16 vs 10), and the text! ''Peak: X.X°C'' annotation
-    (lines 78–85) — render as completely invisible in BOTH plot-light.png and plot-dark.png.
-    Pixel-sampled the background inside the 10.5–15.5h band: it is byte-for-byte identical
-    to the untinted page background (250,248,241 in light / 26,26,23 in dark) with
-    zero blend toward brand green, and no ink-colored text pixels exist anywhere near
-    the peak (hour 12, ~23°C) in either render. This isn''t a subtle-alpha issue —
-    the shading, the bigger marker, and the label are simply not showing up at all,
-    so the code''s intended visual hierarchy/storytelling is not actually delivered
-    to the viewer. Root-cause and fix in the repair pass: check whether vspan!/text!/the
-    second scatter! are being drawn but then painted over by a later background/axis
-    redraw (z-order), whether RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.08) is producing
-    a fully-transparent color due to a Colors.jl component-range mismatch, and whether
-    text! needs `fig` vs `ax` positioning or an explicit `space=:data` to anchor correctly
-    in this CairoMakie version. Either make all three elements actually visible, or
-    remove the dead code for a clean, honest single-line implementation — the current
-    in-between state pays the code-complexity cost without any of the visual payoff.'
-  - Grid lines are enabled on both X and Y axes; the style guide's default guidance
-    for line/bar charts is Y-axis-only grid (both-axes grid is reserved for scatter
-    plots). Minor — AI-discretion territory, not a hard rule — but consider dropping
-    the X gridlines for a cleaner look consistent with the rest of the catalog's line
-    charts.
+  - 'Peak annotation text (''Peak: 23.1C'') sits at a modest 13pt fontsize relative
+    to the 3200x1800 canvas -- readable but could be nudged up slightly for stronger
+    visual hierarchy and mobile legibility.'
+  - Distinctive Makie features are present (vspan! shading, text! annotation, manual
+    hour:00 tick formatting) but still relatively modest -- no advanced primitive
+    (e.g. band! for a confidence range, custom colormap, faceting) to further showcase
+    library mastery.
+  - Title omits the optional descriptive prefix (e.g. 'Daily Temperature Curve (c)
+    line-basic (c) julia (c) makie (c) anyplot.ai'), leaving the title well under
+    the 50-70% width guideline -- not a deduction since the prefix is optional, but
+    a free lever for extra polish.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, confirmed byte-exact #FAF8F1 by pixel sampling across the canvas.
-      Chrome: Title "line-basic · julia · makie · anyplot.ai" in bold dark ink, centered top, clearly readable. X-axis label "Hour of Day" and Y-axis label "Temperature (°C)" in dark ink, both legible. Tick labels ("0:00".."20:00" on X, "5".."20" on Y) in soft gray, legible. Subtle gridlines on both axes at low opacity, visible but non-competing. Only left/bottom spines shown (top/right removed).
-      Data: Single green (#009E73) line with matching circular markers at all 24 hourly points, tracing a smooth diurnal curve from ~3°C overnight up to a ~23°C midday plateau (roughly 11:00–15:00) and back down to ~10°C by 23:00. HOWEVER: the code's intended peak highlight (enlarged, stroked marker) and "Peak: X.X°C" text annotation near the midday plateau are NOT visible anywhere in the render — pixel search around the peak region (hour 11–15, both x/y neighborhoods) found no ink-colored text pixels and no oversized/stroked marker distinct from the other 23 markers. The vspan! shading over hours 10.5–15.5 is also absent — sampled background pixels inside that span are byte-identical to background pixels outside it (no green tint blend).
-      Legibility verdict: PASS (all rendered chrome/text is legible) but the intended peak annotation/highlight/shading elements from the code simply do not appear in the output at all — a rendering defect, not a legibility defect.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "line-basic - julia - makie - anyplot.ai" centered at top, fully visible with margin above. "Hour of Day" (X) and "Temperature (C)" (Y) axis labels in dark ink, clearly legible. Tick labels ("0:00"-"20:00" on X, "5"-"25" on Y) in a softer gray-brown, clearly readable. Only left/bottom spines shown; a subtle low-opacity horizontal (Y-axis-only) grid.
+      Data: A single continuous brand-green (#009E73) line with matching circular markers at all 24 hourly points, tracing a smooth diurnal curve from ~3C overnight up to a ~23C midday plateau and back down to ~10C by 23:00. A pale green vspan band shades the ~10:30-15:30 midday plateau. The peak point (~14:00, 23.1C) carries a visibly larger marker with a dark stroke outline, labeled "Peak: 23.1C" in dark ink positioned just above the marker with no overlap.
+      Legibility verdict: PASS -- all text is readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, confirmed byte-exact #1A1A17 by pixel sampling.
-      Chrome: Same title/axis labels/ticks, now in light ink (#F0EFE8 primary, #B8B7B0 secondary) — all clearly readable against the dark surface, no dark-on-dark failures. Same subtle low-opacity gridlines, same L-shaped spine treatment.
-      Data: Identical brand green (#009E73) line and markers, confirmed same hex as the light render — only chrome flipped, as required. Same missing-annotation issue: no peak highlight marker, no "Peak" text, no shaded midday band — confirmed via the same pixel sampling (background pixels inside the 10.5–15.5h band are byte-identical to background pixels elsewhere).
-      Legibility verdict: PASS for all elements that do render; same rendering defect as the light theme for the (invisible) peak annotation/shading elements.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and axis labels now rendered in light ink (~#F0EFE8), tick labels in a lighter soft gray (~#B8B7B0), all clearly legible. Grid remains a subtle light horizontal line set.
+      Data: The brand-green (#009E73) line, markers, and vspan shading tint are positioned and colored identically to the light render -- only chrome (background, text, grid) flipped, exactly as required. The peak marker retains its enlarged size and stroke, now outlined against the dark background; the "Peak: 23.1C" label is rendered in light ink and stays clearly readable.
+      Legibility verdict: PASS -- no dark-on-dark failures; all text and highlighted elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -77,75 +61,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All rendered title/axis/tick text is clearly legible in both themes
-          at explicit font sizes.
+        comment: Title, axis labels, tick labels, and peak annotation are all readable
+          in both themes; annotation text is modest in size but legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No collisions between text, line, markers, shaded band, or annotation.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Line/markers clearly visible and appropriately sized for 24 points;
-          the intended enlarged peak marker never renders so it adds no extra visibility
-          as designed.
+        comment: vspan! shading, enlarged/stroked peak marker, and text! label all
+          render correctly now (fixed since attempt 2).
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green has strong contrast on both surfaces; no red-green
-          reliance.
+        comment: Strong contrast, single hue, no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas lands exactly on 3200x1800; no cropping/overflow; good proportions.
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt); proportions
+          clean, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units; correct mandated title format.
+        comment: Descriptive labels with units (Hour of Day, Temperature (C)).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical between themes; backgrounds correct
-          #FAF8F1/#1A1A17.'
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; both
+          renders theme-correct.'
     design_excellence:
-      score: 7
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 6
         max: 8
-        passed: false
-        comment: Attempted polish (shaded plateau, highlighted peak, annotation) but
-          none of it renders — the shipped image is a plain, unadorned line+marker
-          chart.
+        passed: true
+        comment: Shaded midday plateau, distinct peak marker, and label form an intentional,
+          working design story beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, subtle grid, generous whitespace — solid but standard
-          refinement.
+        passed: true
+        comment: Spines removed, Y-only subtle grid, generous whitespace, consistent
+          theme tokens.
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 5
         max: 6
-        passed: false
-        comment: Peak highlight/shading/label were clearly intended to create a focal
-          point but are entirely absent from both renders — no visual hierarchy is
-          actually delivered.
+        passed: true
+        comment: Clear focal point (labeled daily peak within a shaded plateau) now
+          actually guides the viewer.
     spec_compliance:
       score: 15
       max: 15
@@ -155,26 +136,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct basic line plot.
+        comment: Correct single-line plot.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Single line, clear axis labels, gridlines, optional markers all present.
+        comment: Line connecting points, optional markers included, grid lines, clear
+          axis labels.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Hour of day on X, temperature on Y, all 24 points shown.
+        comment: X = hour of day, Y = temperature, full range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches spec-id · language · library · anyplot.ai;
-          no legend needed for single series.
+        comment: Title matches required format exactly; no legend needed for a single
+          series.
     data_quality:
       score: 15
       max: 15
@@ -184,23 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers all core line-plot aspects: trend, sequential x, single continuous
-          y.'
+        comment: 24 hourly samples show the full diurnal shape (rise, plateau, fall).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral daily-temperature scenario matching the spec's
-          own example.
+        comment: Plausible, neutral daily-temperature dataset.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 3-23°C range is sensible for an outdoor daily temperature curve.
+        comment: 3-23C range and 24-point count are sensible for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -208,58 +188,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes.
+        comment: No functions/classes; flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set.
+        comment: Random.seed!(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used.
+        comment: CairoMakie, Colors, Random -- all used; no dead imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: vspan!/enlarged scatter!/text! calls are effectively dead code —
-          they run without error but produce zero visible output, adding complexity
-          with no payoff.
+        passed: true
+        comment: All visual elements (vspan!, scatter!, text!) now function as intended
+          -- no dead code.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{theme}.png via current CairoMakie save() API.
+        comment: Saves plot-$(THEME).png via current save(...; px_per_unit=2) API.
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Standard idiomatic Axis/lines!/scatter! usage; the attempted vspan!/text!
-          usage is idiomatic in form but non-functional in practice.
+        passed: true
+        comment: Idiomatic Axis/lines!/scatter!/vspan!/text! usage, correct theme-token
+          mapping.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Attempted distinctive Makie features (region shading, text annotation)
-          don't materialize in the output, so no credit for demonstrated mastery.
-  verdict: REJECTED
+        passed: true
+        comment: vspan! region highlight and text! annotation are genuine distinctive
+          touches beyond bare lines!/scatter!, though still modest in scope.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
