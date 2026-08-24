@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-ashby-material
 created: '2026-08-24T08:44:06Z'
-updated: '2026-08-24T08:49:34Z'
+updated: '2026-08-24T08:58:32Z'
 generated_by: claude-sonnet
 workflow_run: 32706970725
 issue: 4677
@@ -12,130 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-a
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-ashby-material/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
+  - 'All three attempt-1 weaknesses were addressed: material-specific density/modulus
+    sub-ranges for Tungsten/Tungsten Carbide/PTFE, reduced hull fill opacity and margin
+    to cut visual clutter, and a rebalanced right margin matching the left'
   - Convex-hull family envelopes with direct color-matched, halo-stroked labels exactly
-    match the spec's "colored bubble regions or convex-hull envelopes" requirement
+    match the spec's 'colored bubble regions or convex-hull envelopes' requirement
     and remove the need for a separate legend
-  - Optional E/ρ specific-stiffness guide lines (dashed, rotated to match slope, labeled
-    inline) add genuine Ashby-chart analytical value beyond the spec minimum
-  - 'Full Imprint palette compliance in canonical order (Metals=green #009E73 first,
-    then lavender/blue/ochre/red/cyan) with theme-correct chrome in both light and
-    dark renders'
-  - 'Idiomatic MUI X composition: ChartContainer + useXScale/useYScale hooks layer
-    custom SVG overlays (hulls, guide lines) directly inside the chart''s coordinate
-    system — a genuinely library-distinctive technique'
-  - Deterministic LCG-seeded data generation, focused single-purpose helper functions
-    (convexHull, clipIsoline, decadeTicks), no fake interactivity
+  - Optional E/rho specific-stiffness guide lines (dashed, rotated to match slope,
+    labeled inline) add genuine Ashby-chart analytical value beyond the spec minimum
+  - Full Imprint palette compliance in canonical order with theme-correct chrome in
+    both light and dark renders
+  - Deterministic LCG-seeded data generation, focused single-purpose helper functions,
+    no fake interactivity
   weaknesses:
-  - Named materials get log-uniform random properties from a shared per-family range
-    rather than individually accurate values, so specific well-known materials can
-    land far from their real properties — e.g. "Tungsten Carbide" (real density ≈
-    15,800 kg/m³) and "Tungsten" (≈ 19,300 kg/m³) can render inside the Ceramics/Metals
-    family box capped at 4,200/11,400 kg/m³, and "PTFE" (≈ 2,150-2,200 kg/m³) can
-    land inside the Polymers box capped at 1,500 kg/m³. Either tighten per-material
-    sub-ranges for outlier-density materials or rename the generic materials list
-    to avoid specific real-world alloys whose properties are common knowledge.
-  - The Ceramics/Metals/Composites convex-hull regions overlap heavily near their
-    shared boundary (roughly density 2,000-3,000 kg/m³, modulus 100-300 GPa), creating
-    a muddled blended-color zone — reduce HULL_MARGIN or fillOpacity in that area,
-    or nudge the family boxes apart slightly so regions stay visually distinct.
-  - Right margin (60px) is noticeably tighter than the left margin (110px) and the
-    Metals hull/label sit close to the canvas's right edge — widen the right margin
-    or compress the x-domain padding for a more balanced layout.
+  - Ceramics and Metals convex-hull regions still overlap substantially across their
+    shared boundary (density ~2,000-3,500 kg/m^3, modulus ~50-450 GPa), producing
+    a blended teal zone -- reflects genuine overlap in real material property space
+    so the data itself is not wrong, but a further opacity reduction or slight vertical
+    offset between the two hulls in that shared band would read cleaner
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "scatter-ashby-material · javascript · muix · anyplot.ai" centered at top, dark-gray subtitle below it. Dark axis titles ("Density (kg/m³)", "Young's Modulus (GPa)") and medium-gray decade tick labels (100, 1,000, 10,000 on x; 0.001–1,000 on y) are all clearly legible against the light background. Grid is a subtle light-gray line grid, visible but not competing with data.
-      Data: Six convex-hull family regions (Metals=green #009E73, Polymers=lavender, Ceramics=blue, Composites=ochre, Elastomers=matte red, Foams=cyan) each filled at low opacity with a solid colored border and a color-matched, halo-stroked text label near the hull apex. Scatter markers inside each hull are colored to match their family. Two dashed gray guide lines (E/ρ = 1 and E/ρ = 100) run diagonally across the plot with inline rotated labels. First series (Metals) is confirmed brand green #009E73.
-      Legibility verdict: PASS — all text is clearly readable; the halo-stroke behind family/guide labels keeps them legible even where they cross hull fills or the grid.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Bold dark title "scatter-ashby-material · javascript · muix · anyplot.ai" centered at top with gray subtitle below; dark axis titles and medium-gray decade tick labels clearly legible; subtle light-gray grid. Right margin now balanced (105px) against left (110px) -- Metals hull/label have clear breathing room from the canvas edge.
+      Data: Six convex-hull family regions (Metals=green #009E73, Polymers=lavender, Ceramics=blue, Composites=ochre, Elastomers=matte red, Foams=cyan) filled at low opacity (0.07) with solid colored border and color-matched halo-stroked text label; scatter markers match family color; two dashed E/rho guide lines with inline rotated labels.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, subtitle, axis titles, and tick labels all render in light gray/off-white and remain clearly visible against the dark background — no dark-on-dark text observed. Grid lines are a subtle light-gray, still visible but unobtrusive.
-      Data: Same six hull regions and scatter markers as the light render, with identical hex colors (Metals green #009E73 confirmed unchanged, other five family colors unchanged) — only the chrome (background, text, grid, halo-stroke color behind labels) flips to the dark-theme tokens. Guide lines and their labels remain legible with the theme-adaptive halo stroke.
-      Legibility verdict: PASS — no dark-on-dark failures; brand green and all other data colors read clearly on the dark surface.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title, subtitle, axis titles, and tick labels render in light gray/off-white and remain clearly visible -- no dark-on-dark text found.
+      Data: Hull regions and scatter markers use identical hex colors to the light render (Metals green #009E73 confirmed unchanged) -- only chrome (background, text, grid, label halo-stroke) flips to dark-theme tokens.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes and at thumbnail
-          scale; halo-stroked labels stay legible over hull fills
+        comment: All font sizes explicit, readable in both themes and at thumbnail
+          scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlap, but three family hulls (Ceramics/Metals/Composites)
-          overlap heavily near their shared boundary, creating a busy blended-color
-          zone
+        comment: Composites overlap resolved; Ceramics/Metals hulls still overlap
+          substantially but remain readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker size (6px) and hull fill/stroke are well visible across ~82
-          points spread over 6 families
+        comment: Marker size and hull fill/stroke well visible across ~82 points over
+          6 families
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Direct family labels give redundant encoding beyond hue; no red-green-only
-          signal
+        comment: Direct family labels give redundant encoding beyond hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall canvas usage, but right margin (60px) is noticeably
-          tighter than left (110px) and the Metals hull/label sit close to the right
-          edge
+        comment: Right margin rebalanced (60px to 105px) against left (110px)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Density (kg/m³) and Young's Modulus (GPa) — descriptive with units
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Metals) is #009E73; remaining families follow canonical
-          Imprint order; both renders theme-correct'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Convex-hull regions + halo-stroked direct labeling + rotated guide-line
-          annotations are clearly above library defaults
+        comment: Convex-hull regions, halo-stroked labels, guide-line annotations
+          above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines minimal, grid subtle, generous whitespace, but the hull-overlap
-          zone and asymmetric margins cost polish
+        comment: Balanced whitespace and lighter hull opacity; residual Ceramics/Metals
+          overlap is the only remaining issue
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Guide lines frame the classic lightweight-stiffness selection story;
-          direct-labeled regions replace a legend and guide the eye by family
+        comment: Guide lines and direct labeling create clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -145,30 +128,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Log-log scatter with labeled family regions — exact Ashby-chart type
+        comment: Correct log-log Ashby scatter with labeled family regions
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log axes, convex-hull family regions with labels, units on axes,
-          distinct colors, and optional E/ρ guide lines all present
+        comment: Log-log axes, hull regions with labels, units, distinct colors, guide
+          lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=density, y=modulus — the standard Ashby convention; axes show the
-          full data range
+        comment: x=density, y=modulus, standard Ashby convention
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; direct family labeling substitutes
-          appropriately for a legend
+        comment: Title matches mandated format; direct labeling substitutes for legend
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -176,22 +157,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 families, ~82 points, full property-range coverage from foams to
-          ceramics
+        comment: 6 families, ~82 points, full property-range coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, standard materials-science / engineering-education scenario
+        comment: Neutral, standard materials-science/education scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Family-level envelopes are realistic, but per-material log-uniform
-          sampling lets specific named materials (Tungsten, Tungsten Carbide, PTFE)
-          land far outside their well-known real values
+        passed: true
+        comment: Material-specific overrides for Tungsten/Tungsten Carbide/PTFE resolved
+          attempt-1's outlier-material inaccuracy
     code_quality:
       score: 10
       max: 10
@@ -201,8 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Focused single-purpose helpers (convexHull, clipIsoline, decadeTicks)
-          appropriate for the React/MUI X component model
+        comment: No functions/classes beyond focused helpers
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,21 +192,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used @mui/x-charts imports
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; useXScale/useYScale overlay pattern is clean and appropriately
-          complex
+        comment: No fake UI; clean useXScale/useYScale overlay pattern
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual save calls; harness-owned mount contract respected; skipAnimation
-          set
+        comment: Correct harness contract, skipAnimation set
     library_mastery:
       score: 9
       max: 10
@@ -238,26 +214,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ChartContainer + composable ChartsXAxis/ChartsYAxis/ChartsGrid/ChartsTooltip
-          is the recommended MUI X composition pattern
+        comment: ChartContainer + composable Charts* components is the recommended
+          MUI X pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks to layer custom SVG overlays inside the
-          chart's own coordinate system is genuinely MUI-X-distinctive
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks layering custom SVG overlays is MUI-X-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - manual-ticks
-  - hover-tooltips
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
-  - grid-styling
