@@ -1,0 +1,291 @@
+library: matplotlib
+language: python
+specification_id: diagnostic-regression-panel
+created: '2026-08-24T21:31:04Z'
+updated: '2026-08-24T21:44:02Z'
+generated_by: claude-sonnet
+workflow_run: 32779454583
+issue: 5242
+language_version: 3.13.15
+library_version: 3.11.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/diagnostic-regression-panel/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Faithfully replicates R''s plot(lm) four-panel layout: Residuals vs Fitted (with
+    LOWESS), Normal Q-Q (with 45-degree reference), Scale-Location (with LOWESS),
+    and Residuals vs Leverage with manually derived Cook''s distance contours (D=0.5,
+    D=1.0).'
+  - Uses statsmodels' OLS + get_influence() for real studentized residuals, hat-matrix
+    leverage, and Cook's distance rather than approximating them by hand — genuine
+    library mastery.
+  - The same top-3 influential observations (by Cook's distance) are consistently
+    ring-highlighted and index-labeled across all four subplots, using one shared
+    point_kw/highlight_kw/label_kw style dictionary.
+  - 'Synthetic dose-response dataset is purpose-built to exercise every diagnostic:
+    mild non-linearity (quadratic term), heteroscedastic noise scaling with dose,
+    and three deliberately injected influential points, so all four panels show meaningful,
+    non-trivial patterns.'
+  - 'Clean theme handling: PAGE_BG/INK/INK_SOFT/INK_MUTED tokens threaded through
+    facecolor, title, labels, ticks, spines and grid; Imprint palette used correctly
+    (brand green primary series, palette-position-2 purple for LOWESS, amber semantic
+    anchor for Cook''s D warning contours) and identical across light/dark.'
+  - Square 2400x2400 canvas is a well-reasoned choice for this symmetric 2x2 grid,
+    and the mandated title scales its fontsize by the exact title-string length as
+    documented in the library rules.
+  - Single flat script, no functions/classes, np.random.seed(42) for reproducibility,
+    only used imports — clean KISS code.
+  weaknesses:
+  - 'Normal Q-Q panel: the influence label for observation 7 (the point nearest the
+    bottom-left corner, at theoretical quantile ~-2.5) uses the fixed offset (-15,
+    5) from label_offsets, which pushes the text left into the y-axis spine''s corner
+    and directly on top of the x-axis ''-2'' tick mark. The digit collides with the
+    tick line and renders as an illegible fused glyph (looks like ''7|''), unlike
+    the same point''s label in the other three subplots where it reads cleanly. Fix:
+    either give this corner point a different offset (e.g. (10, 10), up-and-right,
+    away from the axis corner) or compute per-point offsets that push away from whichever
+    axis edge the point is closest to, instead of reusing one fixed offset triple
+    keyed only by Cook''s-distance rank across all four subplots.'
+  - 'Design Excellence: data storytelling (DE-03) is solid but stays at the level
+    of ''careful replication of the standard R diagnostic layout'' rather than adding
+    an extra layer of visual hierarchy beyond ring-highlighting (e.g. color- or size-coding
+    the influential points by their actual Cook''s distance value rather than uniform
+    ring styling).'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target — not pure white.
+      Chrome: Title "diagnostic-regression-panel · python · matplotlib · anyplot.ai" fully visible at top, dark ink, not clipped. Each of the four subplot titles (Residuals vs Fitted, Normal Q-Q, Scale-Location, Residuals vs Leverage), axis labels, and tick labels render in dark ink (INK/INK_MUTED) against the light surface — all clearly legible. Grid lines are subtle horizontal gray lines, visible but not dominant. Top/right spines removed on every panel; left/bottom spines a soft dark gray.
+      Data: First (and only) categorical series is brand green (#009E73) at alpha 0.6 with light-bg-colored edges to separate overlapping points. LOWESS trend lines in the Imprint position-2 purple (#C475FD). Cook's distance contour lines and their "D=1"/"D=0.5" labels in the amber semantic anchor (#DDCC77). The three most-influential points (indices 33, 43, 7) are ring-highlighted and index-labeled in every subplot; labels are legible except for point 7 in the Normal Q-Q panel, where the label collides with the x-axis "-2" tick mark (see weaknesses) — this is a localized overlap defect, not a background/text-color legibility failure.
+      Legibility verdict: PASS (the one flagged issue is an overlap collision, not unreadable text against the background).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target — not pure black.
+      Chrome: Title and all subplot titles/axis labels/tick labels render in light ink (INK/INK_MUTED tokens flipped for dark theme) — clearly readable against the dark surface, no dark-on-dark failures anywhere. Grid lines are subtle light-gray horizontal lines. Spines and dashed reference lines correctly flip to lighter tones (e.g. the QQ 45-degree reference line and zero-reference lines are light gray/off-white instead of the light theme's darker gray).
+      Data: Data colors are pixel-identical to the light render — brand green points, purple LOWESS lines, amber Cook's distance contours all unchanged, confirming only chrome (not data) flips between themes. Same localized label/tick-mark overlap for point 7 in the Normal Q-Q panel, present identically in both themes (a code-level offset issue, not theme-specific).
+      Legibility verdict: PASS (no dark-on-dark text; the flagged issue is the same cross-theme overlap noted above, not a dark-mode-specific readability failure).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text explicit-sized and readable in both themes; the observation-7
+          label in the Normal Q-Q panel is hard to parse where it fuses with the x-axis
+          tick mark.
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: Fixed label_offsets[(-15, 5)] applied to the corner point in the
+          Normal Q-Q panel pushes the '7' annotation directly onto the '-2' x-tick
+          mark, producing a fused/illegible glyph. Same point's label is clean in
+          the other three subplots.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: s=65, alpha=0.6 with page-bg edge color is well tuned for n=120 overplotted
+          points; ring highlights are unambiguous.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green, purple LOWESS, and amber contours all have adequate
+          contrast on both surfaces; no red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt); square 2400x2400
+          is a reasonable choice for the symmetric 2x2 grid; title and all D=1/D=0.5
+          labels stay within canvas bounds, no clipping at any edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Every subplot has descriptive x/y labels (Fitted values, Residuals,
+          Theoretical quantiles, Standardized residuals, Leverage, sqrt|Standardized
+          residuals|).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; LOWESS uses Imprint position-2 purple;
+          Cook''s D contours use the documented amber semantic anchor; backgrounds
+          match #FAF8F1/#1A1A17 tokens in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Imprint-token palette, deliberate square-canvas rationale
+          documented in a code comment, consistent cross-panel styling — clearly above
+          generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-axis-only subtle grid (alpha 0.15), generous
+          whitespace via tight_layout rect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ring-highlighting + labeling the top-3 influential points across
+          all panels gives a clear focal point, but doesn't go further (e.g. encoding
+          Cook's-distance magnitude visually) beyond the standard diagnostic layout.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Exact 2x2 regression diagnostic panel replicating R's plot(lm).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: LOWESS in panels 1 and 3, 45-degree reference in Q-Q, Cook's D=0.5/1.0
+          contours in panel 4, top-3 influential points labeled by index in every
+          panel, consistent point styling, shared figure suptitle — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: fitted-vs-resid, theoretical-vs-standardized-quantiles, fitted-vs-sqrt|std
+          resid|, leverage-vs-std-resid all correctly mapped per subplot.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'diagnostic-regression-panel · python · matplotlib
+          · anyplot.ai'; no legend needed since series/contours are directly text-labeled
+          (D=1, D=0.5).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Synthetic data engineered to show non-linearity (quadratic term),
+          heteroscedasticity (noise scale grows with dose), and three deliberately
+          injected influential/high-leverage observations — every diagnostic panel
+          has real signal to show.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral dose-response modeling scenario (pharma/statistics
+          validation use case named in the spec's Applications section).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dose 5-95mg and response ~20-290 are sensible, internally consistent
+          magnitudes for the stated model.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Single flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: os, matplotlib.pyplot, numpy, statsmodels.api, scipy.stats — all
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a 4-panel statistical diagnostic; no fake
+          interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png with default bbox_inches, matching the canvas
+          hard-rule; comment explicitly warns against bbox_inches='tight'.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Axes-method API throughout (ax.scatter/plot/annotate/axhline), no
+          pyplot state-machine calls; subplots via plt.subplots(2,2).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Manually derives the Cook's-distance contour curves from the hat-leverage
+          formula and combines statsmodels influence measures with scipy.stats.probplot
+          — a genuinely non-trivial, library-appropriate technique beyond basic plotting
+          calls.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - statsmodels
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - explicit-figure
+  dataprep:
+  - regression
+  styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
