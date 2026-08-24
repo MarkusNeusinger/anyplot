@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: matplotlib 3.11.1 | Python 3.13.15
 Quality: 89/100 | Created: 2026-08-24
@@ -54,17 +54,22 @@ fig, axes = plt.subplots(2, 2, figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 for panel in axes.flat:
     panel.set_facecolor(PAGE_BG)
 
-point_kw = {"s": 45, "color": BRAND, "alpha": 0.6, "edgecolors": PAGE_BG, "linewidth": 0.4}
-label_kw = {"fontsize": 7, "color": INK_SOFT, "xytext": (4, 4), "textcoords": "offset points"}
+point_kw = {"s": 65, "color": BRAND, "alpha": 0.6, "edgecolors": PAGE_BG, "linewidth": 0.4}
+highlight_kw = {"s": 130, "facecolors": "none", "edgecolors": INK, "linewidth": 1.3, "zorder": 5}
+label_kw = {"fontsize": 7, "color": INK_SOFT, "textcoords": "offset points"}
+# Distinct offset per influential point (same point keeps the same offset in every
+# subplot) so the three labels fan out instead of clustering together.
+label_offsets = [(6, 6), (7, -12), (-15, 5)]
 
 # Subplot 1: Residuals vs Fitted
 ax = axes[0, 0]
 ax.scatter(fitted, resid, **point_kw)
+ax.scatter(fitted[top_influential], resid[top_influential], **highlight_kw)
 ax.axhline(0, color=INK_SOFT, linewidth=1.0, linestyle="--")
 lowess_rf = sm.nonparametric.lowess(resid, fitted, frac=0.6)
 ax.plot(lowess_rf[:, 0], lowess_rf[:, 1], color=LOWESS_COLOR, linewidth=2.0)
-for idx in top_influential:
-    ax.annotate(str(idx), (fitted[idx], resid[idx]), **label_kw)
+for i, idx in enumerate(top_influential):
+    ax.annotate(str(idx), (fitted[idx], resid[idx]), xytext=label_offsets[i], **label_kw)
 ax.set_title("Residuals vs Fitted", fontsize=11, color=INK)
 ax.set_xlabel("Fitted values", fontsize=9, color=INK)
 ax.set_ylabel("Residuals", fontsize=9, color=INK)
@@ -77,8 +82,11 @@ qq_bound = (min(osm.min(), osr.min()), max(osm.max(), osr.max()))
 ax.plot(qq_bound, qq_bound, color=INK_SOFT, linewidth=1.0, linestyle="--")
 sorted_idx = np.argsort(std_resid)
 rank_of = {obs: rank for rank, obs in enumerate(sorted_idx)}
-for idx in top_influential:
-    ax.annotate(str(idx), (osm[rank_of[idx]], osr[rank_of[idx]]), **label_kw)
+qq_influential_x = [osm[rank_of[idx]] for idx in top_influential]
+qq_influential_y = [osr[rank_of[idx]] for idx in top_influential]
+ax.scatter(qq_influential_x, qq_influential_y, **highlight_kw)
+for i, idx in enumerate(top_influential):
+    ax.annotate(str(idx), (osm[rank_of[idx]], osr[rank_of[idx]]), xytext=label_offsets[i], **label_kw)
 ax.set_title("Normal Q-Q", fontsize=11, color=INK)
 ax.set_xlabel("Theoretical quantiles", fontsize=9, color=INK)
 ax.set_ylabel("Standardized residuals", fontsize=9, color=INK)
@@ -87,10 +95,11 @@ ax.set_ylabel("Standardized residuals", fontsize=9, color=INK)
 ax = axes[1, 0]
 sqrt_std_resid = np.sqrt(np.abs(std_resid))
 ax.scatter(fitted, sqrt_std_resid, **point_kw)
+ax.scatter(fitted[top_influential], sqrt_std_resid[top_influential], **highlight_kw)
 lowess_sl = sm.nonparametric.lowess(sqrt_std_resid, fitted, frac=0.6)
 ax.plot(lowess_sl[:, 0], lowess_sl[:, 1], color=LOWESS_COLOR, linewidth=2.0)
-for idx in top_influential:
-    ax.annotate(str(idx), (fitted[idx], sqrt_std_resid[idx]), **label_kw)
+for i, idx in enumerate(top_influential):
+    ax.annotate(str(idx), (fitted[idx], sqrt_std_resid[idx]), xytext=label_offsets[i], **label_kw)
 ax.set_title("Scale-Location", fontsize=11, color=INK)
 ax.set_xlabel("Fitted values", fontsize=9, color=INK)
 ax.set_ylabel("√|Standardized residuals|", fontsize=9, color=INK)
@@ -98,6 +107,7 @@ ax.set_ylabel("√|Standardized residuals|", fontsize=9, color=INK)
 # Subplot 4: Residuals vs Leverage with Cook's distance contours
 ax = axes[1, 1]
 ax.scatter(leverage, std_resid, **point_kw)
+ax.scatter(leverage[top_influential], std_resid[top_influential], **highlight_kw)
 ax.axhline(0, color=INK_SOFT, linewidth=0.8, linestyle=":")
 h_grid = np.linspace(max(leverage.min(), 1e-3), leverage.max() * 1.05, 200)
 for cooks_level, style in ((0.5, "--"), (1.0, "-")):
@@ -105,8 +115,8 @@ for cooks_level, style in ((0.5, "--"), (1.0, "-")):
     ax.plot(h_grid, bound, color=AMBER, linewidth=1.2, linestyle=style)
     ax.plot(h_grid, -bound, color=AMBER, linewidth=1.2, linestyle=style)
     ax.text(h_grid[-1], bound[-1], f"D={cooks_level:g}", fontsize=7, color=AMBER, va="bottom")
-for idx in top_influential:
-    ax.annotate(str(idx), (leverage[idx], std_resid[idx]), **label_kw)
+for i, idx in enumerate(top_influential):
+    ax.annotate(str(idx), (leverage[idx], std_resid[idx]), xytext=label_offsets[i], **label_kw)
 ax.set_title("Residuals vs Leverage", fontsize=11, color=INK)
 ax.set_xlabel("Leverage", fontsize=9, color=INK)
 ax.set_ylabel("Standardized residuals", fontsize=9, color=INK)
