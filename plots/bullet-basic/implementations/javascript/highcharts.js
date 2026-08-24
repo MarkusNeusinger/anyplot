@@ -69,6 +69,7 @@ Highcharts.chart("container", {
     min: 0,
     max: 140,
     tickInterval: 20,
+    reversedStacks: false,
     title: {
       text: "% of Quarterly Quota",
       style: { color: t.inkSoft, fontSize: "16px" },
