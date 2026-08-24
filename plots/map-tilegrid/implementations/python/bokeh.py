@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
 Library: bokeh 3.10.0 | Python 3.13.15
 Quality: 89/100 | Created: 2026-08-24
@@ -9,7 +9,16 @@ import time
 from pathlib import Path
 
 from bokeh.io import output_file, save
-from bokeh.models import BasicTicker, ColorBar, ColumnDataSource, LinearColorMapper, NumeralTickFormatter, Range1d
+from bokeh.models import (
+    BasicTicker,
+    ColorBar,
+    ColumnDataSource,
+    HoverTool,
+    LinearColorMapper,
+    NumeralTickFormatter,
+    Range1d,
+    Title,
+)
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -59,6 +68,17 @@ countries = [
 num_rows = max(c["row"] for c in countries) + 1
 max_col = max(c["col"] for c in countries)
 
+COUNTRY_NAMES = {
+    "IS": "Iceland", "NO": "Norway", "SE": "Sweden", "FI": "Finland",
+    "IE": "Ireland", "UK": "United Kingdom", "DK": "Denmark", "EE": "Estonia",
+    "BE": "Belgium", "NL": "Netherlands", "DE": "Germany", "PL": "Poland",
+    "LV": "Latvia", "FR": "France", "CH": "Switzerland", "CZ": "Czechia",
+    "SK": "Slovakia", "LT": "Lithuania", "PT": "Portugal", "ES": "Spain",
+    "AT": "Austria", "HU": "Hungary", "RO": "Romania", "IT": "Italy",
+    "SI": "Slovenia", "HR": "Croatia", "BG": "Bulgaria", "GR": "Greece",
+    "MT": "Malta",
+}  # fmt: skip
+
 
 def _lerp_hex(c0, c1, t):
     r0, g0, b0 = (int(c0[i : i + 2], 16) for i in (1, 3, 5))
@@ -77,17 +97,20 @@ ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#4467A3", t / 255.0) for t in range(256)
 low = min(c["value"] for c in countries)
 high = max(c["value"] for c in countries)
 
-xs, ys, values, codes, label_colors = [], [], [], [], []
+xs, ys, values, codes, names, label_colors = [], [], [], [], [], []
 for c in countries:
     xs.append(c["col"])
     ys.append(num_rows - 1 - c["row"])  # flip so row 0 (north) renders at top
     values.append(c["value"])
     codes.append(c["code"])
+    names.append(COUNTRY_NAMES[c["code"]])
     t = (c["value"] - low) / (high - low)
     tile_color = ANYPLOT_SEQ256[min(255, int(round(t * 255)))]
     label_colors.append(INK if _luminance(tile_color) > 0.55 else LABEL_LIGHT)
 
-source = ColumnDataSource(data={"x": xs, "y": ys, "value": values, "code": codes, "label_color": label_colors})
+source = ColumnDataSource(
+    data={"x": xs, "y": ys, "value": values, "code": codes, "name": names, "label_color": label_colors}
+)
 mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=low, high=high)
 
 # Title — compute fontsize per the length-scaling formula (default 50pt / floor 34pt)
@@ -105,12 +128,12 @@ p = figure(
     x_range=Range1d(-0.75, max_col + 0.75),
     y_range=Range1d(-0.75, num_rows - 1 + 0.75),
     match_aspect=True,
-    min_border_top=140,
+    min_border_top=190,
     min_border_bottom=60,
     min_border_left=60,
     min_border_right=340,
 )
-p.rect(
+tile_renderer = p.rect(
     x="x",
     y="y",
     width=0.88,
@@ -120,6 +143,8 @@ p.rect(
     line_color=PAGE_BG,
     line_width=6,
 )
+hover = HoverTool(renderers=[tile_renderer], tooltips=[("Country", "@name"), ("Renewable share", "@value{0}%")])
+p.add_tools(hover)
 p.text(
     x="x",
     y="y",
@@ -153,6 +178,18 @@ p.add_layout(color_bar, "right")
 # Style — theme-adaptive chrome; no axes for a schematic tile grid
 p.title.text_font_size = title_font_size
 p.title.text_color = INK
+
+# Subtitle callout — sharpens the color-gradient insight into an explicit takeaway
+p.add_layout(
+    Title(
+        text="Nordic and Alpine countries lead Europe's renewable transition",
+        text_font_size="26pt",
+        text_font_style="italic",
+        text_color=INK_SOFT,
+    ),
+    "above",
+)
+
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = None
