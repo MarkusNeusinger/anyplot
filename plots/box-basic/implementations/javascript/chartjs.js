@@ -1,7 +1,7 @@
 // anyplot.ai
 // box-basic: Basic Box Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-24
+// Quality: 86/100 | Updated: 2026-08-24
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
@@ -73,6 +73,14 @@ const pad = (dataMax - dataMin) * 0.1;
 const yMin = Math.floor((dataMin - pad) / 5) * 5;
 const yMax = Math.ceil((dataMax + pad) / 5) * 5;
 
+// --- Story highlights: call out the strongest and most variable class -------
+const highestMedianCat = categories.reduce((best, c) =>
+  c.median > best.median ? c : best
+);
+const widestSpreadCat = categories.reduce((widest, c) =>
+  c.q3 - c.q1 > widest.q3 - widest.q1 ? c : widest
+);
+
 // --- Custom plugin: whiskers, caps, median line, outlier points ------------
 const boxPlotExtras = {
   id: "boxPlotExtras",
@@ -81,6 +89,7 @@ const boxPlotExtras = {
     const meta = chart.getDatasetMeta(0);
     const yScale = chart.scales.y;
     ctx.save();
+    ctx.lineCap = "round";
 
     categories.forEach((cat, i) => {
       const bar = meta.data[i];
@@ -131,6 +140,26 @@ const boxPlotExtras = {
         ctx.strokeStyle = t.pageBg;
         ctx.stroke();
       });
+
+      // Story highlight — call out the standout class(es) above its whisker top
+      const topValue = Math.max(cat.whiskerMax, ...cat.outliers, -Infinity);
+      const isHighest = cat === highestMedianCat;
+      const isWidest = cat === widestSpreadCat;
+      if (isHighest || isWidest) {
+        const label =
+          isHighest && isWidest
+            ? "Highest median · widest spread"
+            : isHighest
+              ? "Highest median"
+              : "Widest spread (IQR)";
+        const yTop = yScale.getPixelForValue(topValue);
+        const yLabel = Math.max(yScale.top + 14, yTop - 14);
+        ctx.font = "600 13px sans-serif";
+        ctx.fillStyle = t.inkSoft;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(label, centerX, yLabel);
+      }
     });
 
     ctx.restore();
@@ -153,6 +182,7 @@ new Chart(canvas, {
         backgroundColor: categories.map((_, i) => t.palette[i % t.palette.length]),
         borderColor: t.ink,
         borderWidth: 2,
+        borderRadius: 4,
         barPercentage: 0.45,
         categoryPercentage: 0.75,
       },
@@ -168,7 +198,7 @@ new Chart(canvas, {
         display: true,
         text: "box-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 26 },
       },
       legend: { display: false },
     },
@@ -181,7 +211,12 @@ new Chart(canvas, {
       y: {
         min: yMin,
         max: yMax,
-        title: { display: true, text: "Exam Score", color: t.ink, font: { size: 16 } },
+        title: {
+          display: true,
+          text: "Exam Score (0-100 pts)",
+          color: t.ink,
+          font: { size: 16 },
+        },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
       },
