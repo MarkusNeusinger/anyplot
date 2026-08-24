@@ -5,6 +5,7 @@
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
+const isDark = window.ANYPLOT_THEME === "dark";
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Quarterly KPI dashboard — every metric normalised to "% of target achieved"
@@ -19,6 +20,20 @@ const bandSatisfactory = labels.map(() => ranges[1] - ranges[0]);
 const bandGood = labels.map(() => ranges[2] - ranges[1]);
 const targetPoints = target.map((value, index) => [value, index]);
 
+// Band opacity needs a higher floor in dark theme, or the lightest ("Good")
+// band nearly disappears against the near-black page background.
+const bandOpacity = isDark ? [0.3, 0.2, 0.14] : [0.22, 0.13, 0.06];
+
+// Callout: highlight the metric with the widest actual-vs-target gap.
+const gaps = actual.map((value, index) => value - target[index]);
+const widestGapIndex = gaps.reduce(
+  (best, gap, index) => (Math.abs(gap) > Math.abs(gaps[best]) ? index : best),
+  0
+);
+const widestGapText = `Widest gap vs. target: ${labels[widestGapIndex]} (${
+  gaps[widestGapIndex] > 0 ? "+" : ""
+}${gaps[widestGapIndex]} pts)`;
+
 // --- Init ---------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -28,23 +43,29 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "Quarterly KPI Dashboard · bullet-basic · javascript · echarts · anyplot.ai",
+    subtext: widestGapText,
     left: "center",
     top: 20,
-    textStyle: { color: t.ink, fontSize: 20, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 24, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
   legend: {
-    top: 68,
+    top: 104,
     left: "center",
     data: ["Poor", "Satisfactory", "Good", "Actual", "Target"],
     itemWidth: 14,
     itemHeight: 14,
     textStyle: { color: t.inkSoft, fontSize: 14 },
   },
-  grid: { left: 200, right: 90, top: 150, bottom: 80 },
+  grid: { left: 200, right: 90, top: 180, bottom: 110 },
   xAxis: {
     type: "value",
     min: 0,
     max: 100,
+    name: "% of Target",
+    nameLocation: "middle",
+    nameGap: 34,
+    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "{value}%" },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
@@ -66,7 +87,7 @@ chart.setOption({
       barWidth: "55%",
       silent: true,
       data: bandPoor,
-      itemStyle: { color: t.ink, opacity: 0.22 },
+      itemStyle: { color: t.ink, opacity: bandOpacity[0] },
       z: 1,
     },
     {
@@ -76,7 +97,7 @@ chart.setOption({
       barWidth: "55%",
       silent: true,
       data: bandSatisfactory,
-      itemStyle: { color: t.ink, opacity: 0.13 },
+      itemStyle: { color: t.ink, opacity: bandOpacity[1] },
       z: 1,
     },
     {
@@ -86,7 +107,7 @@ chart.setOption({
       barWidth: "55%",
       silent: true,
       data: bandGood,
-      itemStyle: { color: t.ink, opacity: 0.06 },
+      itemStyle: { color: t.ink, opacity: bandOpacity[2] },
       z: 1,
     },
     {
@@ -109,7 +130,7 @@ chart.setOption({
       name: "Target",
       type: "scatter",
       symbol: "rect",
-      symbolSize: [6, 105],
+      symbolSize: [6, 95],
       data: targetPoints,
       itemStyle: { color: t.ink },
       z: 3,
