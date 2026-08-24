@@ -32,20 +32,97 @@ function hexToRgba(hex, alpha) {
 }
 
 const companies = [];
-for (let i = 0; i < 55; i += 1) {
+for (let i = 0; i < 90; i += 1) {
   const growthRate = -5 + rand() * 35;
   const revenue = 10 + rand() * 490;
   const marketShare = Z_MIN + rand() * (Z_MAX - Z_MIN);
   companies.push({ growthRate, revenue, marketShare });
 }
 
+// Focal point: the standout company that ranks highest on BOTH growth and
+// share (normalized 0-1 and summed) — gives the viewer a guided insight
+// instead of a bare position+size encoding.
+let focalIndex = 0;
+let focalScore = -Infinity;
+companies.forEach((c, i) => {
+  const growthNorm = (c.growthRate + 5) / 35;
+  const shareNorm = (c.marketShare - Z_MIN) / (Z_MAX - Z_MIN);
+  const score = growthNorm + shareNorm;
+  if (score > focalScore) {
+    focalScore = score;
+    focalIndex = i;
+  }
+});
+
 const markerFill = hexToRgba(t.palette[0], 0.6);
-const seriesData = companies.map((c) => ({
-  x: c.growthRate,
-  y: c.revenue,
-  marker: { radius: radiusForShare(c.marketShare), fillColor: markerFill, lineColor: t.pageBg, lineWidth: 1.2 },
-  custom: { marketShare: Math.round(c.marketShare) },
-}));
+const seriesData = companies.map((c, i) => {
+  const isFocal = i === focalIndex;
+  return {
+    x: c.growthRate,
+    y: c.revenue,
+    marker: {
+      radius: radiusForShare(c.marketShare),
+      fillColor: markerFill,
+      lineColor: isFocal ? t.amber : t.pageBg,
+      lineWidth: isFocal ? 3 : 1.6,
+    },
+    custom: { marketShare: Math.round(c.marketShare) },
+  };
+});
+
+// --- Chart post-render helpers ------------------------------------------------
+function drawSizeLegend(chart) {
+  // Highcharts core has no bubbleLegend (that lives in highcharts-more), so
+  // the size key is drawn manually in the reserved right margin.
+  const legendX = chart.plotLeft + chart.plotWidth + 40;
+  let cursorY = chart.plotTop + 30;
+
+  chart.renderer
+    .text("Market Share (%)", legendX, cursorY)
+    .css({ color: t.ink, fontSize: "14px", fontWeight: "600" })
+    .add();
+  cursorY += 30;
+
+  [Z_MIN, (Z_MIN + Z_MAX) / 2, Z_MAX].forEach((share) => {
+    const r = radiusForShare(share);
+    const cy = cursorY + R_MAX;
+    chart.renderer
+      .circle(legendX + R_MAX, cy, r)
+      .attr({ fill: markerFill, stroke: t.palette[0], "stroke-width": 1.2 })
+      .add();
+    chart.renderer
+      .text(`${Math.round(share)}%`, legendX + 2 * R_MAX + 16, cy + 5)
+      .css({ color: t.inkSoft, fontSize: "13px" })
+      .add();
+    cursorY += 2 * R_MAX + 16;
+  });
+}
+
+function highlightFocalPoint(chart) {
+  // Guide the viewer to one standout company (top-ranked on both growth and
+  // share) with an amber-ringed marker and a native Highcharts SVGRenderer
+  // "callout" label pointing at it — a focal point beyond the bare
+  // position+size encoding.
+  const focal = companies[focalIndex];
+  const point = chart.series[0].points[focalIndex];
+  const anchorX = chart.plotLeft + point.plotX;
+  const anchorY = chart.plotTop + point.plotY;
+  const labelX = Math.min(anchorX + 60, chart.plotLeft + chart.plotWidth - 160);
+  const labelY = Math.max(anchorY - 70, chart.plotTop + 10);
+
+  chart.renderer
+    .label(
+      `Standout: ${focal.growthRate.toFixed(0)}% growth, ${Math.round(focal.marketShare)}% share`,
+      labelX,
+      labelY,
+      "callout",
+      anchorX,
+      anchorY,
+    )
+    .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+    .attr({ fill: t.elevatedBg, stroke: t.amber, "stroke-width": 1.5, padding: 8, r: 5, zIndex: 6 })
+    .add();
+}
 
 // --- Chart -------------------------------------------------------------------
 // Core bundle has no highcharts-more, so bubbles are core "scatter" points
@@ -71,8 +148,7 @@ Highcharts.chart(
       title: { text: "Year-over-Year Growth Rate (%)", style: { color: t.inkSoft, fontSize: "16px" } },
       lineColor: t.inkSoft,
       tickColor: t.inkSoft,
-      gridLineColor: t.grid,
-      gridLineWidth: 1,
+      gridLineWidth: 0,
       labels: { style: { color: t.inkSoft, fontSize: "14px" }, format: "{value}%" },
     },
     yAxis: {
@@ -102,30 +178,8 @@ Highcharts.chart(
     },
     series: [{ name: "Companies", data: seriesData, showInLegend: false }],
   },
-  function drawSizeLegend(chart) {
-    // Highcharts core has no bubbleLegend (that lives in highcharts-more), so
-    // the size key is drawn manually in the reserved right margin.
-    const legendX = chart.plotLeft + chart.plotWidth + 40;
-    let cursorY = chart.plotTop + 30;
-
-    chart.renderer
-      .text("Market Share (%)", legendX, cursorY)
-      .css({ color: t.ink, fontSize: "14px", fontWeight: "600" })
-      .add();
-    cursorY += 30;
-
-    [Z_MIN, (Z_MIN + Z_MAX) / 2, Z_MAX].forEach((share) => {
-      const r = radiusForShare(share);
-      const cy = cursorY + R_MAX;
-      chart.renderer
-        .circle(legendX + R_MAX, cy, r)
-        .attr({ fill: markerFill, stroke: t.palette[0], "stroke-width": 1.2 })
-        .add();
-      chart.renderer
-        .text(`${Math.round(share)}%`, legendX + 2 * R_MAX + 16, cy + 5)
-        .css({ color: t.inkSoft, fontSize: "13px" })
-        .add();
-      cursorY += 2 * R_MAX + 16;
-    });
+  function drawExtras(chart) {
+    drawSizeLegend(chart);
+    highlightFocalPoint(chart);
   },
 );
