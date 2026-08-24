@@ -51,6 +51,18 @@ const bubbleData = products.map((p) => ({
   r: bubbleRadius(p.salesVolume),
 }));
 
+// Best-value product (highest quality per dollar) drives the storytelling
+// highlight below — a genuine insight beyond the raw x/y/size encoding.
+let bestValueIndex = 0;
+let bestValueScore = -Infinity;
+products.forEach((p, i) => {
+  const score = p.quality / p.price;
+  if (score > bestValueScore) {
+    bestValueScore = score;
+    bestValueIndex = i;
+  }
+});
+
 // --- Size legend plugin (static key explaining the bubble-area encoding) ---
 const legendValues = [sizeMin, (sizeMin + sizeMax) / 2, sizeMax];
 const sizeLegend = {
@@ -74,9 +86,37 @@ const sizeLegend = {
       ctx.lineWidth = 1;
       ctx.strokeStyle = t.inkSoft;
       ctx.stroke();
+      ctx.font = "bold 15px sans-serif";
       ctx.fillStyle = t.inkSoft;
-      ctx.fillText(`${Math.round(val)}`, cx + R_MAX + 12, cy + 4);
+      ctx.fillText(`${Math.round(val)}`, cx + R_MAX + 12, cy + 5);
     });
+    ctx.restore();
+  },
+};
+
+// --- Standout annotation plugin (points at the best-value product) --------
+const standoutAnnotation = {
+  id: "standoutAnnotation",
+  afterDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const p = products[bestValueIndex];
+    const px = scales.x.getPixelForValue(p.price);
+    const py = scales.y.getPixelForValue(p.quality);
+    // Point below-right when near the top-left legend, otherwise above-right.
+    const nearLegend = px < chartArea.left + 160 && py < chartArea.top + 140;
+    const labelX = px + 20;
+    const labelY = nearLegend ? py + 34 : py - 30;
+    ctx.save();
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 1.25;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(labelX, labelY);
+    ctx.stroke();
+    ctx.font = "bold 14px sans-serif";
+    ctx.fillStyle = t.ink;
+    ctx.textAlign = "left";
+    ctx.fillText("Best value", labelX + 4, labelY + (nearLegend ? 4 : -4));
     ctx.restore();
   },
 };
@@ -93,9 +133,12 @@ new Chart(canvas, {
       {
         label: "Products",
         data: bubbleData,
-        backgroundColor: hexToRgba(t.palette[0], 0.55),
-        borderColor: t.pageBg,
-        borderWidth: 1,
+        // Scriptable options single out the best-value bubble (full opacity,
+        // brand-green ring) while the rest stay at the spec-range overlap alpha.
+        backgroundColor: (ctx) =>
+          hexToRgba(t.palette[0], ctx.dataIndex === bestValueIndex ? 0.9 : 0.55),
+        borderColor: (ctx) => (ctx.dataIndex === bestValueIndex ? t.palette[0] : t.pageBg),
+        borderWidth: (ctx) => (ctx.dataIndex === bestValueIndex ? 2.5 : 1),
       },
     ],
   },
@@ -111,6 +154,14 @@ new Chart(canvas, {
         font: { size: 22 },
       },
       legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => {
+            const p = products[ctx.dataIndex];
+            return `Price $${p.price.toFixed(0)} · Quality ${p.quality.toFixed(1)} · Sales ${Math.round(p.salesVolume)} units`;
+          },
+        },
+      },
     },
     scales: {
       x: {
@@ -125,5 +176,5 @@ new Chart(canvas, {
       },
     },
   },
-  plugins: [sizeLegend],
+  plugins: [sizeLegend, standoutAnnotation],
 });
