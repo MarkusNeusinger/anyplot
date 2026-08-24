@@ -1,0 +1,268 @@
+library: muix
+language: javascript
+specification_id: probability-weibull
+created: '2026-08-24T08:12:54Z'
+updated: '2026-08-24T08:29:17Z'
+generated_by: claude-sonnet
+workflow_run: 32703903746
+issue: 4668
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Correctly implements median-rank plotting positions via Johnson's rank-adjustment
+    method for censored data (not a naive median-rank shortcut) — a genuinely reliability-engineering-accurate
+    technique for handling suspensions.
+  - Custom StatusMarker (filled circle for failures, hollow ring for suspensions)
+    encodes censoring by shape/fill, not color alone — CVD-safe and matches the hand-rolled
+    legend swatches exactly.
+  - Reference-line callout at 63.2% cleanly surfaces the fitted characteristic life
+    (eta) with a real least-squares fit computed in-code (beta and eta both annotated),
+    not hard-coded values.
+  - Correct log x-axis and Weibull-linearized y-axis (ln(-ln(1-F))) with percentage
+    tick labels — the nonlinear, non-evenly-spaced y-grid is exactly what real Weibull
+    probability paper looks like.
+  - 'Data colors (brand green #009E73) are identical across light and dark renders;
+    only chrome (background, grid, ink, callout box) adapts via ANYPLOT_TOKENS.'
+  weaknesses:
+  - Grid lines (both axes) are on the more visible side rather than a subtle backdrop
+    — could be lightened/thinned slightly for a cleaner probability-paper look without
+    losing the reference gridlines' function.
+  - A few adjacent points (~250 kcycles and ~380-400 kcycles clusters) sit close enough
+    that their 12px markers nearly touch — not a real overlap, but a touch more separation
+    or slightly smaller markers in dense clusters would improve individual-point readability.
+  - 'LM-02 headroom: the implementation already goes beyond the composable ChartContainer
+    API with custom slots and hooks; a further distinctive touch (e.g. a subtle tooltip
+    customization visible only in the interactive HTML) would round it out, though
+    this is a nice-to-have, not a defect.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "probability-weibull · javascript · muix · anyplot.ai" centered at top; x-axis labeled "Cycles to Failure (thousands)" (log scale, ticks 100/200/300/500/700/1000); y-axis labeled "Cumulative Failure Probability" (rotated, hand-placed) with percentage ticks from 1% to 99% on the Weibull-linearized scale; three-row hand-rolled legend top-right (dashed fit line, filled "Failure" swatch, hollow "Suspended (censored)" swatch); horizontal dotted reference line at 63.2% with an elevated callout box reading "63.2% · η ≈ 453 kcycles". All chrome text renders in dark ink against the light background.
+      Data: Brand green (#009E73) filled circles for failures and hollow green rings for censored/suspended units, roughly following a straight dashed fit line across the log-x / linearized-y plot — exactly the expected "straight line on Weibull paper" signature. First/only categorical series correctly uses palette[0].
+      Legibility verdict: PASS — title, axis labels, tick labels, legend text, and the reference callout are all clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Identical layout and text content to the light render, now rendered in light ink (title, axis labels, tick labels, legend text, callout text) against the dark background. Grid lines are dim gray, still visible but not dominant.
+      Data: Same brand green (#009E73) filled/hollow markers and dashed fit line as the light render — data colors are pixel-identical between themes, confirming only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every text element (including the small legend and callout labels) remains legible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22px, axis labels 16px, tick labels
+          14px, legend 13px); readable in both themes with no dark-on-dark or light-on-light
+          issues.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/legend/data collisions; legend and callout box sit clear
+          of the plotted data and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (12px) are prominent for the 24-point sparse dataset; a couple
+          of adjacent points in dense clusters (~250, ~380-400 kcycles) sit close
+          enough to nearly touch.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Failure vs censored distinguished by fill/shape (filled vs hollow),
+          not color alone — CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, title well within bounds (~35% width at default
+          size), nothing clipped, generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (kcycles, cumulative failure probability
+          %).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series uses Imprint palette[0] (#009E73); backgrounds
+          correct #FAF8F1/#1A1A17; both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom marker slot, hand-rolled legend that mirrors the on-chart
+          encoding exactly, and an elevated reference callout — deliberate polish
+          beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chart with generous whitespace; grid is present on both axes
+          and is slightly more visible than a minimal-chrome ideal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The 63.2% reference line + callout creates a clear focal point (characteristic
+          life), and the fitted dashed line visually anchors the whole story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct Weibull probability plot: log-x, linearized Weibull y-axis,
+          fitted straight line.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log x-axis, linearized y-axis, annotated beta/eta, median-rank plotting
+          positions (i-0.3)/(n+0.4) via Johnson's rank-adjustment, censored-vs-failure
+          marker distinction, 63.2% reference line — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = time-to-failure, y = weibullY(probability); full data range shown
+          (80-1000 x-axis, 1%-99% y-axis).
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'probability-weibull · javascript · muix ·
+          anyplot.ai'; legend labels (Fit, Failure, Suspended (censored)) match the
+          data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows failures, suspensions, fitted line, and the characteristic-life
+          reference — all plot-type aspects covered.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Turbine blade fatigue-life data with periodic inspection-driven censoring
+          is plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Kcycles values (roughly 80-1000) are sensible for turbine blade fatigue
+          testing.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Functions present are React-required (component + small slot helpers)
+          or clearly justified (LCG, StatusMarker, Legend, ReferenceCallout) — no
+          gratuitous abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import (ChartContainer, ScatterPlot, LinePlot, axes, grid,
+          reference line, hooks) is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; comments explain non-obvious design tradeoffs
+          (custom legend, hand-placed y-label).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default-exported component sized to ANYPLOT_SIZE,
+          skipAnimation set on ChartContainer and LinePlot.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the composable ChartContainer + individual plot/axis components
+          pattern (the recommended advanced MUI X API) rather than a monolithic chart
+          wrapper.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom marker via `slots.scatter`, useDrawingArea/useYScale hooks
+          for the reference callout, ChartsReferenceLine — genuinely distinctive MUI
+          X usage, though the interactive HTML surface (tooltips) isn't leveraged
+          further.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - edge-highlighting
