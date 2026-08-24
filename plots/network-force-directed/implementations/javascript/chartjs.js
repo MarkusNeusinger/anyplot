@@ -1,7 +1,7 @@
 // anyplot.ai
 // network-force-directed: Force-Directed Graph
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-24
+// Quality: 89/100 | Created: 2026-08-24
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
