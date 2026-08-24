@@ -1,0 +1,256 @@
+library: echarts
+language: javascript
+specification_id: bubble-packed
+created: '2026-08-24T18:41:08Z'
+updated: '2026-08-24T19:03:34Z'
+generated_by: claude-sonnet
+workflow_run: 32762785503
+issue: 992
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Vertical/horizontal imbalance from attempt 1 is fixed: the post-simulation bounding
+    box is re-centered and then uniformly scaled to a 0.92 fill ratio, so the packed
+    cluster now sits symmetrically within its square working area on both axes.'
+  - 'Palette-recycling ambiguity from attempt 1 is fixed: circles past the 8th category
+    (i >= palette.length) now get a dashed, wider border ring, so a same-colored recycled
+    circle stays visually distinguishable from its first-lap sibling even when too
+    small to carry a label.'
+  - Added radial-gradient sphere highlight (light source top-left) on every circle,
+    lifting the flat fills toward a more polished, dimensional look without touching
+    the underlying Imprint hues.
+  - Correct spec-mandated force-simulation circle-packing implemented from scratch
+    (collision resolution + centering attraction over 500 iterations, deterministic
+    seeded LCG) since ECharts has no native packing series.
+  - 'Area-correct radius scaling (r = scale * sqrt(value)), correct Imprint palette
+    usage (brand green #009E73 on the largest/first category), and theme-adaptive
+    chrome (identical data colors between light/dark, luminance-based label ink keeps
+    every in-circle label readable).'
+  weaknesses:
+  - The two smallest circles (Food & Drink=50, Weather=28) shrink to barely-there
+    dots below the label threshold — an accurate area encoding but the weakest end
+    of the size range is close to imperceptible at a glance.
+  - Still no ECharts-distinctive feature beyond a standard scatter series with symbolSize/RadialGradient
+    itemStyle — reasonable given ECharts has no native packing layout, but there's
+    room to lean further into ECharts-specific capabilities (e.g. graphic custom elements)
+    for Library Mastery.
+  - Several small helper functions (boundingBox, labelColorFor, lighten) deviate from
+    the strict KISS 'no functions' ideal, though they are justified by the physics-simulation
+    nature of this chart type.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-packed · javascript · echarts · anyplot.ai" in dark ink, centered near the top, clearly legible. No axes/gridlines shown (correct for this chart type — position carries no meaning).
+      Data: 16 circles sized by app-store category revenue, packed without overlap in an organic cluster that now fills the square working area symmetrically (fixed from attempt 1's low/unbalanced placement). The largest circle ("Games") renders in brand green #009E73 (first categorical series, matches spec). The next 7 categories cycle through the Imprint palette in canonical order (purple, blue, ochre, red, cyan, magenta, olive); past the 8th category, colors recycle but now carry a dashed, wider border ring to stay distinguishable from their first-lap sibling. In-circle labels switch between near-black and near-white ink based on fill luminance, and every visible label is readable; the two smallest circles (Food & Drink, Weather) fall below the label-radius threshold and render as small unlabeled dashed dots. A subtle radial-gradient highlight gives each circle a soft sphere-like depth.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now in light ink, clearly legible against the dark surface.
+      Data: Circle positions, sizes, and fill colors are pixel-identical to the light render — only the page background and title ink flipped, exactly as required. Label ink assignments are unchanged (derived from fixed fill hue, not theme), and remain readable. No dark-on-dark issues found anywhere (title, in-circle labels all pass).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title and in-circle
+          labels well-proportioned
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Collision-resolved packing, no circle or label overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Size hierarchy is clear; the two smallest circles (Food & Drink,
+          Weather) are near-imperceptible dots, an accurate but weak edge of the encoding
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, radial-gradient depth, dashed rings give recycled
+          colors a non-hue distinguishing signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed from attempt 1: bounding-box re-center + 0.92 fill-ratio scale
+          now balances the cluster symmetrically within the square'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches mandated format; no axes needed for this chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73, canonical Imprint order for categories 2-8,
+          dashed border differentiates the recycled second lap; theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom force-simulation packing plus new radial-gradient sphere highlight
+          lifts this clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, page-bg circle borders, and now evenly balanced whitespace
+          after the layout fix
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size hierarchy clearly highlights top-revenue categories (Games,
+          Social Networking, Entertainment) as the focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct packed-bubble chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Force-simulation packing, area-correct sizing, labels all present;
+          grouping is optional and correctly omitted since data has no group field
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly drives circle area; simulated (x, y) correctly drive
+          position
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; in-circle labels serve as the legend, matching
+          data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 16 categories spanning a wide value range (28-1250) show the full
+          size hierarchy this chart type is meant to demonstrate
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real, neutral scenario: app-store category revenue'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and relative proportions plausible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (boundingBox, labelColorFor, lighten) deviate
+          from strict no-function KISS, but are justified by the physics-simulation
+          nature of this chart
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the echarts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch packing simulation, no
+          fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly, animation disabled
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of scatter series, RadialGradient itemStyle, and tooltip
+          formatter
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Still a standard scatter series under the hood; no ECharts-specific
+          capability (e.g. graphic custom elements) leveraged beyond basic itemStyle/label
+          config
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns: []
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending
+  - edge-highlighting
