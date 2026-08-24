@@ -1,0 +1,271 @@
+library: d3
+language: javascript
+specification_id: line-stress-strain
+created: '2026-08-24T21:06:25Z'
+updated: '2026-08-24T21:34:01Z'
+generated_by: claude-sonnet
+workflow_run: 32776066514
+issue: 4413
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/d3/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Factually accurate Al 6061-T6 material properties: Young''s modulus ~69 GPa,
+    yield strength ~270 MPa, UTS 310 MPa, and ~14% fracture strain all sit squarely
+    in the real-world range for this alloy.'
+  - 'Full spec coverage: elastic/strain-hardening/necking regions labeled, yield (0.2%
+    offset), UTS, and fracture points marked with direct on-chart labels, the 0.2%
+    offset construction line drawn, and the elastic modulus annotated with both a
+    slope line and text.'
+  - 'Distinctive engineering-grade implementation: a custom Fritsch-Carlson monotone
+    Hermite interpolation generates the curve from control points, and a bisection
+    search locates the true yield point where the offset line meets the modeled curve.'
+  - Clean theme-adaptive chrome; data colors (brand green curve, semantic matte-red
+    fracture X) are identical between light and dark renders, and all text/grid/spines
+    correctly use theme tokens.
+  - The attempt-1 fix successfully resolved the previously flagged 'Yield (0.2% offset)'
+    label/curve overlap by moving the label further above the marker — the label no
+    longer touches the rising curve in either theme.
+  - Direct point labeling instead of a legend is the right call for a single-series
+    curve with named critical points.
+  weaknesses:
+  - The 'Yield (0.2% offset)' label is centered on the yield marker's x-position,
+    which sits very close to the y-axis — the label's leading 'Y' glyph is bisected
+    by the solid y-axis domain line in both light and dark renders. Right-align the
+    label (text-anchor 'end' with a small left offset) or nudge it right so it clears
+    the axis stroke.
+  - 'The attempt-1 fix that lengthened the elastic-modulus tangent line (to PROP_LIMIT_STRAIN
+    * 1.6) made it nearly geometrically coincident with the separate 0.2% offset construction
+    line — both use the same dash pattern (''6,4'') and a similar muted-gray tone,
+    so at render scale they merge into what reads as a single dashed line instead
+    of two distinct annotations. This defeats the spec''s intent of showing the offset
+    construction as visually distinct from the modulus slope. Differentiate them:
+    use a clearly different dash pattern or a more contrasting stroke color for one
+    of the two lines, or introduce a deliberate small visual offset between them so
+    both remain legible as separate constructs in both themes.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Al 6061-T6 Tensile Test · line-stress-strain · javascript · d3 · anyplot.ai" centered top in dark ink, clearly readable, fontsize correctly scaled down for the descriptive-prefixed title length. Axis titles "Engineering strain (mm/mm)" (x) and "Engineering stress (MPa)" (y) in dark ink with units. Tick labels in soft dark gray, evenly spaced, no overlap with each other. Subtle horizontal gridlines only. Region labels ELASTIC / STRAIN HARDENING / NECKING across the top in soft gray, separated by thin dotted vertical dividers at the yield and UTS strains.
+      Data: Single stress-strain curve in brand green (#009E73), rising steeply through the elastic region, curving over a broad strain-hardening plateau, then declining through necking to a red (semantic matte-red) X marker at fracture. Yield point and UTS point are marked with green filled circles with light-colored strokes, each with a bold label and an MPa value beneath. A dashed construction line runs from near the origin through the yield region — on close zoom, this is actually two near-coincident lines (the elastic-modulus tangent and the 0.2% offset line) that render as one due to matching dash style and very similar slope/position at this scale. A text annotation "E ≈ 69 GPa (elastic slope)" sits in the open plateau area below the curve, and "0.2% offset" sits near the x-axis.
+      Legibility verdict: PASS overall — all text is readable against the light background. Two defects noted (see weaknesses): the "Yield (0.2% offset)" label's leading glyph is bisected by the y-axis domain line, and the modulus/offset construction lines visually merge into one.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, tick labels, and region labels as the light render, but flipped to light-colored ink (white/light gray) against the dark background — all clearly legible, no dark-on-dark occurrences anywhere (title, ticks, region labels, and annotation text all confirmed light-on-dark).
+      Data: Curve color, yield/UTS marker fill, and fracture X color are identical to the light render (#009E73 green curve, matte-red fracture marker) — only the chrome (background, text, grid, dashed divider color) flipped for the theme, exactly as required.
+      Legibility verdict: PASS — all text and data are readable against the dark background. Same axis-line/label overlap and merged-construction-line defects reproduce identically (chrome-independent, geometry-driven issues).
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (15px/17px axis text, dynamically-scaled
+          title); readable at full size in both themes; title fontsize correctly scaled
+          via the length-based formula for the descriptive-prefixed title.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: '''Yield (0.2% offset)'' label is centered on the yield marker''s
+          x-position, close to the y-axis; the leading ''Y'' glyph is visibly bisected
+          by the solid axis domain line in both renders. Text stays readable but the
+          crossing is a real defect.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: false
+        comment: Curve, markers, and fracture X are well-sized. However the elastic-modulus
+          tangent line and the 0.2% offset construction line share the same dash pattern
+          and similar gray tone with near-identical geometry, so they merge into a
+          single visible line instead of two distinct annotations.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green curve vs. red fracture marker is also distinguished by shape
+          (line vs. X), not color alone; good contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, well-balanced share of the canvas; no cut-off
+          content; margins generous but not wasteful.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Engineering strain (mm/mm)'' and ''Engineering stress (MPa)''
+          are descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series is #009E73; fracture marker uses the matte-red
+          semantic anchor appropriately for a failure event; backgrounds and chrome
+          theme-correct in both renders; data colors identical across themes.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful direct labeling, semantic color use for fracture, and
+          region segmentation go clearly beyond a configured default, short of full
+          publication polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, y-axis-only subtle grid, generous whitespace; the
+          merged construction lines and axis-crossing label keep this from top marks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Region labels + directly-labeled yield/UTS/fracture points create
+          an immediate, guided narrative of the material's mechanical behavior stages.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line/curve chart for a stress-strain relationship.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Region labels, yield/UTS/fracture markers, and elastic-modulus annotation
+          are all present and legible. The 0.2% offset line is technically drawn but
+          visually merges with the elastic-modulus tangent line, so the spec's two
+          distinct required constructs read as one on the actual render.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strain on x, stress on y, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; no legend
+          needed given direct point labeling.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Single curve fully covers elastic, yield, strain-hardening, necking,
+          and fracture stages.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral engineering scenario (aluminum alloy tensile test).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: E, yield, UTS, and elongation values all match real Al 6061-T6 properties.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions (hermite, monotoneTangents, stressAt,
+          offsetStressAt) are used — justified by the curve math, but a deviation
+          from strict linear script structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded control points, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for an accurate mechanical-behavior model;
+          no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, single svg appended, no animation.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of d3 scales, axes, curveMonotoneX, and data joins for
+          gridlines/dividers.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom Fritsch-Carlson monotone Hermite interpolation plus a bisection
+          root-find for the 0.2% offset yield point is a genuinely distinctive, hand-rolled
+          technical computation.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - publication-ready
+  - alpha-blending
