@@ -1,0 +1,249 @@
+library: highcharts
+language: javascript
+specification_id: line-stress-strain
+created: '2026-08-24T21:06:22Z'
+updated: '2026-08-24T21:19:51Z'
+generated_by: claude-sonnet
+workflow_run: 32776788118
+issue: 4413
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'All spec-mandated annotations present: labeled elastic/plastic(strain-hardening)/necking
+    regions via plotBands, yield (0.2% offset)/UTS/fracture critical points via a
+    dedicated scatter series with dataLabels, a visible elastic-modulus slope line
+    from the origin, and a parallel 0.2% offset construction line'
+  - Data colors are pixel-identical between light and dark renders (green curve, violet
+    offset line, red fracture marker) while chrome (elastic-modulus line, ink, backgrounds,
+    plot band tints) correctly flips via ANYPLOT_TOKENS
+  - Realistic, physically-plausible Ramberg-Osgood model for Al 6061-T6 (E=69 GPa,
+    sigma_y=276 MPa, UTS=310 MPa, fracture=235 MPa at ~11% strain) — deterministic,
+    no RNG
+  - 'Clean idiomatic Highcharts usage: plotBands with inline labels, plotLines for
+    region boundaries, mixed line+scatter series, custom tooltip pointFormat and dataLabels
+    formatter, credits disabled, animation disabled on chart and series'
+  - Canvas gate passed (3200x1800), no clipped text, no overlapping elements in either
+    render
+  weaknesses:
+  - 'Dark render: the italic plotBand region labels (''Elastic'', ''Plastic (strain
+    hardening)'', ''Necking'') use t.inkMuted and read noticeably low-contrast against
+    the near-black background — still legible but the faintest text element in the
+    chart; consider bumping toward t.inkSoft for the dark theme.'
+  - The 'Critical points' legend swatch is drawn in a single ink color even though
+    the fracture point renders in palette[4] (red) on the chart itself — a minor mismatch
+    between legend and rendered marker color for that one point.
+  - Design relies entirely on the stock Imprint categorical palette with no additional
+    custom color/gradient treatment beyond the plot-band opacity tint — solid but
+    not maximally distinctive.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Al 6061-T6 tensile test · line-stress-strain · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible. X-axis title "Engineering strain (mm/mm)" and Y-axis title "Engineering stress (MPa)" in medium-gray ink, readable. Tick labels on both axes dark and crisp. Italic plotBand region labels ("Elastic", "Plastic (strain hardening)", "Necking") in muted gray, readable against the light background. Subtle horizontal gridlines and faint vertical dotted boundary lines at the yield/UTS strain values, visible but unobtrusive. Legend at bottom with 4 entries (curve, elastic modulus, 0.2% offset, critical points), all legible.
+      Data: Primary stress-strain curve in Imprint green (#009E73), 3.5px line width, smooth from origin through yield, strain-hardening plateau, and necking down to fracture. Black dashed elastic-modulus line from origin to the yield point. Violet/purple long-dash 0.2% offset construction line parallel to the elastic line, correctly offset along the strain axis. Three triangular critical-point markers: yield and UTS in ink-black, fracture in red, each with a text data label reporting the stress value. First categorical series confirmed as #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels rendered in light/white ink, clearly legible against the dark surface. Gridlines and boundary dotted lines still visible at reduced contrast, as expected. Legend text light-colored and legible. The italic plotBand region labels ("Elastic", "Plastic (strain hardening)", "Necking") are present but rendered quite faint/dim (muted dark-gray-green) against the near-black background — legible on close inspection but the lowest-contrast text element in the chart; not a hard dark-on-dark failure (letters are not black-on-black) but worth tightening.
+      Data: Curve color and offset-line color are identical to the light render (Imprint green curve, violet offset line, red fracture marker) — only the elastic-modulus reference line flips from black to white and chrome flips as expected. No other color drift observed.
+      Legibility verdict: PASS (with a minor low-contrast note on the muted region labels, not severe enough to constitute a legibility failure)
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All text readable in both themes; plotBand region labels are notably
+          low-contrast (t.inkMuted) in the dark render
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width and marker sizes appropriate for a ~300-point single curve
+          plus overlay lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; critical points distinguished by shape+label, not
+          solely by red-green hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title, axes, legend well-proportioned,
+          nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (mm/mm, MPa)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 confirmed; backgrounds correct per theme; data
+          colors identical across renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: PlotBands, offset construction line, and distinct critical-point
+          styling show real design intent beyond generic defaults; palette itself
+          is stock Imprint
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/borders minimal, grid subtle, generous whitespace; plot-band
+          tint adds slight visual density
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Region labels and critical-point callouts guide the viewer through
+          elastic -> yield -> hardening -> necking -> fracture
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line chart for a stress-strain curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, critical points, elastic-modulus line, and 0.2% offset
+          line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strain on X, stress on Y, full curve range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches mandated pattern with descriptive prefix; legend
+          labels accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows elastic, yield, strain-hardening, necking, and fracture — all
+          key stress-strain regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral Al 6061-T6 tensile-test values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stress and strain magnitudes sensible for an aluminum alloy
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic Ramberg-Osgood model, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the mount-node globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows mount-node contract; animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: plotBands/plotLines, dataLabels formatter, mixed series types used
+          idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines region shading, construction lines, and a labeled scatter
+          overlay — goes beyond a bare line series
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending

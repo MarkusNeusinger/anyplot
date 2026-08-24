@@ -1,0 +1,270 @@
+library: ggplot2
+language: r
+specification_id: line-stress-strain
+created: '2026-08-24T21:02:39Z'
+updated: '2026-08-24T21:17:43Z'
+generated_by: claude-sonnet
+workflow_run: 32776543015
+issue: 4413
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'All spec-required elements are present: elastic/plastic(strain-hardening)/necking
+    regions labeled, yield (0.2% offset) / UTS / fracture critical points marked,
+    elastic modulus annotated (E ≈ 70 GPa text) and the 0.2% offset construction line
+    drawn parallel to the elastic slope.'
+  - Direct-labeling of regions and critical points instead of a legend is a clean,
+    idiomatic ggplot2 choice that avoids clutter for a single-series chart.
+  - Realistic, physically-plausible aluminum-alloy tensile data (E ≈ 70 GPa, yield/UTS/fracture
+    stresses and strains all in sensible ranges) generated with a piecewise elastic
+    → hardening → necking model plus smoothed measurement noise.
+  - 'Thoughtful micro-details: size hierarchy across the three critical-point markers
+    (yield < UTS < fracture), semantic use of matte red (#AE3030) reserved only for
+    the fracture/failure point, and white-edge (shape 21, PAGE_BG stroke) markers
+    for definition against the ribbon fill.'
+  - 'Theme-adaptive chrome is correctly threaded through: backgrounds, ink tones,
+    and grid color all flip between light/dark while the brand-green line and semantic-red
+    fracture marker stay identical.'
+  - 'Clean code: single-purpose script, only the packages it uses, reproducible via
+    set.seed(42), saves plot-{THEME}.png via ragg as required.'
+  weaknesses:
+  - 'Repeated text/element overlap (VQ-02), identical in both themes: the dotted region-boundary
+    vlines at e_proportional and e_uts run directly through the ''Elastic'' and ''UTS''
+    annotation text (the line crosses through the letters rather than stopping above/below
+    the label). Nudge the ''Elastic'' and ''UTS'' annotate() y-positions (or the vline
+    endpoints) so the dotted lines terminate at the label''s edge instead of crossing
+    through it.'
+  - The 'Fracture' label sits directly on top of the green data line — the line visibly
+    cuts through 'racture' in both renders. Move the label further above/right of
+    the line (e.g. increase the y-offset or right-shift x so the text clears the curve)
+    rather than centering it on the line path.
+  - The elastic-modulus annotation ('E ≈ 70 GPa') is text-only; consider making the
+    steep elastic segment's slope more visually distinct (e.g. a short reference guide
+    line) since the spec calls out 'a visible slope line or text annotation' and the
+    current implementation relies solely on the text half of that either/or.
+  - The ribbon fill under the whole curve (down to y=0) is decorative rather than
+    meaningful for a stress-strain curve — it doesn't represent a real quantity (unlike,
+    say, toughness/energy which would need integration to fracture only). Consider
+    limiting it to a clearer semantic use or dropping it for a cleaner read.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "Aluminum Alloy Tensile Test · line-stress-strain · r · ggplot2 · anyplot.ai" in dark ink, clearly legible, occupies roughly 70-75% of plot width (expected for the mandated long title). Axis titles "Engineering Strain" / "Engineering Stress (MPa)" and tick labels are dark/soft-dark and clearly readable. Y-axis gridlines are subtle horizontal lines only. No spines/tick marks visible (theme_minimal + explicit removal).
+      Data: Single brand-green (#009E73) curve with a light green ribbon fill beneath it, tracing elastic → yield → strain-hardening → necking → fracture. Region labels "Elastic", "Plastic (strain hardening)", "Necking" sit above the curve; two dotted gray vertical lines mark region boundaries (at proportional-limit and UTS strain) but run directly through the "Elastic" and "UTS" label text rather than stopping short of it. A dashed gray 0.2% offset line runs parallel to the elastic slope. Yield and UTS points are marked with dark-filled circles with light edges; the fracture point is a distinct matte-red (#AE3030) circle, and its "Fracture" label overlaps the green curve line beneath it (the line visibly crosses through the letters).
+      Legibility verdict: PASS overall (all text is readable against the background and against the curve color), but FLAG two repeated text/line overlaps described above — a VQ-02 deduction, not a legibility (VQ-01) failure since every character remains distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Same title, now in light ink (#F0EFE8), fully legible against the dark background. Axis titles and tick labels rendered in light/soft-light tones, clearly readable, no dark-on-dark issues found. Gridlines subtle and visible.
+      Data: Data colors are pixel-identical to the light render — same brand-green curve/ribbon and same matte-red fracture marker — confirming only chrome (background, text, grid, marker edge color which flips to the dark PAGE_BG) changed between themes. Yield/UTS point fills flip to a light ink tone (correct theme-adaptive INK token) with dark-background-colored edges.
+      Legibility verdict: PASS overall (no dark-on-dark or light-on-light failures), with the same two overlap issues (dotted vlines through "Elastic"/"UTS" text; data line through "Fracture" text) reproduced identically, confirming this is a fixed-layout issue rather than a theme-specific rendering bug.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, high contrast against background in both themes,
+          title fontsize scales with title length. Readability held back only by the
+          overlaps counted under VQ-02.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Dotted region-boundary vlines cross directly through the 'Elastic'
+          and 'UTS' labels, and the data line cuts through the 'Fracture' label. Reproduced
+          identically in both themes. Text stays legible (not severe) but this is
+          a clear, repeated overlap defect.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weight (1.3) and marker sizes (3.0-4.2 with size hierarchy)
+          appropriate for 300 sampled points; ribbon alpha=0.08 keeps it subtle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast brand green on both surfaces; red fracture marker is
+          redundantly labeled, not the sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas, no clipping at any edge, title proportion within
+          expected range for the mandated title, generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Engineering Strain'' and ''Engineering Stress (MPa)'' are descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; fracture point correctly uses the matte-red
+          semantic anchor; backgrounds match #FAF8F1/#1A1A17; data colors identical
+          across themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom size hierarchy on critical points, semantic red reserved for
+          fracture, ribbon fill and offset-line construction beyond generic defaults;
+          polish undercut by the overlap issues.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/ticks removed, grid reduced to subtle y-only lines, generous
+          margins; refinement dinged by label/line collisions.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Region labels and critical-point markers build a clear narrative
+          arc through the test, though the overlaps interrupt the intended clean read
+          at the region boundaries and fracture point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line chart is the correct plot type for a stress-strain curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, yield/UTS/fracture markers, elastic-modulus annotation,
+          and 0.2% offset line are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strain on x, stress (MPa) on y, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · spec-id · r · ggplot2 · anyplot.ai'
+          format; no legend needed given direct labeling of the single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Elastic, yield, strain-hardening, necking, and fracture are all represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible aluminum-alloy tensile-test values, neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Strain 0-0.16 and stress 0-310 MPa are sensible for the material
+          modeled.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (material_curve) for the piecewise physical model;
+          justified but not zero-function.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported; tibble used via ::.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ggsave/ragg::agg_png at the correct dimensions.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar-of-graphics layering (geom_ribbon + geom_vline + geom_line
+          + geom_point + annotate), proper theme() overrides.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: shape=21 fill/edge markers and direct-labeling via annotate() instead
+          of a legend are distinctive, idiomatic ggplot2 choices.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
+  - edge-highlighting
