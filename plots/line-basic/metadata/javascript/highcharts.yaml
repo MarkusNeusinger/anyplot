@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: line-basic
 created: '2026-08-24T13:17:41Z'
-updated: '2026-08-24T13:20:53Z'
+updated: '2026-08-24T13:30:14Z'
 generated_by: claude-sonnet
 workflow_run: 32731484413
 issue: 653
@@ -12,47 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/javascript/highcharts/plot-dark.html
-quality_score: 80
+quality_score: 91
 review:
   strengths:
-  - 'Theme tokens threaded correctly throughout: title/axis colors from t.ink/t.inkSoft,
-    grid from t.grid, first series pinned to t.palette[0] (#009E73), background transparent
-    so page bg shows through in both themes'
-  - Data colors are pixel-identical between light and dark renders — only chrome (background,
-    text, grid) flips, exactly as required
-  - Deterministic LCG-seeded data generation produces a realistic 48-hour diurnal
-    double-sine temperature curve with plausible noise, staying well within the spec's
-    10-200 point range
-  - 'Title format is exact: ''line-basic · javascript · highcharts · anyplot.ai'',
-    comfortably sized within the canvas with no overflow or clipping'
-  - 'animation: false set on both chart and plotOptions.series as required, and no
-    white background / no default Highcharts palette used'
+  - 'Precise theme-adaptive chrome: the brand-green line (#009E73) is identical between
+    light and dark renders, backgrounds correctly flip to #FAF8F1/#1A1A17, and all
+    title/axis/tick text stays legible in both themes.'
+  - Thoughtful data storytelling via amber Peak/Trough callouts that give the chart
+    a clear focal point beyond a plain line, without overlapping the data or axis
+    text.
+  - 'Deterministic, realistic synthetic data: an LCG-seeded 48-hour diurnal temperature
+    cycle (5.5-24 degC) with a small drift term, appropriate scale and plausibility
+    for outdoor hourly readings.'
+  - 'Clean, idiomatic Highcharts wiring: correct mount-node contract, animation disabled
+    on chart and series, credits removed, Imprint tokens correctly threaded into colors/backgrounds/chrome.'
   weaknesses:
-  - 'Purely generic styling: no custom flourishes beyond token application — default
-    Highcharts line, no markers, no annotations, no use of Highcharts-distinctive
-    features (e.g. plotBands to highlight day/night, zones for gradient emphasis)
-    that would elevate design excellence and library mastery'
-  - No visual hierarchy or focal point — the two diurnal peaks are visually equal
-    weight with nothing drawing the eye to a specific insight (e.g. peak/trough annotation,
-    shaded night bands)
-  - markers.enabled is false everywhere; with only 49 points a light marker on the
-    line would improve individual-value readability per the spec's 'markers optional
-    but can enhance visibility' note without adding clutter
+  - The night/day plotBands shading has no legend, subtitle, or annotation explaining
+    what the alternating bands mean - a viewer cannot tell they denote 'night' without
+    reading the source; add a brief label/legend entry or drop the shading if it isn't
+    essential to the spec's minimal design.
+  - tooltip.enabled is set to false on an interactive JS library - this discards Highcharts'
+    main advantage (per-point hover detail) for a 49-point hourly series; re-enable
+    a themed tooltip (t.ink/t.elevatedBg) so the HTML detail view lets viewers read
+    exact hour/temperature values.
+  - The added Peak/Trough scatter overlay plus background shading push the chart a
+    bit beyond the spec's explicit ask for a 'clean, minimal design with a single
+    line' - fine as tasteful enhancement here, but keep 'basic' specs from becoming
+    over-decorated in future attempts.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "line-basic · javascript · highcharts · anyplot.ai" in bold dark text at top, clearly readable. X-axis title "Hour of Observation" and Y-axis title "Temperature (°C)" in medium-gray, both legible. Tick labels (0-48 on X, 4-26 on Y) in the same soft gray, all readable. Horizontal grid lines subtle but visible.
-      Data: Single green line (#009E73, Imprint brand green) tracing a smooth double-sine diurnal temperature curve across 48 hours, two clear peaks (~24°C) and two troughs (~5.5-6°C). Line width is substantial (3px) and clearly distinguishable from the background. No markers on individual points.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "line-basic - javascript - highcharts - anyplot.ai" in dark ink, bold, centered at top. X-axis title "Hour of Observation" and Y-axis title "Temperature (°C)" in soft dark gray. Tick labels (0-48 on X in steps of 6, 4-26 on Y) in soft dark gray. Horizontal gridlines are subtle light gray, visible but not dominant. Alternating vertical plotBands (very faint warm-gray tint) mark overnight windows.
+      Data: A single green (#009E73) line with small circular markers traces two diurnal humps (troughs near hour 3/27 at ~5.5-6 degC, peaks near hour 15/39 at ~24 degC). An amber diamond marks the global peak (24°C, hour 15) and trough (5.5°C, hour 3), each with a bold dark data-label callout ("Peak 24°C" / "Trough 5.5°C") placed clear of the line.
+      Legibility verdict: PASS - all text is dark-on-light and clearly readable; no overlap between labels, markers, or the line.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title in white/light text, clearly visible against the dark background. Axis titles and tick labels in light gray, all legible with no dark-on-dark issues anywhere. Grid lines subtle but visible against the dark surface.
-      Data: Same green line (#009E73) as the light render — confirmed pixel-identical hue and shape, only chrome (background/text/grid) has flipped to the dark theme.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title/axis/tick layout, now in off-white/light-gray ink against the dark surface. Gridlines are a subtle darker-gray, still visible. The overnight plotBands read as slightly darker vertical bands against the near-black background.
+      Data: The line and markers use the identical #009E73 green as the light render (confirmed no hue shift). The amber peak/trough markers and their data-labels are unchanged in color and position, now rendered in light text for contrast.
+      Legibility verdict: PASS - title, axis titles, tick labels, and the peak/trough callouts are all light-on-dark with no dark-on-dark or light-on-light failures anywhere in the render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,35 +61,34 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
-          14px); fully readable in both themes, no dark-on-dark/light-on-light
+        comment: All text explicitly sized and readable in both themes; peak/trough
+          data-labels are bold and clear of the line
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No collisions between labels, markers, or the line
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 3px line clearly visible; no markers on the ~49 points means individual
-          readings aren't emphasized, though the line itself reads well
+        comment: 49 points with small (radius 3) markers and a 3px line is appropriate
+          density; amber diamonds highlight the extremes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green has strong contrast against both the off-white and near-black
-          surfaces; single-series so no CVD concern
+        comment: Green line and amber accent contrast well against both surfaces;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (3200x1800); title comfortably within
-          bounds, no overflow or clipping
+        comment: Good proportions, no clipping or overflow, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -101,33 +101,32 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is t.palette[0] = #009E73; backgrounds match
-          theme tokens; identical data color across themes'
+        comment: 'First series is #009E73, backgrounds match #FAF8F1/#1A1A17, data
+          colors identical across themes'
     design_excellence:
-      score: 9
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Clean but generic — default line chart styling with token-driven
-          chrome, no custom design flourishes
+        passed: true
+        comment: Polished with custom peak/trough emphasis and theme tokens, though
+          slightly more decorated than a 'basic' plot needs
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid is subtle and whitespace is generous, but nothing beyond default
-          Highcharts refinement
+        passed: true
+        comment: No chart border/frame, subtle gridlines, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or emphasis — both diurnal peaks have equal visual
-          weight with no annotation or focal point
+        passed: true
+        comment: Peak/trough callouts create a clear focal point, but the unlabeled
+          night-shading bands are not self-explanatory
     spec_compliance:
       score: 15
       max: 15
@@ -137,51 +136,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart type
+        comment: Correct line chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Minimal single-line design, clear axis labels, grid lines present
-          as required
+        comment: Grid lines, clear axis labels, markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = hour of observation, Y = temperature, full 49-point series shown
+        comment: Hour on X, temperature on Y, full 0-48h range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; legend correctly disabled for
-          single series
+        comment: Title matches mandated format exactly; legend correctly omitted for
+          a single visible series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a clear continuous trend over a sequential axis; markers would
-          add a touch more coverage of the 'optional markers' note
+        comment: Full trend shown across 48 hourly points
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible 48-hour outdoor temperature diurnal cycle, neutral domain
+        comment: Plausible, neutral outdoor-temperature scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5-24°C range and 49 hourly points are sensible for the domain and
-          within spec's 10-200 point guidance
+        comment: 5.5-24 degC range is sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -191,35 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only a tiny LCG helper function for deterministic randomness; otherwise
-          flat script
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Seeded LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only globals used
+        comment: Only uses the provided Highcharts/tokens globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or simulated interactivity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly calls Highcharts.chart('container', ...) with no explicit
-          width/height, matching the mount-node contract
+        comment: Follows the mount-node contract; harness saves plot-{theme}.png/.html
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -227,21 +221,22 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct use of plotOptions.series/line, colors array from tokens,
-          credits/tooltip/legend disabled appropriately — solid but basic idiomatic
-          usage
+        comment: Solid config, but disabling tooltip entirely forgoes Highcharts'
+          core interactive value for a dense hourly series
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No Highcharts-distinctive features used (e.g. plotBands, zones, gradient
-          fills) — a generic line series
+        passed: true
+        comment: Good use of plotBands and custom dataLabels beyond a default line
+          chart
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
