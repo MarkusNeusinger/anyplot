@@ -88,6 +88,7 @@ chart.setOption({
     nameLocation: "middle",
     nameGap: 60,
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+    scale: true,
     axisLabel: { color: t.inkSoft, fontSize: 13 },
     axisLine: { show: false },
     axisTick: { show: false },
@@ -115,6 +116,7 @@ chart.setOption({
       symbol: "none",
       lineStyle: { opacity: 0 },
       areaStyle: { color: t.palette[0], opacity: 0.22 },
+      itemStyle: { color: t.palette[0] },
       z: 1,
     },
     {
