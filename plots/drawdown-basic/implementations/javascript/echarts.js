@@ -37,13 +37,13 @@ for (let i = 1; i < dates.length; i++) {
   let mu, sigma;
   if (i < 350) {
     mu = 0.0009;
-    sigma = 0.011;
+    sigma = 0.0085;
   } else if (i < 500) {
     mu = -0.0022;
-    sigma = 0.02;
+    sigma = 0.016;
   } else {
     mu = 0.0012;
-    sigma = 0.013;
+    sigma = 0.01;
   }
   nav.push(nav[i - 1] * (1 + mu + sigma * gaussian()));
 }
@@ -97,7 +97,7 @@ const markPointData = [
     symbol: "pin",
     symbolSize: 52,
     itemStyle: { color: t.palette[4] },
-    label: { color: t.pageBg, fontSize: 13, fontWeight: 600, formatter: () => `${maxDdPct}%` },
+    label: { color: "#FFFFFF", fontSize: 13, fontWeight: 600, formatter: () => `${maxDdPct}%` },
   },
 ];
 if (recoveryIdx !== null) {
@@ -153,6 +153,7 @@ chart.setOption({
       name: "NAV ($)",
       nameTextStyle: { color: t.inkSoft, fontSize: 14 },
       position: "right",
+      scale: true,
       axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "${value}" },
       axisLine: { show: true, lineStyle: { color: t.inkSoft } },
       splitLine: { show: false },
