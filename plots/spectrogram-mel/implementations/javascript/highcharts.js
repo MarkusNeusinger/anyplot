@@ -27,25 +27,32 @@ for (let n = 0; n < N_SAMPLES; n++) {
   const timeInNote = time - noteIdx * NOTE_DURATION;
   const vibrato = 1 + 0.004 * Math.sin(2 * Math.PI * 5 * time);
   const f0 = NOTES_HZ[noteIdx] * vibrato;
-  const attack = timeInNote < 0.01 ? timeInNote / 0.01 : 1;
+  // Raised-cosine (not linear) attack: a linear ramp has a corner in its
+  // derivative that splatters broadband energy across every mel bin at each
+  // onset, which was the real source of the "noisy across the full
+  // frequency range" texture — a smooth S-curve confines the onset's energy
+  // to the note's own partials instead of the whole spectrum.
+  const attack = timeInNote < 0.01 ? 0.5 - 0.5 * Math.cos((Math.PI * timeInNote) / 0.01) : 1;
   // Fast pluck-like decay so each note's onset and the silence between notes
-  // both stay visible instead of blurring into one continuous tone.
-  const envelope = attack * Math.exp(-16 * timeInNote);
-  const tone =
-    Math.sin(2 * Math.PI * f0 * time) +
-    0.5 * Math.sin(2 * Math.PI * 2 * f0 * time) +
-    0.25 * Math.sin(2 * Math.PI * 3 * f0 * time);
-  const breathNoise = (lcgNext() - 0.5) * 0.02 * envelope;
+  // both stay visible instead of blurring into one continuous tone; steep
+  // enough that consecutive notes don't smear together in the mel grid.
+  const envelope = attack * Math.exp(-22 * timeInNote);
+  // Fundamental plus a much quieter overtone: with only 48 mel bins packed
+  // into a narrow 80-850 Hz span, a loud second partial competes visually
+  // with the fundamental and reads as noise, so keep the overtone faint and
+  // let one dominant band trace the melody clearly.
+  const tone = Math.sin(2 * Math.PI * f0 * time) + 0.18 * Math.sin(2 * Math.PI * 2 * f0 * time);
+  const breathNoise = (lcgNext() - 0.5) * 0.006 * envelope;
   audio[n] = 0.3 * envelope * tone + breathNoise;
 }
 
 // --- Mel-scale frequency centers --------------------------------------------
 const N_MELS = 48;
 const FMIN_HZ = 80;
-// Capped well below Nyquist so the fundamental + its first three harmonics
-// (up to 392 Hz x 3 ~= 1176 Hz) span most of the mel axis instead of leaving
-// the top of the plot as dead noise floor.
-const FMAX_HZ = 1600;
+// Capped well below Nyquist so the fundamental + its faint overtone (up to
+// 392 Hz x 2 = 784 Hz) span most of the mel axis, leaving only a thin margin
+// of true noise floor above instead of a wide dead band.
+const FMAX_HZ = 850;
 function hzToMel(hz) {
   return 2595 * Math.log10(1 + hz / 700);
 }
@@ -60,7 +67,10 @@ const melCenterHz = Array.from({ length: N_MELS }, (_, m) => melToHz((melEdges[m
 
 // --- Short-time energy at each mel center via the Goertzel algorithm --------
 // (avoids computing a full FFT per frame — only the frequencies we need)
-const N_FFT = 512;
+// N_FFT=1024 gives a ~62.5 Hz main-lobe width (vs ~125 Hz at 512), narrower
+// relative to the mel-bin spacing at low frequencies, while staying short
+// enough that note onsets still land cleanly within a handful of frames.
+const N_FFT = 1024;
 const HOP = 384;
 const N_FRAMES = Math.floor((N_SAMPLES - N_FFT) / HOP) + 1;
 
@@ -94,7 +104,9 @@ for (let f = 0; f < N_FRAMES; f++) {
 }
 
 // power -> dB, referenced to peak power, floored for display dynamic range
-const DB_FLOOR = -80;
+// (widened from -80 to -90 dB so near-floor texture spreads across more of
+// the color scale instead of clumping at one end)
+const DB_FLOOR = -90;
 const EPS = 1e-12;
 const dbMatrix = powerMatrix.map((row) =>
   row.map((p) => Math.max(DB_FLOOR, 10 * Math.log10((p + EPS) / (maxPower + EPS))))
@@ -116,10 +128,20 @@ function rgbToHex(r, g, b) {
       .join("")
   );
 }
+// Gamma > 1 compresses the color response near the noise floor (small dB
+// differences there barely shift hue, reading as a calm, quiet background)
+// while expanding it near the loud peaks, so real note energy stands out
+// instead of the whole grid looking like uniform colorful speckle.
+const COLOR_GAMMA = 2.4;
 function imprintSeq(frac) {
+  const shaped = Math.pow(Math.max(0, Math.min(1, frac)), COLOR_GAMMA);
   const a = hexToRgb(t.seq[0]);
   const b = hexToRgb(t.seq[1]);
-  return rgbToHex(a[0] + (b[0] - a[0]) * frac, a[1] + (b[1] - a[1]) * frac, a[2] + (b[2] - a[2]) * frac);
+  return rgbToHex(
+    a[0] + (b[0] - a[0]) * shaped,
+    a[1] + (b[1] - a[1]) * shaped,
+    a[2] + (b[2] - a[2]) * shaped
+  );
 }
 
 // --- Chart: axes + chrome only, the mel grid is drawn as native SVG rects ---
