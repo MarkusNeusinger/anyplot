@@ -1,0 +1,254 @@
+library: highcharts
+language: javascript
+specification_id: bump-basic
+created: '2026-08-24T19:30:04Z'
+updated: '2026-08-24T19:43:40Z'
+generated_by: claude-sonnet
+workflow_run: 32768057740
+issue: 982
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/highcharts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Y-axis title now reads "League Position (1 = top)", removing the ordinal-direction
+    ambiguity flagged in the previous review
+  - Marker symbols (circle/diamond/square/triangle/triangle-down) are now set explicitly
+    per series instead of relying on Highcharts' implicit default cycling, giving
+    each team color + shape redundant encoding by deliberate code choice
+  - Direct end-of-line data labels (team names) fully replace the legend, an idiomatic
+    and cleaner bump-chart pattern that removes the color-lookup step for the reader
+  - yAxis correctly inverted with min/max/tickInterval locked to the entity count
+    so rank 1 sits at the top with only integer ranks labeled
+  - Both renders hit the 3200x1800 landscape canvas with no clipping; all chrome is
+    theme-adaptive while the six data colors stay pixel-identical between light and
+    dark
+  - Data colors follow the Imprint canonical order 1-6 with brand green correctly
+    on the first series (Falcons)
+  - Realistic, neutral football-standings data across 6 teams / 8 matchweeks (within
+    the spec's 5-10 entities / 4-8 periods guidance), showing a genuine title race,
+    mid-table crossings, and a relegation battle
+  weaknesses:
+  - Falcons and Sharks both use the 'circle' marker symbol - a minor duplicate in
+    the shape encoding. Not confusing in practice since the two lines sit far apart
+    (rank 1 vs rank 6) and colors differ, but assigning Sharks a unique symbol (e.g.
+    'diamond-alt' equivalent or another distinct shape) would make the redundant encoding
+    fully unambiguous across all 6 series
+  - 'Design Excellence is solid but not maximal: no additional focal-point treatment
+    (e.g. subtle shading behind the rank-1 band, or slightly bolder line weight for
+    the top finisher) to push the storytelling further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "bump-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible. X-axis title "Matchweek" and Y-axis title "League Position (1 = top)" in medium-grey ink, both readable. Tick labels (MW1-MW8 and ranks 1-6) legible. Subtle horizontal gridlines at each integer rank; no vertical gridlines. Only bottom and left axis lines are visible (no full frame).
+      Data: Six lines in Imprint canonical colors (green #009E73 / lavender / blue / ochre / matte red / cyan) with distinct marker shapes (circle/diamond/square/triangle-up/triangle-down/circle) trace each team's rank across the 8 matchweeks, crossing to show overtakes. First series (Falcons) is confirmed brand green. Team names are printed directly at the end of each line (Falcons, Comets, Vipers, Titans, Wolves, Sharks) in place of a legend, each colored to match its line.
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now render in light/off-white ink and remain fully legible; gridlines are faint but visible; axis lines remain visible in a lighter tone.
+      Data: The six data-line colors are pixel-identical to the light render (green/lavender/blue/ochre/red/cyan unchanged) - confirming only chrome flipped, not data colors. End-of-line team labels render in light ink and stand out clearly against the dark background.
+      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/labels
+          14px); y-axis title now includes the '(1 = top)' cue, removing the prior
+          ambiguity; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; end labels are cleanly spaced since final-matchweek
+          ranks are unique
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius 5 / line width 2.5 appropriate for the sparse 6x8 dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant color + marker-shape encoding for all 6 series (minor duplicate
+          circle shape between Falcons/Sharks does not hurt distinguishability since
+          colors and rank positions differ strongly)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good margins, right margin reserved
+          for end labels, no cut-off content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with the rank-direction clarified
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint canonical order 1-6, brand green first series, theme-correct
+          chrome in both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-baseline: direct end-labels replacing legend, explicit marker-shape
+          variety; no extra distinctive flourish beyond that'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal spines (bottom+left only), subtle single-axis grid, generous
+          right margin for end labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Crossing lines and end labels clearly narrate the title race and
+          relegation battle, though no explicit focal-point emphasis on the eventual
+          leader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct bump chart: rank lines with markers connecting periods'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Inverted y-axis, distinct colors/labels per entity, dot markers at
+          each period all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = matchweek, Y = rank, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly 'bump-basic · javascript · highcharts · anyplot.ai';
+          entity identification via end labels is correct and unambiguous
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows a top-spot battle, mid-table crossings, and a bottom-of-table
+          swap - full range of bump-chart behaviors
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic football league-standings scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 teams / 8 matchweeks with plausible rank churn, within spec's suggested
+          ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> chart script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only the provided globals (Highcharts, ANYPLOT_TOKENS)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately concise, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Calls Highcharts.chart('container', ...) per the mount-node contract,
+          animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Canonical Highcharts bump-chart pattern: inverted categorical-style
+          axis + series-end dataLabels for direct labeling'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Explicit per-series marker.symbol now set in code (fixed from the
+          prior implicit-cycling weakness), combined with end-of-line dataLabels for
+          a deliberate redundant-encoding design
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
