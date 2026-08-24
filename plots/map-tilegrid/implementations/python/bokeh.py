@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-tilegrid: Tile Grid Map for Equal-Area Geographic Comparison
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-08-24
+Library: bokeh 3.10.0 | Python 3.13.15
+Quality: 89/100 | Created: 2026-08-24
 """
 
 import os
