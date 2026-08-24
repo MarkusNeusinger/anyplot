@@ -58,6 +58,9 @@ DEPARTMENTS.forEach((dept, i) => {
   dept.total = dept.items.reduce((s, d) => s + d.value, 0);
 });
 const GRAND_TOTAL = DEPARTMENTS.reduce((s, d) => s + d.total, 0);
+// Largest single cost center overall — gets a bolder border below as the
+// chart's one focal-point emphasis beyond the standard size/color/tint encoding.
+const TOP_LEAF_VALUE = Math.max(...DEPARTMENTS.flatMap((d) => d.items.map((i) => i.value)));
 
 // --- Squarified treemap layout (values -> rectangles) -----------------------
 function worstRatio(row, side) {
@@ -157,7 +160,7 @@ const chart = Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
-    marginTop: 150,
+    marginTop: 112,
     marginBottom: 40,
     marginLeft: 40,
     marginRight: 40,
@@ -246,12 +249,21 @@ deptRects.forEach(({ item, x, y, w, h }) => {
     const tint = Math.min(0.15 + rank * 0.09, 0.6);
     const fill = mix(dept.color, "#FFFFFF", tint);
     const pct = ((leaf.item.value / GRAND_TOTAL) * 100).toFixed(1);
+    const isTopLeaf = leaf.item.value === TOP_LEAF_VALUE;
 
     const tileEl = chart.renderer
       .rect(leaf.x, leaf.y, leaf.w, leaf.h)
-      .attr({ fill, stroke: t.pageBg, "stroke-width": 2, zIndex: 3 })
+      .attr({
+        fill,
+        stroke: isTopLeaf ? t.ink : t.pageBg,
+        "stroke-width": isTopLeaf ? 3 : 2,
+        zIndex: isTopLeaf ? 4 : 3,
+      })
       .add(g);
-    addTooltip(tileEl, `${dept.name} → ${leaf.item.name}\n${money(leaf.item.value)} (${pct}% of budget)`);
+    addTooltip(
+      tileEl,
+      `${dept.name} → ${leaf.item.name}\n${money(leaf.item.value)} (${pct}% of budget)${isTopLeaf ? " — largest line item" : ""}`,
+    );
 
     const nameSize = fitFontSize(leaf.item.name, leaf.w - 16, 15, 10);
     if (nameSize && leaf.h >= 30) {
@@ -259,14 +271,26 @@ deptRects.forEach(({ item, x, y, w, h }) => {
       const nameY = showValue ? leaf.y + leaf.h / 2 - 6 : leaf.y + leaf.h / 2 + nameSize * 0.35;
       chart.renderer
         .text(leaf.item.name, leaf.x + 8, nameY)
-        .attr({ align: "left", zIndex: 4 })
+        .attr({ align: "left", zIndex: 5 })
         .css({ color: labelColorFor(fill), fontSize: `${nameSize}px`, fontWeight: "600", pointerEvents: "none" })
         .add(g);
       if (showValue) {
         chart.renderer
           .text(money(leaf.item.value), leaf.x + 8, leaf.y + leaf.h / 2 + 14)
-          .attr({ align: "left", zIndex: 4 })
+          .attr({ align: "left", zIndex: 5 })
           .css({ color: labelColorFor(fill), fontSize: "12px", pointerEvents: "none" })
+          .add(g);
+      }
+    } else {
+      // Fallback for tiles too small to fit the cost-center name: fall back to
+      // a value-only label (smaller min font) so no tile ships completely blank.
+      const valueText = money(leaf.item.value);
+      const valueSize = fitFontSize(valueText, leaf.w - 10, 12, 7);
+      if (valueSize && leaf.h >= 16) {
+        chart.renderer
+          .text(valueText, leaf.x + leaf.w / 2, leaf.y + leaf.h / 2 + valueSize * 0.35)
+          .attr({ align: "center", zIndex: 5 })
+          .css({ color: labelColorFor(fill), fontSize: `${valueSize}px`, fontWeight: "600", pointerEvents: "none" })
           .add(g);
       }
     }
