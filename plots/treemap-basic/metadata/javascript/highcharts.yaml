@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: treemap-basic
 created: '2026-08-24T12:04:18Z'
-updated: '2026-08-24T12:09:16Z'
+updated: '2026-08-24T12:18:14Z'
 generated_by: claude-sonnet
 workflow_run: 32724217946
 issue: 766
@@ -12,29 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
-  strengths:
-  - Correct, well-tested squarified-treemap algorithm (Bruls/Huizing/van Wijk) compensating
-    cleanly for the missing native Highcharts treemap module
-  - Dynamic shrink-to-fit label sizing (fitFontSize) keeps text legible across a wide
-    range of tile sizes without overflow
-  - Rank-based tint shading within each department gives a clear secondary visual
-    cue for relative cost-center size, on top of area
-  - Theme tokens correctly threaded through custom-drawn elements — tile borders/gaps
-    track t.pageBg per theme, so light/dark gaps flip correctly
-  - Full-tile native SVG <title> tooltips (covering the whole rectangle, not just
-    an inscribed circle) for genuinely useful HTML-mode hover detail
-  weaknesses:
-  - The smallest leaf tile (G&A -> Finance & Accounting, $130K) renders as a bare
-    colored rectangle with no label or value at all — 12 of 13 cost centers are named,
-    one is silently dropped from the static view
-  - Noticeable unused whitespace above the treemap (title/subtitle block); tightening
-    marginTop would push canvas utilization further into the ideal range and improve
-    DE-02
-  - Overall composition, while clean and correct, doesn't go beyond the standard treemap
-    encoding (size + color + tint) to create additional emphasis or a stronger single
-    focal point
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
