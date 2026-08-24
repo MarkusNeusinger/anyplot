@@ -6,7 +6,6 @@
 using CairoMakie
 using Colors
 using Random
-using Dates
 
 Random.seed!(42)
 
@@ -66,8 +65,24 @@ ax = Axis(
     xticks             = (0:4:23, string.(0:4:23) .* ":00"),
 )
 
+# Shade the midday plateau to give the chart a focal point before drawing the line.
+vspan!(ax, 10.5, 15.5; color = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.08))
+
 lines!(ax, hours, temperatures; color = BRAND, linewidth = 3.5)
 scatter!(ax, hours, temperatures; color = BRAND, markersize = 10, strokewidth = 0)
+
+# Highlight and label the daily peak.
+peak_idx = argmax(temperatures)
+peak_hour, peak_temp = hours[peak_idx], temperatures[peak_idx]
+scatter!(ax, [peak_hour], [peak_temp]; color = BRAND, markersize = 16, strokewidth = 2, strokecolor = INK)
+text!(
+    ax, peak_hour, peak_temp;
+    text     = "Peak: $(round(peak_temp, digits = 1))°C",
+    align    = (:center, :bottom),
+    offset   = (0, 12),
+    fontsize = 13,
+    color    = INK,
+)
 
 xlims!(ax, -0.5, 23.5)
 
