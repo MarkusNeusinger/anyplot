@@ -35,7 +35,8 @@ for (let i = 0; i < sampleCount; i++) {
 
 // --- Gaussian KDE with Silverman's rule-of-thumb bandwidth ----------------
 const mean = latencies.reduce((a, b) => a + b, 0) / sampleCount;
-const variance = latencies.reduce((a, b) => a + (b - mean) ** 2, 0) / (sampleCount - 1);
+const variance =
+  latencies.reduce((a, b) => a + (b - mean) ** 2, 0) / (sampleCount - 1);
 const std = Math.sqrt(variance);
 const bandwidth = 1.06 * std * Math.pow(sampleCount, -1 / 5);
 
@@ -71,11 +72,63 @@ const rugData = latencies.map((v) => [v, rugY]);
 // Round the x-axis to clean bounds instead of the raw KDE grid extent
 const xMax = Math.ceil(gridEnd / 50) * 50;
 
+// Detect the secondary shoulder in the tail: not a true local maximum (the
+// curve keeps descending overall), but a flattening of the descent — a local
+// maximum in the curve's slope. Look for the point in the tail (past the
+// global peak) where the descent visibly slows before continuing downward.
+let globalPeakIdx = 0;
+for (let i = 1; i < densityCurve.length; i++) {
+  if (densityCurve[i][1] > densityCurve[globalPeakIdx][1]) globalPeakIdx = i;
+}
+// Widened second derivative (concavity): a shoulder is the point of
+// strongest local "bulge" (concave-up interruption of the otherwise
+// concave-down decline). A window of several grid steps rides over the
+// sample-noise wobble that a point-to-point derivative would chase.
+const w = 8;
+let bulgeStartIdx = -1;
+let bestBulge = 0;
+for (let i = globalPeakIdx + w + 2; i < densityCurve.length - w - 2; i++) {
+  const bulge =
+    densityCurve[i - w][1] - 2 * densityCurve[i][1] + densityCurve[i + w][1];
+  if (bulge > bestBulge) {
+    bestBulge = bulge;
+    bulgeStartIdx = i;
+  }
+}
+// The bulge marks where the descent starts to flatten; walk forward a bit
+// further to land the label on the flattest part of the shelf itself.
+let shoulderIdx = bulgeStartIdx;
+if (bulgeStartIdx >= 0) {
+  let flattest = Infinity;
+  const scanEnd = Math.min(bulgeStartIdx + 30, densityCurve.length - 2);
+  for (let i = bulgeStartIdx; i <= scanEnd; i++) {
+    const localSlope = Math.abs(
+      densityCurve[i + 1][1] - densityCurve[i - 1][1],
+    );
+    if (localSlope < flattest) {
+      flattest = localSlope;
+      shoulderIdx = i;
+    }
+  }
+}
+const shoulderPoint = shoulderIdx >= 0 ? densityCurve[shoulderIdx] : null;
+
+// Vertical gradient fill: fuller near the curve, fading toward the baseline.
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+const areaGradient = new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+  { offset: 0, color: hexToRgba(t.palette[0], 0.4) },
+  { offset: 1, color: hexToRgba(t.palette[0], 0.06) },
+]);
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
 // --- Option -----------------------------------------------------------------
-const title = "Server Response Latency · density-basic · javascript · echarts · anyplot.ai";
+const title =
+  "Server Response Latency · density-basic · javascript · echarts · anyplot.ai";
 
 chart.setOption({
   animation: false,
@@ -107,7 +160,11 @@ chart.setOption({
     nameGap: 70,
     nameTextStyle: { color: t.ink, fontSize: 16 },
     min: rugY * 1.6,
-    axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (v) => (v < 0 ? "" : v.toFixed(3)) },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      formatter: (v) => (v < 0 ? "" : v.toFixed(3)),
+    },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
   },
@@ -119,7 +176,30 @@ chart.setOption({
       symbol: "none",
       smooth: false,
       lineStyle: { color: t.palette[0], width: 3.5 },
-      areaStyle: { color: t.palette[0], opacity: 0.28 },
+      areaStyle: { color: areaGradient },
+      markPoint: shoulderPoint
+        ? {
+            silent: true,
+            symbol: "circle",
+            symbolSize: 8,
+            itemStyle: {
+              color: t.palette[0],
+              borderColor: t.pageBg,
+              borderWidth: 2,
+            },
+            label: {
+              show: true,
+              formatter: `Secondary shoulder\n~${Math.round(shoulderPoint[0])}ms`,
+              color: t.ink,
+              fontSize: 13,
+              fontWeight: 500,
+              align: "left",
+              position: [12, -36],
+              lineHeight: 16,
+            },
+            data: [{ coord: shoulderPoint, name: "shoulder" }],
+          }
+        : undefined,
       z: 2,
     },
     {
@@ -127,8 +207,8 @@ chart.setOption({
       type: "scatter",
       data: rugData,
       symbol: "rect",
-      symbolSize: [1.5, 11],
-      itemStyle: { color: t.inkSoft, opacity: 0.4 },
+      symbolSize: [1, 10],
+      itemStyle: { color: t.inkSoft, opacity: 0.32 },
       z: 1,
     },
   ],
