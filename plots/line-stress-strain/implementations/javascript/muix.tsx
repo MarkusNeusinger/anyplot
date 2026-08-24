@@ -5,7 +5,7 @@
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { ChartsText } from "@mui/x-charts/ChartsText";
-import { useXScale, useYScale } from "@mui/x-charts/hooks";
+import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -110,6 +110,23 @@ function PointMarker({ x, y, color }) {
   return <circle cx={xScale(x)} cy={yScale(y)} r={10} fill={color} stroke={t.pageBg} strokeWidth={3} />;
 }
 
+// Hand-rolled y-axis title, anchored to a fixed distance from the canvas edge
+// rather than MUI X's built-in `yAxis.label` (whose offset is derived from
+// `tickFontSize`, not the actual rendered width of 3-digit tick values, so it
+// collides with the tick-label column for this data range).
+function YAxisTitle({ text }) {
+  const { top, height } = useDrawingArea();
+  return (
+    <ChartsText
+      x={26}
+      y={top + height / 2}
+      text={text}
+      fill={t.ink}
+      style={{ fontSize: 16, angle: -90, textAnchor: "middle", dominantBaseline: "auto" }}
+    />
+  );
+}
+
 // --- Chart -------------------------------------------------------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -144,11 +161,9 @@ export default function Chart() {
         yAxis={[
           {
             id: "stress-axis",
-            label: "Engineering stress, σ (MPa)",
             min: 0,
             max: Y_MAX,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
           },
         ]}
         series={[
@@ -165,7 +180,7 @@ export default function Chart() {
             id: "hardening",
             dataKey: "stressHardening",
             label: "Strain hardening",
-            color: t.palette[2],
+            color: t.palette[1],
             curve: "monotoneX",
             connectNulls: true,
             showMark: false,
@@ -189,7 +204,7 @@ export default function Chart() {
             showMark: false,
           },
         ]}
-        margin={{ top: 30, bottom: 90, left: 100, right: 40 }}
+        margin={{ top: 30, bottom: 90, left: 116, right: 40 }}
         sx={{
           "& .MuiLineElement-root": { strokeWidth: 3.5 },
           "& .MuiLineElement-series-offsetLine": { strokeWidth: 1.75, strokeDasharray: "10 6" },
@@ -205,6 +220,8 @@ export default function Chart() {
           },
         }}
       >
+        <YAxisTitle text="Engineering stress, σ (MPa)" />
+
         <ChartsReferenceLine
           x={YIELD_STRAIN}
           label="Yield ≈ 250 MPa"
@@ -230,13 +247,13 @@ export default function Chart() {
           labelStyle={{ fill: t.inkSoft, fontSize: 13, textAnchor: "end" }}
         />
 
-        <DataLabel x={0.007} y={400} text="Elastic + Yield" fill={t.palette[0]} anchor="start" />
-        <DataLabel x={HARDENING_LABEL_X} y={HARDENING_LABEL_Y} text="Plastic (Strain Hardening)" fill={t.palette[2]} />
+        <DataLabel x={0.012} y={130} text="Elastic + Yield" fill={t.palette[0]} anchor="start" />
+        <DataLabel x={HARDENING_LABEL_X} y={HARDENING_LABEL_Y} text="Plastic (Strain Hardening)" fill={t.palette[1]} />
         <DataLabel x={NECKING_LABEL_X} y={NECKING_LABEL_Y} text="Necking" fill={t.palette[4]} />
-        <DataLabel x={0.02} y={Y_MAX - 25} text="E ≈ 200 GPa (elastic modulus)" fill={t.inkSoft} anchor="start" fontSize={14} />
+        <DataLabel x={0.05} y={Y_MAX - 25} text="E ≈ 200 GPa (elastic modulus)" fill={t.inkSoft} anchor="start" fontSize={14} />
 
         <PointMarker x={YIELD_STRAIN} y={YIELD_STRESS} color={t.palette[0]} />
-        <PointMarker x={UTS_STRAIN} y={UTS_STRESS} color={t.palette[2]} />
+        <PointMarker x={UTS_STRAIN} y={UTS_STRESS} color={t.palette[1]} />
         <PointMarker x={FRACTURE_STRAIN} y={FRACTURE_STRESS} color={t.palette[4]} />
       </LineChart>
     </Box>
