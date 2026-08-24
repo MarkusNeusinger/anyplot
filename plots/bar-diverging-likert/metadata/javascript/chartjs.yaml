@@ -1,0 +1,264 @@
+library: chartjs
+language: javascript
+specification_id: bar-diverging-likert
+created: '2026-08-24T16:24:49Z'
+updated: '2026-08-24T16:39:36Z'
+generated_by: claude-sonnet
+workflow_run: 32749674852
+issue: 4429
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Diverging stack is correctly centered on the neutral category, split evenly across
+    the zero midpoint, with a bold zero-reference line that flips ink color per theme
+  - Colors are drawn directly from the fixed Imprint imprint_div anchors (t.div[0]/t.div[2])
+    as the spec explicitly requests a diverging red-to-blue scheme for Likert data,
+    with the theme-adaptive muted anchor used for Neutral — documented in code comments
+    as the semantic-exception role (neutral/disabled → muted)
+  - Custom afterDatasetsDraw plugin computes per-segment text color from relative
+    luminance so in-bar percentage labels stay readable against every fill color in
+    both themes, and small segments (<6%) correctly suppress their label to avoid
+    clutter
+  - Questions are sorted by net agreement (agree + strongly agree − disagree + strongly
+    disagree) as required, giving the chart a clear top-to-bottom story from most
+    to least favorable
+  - Data is realistic and internally consistent — all 8 rows sum to exactly 100%,
+    plausible neutral HR-survey scenario
+  - The attempt-2 fix replaced the disabled tooltip with a themed, styled tooltip
+    using ANYPLOT_TOKENS, correctly leveraging Chart.js interactivity for the HTML
+    detail view instead of leaving it off
+  - All font sizes are explicitly set (title, axis title, ticks, legend, in-bar labels)
+    and legible in both renders; title fontsize scaling formula is present for longer
+    titles even though not triggered here
+  weaknesses:
+  - The mild segments (Disagree, Agree) are only a 15% mix toward the opposite anchor,
+    so they sit visually close to their 'strongly' counterpart — widening the mix
+    amount or adding a thin ink-color stroke on segment boundaries would sharpen distinguishability,
+    especially under CVD simulation
+  - The custom label-drawing plugin and scriptable grid coloring are nice touches
+    but are conceptually replicable with similar canvas/annotation code in most other
+    JS or Python plotting libraries — leaning further into a Chart.js-only capability
+    (e.g. plugin-level animation-free draw hooks, dataset-level scriptable radius)
+    would push Library Mastery higher
+  - Legend swatches and bottom padding are functional but not maximally refined —
+    slightly more breathing room between the last row of bars and the legend block
+    would read as more deliberate polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "bar-diverging-likert · javascript · chartjs · anyplot.ai" in dark ink, clearly visible. X-axis title "Share of Respondents" in dark ink. Tick labels (percentages on both sides of the diverging axis) in a softer dark gray, all readable. Y-axis category labels (survey questions, word-wrapped to two lines each) in dark ink, no overlap between rows. Legend at the bottom with 5 swatches (Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree) in dark ink text, positioned close under the plot.
+      Data: 8 horizontal diverging bars, sorted top-to-bottom by descending net agreement. Left side (disagree family) uses a red family, right side (agree family) uses a blue family, with a muted gray Neutral segment straddling a bold black zero-reference line. In-segment white percentage labels are legible against every fill color. Colors read as pulled from the Imprint diverging anchors (matte red / blue), not arbitrary hues.
+      Legibility verdict: PASS - all text is readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, axis title, tick labels, category labels, and legend text all render in light ink (off-white/light gray), clearly visible against the dark surface. The zero-reference line flips to white/light ink so it still reads as a strong center marker. No dark-on-dark text anywhere.
+      Data: The five Likert segment colors (both reds, both blues) are pixel-identical to the light render, confirming the diverging Imprint anchors are theme-independent. Only the Neutral segment's gray shifts to a lighter tone appropriate for the dark background (the documented theme-adaptive "muted" anchor), and this is an intentional, spec-compliant exception, not a data-color drift. In-segment percentage labels remain legible via the same luminance-based contrast logic.
+      Legibility verdict: PASS - all text is readable against the dark background, no dark-on-dark failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes, no clipping
+          or overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Wrapped category labels and in-bar percentage labels never collide
+          with each other or with data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar thickness and spacing (barPercentage/categoryPercentage) are
+          well-adapted to 8 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Diverging red/blue is CVD-safe overall, but the 15%-mix adjacent
+          shades (Disagree vs Strongly Disagree, Agree vs Strongly Agree) sit close
+          together
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well, balanced margins, legend close to plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Share of Respondents" with % tick formatting; category axis is
+          self-descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses fixed imprint_div anchors for the diverging scale (correct semantic
+          choice for Likert data) and the muted anchor for Neutral; theme-correct
+          chrome in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful luminance-based label contrast and derived diverging shades
+          go clearly beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid mostly subtle with a deliberate zero-line emphasis, y-axis border/grid
+          removed; some spacing polish still possible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Net-agreement sorting plus the zero-line create a clear top-to-bottom
+          favorability story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Centered neutral split, diverging colors, in-segment % labels, horizontal
+          orientation, sorted by net agreement - all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = share of respondents, Y = questions, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches mandated pattern exactly; legend labels match
+          the five Likert categories in order
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 questions spanning strongly favorable to weakly favorable net agreement,
+          good variation across all 5 categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible employee engagement survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Every row sums to exactly 100%, proportions are realistic for a survey
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script; small helper functions are justified by the color-contrast
+          math needed
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.js and ANYPLOT_TOKENS contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; complexity matches what the diverging-label
+          rendering requires
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract, animation: false set, no filesystem
+          calls'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scriptable grid/tick options, custom legend generateLabels, registered
+          plugin - expert use of Chart.js's config surface
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Plugin-based afterDatasetsDraw label rendering and scriptable per-tick
+          grid styling are Chart.js-specific, though the technique is conceptually
+          portable to other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - publication-ready
