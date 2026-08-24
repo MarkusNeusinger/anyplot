@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-force-directed
 created: '2026-08-24T14:13:40Z'
-updated: '2026-08-24T14:18:46Z'
+updated: '2026-08-24T14:27:49Z'
 generated_by: claude-sonnet
 workflow_run: 32736405725
 issue: 990
@@ -12,47 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-f
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Bespoke Fruchterman-Reingold force simulation implemented in-browser with a deterministic
-    seeded LCG, producing a clean, well-separated 5-community layout with a natural
-    bridge structure between hubs.
-  - Correct Imprint palette applied in canonical order (green/lavender/blue/ochre/red)
-    across both themes; both backgrounds and all chrome (title, legend text, tick-free
-    axes) are theme-correct in both light and dark renders.
-  - 'Precise spec coverage: node radius scales by degree, edge stroke width scales
-    by co-authorship weight, and labels are drawn only on hub nodes to avoid clutter
-    — matching the specification''s Notes section exactly.'
-  - 'Idiomatic MUI X usage: layers custom SVG (`GraphEdges`/`GraphNodes`) on top of
-    `ChartContainer` via `useXScale`/`useYScale`, the correct community-surface pattern
-    for a chart type with no built-in MUI X series.'
-  - Excellent canvas utilization (~80% coverage) with balanced margins; no clipping,
-    no overlap, and consistent square framing appropriate for a symmetric graph layout.
+  - Genuine client-side Fruchterman-Reingold force simulation (300 iterations with
+    a cooling schedule and mild centering gravity) — a real computed layout, not a
+    static/fake one
+  - 'Community structure reads instantly: five clearly separated clusters, hub nodes
+    emphasized with a soft halo, larger radius, and a label so the viewer can find
+    central nodes at a glance'
+  - 'Correct Imprint palette: first series (Machine Learning) is brand green #009E73,
+    remaining four groups follow canonical order 2-5, identical across both themes'
+  - Deterministic reproducibility via a small fixed-seed LCG since the browser has
+    no seeded RNG
+  - Theme-adaptive chrome verified correct in both renders (warm off-white / near-black
+    backgrounds, ink/inkSoft text, identical data colors)
+  - Idiomatic and creative use of MUI X's ChartContainer + useXScale/useYScale extension
+    hooks to render fully custom SVG layers — the correct fallback since community
+    MUI X has no native graph/network chart type
+  - Square canvas orientation is the right call for this radially symmetric multi-cluster
+    layout
+  - Both edge weight (line thickness) and node degree (node radius) are encoded visually
+    per the spec's optional notes, and inter-group bridge edges are visually distinguished
+    (dashed, lower opacity) from intra-group ties
   weaknesses:
-  - Title occupies only ~40% of the canvas width at the default 22px fontsize — below
-    the ~50-70% guideline for a short custom title on a 2400x2400 canvas; a modest
-    fontsize bump would give it more visual weight relative to the large square format.
-  - Edge styling is uniform (single stroke-opacity=0.35 for every edge) — differentiating
-    intra-group edges from the thin inter-group bridge edges (e.g. dashed strokes
-    or a further-reduced opacity on bridges) would add another layer of storytelling
-    about the network's modular structure.
-  - MUI X is used purely as a coordinate-scale provider (ChartContainer + useXScale/useYScale)
-    — correct for this unsupported chart type, but no MUI X-specific interactive affordance
-    (tooltip, animated legend, etc.) is layered on top to showcase the library beyond
-    its scale system.
+  - 'LM-02: everything is drawn as bespoke <line>/<circle> SVG layered on ChartContainer;
+    no native MUI X chart component or ChartsTooltip is ever touched, so distinctive
+    library features (built-in tooltip/highlight interactions) go unused in the HTML
+    output — an acceptable fallback given MUI X community has no graph chart, but
+    it caps the library-mastery score'
+  - No legend or annotation tells the viewer that edge thickness encodes co-authorship
+    weight or that dashed edges mean an inter-group bridge — that mapping only exists
+    in code comments, not in the chart itself
+  - Aside from the hub halo, edges get little additional visual refinement (uniform
+    gray stroke for all intra-group ties) — a touch more depth (e.g. weight-based
+    opacity) would sharpen the design further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "network-force-directed · javascript · muix · anyplot.ai" top-left in dark ink, fully legible. Legend row below it with 5 colored dot + label pairs (Machine Learning, Robotics, Bioinformatics, Network Science, Cryptography), all readable in dark secondary-ink text. No axes or grid (appropriate for a network graph).
-      Data: Five clearly separated clusters of circular nodes joined by thin grey edges (stroke = inkSoft, alpha 0.35). First series (Machine Learning) renders in brand green #009E73, followed by lavender (Robotics), blue (Bioinformatics), ochre (Network Science), and matte red (Cryptography) — matching canonical Imprint order. Hub nodes are visibly larger (degree-scaled radius) and labeled with their group name in dark ink; edge thickness varies with co-authorship weight. Thin bridge edges connect hub-to-hub across clusters.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "network-force-directed · javascript · muix · anyplot.ai" in dark ink, top-left, clearly legible. Legend row below title shows 5 circular swatches + labels (Machine Learning, Robotics, Bioinformatics, Network Science, Cryptography) in dark secondary-ink text, all readable against the light background. Hub node labels (group names) render in dark ink above each hub circle, fully legible.
+      Data: Five spatially separated node clusters, each a distinct Imprint color (green/lavender/blue/ochre/red) matching the legend swatches. Hub nodes are visibly larger with a soft halo ring. Edges are subtle gray, thicker near hubs (encoding weight/degree), with dashed lighter-opacity edges bridging clusters. First series (Machine Learning) is brand green #009E73 as required.
+      Legibility verdict: PASS — no light-on-light or illegible text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title and legend, now rendered in light ink (#F0EFE8 title, lighter secondary tone for legend labels) — fully legible against the dark surface. No dark-on-dark failures observed.
-      Data: Node and edge colors are pixel-identical to the light render (same green/lavender/blue/ochre/red positions, same edge greys) — confirming the palette is theme-independent as required; only the chrome (title/legend ink, background) flips.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, no dark-on-dark text found.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend text render in light ink/inkSoft tones, clearly visible against the dark background. Hub labels are in light-colored text and remain legible over the dark surface.
+      Data: Same five clusters in the identical Imprint hues as the light render (green/lavender/blue/ochre/red) — only the chrome (background, text, node stroke outline color which matches page background) flipped, confirming data-color consistency across themes. Edge styling (thickness/dash/opacity) also matches the light render's encoding.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,9 +69,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; title
-          runs a bit small (~40% width) relative to the 50-70% guideline for a short
-          custom title
+        comment: Title, legend, hub labels readable in both themes; only hub nodes
+          labeled (unlabeled leaves are intentional per spec)
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -77,61 +82,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Node radius (degree-scaled) and edge width (weight-scaled) are well
-          adapted to the 35-node graph density
+        comment: Node/edge sizing scales with degree/weight, appropriate for ~35-node
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; nodes carry a page-background stroke
-          for definition against overlapping edges
+        comment: 5 categorical colors from Imprint, borderline count per style guide
+          but redundant-encoded via spatial clustering + hub labels
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Graph spans ~80% of the square canvas with balanced margins; nothing
-          cut off
+        comment: 2400x2400 square correct for symmetric multi-cluster layout, generous
+          whitespace, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a network graph; title and legend are descriptive
+        comment: Title format exact; axes intentionally hidden (force-layout coordinates
+          are not meaningful data axes)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue/ochre/red); both backgrounds
-          and chrome are theme-correct
+        comment: 'First series brand green #009E73, canonical order 1-5, identical
+          across themes, correct theme backgrounds'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Bespoke physics-based layout, degree/weight-scaled marks, clean composition
-          — clearly above a configured default, though not yet at publication-polish
-          level
+        comment: Hub halo rings, degree-based sizing, dashed bridge edges show intentional
+          polish beyond defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No spines/grid needed, generous whitespace, subtle alpha-blended
-          edges; uniform edge styling leaves some refinement on the table
+        comment: No spines/grid to begin with, generous whitespace; edges themselves
+          are visually uniform beyond the halo treatment
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size and color create clear visual hierarchy (hubs vs. peers, group
-          membership) guiding the reader to the community structure
+        comment: Clear focal points via hub emphasis; cluster separation makes community
+          structure the obvious story
     spec_compliance:
       score: 15
       max: 15
@@ -141,28 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct force-directed graph
+        comment: Genuine physics-based force-directed layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, degree-based sizing, weight-based edge thickness, hub-only
-          labeling all present
+        comment: Nodes with IDs/labels, edges with source/target, weight, degree-scaled
+          sizing, all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Node positions correctly mapped through the simulated x/y domain
-          and chart scales
+        comment: Simulation-derived coordinates correctly mapped via chart scales,
+          full graph shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches the mandated pattern; legend labels match the
-          5 groups
+        comment: Exact mandated title format; legend labels match group names
     data_quality:
       score: 15
       max: 15
@@ -172,20 +176,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows hub structure, peer chains, weighted edges, and inter-group
-          bridges — full feature coverage for a force-directed graph
+        comment: Communities, hubs, peer chains, weighted edges, inter-group bridges
+          all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Research co-authorship network is realistic and neutral
+        comment: Research co-authorship network is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 35 nodes across 5 groups is a sensible, readable network size
+        comment: 35 nodes / ~50 edges, within spec's 20-200 typical range
     code_quality:
       score: 10
       max: 10
@@ -195,35 +199,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Procedural top-level flow; components only where React requires them
+        comment: Functions present are the required React components plus a justified
+          seeded-RNG helper, not needless abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42) makes data and layout fully deterministic
+        comment: Fixed-seed LCG, deterministic fixed-iteration simulation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only React, ChartContainer, and the two scale hooks are imported,
-          all used
+        comment: Only React + ChartContainer + scale hooks, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Physics simulation complexity is appropriate — no native graph-layout
-          API exists in the browser/MUI X
+        comment: No fake UI/interactivity, real simulation code, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sized from window.ANYPLOT_SIZE, harness owns mounting/saving
+        comment: Default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,25 +234,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ChartContainer + useXScale/useYScale is the recommended MUI X pattern
-          for a chart type with no built-in series
+        comment: Correct use of ChartContainer + useXScale/useYScale as the documented
+          extension mechanism for custom chart types
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses MUI X's scale-hook architecture but no other library-specific
-          affordance (tooltip, animated legend) is layered on
-  verdict: REJECTED
+        passed: true
+        comment: Bypasses native MUI X series/tooltip entirely in favor of raw custom
+          SVG — justified fallback but leaves distinctive library features (built-in
+          tooltip/highlight) unused
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - force-simulation
+  - force-directed-layout
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
