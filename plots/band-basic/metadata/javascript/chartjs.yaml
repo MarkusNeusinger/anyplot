@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: band-basic
 created: '2026-08-24T15:44:20Z'
-updated: '2026-08-24T15:49:24Z'
+updated: '2026-08-24T15:58:01Z'
 generated_by: claude-sonnet
 workflow_run: 32746242718
 issue: 979
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
+  - 'The repair cleanly addresses all three prior-review weaknesses: the confidence
+    band now has a vertical gradient fill (35% alpha near the trend line fading to
+    20% at the edge) plus a hairline top-edge stroke (borderColor at ~40% alpha),
+    replacing the flat single-tone fill.'
+  - A custom Chart.js core plugin (ciCalloutPlugin, afterDraw hook) draws a dashed
+    vertical guide and a "±$42K CI" label at day 45, giving the widening-uncertainty
+    story an explicit focal point instead of relying on the band shape alone.
   - 'Idiomatic Chart.js area-between-datasets pattern (fill: ''-1'') correctly builds
-    the confidence band from the upper/lower datasets, with the center trend line
-    as a separate solid series.'
+    the band from the upper/lower line datasets, with the center trend line as a separate
+    solid series — and no unpinned annotation plugin was pulled in for the callout,
+    per the library''s no-workarounds rule.'
   - 'Legend correctly filters out the empty-label lower-bound helper dataset via `filter:
     (item) => item.text`, so only "95% Confidence Interval" and "Forecast" are shown.'
-  - 'Theme-correct chrome and Imprint palette compliance in both renders: first series
-    is brand green #009E73, backgrounds match #FAF8F1 (light) / #1A1A17 (dark), all
-    text and grid colors flip correctly.'
+  - 'Theme-correct chrome and Imprint palette compliance in both renders: first/only
+    series is brand green #009E73, backgrounds match #FAF8F1 (light) / #1A1A17 (dark),
+    and the callout text/line correctly reads t.ink and t.palette[0] so it flips correctly
+    between themes.'
   - Deterministic LCG-seeded data generation produces a realistic widening fan-chart
     shape (uncertainty compounding over the 45-day forecast horizon), matching the
     spec's suggested example.
-  - Clean KISS structure, no fake interactivity, animation disabled per the harness
-    mount-node contract.
   weaknesses:
-  - 'Design Excellence is ''well-configured default'' territory: the band is a single
-    flat translucent fill with no additional refinement. Add a subtle top-edge stroke
-    on the confidence band (e.g. a hairline borderWidth/borderColor at low alpha)
-    and/or a vertical canvas gradient fill to lift the band beyond a flat default
-    look.'
-  - Data storytelling relies entirely on the widening band shape for its insight;
-    there's no callout or annotation pointing at the story (e.g. label the CI width
-    at day 45, or annotate the day ~28 inflection where growth visibly accelerates)
-    to give the chart a clearer focal point.
-  - 'Library Mastery is generic-plus: `fill: ''-1''` is the correct idiomatic pattern
-    but is the baseline way to draw a band in Chart.js. Consider a more distinctive
-    touch such as a `createLinearGradient` fill for the band or per-point styling
-    that showcases a feature not trivially replicated in a config-only library.'
+  - Data storytelling is now anchored by a single callout at the forecast horizon;
+    the spec also suggests the day ~28 inflection where growth visibly accelerates
+    is a secondary candidate for emphasis, which is still unaddressed (minor, not
+    blocking).
+  - The band's gradient and edge stroke are a real improvement but still a fairly
+    restrained, two-stop gradient — a bolder treatment (e.g. a slightly stronger top-to-bottom
+    contrast, or highlighting the day-45 endpoint marker) would push Design Excellence
+    further into distinctive territory.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "band-basic · javascript · chartjs · anyplot.ai" centered at top; legend directly below showing a translucent green swatch labeled "95% Confidence Interval" and a solid green swatch labeled "Forecast". X-axis title "Day" (1-45, every integer labeled) and Y-axis title "Revenue ($K)" (100-280) both in dark ink, with lighter dark tick labels. Only horizontal (Y-axis) gridlines are shown, subtle gray, no vertical gridlines, no visible chart border/spines. All chrome elements are clearly visible against the light background.
-      Data: Confidence band rendered as a light, semi-transparent green fill widening from a narrow ~10-unit spread near day 1 to roughly a 75-unit spread near day 45 (classic fan-chart shape). The center "Forecast" trend line is a solid, darker, more saturated green (#009E73), clearly distinguishable from the lighter translucent band by both opacity and stroke vs. fill.
-      Legibility verdict: PASS — no text is light-on-light, all title/axis/tick/legend text reads clearly against the cream background.
+      Chrome: Bold dark title "band-basic · javascript · chartjs · anyplot.ai" centered at top; legend directly below showing a translucent green swatch labeled "95% Confidence Interval" and a solid green swatch labeled "Forecast". X-axis title "Day" (1-45, every integer labeled) and Y-axis title "Revenue ($K)" (100-280) both in dark ink, with lighter dark tick labels. Only horizontal (Y-axis) gridlines are shown, subtle gray, no vertical gridlines, no visible chart border/spines. A dark "±$42K CI" callout with a short dashed vertical guide sits near day 45, cleanly inside the plot area with no clipping or overlap. All chrome elements and the callout are clearly visible against the light background.
+      Legibility verdict: PASS — no text is light-on-light, all title/axis/tick/legend/callout text reads clearly against the cream background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as light — title, legend, axis titles, and tick labels all rendered in light/white text, clearly readable against the dark background. Horizontal gridlines remain visible as subtle light-gray lines at low opacity. No dark-on-dark text detected anywhere.
-      Data: The confidence band and forecast line use the identical underlying hex values as the light render (t.palette[0] = #009E73, band fill = same hex at 20% alpha) — only their *composited* appearance differs because the same translucent fill blends with a dark background instead of a light one (band reads as a darker teal-green here vs. pale mint in light), which is the expected/correct behavior for an alpha-blended fill, not a palette violation. The solid forecast line is the same bright brand green in both renders.
-      Legibility verdict: PASS — all text is legible, no dark-on-dark failures; brand green line is clearly visible against the near-black surface.
+      Chrome: Same layout as light — title, legend, axis titles, and tick labels all rendered in light/white text, clearly readable against the dark background. The "±$42K CI" callout renders in light ink and remains clearly legible; the dashed guide line is visible. Horizontal gridlines remain visible as subtle light-gray lines at low opacity. No dark-on-dark text detected anywhere.
+      Data: The confidence band (now with a top-edge stroke and a two-stop vertical gradient fill) and forecast line use the identical underlying hex values as the light render (t.palette[0] = #009E73) — only the composited appearance differs because the same translucent gradient fill blends with a dark background instead of a light one (band reads as a darker teal-green here vs. pale mint in light), which is expected alpha-blending behavior, not a palette violation. The solid forecast line is the same bright brand green in both renders.
+      Legibility verdict: PASS — all text is legible, no dark-on-dark failures; brand green line and callout are clearly visible against the near-black surface.
 
-    Both renders confirm the mandated title format, correct theme-adaptive chrome, and correct Imprint palette usage (first/only series = #009E73) throughout.
+    Both renders confirm the mandated title format, correct theme-adaptive chrome, and correct Imprint palette usage (first/only series = #009E73) throughout. The attempt-2 additions (band gradient/edge stroke, CI callout) are present and correctly theme-adaptive in both renders.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -67,28 +68,29 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22, legend/axis-title 16, ticks
-          14); readable in both themes with no overflow, matches the chartjs library
-          convention for the mandated title length.
+          14, callout 14); readable in both themes, no overflow. Callout text does
+          not collide with anything.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend, title, axis labels, and 45 x-axis tick labels are all cleanly
-          spaced with no collisions.
+        comment: Legend, title, axis labels, 45 x-axis tick labels, and the new CI
+          callout are all cleanly spaced with no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Band and center line are both clearly visible and well-sized for
-          a 45-point series; pointRadius:0 is appropriate for a smooth band/line combo.
+        comment: Band, center line, and callout guide/label are all clearly visible
+          and well-sized for a 45-point series; pointRadius:0 is appropriate for a
+          smooth band/line combo.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Band vs. line distinguished by fill/opacity and stroke, not hue alone;
+        comment: Band vs. line distinguished by fill/opacity/stroke, not hue alone;
           good contrast in both themes.
       - id: VQ-05
         name: Layout & Canvas
@@ -96,7 +98,7 @@ review:
         max: 4
         passed: true
         comment: Plot area uses the large majority of the canvas with balanced margins;
-          nothing is cut off.
+          callout stays inside plot bounds; nothing is cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,32 +112,36 @@ review:
         max: 2
         passed: true
         comment: 'First/only series is #009E73 in both renders; backgrounds and chrome
-          are theme-correct (#FAF8F1 / #1A1A17).'
+          are theme-correct (#FAF8F1 / #1A1A17); callout uses t.ink/t.palette[0] and
+          flips correctly.'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Looks like a well-configured library default — flat translucent fill,
-          no gradient or edge treatment on the band.
+        passed: true
+        comment: 'Fixed from prior attempt''s flat fill: band now has a two-stop vertical
+          gradient plus a hairline top-edge stroke, and a custom canvas-plugin callout
+          — a clear step up from a well-configured default, though still a fairly
+          restrained gradient.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: 'Some refinement visible: y-only grid, no visible spines, filtered
-          legend — but not fully polished (flat band edge).'
+        passed: true
+        comment: Y-only grid, no visible spines, filtered legend, plus the new band
+          edge stroke and gradient read as more polished than the prior flat fill.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Widening band creates visual hierarchy (growing uncertainty is legible
-          at a glance), but no annotation/callout reinforces the insight.
+        passed: true
+        comment: The new dashed-guide + "±$42K CI" callout at the forecast horizon
+          gives the widening band an explicit focal point, directly addressing the
+          prior review's ask for an annotation reinforcing the insight.
     spec_compliance:
       score: 15
       max: 15
@@ -152,7 +158,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill (~20% alpha, within spec's 0.2-0.4 range),
+        comment: Semi-transparent fill (~20-35% alpha, within spec's 0.2-0.4 range),
           contrasting center line, smooth interpolation (tension 0.35) all present.
       - id: SC-03
         name: Data Mapping
@@ -178,8 +184,8 @@ review:
         max: 6
         passed: true
         comment: Shows the key band-plot feature (widening uncertainty over time)
-          clearly, though the band width variation is fairly uniform/monotonic rather
-          than showing more varied dynamics.
+          clearly, and the new callout quantifies it at the endpoint; band width variation
+          is still fairly monotonic rather than showing more varied dynamics.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -193,7 +199,7 @@ review:
         max: 4
         passed: true
         comment: Revenue growth from ~$104K to ~$221K over 45 days with a plausibly
-          widening forecast interval is realistic.
+          widening forecast interval (±$42K at day 45) is realistic.
     code_quality:
       score: 10
       max: 10
@@ -203,7 +209,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: data generation, mount, chart config — no functions/classes.'
+        comment: 'Flat script: data generation, mount, one plugin object (idiomatic
+          Chart.js plugin API), chart config — no classes, no over-abstraction.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,7 +228,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or over-engineering.
+        comment: Appropriately simple; the afterDraw callout is a real, functioning
+          Chart.js feature, not fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -230,32 +238,36 @@ review:
         comment: Correctly follows the mount-node contract, animation:false set, no
           filesystem calls.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: 'Uses the idiomatic Chart.js relative-fill pattern (fill: ''-1'')
-          to construct the band from two line datasets.'
+          plus the core plugin API (afterDraw) and canvas gradients — all standard,
+          high-level Chart.js mechanisms used correctly.'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: The relative dataset-fill mechanic is somewhat Chart.js-specific,
-          but is the baseline/expected way to build a band in this library rather
-          than a standout feature.
-  verdict: REJECTED
+        comment: The custom afterDraw callout plugin and per-point gradient fill are
+          genuinely Chart.js-specific touches that go beyond the baseline fill:'-1'
+          band, correctly avoiding the unpinned annotation plugin per the library's
+          no-workarounds rule.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - layer-composition
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
+  - gradient-fill
