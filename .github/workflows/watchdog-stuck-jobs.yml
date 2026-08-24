@@ -312,7 +312,16 @@ jobs:
           # CEST and sits an hour earlier in local terms under CET.
           LIVENESS_HOURS=10
           HOUR=$(date -u +%-H)
-          if (( HOUR >= 17 && HOUR <= 21 )); then
+          # A manually disabled daily-regen is a deliberate pause (e.g. while a
+          # sequential backfill owns the rate limit), not a starved schedule:
+          # its cron does not tick at all, so the gap grows without bound, and
+          # `gh workflow run` on a disabled workflow fails with HTTP 422 — which
+          # under `set -e` takes the whole scan down after A and B already ran.
+          REGEN_STATE=$(gh api "repos/${GH_REPO}/actions/workflows/daily-regen.yml" \
+            --jq '.state' 2>/dev/null || echo unknown)
+          if [[ "$REGEN_STATE" != "active" ]]; then
+            echo "::notice::daily-regen liveness: workflow state is '${REGEN_STATE}', not active — rescue skipped"
+          elif (( HOUR >= 17 && HOUR <= 21 )); then
             echo "::notice::daily-regen liveness: inside/adjacent to quiet window (UTC hour $HOUR) — check skipped"
           else
             # --branch main: schedule runs (and rescue dispatches) live on the
