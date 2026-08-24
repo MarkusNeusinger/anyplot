@@ -63,7 +63,19 @@ for (let i = 0; i < PERIODS; i++) {
 
 const yMin = Math.min(...low);
 const yMax = Math.max(...high);
-const yPad = (yMax - yMin) * 0.08;
+const yPad = (yMax - yMin) * 0.12;
+
+// Session extremes — the focal point the review asked for: call out the
+// intraday high/low instead of presenting a uniform, unemphasized series.
+let highIdx = 0;
+let lowIdx = 0;
+for (let i = 1; i < PERIODS; i++) {
+  if (high[i] > high[highIdx]) highIdx = i;
+  if (low[i] < low[lowIdx]) lowIdx = i;
+}
+const fmtUsd = (v: number) => `$${Math.round(v).toLocaleString("en-US")}`;
+const highCallout = `Session High · ${fmtUsd(high[highIdx])}`;
+const lowCallout = `Session Low · ${fmtUsd(low[lowIdx])}`;
 
 // --- Candlesticks: MUI X community has no native candlestick series — draw
 // against the shared band scale via useXScale/useYScale, the documented
@@ -71,13 +83,21 @@ const yPad = (yMax - yMin) * 0.08;
 // surface. Bullish (close >= open) bodies are brand green, bearish bodies
 // matte red — the finance up/down semantic exception from the style guide.
 // Wick strokes stay well under the body width so the range line reads as
-// subordinate to the open/close body, per the spec's legibility note.
+// subordinate to the open/close body, per the spec's legibility note. A thin
+// ink-color stroke on every body is the style guide's "optional outline
+// pattern" — redundant contrast for CVD readers beyond hue alone.
 function Candlesticks() {
   const xScale = useXScale("x") as any;
   const yScale = useYScale("y") as any;
   if (!xScale || !yScale) return null;
   const bw = xScale.bandwidth();
   const bodyWidth = bw * 0.62;
+  const [xRangeStart] = xScale.range();
+
+  const highCx = xScale(dateLabels[highIdx]) + bw / 2;
+  const highCy = yScale(high[highIdx]);
+  const lowCx = xScale(dateLabels[lowIdx]) + bw / 2;
+  const lowCy = yScale(low[lowIdx]);
 
   return (
     <g>
@@ -91,11 +111,61 @@ function Candlesticks() {
         const bodyHeight = Math.max(Math.abs(yClose - yOpen), 1.5);
         return (
           <g key={i}>
-            <line x1={cx} x2={cx} y1={yScale(high[i])} y2={yScale(low[i])} stroke={color} strokeWidth={1.5} />
-            <rect x={cx - bodyWidth / 2} y={bodyTop} width={bodyWidth} height={bodyHeight} fill={color} />
+            <line
+              x1={cx}
+              x2={cx}
+              y1={yScale(high[i])}
+              y2={yScale(low[i])}
+              stroke={color}
+              strokeWidth={1.5}
+              strokeLinecap="round"
+            />
+            <rect
+              x={cx - bodyWidth / 2}
+              y={bodyTop}
+              width={bodyWidth}
+              height={bodyHeight}
+              fill={color}
+              stroke={t.ink}
+              strokeOpacity={0.35}
+              strokeWidth={1}
+            />
           </g>
         );
       })}
+
+      {/* Focal-point callouts: dashed reference lines + labels pin the
+          session high and low, giving the series a deliberate story beyond
+          a uniform OHLC run. */}
+      <line
+        x1={xRangeStart}
+        x2={highCx}
+        y1={highCy}
+        y2={highCy}
+        stroke={t.inkSoft}
+        strokeOpacity={0.4}
+        strokeWidth={1}
+        strokeDasharray="2 3"
+      />
+      <circle cx={highCx} cy={highCy} r={4} fill={t.pageBg} stroke={t.ink} strokeWidth={1.5} />
+      <text x={highCx} y={highCy - 12} textAnchor="middle" fontSize={12} fontWeight={600} fill={t.inkSoft}>
+        {highCallout}
+      </text>
+
+      <line
+        x1={xRangeStart}
+        x2={lowCx}
+        y1={lowCy}
+        y2={lowCy}
+        stroke={t.inkSoft}
+        strokeOpacity={0.4}
+        strokeWidth={1}
+        strokeDasharray="2 3"
+      />
+      <circle cx={lowCx} cy={lowCy} r={4} fill={t.pageBg} stroke={t.ink} strokeWidth={1.5} />
+      <text x={lowCx} y={lowCy + 20} textAnchor="middle" fontSize={12} fontWeight={600} fill={t.inkSoft}>
+        {lowCallout}
+      </text>
     </g>
   );
 }
@@ -103,12 +173,19 @@ function Candlesticks() {
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width;
   const H = window.ANYPLOT_SIZE.height;
-  const TITLE_H = 74;
-  const LEGEND_H = 44;
+  const TITLE_H = 96;
+  const LEGEND_H = 52;
   const chartH = H - TITLE_H - LEGEND_H;
 
   const title = "Bitcoin Hourly Price · candlestick-basic · javascript · muix · anyplot.ai";
   const titleSize = title.length > 67 ? Math.round((22 * 67) / title.length) : 22;
+
+  const rangeEnd = new Date(START);
+  rangeEnd.setHours(rangeEnd.getHours() + PERIODS - 1);
+  const subtitle = `${START.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${rangeEnd.toLocaleDateString(
+    "en-US",
+    { month: "short", day: "numeric", year: "numeric" },
+  )} · Hourly candles`;
 
   const legendItems = [
     { label: "Bullish (close ≥ open)", color: t.palette[0] },
@@ -127,8 +204,20 @@ export default function Chart() {
         boxSizing: "border-box",
       }}
     >
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box
+        sx={{
+          height: TITLE_H,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "6px",
+        }}
+      >
         <Typography sx={{ color: t.ink, fontSize: titleSize, fontWeight: 600 }}>{title}</Typography>
+        <Typography sx={{ color: t.inkSoft, fontSize: 13, fontWeight: 400, letterSpacing: "0.03em" }}>
+          {subtitle}
+        </Typography>
       </Box>
 
       <ChartContainer
@@ -170,11 +259,22 @@ export default function Chart() {
         <ChartsYAxis axisId="y" slotProps={{ axisLabel: { x: -80 } }} />
       </ChartContainer>
 
-      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "26px" }}>
+      <Box sx={{ height: LEGEND_H, display: "flex", alignItems: "center", justifyContent: "center", gap: "16px" }}>
         {legendItems.map((item) => (
-          <Box key={item.label} sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Box sx={{ width: 14, height: 14, bgcolor: item.color, borderRadius: "2px" }} />
-            <Typography sx={{ color: t.inkSoft, fontSize: 13 }}>{item.label}</Typography>
+          <Box
+            key={item.label}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 16px",
+              borderRadius: "999px",
+              border: `1px solid ${t.grid}`,
+              bgcolor: t.elevatedBg,
+            }}
+          >
+            <Box sx={{ width: 10, height: 10, borderRadius: "50%", bgcolor: item.color }} />
+            <Typography sx={{ color: t.inkSoft, fontSize: 13, fontWeight: 500 }}>{item.label}</Typography>
           </Box>
         ))}
       </Box>
