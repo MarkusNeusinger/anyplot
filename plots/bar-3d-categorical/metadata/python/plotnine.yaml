@@ -1,0 +1,269 @@
+library: plotnine
+language: python
+specification_id: bar-3d-categorical
+created: '2026-08-24T22:54:42Z'
+updated: '2026-08-24T22:59:15Z'
+generated_by: claude-sonnet
+workflow_run: 32786197817
+issue: 5248
+language_version: 3.13.15
+library_version: 0.15.8
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-3d-categorical/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Genuinely native pseudo-3D: no matplotlib 3D fallback — an isometric projection
+    (elevation ~30°, azimuth ~45°) is computed by hand in Python and rendered purely
+    through plotnine''s 2D grammar (geom_polygon top/left/right faces, geom_path grid,
+    geom_text labels/ticks), exactly honoring the library''s ''no 3D workarounds''
+    rule while still delivering a convincing 3D bar chart'
+  - Painter's-algorithm depth sorting (bars.sort(key=depth_key, reverse) draws far-to-near)
+    produces correct occlusion between bars with no z-fighting artifacts in either
+    render
+  - 'Per-face shading (shade() lightens the top face +35% and darkens the right face
+    -35% from the base Imprint hue) creates real 3D lighting cues while keeping the
+    base hue anchored to the Imprint palette — first series (North) is #009E73 and
+    the remaining 4 regions follow canonical palette order exactly'
+  - 'Clever legend-proxy trick: a near-invisible geom_point layer on the independent
+    ''color'' aesthetic produces a correct, undistorted legend swatch even though
+    the visible bars are drawn via scale_fill_identity — avoids the common trap of
+    a legend that doesn''t match the shaded fill'
+  - 'All required spec Notes are implemented: slight inter-bar spacing (MARGIN), base-plane
+    grid lines, value labels on all 20 bars (under the 25-bar threshold), and a color
+    legend for the third categorical dimension'
+  - Both renders are pixel-identical in data color and only flip chrome (background,
+    text, grid) correctly — theme tokens are threaded consistently
+  - Canvas is exactly 3200×1800, title format matches the mandated pattern exactly,
+    and the code is clean, reproducible (seed=42), and uses only geoms/scales actually
+    needed
+  weaknesses:
+  - No explicit axis-title text for the two categorical axes (e.g. 'Region' / 'Quarter')
+    — the tick labels are self-explanatory but a small italic axis label near each
+    front edge would make the encoding fully explicit without relying on the legend
+    title alone
+  - Value-label font (geom_text size=6, ~17pt) is legible but sits at the lower end
+    of comfortable size for a 3200×1800 canvas — could go to 7-7.5 for a touch more
+    presence, especially for mobile scaling
+  - Data storytelling is functional (height + color) but passive — no annotation or
+    emphasis calls out the standout bar (Central/Q4 at 91), so the viewer has to find
+    the peak themselves
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bar-3d-categorical · python · plotnine · anyplot.ai" at top, fully visible with margin above and below, no clipping. Caption "Bar height = Quarterly revenue ($K)" at bottom, legible. Region/Quarter category tick labels along the two front edges of the isometric base plane (Q1-Q4 angled left, North-Central angled right), rendered in soft dark ink, all readable. "Region" legend box on the right with bordered swatches for North/South/East/West/Central.
+      Data: 20 isometric bars arranged on a 5x4 grid (region x quarter), each with a lighter top face and darker left/right side faces for 3D shading. First series (North) renders in Imprint brand green #009E73; South/East/West/Central follow the next four canonical Imprint positions (lavender, blue, ochre, matte red) in order. Bold black value labels ("91", "86", "84", etc.) sit just above each bar's top face and are fully readable.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, caption, and tick labels have flipped to light ink (off-white/soft gray) and remain fully readable against the dark surface. Legend box background and border also flipped to the dark-theme elevated/soft-ink tokens; legend text is light and legible.
+      Data: Bar colors are pixel-identical to the light render (same green/lavender/blue/ochre/red hues and per-face shading) — only the chrome flipped, confirming correct theme-token separation between data and non-data elements. Value labels are now white/light and stay legible against both the dark canvas and the bar faces they sit above.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/label/tick is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit; readable in both themes; value-label size
+          is a touch conservative for the canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 bars at this density are well-sized with clear face separation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues plus per-face shading give redundant luminance cues
+          beyond hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart + legend occupy a balanced ~55-60% of canvas with generous,
+          evenly distributed margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: false
+        comment: Category tick labels are descriptive but there is no explicit 'Region'/'Quarter'
+          axis title text
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining 4 in canonical Imprint order, correct
+          theme-adaptive backgrounds in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hand-built isometric shading (top/left/right face tinting) is genuinely
+          publication-adjacent craftsmanship, not a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void chrome, subtle base-plane grid (alpha 0.2), thin page-bg
+          face outlines for definition, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Height + color create hierarchy and value labels aid reading, but
+          nothing calls out the standout bar explicitly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 3D categorical-grid bar chart, faithfully reproduced via
+          2D projection
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bar spacing, ~30/45 viewing angle, base-plane grid, value labels
+          (<25 bars), color legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Region/quarter/revenue correctly mapped to the two base axes and
+          height
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match region
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 distinct bars with per-region baselines and a quarterly growth
+          trend, plus noise — no flat/uniform groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly regional revenue is a real, neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values ($47K-$91K) and quarter-over-quarter growth are plausible
+          and internally consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear import->data->plot->save flow, but a handful of small helper
+          functions (project, shade, hex_to_rgb/rgb_to_hex) are used for the projection/shading
+          math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every imported plotnine symbol is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch 3D projection; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png', ...), current plotnine API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert composition of layered geoms, scale_fill_identity + scale_color_manual
+          duality, coord_fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The polygon-face isometric technique with an invisible color-aesthetic
+          legend proxy is a distinctive, non-trivial exploitation of plotnine's grammar
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - 3d-projection
+  - layer-composition
+  - custom-legend
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
+  - alpha-blending
