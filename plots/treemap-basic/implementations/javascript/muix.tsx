@@ -1,15 +1,7 @@
 // anyplot.ai
 // treemap-basic: Basic Treemap
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-24
-//
-// The community @mui/x-charts package has no Treemap component (Treemap is a
-// Pro-only chart in @mui/x-charts-pro, see its CHANGELOG "Move Heatmap to pro
-// plan" precedent for the sibling Heatmap chart) -- so this hand-builds a
-// squarified treemap as nested SVG rects mounted inside ChartContainer (its
-// <ChartsSurface> + theming), following the same low-level-primitives pattern
-// this catalog already uses for chart types without a canned MUI X component
-// (see flamegraph-basic/muix.tsx).
+// Quality: 87/100 | Created: 2026-08-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 
 const t = window.ANYPLOT_TOKENS;
