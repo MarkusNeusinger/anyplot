@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bubble-packed
 created: '2026-08-24T18:52:21Z'
-updated: '2026-08-24T18:57:27Z'
+updated: '2026-08-24T19:08:36Z'
 generated_by: claude-sonnet
 workflow_run: 32763025094
 issue: 992
@@ -15,102 +15,110 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 quality_score: 88
 review:
   strengths:
-  - 'Correct plot type: a physics-based force simulation packs 24 circles with zero
-    overlap, radius scaled by sqrt(value) so circle AREA (not radius) accurately encodes
-    spend — exactly the mechanic bubble-packed calls for.'
-  - 'Grouping requirement fully implemented: same-team circles cluster tightly (4px
-    gap) while different-team clusters keep a visible 22px gap, and legend + color
-    make the grouping legible at a glance.'
-  - 'Imprint palette applied correctly and consistently: first series (Platform) is
-    #009E73, the remaining three groups use canonical palette positions 2-4, and the
-    data colors are pixel-identical between the light and dark renders — only chrome
-    flips.'
-  - Clean theme-adaptive chrome throughout (title, subtitle, legend, tooltip, marker
-    stroke) with explicit font sizes; both renders are fully legible with no dark-on-dark
-    or light-on-light failures.
-  - Deterministic LCG-seeded data, self-contained script, no fake interactivity —
-    the code candidly documents why it manually reimplements packing (highcharts-more's
-    packedbubble series isn't loaded) instead of faking the module or shelling out
-    to another library.
+  - Genuinely implements the spec's core requirement (area-correct sizing, non-overlapping
+    physics-based packing, group clustering with tighter same-group / looser cross-group
+    spacing) despite the packedbubble series type living in an unloaded module — a
+    real force simulation, not a fake substitute.
+  - 'Full Imprint palette compliance: first series (Platform) is #009E73, remaining
+    groups follow canonical positions 2-4, identical data colors between light and
+    dark, theme-correct chrome (background, title, subtitle, legend, tooltip) in both
+    renders.'
+  - Adaptive per-bubble label fitting (two-line name+value, single-line, or ellipsis-truncated,
+    with a computed font size) keeps text inside every circle regardless of radius,
+    avoiding overlap or overflow across 24 differently-sized bubbles.
+  - Auto-fit view via the onLoad callback's setExtremes() call scales the packed cluster
+    to use the available plot area rather than leaving it at a fixed, potentially
+    awkward size.
+  - Realistic, neutral business scenario (monthly cloud infrastructure spend by service/team)
+    with a wide, well-differentiated value range ($21K-$210K) and clear grouping into
+    4 teams.
   weaknesses:
-  - On several small/medium bubbles (e.g. 'Compliance Scans', 'Threat Detection',
-    'Secrets Manager'), the dataLabels text is visibly wider than the circle it labels,
-    so letters spill past the bubble's edge into the surrounding whitespace on both
-    renders. Scale dataLabels fontSize down as radius shrinks (or shorten/omit the
-    label below a radius threshold) so labels stay contained within their bubble.
-  - The manual force-simulation (rand/radiusFor helpers + a 480-iteration nested-loop
-    physics pass) pulls the script away from the KISS single-pass structure the style
-    guide prefers. Keep the simulation (it's the only way to get packedbubble-style
-    layout without the unavailable module), but the deviation costs a point on CQ-01.
-  - 'LM-02 is generic: the circle-packing math itself isn''t Highcharts-specific and
-    could be ported to any SVG-capable library unchanged. Leaning further into Highcharts-only
-    affordances (e.g. its built-in bubbleLegend component, or richer HTML-in-tooltip)
-    would raise distinctiveness.'
+  - Smallest bubbles (e.g. 'WAF $21K', 'Compliance Sc...') carry the smallest fonts
+    (~9px) and least label detail (value line dropped, or name truncated with an ellipsis)
+    — at mobile scale (~400px canvas width) these labels will be difficult or impossible
+    to read; acceptable as a fallback for very small circles, but worth noting for
+    repair consideration.
+  - 'Whitespace is not fully balanced: a noticeably larger empty margin sits above
+    the cluster (between the subtitle and the first bubble row) than below it, and
+    the four-quadrant clustering leaves visible empty space in the canvas corners.'
+  - CQ-01 (KISS structure) is only partially met — the implementation defines several
+    helper functions (rand, radiusFor, fitLabel, fits) beyond a flat imports->data->plot
+    script; justified here by the packing-simulation complexity, but still a deviation
+    from the strict KISS ideal.
+  - Because Highcharts' native packedbubble series isn't available (highcharts-more
+    not loaded), the implementation falls back to a manual scatter-plus-fixed-radius-marker
+    technique rather than a single idiomatic high-level Highcharts API call — the
+    correct workaround per the library rules, but it slightly caps Library Mastery
+    (LM-01) versus a plot type with a direct native series match.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: title "bubble-packed · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Monthly cloud spend by service ($K) — circle area = spend, color = team" in softer dark gray, both clearly readable against the light background. Legend at the bottom center shows four dot+label pairs (Platform, Data, Growth, Security) in dark text, easy to read. No tick/axis labels are shown (position carries no meaning, as the spec notes) — appropriate for this plot type.
-      Data: 24 packed circles in four Imprint colors — green (#009E73, Platform), lavender (#C475FD, Data), blue (#4467A3, Growth), ochre (#BD8233, Security). First series (Platform) is correctly the brand green. Circles are sized by sqrt(value) so area encodes spend; a thin page-colored stroke separates touching circles. Most bubbles carry a bold, white-outlined data label (name, plus $-value for the largest); a few of the smallest/medium bubbles (e.g. "Compliance Scans", "Threat Detection") have label text visibly wider than the circle, spilling into the surrounding whitespace.
-      Legibility verdict: PASS (all chrome text is fully readable; the label-overflow issue is a proportional/containment flaw, not an illegibility one — the text itself is crisp and readable, just not contained inside its bubble).
+      Background: Warm off-white (#FAF8F1) - correct, not pure white.
+      Chrome: Bold dark title "bubble-packed · javascript · highcharts · anyplot.ai" and a gray subtitle ("Monthly cloud spend by service ($K) — circle area = spend, color = team") are both clearly readable against the light background. A horizontal legend at the bottom ("Platform", "Data", "Growth", "Security") with matching color swatches is fully legible.
+      Data: 24 circles of varying size, packed without overlap into four loosely clustered quadrants by team. Colors are Platform=green (#009E73), Data=lavender/purple, Growth=blue, Security=ochre — matching the Imprint canonical order with the brand green first. Each circle has a thin light-colored (page-background-colored) stroke for separation and a white/dark-outlined data label (name + "$XXK" value for larger circles, name only or truncated for the smallest).
+      Legibility verdict: PASS - all chrome and most data labels are readable; the smallest 3-4 bubbles have very small (~9px) truncated labels that would be hard to read at mobile scale, but nothing is unreadable at full resolution.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: title and subtitle render in light ink/soft-gray text, both clearly legible against the dark background. Legend text is light-colored and readable. No dark-on-dark or light-on-light failures anywhere.
-      Data: identical circle layout and identical four Imprint hues to the light render — confirms only chrome (background, text color) flips between themes while data colors stay constant, as required.
-      Legibility verdict: PASS (same label-overflow observation as the light render, but all text itself is crisp and correctly colored for the dark surface).
+      Background: Warm near-black (#1A1A17) - correct, not pure black.
+      Chrome: Title and subtitle switch to light-colored text, clearly readable against the dark background. Legend text and swatches remain legible; no dark-on-dark text observed anywhere.
+      Data: Same four circle colors as the light render (green/lavender/blue/ochre) - confirmed identical data-color values; only the chrome (background, text) flipped as expected. Circle stroke color adapts to the dark page background.
+      Legibility verdict: PASS - no dark-on-dark or light-on-light failures; same minor small-bubble label size caveat as the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; a few
-          small-bubble data labels are wider than their circle and spill into whitespace
+        comment: Font sizes explicitly set (title 22px, subtitle/legend 14px, dynamic
+          per-bubble labels 9-14px); readable at full resolution in both themes, but
+          the smallest bubbles' labels are near the mobile-legibility floor.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions in either render
+        comment: Physics-based packing keeps all 24 circles non-overlapping with visible
+          gaps; labels stay inside their circles; legend does not collide with data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle sizes clearly differentiate spend values; force-sim packing
-          leaves no overlap
+        comment: Circle radii scale with sqrt(value) so area is proportional to spend;
+          size differences are clearly perceivable across the 10x value range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette + white-outlined labels give strong contrast and
-          CVD safety
+        comment: Four CVD-safe Imprint hues, redundant encoding via legend text and
+          tooltip, adequate contrast against both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Cluster + legend fill most of the square canvas with balanced margins;
-          minor deduction for the label-overflow spillover
+        comment: Cluster is auto-fit to the plot area via setExtremes; margins are
+          slightly unbalanced (larger empty gap above the cluster than below) and
+          the quadrant clustering leaves visible corner whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed (position carries no meaning); title/subtitle descriptive
-          with units ($K)
+        comment: No axes needed (position carries no meaning per spec); subtitle explicitly
+          states the units ($K) and encoding (area=spend, color=team).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for remaining groups, identical
-          data colors across themes, correct theme-adaptive chrome'
+        comment: 'First series (Platform) is #009E73; remaining 3 groups follow Imprint
+          canonical order; identical data colors across themes; theme-correct chrome
+          in both renders.'
     design_excellence:
       score: 15
       max: 20
@@ -119,23 +127,22 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        passed: true
-        comment: Genuine force-simulation packing with intentional grouping is well
-          above default configuration
+        comment: Genuine force-simulation packing with group clustering goes well
+          beyond a configured default; clean typography and Imprint palette throughout.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        passed: true
-        comment: No grid/spines needed, generous whitespace, subtle stroke outlines;
-          small deduction for label overflow
+        comment: No grid, no spines/axes, generous whitespace, subtle marker stroke
+          for separation; minor deduction for the uneven margin distribution noted
+          in VQ-05.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Size and color-by-team create clear visual hierarchy and an immediate
-          focal point (Compute, Warehouse, Storage)
+        comment: Size and color together create a clear visual hierarchy (Compute/Warehouse/Storage
+          stand out as largest), and group clustering tells a secondary organizational
+          story; no explicit annotation layer (not required by spec).
     spec_compliance:
       score: 15
       max: 15
@@ -144,29 +151,27 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
-        comment: 'Correct packed-bubble mechanic: no-overlap circle packing via simulation,
-          area encodes value'
+        comment: 'Genuine packed-bubble chart: area-scaled circles, non-overlapping
+          via simulated physics, position carries no meaning (axes hidden).'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Area scaling, force-sim packing, in-circle labels, group color-coding,
-          grouped clustering with gaps — all present
+        comment: label/value/group all present; area-not-radius scaling confirmed
+          in code; force simulation for packing; optional grouping with visible inter-group
+          spacing.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: Axes correctly hidden since position carries no meaning; all 24 items
-          visible
+        comment: All 24 items rendered and visible; no x/y semantics to map since
+          position is meaningless by design.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exact; legend labels match the four team groups
+        comment: Title matches the exact mandated format; legend labels match the
+          4 group names used in the data and tooltip.
     data_quality:
       score: 15
       max: 15
@@ -175,23 +180,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        passed: true
-        comment: 24 items across 4 groups with a wide value range (21-210) showing
-          clear size variation
+        comment: Wide value range (21-210), 4 distinct groups with different member
+          counts and totals, sizes clearly differentiated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible, neutral business scenario (cloud infrastructure spend
-          by service/team)
+        comment: Neutral, comprehensible business/tech scenario (cloud infrastructure
+          spend by service and owning team).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Values and relative proportions plausible for a real cloud spend
-          breakdown
+        comment: Relative spend values (Compute/Storage largest, WAF/Registry smallest)
+          align with plausible real-world cloud cost structures.
     code_quality:
       score: 9
       max: 10
@@ -200,63 +202,60 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Helper functions and a nested physics loop deviate from single-pass
-          KISS, though justified by the missing packedbubble module
+        comment: Several small helper functions (rand, radiusFor, fitLabel) are used
+          beyond a flat script; justified by the packing-simulation complexity but
+          a deviation from strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Deterministic seeded LCG
+        comment: Deterministic fixed-seed LCG (seed=42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No imports; only browser globals used
+        comment: No unused imports; only the Highcharts global is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Appropriate complexity for reimplementing missing library functionality;
-          no fake UI
+        comment: Complexity is appropriate for a manual bubble-packing simulation;
+          no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Correct mount-node contract, animation disabled, current API
+        comment: Correct Highcharts.chart('container', ...) call, no explicit width/height,
+          animation disabled everywhere.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Good use of dataLabels formatter, pointFormatter tooltip, marker
-          states, and onLoad extremes-fitting
+        comment: Correct workaround given packedbubble lives in the unloaded highcharts-more
+          module - uses scatter series with per-point marker.radius, which is the
+          right approach per the library rules, but isn't a single high-level native
+          call.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Core packing math is generic and library-agnostic; only the 'contrast'
-          auto-text-color trick is Highcharts-specific
-  verdict: REJECTED
+        comment: Uses Highcharts-specific hooks (onLoad callback, chart.plotWidth/plotHeight,
+          setExtremes for auto-fit view, pointFormatter for rich tooltips) beyond
+          generic usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - force-simulation
-  - custom-legend
-  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
+  - minimal-chrome
   - edge-highlighting
