@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: spectrogram-mel
 created: '2026-08-24T09:19:21Z'
-updated: '2026-08-24T09:24:21Z'
+updated: '2026-08-24T09:32:30Z'
 generated_by: claude-sonnet
 workflow_run: 32709566031
 issue: 4672
@@ -12,63 +12,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
   - 'Advanced idiomatic use of the MUI X escape hatch: bare ChartContainer plus useXScale/useYScale/useDrawingArea
     hooks to draw a true heatmap layer, since no MUI X community chart type natively
-    supports a spectrogram — this is exactly the intended "community surface, full
-    richness" pattern.'
-  - Custom-built colorbar (gradient + 0 dB / -80 dB / rotated "Power (dB)" label)
-    is positioned correctly from useDrawingArea() and never clips against the canvas
+    supports a spectrogram.'
+  - Custom-built colorbar (gradient + 0 dB / -80 dB / rotated Power (dB) label) is
+    positioned correctly from useDrawingArea() and never clips against the canvas
     edge in either theme.
   - 'Correct mel-scale warping: HTK mel formula, Slaney-style triangular filterbank
     area normalization, and y-axis ticks placed at even mel-band edges but labeled
-    with their actual Hz value (e.g. "614 Hz", "1.1k Hz") — matches the spec''s ''Hz
-    labels at key mel band edges'' requirement precisely.'
+    with their actual Hz value (e.g. "614 Hz", "1.1k Hz") — matches the spec''s "Hz
+    labels at key mel band edges" requirement precisely.'
   - Deterministic, in-browser DSP pipeline (seeded LCG, hand-written radix-2 FFT,
     Hann window, dB-with-floor conversion) produces a plausible sung four-note melody
-    with harmonics, vibrato, and a breathy onset transient — realistic and neutral
-    content with no external audio file dependency.
-  - Imprint sequential colormap (t.seq[0] to t.seq[1]) is used correctly for the continuous
+    with harmonics, vibrato, and a breathy onset transient.
+  - skipAnimation now set on ChartContainer, closing the CQ-05/LM-01 gap from attempt
+    1.
+  - The gamma-corrected color mapping (frac^0.6, gamma < 1) now reads correctly in
+    both the heatmap cells AND the colorbar gradient (5 gamma-matched stops instead
+    of a flat 2-stop gradient) — quiet early note onsets are visibly distinguishable
+    from the background instead of blending into a flat mid-tone field.
+  - Imprint sequential colormap (t.seq[0] to t.seq[1]) used correctly for the continuous
     power data, identical between light/dark renders, with theme-correct backgrounds
-    and fully legible chrome in both themes.
-  - No AR-09 edge clipping anywhere (title, axis labels, tick labels, colorbar, colorbar
-    labels all fully inside the 3200x1800 canvas with comfortable margins).
+    and chrome.
+  - No AR-09 edge clipping anywhere — checked all four canvas edges at full resolution
+    in both themes.
   weaknesses:
-  - '`skipAnimation` is never set on `<ChartContainer>`, contradicting the muix library
-    rule (''Always set both belts — set skipAnimation on every chart component'').
-    It happens not to matter visually here because the spectrogram is drawn as raw
-    SVG rects outside MUI X''s animated series system, but it''s a one-line fix (`<ChartContainer
-    skipAnimation ...>`) that should be added for correctness and to match the mandatory
-    rule.'
   - n_fft=1024 / hop_length=400 / n_mels=64 diverge from the spec's 'typical parameters'
-    (n_fft=2048, hop_length=512, n_mels=128). This is a defensible engineering choice
-    for a 2.4s/16kHz clip computed live in the browser, but the resulting time-frequency
-    resolution is coarser than the spec's suggested defaults — consider n_fft=2048/hop=512
-    if performance allows, or note the deviation is intentional.
-  - 'Visual storytelling is modest: most of the canvas is a fairly uniform mid-tone
-    field, with the melodic/harmonic structure only becoming visually prominent in
-    the back half (1.8s-2.4s). A touch more dynamic-range stretching or contrast could
-    make the earlier notes read more clearly against the background.'
+    (n_fft=2048, hop_length=512, n_mels=128) — a defensible browser-performance tradeoff
+    given the SVG-rect-per-cell rendering approach, but coarser time/frequency resolution
+    than the spec's suggested defaults.
   - Design excellence is solid but not distinctive — the heatmap + colorbar composition
-    is clean and correct but doesn't go much further than the functional minimum (e.g.
-    no reference lines, no annotation of note boundaries, no secondary visual emphasis).
+    is clean and correct but doesn't go much further than the functional minimum (no
+    annotation calling out the melodic phrase, no additional emphasis technique).
+  - X-axis carries 24 densely packed tick labels (0.0s-2.3s at 0.1s steps); still
+    readable in both renders but tight, and a sparser tick interval would give more
+    breathing room.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the Imprint light-theme surface — not pure white.
-      Chrome: Title "spectrogram-mel · javascript · muix · anyplot.ai" is centered at the top in dark ink, fully visible with clear margin above it. X-axis "Time (s)" labeled 0.0s-2.3s in ~0.1s steps. Y-axis "Frequency (mel-scaled)" with Hz tick labels at mel-even intervals (0 Hz, 259 Hz, 614 Hz, 1.1k Hz, 1.8k Hz, 2.7k Hz, 3.9k Hz, 5.6k Hz, 8k Hz). Colorbar on the right with "0 dB" above and "-80 dB" below the gradient bar, plus a rotated "Power (dB)" label to its right. All text is dark-on-light and clearly readable; no clipping at any edge.
-      Data: Continuous heatmap cells from teal-green (#009E73, low power/-80 dB) to indigo-blue (~#4467A3, high power/0 dB, the Imprint sequential pair). A dense low-frequency band (below ~600 Hz) runs throughout, with harmonic "arch" structures rising into the ~1-2 kHz range that grow more prominent after ~1.2s, consistent with a four-note melody with harmonics and vibrato.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Centered dark-ink title "spectrogram-mel · javascript · muix · anyplot.ai" fully visible at the top. X-axis "Time (s)" with dense 0.0s-2.3s tick labels; Y-axis "Frequency (mel-scaled)" with Hz tick labels at mel-even intervals (0 Hz through 8k Hz). Colorbar on the right with "0 dB" / "-80 dB" endpoints and a rotated "Power (dB)" label. All text is dark-on-light and clearly readable, no clipping at any edge.
+      Data: Continuous heatmap from teal-green (#009E73, low power) to indigo-blue (t.seq[1], high power). A dense low-frequency band (below ~1.1k Hz) runs throughout, with harmonic "arch" structures tracing a four-note rising melody, most prominent from ~1.2s onward but now visibly present from early frames too thanks to the gamma-corrected color mapping.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the Imprint dark-theme surface — not pure black.
-      Chrome: Same title, axis labels, tick labels, and colorbar as the light render, now rendered in light ink/white text against the dark background. All text is clearly legible; no dark-on-dark failures observed (title, axis ticks, colorbar labels all light-colored and crisp).
-      Data: Identical teal-green-to-indigo-blue heatmap coloring and spatial pattern as the light render — confirms data colors are unchanged between themes, only chrome flipped.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Identical title, axes, and colorbar as the light render, now rendered in light ink against the dark background — all clearly legible. No dark-on-dark failures; no black text on the dark surface anywhere.
+      Data: Heatmap data colors are visually identical to the light render (same teal-green-to-blue gradient at the same positions), confirming only chrome flipped between themes as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -76,73 +72,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and colorbar labels are all explicitly
-          sized and clearly readable in both themes; tickFontSize/tickLabelStyle hack
-          for the y-axis label offset works correctly.
+        comment: All font sizes explicit and readable in both themes; x-axis tick
+          labels are dense (24 labels) but not overlapping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, axes, ticks, colorbar, or data.
+        comment: No overlap between any text, axes, or colorbar elements.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Heatmap cells are appropriately sized/dense for the 64-mel x ~72-frame
-          grid; melodic structure visible but background field is fairly flat.
+        comment: Gamma-corrected color mapping (frac^0.6) now makes quiet low-power
+          regions clearly distinguishable from background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue Imprint sequential scale, no red-green single-channel
-          encoding, adequate contrast against both backgrounds.
+        comment: Sequential green-to-blue Imprint colormap, no red-green reliance,
+          good contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Exact 3200x1800 canvas, generous margins (130/140/100/80), no overflow
-          or clipping at any edge.
+        comment: Plot area uses the large majority of the canvas with balanced margins;
+          colorbar sits cleanly in the right margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (Time (s), Frequency (mel-scaled)
-          with Hz tick values); colorbar labeled Power (dB).
+        comment: Time (s) and Frequency (mel-scaled) are descriptive; Y-axis ticks
+          carry Hz units directly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses imprint_seq (t.seq[0]/t.seq[1]) for continuous power data, correct
-          theme-adaptive backgrounds, data colors identical across themes.
+        comment: imprint_seq (t.seq[0] -> t.seq[1]) used correctly for continuous
+          power data; theme-correct backgrounds and chrome in both renders.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Custom-built colorbar and correct Imprint gradient show real polish,
-          but overall composition stays close to the functional minimum for a heatmap.
+        passed: true
+        comment: Custom colorbar + correct Imprint gradient show real polish, but
+          composition stays close to the functional minimum.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Clean chrome, no clutter, generous whitespace/margins; no extraneous
-          decoration.
+        passed: true
+        comment: Clean chrome, no clutter, generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        comment: Melodic/harmonic structure becomes a visible focal point mainly in
-          the back half of the time axis; earlier notes are present but low-contrast
-          against the background field.
+        passed: true
+        comment: Gamma fix improved early-time-axis contrast, giving the melodic/harmonic
+          structure a visible hierarchy across the full time range, not just the back
+          half.
     spec_compliance:
       score: 15
       max: 15
@@ -152,28 +149,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mel-spectrogram heatmap with mel-warped frequency axis.
+        comment: Correct mel-spectrogram heatmap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: dB scale, sequential colormap, time x-axis, mel-warped y-axis with
-          Hz labels, dB colorbar — all present.
+        comment: dB conversion, sequential colormap, time/mel axes with Hz labels,
+          labeled colorbar — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=time (s), y=mel frequency (Hz-labeled), color=power (dB); full
-          frequency range 0-8kHz covered.
+        comment: X=time, Y=mel-scaled frequency, correctly assigned.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'spectrogram-mel · javascript · muix · anyplot.ai';
-          colorbar correctly labeled.
+        comment: Title format correct; colorbar serves as the legend and is properly
+          labeled.
     data_quality:
       score: 14
       max: 15
@@ -183,23 +179,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows melody progression, harmonics, vibrato, breathy onset transient,
-          and noise floor.
+        comment: Shows harmonics, vibrato, decay envelopes, and a breathy onset transient
+          across a four-note melody.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible vocal-like melody, entirely neutral content.
+        comment: Sung melody scenario is realistic and neutral, matching audio-ML
+          preprocessing use cases.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16kHz sample rate and 2.4s duration are within spec range; -80 to
-          0 dB range is sensible.
+        comment: Sample rate, note frequencies, and dB range are all physically plausible
+          for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -207,14 +204,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions (fft, hzToMel, melToHz, formatHz) are warranted
-          for the manual DSP pipeline; no over-engineering.
+        comment: Structure (helper functions for FFT/mel/formatting) is justified
+          by the DSP domain, not over-engineered.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic.
+        comment: Deterministic seeded LCG (seed=42).
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -226,33 +223,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch FFT + mel filterbank; no
+        comment: Appropriate complexity for a from-scratch spectrogram pipeline; no
           fake UI.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Missing mandatory `skipAnimation` prop on ChartContainer per muix
-          library rules.
+        passed: true
+        comment: skipAnimation now set on ChartContainer, fixing the attempt-1 gap;
+          mount-node contract respected.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Correct escape-hatch pattern (ChartContainer + scale hooks) for a
-          chart type MUI X doesn't natively support; loses a point for the missing
-          skipAnimation belt.
+        passed: true
+        comment: Correct escape-hatch pattern (ChartContainer + scale hooks) with
+          skipAnimation belt now in place.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
+        passed: true
         comment: useXScale/useYScale/useDrawingArea used directly to build a custom
-          heatmap + colorbar layer — a genuinely distinctive, advanced use of the
-          library's internals.
+          heatmap + colorbar layer, a technique distinctive to MUI X's hook-based
+          extensibility.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -263,7 +261,6 @@ impl_tags:
   - data-generation
   - matrix-construction
   dataprep:
-  - fft
   - normalization
   styling:
   - custom-colormap

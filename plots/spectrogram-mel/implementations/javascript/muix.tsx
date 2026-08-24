@@ -1,7 +1,7 @@
 // anyplot.ai
 // spectrogram-mel: Mel-Spectrogram for Audio Analysis
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-24
+// Quality: 90/100 | Created: 2026-08-24
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
