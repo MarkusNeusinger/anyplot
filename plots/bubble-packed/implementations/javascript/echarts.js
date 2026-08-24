@@ -93,18 +93,36 @@ for (let iter = 0; iter < ITERATIONS; iter++) {
 // The weak centering force leaves a residual drift after finite iterations —
 // re-center the whole blob's bounding box onto the box center so it doesn't
 // settle off-axis and waste canvas on one side.
-let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-for (let i = 0; i < n; i++) {
-  minX = Math.min(minX, positions[i].x - radii[i]);
-  maxX = Math.max(maxX, positions[i].x + radii[i]);
-  minY = Math.min(minY, positions[i].y - radii[i]);
-  maxY = Math.max(maxY, positions[i].y + radii[i]);
+function boundingBox() {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (let i = 0; i < n; i++) {
+    minX = Math.min(minX, positions[i].x - radii[i]);
+    maxX = Math.max(maxX, positions[i].x + radii[i]);
+    minY = Math.min(minY, positions[i].y - radii[i]);
+    maxY = Math.max(maxY, positions[i].y + radii[i]);
+  }
+  return { minX, maxX, minY, maxY };
 }
-const offsetX = cx - (minX + maxX) / 2;
-const offsetY = cy - (minY + maxY) / 2;
+
+let bbox = boundingBox();
+const offsetX = cx - (bbox.minX + bbox.maxX) / 2;
+const offsetY = cy - (bbox.minY + bbox.maxY) / 2;
 for (let i = 0; i < n; i++) {
   positions[i].x += offsetX;
   positions[i].y += offsetY;
+}
+
+// Centering alone leaves a loosely-packed cluster far smaller than the box
+// (collision padding + a weak central pull don't compact it fully) — scale
+// the whole blob up around its own center so it fills most of the working
+// square instead of leaving a wide, evenly-distributed margin on every side.
+bbox = boundingBox();
+const FILL_RATIO = 0.92;
+const fillScale = (boxSize * FILL_RATIO) / Math.max(bbox.maxX - bbox.minX, bbox.maxY - bbox.minY);
+for (let i = 0; i < n; i++) {
+  positions[i].x = cx + (positions[i].x - cx) * fillScale;
+  positions[i].y = cy + (positions[i].y - cy) * fillScale;
+  radii[i] *= fillScale;
 }
 
 // Fill luminance decides label ink so text stays legible on every hue.
@@ -116,15 +134,39 @@ function labelColorFor(hex) {
   return luminance > 0.55 ? "#1A1A17" : "#FFFDF6";
 }
 
+// Lighten a hex color toward white for the radial-gradient sphere highlight.
+function lighten(hex, amount) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mix = (c) => Math.round(c + (255 - c) * amount);
+  return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+}
+
 const LABEL_MIN_RADIUS = boxSize * 0.045;
 const bubbleData = categories.map((c, i) => {
   const r = radii[i];
   const fill = t.palette[i % t.palette.length];
+  // Past the first 8 categories the palette recycles hues; give that second
+  // lap a dashed ring so a same-colored, unlabeled small circle stays
+  // distinguishable from its first-lap sibling without relying on the label.
+  const recycled = i >= t.palette.length;
   return {
     name: c.label,
     value: [positions[i].x, positions[i].y, c.value],
     symbolSize: r * 2,
-    itemStyle: { color: fill, borderColor: t.pageBg, borderWidth: 2, opacity: 0.92 },
+    itemStyle: {
+      // Subtle radial highlight (light source top-left) gives the flat fill
+      // a touch of sphere-like depth instead of a plain solid disc.
+      color: new echarts.graphic.RadialGradient(0.3, 0.3, 0.75, [
+        { offset: 0, color: lighten(fill, 0.22) },
+        { offset: 1, color: fill },
+      ]),
+      borderColor: t.pageBg,
+      borderWidth: recycled ? 3 : 2,
+      borderType: recycled ? "dashed" : "solid",
+      opacity: 0.92,
+    },
     label: {
       show: r > LABEL_MIN_RADIUS,
       position: "inside",
