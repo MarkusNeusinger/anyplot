@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dendrogram-radial: Radial Dendrogram
 Library: letsplot 4.11.0 | Python 3.13.15
 Quality: 88/100 | Created: 2026-08-24
@@ -149,6 +149,24 @@ for position, sample_index in enumerate(leaf_order):
 
 leaves_df = pd.DataFrame(leaf_rows)
 
+# Radial reference guide — faint dashed rings at two intermediate merge-height
+# levels, so branch length has a scale anchor beyond eyeballing bare radius
+RING_FRACTIONS = [1 / 3, 2 / 3]
+ring_angles = np.linspace(0, 2 * np.pi, 120)
+ring_rows = []
+ring_label_rows = []
+for ring_id, fraction in enumerate(RING_FRACTIONS):
+    ring_height = fraction * max_height
+    ring_radius = to_radius(ring_height)
+    ring_rows += [
+        {"ring_id": ring_id, "x": px, "y": py} for px, py in (polar_to_xy(a, ring_radius) for a in ring_angles)
+    ]
+    label_x, label_y = polar_to_xy(0.02, ring_radius)
+    ring_label_rows.append({"x": label_x, "y": label_y, "text": f"h={ring_height:.1f}"})
+
+rings_df = pd.DataFrame(ring_rows)
+ring_labels_df = pd.DataFrame(ring_label_rows)
+
 # Colors — Imprint palette for the 4 clusters, muted ink for merges that join
 # two different clusters (the conventional "above cluster cut" styling)
 color_values = {name: cluster_color[cid] for cid, name in cell_type_names.items()}
@@ -177,15 +195,37 @@ legend_df = pd.DataFrame(
 title = "dendrogram-radial · python · letsplot · anyplot.ai"
 plot = (
     ggplot()
+    + geom_path(
+        aes(x="x", y="y", group="ring_id"),
+        data=rings_df,
+        color=INK_MUTED,
+        size=0.4,
+        alpha=0.5,
+        linetype="dashed",
+        show_legend=False,
+    )
+    + geom_text(
+        aes(x="x", y="y", label="text"),
+        data=ring_labels_df,
+        color=INK_MUTED,
+        size=3.5,
+        hjust=0,
+        vjust=-0.3,
+        show_legend=False,
+    )
     + geom_path(aes(x="x", y="y", group="path_id", color="cluster"), data=branches_df, size=1.1, show_legend=False)
     + geom_segment(
-        aes(x="x_in", y="y_in", xend="x_out", yend="y_out", color="cluster"), data=leaves_df, size=3, show_legend=False
+        aes(x="x_in", y="y_in", xend="x_out", yend="y_out", color="cluster"),
+        data=leaves_df,
+        size=3,
+        show_legend=False,
+        tooltips=layer_tooltips().line("Sample|@sample").line("Cluster|@cluster"),
     )
     + geom_text(
         aes(x="x_label", y="y_label", label="sample", angle="rotation", hjust="hjust"),
         data=leaves_df,
         color=INK_SOFT,
-        size=8,
+        size=8.5,
         vjust=0.5,
         show_legend=False,
     )
