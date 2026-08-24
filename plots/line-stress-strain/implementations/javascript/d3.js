@@ -168,11 +168,12 @@ g.append("text")
   .style("letter-spacing", "0.02em")
   .text("NECKING");
 
-// --- Elastic modulus reference line (short tangent at slope E) -------------
-// The label sits in the open plateau area rather than beside the tangent —
-// at this canvas scale the elastic segment is only a few px wide, too tight
-// for a label without crowding the curve or the yield marker.
-const modulusEnd = PROP_LIMIT_STRAIN * 1.3;
+// --- Elastic modulus reference line (tangent at slope E) -------------------
+// Extended well past the proportional limit so the straight tangent visibly
+// separates from the actual (bending) curve instead of merging with it. The
+// label sits in the open plateau area rather than beside the tangent, which
+// stays narrow even when lengthened since E dwarfs the yield stress.
+const modulusEnd = PROP_LIMIT_STRAIN * 1.6;
 g.append("line")
   .attr("x1", x(0))
   .attr("y1", y(0))
@@ -226,7 +227,7 @@ g.append("circle")
   .call(markerStyle);
 g.append("text")
   .attr("x", x(yieldPoint.strain))
-  .attr("y", y(yieldPoint.stress) - 40)
+  .attr("y", y(yieldPoint.stress) - 66)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "15px")
@@ -234,7 +235,7 @@ g.append("text")
   .text("Yield (0.2% offset)");
 g.append("text")
   .attr("x", x(yieldPoint.strain))
-  .attr("y", y(yieldPoint.stress) - 22)
+  .attr("y", y(yieldPoint.stress) - 48)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
