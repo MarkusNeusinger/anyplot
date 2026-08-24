@@ -31,14 +31,18 @@ const BAND_COLORS = [hexToRgba(t.ink, 0.26), hexToRgba(t.ink, 0.15), hexToRgba(t
 const BAR_COLOR = t.palette[0]; // brand green — the measure, identical across every bullet
 
 // --- Layout constants (CSS px within the mount's coordinate space) ---------
-const PADDING = 48;
-const TITLE_HEIGHT = 44;
-const ROW_GAP = 20;
+// BAND_HEIGHT occupies most of each row (denser, space-efficient dashboard
+// block per the spec's own framing) instead of a thin band lost in tall rows.
+const PADDING = 40;
+const TITLE_HEIGHT = 40;
+const KEY_HEIGHT = 24;
+const ROW_GAP = 14;
 const LABEL_WIDTH = 300;
 const VALUE_WIDTH = 150;
-const BAND_HEIGHT = 46;
+const BAND_HEIGHT = 110;
 
-const rowAreaHeight = SIZE.height - PADDING * 2 - TITLE_HEIGHT - ROW_GAP * kpis.length;
+const rowAreaHeight =
+  SIZE.height - PADDING * 2 - TITLE_HEIGHT - KEY_HEIGHT - ROW_GAP * (kpis.length + 1);
 const rowHeight = rowAreaHeight / kpis.length;
 const chartWidth = SIZE.width - PADDING * 2 - LABEL_WIDTH - VALUE_WIDTH;
 
@@ -92,7 +96,13 @@ function Bullet({ kpi }) {
             tooltip={{ trigger: "none" }}
             skipAnimation
           >
-            <ChartsReferenceLine x={kpi.target} lineStyle={{ stroke: t.ink, strokeWidth: 3 }} />
+            <ChartsReferenceLine
+              x={kpi.target}
+              lineStyle={{ stroke: t.ink, strokeWidth: 3 }}
+              label={`${kpi.target}`}
+              labelStyle={{ fill: t.ink, fontSize: 11, fontWeight: 600 }}
+              labelAlign="end"
+            />
           </BarChart>
         </div>
       </div>
@@ -118,6 +128,29 @@ export default function Chart() {
     >
       <div style={{ height: TITLE_HEIGHT, color: t.ink, fontSize: 22, fontWeight: 500 }}>
         bullet-basic · javascript · muix · anyplot.ai
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          height: KEY_HEIGHT,
+          marginTop: ROW_GAP,
+          marginLeft: LABEL_WIDTH + 20,
+          gap: 20,
+          fontSize: 13,
+          color: t.inkSoft,
+        }}
+      >
+        {["Poor", "Satisfactory", "Good"].map((name, i) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 12, height: 12, background: BAND_COLORS[i], borderRadius: 2 }} />
+            {name}
+          </div>
+        ))}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ width: 2, height: 12, background: t.ink }} />
+          Target
+        </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: ROW_GAP, marginTop: ROW_GAP }}>
         {kpis.map((kpi) => (
