@@ -1,0 +1,270 @@
+library: muix
+language: javascript
+specification_id: treemap-basic
+created: '2026-08-24T11:24:38Z'
+updated: '2026-08-24T11:39:32Z'
+generated_by: claude-sonnet
+workflow_run: 32720988352
+issue: 766
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/treemap-basic/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Correctly implements a squarified treemap (Bruls-Huizing-van Wijk algorithm) via
+    MUI X's ChartContainer/useDrawingArea composition primitives -- a legitimate use
+    of the community package's low-level layout system since MUI X community has no
+    native Treemap chart type.
+  - Adaptive label visibility (fitsLabel/showSub helpers) hides labels that would
+    not fit their tile, preventing any overlap or illegible micro-text across all
+    26 rectangles.
+  - Contrast-aware text color via a relative-luminance calculation guarantees readable
+    text on every tile fill, in both themes, without hardcoding light/dark exceptions.
+  - Canonical Imprint palette order used exactly (green first, then purple/blue/ochre/red/cyan);
+    department colors are pixel-identical between light and dark renders, only chrome
+    flips.
+  - Cost-center tiles are tinted progressively lighter within each department by relative
+    size, directly satisfying the spec's 'show hierarchy through nesting depth or
+    color shading intensity' note.
+  - Explicit data-story annotation ('Engineering leads at $1,880K -- 30% of total
+    budget') gives the viewer an immediate, stated takeaway rather than leaving them
+    to find it.
+  - Deterministic, realistic company-expense dataset (6 departments, 20 cost centers,
+    $110K-$820K range) covers the full range of hierarchy sizes the treemap layout
+    needs to demonstrate.
+  weaknesses:
+  - No native MUI X chart component renders the actual marks (ChartContainer is passed
+    series=[]); the treemap tiles are 100% hand-drawn SVG rects/text. Using ChartContainer/useDrawingArea
+    for the surface and margin system is idiomatic, but it caps Library Mastery since
+    no MUI X series/marks API is exercised for the data itself.
+  - The large-department header path (flat <rect>+<text>) and the small-department
+    fallback path (TreemapRect helper) draw tile borders slightly differently, giving
+    a minor visual inconsistency in how department separators render across size thresholds.
+  - 'The squarify/color-math helpers (7 pure functions: worstRatio, layoutRow, squarify,
+    hexToRgb, rgbToHsl, hueToRgb, hslToRgb, tintRgb, relLuminanceRgb, textColorForRgb)
+    add real code volume -- justified by the missing library primitive, but it departs
+    from the flat-script KISS ideal expected of simpler chart types.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white, not dark -- correct light-theme page tone.
+      Chrome: Title "treemap-basic · javascript · muix · anyplot.ai" in bold dark text, centered, ~45% of canvas width. Subtitle "Company expense breakdown by department and cost center · values in $K, area ∝ budget" in gray beneath it. Italic insight line "Engineering leads at $1,880K — 30% of total budget" colored in Engineering's brand-green. All three lines are clearly legible against the light background.
+      Data: 6 department bands (Engineering, Sales, Marketing, R&D, Operations, Customer Success) squarified into rectangles sized by budget, each in a distinct Imprint hue (green, purple, blue, ochre, red, cyan respectively -- Engineering is #009E73 brand green, confirming VQ-07 first-series compliance). Within each department, cost-center tiles are progressively lighter tints of the department hue, largest tile = base hue. Every tile has a header/label ("Name" + "$XXXK") whose text color (dark navy or cream) is computed per-tile for contrast, so all labels are legible regardless of tile lightness. Thin off-white gutters separate all tiles.
+      Legibility verdict: PASS -- no light-on-light text, no clipped labels, small tiles (e.g. "Training $110K", "Patents & Compliance $140K") remain fully readable (verified via pixel crops).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black, not light -- correct dark-theme page tone.
+      Chrome: Same title/subtitle now rendered in light/cream text, clearly legible against the dark background. The insight line keeps the same brand-green color, which reads well on the dark surface too.
+      Data: All department and cost-center tile colors are pixel-identical to the light render (verified via crop comparison of the R&D "Patents & Compliance" and Customer Success "Training" tiles) -- only the page chrome flipped, exactly as required. Per-tile text color is computed from each tile's own fill luminance (independent of page theme), so it is identical to the light render and remains legible on every tile.
+      Legibility verdict: PASS -- no dark-on-dark failures; every title/label/tick-equivalent element is clearly visible in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; adaptive fitsLabel() logic hides labels
+          that don't fit, so nothing is squeezed or unreadable in either theme.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text anywhere; sublabels only render when there is
+          room for both lines.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 26 tiles are clearly delineated with consistent gutters; nothing
+          is barely visible or overlapping.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Text color chosen per-tile via a relative-luminance contrast calculation,
+          not a fixed light/dark toggle -- guarantees contrast on every hue/tint.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Treemap fills the vast majority of the canvas (~85% height, full
+          width), balanced margins, nothing cut off or isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a treemap; every tile carries its own descriptive
+          label with $K units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering (first department) is #009E73; remaining departments
+          follow the canonical Imprint order; identical data colors across both theme-correct
+          renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom hierarchy (header bands + tinted children), consistent
+          Imprint coloring -- strong design, just short of publication-grade polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Consistent gutters, generous top margin for chrome; minor inconsistency
+          between the large-department header path and the small-department flat-fill
+          path.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Explicit stated insight ('Engineering leads at $1,880K — 30% of total
+          budget') plus size/color-driven hierarchy make the takeaway immediate.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct nested-rectangle treemap, area proportional to value.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct category colors, labels on larger tiles only, subtle borders,
+          and shading-intensity nesting cue -- all spec Notes satisfied.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Value correctly drives tile area at both hierarchy levels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no separate legend needed
+          since each tile is self-labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 26 rectangles across 6 departments and varying cost-center counts
+          (3-4) exercise the full range of treemap sizing behavior.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world company expense breakdown scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Departmental and cost-center budget values are realistic corporate
+          figures.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessarily uses several helper functions (squarify layout, color
+          math) because MUI X has no built-in treemap primitive -- justified but departs
+          from a flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer and useDrawingArea imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/functionality; the squarified-treemap algorithm is correctly
+          and cleanly implemented.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export component contract, skipAnimation set, current
+          MUI X API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expertly repurposes ChartContainer's DrawingProvider and useDrawingArea
+          -- the documented composition pattern for custom marks -- but no MUI X series/marks
+          API renders the actual data.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: The DrawingProvider/useDrawingArea margin system is genuinely MUI
+          X-specific, though the tile rendering itself is generic SVG replicable in
+          any library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - squarified-treemap
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - edge-highlighting
+  - publication-ready
