@@ -1,8 +1,7 @@
 // anyplot.ai
 // gantt-dependencies: Gantt Chart with Dependencies
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-08-24
+// Quality: 90/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 const MUTED = window.ANYPLOT_THEME === "light" ? "#6B6A63" : "#A8A79F";
