@@ -92,6 +92,14 @@ const weibullTicks = probabilityTicks.map((p) => ({
   y: weibullY(p / 100),
 }));
 
+// --- X-axis: explicit, well-spaced tick positions (log10 of the cycle count,
+// since Highcharts' logarithmic axis expects tickPositions in its internal
+// linear/log space). The default tick algorithm packs a label every 10k in
+// the 100k-200k decade, crowding "180k"/"190k" together at the right edge;
+// thinning out above 100k keeps every label legibly separated.
+const xAxisCycleTicks = [40000, 60000, 80000, 100000, 150000, 200000];
+const xAxisTickPositions = xAxisCycleTicks.map((v) => Math.log10(v));
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -115,6 +123,9 @@ Highcharts.chart("container", {
       text: "Cycles to Failure (log scale)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
+    tickPositions: xAxisTickPositions,
+    startOnTick: false,
+    endOnTick: false,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
