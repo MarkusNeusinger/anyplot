@@ -10,12 +10,12 @@ const t = window.ANYPLOT_TOKENS;
 // A regional football league table: rank (1 = top) per team across matchweeks.
 const matchweeks = ["MW1", "MW2", "MW3", "MW4", "MW5", "MW6", "MW7", "MW8"];
 const standings = [
-  { team: "Falcons", ranks: [3, 2, 1, 1, 2, 1, 1, 1] },
-  { team: "Comets", ranks: [1, 1, 2, 2, 1, 2, 3, 2] },
-  { team: "Vipers", ranks: [2, 3, 3, 4, 4, 3, 2, 3] },
-  { team: "Titans", ranks: [5, 4, 4, 3, 3, 4, 4, 4] },
-  { team: "Wolves", ranks: [4, 5, 6, 5, 6, 6, 5, 5] },
-  { team: "Sharks", ranks: [6, 6, 5, 6, 5, 5, 6, 6] },
+  { team: "Falcons", ranks: [3, 2, 1, 1, 2, 1, 1, 1], symbol: "circle" },
+  { team: "Comets", ranks: [1, 1, 2, 2, 1, 2, 3, 2], symbol: "diamond" },
+  { team: "Vipers", ranks: [2, 3, 3, 4, 4, 3, 2, 3], symbol: "square" },
+  { team: "Titans", ranks: [5, 4, 4, 3, 3, 4, 4, 4], symbol: "triangle" },
+  { team: "Wolves", ranks: [4, 5, 6, 5, 6, 6, 5, 5], symbol: "triangle-down" },
+  { team: "Sharks", ranks: [6, 6, 5, 6, 5, 5, 6, 6], symbol: "circle" },
 ];
 const lastIndex = matchweeks.length - 1;
 
@@ -42,7 +42,7 @@ Highcharts.chart("container", {
     title: { text: "Matchweek", style: { color: t.inkSoft, fontSize: "16px" } },
   },
   yAxis: {
-    title: { text: "League Position", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: { text: "League Position (1 = top)", style: { color: t.inkSoft, fontSize: "16px" } },
     min: 1,
     max: standings.length,
     tickInterval: 1,
@@ -64,6 +64,7 @@ Highcharts.chart("container", {
   },
   series: standings.map((entry) => ({
     name: entry.team,
+    marker: { symbol: entry.symbol },
     data: entry.ranks.map((rank, i) =>
       i === lastIndex
         ? {
