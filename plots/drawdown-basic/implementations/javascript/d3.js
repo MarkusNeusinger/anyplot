@@ -69,6 +69,10 @@ for (let i = troughIdx; i < drawdowns.length; i++) {
 
 const data = dates.map((date, i) => ({ date, drawdown: drawdowns[i] }));
 
+// Key statistics required by spec: max drawdown %, duration, and recovery time.
+const maxDDDuration = troughIdx - peakIdx;
+const recoveryTime = recoveryIdx >= 0 ? recoveryIdx - troughIdx : null;
+
 // --- Scales -------------------------------------------------------------------
 const x = d3
   .scaleTime()
@@ -96,7 +100,20 @@ g.append("g")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
-// --- Drawdown area fill (semi-transparent loss red) ---------------------------
+// --- Drawdown area fill (semi-transparent loss red, fading toward zero) -------
+svg
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", "drawdown-fill-gradient")
+  .attr("x1", "0%")
+  .attr("y1", "0%")
+  .attr("x2", "0%")
+  .attr("y2", "100%")
+  .call((gradient) => {
+    gradient.append("stop").attr("offset", "0%").attr("stop-color", t.palette[4]).attr("stop-opacity", 0.06);
+    gradient.append("stop").attr("offset", "100%").attr("stop-color", t.palette[4]).attr("stop-opacity", 0.38);
+  });
+
 const area = d3
   .area()
   .x((d) => x(d.date))
@@ -104,7 +121,7 @@ const area = d3
   .y1((d) => y(d.drawdown))
   .curve(d3.curveLinear);
 
-g.append("path").datum(data).attr("d", area).attr("fill", t.palette[4]).attr("fill-opacity", 0.28);
+g.append("path").datum(data).attr("d", area).attr("fill", "url(#drawdown-fill-gradient)");
 
 // --- Drawdown line --------------------------------------------------------------
 const line = d3
@@ -147,7 +164,7 @@ if (recoveryIdx >= 0) {
     .attr("fill", t.palette[0])
     .style("font-size", "14px")
     .style("font-weight", "600")
-    .text("Recovery");
+    .text("Recovery from max drawdown");
 }
 
 // --- Maximum drawdown marker + annotation ----------------------------------------
@@ -184,7 +201,7 @@ for (const ax of [xAxis, yAxis]) {
   ax.selectAll("line").attr("stroke", t.grid);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
-xAxis.selectAll(".tick line").attr("y2", 6);
+xAxis.selectAll(".tick line").remove();
 yAxis.selectAll(".tick line").remove();
 
 // --- Axis labels -------------------------------------------------------------------
@@ -215,3 +232,16 @@ svg
   .style("font-size", "22px")
   .style("font-weight", "600")
   .text("drawdown-basic · javascript · d3 · anyplot.ai");
+
+// --- Key statistics callout (spec-required: max DD %, duration, recovery time) ---
+const recoveryText = recoveryTime !== null ? `${recoveryTime} days` : "not yet recovered";
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 72)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "15px")
+  .text(
+    `Max drawdown: ${drawdowns[troughIdx].toFixed(1)}%  ·  Duration: ${maxDDDuration} trading days  ·  Recovery: ${recoveryText}`,
+  );
