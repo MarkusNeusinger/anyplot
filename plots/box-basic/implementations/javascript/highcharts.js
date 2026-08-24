@@ -79,6 +79,14 @@ const allBounds = classes.flatMap((c) => [
 const yMin = Math.max(0, Math.floor((Math.min(...allBounds) - 5) / 5) * 5);
 const yMax = Math.min(100, Math.ceil((Math.max(...allBounds) + 5) / 5) * 5);
 
+// Storytelling: call out the widest- and tightest-spread classes via
+// core-Highcharts xAxis.plotBands + label (no annotations module needed) —
+// computed from the data, not hardcoded, so the highlight stays correct if
+// the class parameters above change.
+const spreads = categories.map((c) => stats[c].whiskerHigh - stats[c].whiskerLow);
+const widestIdx = spreads.indexOf(Math.max(...spreads));
+const tightestIdx = spreads.indexOf(Math.min(...spreads));
+
 // Whiskers (box edge → fence) and caps, one null-separated "line" series for
 // every category so a single series draws all the disconnected segments.
 // Every entry (including gaps) carries an explicit x so a mixed array of real
@@ -124,6 +132,32 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Class", style: { color: t.inkSoft, fontSize: "16px" } },
+    plotBands: [
+      {
+        from: widestIdx - 0.5,
+        to: widestIdx + 0.5,
+        color: `${t.inkSoft}14`,
+        label: {
+          text: "Widest spread",
+          align: "center",
+          verticalAlign: "top",
+          y: 12,
+          style: { color: t.inkSoft, fontSize: "12px", fontStyle: "italic" },
+        },
+      },
+      {
+        from: tightestIdx - 0.5,
+        to: tightestIdx + 0.5,
+        color: `${t.inkSoft}14`,
+        label: {
+          text: "Most consistent",
+          align: "center",
+          verticalAlign: "top",
+          y: 12,
+          style: { color: t.inkSoft, fontSize: "12px", fontStyle: "italic" },
+        },
+      },
+    ],
   },
   yAxis: {
     min: yMin,
@@ -158,8 +192,9 @@ Highcharts.chart("container", {
       name: "Interquartile range",
       data: categories.map((c) => +(stats[c].q3 - stats[c].q1).toFixed(2)),
       colorByPoint: true,
-      borderColor: t.ink,
-      borderWidth: 1.5,
+      borderColor: t.inkSoft,
+      borderWidth: 1.25,
+      borderRadius: 2,
       showInLegend: false,
       tooltip: {
         pointFormatter: function () {
@@ -178,7 +213,8 @@ Highcharts.chart("container", {
       name: "Whiskers",
       data: whiskerData,
       color: t.inkSoft,
-      lineWidth: 1.75,
+      lineWidth: 1.5,
+      linecap: "round",
       marker: { enabled: false },
       enableMouseTracking: false,
       showInLegend: false,
@@ -203,7 +239,7 @@ Highcharts.chart("container", {
           color: t.palette[i % t.palette.length],
         }))
       ),
-      marker: { radius: 5, symbol: "circle", lineWidth: 1.5, lineColor: t.pageBg },
+      marker: { radius: 4.5, symbol: "circle", lineWidth: 1, lineColor: t.pageBg, fillOpacity: 0.85 },
       showInLegend: false,
       tooltip: { pointFormat: "Outlier: <b>{point.y:.1f}</b>" },
     },
