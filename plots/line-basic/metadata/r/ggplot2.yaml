@@ -1,0 +1,260 @@
+library: ggplot2
+language: r
+specification_id: line-basic
+created: '2026-08-24T13:12:08Z'
+updated: '2026-08-24T13:24:29Z'
+generated_by: claude-sonnet
+workflow_run: 32730974547
+issue: 653
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Peak annotation and focal marker directly address the prior review's data-storytelling
+    weakness — the dashed loess trend line plus the labeled peak dot give the viewer
+    a clear visual hierarchy and an immediate takeaway (rise to ~31.0°C then decline)
+    instead of leaving the story to be found in the raw zigzag alone
+  - geom_smooth(method = "loess") trend overlay is a genuine ggplot2-native statistical
+    layer, distinguished from the raw series by both color (INK_SOFT) and linetype
+    (dashed) rather than hue alone — CVD-safe and addresses the prior Library Mastery
+    weakness
+  - geom_line linewidth raised from 1.1 to 1.5, fixing the previously-flagged thin
+    line that read weakly against the noisy day-to-day fluctuation
+  - 'Imprint palette and theme-adaptive chrome remain fully correct: brand green #009E73
+    identical between light and dark renders, backgrounds match #FAF8F1/#1A1A17, and
+    all text/grid tokens flip correctly with no dark-on-dark or light-on-light failures'
+  - Clean KISS code structure (imports → theme tokens → data → plot → save), reproducible
+    via set.seed(42), uses current linewidth= API and ragg::agg_png per the library
+    guide
+  weaknesses:
+  - DE-01 typography still relies on the default sans-serif family — only the title
+    weight changed to bold this round; a custom font family or a refined size hierarchy
+    between title and axis text would lift aesthetic sophistication further toward
+    publication-ready
+  - DE-02 visual refinement is unchanged from attempt 1 (Y-axis-only grid, no ticks,
+    spines removed) — solid but not maximal polish; e.g. a very subtle reference band
+    or secondary annotation for the trough would add further detail
+  - The peak annotation sits close to the top gridline (32°C) with modest headroom
+    — comfortable at the current data range, but a regenerated dataset with a higher
+    peak value could push the label toward the plot title; consider anchoring annotation
+    y-position with a small buffer relative to the panel's expansion range
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold title "line-basic · r · ggplot2 · anyplot.ai" in dark ink top-left, clearly readable. Y-axis title "Temperature (°C)" (rotated) and X-axis title "Day of Season" in dark ink, both legible. Tick labels (0/25/50/75 on X; 24/26/28/30/32 on Y) in a softer gray-ink tone, clearly readable. Horizontal Y-axis gridlines only, thin and subtle. No X gridlines, no tick marks, no panel border/spines — clean minimal frame.
+      Data: A single continuous line in brand green (#009E73) tracing a noisy seasonal arc from ~24°C at day 0 rising to a peak of ~31°C near day ~48, then declining back to ~24-25°C by day 90. A dashed gray (INK_SOFT) loess trend line runs beneath the raw series, smoothing out the day-to-day noise to show the underlying rise-then-fall shape. A slightly larger green dot marks the single hottest observed day, with an italic gray annotation "Peak: 31.0°C" positioned just above it and below the top gridline — no overlap with any other element.
+      Legibility verdict: PASS — all text is dark-on-light and fully readable, no overlap, no clipping at the canvas edges.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels all rendered in light ink (near-white/light-gray), clearly readable against the dark background. Y-axis gridlines rendered in light-toned thin lines, subtle but visible. No dark-on-dark text anywhere.
+      Data: The line, trend overlay, and peak marker/annotation are identical in shape, position, and brand-green color to the light render — only the chrome (background, text, grid, annotation gray) flipped to the dark tokens, confirming data colors are theme-independent as required.
+      Legibility verdict: PASS — all text is light-on-dark and fully readable, no dark-on-dark or light-on-light failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (axis.title=10, axis.text=8, plot.title=12
+          bold), readable in both themes, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak annotation sits cleanly above the line and below the top gridline,
+          no collision with title, axis labels, ticks, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width raised to 1.5 reads prominently against the noisy data;
+          dashed trend line and peak marker both clearly visible and appropriately
+          subordinate
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green vs. gray dashed trend distinguished by both hue and linetype,
+          not relying on color alone; strong contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a good majority of the canvas, balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units (°C), X-axis is descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds and
+          chrome are theme-correct in both renders; trend/annotation use neutral INK_SOFT,
+          not the categorical pool'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Bold title and a deliberate focal-point treatment lift it above a
+          bare default, but typography still uses the default font family with no
+          custom palette beyond brand green + neutral gray
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Unchanged from attempt 1: Y-only grid, no ticks, spines removed
+          — deliberate but not maximal polish'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak marker + labeled annotation plus loess trend overlay give a
+          clear focal point and visual hierarchy; the rise-then-fall story is now
+          immediately visible instead of left to the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct single-line plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean line, clear axis labels, grid lines present; the added trend/peak
+          layers are a subtle secondary reference, not a competing series, and keep
+          the minimal single-line spirit intact
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = day of season, Y = temperature, both fully shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches mandated pattern; no legend needed for
+          single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full seasonal arc — rise, peak, and decline with realistic daily
+          noise
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible daily summer temperature scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24-31°C range over a 90-day summer season is factually plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → theme tokens → data → plot → save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, idiomatic, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, uses current linewidth=
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layers geom_smooth, geom_line, geom_point, and annotate() idiomatically
+          to build a composed grammar-of-graphics chart, not just geom_line + labs
+          + theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_smooth(method = "loess") statistical layer combined with a data-driven
+          annotate() peak label demonstrates ggplot2's native layered-statistics workflow
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - grid-styling
+  - minimal-chrome
