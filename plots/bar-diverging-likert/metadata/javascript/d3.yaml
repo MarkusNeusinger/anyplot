@@ -1,0 +1,241 @@
+library: d3
+language: javascript
+specification_id: bar-diverging-likert
+created: '2026-08-24T16:25:58Z'
+updated: '2026-08-24T16:31:52Z'
+generated_by: claude-sonnet
+workflow_run: 32749923198
+issue: 4429
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Diverging math is correct: neutral splits evenly across the center baseline exactly
+    as the spec requires, with the other four segments offset from that split.'
+  - Rows sorted by descending net agreement gives an immediate at-a-glance ranking
+    across questions.
+  - Segment percentage labels are gated on rendered width and use a computed-luminance
+    text color, so labels stay legible without hardcoding per-segment colors.
+  - Legend is measured and centered programmatically via getBBox() — a nice DOM-level
+    technique.
+  - Theme-adaptive chrome and identical cross-theme data colors are handled correctly
+    throughout.
+  weaknesses:
+  - All 8 survey questions have net-positive agreement (agree + strongly_agree > disagree
+    + strongly_disagree in every row) — swap in one or two questions with net-negative
+    sentiment so the chart demonstrates items diverging in both directions, which
+    is the core value proposition of a diverging bar chart.
+  - The Disagree/Agree segment colors are ad hoc d3.interpolateRgb blends between
+    a palette anchor and the muted anchor rather than literal Imprint palette/anchor
+    members or the documented imprint_div 3-stop gradient — consider building the
+    ramp from imprint_div's stops, or comment the rationale for using muted as the
+    blend target instead of the page-background midpoint.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title, axis ticks, axis label ("Share of Respondents"), question labels, and legend all render in dark ink — all clearly readable against the light background.
+      Data: Five-segment diverging bars per question — Strongly Disagree (matte red #AE3030), Disagree (red-muted blend), Neutral (muted gray), Agree (blue-muted blend), Strongly Agree (Imprint blue #4467A3). Rows sorted by descending net agreement. Percentage labels inside segments wide enough to hold them, text color adapted per segment luminance.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title, axis ticks, axis label, question labels, and legend all render in light ink — all clearly readable against the dark background. No dark-on-dark failures found.
+      Data: Confirmed identical to light render — same red/blue-anchored diverging ramp (matte red -> red-muted blend -> gray -> blue-muted blend -> Imprint blue); only chrome (background, text, gridlines, center baseline) flipped to light-on-dark.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; title scaled correctly for long descriptive
+          string; legible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, bars, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Segment labels gated on 34px min width to avoid clipped/illegible
+          text
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Smooth red-gray-blue ramp, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced canvas use; wide left margin justified by long question
+          text
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis label with % tick suffix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Legitimate semantic exception for red/blue first series, but Disagree/Agree
+          colors are ad hoc interpolateRgb blends rather than literal Imprint anchors
+          or the documented imprint_div construction
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful diverging color derivation, rounded corners, luminance-adaptive
+          labels
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle gridlines, y-axis domain removed, generous whitespace, center
+          baseline as focal device
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorting by net agreement plus diverging color creates hierarchy;
+          no explicit annotation (not required)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct diverging stacked bar, horizontal orientation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Centered on neutral, diverging color scheme, sorted by net agreement,
+          in-segment labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = share of respondents, Y = question, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          categories
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 3
+        max: 6
+        passed: false
+        comment: Good magnitude variation, but every question is net-positive — no
+          negative-leaning example
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible employee-engagement survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Each row sums to 100%; realistic magnitudes and decline pattern
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small pure helper functions, no classes, straightforward flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, single svg, no animation
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic scales/axes and .data().join() pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: getBBox()-based legend centering and per-segment luminance text color
+          are D3-distinctive DOM techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
