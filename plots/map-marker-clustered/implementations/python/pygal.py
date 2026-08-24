@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 80/100 | Created: 2026-08-24
@@ -51,6 +51,20 @@ lats = np.array(lats)
 lons = np.array(lons)
 cats = np.array(cats)
 
+# Minimal geographic reference layer: a soft coastline band along the
+# southern edge, shaded on the water side, so the plot reads as a map
+# rather than a plain scatter even without a tile basemap. Built purely
+# from theme tokens (no new brand colors).
+lat_min, lat_max = float(lats.min()), float(lats.max())
+lon_min, lon_max = float(lons.min()), float(lons.max())
+lat_span = lat_max - lat_min
+WATER_FILL = "#{:02X}{:02X}{:02X}".format(
+    *(round(int(PAGE_BG[i : i + 2], 16) * 0.88 + int(INK[i : i + 2], 16) * 0.12) for i in (1, 3, 5))
+)
+coastline_x = np.linspace(lon_min, lon_max, 24)
+coastline_y = lat_min + lat_span * (0.03 + 0.025 * np.sin(np.linspace(0, 3 * np.pi, 24)))
+water_band = list(zip(coastline_x.tolist(), coastline_y.tolist(), strict=True))
+
 # Cluster nearby stores the way a map would collapse them at a fixed zoom
 # level; isolated stores (label -1) stay as individual markers.
 cluster_labels = DBSCAN(eps=0.012, min_samples=8).fit_predict(np.column_stack([lats, lons]))
@@ -93,16 +107,19 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=IMPRINT_PALETTE[: len(CATEGORIES)],
+    colors=(WATER_FILL, *IMPRINT_PALETTE[: len(CATEGORIES)]),
     title_font_size=title_font_size,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
+    value_label_font_size=44,
+    dot_opacity=0.88,
     stroke_width=2.5,
 )
 
-# Plot — an XY scatter stands in for the map surface; circle size encodes
+# Plot — an XY scatter stands in for the map surface, with a coastline
+# fill layer beneath it for geographic context; circle size encodes
 # cluster size and the printed number is the grouped-point count.
 chart = pygal.XY(
     style=custom_style,
@@ -119,6 +136,10 @@ chart = pygal.XY(
     show_y_guides=True,
     show_legend=True,
 )
+
+# Water-side fill beneath the coastline curve; title=None keeps it out
+# of the category legend since it isn't a data series.
+chart.add(None, water_band, stroke=True, fill=True, show_dots=False, stroke_style={"width": 2})
 
 for category in CATEGORIES:
     chart.add(category, series_points[category])
