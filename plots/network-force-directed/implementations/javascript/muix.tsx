@@ -57,20 +57,22 @@ GROUPS.forEach((group, groupIndex) => {
   }
 });
 
-// edges: [sourceIndex, targetIndex, weight] — weight ~ co-authored papers.
+// edges: [sourceIndex, targetIndex, weight, isBridge] — weight ~ co-authored
+// papers; isBridge marks the thin inter-group collaborations so they can be
+// styled (dashed, lower alpha) distinctly from intra-group edges.
 const edges = [];
 groupRanges.forEach(([start, end]) => {
   const hub = start; // lab lead co-authors with every member
   for (let i = start + 1; i < end; i += 1) {
-    edges.push([hub, i, 2 + Math.floor(rand() * 2)]);
+    edges.push([hub, i, 2 + Math.floor(rand() * 2), false]);
   }
   for (let i = start + 1; i < end - 1; i += 1) {
-    edges.push([i, i + 1, 1 + Math.floor(rand() * 2)]); // peer chain
+    edges.push([i, i + 1, 1 + Math.floor(rand() * 2), false]); // peer chain
   }
 });
 groupRanges.forEach(([start], groupIndex) => {
   const [nextStart] = groupRanges[(groupIndex + 1) % groupRanges.length];
-  edges.push([start, nextStart, 1]); // thin cross-group bridge between hubs
+  edges.push([start, nextStart, 1, true]); // thin cross-group bridge between hubs
 });
 
 const degree = new Array(nodes.length).fill(0);
@@ -166,7 +168,7 @@ function GraphEdges() {
   const yScale = useYScale();
   return (
     <g data-drawing-container>
-      {edges.map(([a, b, weight], i) => (
+      {edges.map(([a, b, weight, isBridge], i) => (
         <line
           key={`edge-${i}`}
           x1={xScale(nodes[a].x)}
@@ -174,8 +176,9 @@ function GraphEdges() {
           x2={xScale(nodes[b].x)}
           y2={yScale(nodes[b].y)}
           stroke={t.inkSoft}
-          strokeOpacity={0.35}
-          strokeWidth={0.8 + weight * 0.7}
+          strokeOpacity={isBridge ? 0.22 : 0.4}
+          strokeWidth={isBridge ? 1.1 : 0.8 + weight * 0.7}
+          strokeDasharray={isBridge ? "5,4" : undefined}
         />
       ))}
     </g>
@@ -189,6 +192,15 @@ function GraphNodes() {
     <g data-drawing-container>
       {nodes.map((node, i) => (
         <React.Fragment key={node.id}>
+          {node.isHub && (
+            <circle
+              cx={xScale(node.x)}
+              cy={yScale(node.y)}
+              r={nodeRadius(i) + 7}
+              fill={t.palette[node.group]}
+              opacity={0.2}
+            />
+          )}
           <circle
             cx={xScale(node.x)}
             cy={yScale(node.y)}
@@ -216,7 +228,7 @@ function GraphNodes() {
 
 // --- Title + legend chrome ---------------------------------------------------
 const TITLE = "network-force-directed · javascript · muix · anyplot.ai";
-const TITLE_FONT_DEFAULT = 22;
+const TITLE_FONT_DEFAULT = 25;
 const titleFontSize =
   TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
 const TITLE_H = 46;
