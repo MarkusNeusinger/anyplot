@@ -1016,6 +1016,11 @@ jobs:
           # Pass via env (not template-interpolated into the script) so hints
           # containing quotes / $ / backticks can't break shell parsing.
           CHANGE_REQUEST: ${{ inputs.change_request }}
+          # How far back a failure marker still counts toward the 3-attempt cap.
+          # Covers a whole campaign (a generate→review→repair→merge cycle runs
+          # well under an hour) with room for a stalled tail, without letting
+          # last month's failures veto today's retries.
+          CAMPAIGN_WINDOW_H: '12'
         run: |
           echo "::notice::Handling generation failure for $LIBRARY/$SPEC_ID"
 
@@ -1035,11 +1040,25 @@ jobs:
           # (the old code broke on issues with >100 comments for this reason).
           # pipefail (Actions bash default) makes a gh failure fail the whole
           # pipeline, so the fail-closed else-branch still triggers.
+          #
+          # CAMPAIGN-SCOPED: only markers younger than CAMPAIGN_WINDOW_H count.
+          # The markers are the permanent audit trail — nothing deletes them —
+          # so counting all of them made the "3 attempts" cap per-issue-lifetime
+          # instead of per-generation-run. Any (spec, library) pair that ever
+          # failed twice then got exactly ONE attempt on every future dispatch,
+          # and a single hit of the ~9%/run "agent reports success but writes no
+          # file" flake parked it under `impl:<lib>:failed`, which nothing
+          # retries (the watchdog reports it as "needs manual attention").
+          # Measured 2026-08-24: counts of 3 and 4 on pairs that then succeeded
+          # on the very next manual dispatch, and 87 pairs parked repo-wide.
+          # A generation campaign is minutes long, so a window of hours is
+          # generous while still letting stale history age out on its own.
           MARKER="<!-- impl-fail:${SPEC_ID}:${LIBRARY} -->"
+          CAMPAIGN_CUTOFF=$(date -u -d "${CAMPAIGN_WINDOW_H} hours ago" +%Y-%m-%dT%H:%M:%SZ)
           if FAILURE_COUNT=$(gh api --paginate "repos/${{ github.repository }}/issues/${ISSUE}/comments?per_page=100" \
-            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")))] | length" \
+            --jq "[.[] | select(.body != null and (.body | contains(\"$MARKER\")) and .created_at > \"$CAMPAIGN_CUTOFF\")] | length" \
             | awk '{ sum += $1 } END { print sum + 0 }'); then
-            echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID}: $FAILURE_COUNT"
+            echo "::notice::Previous failures for ${LIBRARY}/${SPEC_ID} since ${CAMPAIGN_CUTOFF}: $FAILURE_COUNT"
           else
             echo "::warning::Failure-count API call failed — failing closed (treating retry cap as reached, no auto-retry)"
             FAILURE_COUNT=999
@@ -1056,7 +1075,13 @@ jobs:
             if [ "$FAILURE_COUNT" -eq 999 ]; then
               CAP_REASON="the failure counter could not be read (failed closed — auto-retry disabled)"
             else
-              CAP_REASON="3 generation attempts"
+              # State the real total, not a flat "3 attempts": a pair capped by
+              # stale history had ONE attempt today, and reading the old wording
+              # as "tried three times, must be a capability gap" is exactly how
+              # recoverable pairs got written off (2026-08-24).
+              # ATTEMPT, not FAILURE_COUNT: the latter excludes the failure being
+              # handled right now, so at the cap it would under-report by one.
+              CAP_REASON="${ATTEMPT} failed attempt(s) in the last ${CAMPAIGN_WINDOW_H}h (cap: 3 per campaign)"
             fi
             echo "::warning::Marking $LIBRARY as failed: $CAP_REASON"
 
