@@ -1075,11 +1075,13 @@ jobs:
             if [ "$FAILURE_COUNT" -eq 999 ]; then
               CAP_REASON="the failure counter could not be read (failed closed — auto-retry disabled)"
             else
-              # State the counted failures, not a flat "3 attempts": this run
-              # made ONE attempt, and reading the old wording as "tried three
-              # times, must be a real capability gap" is exactly how genuinely
+              # State the real total, not a flat "3 attempts": a pair capped by
+              # stale history had ONE attempt today, and reading the old wording
+              # as "tried three times, must be a capability gap" is exactly how
               # recoverable pairs got written off (2026-08-24).
-              CAP_REASON="${FAILURE_COUNT} failed attempt(s) in the last ${CAMPAIGN_WINDOW_H}h (cap: 3 per campaign)"
+              # ATTEMPT, not FAILURE_COUNT: the latter excludes the failure being
+              # handled right now, so at the cap it would under-report by one.
+              CAP_REASON="${ATTEMPT} failed attempt(s) in the last ${CAMPAIGN_WINDOW_H}h (cap: 3 per campaign)"
             fi
             echo "::warning::Marking $LIBRARY as failed: $CAP_REASON"
 
