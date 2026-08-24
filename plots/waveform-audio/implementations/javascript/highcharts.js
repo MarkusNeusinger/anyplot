@@ -1,7 +1,7 @@
 // anyplot.ai
 // waveform-audio: Audio Waveform Plot
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-24
+// Quality: 93/100 | Created: 2026-08-24
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
