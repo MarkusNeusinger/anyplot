@@ -21,7 +21,7 @@ function lcg(seed) {
 }
 const rand = lcg(42);
 
-const n = 60;
+const n = 120;
 const data = [];
 for (let i = 0; i < n; i++) {
   const funding = 2 + rand() * 148;
@@ -42,7 +42,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleLinear().domain([0, d3.max(data, (d) => d.funding)]).nice().range([0, iw]);
 const y = d3.scaleLinear().domain(d3.extent(data, (d) => d.growth)).nice().range([ih, 0]);
 const teamExtent = d3.extent(data, (d) => d.team);
-const r = d3.scaleSqrt().domain(teamExtent).range([8, 42]);
+const r = d3.scaleSqrt().domain(teamExtent).range([8, 34]);
 
 // --- Gridlines --------------------------------------------------------------
 const gridX = g.append("g")
@@ -88,12 +88,49 @@ g.selectAll("circle.bubble").data(data).join("circle")
   .attr("cy", (d) => y(d.growth))
   .attr("r", (d) => r(d.team))
   .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.6)
+  .attr("fill-opacity", 0.48)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
 
+// --- Trend annotation -------------------------------------------------------
+// Least-squares fit of growth vs. funding, drawn as a dashed guide so the
+// negative correlation is called out explicitly rather than left implicit.
+const sumX = d3.sum(data, (d) => d.funding);
+const sumY = d3.sum(data, (d) => d.growth);
+const sumXY = d3.sum(data, (d) => d.funding * d.growth);
+const sumXX = d3.sum(data, (d) => d.funding * d.funding);
+const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+const intercept = (sumY - slope * sumX) / n;
+const [fundingMin, fundingMax] = d3.extent(data, (d) => d.funding);
+
+g.append("line")
+  .attr("x1", x(fundingMin))
+  .attr("y1", y(slope * fundingMin + intercept))
+  .attr("x2", x(fundingMax))
+  .attr("y2", y(slope * fundingMax + intercept))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 2)
+  .attr("stroke-dasharray", "8,6")
+  .attr("stroke-opacity", 0.6);
+
+const trendLabelX = x(fundingMin) + (x(fundingMax) - x(fundingMin)) * 0.62;
+const trendLabelY = y(slope * (fundingMin + (fundingMax - fundingMin) * 0.62) + intercept) - 16;
+g.append("text")
+  .attr("x", trendLabelX)
+  .attr("y", trendLabelY)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", "italic")
+  .text("Growth slows as funding scales up");
+
 // --- Size legend ------------------------------------------------------------
-const legendValues = [20, 50, 90];
+const teamMedian = d3.median(data, (d) => d.team);
+const legendValues = [
+  Math.round(teamExtent[0] / 5) * 5,
+  Math.round(teamMedian / 5) * 5,
+  Math.round(teamExtent[1] / 5) * 5,
+];
 const legendR = legendValues.map((v) => r(v));
 const legendBoxW = 260;
 const legendBoxH = 140;
