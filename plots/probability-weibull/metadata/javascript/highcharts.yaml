@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: probability-weibull
 created: '2026-08-24T08:01:00Z'
-updated: '2026-08-24T08:05:08Z'
+updated: '2026-08-24T08:16:34Z'
 generated_by: claude-sonnet
 workflow_run: 32703703981
 issue: 4668
@@ -12,123 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/probabili
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/probability-weibull/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
+  - X-axis tick-label crowding from attempt 1 ("180k"/"190k" touching) is fully resolved
+    — explicit tickPositions now thin the labels above 100k (40k, 60k, 80k, 100k,
+    150k), each with a generous visible gap in both renders.
   - Correctly implements Johnson's rank-increment median-rank regression, adjusting
     probability estimates for right-censored (suspended) units rather than naive sequential
     ranking — a genuinely advanced reliability-engineering technique.
   - Distinguishes censored (hollow) from failed (filled) points via marker fill, a
     redundant shape encoding that keeps the chart colorblind-safe without relying
     on a second hue.
-  - Y-axis uses true Weibull-linearized values (ln(-ln(1-F))) with a custom tickPositions
-    + formatter so the axis displays clean probability percentages (1%...99%) while
-    the underlying scale stays linear for the fit — correct 'Weibull paper' construction.
-  - 63.2% characteristic-life reference line is present with a clear label, and beta/eta
-    are both computed via least-squares on the linearized failures and surfaced in
-    the subtitle.
-  - 'Both renders are theme-correct: warm off-white / near-black backgrounds, all
-    chrome text readable, and the single brand-green data color is identical across
-    themes.'
+  - Y-axis uses true Weibull-linearized values with a custom tickPositions + formatter
+    so the axis displays clean probability percentages while the underlying scale
+    stays linear for the fit — correct "Weibull paper" construction.
+  - 63.2% characteristic-life reference line is present and clearly labeled; beta/eta
+    are computed via least-squares on the linearized failures and surfaced in the
+    subtitle.
+  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, all chrome
+    text readable, single brand-green data color identical across themes.'
   weaknesses:
-  - X-axis tick labels crowd together near the right edge of the logarithmic scale
-    — '180k' and '190k' render with no visible gap between them (log compression packs
-    more ticks into the upper decade). Thin the labels above ~100k (e.g. a larger
-    tickPixelInterval, explicit tickPositions every 20k only up to 150k then wider
-    spacing, or tickAmount) so no two labels touch.
-  - Fit-line and reference-line annotations rely entirely on the subtitle and a small
-    plotLine label for beta/eta/characteristic-life — consider a lightweight on-chart
-    annotation near the fit line itself so the parameters are legible even without
-    reading the subtitle.
+  - Fit-line and reference-line annotations still rely entirely on the subtitle and
+    a small plotLine label for beta/eta/characteristic-life — a lightweight on-chart
+    annotation near the fit line itself would raise Design Excellence further, though
+    this is a polish suggestion, not a defect.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), not pure white, not dark.
-      Chrome: Title "probability-weibull · javascript · highcharts · anyplot.ai" and subtitle with β/η values are dark ink, clearly readable. X-axis title "Cycles to Failure (log scale)" and y-axis title "Cumulative Failure Probability" are legible secondary-ink text. Tick labels (1%-99% on y, 40k-190k on x) are readable, though the rightmost x tick labels ("180k", "190k") are crowded with no gap. Grid lines are subtle, light gray, not competing with data. Legend at bottom ("Failures", "Suspensions (censored)", "Weibull fit") is fully visible with adequate margin.
-      Data: First and only categorical data color is brand green (#009E73) — filled circles for failures, hollow (page-bg fill, green outline) circles for suspensions. Fit line is a dashed ink-colored (theme-neutral) line, appropriate since it's a reference/model line rather than a data category. A horizontal dashed reference line marks 63.2% cumulative probability, labeled "63.2% · η".
-      Legibility verdict: PASS (all text readable; only the tick-label crowding at the right edge is a minor legibility concern, not a failure).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "probability-weibull · javascript · highcharts · anyplot.ai" and subtitle "β (shape) = 2.73 · η (scale) = 109,709 cycles — characteristic life at 63.2% cumulative probability" render in dark ink, fully readable. Axis titles ("Cycles to Failure (log scale)", "Cumulative Failure Probability") and both axes' tick labels are legible secondary-ink text. X-axis ticks (40k, 60k, 80k, 100k, 150k) are now evenly spaced with clear gaps — the attempt-1 crowding at the right edge is gone. Grid lines (horizontal and vertical, appropriate for a scatter plot) are subtle but visible.
+      Data: Brand-green (#009E73) filled circles for failures, hollow (page-bg fill, green-outlined) circles for suspensions/censored — a shape-redundant encoding, no reliance on color alone. A black dashed Weibull fit line and a black dashed 63.2% reference line (labeled "63.2% · η") complete the picture. Legend at bottom lists all three series correctly.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), not pure black, not light.
-      Chrome: Title and subtitle render in light/off-white ink, clearly legible against the dark background. Axis titles and tick labels use lighter secondary-ink tones and remain fully readable — no dark-on-dark failures observed. Grid lines are subtle light-on-dark, appropriately faint. Legend text is light-colored and readable at the bottom.
-      Data: Same brand-green (#009E73) markers and hollow/filled distinction as the light render — confirmed identical data colors, only chrome (background, grid, text) flipped. Fit line switches to a light dashed line (still theme-neutral ink), correctly adapting to the dark surface.
-      Legibility verdict: PASS (no dark-on-dark text; same minor x-axis tick crowding issue as light render, not a legibility failure).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles, and tick labels all switch to light/off-white ink and remain fully readable — no dark-on-dark failures anywhere. Grid lines are faint and unobtrusive. X-axis tick spacing matches the light render (40k/60k/80k/100k/150k, no crowding).
+      Data: Confirmed identical to light render — same brand green (#009E73) for both failure and suspension markers; only chrome (background, grid, text, fit-line/reference-line color) flips to the light-on-dark scheme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; rightmost x-axis tick labels crowd
-          together
+        comment: Explicit font sizes; no more x-axis crowding (attempt-1 issue fixed);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: '''180k'' and ''190k'' tick labels touch with no gap on the log-compressed
-          upper axis range'
+        comment: 180k/190k tick collision resolved; markers, ticks, legend all clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker radius 7 appropriate for sparse (22-point) dataset; fit line
-          clearly visible against grid
+        comment: marker radius 7 (CSS px) appropriate for the sparse 22-point dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Filled/hollow shape redundancy avoids relying on color alone; high-contrast
-          text
+        comment: Filled/hollow shape redundancy, no reliance on color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall proportions and generous margins; docked a point for
-          the crowded right-edge ticks
+        comment: Good proportions and margins; tick-crowding cause of prior dock is
+          fixed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles are descriptive with units (cycles, probability)
+        comment: Both axes descriptive with units (cycles, probability %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds are theme-correct on both renders'
+        comment: 'First series #009E73; backgrounds theme-correct on both renders'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
+        passed: false
         comment: Custom Weibull-linearized axis with percentage formatter and annotated
-          fit parameters show real design thought beyond defaults
+          fit parameters; not yet publication-ready custom palette level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, clean legend; docked for the tick-label
-          crowding
+        comment: Subtle grid, generous whitespace; the tick-crowding dock from attempt
+          1 no longer applies
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Dashed fit line and 63.2% reference line create a clear focal narrative
-          for reading beta/eta
+        comment: Dashed fit line + 63.2% reference line create a clear focal narrative
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +131,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Weibull probability plot: log x, linearized Weibull y, fitted
-          line'
+        comment: Correct Weibull probability plot construction (log x, linearized
+          y)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log x-axis, linearized y-axis, median-rank plotting positions, censored
-          distinction, 63.2% reference line, annotated beta/eta all present
+        comment: Log x-axis, linearized y, median-rank positions, censored distinction,
+          63.2% line, annotated β/η all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles on x, transformed cumulative probability on y; axes cover
-          full data range
+        comment: Cycles on x, transformed probability on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match series
+        comment: Title matches required format; legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -169,21 +161,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Failures, censored suspensions, fit line, and reference line all
-          represented
+        comment: Failures, censored suspensions, fit line, reference line all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Turbine blade fatigue-life data is plausible and neutral
+        comment: Turbine blade fatigue-life data, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 22 observations (within 10-100 spec range), cycle magnitudes realistic
-          for the domain
+        comment: 22 observations (within spec's 10-100 range), realistic cycle magnitudes
     code_quality:
       score: 10
       max: 10
@@ -199,26 +189,25 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the Highcharts global is used
+        comment: No imports beyond the Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the statistical computation; no fake UI
+        comment: Appropriate complexity for the statistics involved, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled everywhere, credits
-          disabled
+        comment: Correct mount-node contract, animation disabled, credits disabled
     library_mastery:
       score: 7
       max: 10
@@ -228,15 +217,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Native logarithmic xAxis, custom tickPositions/formatter, plotLines
-          for reference line
+        comment: Native log xAxis, custom tickPositions/formatter, plotLines
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Custom tooltip pointFormatter inverting the linearized y back to
-          a probability percentage
+        passed: false
+        comment: Custom tooltip pointFormatter inverting linearized y back to probability;
+          plotLines label
   verdict: APPROVED
 impl_tags:
   dependencies: []
