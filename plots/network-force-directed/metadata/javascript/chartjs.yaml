@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: network-force-directed
 created: '2026-08-24T14:11:02Z'
-updated: '2026-08-24T14:15:36Z'
+updated: '2026-08-24T14:24:27Z'
 generated_by: claude-sonnet
 workflow_run: 32735893007
 issue: 990
@@ -15,51 +15,46 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-f
 quality_score: 89
 review:
   strengths:
-  - Implements a genuine Fruchterman-Reingold force-directed layout from scratch (deterministic
-    fixed-seed LCG) since Chart.js has no native graph/network chart type — real physics
-    simulation with 400 cooling iterations, not a faked layout.
-  - Node radius scales with degree and edge thickness/opacity scale with coupling
-    weight, directly satisfying the spec's optional degree- and weight-encoding notes.
-  - Custom Chart.js plugins draw directed edges with arrowheads (beforeDatasetsDraw)
-    and hub labels with theme-adaptive background pills (afterDatasetsDraw) for the
-    top-3 highest-degree modules — matches the spec's guidance to label only key nodes
-    in denser networks.
-  - Correct canonical Imprint palette order across the 4 architecture layers (green/lavender/blue/ochre)
-    with clean, theme-adaptive chrome; data colors are identical between light and
-    dark renders.
-  - Realistic, neutral dataset — a 24-node layered software dependency graph (Infrastructure/Domain/Application/UI)
-    — matching the spec's own 'software dependencies' application example.
-  - Title format, legend, mount-node contract (#container, single canvas), and animation:false
-    are all followed correctly.
+  - Genuine physics simulation (Fruchterman-Reingold with weighted edge attraction
+    and gentle gravity centering) driven by a deterministic seeded LCG, not a static
+    preset layout
+  - Custom Chart.js plugins (beforeDatasetsDraw/afterDatasetsDraw) draw directional
+    arrowheads and background-boxed hub labels on top of the scatter API — a distinctive
+    use of the plugin lifecycle
+  - 'Both spec-suggested encodings are present and legible: node radius scales with
+    degree, edge thickness and opacity scale with coupling weight'
+  - Correct Imprint palette in canonical order across the 4 architecture layers (green/lavender/blue/ochre),
+    identical data colors between light and dark, theme-adaptive chrome (title, legend,
+    hub-label boxes) throughout
+  - Realistic, neutral software-dependency dataset with a clear layered structure
+    (infrastructure to domain to application to UI) that plausibly explains the topology
   weaknesses:
-  - The hub area around catalog-svc/checkout-svc/user-svc and their shared infrastructure
-    dependencies is visually dense — many edges cross at sharp angles and a few nodes
-    sit close together, making individual dependency chains hard to trace at a glance;
-    consider a slightly larger repulsion constant (k) or more iterations to open up
-    the hairball.
-  - The stabilized layout leaves noticeable empty space in the upper-right quadrant
-    of the square canvas while most nodes cluster lower-left/center, giving a mildly
-    unbalanced visual weight; a post-layout recentering pass (shift the centroid toward
-    canvas center before computing xRange/yRange) would balance this better.
-  - Only the top-3 hub nodes carry text labels; this matches the spec's guidance for
-    larger networks but means the 21 remaining nodes are identifiable only via tooltip
-    (fine for interactivity, but slightly limits the static PNG's standalone readability
-    for viewers who can't hover).
+  - The central checkout-svc/catalog-svc/domain-layer cluster has dense edge crossing
+    that makes individual low-weight connections hard to trace — a slightly stronger
+    repulsion constant or extra fade on low-weight edges would improve legibility
+    there (VQ-03)
+  - Only 3 of 24 nodes are labeled (the top hubs), which is correct per the spec's
+    'label only key nodes' guidance, but the domain-layer node cluster is still visually
+    crowded enough that a couple of markers nearly touch — a touch more spacing in
+    that region would help
+  - The `lcg` and `nodeRadius` helper functions move slightly away from the pure KISS
+    'imports → data → plot → save' shape (CQ-01) — understandable given the force-directed
+    math, but worth noting
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent), not pure white and not dark.
-      Chrome: Title "network-force-directed · javascript · chartjs · anyplot.ai" reads clearly in dark ink at the top; the bottom legend ("Infrastructure", "Domain", "Application", "UI") is fully legible with matching colored point swatches; the three hub labels (catalog-svc, checkout-svc, user-svc) sit on a light background pill so they stay readable even over crossing edges.
-      Data: Node fill colors are the canonical Imprint order — green (#009E73, Infrastructure), lavender/purple (Domain), blue (Application), ochre/amber (UI) — with a thin off-white/cream stroke around each marker for edge separation. Edges are gray, directional (small arrowheads pointing at the depended-upon module), with width/opacity scaled by coupling weight. Node radius scales visibly with degree — catalog-svc, checkout-svc, and user-svc are clearly the largest, and the labeled hubs.
-      Legibility verdict: PASS — no text collides with other text, and all chrome and hub labels are readable against the light surface.
+      Background: warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: title "network-force-directed · javascript · chartjs · anyplot.ai" in dark ink at top, clearly legible; bottom legend (Infrastructure/Domain/Application/UI) in dark text with matching swatches, clearly legible; three hub labels (catalog-svc, checkout-svc, user-svc) rendered in bold dark text on light background boxes that sit cleanly over the edges beneath them.
+      Data: 24 circular nodes colored by layer — green (Infrastructure), lavender (Domain), blue (Application), ochre (UI) — sized by connection degree; gray directed edges with arrowheads point from dependent to dependency, thickness/opacity scaling with coupling weight. First series (Infrastructure) is the brand green #009E73 as required.
+      Legibility verdict: PASS — all text is dark-on-light and fully readable; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent), not pure black and not light.
-      Chrome: Title and legend text render in light ink, clearly legible against the dark surface; hub labels now sit on a dark background pill (theme-adaptive fill via t.pageBg) so there is no dark-on-dark or light-on-light failure.
-      Data: Node and edge colors are pixel-identical to the light render — same green/lavender/blue/ochre categorical hues, same edge weighting and arrowheads, same layout coordinates — confirming only chrome flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark text; all labels, ticks-equivalent chrome, and legend remain clearly visible.
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: title, legend, and all three hub labels flip to light/off-white text, clearly legible against the dark background; hub-label background boxes flip to the dark page background so they still separate the label from the edges beneath.
+      Data: node and edge colors are identical to the light render (same green/lavender/blue/ochre palette, same gray edges) — only the chrome (background, text, label-box fill) flipped, confirming theme-adaptive tokens are threaded correctly.
+      Legibility verdict: PASS — no dark-on-dark text found; all labels and legend entries remain legible.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -67,52 +62,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, legend, and hub labels are readable in both themes; hub-label
-          background pills prevent overlap with edges/nodes.
+        comment: Font sizes explicitly set (title 22px, legend 16px, hub labels 15px);
+          readable in both themes; title well within proportion for its 59-char length
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap; the dense hub cluster has
-          close nodes/crossing edges but nothing unreadable.
+        comment: Hub labels use background boxes to stay clear of edges; legend and
+          title do not collide with any element
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node size scales with degree, edge width/opacity scales with weight;
-          low-degree peripheral nodes remain visible.
+        comment: Node sizes scale with degree and edge weight scales thickness/opacity
+          well, but the central domain-layer cluster has enough edge crossing to make
+          a few low-weight connections hard to trace
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 distinct Imprint categorical hues, CVD-safe, not reliant on red-green
-          alone.
+        comment: White node borders and CVD-safe Imprint hues keep layers distinguishable
+          without relying on hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 canvas, nothing cut off; layout is slightly unbalanced
-          with empty space in the upper-right quadrant.
+        comment: Graph fills a healthy majority of the 2400x2400 canvas with balanced
+          margins and a centered bottom legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly; axes correctly hidden since
-          layout coordinates are arbitrary, not meaningful data axes.
+        comment: Axes are intentionally hidden — layout coordinates from the force
+          simulation carry no real units, which is correct for a network diagram
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue/ochre); backgrounds
-          match theme tokens; data colors identical across themes.
+        comment: 'Canonical Imprint order for the 4 layers, first series is brand
+          green #009E73, identical data colors across themes, theme-correct #FAF8F1/#1A1A17
+          backgrounds'
     design_excellence:
-      score: 16
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -120,22 +117,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom edge/hub-label plugins, weight-scaled edge styling, degree-scaled
-          node sizing — clear intentional polish beyond defaults.
+        comment: Custom edge/arrow/hub-label plugins and degree/weight-driven sizing
+          go clearly beyond a default scatter chart
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No spines/axes clutter, subtle weight-scaled edge alpha, generous
-          overall whitespace despite the layout imbalance noted in VQ-05.
+        comment: No grid, no axes, generous whitespace, but the dense central cluster
+          keeps this from full marks
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Hub labeling, directional arrowheads, and degree/weight encodings
-          together tell a clear 'which modules matter most' story.
+        comment: Hub labels and degree-scaled node sizing draw the eye straight to
+          the most central modules; layer coloring reinforces the architecture narrative
     spec_compliance:
       score: 15
       max: 15
@@ -145,29 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine force-directed (Fruchterman-Reingold) layout, hand-implemented
-          since Chart.js has no native graph type.
+        comment: Genuine force-directed (Fruchterman-Reingold) physics layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nodes, edges, optional degree-based sizing, optional weight-based
-          edge thickness, and sufficient (400) stabilization iterations all present.
+        comment: Degree-based node size, weight-based edge thickness, sufficient iterations
+          (400), labels limited to key hubs
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 24 nodes and 46 edges are rendered; per-axis independent scaling
-          fits the full layout into the canvas.
+        comment: X/Y are the simulated layout coordinates, independently scaled per
+          axis, correctly hidden
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend labels match the 4 architecture
-          layers with correct color swatches.
+        comment: Title matches the mandated format exactly; legend labels match the
+          4 architecture layers
     data_quality:
       score: 15
       max: 15
@@ -177,22 +173,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Degree-based node sizing, weight-based edge styling, and selective
-          hub labeling cover all spec-noted optional aspects.
+        comment: 24 nodes across 4 layers, weighted directed edges, hub/degree variation
+          all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Layered software dependency graph is realistic, neutral, and matches
-          the spec's own application example.
+        comment: Neutral software-dependency graph, plausible module names and layering
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 24 nodes / 46 edges is within the spec's typical 20-200 range; weight
-          values (1-5) are a sensible coupling scale.
+        comment: Weight range (1-5) and degree distribution are sensible for a service
+          dependency graph
     code_quality:
       score: 9
       max: 10
@@ -202,37 +197,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small helper functions (lcg, nodeRadius) are used, but they're
-          necessary for the physics-simulation complexity, not gratuitous abstraction.
+        comment: Mostly linear imports/data/plot flow, but two small helper functions
+          (lcg, nodeRadius) are used, justified by the layout algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG drives both the initial layout and the
-          whole simulation.
+        comment: Fixed-seed LCG (seed=42) makes the layout fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided Chart global; nothing unused.
+        comment: No unused imports; browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Genuine physics simulation, no fake interactivity or placeholder
-          logic.
+        comment: Appropriate complexity for a from-scratch force-directed layout,
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, single canvas appended to #container,
-          animation:false set.'
+        comment: 'Mounts to #container, animation:false, current Chart.js API'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -240,26 +233,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Scatter chart + plugin system is the idiomatic Chart.js pattern for
-          a graph type it doesn't natively support.
+        comment: Correct use of Chart.js scatter + plugin lifecycle hooks, though
+          edges are manually drawn rather than via a built-in chart type
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: beforeDatasetsDraw/afterDatasetsDraw plugin hooks used distinctively
-          for directed-edge arrowheads and adaptive hub-label pills.
+        comment: Custom beforeDatasetsDraw/afterDatasetsDraw plugins for edges and
+          hub labels leverage Chart.js's plugin API in a way not trivially portable
+          to another library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - force-directed-layout
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
   - alpha-blending
   - edge-highlighting
