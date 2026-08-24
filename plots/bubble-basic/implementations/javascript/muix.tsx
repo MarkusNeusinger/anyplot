@@ -30,13 +30,15 @@ function randomNormal(rand, mean, stdDev) {
 
 // Three loose company archetypes — fast-growing leaders, steady mid-market
 // challengers, and small niche players — so the cloud has real structure
-// instead of a formless blob. The community package has no bubble/z-size
-// scatter mode (ZAxisConfig only maps z to colour), so bubbles are drawn as
-// a custom SVG layer positioned via the chart's own scale hooks.
+// instead of a formless blob. Each archetype gets its own hue so the
+// pattern reads immediately instead of hiding in a single-color cloud.
+// The community package has no bubble/z-size scatter mode (ZAxisConfig
+// only maps z to colour), so bubbles are drawn as a custom SVG layer
+// positioned via the chart's own scale hooks.
 const ARCHETYPES = [
-  { growth: 24, margin: 19, share: 62, count: 15 },
-  { growth: 12, margin: 10, share: 34, count: 20 },
-  { growth: 4, margin: 3, share: 14, count: 15 },
+  { name: "Growth leaders", growth: 24, margin: 19, share: 62, count: 15, color: t.palette[0] },
+  { name: "Mid-market", growth: 12, margin: 10, share: 34, count: 20, color: t.palette[2] },
+  { name: "Niche players", growth: 4, margin: 3, share: 14, count: 15, color: t.palette[3] },
 ];
 
 const rand = lcg(42);
@@ -47,6 +49,7 @@ const companies = ARCHETYPES.flatMap((a, groupIndex) =>
     x: Math.round(randomNormal(rand, a.growth, 7) * 10) / 10,
     y: Math.round(randomNormal(rand, a.margin, 6) * 10) / 10,
     size: Math.min(100, Math.max(10, Math.round(randomNormal(rand, a.share, 18)))),
+    color: a.color,
   })),
 );
 
@@ -59,9 +62,11 @@ const sizeMin = Math.min(...sizeValues);
 const sizeMax = Math.max(...sizeValues);
 
 // Scale bubbles by AREA, not radius — otherwise size differences read as
-// far more extreme than the underlying data actually is.
+// far more extreme than the underlying data actually is. Capped a bit
+// tighter than the raw 10-100 domain would suggest so the densest cluster
+// (growth ~20-30%, margin ~15-25%) stays legible instead of fusing together.
 const MIN_RADIUS = 7;
-const MAX_RADIUS = 52;
+const MAX_RADIUS = 44;
 function radiusForSize(value) {
   const ratio = (value - sizeMin) / (sizeMax - sizeMin);
   return MIN_RADIUS + (MAX_RADIUS - MIN_RADIUS) * Math.sqrt(Math.max(0, ratio));
@@ -79,12 +84,35 @@ function Bubbles() {
           cx={xScale(d.x)}
           cy={yScale(d.y)}
           r={radiusForSize(d.size)}
-          fill={t.palette[0]}
+          fill={d.color}
           fillOpacity={0.6}
           stroke={t.pageBg}
-          strokeWidth={1}
+          strokeWidth={1.5}
         />
       ))}
+    </g>
+  );
+}
+
+// --- Color legend — names the three archetypes so the clustering reads as
+// an insight instead of something the viewer has to discover unaided -------
+function ColorLegend({ left, top }) {
+  return (
+    <g>
+      <text x={left} y={top - 20} fontSize={13} fontWeight={600} fill={t.inkSoft}>
+        Company archetype
+      </text>
+      {ARCHETYPES.map((a, i) => {
+        const cy = top + i * 24;
+        return (
+          <g key={a.name}>
+            <circle cx={left + 6} cy={cy} r={6} fill={a.color} fillOpacity={0.6} stroke={a.color} strokeWidth={1.5} />
+            <text x={left + 20} y={cy} dominantBaseline="middle" fontSize={13} fill={t.inkSoft}>
+              {a.name}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
@@ -181,11 +209,12 @@ export default function Chart() {
           },
         ]}
       >
-        <ChartsGrid horizontal vertical />
+        <ChartsGrid horizontal />
         <Bubbles />
         <ChartsXAxis axisId="growth" />
         <ChartsYAxis axisId="margin" />
-        <SizeLegend left={width - margin.right + 24} top={70} />
+        <ColorLegend left={width - margin.right + 24} top={64} />
+        <SizeLegend left={width - margin.right + 24} top={220} />
       </ChartContainer>
     </div>
   );
