@@ -1,0 +1,242 @@
+library: echarts
+language: javascript
+specification_id: line-stress-strain
+created: '2026-08-24T21:07:45Z'
+updated: '2026-08-24T21:24:41Z'
+generated_by: claude-sonnet
+workflow_run: 32776301408
+issue: 4413
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Complete spec-required annotation set (elastic/strain-hardening/necking region
+    labels, 0.2% offset yield marker, UTS, fracture, Young's modulus text) placed
+    cleanly with no overlap in either theme
+  - 'Correct theme-adaptive chrome and Imprint palette compliance -- first series
+    brand green #009E73, second series canonical lavender #C475FD, both renders theme-correct
+    backgrounds and text'
+  - Deterministic, realistic material data (mild steel sharp yield + Luders plateau
+    vs. aluminum gradual rounded knee) via a seeded LCG piecewise curve builder, giving
+    genuine feature contrast between the two overlaid materials
+  - Both flaws from the attempt-1 review -- Yield-label/curve-line overlap and non-canonical
+    aluminum color -- are cleanly fixed with no new regressions introduced
+  weaknesses:
+  - Uses a full dashed line series for the 0.2% offset construction line and plain
+    text markPoints for phase region labels, rather than ECharts' dedicated markLine/markArea
+    APIs -- functionally fine but not the most idiomatic ECharts pattern for these
+    two annotation roles
+  - The 'Elastic' region label sits at strain ~=0.015, past the material's actual
+    elastic range (~0.0038 for steel), reading as a floating section header rather
+    than being tied to the precise data region -- minor precision nit, doesn't hurt
+    readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "line-stress-strain · javascript · echarts · anyplot.ai" centered top in dark ink; legend "Mild steel" / "Aluminum alloy" top-right with no box frame; axis titles "Engineering Strain (mm/mm)" / "Engineering Stress (MPa)" and tick labels dark-on-light and legible; region labels (Elastic, Strain hardening, Necking) and point labels (Yield ~= 250 MPa (0.2% offset), UTS ~= 400 MPa, Fracture, E ~= 200 GPa) all readable with no overlap onto the curve lines.
+      Data: Mild steel is brand green #009E73 (first series); Aluminum alloy is lavender #C475FD (palette position 2, canonical order). Dashed near-vertical offset construction line in soft ink, parallel to the steel elastic slope. Markers (filled circle for Yield/UTS, diamond for Fracture) clearly visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title/legend/axis/region/point labels, now rendered in light ink against the dark surface -- fully legible, no dark-on-dark failures anywhere.
+      Data: Colors identical to the light render (green #009E73, lavender #C475FD, dashed offset line in light ink) -- only chrome flipped, as required. Yield/UTS markers flip to light-fill/dark-border per theme token, correctly.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (14-22px), readable in both themes and at
+          canvas scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Yield label no longer crosses the steel curve after the attempt-1
+          repair
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths and markPoint sizes well adapted to ~180/135-point density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender is CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area ~80% width x ~71% height of mount, balanced margins, legend
+          near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series canonical palette[1] #C475FD
+          after fix, theme-correct chrome both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful hierarchy via phase/critical-point annotations, clean
+          typography, above default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle Y-only grid, minimal spines (only bottom axis line kept),
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear phase narrative, UTS/fracture focal points, second-material
+          comparison overlay
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-chart stress-strain curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, critical points, elastic modulus annotation, 0.2%
+          offset line, optional multi-material overlay all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strain on X, stress on Y, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Elastic, Luders plateau, hardening, necking to fracture for steel;
+          distinct gradual-knee behavior for aluminum
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral materials-science scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: E, yield, UTS, fracture values plausible for mild steel and an aluminum
+          alloy
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions (lcg, buildCurve), justified by the piecewise
+          deterministic-curve pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct option/series/markPoint structure; markLine/markArea would
+          be more idiomatic for the offset line and region shading
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Invisible label-only markPoint entries for phase text is a nice ECharts-specific
+          trick
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - interpolation
+  styling:
+  - publication-ready

@@ -1,0 +1,255 @@
+library: makie
+language: julia
+specification_id: line-stress-strain
+created: '2026-08-24T21:13:42Z'
+updated: '2026-08-24T21:34:42Z'
+generated_by: claude-sonnet
+workflow_run: 32777015920
+issue: 4413
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - The elastic-modulus slope, flagged as imperceptible in attempt 1 (near-vertical
+    line against the y-axis at this MPa/strain scale), is now genuinely visible via
+    a dedicated 'Elastic region (zoomed)' inset placed in the axis's empty bottom-right
+    quadrant — the modulus reads as an actual slope, not just a text annotation
+  - The yield-point annotation cluster near the origin, flagged as crowded in attempt
+    1, is now resolved with vertical leader lines dropping from each marker to open
+    space below the curve before placing label text — no overlap between the offset-line
+    label, yield-point label, and the Luders plateau serration
+  - 'Physically accurate mild-steel stress-strain curve: elastic rise, serrated Luders
+    (yield) plateau, strain-hardening curvature, and necking softening all present
+    with plausible MPa/strain values consistent with real mild steel'
+  - 'Correct theme-adaptive chrome: data colors (brand green curve, amber yield marker,
+    blue UTS marker, red xcross fracture marker) are pixel-identical between light
+    and dark renders; only background/text/grid chrome flips'
+  - Direct point labeling (Yield point, UTS, Fracture) replaces a legend; markers
+    differ by both color AND shape (amber circle, blue circle, red xcross) for CVD
+    accessibility beyond hue alone
+  - 0.2% offset construction line correctly implemented per the standard ASTM yield-determination
+    method, parallel to the true elastic slope, and mirrored inside the inset for
+    consistency
+  weaknesses:
+  - 'Aesthetic sophistication (DE-01) is strong but stops short of full publication-ready:
+    the palette usage is correct but relatively conservative (Imprint palette + amber
+    accent only), without further custom refinement beyond spec defaults'
+  - In the main panel the elastic segment itself is still a near-vertical line against
+    the y-axis (physically correct, but the modulus story now lives almost entirely
+    in the inset rather than the main curve) — acceptable given the inset fix, but
+    a broken-axis treatment on the main panel could tell the story even more directly
+  - Annotation fontsize (13-14pt at the 3200x1800 canvas) is on the smaller side for
+    the amount of text used; still readable but leaves little margin when the PNG
+    is scaled down for mobile/thumbnail previews
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — correct light-theme surface.
+      Chrome: Title "Mild Steel Tensile Test · line-stress-strain · julia · makie · anyplot.ai" in bold dark ink, clearly visible near the top. Axis labels "Engineering Strain" / "Engineering Stress (MPa)" and tick labels are dark/soft-gray, all fully legible. Horizontal gridlines at 200/400 MPa are subtle, not dominant. Region-band labels ("Elastic", "Plastic (strain hardening)", "Necking") sit in muted gray, readable against the tinted bands. The new bottom-right inset ("Elastic region (zoomed)") has its own light-themed spines/ticks/title, fully legible at smaller scale.
+      Data: Green stress-strain curve (#009E73) rises near-vertically through the elastic region, shows a serrated Luders plateau at yield (amber circle marker with leader line to "Yield point (0.2% offset)"), curves through strain hardening to a rounded peak (blue circle marker, "UTS" label), then descends through necking to a red xcross "Fracture" marker. The dashed 0.2% offset construction line is visible near the origin with its own leader-labeled line. The inset repeats the elastic segment and offset line at zoomed scale with an "E ≈ 200 GPa" text annotation, making the modulus slope genuinely visible instead of just described.
+      Legibility verdict: PASS — no light-on-light issues, no overlapping text, leader lines keep the origin-area annotations clear of each other.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — correct dark-theme surface.
+      Chrome: Title, axis labels, tick labels, and region labels flip to light ink/off-white and remain fully legible — no dark-on-dark failures. Region-band tints flip to darker green/red variants appropriate for the surface. The inset panel also flips its spines/ticks/title to light-on-dark and stays legible at its smaller scale.
+      Data: The green curve, amber yield marker, blue UTS marker, and red xcross fracture marker are visually identical in hue and position to the light render — confirms only chrome (not data color) changed between themes. The 0.2% offset dashed line and inset contents mirror the light render correctly.
+      Legibility verdict: PASS — all text and data elements read clearly against the dark surface; the amber and blue markers retain good contrast on the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set, readable in both themes; annotation text
+          on the smaller side leaves little margin for mobile scaling
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Leader lines fully resolved the attempt-1 origin-cluster crowding;
+          no overlapping text observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width and marker sizes well adapted to the ~210-point dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Critical-point markers differ by both color and shape, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well, inset placed in otherwise-empty bottom-right
+          quadrant, no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units where applicable (MPa)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, semantic anchors used correctly (amber caution,
+          red for fracture), theme-correct chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Region shading, semantic markers, and the new inset show thoughtful,
+          above-default design; stops short of full publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, and the attempt-1 crowding issue is
+          now resolved with leader lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Region labels, critical-point call-outs, and the elastic-region inset
+          now make the modulus slope genuinely visible — the key attempt-1 gap is
+          fixed
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct engineering stress-strain curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region labels, critical points, elastic modulus (now with visible
+          slope via inset), 0.2% offset line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Strain on X, stress on Y, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed given direct point labeling
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Elastic, yield plateau with realistic serration, strain hardening,
+          necking, and fracture all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral mild-steel tensile-test scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: E=200GPa, yield=250MPa, UTS=420MPa, fracture strain=0.28 — realistic
+          mild-steel values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear imports -> data -> plot -> save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the annotation-heavy plot, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of Axis, lines!, scatter!, text!, vspan!, and nested
+          inset Axis via fig[1,1] with Relative sizing/halign/valign
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: vspan! region shading, marker=:xcross, strokewidth/strokecolor halos,
+          overlapping-GridPosition inset axis
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - inset-axes
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
