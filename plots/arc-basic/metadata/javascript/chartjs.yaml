@@ -1,0 +1,237 @@
+library: chartjs
+language: javascript
+specification_id: arc-basic
+created: '2026-08-24T15:17:38Z'
+updated: '2026-08-24T15:30:14Z'
+generated_by: claude-sonnet
+workflow_run: 32743026230
+issue: 991
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Node-marker clipping from attempt 1 is fully resolved - markers render as complete
+    circles in both themes
+  - Arc height cleanly proportional to node-index distance (span/maxSpan), matching
+    the spec's height-indicates-distance requirement
+  - Edge weight redundantly encoded via color (imprint_seq gradient), line thickness,
+    and opacity - a CVD-safe multi-channel encoding with visible floors so weak connections
+    still read clearly
+  - Realistic, neutral dataset (character dialogue-exchange network) closely matching
+    the spec's own worked example
+  - 'Clean minimal chrome: no grid, no spines/border, hidden y-axis, generous whitespace'
+  - Theme-correct backgrounds and chrome in both renders; palette compliant, identical
+    data colors across themes
+  - Idiomatic use of Chart.js's plugin architecture instead of reaching for an external/community
+    plugin
+  weaknesses:
+  - No small legend or one-line caption communicates what the color/thickness gradient
+    encodes (edge weight) - not spec-mandated, but would strengthen data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "arc-basic · javascript · chartjs · anyplot.ai" in bold dark ink, clearly legible near the top with a clean gap before the tallest arc's peak. 14 character names run along the baseline as tick labels, rotated 45 degrees, in softer dark gray - all fully readable, none clipped at the canvas edges.
+      Data: Nodes render as full green (#009E73) circles with a dark ink border - the half-circle clipping artifact from attempt 1 is gone. Arcs curve above the baseline; color and thickness/opacity scale with edge weight from pale green through blue (imprint_seq gradient), height scales with node-index span.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title, now in light off-white text, clearly legible. Tick labels are light gray, readable against the dark background - no dark-on-dark failures.
+      Data: Node markers are full circles with a light border on the same green fill - identical data color to the light render (only chrome flips, as required). Arc colors and the green-to-blue weight gradient are unchanged from the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node markers now render as full circles after y.min=-0.08 fix; arc
+          line-width/alpha floors keep weak edges visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe imprint_seq gradient plus thickness/opacity
+          redundancy
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, generous whitespace, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Node names serve as descriptive categorical axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, imprint_seq gradient for weight, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom weight-driven arc plugin (color + thickness + opacity), clearly
+          above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chrome, no grid/spines, generous whitespace; marker-clipping
+          artifact from last round is fixed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color/thickness create clear visual hierarchy toward high-weight
+          connections; no explicit legend for the encoding
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct arc diagram: nodes on baseline, arcs above'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Arc height by distance, semi-transparent overlapping arcs, readable
+          node labels, weight-based color coding
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Nodes correctly mapped along x, arcs correctly connect node pairs
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single node series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows short-range and long-range arcs, varying weights
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic character-dialogue network scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Weights and node counts are plausible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward data -> plugin -> chart structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports (no imports needed, Chart global)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom canvas plugin, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's own plugin architecture rather than an external plugin
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDatasetsDraw hook + raw canvas 2D API for weight-driven bezier
+          arcs
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - edge-highlighting
