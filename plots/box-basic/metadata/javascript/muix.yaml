@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: box-basic
 created: '2026-08-24T17:07:27Z'
-updated: '2026-08-24T17:12:45Z'
+updated: '2026-08-24T17:22:31Z'
 generated_by: claude-sonnet
 workflow_run: 32754282646
 issue: 689
@@ -12,60 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Correct box-plot statistics implemented by hand: Q1/median/Q3 via linear-interpolation
-    quantiles, whiskers clamped to the 1.5*IQR fences, and true outlier detection
-    — not a fake/simplified box.'
-  - Imprint palette applied in exact canonical order across the 5 abstract categories
-    (green, lavender, blue, ochre, matte-red), with the brand green correctly on the
-    first series.
-  - 'Theme-adaptive chrome is fully correct in both renders: warm off-white/near-black
-    backgrounds, readable ink-colored title/axis/tick text in both themes, subtle
-    horizontal-only grid, no dark-on-dark or light-on-light failures.'
-  - No edge clipping or overlap in either render; generous, well-balanced margins
-    (top 20 / right 40 / bottom 64 / left 80) fill the canvas without cramming or
-    wasting space.
-  - Deterministic LCG-seeded data generation (seed 42) with per-class mean/std variation
-    that produces visibly different spreads across classes.
-  - skipAnimation set on ChartContainer and outlier markers rendered as hollow circles
-    (fill = t.pageBg) so they read correctly against both theme backgrounds.
+  - 'First series correctly uses brand green #009E73, and the remaining four classes
+    follow the canonical Imprint order (lavender, blue, ochre, matte red) exactly'
+  - Real box-plot statistics (quartiles, 1.5*IQR fences, outliers) are computed from
+    generated per-class score distributions rather than faked, and the custom SVG
+    overlay is positioned via useXScale/useYScale — exactly the technique the muix.md
+    library guide prescribes for the missing community BoxPlot component
+  - 'Data shows genuine variety: different spreads across classes (tight Class C vs.
+    wide Class B) and deliberate, deterministic outliers in two classes, satisfying
+    DQ-01''s ''outliers AND different spreads'' bar'
+  - 'Subtle design polish beyond library defaults: rounded box corners, alpha-blended
+    fills, a bolder stroke + soft drop-shadow highlighting the tightest/highest-scoring
+    class as a data-driven focal point'
+  - 'Both renders are theme-correct: identical data colors between light/dark, warm
+    off-white / near-black backgrounds, fully legible chrome in both themes, exact
+    mandated title string, no clipping at any edge'
   weaknesses:
-  - 'Design Excellence is at the well-configured-default level: no intentional focal
-    point, callout, or emphasis beyond the required per-category coloring — consider
-    highlighting the class with the tightest/highest distribution or annotating a
-    notable outlier to give the chart a clearer story.'
-  - Only Class A shows an outlier point; the other four classes have none, so the
-    outlier-marker feature is demonstrated only once. Nudging one or two more class
-    std-devs/means would surface outliers in at least 2-3 classes for a stronger feature-coverage
-    showcase.
-  - The box-and-whisker marks are necessarily hand-drawn SVG (via useXScale/useYScale)
-    since the community package has no BoxPlot component — a reasonable and well-documented
-    workaround, but it means the implementation can't lean on any MUI X mark-level
-    API (e.g. ChartsReferenceLine for a class-average marker, or ChartsTooltip wiring
-    for the custom layer) to show deeper library-specific richness beyond the axis/grid/container
-    composition already used.
-  - Grid and spine treatment (horizontal-only grid, L-shaped frame) comes mostly from
-    MUI X defaults (ChartsGrid horizontal, standard axis lines) rather than additional
-    deliberate refinement — fine as-is, but there's room for more visual polish (e.g.
-    finer grid opacity tuning, box corner treatment) to move past 'good default' into
-    'refined'.
+  - Grid lines use strokeDasharray '2 5' (dashed); the default style guide's Grid
+    Guidelines call for solid thin lines at 15-25% opacity — consider a solid line
+    at lower opacity for closer style-guide alignment
+  - Outlier marker radius (r=5 CSS px) is only modestly prominent given how sparse
+    the outliers are (1 per affected class) — bumping to r=7-8 would read more confidently
+    as a deliberate data point rather than visual noise
+  - Helper functions (lcg, randomNormal, quantile) add more structure than the KISS
+    'no functions' ideal, though this is largely unavoidable given muix's React component
+    contract and the need to compute real quartile/IQR statistics
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "box-basic · javascript · muix · anyplot.ai" top-left in dark ink, fully visible and unclipped. Y-axis label "Exam Score (%)" rotated on the left, X-axis label "Class" centered below the tick row. Tick labels (0-100 in steps of 5 on Y; Class A-E on X) all dark and clearly readable. Horizontal grid lines only, subtle (~15% opacity), do not compete with the data.
-      Data: Five box-and-whisker plots for Class A-E. Colors follow the Imprint categorical palette in canonical order: Class A = brand green (#009E73), Class B = lavender, Class C = blue, Class D = ochre, Class E = matte red. Each box shows a visible median line, a filled IQR box (semi-transparent), whiskers extending to the 1.5*IQR fence, and one hollow outlier circle below Class A's lower whisker. Distributions are visually distinct: Class C is tight and high (best scores), Class B is wide with a long lower tail, Class D has the lowest median.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "box-basic · javascript · muix · anyplot.ai" top-left in dark ink; "Class" and "Exam Score (%)" axis labels and 0-100 tick labels all dark and clearly legible; horizontal dashed gridlines are subtle and don't compete with the data.
+      Data: Five box-and-whisker glyphs for Class A-E in Imprint canonical order — brand green, lavender, blue, ochre, matte red. Each shows a median line, IQR box, whiskers, and (for Class A, B, D) a single hollow-circle outlier below the lower whisker. Class C's box has a visibly bolder stroke and soft drop-shadow, marking it as the tightest/highest-scoring distribution (focal point).
+      Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/off-white ink, fully legible against the dark surface. Grid lines are the same subtle horizontal treatment, rendered in a light low-opacity stroke so they remain visible without dominating.
-      Data: Same five boxes in the same hue positions and same underlying hex values as the light render (green/lavender/blue/ochre/red) — only the box fill's blended appearance shifts slightly because the semi-transparent fill (28% opacity) is composited over a different background, which is expected alpha-blending behavior, not a color change. Stroke colors, median lines, whiskers, and the single outlier circle for Class A are unchanged from the light render.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, and tick label is clearly visible in light ink against the near-black background, and the brand green on Class A reads well on both surfaces.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink against the dark surface, fully readable; no dark-on-dark text anywhere; gridlines remain subtle.
+      Data: Same five box glyphs in the identical five colors as the light render (green, lavender, blue, ochre, red) — confirmed unchanged; only the chrome (background, text, grid) flipped to the dark theme. Class C retains its focal bolder-stroke treatment.
+      Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -73,72 +62,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, axis labels 16px, tick labels
-          14px); readable at full size and no overflow in either theme.
+        comment: All font sizes explicitly set (title 22px, axis label 16px, tick
+          14px), fully readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, boxes, or the single outlier marker.
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Box/whisker/median strokes and outlier markers are clearly visible
-          and appropriately sized for medium-density (55-74 pts/class) data.
+        comment: Boxes/whiskers/median clearly visible; outlier circles (r=5) are
+          visible but only modestly prominent for such sparse points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues plus stroke outlines on every mark give redundant contrast
-          beyond hue alone.
+        comment: Hollow-circle outliers with colored stroke on page-bg fill give good
+          contrast in both themes; no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas with balanced margins; nothing cut off.
+        comment: Plot fills most of the canvas with balanced margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis label includes units (%); X-axis label is descriptive.
+        comment: '''Exam Score (%)'' carries units; ''Class'' is a clear categorical
+          label'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette in canonical order, brand green first series, theme-correct
-          chrome in both renders.
+        comment: 'First series #009E73, remaining classes follow canonical Imprint
+          order; backgrounds and chrome theme-correct on both renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured library default: correct palette usage but no intentional
-          design flourish beyond that.'
+        passed: true
+        comment: Rounded box corners, alpha-blended fills, and a focal drop-shadow
+          go clearly beyond a configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Horizontal-only grid and L-shaped spines show some refinement, largely
-          via MUI X defaults plus deliberate margin/grid config.
+        passed: true
+        comment: Only left/bottom axis lines shown, generous whitespace; dashed rather
+          than solid gridlines is a minor deviation from the style guide
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted — no annotation or focal point
-          beyond per-category coloring.
+        passed: true
+        comment: Bolder stroke + shadow on the tightest/highest-scoring class creates
+          a clear, data-driven focal point without needing a text callout
     spec_compliance:
       score: 15
       max: 15
@@ -148,110 +138,108 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker plot with all subtypes (box, median, whiskers,
-          outliers).
+        comment: Correct box-and-whisker plot with all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, outliers, 1.5*IQR whiskers, and per-category colors
-          all present.
+        comment: Median line, individual outlier points, 1.5*IQR whiskers, and per-category
+          colors all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = category, Y = value, full 0-100 axis range shown.
+        comment: Class on x-axis, exam score on y-axis (0-100), all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; no legend needed since
-          X-axis ticks already label each category.
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          since x-axis already labels each category
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Different spreads/medians across classes are clear, but only Class
-          A shows an outlier — thin evidence of the outlier feature.
+        comment: Different spreads across classes plus deliberate, deterministic outliers
+          in two classes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam scores across classes — real, neutral, comprehensible scenario.
+        comment: Exam scores across 5 classes is a real, neutral, comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score ranges/means/stds and 0-100 clamping are all realistic for
-          exam data.
+        comment: 0-100% score range with realistic means (68-85) and std devs (5-13)
+          per class
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: data generation -> stats -> overlay component
-          -> chart export; functions are the React-idiomatic norm for this library.'
+        comment: A few helper functions (lcg, randomNormal, quantile) beyond bare
+          KISS, but necessary for real quartile/IQR math and the required React component
+          contract
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (42).
+        comment: Fixed-seed LCG (seed=42) plus deterministic injected outliers
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (ChartContainer, ChartsGrid, ChartsXAxis, ChartsYAxis,
-          useXScale, useYScale) is used.
+        comment: Only ChartContainer/ChartsGrid/ChartsXAxis/ChartsYAxis/useXScale/useYScale
+          imported, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex given the community package's missing BoxPlot
-          component; no fake UI.
+        comment: Clean custom SVG overlay filling a genuine community-package gap;
+          no fake UI or fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set; harness owns output, current API used throughout.
+        comment: Default-exported component, skipAnimation set, no manual mount/HTML
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses MUI X's documented low-level composition API (ChartContainer
-          + scale hooks) — the recommended pattern for custom overlays when no built-in
-          chart type exists.
+        comment: Follows the exact ChartContainer + useXScale/useYScale overlay pattern
+          the muix.md guide documents for filling community-package gaps
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: useXScale/useYScale-driven custom SVG layer is a genuinely MUI X-specific
-          technique, though the box/whisker marks themselves are hand-drawn rather
-          than through any native mark API.
-  verdict: REJECTED
+        comment: Uses MUI X's scale hooks to build a custom glyph layer — a technique
+          specific to MUI X's architecture, not trivially portable to another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -260,7 +248,8 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - outlier-detection
+  - iqr-calculation
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
