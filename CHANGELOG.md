@@ -42,12 +42,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   manual attention. Repo-wide that state had accumulated on **87 `(spec, library)` pairs**.
   Marker counting is now scoped to a 12-hour campaign window, so stale history ages out and
   a fresh dispatch gets its full three attempts. The fail-closed behaviour on an unreadable
-  counter (issue #1010: ~1,200 runs in 38 h) is untouched (#10554).
+  counter (issue #1010: ~1,200 runs in 38 h) is untouched (#10627).
 - **A failed library no longer claims three attempts it never made** — the cap message read
   `Marking <lib> as failed: 3 generation attempts` even when the run made exactly one, which
   reads as "tried repeatedly, must be a genuine capability gap". It now names the counted
   failures and the window. Three pairs written off under the old wording on 2026-08-24
-  succeeded on the very next dispatch (#10554).
+  succeeded on the very next dispatch (#10627).
 - **Image structured data carries the licensing fields Google recommends** — Search
   Console flagged every implementation page's `ImageObject` for missing `creator`,
   `copyrightNotice`, `creditText`, and `acquireLicensePage`. The bot-page JSON-LD now
