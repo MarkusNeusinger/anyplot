@@ -77,6 +77,17 @@ for (let i = 0; i < 400; i += 1) {
   }
 }
 
+// Packed clusters settle compactly near clusterCenterY, leaving unbalanced
+// whitespace above and below. Stretch the vertical spread to use the full
+// bubbleTop-bubbleBottom band; this only increases inter-node distance
+// (never shrinks it), so it cannot introduce new overlap.
+const yMin = d3.min(nodes, (d) => d.y - d.r);
+const yMax = d3.max(nodes, (d) => d.y + d.r);
+const yScale = (bubbleBottom - bubbleTop) / (yMax - yMin);
+for (const d of nodes) {
+  d.y = Math.max(bubbleTop + d.r, Math.min(bubbleBottom - d.r, bubbleTop + (d.y - yMin) * yScale));
+}
+
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
@@ -102,6 +113,11 @@ function relativeLuminance(hex) {
 }
 const labelInk = (hex) => (relativeLuminance(hex) > 0.42 ? "#1A1A17" : "#F5F4EE");
 
+// Largest project per group — emphasized with a bolder stroke to reinforce
+// the size hierarchy (the "hero" bubble of each cluster).
+const heroValueByGroup = new Map(GROUPS.map((g) => [g, d3.max(nodes.filter((d) => d.group === g), (d) => d.value)]));
+const isHero = (d) => d.value === heroValueByGroup.get(d.group);
+
 const bubble = svg
   .selectAll("g.bubble")
   .data(nodes)
@@ -113,10 +129,12 @@ bubble
   .attr("r", (d) => d.r)
   .attr("fill", (d) => color(d.group))
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 2);
+  .attr("stroke-width", (d) => (isHero(d) ? 3.5 : 2));
 
-// Labels only where the circle is large enough to hold them; word-wrapped and
-// sized to the available chord so text never spills past its own bubble.
+// Labels only where the circle is large enough to hold them; word-wrapped,
+// sized to the available chord so text never spills past its own bubble, and
+// paired with a smaller value line ("$118M") so magnitudes are readable
+// directly, not just relative rank.
 bubble
   .filter((d) => d.r > 50)
   .append("text")
@@ -125,22 +143,34 @@ bubble
   .attr("fill", (d) => labelInk(color(d.group)))
   .each(function (d) {
     const words = d.label.split(" ");
-    const lines =
+    const nameLines =
       words.length > 1
         ? [words.slice(0, Math.ceil(words.length / 2)).join(" "), words.slice(Math.ceil(words.length / 2)).join(" ")]
         : [d.label];
-    const longest = Math.max(...lines.map((l) => l.length));
-    const fontSize = Math.max(9, Math.min(15, d.r * 0.26, (d.r * 1.6) / (longest * 0.58)));
+    const valueLine = `$${d.value}M`;
+    const totalLines = nameLines.length + 1;
+    const longest = Math.max(...nameLines.map((l) => l.length), valueLine.length * 0.85);
+    const fontSize = Math.max(9, Math.min(15, d.r * 0.24, (d.r * 1.6) / (longest * 0.58)));
+    const valueFontSize = fontSize * 0.8;
     const lineHeight = fontSize * 1.15;
-    d3.select(this)
-      .style("font-size", `${fontSize}px`)
-      .style("font-weight", "500")
-      .selectAll("tspan")
-      .data(lines)
+    const sel = d3.select(this).style("font-size", `${fontSize}px`).style("font-weight", "500");
+    sel
+      .selectAll("tspan.name")
+      .data(nameLines)
       .join("tspan")
+      .attr("class", "name")
       .attr("x", 0)
-      .attr("y", (_, i) => (i - (lines.length - 1) / 2) * lineHeight)
+      .attr("y", (_, i) => (i - (totalLines - 1) / 2) * lineHeight)
       .text((line) => line);
+    sel
+      .append("tspan")
+      .attr("class", "value")
+      .attr("x", 0)
+      .attr("y", (nameLines.length - (totalLines - 1) / 2) * lineHeight)
+      .style("font-size", `${valueFontSize}px`)
+      .style("font-weight", "400")
+      .style("opacity", 0.85)
+      .text(valueLine);
   });
 
 // --- Title ----------------------------------------------------------------
