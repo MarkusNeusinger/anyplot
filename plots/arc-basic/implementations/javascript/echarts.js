@@ -1,7 +1,7 @@
 // anyplot.ai
 // arc-basic: Basic Arc Diagram
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-08-24
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 
