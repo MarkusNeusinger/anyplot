@@ -1,0 +1,260 @@
+library: bokeh
+language: python
+specification_id: map-tilegrid
+created: '2026-08-24T21:46:05Z'
+updated: '2026-08-24T21:58:26Z'
+generated_by: claude-sonnet
+workflow_run: 32780814409
+issue: 5246
+language_version: 3.13.15
+library_version: 3.10.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tilegrid/python/bokeh/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - HoverTool now wired to the ColumnDataSource (country name + renewable share %),
+    directly addressing attempt 1's Library Mastery gap and giving the HTML output
+    genuine bokeh-distinctive interactivity
+  - Subtitle callout ("Nordic and Alpine countries lead Europe's renewable transition")
+    sharpens the color-gradient pattern into an explicit takeaway, addressing attempt
+    1's Data Storytelling weakness
+  - ColorBar now uses ELEVATED_BG background + INK_SOFT border, matching the tile
+    grid's polish level instead of the previously plain default styling
+  - 'imprint_seq colormap (#009E73 -> #4467A3) correctly built and pixel-identical
+    across light/dark renders; only chrome flips'
+  - Theme-adaptive chrome fully correct in both renders -- background, title, subtitle,
+    tick text, and colorbar all readable, no dark-on-dark or light-on-light failures
+  - Thoughtful luminance-based label-color selection keeps region codes legible against
+    every tile shade
+  - Clean tile-grid layout with visible PAGE_BG gaps between tiles gives every region
+    equal visual weight, the defining trait of this plot type
+  - Realistic, neutral dataset (European renewable-energy share, 13-85%) with geographically
+    sensible tile placement
+  - Clean KISS code structure, no unused imports, idiomatic ColumnDataSource + LinearColorMapper
+    + ColorBar pattern
+  weaknesses:
+  - Subtitle claims 'Alpine countries' (plural) lead, but Switzerland (CH=30%) doesn't
+    support that generalization -- only Austria (78%) stands out among the Alpine-region
+    tiles; consider narrowing the claim to 'Nordic countries and Austria' for accuracy
+  - Title spans ~88% of the plot width at the computed fontsize -- comfortably inside
+    the canvas with no clipping, but close enough to the overflow line that a slightly
+    smaller fontsize floor would add breathing room if the mandated title grows further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark-ink title "Renewable Energy Share in Europe · map-tilegrid · python · bokeh · anyplot.ai" at top, fully legible with comfortable margins (no clipping at any edge). Italic subtitle "Nordic and Alpine countries lead Europe's renewable transition" in soft ink directly below. Colorbar on the right, titled "Renewable share (%)", sits in a subtly lighter elevated panel with visible tick labels (20/40/60/80) in soft ink.
+      Data: 29 equal-sized square tiles arranged in an approximate European geography (Nordics top, Mediterranean bottom), each colored on the imprint_seq ramp from brand green (#009E73, low renewable share) to blue (#4467A3, high). Each tile carries its 2-letter country code in either dark ink or light cream text depending on tile luminance -- every label is clearly readable against its tile.
+      Legibility verdict: PASS -- no light-on-light issues found anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Title and subtitle now render in light cream/gray ink, fully legible against the dark background. Colorbar panel uses a slightly lighter elevated background with light tick labels, clearly distinguishable from the page background.
+      Data: The 29 tile colors are pixel-identical to the light render, confirming only chrome (background, text) flipped between themes as required. Tile labels remain legible via the same luminance-based switching -- e.g. dark-ink labels on the bright blue Iceland/Norway/Sweden/Austria tiles, light-cream labels on the darker green/teal tiles.
+      Legibility verdict: PASS -- no dark-on-dark failures found anywhere.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title occupies ~88% of plot width,
+          leaving tight but non-clipped margins
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between tiles, labels, subtitle, or colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tile size consistent and readable; 29 regions is well within comfortable
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue ramp with luminance-adaptive label color;
+          no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas appropriate for this grid-based plot type;
+          nothing cut off; no canvas-gate failure
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a schematic tile grid; colorbar title
+          'Renewable share (%)' gives units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq ramp anchored at #009E73; PAGE_BG correct in both themes'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom imprint_seq ramp, luminance-adaptive label coloring, and now
+          an elevated-panel colorbar -- clear intentional polish beyond configured
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: No axes/spines/grid, generous tile gaps, colorbar now uses ELEVATED_BG
+          + INK_SOFT border to match the tile grid's polish (fixes attempt 1 weakness)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle sharpens the insight, but overstates 'Alpine countries'
+          (plural) when only Austria, not Switzerland (30%), actually stands out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct tile grid map with equal-area square tiles
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Region abbreviations, sequential colormap (no natural midpoint),
+          colorbar legend, consistent tile sizing all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid row/col correctly maps to x/y position, value correctly maps
+          to tile color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format '{Descriptive Title} · map-tilegrid · python · bokeh
+          · anyplot.ai' matches spec
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 29 regions with position, value, color, and label -- shows all facets
+          of the plot type
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: European renewable-energy share is a real-world, neutral, non-controversial
+          dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13-85% range is a sensible spread for this domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Two small pure helper functions (_lerp_hex, _luminance) for color-ramp
+          construction; no classes, minimal indirection
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: output_file/save + Selenium screenshot to plot-{THEME}.png/html,
+          matching bokeh.md pattern
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource + LinearColorMapper + ColorBar is bokeh's recommended
+          mapped-color pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool added with country name + renewable share tooltip, now
+          genuinely leveraging bokeh's interactivity in the HTML output (fixes attempt
+          1 weakness)
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  techniques:
+  - colorbar
+  - hover-tooltips
+  - html-export
+  - custom-legend
+  patterns:
+  - columndatasource
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
