@@ -15,14 +15,70 @@ const MUTED = THEME === "dark" ? "#A8A79F" : "#6B6A63";
 
 // --- Data (in-memory, deterministic) — employee engagement survey, 5-point Likert ---
 const RESPONSES = [
-  { question: "I understand my role's impact", strongly_disagree: 2, disagree: 5, neutral: 8, agree: 45, strongly_agree: 40 },
-  { question: "I receive regular recognition", strongly_disagree: 8, disagree: 17, neutral: 20, agree: 35, strongly_agree: 20 },
-  { question: "I have growth opportunities", strongly_disagree: 10, disagree: 22, neutral: 23, agree: 30, strongly_agree: 15 },
-  { question: "My manager gives useful feedback", strongly_disagree: 5, disagree: 12, neutral: 18, agree: 40, strongly_agree: 25 },
-  { question: "I can share ideas openly", strongly_disagree: 4, disagree: 11, neutral: 15, agree: 42, strongly_agree: 28 },
-  { question: "Changes are communicated well", strongly_disagree: 12, disagree: 25, neutral: 20, agree: 28, strongly_agree: 15 },
-  { question: "My workload is manageable", strongly_disagree: 18, disagree: 27, neutral: 15, agree: 28, strongly_agree: 12 },
-  { question: "I'd recommend this company", strongly_disagree: 3, disagree: 7, neutral: 12, agree: 38, strongly_agree: 40 },
+  {
+    question: "I understand my role's impact",
+    strongly_disagree: 2,
+    disagree: 5,
+    neutral: 8,
+    agree: 45,
+    strongly_agree: 40,
+  },
+  {
+    question: "I receive regular recognition",
+    strongly_disagree: 8,
+    disagree: 17,
+    neutral: 20,
+    agree: 35,
+    strongly_agree: 20,
+  },
+  {
+    question: "I have growth opportunities",
+    strongly_disagree: 10,
+    disagree: 22,
+    neutral: 23,
+    agree: 30,
+    strongly_agree: 15,
+  },
+  {
+    question: "My manager gives useful feedback",
+    strongly_disagree: 5,
+    disagree: 12,
+    neutral: 18,
+    agree: 40,
+    strongly_agree: 25,
+  },
+  {
+    question: "I can share ideas openly",
+    strongly_disagree: 4,
+    disagree: 11,
+    neutral: 15,
+    agree: 42,
+    strongly_agree: 28,
+  },
+  {
+    question: "Changes are communicated well",
+    strongly_disagree: 12,
+    disagree: 25,
+    neutral: 20,
+    agree: 28,
+    strongly_agree: 15,
+  },
+  {
+    question: "My workload is manageable",
+    strongly_disagree: 18,
+    disagree: 27,
+    neutral: 15,
+    agree: 28,
+    strongly_agree: 12,
+  },
+  {
+    question: "I'd recommend this company",
+    strongly_disagree: 3,
+    disagree: 7,
+    neutral: 12,
+    agree: 38,
+    strongly_agree: 40,
+  },
 ];
 
 // Sort by net agreement (agree + strongly_agree − disagree − strongly_disagree),
@@ -71,12 +127,15 @@ const MIN_LABEL_WIDTH = 30;
 const barLabel = (item, context) => {
   if (item.value === null || context.bar.width < MIN_LABEL_WIDTH) return null;
   if (item.seriesId === "neutral_left") return null;
-  if (item.seriesId === "neutral_right") return `${SORTED[item.dataIndex].neutral}%`;
+  if (item.seriesId === "neutral_right")
+    return `${SORTED[item.dataIndex].neutral}%`;
   return `${Math.abs(item.value)}%`;
 };
 
 const title = "bar-diverging-likert · javascript · muix · anyplot.ai";
-const titleFontSize = Math.round(22 * (title.length > 67 ? 67 / title.length : 1));
+const titleFontSize = Math.round(
+  22 * (title.length > 67 ? 67 / title.length : 1),
+);
 
 const LEGEND_ITEMS = [
   { label: "Strongly Disagree", color: COLOR_STRONGLY_DISAGREE },
@@ -93,10 +152,22 @@ export default function Chart() {
   const chartHeight = window.ANYPLOT_SIZE.height - titleHeight - legendHeight;
 
   return (
-    <div style={{ width, height: window.ANYPLOT_SIZE.height, display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        width,
+        height: window.ANYPLOT_SIZE.height,
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <Typography
         align="center"
-        style={{ fontSize: titleFontSize, fontWeight: 500, height: titleHeight, lineHeight: `${titleHeight}px` }}
+        style={{
+          fontSize: titleFontSize,
+          fontWeight: 500,
+          height: titleHeight,
+          lineHeight: `${titleHeight}px`,
+        }}
       >
         {title}
       </Typography>
@@ -106,12 +177,47 @@ export default function Chart() {
         layout="horizontal"
         skipAnimation
         series={[
-          { id: "neutral_left", data: negNeutral, stack: "likert", color: COLOR_NEUTRAL },
-          { id: "disagree", data: negDisagree, label: "Disagree", stack: "likert", color: COLOR_DISAGREE },
-          { id: "strongly_disagree", data: negStronglyDisagree, label: "Strongly Disagree", stack: "likert", color: COLOR_STRONGLY_DISAGREE },
-          { id: "neutral_right", data: posNeutral, label: "Neutral", stack: "likert", color: COLOR_NEUTRAL },
-          { id: "agree", data: posAgree, label: "Agree", stack: "likert", color: COLOR_AGREE },
-          { id: "strongly_agree", data: posStronglyAgree, label: "Strongly Agree", stack: "likert", color: COLOR_STRONGLY_AGREE },
+          {
+            id: "neutral_left",
+            data: negNeutral,
+            stack: "likert",
+            color: COLOR_NEUTRAL,
+          },
+          {
+            id: "disagree",
+            data: negDisagree,
+            label: "Disagree",
+            stack: "likert",
+            color: COLOR_DISAGREE,
+          },
+          {
+            id: "strongly_disagree",
+            data: negStronglyDisagree,
+            label: "Strongly Disagree",
+            stack: "likert",
+            color: COLOR_STRONGLY_DISAGREE,
+          },
+          {
+            id: "neutral_right",
+            data: posNeutral,
+            label: "Neutral",
+            stack: "likert",
+            color: COLOR_NEUTRAL,
+          },
+          {
+            id: "agree",
+            data: posAgree,
+            label: "Agree",
+            stack: "likert",
+            color: COLOR_AGREE,
+          },
+          {
+            id: "strongly_agree",
+            data: posStronglyAgree,
+            label: "Strongly Agree",
+            stack: "likert",
+            color: COLOR_STRONGLY_AGREE,
+          },
         ]}
         barLabel={barLabel}
         xAxis={[
@@ -120,13 +226,34 @@ export default function Chart() {
             max: axisBound,
             valueFormatter: (value) => `${Math.abs(value)}%`,
             tickLabelStyle: { fontSize: 14 },
+            label: "% of Responses",
+            labelStyle: { fontSize: 15 },
           },
         ]}
-        yAxis={[{ scaleType: "band", data: questions, tickLabelStyle: { fontSize: 14 } }]}
-        margin={{ left: 260, right: 40, top: 10, bottom: 40 }}
+        yAxis={[
+          {
+            scaleType: "band",
+            data: questions,
+            tickLabelStyle: { fontSize: 14 },
+          },
+        ]}
+        margin={{ left: 260, right: 40, top: 10, bottom: 64 }}
         slots={{ legend: () => null }}
+        sx={{
+          // Dark diverging segments (red/rose/blue) need light label text to clear
+          // WCAG AA contrast; the lighter segments (muted neutral, cyan agree) keep
+          // the theme-default ink fill from BarLabel's styled `text.primary`.
+          [["strongly_disagree", "disagree", "strongly_agree"]
+            .map((id) => `& .MuiBarLabel-series-${id}`)
+            .join(", ")]: {
+            fill: "#FFFFFF",
+          },
+        }}
       >
-        <ChartsReferenceLine x={0} lineStyle={{ stroke: t.ink, strokeWidth: 1.5 }} />
+        <ChartsReferenceLine
+          x={0}
+          lineStyle={{ stroke: t.ink, strokeWidth: 1.5 }}
+        />
       </BarChart>
       <div
         style={{
@@ -138,8 +265,18 @@ export default function Chart() {
         }}
       >
         {LEGEND_ITEMS.map((item) => (
-          <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ width: 14, height: 14, borderRadius: 3, background: item.color }} />
+          <div
+            key={item.label}
+            style={{ display: "flex", alignItems: "center", gap: 8 }}
+          >
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 3,
+                background: item.color,
+              }}
+            />
             <Typography style={{ fontSize: 14 }}>{item.label}</Typography>
           </div>
         ))}
