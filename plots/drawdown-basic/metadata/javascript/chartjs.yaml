@@ -1,0 +1,261 @@
+library: chartjs
+language: javascript
+specification_id: drawdown-basic
+created: '2026-08-24T23:13:16Z'
+updated: '2026-08-24T23:30:30Z'
+generated_by: claude-sonnet
+workflow_run: 32787868681
+issue: 3752
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Mobile legibility fix from attempt 1 is confirmed effective: pixel measurement
+    of plot-light_400.png / plot-dark_400.png shows the title glyphs are now clearly
+    separated and readable (~9px cap height) versus the ~5px illegible smear in attempt
+    1 - the targeted 1.5-2x font-size scaling worked exactly as prescribed'
+  - Title now occupies ~50.4% of canvas width (pixel-measured), landing inside the
+    comfortable 50-70% proportion range, up from the ~33% flagged in attempt 1
+  - 'Pixel-verified palette + theme compliance holds after the edit: light bg exactly
+    #FAF8F1, dark bg exactly #1A1A17, brand green exactly #009E73, matte red exactly
+    #AE3030, amber exactly #DDCC77 - counts and hues are pixel-identical between light
+    and dark renders'
+  - Zero edge clipping in either render at any of the four canvas borders (pixel-verified
+    3px edge strips)
+  - 'Well-justified semantic color mapping for a finance chart: matte red for drawdown/loss,
+    brand green for recovery, amber for the max-drawdown warning marker, gray reference
+    line for the underlying portfolio value'
+  - Strong data storytelling via the narrative subtitle (max drawdown %, days-to-trough,
+    recovery time) plus non-color-redundant marker shapes (rectRot diamond vs. circle)
+    for the two highlighted events
+  - 'Clean, deterministic, KISS code: fixed-seed LCG, no fake interactivity, correct
+    mount-node contract, animation disabled'
+  weaknesses:
+  - Only the first return-to-baseline after the deepest trough is marked 'Recovery',
+    even though the drawdown line visibly touches 0% many other times across the two-year
+    series - consider a caption tweak (e.g. 'Recovery from max drawdown') if this
+    is ever revisited, though it is not required for approval
+  - 'Design Excellence and Library Mastery are solid but not exceptional: default
+    sans-serif typography and no distinctive Chart.js capability beyond the two sparse-array
+    highlight datasets and the dual y-axis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, pixel-verified as exactly #FAF8F1 (RGB 250,248,241).
+      Chrome: Title "drawdown-basic · javascript · chartjs · anyplot.ai" (dark ink, ~50.4% of canvas width, not clipped - starts cleanly at y=11px) followed by the subtitle "Max drawdown -11.5% · 23 trading days to trough · recovered in 62 trading days" and a 4-item point-style legend (Portfolio Value, Drawdown, Max Drawdown, Recovery). All title/subtitle/legend/axis/tick text is clearly readable at full canvas size; no overlap between legend and the topmost data (recovery marker sits ~30px below the legend row).
+      Data: A jagged matte-red (#AE3030) drawdown line filled to the 0% baseline shows repeated decline episodes over ~2 years of daily data; a thin gray (inkSoft) portfolio-value reference line tracks the underlying series on the right axis; an amber (#DDCC77) rectRot diamond marks the deepest trough and a brand-green (#009E73) circle marks the recovery point.
+      Legibility verdict: PASS - all chrome text readable at full resolution; no clipping at any of the four canvas edges (pixel-verified).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, pixel-verified as exactly #1A1A17 (RGB 26,26,23).
+      Chrome: Identical layout, now in light ink (t.ink/t.inkSoft) - clearly readable, no dark-on-dark issues anywhere (title, subtitle, legend, tick labels, axis titles all light-colored against the near-black surface).
+      Data: Data colors are pixel-identical to the light render (#AE3030 red ~163k px, #009E73 green ~2.4k px, #DDCC77 amber ~1.7k px, all within tolerance 15) - only the chrome flipped, as required. No edge clipping (pixel-verified).
+      Legibility verdict: PASS - no dark-on-dark failures; all text and data elements clearly distinguishable from the near-black background.
+
+    Mobile (~400px) check, both themes:
+      Measured plot-light_400.png / plot-dark_400.png directly: the title glyph band is ~9-10px cap height with clearly separated, individually legible letterforms - a marked improvement over attempt 1's ~5px illegible smear. This was the sole attempt-1 rejection reason (VQ-01) and repair applied exactly the prescribed fix (title 22->38, subtitle 15->22, legend 14->21, tick labels 13->20, axis titles 15->22 CSS px), verified via git diff of the only changed commit.
+      Legibility verdict: PASS in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'Mobile legibility fixed: all font sizes explicitly set (title 38,
+          subtitle 22, legend 21, ticks 20, axis titles 22 CSS px) and pixel-verified
+          readable at both full 3200x1800 size and the ~400px mobile crop in both
+          themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between legend, title, subtitle, ticks, or data elements
+          in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 2.5px drawdown line, 1.5px reference line, 8px-radius highlight markers
+          - appropriate for a ~504-point medium-density daily series.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct marker shapes (rectRot vs circle) supplement color, good
+          contrast in both themes, no red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title now ~50.4% of canvas width (pixel-measured, up from ~33% in
+          attempt 1); no clipping at any edge (pixel-verified); balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Drawdown (%) has units; Date and Portfolio Value are descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Pixel-verified: bg exactly #FAF8F1/#1A1A17, brand green #009E73,
+          matte red #AE3030, amber #DDCC77 - all pixel-identical counts between light
+          and dark renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic red/green/amber colors and dual-axis composition,
+          clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, x-grid and secondary-axis grid disabled,
+          generous spacing - good but not exceptional polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Narrative subtitle with max-drawdown/duration/recovery stats plus
+          distinct trough/recovery markers create a clear focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct drawdown chart: filled area from drawdown line to zero baseline.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Fill-to-zero, max-drawdown marker, recovery marker, key stats in
+          subtitle, secondary axis for portfolio value, zero line as implicit top
+          boundary - all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, primary Y=drawdown%, secondary Y=portfolio value; axes show
+          all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match the four datasets.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows multiple decline episodes of varying depth; only a single recovery
+          event highlighted despite several zero-touches.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral finance/portfolio scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible ~9%/yr drift, ~17.5%/yr volatility, realistic 2-year daily
+          portfolio path and drawdown magnitudes.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports -> data -> mount -> chart structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42), fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global Chart is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or fake-interactivity code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no filesystem calls.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic multi-dataset config with fill, order, and dual yAxisID.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Dual y-axis plus sparse-array single-point highlight datasets is
+          a real Chart.js-specific technique, though not maximally unique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
