@@ -59,8 +59,12 @@ const strokeWidth = d3.scaleLinear().domain([1, maxWeight]).range([1.5, 7]);
 const opacity = d3.scaleLinear().domain([1, maxWeight]).range([0.25, 0.65]);
 
 // Arc height scales with node distance (long-range connections arc higher).
+// scaleSqrt (not linear) so the single far-outlier span (Elena-Sana) doesn't
+// dominate the domain and compress the other 19 arcs into a thin band -
+// ordering is preserved (the long-range arc still reads as tallest) while the
+// short/medium arcs fill much more of the available canvas height.
 const maxSpan = d3.max(interactions, (d) => Math.abs(x(d.source) - x(d.target)));
-const arcHeight = d3.scaleLinear().domain([0, maxSpan]).range([40, axisY - margin.top - 40]);
+const arcHeight = d3.scaleSqrt().domain([0, maxSpan]).range([40, axisY - margin.top - 40]);
 
 const g = svg.append("g").attr("transform", `translate(${margin.left},0)`);
 
