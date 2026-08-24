@@ -1,0 +1,115 @@
+// anyplot.ai
+// band-basic: Basic Band Plot
+// Library: Highcharts 12.6.0 | Node 22
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
+// Quality: pending | Created: 2026-08-24
+
+const t = window.ANYPLOT_TOKENS;
+
+// --- Data (in-memory, deterministic) ----------------------------------------
+// Projected global mean sea level rise since a 1900 baseline, moderate-emissions
+// scenario. The 95% prediction interval widens with the forecast horizon, as is
+// typical for cumulative climate projections.
+let seed = 42;
+function nextRandom() {
+  seed = (seed * 1103515245 + 12345) % 2147483648;
+  return seed / 2147483648;
+}
+
+const years = [];
+const lowerBase = []; // invisible stack base = y_lower
+const bandHeight = []; // stacked on top of lowerBase to reach y_upper
+const centerLine = []; // y_center trend
+
+for (let t_yr = 0; t_yr <= 50; t_yr += 1) {
+  const year = 2025 + t_yr;
+  const trend = 228 + 4.4 * t_yr + 0.03 * t_yr * t_yr; // mm since 1900
+  const wobble = (nextRandom() - 0.5) * 6; // year-to-year natural variability
+  const center = trend + wobble;
+  const halfWidth = 8 + 0.5 * t_yr; // widening 95% prediction interval
+
+  years.push(year);
+  lowerBase.push(Math.round((center - halfWidth) * 10) / 10);
+  bandHeight.push(Math.round(halfWidth * 2 * 10) / 10);
+  centerLine.push(Math.round(center * 10) / 10);
+}
+
+const bandFill = Highcharts.color(t.palette[0]).setOpacity(0.25).get();
+
+// --- Chart -------------------------------------------------------------------
+Highcharts.chart("container", {
+  chart: {
+    backgroundColor: "transparent",
+    animation: false,
+    style: { fontFamily: "inherit" },
+  },
+  credits: { enabled: false },
+  colors: t.palette,
+  title: {
+    text: "band-basic · javascript · highcharts · anyplot.ai",
+    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+  },
+  subtitle: {
+    text: "Projected sea level rise, moderate-emissions scenario · 95% prediction interval",
+    style: { color: t.inkSoft, fontSize: "14px" },
+  },
+  xAxis: {
+    title: { text: "Year", style: { color: t.inkSoft, fontSize: "16px" } },
+    lineColor: t.inkSoft,
+    tickColor: t.inkSoft,
+    gridLineColor: t.grid,
+    tickInterval: 10,
+    labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+  },
+  yAxis: {
+    title: {
+      text: "Sea Level Rise Since 1900 (mm)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
+    gridLineColor: t.grid,
+    labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+  },
+  legend: {
+    itemStyle: { color: t.inkSoft, fontSize: "14px" },
+    itemHoverStyle: { color: t.ink },
+  },
+  tooltip: { shared: true, valueSuffix: " mm" },
+  plotOptions: {
+    series: { animation: false, marker: { enabled: false } },
+  },
+  series: [
+    // Stacking order matters: Highcharts stacks the FIRST series in this array
+    // as the cumulative top of the stack, and the LAST as the base at 0. So the
+    // visible band goes first (rendering from y_lower to y_upper) and the
+    // invisible spacer goes second (rendering from 0 to y_lower, hidden).
+    {
+      name: "95% prediction interval",
+      type: "areaspline",
+      data: years.map((year, i) => [year, bandHeight[i]]),
+      stacking: "normal",
+      color: bandFill,
+      lineWidth: 0,
+      enableMouseTracking: false,
+      showInLegend: true,
+    },
+    {
+      name: "Lower bound",
+      type: "areaspline",
+      data: years.map((year, i) => [year, lowerBase[i]]),
+      stacking: "normal",
+      color: "transparent",
+      fillOpacity: 0,
+      lineWidth: 0,
+      enableMouseTracking: false,
+      showInLegend: false,
+    },
+    {
+      name: "Projected mean",
+      type: "spline",
+      data: years.map((year, i) => [year, centerLine[i]]),
+      color: t.palette[0],
+      lineWidth: 3,
+      showInLegend: true,
+    },
+  ],
+});
