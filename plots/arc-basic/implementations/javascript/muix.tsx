@@ -103,7 +103,8 @@ function ArcEdges() {
             fill="none"
             stroke={kindColor(kind)}
             strokeWidth={1 + strength * 0.6}
-            strokeOpacity={0.32 + strength * 0.1}
+            strokeOpacity={0.42 + strength * 0.1}
+            strokeDasharray={kind === "repress" ? "6 4" : undefined}
           />
         );
       })}
@@ -155,8 +156,10 @@ function Legend() {
         <span style={{ fontSize: "14px", color: t.inkSoft }}>Activates</span>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "7px" }}>
-        <span style={{ width: "18px", height: "3px", backgroundColor: t.palette[4], display: "inline-block" }} />
-        <span style={{ fontSize: "14px", color: t.inkSoft }}>Represses</span>
+        <svg width="18" height="3" style={{ display: "inline-block" }}>
+          <line x1="0" y1="1.5" x2="18" y2="1.5" stroke={t.palette[4]} strokeWidth="3" strokeDasharray="6 4" />
+        </svg>
+        <span style={{ fontSize: "14px", color: t.inkSoft }}>Represses (dashed)</span>
       </div>
       <span style={{ fontSize: "14px", color: t.inkSoft }}>Arc height ∝ distance along the chromosome</span>
     </div>
@@ -170,18 +173,20 @@ export default function Chart() {
 
   return (
     <div style={{ width, height, display: "flex", flexDirection: "column" }}>
-      <div
-        style={{
-          height: `${TITLE_H}px`,
-          lineHeight: `${TITLE_H}px`,
-          fontSize: `${titleFontSize}px`,
-          fontWeight: 500,
-          color: t.ink,
-        }}
-      >
-        {TITLE}
+      <div style={{ paddingLeft: "50px" }}>
+        <div
+          style={{
+            height: `${TITLE_H}px`,
+            lineHeight: `${TITLE_H}px`,
+            fontSize: `${titleFontSize}px`,
+            fontWeight: 500,
+            color: t.ink,
+          }}
+        >
+          {TITLE}
+        </div>
+        <Legend />
       </div>
-      <Legend />
       <ChartContainer
         width={width}
         height={chartHeight}
