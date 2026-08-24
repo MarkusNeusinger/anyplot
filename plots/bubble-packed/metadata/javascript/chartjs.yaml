@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bubble-packed
 created: '2026-08-24T18:52:40Z'
-updated: '2026-08-24T18:59:18Z'
+updated: '2026-08-24T19:14:36Z'
 generated_by: claude-sonnet
 workflow_run: 32762308139
 issue: 992
@@ -12,114 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/chartjs/plot-dark.html
-quality_score: 84
+quality_score: 90
 review:
   strengths:
-  - Custom, deterministic circle-packing implemented via iterative pairwise collision
-    relaxation with a seeded LCG — a genuinely sophisticated technique not available
-    out-of-the-box in Chart.js's stock bubble type, and it correctly scales radius
-    by sqrt(value) so bubble AREA (not radius) encodes value, matching the spec's
-    explicit requirement.
-  - Per-bubble WCAG-luminance-based text-color selection (labelColorFor/relativeLuminance/contrastRatio)
-    picks dark or light label text against every fill color in both themes — an accessibility-driven
-    detail most implementations skip.
-  - Correct Imprint palette usage in canonical order (green Engineering, lavender
-    Marketing, blue Operations), identical data colors across light/dark renders,
-    and theme-adaptive chrome (title, legend text via t.ink).
-  - Realistic, neutral business scenario (department budgets in $k) with grouped clustering,
-    meaningfully varied values across 15 categories, and all spec-required fields
-    (label, value, group) plus a manually drawn legend kept off the Chart.js layout
-    system so circles stay perfectly round.
+  - Canvas utilization substantially improved from attempt 1 (repositioned group anchors
+    toward the canvas corners, larger MAX_R) — measured ink coverage is now ~46-50%
+    of the canvas, up from well under 30%.
+  - Increased MAX_R lifted every bubble radius well above the old label-cramming issue;
+    even the smallest circle (SEO, $95k) now renders its name at the 16px font cap,
+    fixing the marginal small-bubble legibility flagged in review 1.
+  - Custom, deterministic circle-packing via iterative pairwise collision relaxation
+    with a seeded LCG (seed=42); radius scales by sqrt(value) so bubble AREA (not
+    radius) correctly encodes value, matching the spec.
+  - Per-bubble WCAG-luminance-based text-color selection keeps labels legible against
+    every fill color in both themes; correct Imprint palette in canonical order; theme-correct
+    chrome in both renders; verified no pixels touch the canvas border in either theme
+    (no AR-09 clipping).
+  - Realistic, neutral department-budget scenario with 3 clearly distinguished groups
+    and a wide, plausible value range.
   weaknesses:
-  - 'Canvas utilization is poor: the three group clusters sit at widely-separated
-    fixed anchor centers (320,400 / 900,400 / 610,830 in a 1200x1130 layout space)
-    leaving large blank voids — a broad empty strip under the title, a wide vertical
-    gap between the Engineering and Marketing clusters, and dead space below/right
-    of the Operations cluster. Actual bubble ink likely covers well under 30% of the
-    2400x2400 canvas. Fix: enlarge MAX_R and/or reduce CROSS_GROUP_GAP so clusters
-    grow to fill available space, reposition anchors to reach all four canvas quadrants,
-    or otherwise rebalance the layout so packed content occupies at least 40-50% of
-    the canvas.'
-  - The smallest bubbles (SEO $95k, Legal $120k, Brand $140k) render two lines of
-    text at the 9px font floor — legible at full 2400px resolution but will be nearly
-    illegible once the PNG is scaled down to a ~400px mobile width. Consider dropping
-    the value line (or showing only an abbreviated label) below a radius threshold
-    instead of always cramming two lines into every circle.
-  - The legend sits isolated in the top-left corner, far from the Marketing and Operations
-    clusters on the right/bottom of the canvas, rather than being positioned near
-    the plotted content.
+  - Canvas ink coverage measured at ~46-50%, still just under the 50-70% target the
+    prior review asked for — a noticeable blank void remains in the lower-right quadrant
+    (right of the Operations cluster, below Digital Ads) and in the vertical gap between
+    the top clusters and the Operations cluster.
+  - The VALUE_LINE_MIN_R=46 threshold added this round never actually triggers on
+    the current dataset (the smallest bubble, SEO, has r≈78) — harmless but effectively
+    dead code for this example.
+  - The manually-drawn legend still sits isolated near the very top of the canvas,
+    with a sizeable vertical gap before the Engineering/Marketing clusters begin below
+    it.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bubble-packed · javascript · chartjs · anyplot.ai" is bold dark text, centered at top, clearly readable. A manually-drawn vertical legend in the top-left lists "Engineering" (green dot), "Marketing" (lavender dot), "Operations" (blue dot) in dark text, all readable.
-      Data: Three separate packed-circle clusters — green cluster top-left (Backend $420k, Frontend $310k, Mobile $265k, DevOps $190k, QA $150k), lavender cluster top-right (Digital Ads $380k, Content $210k, Events $175k, Brand $140k, SEO $95k), blue cluster bottom-center (Facilities $260k, Finance $230k, HR $205k, IT Support $165k, Legal $120k). First series (Engineering) is the brand green #009E73 as required. Each circle carries a two-line label (department name + dollar value) with automatically chosen dark or light text for contrast against its fill.
-      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues. Large blank areas of canvas surround and separate the three clusters (see weaknesses).
+      Background: Warm off-white matching #FAF8F1 (verified: no non-background pixels touch any canvas edge).
+      Chrome: Title "bubble-packed · javascript · chartjs · anyplot.ai" is bold dark text, centered at top, clearly readable. A manually-drawn horizontal legend below the title lists "Engineering" (green dot), "Marketing" (lavender dot), "Operations" (blue dot) in dark text.
+      Data: Three packed-circle clusters reaching toward the canvas corners/edges — green cluster top-left (Backend $420k, Frontend $310k, Mobile $265k, DevOps $190k, QA $150k), lavender cluster top-right (Digital Ads $380k, Content $210k, Events $175k, Brand $140k, SEO $95k), blue cluster bottom-center (Facilities $260k, Finance $230k, HR $205k, IT Support $165k, Legal $120k). First series is the brand green #009E73 as required. Each circle carries a two-line label (name + $-value) with automatically chosen text color for contrast; all labels are legible at the 16px font cap even on the smallest circles.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — not pure black, not light.
-      Chrome: Title and legend text switch to light/white and remain clearly readable against the dark background — no dark-on-dark failures observed.
-      Data: The three clusters retain identical fill colors to the light render (same green #009E73, lavender, blue), confirming palette consistency across themes. In-bubble label contrast logic still picks appropriately readable text color per bubble in the dark theme.
-      Legibility verdict: PASS — no dark-on-dark text; brand green remains clearly visible. Same large blank canvas regions as in the light render, confirming the layout/whitespace issue is theme-independent.
+      Background: Warm near-black matching #1A1A17 (verified: no non-background pixels touch any canvas edge).
+      Chrome: Title and legend text switch to light/white and remain clearly readable — no dark-on-dark failures.
+      Data: The three clusters retain identical fill colors to the light render (same green/lavender/blue), confirming Imprint palette consistency across themes. In-bubble label contrast logic still picks readable text per bubble. Canvas ink coverage matches the light render (measured ~46-50% of the canvas below the header) — a meaningfully larger fill than attempt 1, though still short of the 50-70% target the prior review requested; the remaining blank area sits mainly in the lower-right quadrant and the vertical gap above the Operations cluster.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Explicit, dynamically-fitted font sizes; readable at full size in
-          both themes. Smallest bubbles (SEO, Legal, Brand) sit at the 9px font floor
-          and would be marginal at mobile scale.
+        comment: Explicit, dynamically-fitted font sizes; the larger MAX_R this round
+          pushes even the smallest bubble (SEO) to the 16px font cap, readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Collision-relaxation packing keeps circles from overlapping; in-bubble
-          labels shrink-to-fit so no text collides with neighbors.
+        comment: Collision-relaxation packing plus shrink-to-fit labels avoid any
+          overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bubble sizes scale by sqrt(value) so area tracks value correctly;
-          smallest bubbles are visible but text inside is tight.
+        comment: Radius scales correctly by sqrt(value); all bubbles now comfortably
+          sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues are CVD-safe; per-bubble luminance-based text-color
-          choice ensures contrast on every fill.
+        comment: CVD-safe hues, per-bubble luminance-based text contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 2
         max: 4
         passed: false
-        comment: Three clusters sit at widely-separated fixed anchors leaving large
-          blank voids (under title, between Engineering/Marketing, around Operations);
-          canvas ink coverage looks well under 30%. Legend also isolated top-left,
-          away from most clusters.
+        comment: Improved from 0 (attempt 1) to ~46-50% measured ink coverage, but
+          still short of the 50-70% target; residual void in the lower-right quadrant
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for a packed-bubble chart (position carries no meaning per spec,
-          so axes are correctly hidden); title is descriptive and correctly formatted.
+        comment: Axes correctly hidden (position is meaningless per spec), title correctly
+          formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73; second/third series follow
-          canonical Imprint order (lavender, blue); backgrounds and chrome are theme-correct
-          in both renders.'
+        comment: Canonical Imprint order, theme-correct chrome verified in both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -127,23 +115,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom physics-based packing algorithm and per-bubble contrast-aware
-          labeling show above-default craftsmanship, though the overall composition
-          is undercut by the whitespace imbalance.
+        comment: Custom packing algorithm plus contrast-aware labeling stays clearly
+          above default styling
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean legend, no grid clutter, appropriate absence of axes, but whitespace
-          is unevenly distributed rather than generous-and-balanced.
+        comment: Whitespace balance is notably better than attempt 1; minor residual
+          imbalance remains in the lower-right quadrant
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Grouping by department division plus size variation communicates
-          organizational structure and relative spend without annotations.
+        comment: Grouping plus size variation communicates organizational budget structure
+          without annotations
     spec_compliance:
       score: 15
       max: 15
@@ -153,29 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct packed-bubble chart: circles sized by value, packed without
-          overlap via physics-style relaxation.'
+        comment: Correct packed-bubble chart with no-overlap packing
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based sizing, no-overlap packing, in-circle labels, and group-based
-          color encoding are all present.
+        comment: Area-based sizing, packing, in-circle labels, group color encoding
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Size maps to value, color maps to group, position is correctly meaningless
-          (hidden scales) per spec.
+        comment: Size=value, color=group, position correctly meaningless
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match the three
-          group names.
+        comment: Title format exact match, legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -185,21 +169,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 items across 3 groups with a wide value range (95-420) demonstrating
-          packing, grouping, and size variation.
+        comment: 15 items, 3 groups, wide value range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business scenario (department budgets).
+        comment: Neutral department-budget scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget figures and relative department sizes are plausible and internally
-          consistent.
+        comment: Plausible, internally consistent budget figures
     code_quality:
       score: 9
       max: 10
@@ -209,35 +191,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Necessarily uses several helper functions (packing loop, luminance/contrast,
-          plugin hooks) since Chart.js has no native circle-packing — reasonable given
-          the plot type, but more structure than a minimal KISS script.
+        comment: Necessary helper functions for packing/contrast logic given no native
+          Chart.js circle-packing
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed=42) plus hardcoded data.
+        comment: Deterministic seeded LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; uses only the global Chart.
+        comment: No extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; well-commented, appropriately complex for
-          a packed-bubble implementation.
+        comment: No fake UI, appropriately complex for a manual packing simulation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract correctly; animation: false set;
-          current Chart.js API.'
+        comment: 'Correct mount-node contract, animation: false set'
     library_mastery:
       score: 8
       max: 10
@@ -247,27 +226,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Cleverly repurposes Chart.js's bubble type as a positioned-circle
-          renderer with hidden scales, a legitimate expert-level workaround given
-          Chart.js has no native packing chart.
+        comment: Clever repurposing of the bubble type as a positioned-circle renderer
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Chart.js's plugin system (afterDatasetsDraw/afterDraw hooks)
-          for custom canvas drawing — a technique fairly distinctive to Chart.js's
-          architecture.
-  verdict: REJECTED
+        comment: Uses Chart.js's plugin/canvas-hook system (afterDatasetsDraw/afterDraw)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - annotations
+  - circle-packing
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - edge-highlighting

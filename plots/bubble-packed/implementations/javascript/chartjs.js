@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-packed: Basic Packed Bubble Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-08-24
+// Quality: 90/100 | Created: 2026-08-24
 
 //# anyplot-orientation: square
 
