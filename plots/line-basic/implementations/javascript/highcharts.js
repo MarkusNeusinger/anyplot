@@ -21,6 +21,23 @@ const temperatures = hours.map((h) => {
   return Math.round((diurnal + drift + noise) * 10) / 10;
 });
 
+// Overnight shading — the diurnal formula troughs at h=3 and h=27, so night
+// (roughly 9pm-9am) spans these windows within the 0-48h range
+const nightBandColor = Highcharts.color(t.inkSoft).setOpacity(0.06).get("rgba");
+const nightBands = [
+  { from: 0, to: 9, color: nightBandColor },
+  { from: 21, to: 33, color: nightBandColor },
+  { from: 45, to: 48, color: nightBandColor },
+];
+
+// Peak/trough callout for a clear focal point
+let peakIdx = 0;
+let troughIdx = 0;
+temperatures.forEach((v, i) => {
+  if (v > temperatures[peakIdx]) peakIdx = i;
+  if (v < temperatures[troughIdx]) troughIdx = i;
+});
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -45,6 +62,7 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     tickInterval: 6,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: nightBands,
   },
   yAxis: {
     title: {
@@ -58,14 +76,46 @@ Highcharts.chart("container", {
   legend: { enabled: false },
   tooltip: { enabled: false },
   plotOptions: {
-    series: { animation: false, marker: { enabled: false } },
-    line: { lineWidth: 3 },
+    series: { animation: false },
+    line: {
+      lineWidth: 3,
+      marker: { enabled: true, radius: 3, fillColor: t.palette[0], lineWidth: 0 },
+    },
   },
   series: [
     {
       name: "Temperature",
+      type: "line",
       data: temperatures,
       color: t.palette[0],
+    },
+    {
+      name: "Peak / Trough",
+      type: "scatter",
+      data: [
+        {
+          x: peakIdx,
+          y: temperatures[peakIdx],
+          name: `Peak ${temperatures[peakIdx]}°C`,
+          dataLabels: { verticalAlign: "bottom", y: -14 },
+        },
+        {
+          x: troughIdx,
+          y: temperatures[troughIdx],
+          name: `Trough ${temperatures[troughIdx]}°C`,
+          dataLabels: { verticalAlign: "top", y: 14 },
+        },
+      ],
+      color: t.amber,
+      marker: { radius: 6, lineColor: t.pageBg, lineWidth: 2 },
+      dataLabels: {
+        enabled: true,
+        format: "{point.name}",
+        style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+      },
+      enableMouseTracking: false,
+      showInLegend: false,
+      zIndex: 5,
     },
   ],
 });
