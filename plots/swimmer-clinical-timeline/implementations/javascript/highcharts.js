@@ -85,6 +85,11 @@ for (let i = 0; i < patientCount; i += 1) {
 // Sorted so the longest-running patient lands at the top of the inverted axis
 patients.sort((a, b) => a.durationWeeks - b.durationWeeks);
 
+// Cohort median duration — a data-derived focal point for the "story" of the
+// cohort (patients array is already duration-sorted, so the middle entry is
+// the median), not an arbitrary annotation.
+const medianDurationWeeks = patients[Math.floor(patients.length / 2)].durationWeeks;
+
 const categories = patients.map((p) => p.id);
 const armAData = [];
 const armBData = [];
@@ -113,6 +118,14 @@ patients.forEach((p, index) => {
   });
 });
 
+// Subtle zebra banding across the 25 patient rows aids scanning without
+// competing with the data (kept within the grid-opacity range).
+const rowBandColor = t.theme === "dark" ? "rgba(255,255,255,0.035)" : "rgba(0,0,0,0.035)";
+const rowBands = categories
+  .map((_, i) => i)
+  .filter((i) => i % 2 === 1)
+  .map((i) => ({ from: i - 0.5, to: i + 0.5, color: rowBandColor }));
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -126,18 +139,19 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "swimmer-clinical-timeline · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "23px", fontWeight: "700", letterSpacing: "-0.2px" },
   },
   subtitle: {
     text: "Phase II oncology trial · 25 patients · two treatment arms",
-    style: { color: t.inkSoft, fontSize: "14px" },
+    style: { color: t.inkSoft, fontSize: "14px", fontWeight: "400", letterSpacing: "0.3px" },
   },
   xAxis: {
     categories,
+    plotBands: rowBands,
     title: { text: "Patient ID", style: { color: t.inkSoft, fontSize: "16px" } },
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    labels: { style: { color: t.inkSoft, fontSize: "12px" } },
+    labels: { style: { color: t.inkSoft, fontSize: "12px", fontWeight: "500" } },
   },
   yAxis: {
     title: { text: "Time on Study (weeks)", style: { color: t.inkSoft, fontSize: "16px" } },
@@ -146,6 +160,24 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     min: 0,
+    plotLines: [
+      {
+        value: medianDurationWeeks,
+        color: t.inkSoft,
+        width: 1.5,
+        dashStyle: "Dash",
+        zIndex: 5,
+        label: {
+          text: `Cohort median: ${medianDurationWeeks} wk`,
+          rotation: 0,
+          align: "left",
+          verticalAlign: "top",
+          x: 6,
+          y: 16,
+          style: { color: t.inkSoft, fontSize: "12px", fontStyle: "italic" },
+        },
+      },
+    ],
   },
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "13px" },
