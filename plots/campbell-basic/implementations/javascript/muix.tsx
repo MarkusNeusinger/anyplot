@@ -34,9 +34,9 @@ const modeCurves = modes.map((m) => ({ ...m, data: speeds.map(m.freq) }));
 
 // Engine order excitation lines: frequency (Hz) = order x speed (RPM) / 60.
 const orders = [
-  { id: "order1", order: 1, label: "1x", dash: "12 6" },
-  { id: "order2", order: 2, label: "2x", dash: "6 4" },
-  { id: "order3", order: 3, label: "3x", dash: "2 3" },
+  { id: "order1", order: 1, label: "1x", dash: "12 6", opacity: 0.85 },
+  { id: "order2", order: 2, label: "2x", dash: "6 4", opacity: 0.6 },
+  { id: "order3", order: 3, label: "3x", dash: "2 3", opacity: 0.4 },
 ];
 const orderLines = orders.map((o) => ({
   ...o,
@@ -78,10 +78,30 @@ export default function Chart() {
       skipAnimation
       margin={{ top: 70, right: 250, bottom: 90, left: 135 }}
       sx={{
+        // Mode curves (the primary data) get a heavier stroke so they read as
+        // the "real" data; engine-order reference lines stay thin, dashed,
+        // and get a per-order opacity step so 1x/2x/3x read as a fading
+        // sequence in the plot body.
+        ...Object.fromEntries(
+          modeCurves.map((m) => [
+            `& .MuiLineElement-series-${m.id}`,
+            { strokeWidth: 3 },
+          ]),
+        ),
         ...Object.fromEntries(
           orders.map((o) => [
             `& .MuiLineElement-series-${o.id}`,
-            { strokeDasharray: o.dash, opacity: 0.75 },
+            { strokeDasharray: o.dash, opacity: o.opacity, strokeWidth: 1.5 },
+          ]),
+        ),
+        // The legend mark is a solid filled <rect> (no stroke, so
+        // strokeDasharray never reaches it) — mirror the same per-order
+        // opacity step there so 1x/2x/3x stay visually distinct in the
+        // legend, not just in the plot body.
+        ...Object.fromEntries(
+          orders.map((o) => [
+            `& .MuiChartsLegend-series-${o.id} .MuiChartsLegend-mark`,
+            { opacity: o.opacity },
           ]),
         ),
       }}
@@ -149,7 +169,10 @@ export default function Chart() {
         direction="column"
         slotProps={{
           legend: {
-            itemMarkWidth: 20,
+            // Widened from 20px so the per-order opacity step (see sx above)
+            // reads as a clear light/medium/dark gradient across the three
+            // swatches instead of a barely-visible sliver.
+            itemMarkWidth: 36,
             itemMarkHeight: 4,
             markGap: 8,
             itemGap: 16,
