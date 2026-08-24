@@ -29,7 +29,7 @@ const chart = echarts.init(document.getElementById("container"));
 // --- Option ---------------------------------------------------------------
 chart.setOption({
   animation: false,
-  color: [t.palette[0], t.palette[2], t.palette[4], t.muted],
+  color: [t.palette[0], t.palette[2], t.palette[4], t.palette[6]],
   backgroundColor: "transparent",
   title: {
     text: "curve-bias-variance-tradeoff · javascript · echarts · anyplot.ai",
@@ -37,7 +37,7 @@ chart.setOption({
     top: 12,
     textStyle: { color: t.ink, fontSize: 20, fontWeight: 500 },
   },
-  grid: { left: 90, right: 60, top: 150, bottom: 90 },
+  grid: { left: 90, right: 170, top: 150, bottom: 90 },
   legend: {
     top: 60,
     textStyle: { color: t.ink, fontSize: 15 },
@@ -76,6 +76,15 @@ chart.setOption({
       data: complexity.map((c, i) => [c, biasSquared[i]]),
       showSymbol: false,
       lineStyle: { width: 3.5, color: t.palette[0] },
+      endLabel: {
+        show: true,
+        formatter: "{a}",
+        color: t.palette[0],
+        fontSize: 14,
+        fontWeight: 500,
+        distance: 10,
+        offset: [0, -16],
+      },
       z: 3,
       markArea: {
         silent: true,
@@ -90,6 +99,14 @@ chart.setOption({
       data: complexity.map((c, i) => [c, variance[i]]),
       showSymbol: false,
       lineStyle: { width: 3.5, color: t.palette[2] },
+      endLabel: {
+        show: true,
+        formatter: "{a}",
+        color: t.palette[2],
+        fontSize: 14,
+        fontWeight: 500,
+        distance: 10,
+      },
       z: 3,
       markArea: {
         silent: true,
@@ -103,7 +120,16 @@ chart.setOption({
       type: "line",
       data: complexity.map((c, i) => [c, irreducible[i]]),
       showSymbol: false,
-      lineStyle: { width: 2.5, color: t.muted, type: "dashed" },
+      lineStyle: { width: 2.5, color: t.palette[6], type: "dashed" },
+      endLabel: {
+        show: true,
+        formatter: "{a}",
+        color: t.palette[6],
+        fontSize: 14,
+        fontWeight: 500,
+        distance: 10,
+        offset: [0, 16],
+      },
       z: 2,
     },
     {
@@ -112,6 +138,14 @@ chart.setOption({
       data: complexity.map((c, i) => [c, totalError[i]]),
       showSymbol: false,
       lineStyle: { width: 4, color: t.palette[4] },
+      endLabel: {
+        show: true,
+        formatter: "{a}",
+        color: t.palette[4],
+        fontSize: 14,
+        fontWeight: 600,
+        distance: 10,
+      },
       z: 4,
       markLine: {
         silent: true,
