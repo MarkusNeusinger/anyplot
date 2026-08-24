@@ -33,18 +33,46 @@ for (let i = 0; i < numDays; i += 1) {
 
 // Drawdown as % decline from running maximum.
 const drawdownPoints = [];
+const recoveryPoints = [];
 let runningMax = navValues[0];
+let runningMaxIndex = 0;
 let maxDrawdown = 0;
 let maxDrawdownIndex = 0;
+let maxDrawdownPeakIndex = 0;
+let inDrawdown = false;
 for (let i = 0; i < navValues.length; i += 1) {
-  runningMax = Math.max(runningMax, navValues[i]);
+  if (navValues[i] >= runningMax) {
+    if (inDrawdown) {
+      recoveryPoints.push([dates[i], 0]);
+      inDrawdown = false;
+    }
+    runningMax = navValues[i];
+    runningMaxIndex = i;
+  } else {
+    inDrawdown = true;
+  }
   const drawdown = ((navValues[i] - runningMax) / runningMax) * 100;
   drawdownPoints.push([dates[i], drawdown]);
   if (drawdown < maxDrawdown) {
     maxDrawdown = drawdown;
     maxDrawdownIndex = i;
+    maxDrawdownPeakIndex = runningMaxIndex;
   }
 }
+
+// Duration/recovery stats for the deepest drawdown episode.
+let maxDrawdownRecoveryIndex = null;
+for (let i = maxDrawdownIndex + 1; i < navValues.length; i += 1) {
+  if (drawdownPoints[i][1] === 0) {
+    maxDrawdownRecoveryIndex = i;
+    break;
+  }
+}
+const maxDrawdownDurationDays = maxDrawdownIndex - maxDrawdownPeakIndex;
+const recoveryLabel =
+  maxDrawdownRecoveryIndex !== null
+    ? `Recovery: ${maxDrawdownRecoveryIndex - maxDrawdownIndex}d`
+    : "Recovery: not yet recovered";
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -58,10 +86,10 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "drawdown-basic · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "25px", fontWeight: "600" },
   },
   subtitle: {
-    text: `Max drawdown ${maxDrawdown.toFixed(1)}% on ${new Date(dates[maxDrawdownIndex]).toISOString().slice(0, 10)}`,
+    text: `Max drawdown ${maxDrawdown.toFixed(1)}% on ${new Date(dates[maxDrawdownIndex]).toISOString().slice(0, 10)} · Duration: ${maxDrawdownDurationDays}d · ${recoveryLabel}`,
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
@@ -133,6 +161,15 @@ Highcharts.chart("container", {
         style: { color: t.ink, fontSize: "14px", fontWeight: "600", textOutline: "none" },
         y: -14,
       },
+      zIndex: 2,
+      enableMouseTracking: true,
+    },
+    {
+      type: "scatter",
+      name: "Recovery point",
+      data: recoveryPoints,
+      color: t.palette[0],
+      marker: { symbol: "diamond", radius: 5, lineWidth: 1.5, lineColor: t.pageBg },
       zIndex: 2,
       enableMouseTracking: true,
     },
