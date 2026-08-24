@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: density-basic
 created: '2026-08-24T20:28:27Z'
-updated: '2026-08-24T20:32:20Z'
+updated: '2026-08-24T20:41:36Z'
 generated_by: claude-sonnet
 workflow_run: 32773584507
 issue: 912
@@ -12,49 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/d3/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
+  - Peak annotations (amber-accented dots + labels) now call out the competitive vs.
+    recreational finisher modes directly on the curve, giving the bimodal shape a
+    clear narrative
+  - Vertical fill gradient (denser near the curve, fading to the baseline) replaces
+    the flat fill-opacity and adds real visual depth without harming legibility
+  - Rug plot ticks strengthened (stroke-width 1→1.4, opacity 0.35→0.5) so the 600
+    individual observations are visible at full canvas size
   - Correct Gaussian-kernel KDE with Silverman's rule-of-thumb bandwidth, computed
     manually and rendered with a d3-shape area + line pair
-  - Optional rug plot included (per spec Notes), implemented as a proper D3 data join
-    along the baseline
   - Realistic bimodal marathon finish-time data (competitive vs. recreational runners)
-    with plausible bounds (clamped at 120 min, tail out to ~380 min)
-  - 'Theme-adaptive chrome is correct in both renders: Imprint brand green #009E73
-    identical across themes, warm off-white/near-black backgrounds, all text legible'
-  - 'Idiomatic D3: proper data joins (`.data(finishTimes).join("line")` for the rug),
-    d3-shape generators for area/line, d3-array (`d3.mean`, `d3.deviation`, `d3.range`)
-    for stats'
-  - Title format exactly matches the mandated `{spec-id} · {language} · {library}
-    · anyplot.ai` pattern; single-series legend correctly omitted
+    with plausible bounds and a deterministic seeded LCG
+  - 'Theme-adaptive chrome is correct in both renders: Imprint brand green identical
+    across themes, warm off-white/near-black backgrounds, all text legible'
+  - 'Idiomatic D3: proper data joins, d3-shape generators, d3-array stat functions,
+    gradient defs'
   weaknesses:
-  - 'Design Excellence is generic: a single flat green fill+line+rug with no distinguishing
-    color harmony or typographic hierarchy beyond the brand default — looks like a
-    competent standard implementation rather than a publication-ready one (DE-01)'
-  - 'No data storytelling: the curve is genuinely bimodal (competitive vs. recreational
-    runner populations per the code comment) but nothing in the visual calls this
-    out — consider a subtle peak annotation or label on the two modes so the viewer
-    immediately sees the insight instead of having to find it themselves (DE-03)'
-  - Rug plot ticks (600 observations, 1px stroke width, 0.35 opacity) read faint at
-    full canvas size — a touch more opacity or slightly thicker strokes would make
-    the raw-observation layer easier to notice without adding clutter (VQ-03)
-  - Visual refinement is solid (L-shaped spines, subtle y-grid) but stops at a well-executed
-    default rather than pushing further — e.g. no white edge/definition treatment
-    on the rug marks, no secondary color or fill gradient to differentiate the two
-    modes (DE-02)
+  - Peak markers use t.amber, whose defined role is the 'warning/caution' semantic
+    anchor — these labels ('Competitive finishers', 'Recreational finishers') are
+    neutral population callouts, not a warning, so this is a semantic-anchor misuse
+    (minor). Prefer the chart's ink/neutral tone or a categorical palette color for
+    pure highlight markers.
+  - Visual refinement is solid but still close to the prior default treatment (L-shaped
+    spines, subtle y-grid) — no further differentiation beyond the new gradient and
+    annotations
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold centered title "density-basic · javascript · d3 · anyplot.ai" in dark ink at top; x-axis label "Marathon Finish Time (minutes)" and y-axis label "Density" (rotated) in dark ink; tick labels in a slightly softer dark gray; subtle horizontal gridlines at 0.002 intervals. All chrome elements are clearly legible against the light background.
-      Data: A single filled density curve in Imprint brand green (#009E73), semi-transparent mint fill under the curve, with a rug plot of individual observations (thin green tick marks) along the baseline. The curve is visibly bimodal — a taller peak near 200 minutes and a broader lower peak near 250-260 minutes, consistent with the competitive/recreational runner mixture described in the code.
-      Legibility verdict: PASS — no light-on-light or unreadable text observed.
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Bold centered title "density-basic · javascript · d3 · anyplot.ai" in dark ink at top; x-axis label "Marathon Finish Time (minutes)" and rotated y-axis label "Density" in dark ink; softer dark-gray tick labels; subtle horizontal gridlines (y-axis only). All chrome text reads clearly against the light background.
+      Data: A single bimodal density curve in Imprint brand green (#009E73) with a vertical fill gradient (denser near the curve line, fading toward the baseline) instead of a flat fill. A rug plot of ~600 individual observations sits along the baseline, now visibly thicker/more opaque than before. Two amber dots mark the local peaks (~200 min and ~250 min), each labeled "Competitive finishers" / "Recreational finishers" in soft dark text above the dot — clearly readable, no overlap with the curve or title.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/off-white and light gray respectively; gridlines subtle and visible against the dark surface. All chrome elements clearly legible against the dark background.
-      Data: Curve, fill, and rug marks are the identical Imprint brand green (#009E73) as in the light render — only the chrome (background, text, grid) flipped, exactly as required. Same bimodal shape, same peak positions.
-      Legibility verdict: PASS — no dark-on-dark failures; all text and data elements are clearly distinguishable from the near-black background.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title/axis labels/ticks now rendered in light ink/off-white and light gray respectively, all clearly legible against the dark surface; gridlines remain subtle but visible.
+      Data: Curve, gradient fill, and rug marks use the identical #009E73 green as the light render — only chrome flipped. The two amber peak-marker dots and their labels are identical in color/position to the light render and remain clearly legible (soft light-gray label text on dark background, no dark-on-dark failure).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -65,71 +61,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, axis labels 16px, ticks 14px);
-          well-proportioned, readable in both themes
+        comment: Explicit font sizes (22/16/14/13px), readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, axis labels, ticks, or data
+        comment: Peak labels, title, axes all clear of collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Curve/fill clearly visible; rug ticks (600 obs, 1px, 0.35 opacity)
-          read a bit faint at full size
+        comment: Rug stroke-width/opacity increased (1→1.4, 0.35→0.5), fixes prior
+          faint-rug weakness
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, strong contrast against both surfaces, no red-green
-          reliance
+        comment: High-contrast single-series green + amber accent, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well, balanced margins, nothing cut off
+        comment: Canvas gate passed, no overflow/clipping, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units (minutes); Density is inherently unitless
+        comment: Descriptive axis labels with units
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Brand green #009E73 identical across themes; backgrounds theme-correct'
+        passed: false
+        comment: 'First series is #009E73 and backgrounds are theme-correct, but amber
+          is used for non-warning peak-highlight markers, outside its defined semantic-anchor
+          role'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured but generic single-color fill+line+rug, no distinctive
-          color harmony or hierarchy
+        passed: true
+        comment: Gradient fill and peak-marker accents add intentional depth over
+          the prior flat single-color treatment
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped spines, subtle y-grid, decent whitespace — solid but not
-          exceptional
+        comment: L-shaped spines, subtle y-grid, generous whitespace — solid but not
+          further refined this round
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Bimodal shape is visible but not called out — no annotation guiding
-          the viewer to the two-population insight
+        passed: true
+        comment: Peak annotations now explicitly call out the two-population bimodal
+          insight, directly fixing prior weakness
     spec_compliance:
       score: 15
       max: 15
@@ -139,26 +135,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct smooth KDE density plot
+        comment: Correct KDE density plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth curve, fill under curve with transparency, and optional rug
-          plot all present
+        comment: Smooth curve, transparency fill, rug plot, chosen bandwidth all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = finish time, Y = density, correct
+        comment: X = finish time, Y = density, full domain shown including tails
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend correctly omitted for single series
+        comment: Title matches mandated pattern; single-series legend correctly omitted
     data_quality:
       score: 15
       max: 15
@@ -168,20 +163,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Bimodal distribution shown, demonstrating multimodality
+        comment: KDE curve, fill, rug, peak annotations — comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marathon finish times — real, neutral, comprehensible scenario
+        comment: Marathon finish times, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and peak positions plausible for competitive/recreational
-          marathon runners
+        comment: 120-380 minute domain and density values are sensible
     code_quality:
       score: 9
       max: 10
@@ -191,34 +185,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Flat script; small helper functions (lcg, randomNormal, kernelGaussian,
-          kde) are necessary for from-scratch KDE
+        comment: Small helper functions (lcg, randomNormal, kernelGaussian, kde) are
+          reasonable for a KDE implementation, slightly more surface than a minimal
+          script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic
+        comment: Seeded LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global used, no unused imports
+        comment: No imports beyond the d3 global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex for from-scratch KDE, no fake functionality
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current D3 7.9 API, no animation
+        comment: Correct mount-node contract, no animation
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -226,23 +221,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper data joins, d3-shape area/line generators, d3-array stats
+        comment: Proper scales/axes/d3-shape/d3-array usage, gradient defs
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Manual KDE + custom path generation leverages D3's low-level flexibility
-          beyond generic charting
-  verdict: REJECTED
+        comment: Manual KDE, local-maxima peak detection, gradient fill, and rug plot
+          leverage D3's low-level flexibility distinctively
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
+  - gradient-fill
   - alpha-blending
-  - grid-styling
