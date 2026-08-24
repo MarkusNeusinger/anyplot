@@ -107,9 +107,9 @@ const arcDiagramPlugin = {
       ctx.beginPath();
       ctx.moveTo(x1, baselineY);
       ctx.quadraticCurveTo(xMid, yPeak, x2, baselineY);
-      ctx.lineWidth = 1.5 + norm * 4.5;
+      ctx.lineWidth = 2.0 + norm * 4.0;
       ctx.strokeStyle = seqColor(norm);
-      ctx.globalAlpha = 0.35 + norm * 0.35;
+      ctx.globalAlpha = 0.45 + norm * 0.3;
       ctx.stroke();
     });
     ctx.restore();
@@ -171,7 +171,7 @@ new Chart(canvas, {
       },
       y: {
         type: "linear",
-        min: 0,
+        min: -0.08,
         max: 1,
         display: false,
       },
