@@ -36,6 +36,8 @@ for (let i = 0; i < numDays; i++) {
   candles.push({ date, open, high, low, close });
   price = close;
 }
+const peakCandle = candles.reduce((a, b) => (b.high > a.high ? b : a));
+const troughCandle = candles.reduce((a, b) => (b.low < a.low ? b : a));
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -89,11 +91,13 @@ for (const ax of [xAxis, yAxis]) {
 }
 xAxis.selectAll("text").attr("transform", "rotate(-30)").style("text-anchor", "end");
 
-// --- Candlesticks (bullish green / bearish red, Imprint semantic anchors) --
+// --- Candlesticks (bullish hollow-green / bearish filled-red — dual-cue: hue
+// AND fill style, so the bull/bear signal survives colorblind simulation) ---
 const bullColor = t.palette[0]; // brand green — up days
 const bearColor = t.palette[4]; // matte red — down days, semantic loss anchor
 const wickWidth = 2;
 const bodyWidth = Math.max(3, x.bandwidth());
+const isBull = (d) => d.close >= d.open;
 
 const candleG = g
   .selectAll(".candle")
@@ -106,7 +110,7 @@ candleG
   .append("line")
   .attr("y1", (d) => y(d.high))
   .attr("y2", (d) => y(d.low))
-  .attr("stroke", (d) => (d.close >= d.open ? bullColor : bearColor))
+  .attr("stroke", (d) => (isBull(d) ? bullColor : bearColor))
   .attr("stroke-width", wickWidth);
 
 candleG
@@ -115,18 +119,49 @@ candleG
   .attr("y", (d) => y(Math.max(d.open, d.close)))
   .attr("width", bodyWidth)
   .attr("height", (d) => Math.max(1.5, Math.abs(y(d.open) - y(d.close))))
-  .attr("fill", (d) => (d.close >= d.open ? bullColor : bearColor));
+  .attr("fill", (d) => (isBull(d) ? t.pageBg : bearColor))
+  .attr("stroke", (d) => (isBull(d) ? bullColor : bearColor))
+  .attr("stroke-width", (d) => (isBull(d) ? 2 : 0));
+
+// --- Peak / trough annotations (data storytelling) --------------------------
+function annotate(candle, value, label, dy) {
+  const cx = x(candle.date) + x.bandwidth() / 2;
+  const cy = y(value);
+  g.append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 4.5)
+    .attr("fill", "none")
+    .attr("stroke", t.ink)
+    .attr("stroke-width", 1.5);
+  g.append("text")
+    .attr("x", cx)
+    .attr("y", cy + dy)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text(label);
+}
+annotate(peakCandle, peakCandle.high, `Peak $${peakCandle.high.toFixed(0)}`, -14);
+annotate(troughCandle, troughCandle.low, `Trough $${troughCandle.low.toFixed(0)}`, 22);
 
 // --- Legend (bullish / bearish) ---------------------------------------------
 const legend = svg.append("g").attr("transform", `translate(${margin.left},${margin.top - 46})`);
 const legendItems = [
-  { label: "Bullish (close ≥ open)", color: bullColor },
-  { label: "Bearish (close < open)", color: bearColor },
+  { label: "Bullish (close ≥ open)", color: bullColor, hollow: true },
+  { label: "Bearish (close < open)", color: bearColor, hollow: false },
 ];
 let lx = 0;
 for (const item of legendItems) {
   const item_g = legend.append("g").attr("transform", `translate(${lx},0)`);
-  item_g.append("rect").attr("width", 20).attr("height", 20).attr("fill", item.color);
+  item_g
+    .append("rect")
+    .attr("width", 20)
+    .attr("height", 20)
+    .attr("fill", item.hollow ? t.pageBg : item.color)
+    .attr("stroke", item.color)
+    .attr("stroke-width", item.hollow ? 2 : 0);
   item_g
     .append("text")
     .attr("x", 28)
