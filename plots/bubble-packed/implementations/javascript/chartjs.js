@@ -28,14 +28,17 @@ const departments = [
 
 const GROUPS = ["Engineering", "Marketing", "Operations"];
 const groupColor = Object.fromEntries(GROUPS.map((g, i) => [g, t.palette[i]]));
+// Anchors reach toward all four corners of the square canvas (top-left,
+// top-right, bottom-center) with the vertical gap between the top row and
+// the bottom cluster tightened so bubble ink — not blank margin — dominates.
 const groupCenters = {
-  Engineering: { x: 320, y: 400 },
-  Marketing: { x: 900, y: 400 },
-  Operations: { x: 610, y: 830 },
+  Engineering: { x: 290, y: 320 },
+  Marketing: { x: 910, y: 320 },
+  Operations: { x: 600, y: 860 },
 };
 
 // --- Radius by area (not radius) so circle size tracks value linearly ------
-const MAX_R = 108;
+const MAX_R = 165;
 const maxValue = Math.max(...departments.map((d) => d.value));
 const radiusScale = (v) => (MAX_R * Math.sqrt(v)) / Math.sqrt(maxValue);
 
@@ -48,9 +51,9 @@ function lcg(seed) {
 const rand = lcg(42);
 
 const LAYOUT_W = 1200;
-const LAYOUT_H = 1130;
-const SAME_GROUP_GAP = 8;
-const CROSS_GROUP_GAP = 40;
+const LAYOUT_H = 1200;
+const SAME_GROUP_GAP = 6;
+const CROSS_GROUP_GAP = 22;
 const ITERATIONS = 600;
 const CENTER_PULL = 0.015;
 
@@ -117,9 +120,11 @@ function labelColorFor(hex) {
   return darkContrast >= lightContrast ? "#1A1A17" : "#F0EFE8";
 }
 
-// --- Custom plugin: two-line label (name + value) inside each bubble, plus -
-// a manually-drawn legend key (kept off the Chart.js layout system so the
+// --- Custom plugin: name+value label inside each bubble (dropping the value
+// line below a radius floor so small circles never cram two lines), plus a
+// manually-drawn legend key (kept off the Chart.js layout system so the
 // hidden x/y scales stay at a 1:1 pixel-to-data ratio and circles stay round).
+const VALUE_LINE_MIN_R = 46;
 const bubbleLabels = {
   id: "bubbleLabels",
   afterDatasetsDraw(chart) {
@@ -133,36 +138,47 @@ const bubbleLabels = {
         const point = dataset.data[i];
         const { x, y } = element.getProps(["x", "y"], true);
         const r = element.options.radius;
-        let nameFont = Math.min(15, Math.max(9, Math.round(r * 0.28)));
+        const showValue = r >= VALUE_LINE_MIN_R;
+        let nameFont = Math.min(16, Math.max(9, Math.round(r * 0.24)));
         ctx.font = `600 ${nameFont}px sans-serif`;
         while (nameFont > 9 && ctx.measureText(point.label).width > r * 1.7) {
           nameFont -= 1;
           ctx.font = `600 ${nameFont}px sans-serif`;
         }
         ctx.fillStyle = dataset.labelColor;
-        ctx.fillText(point.label, x, y - nameFont * 0.65);
-        const valueFont = Math.max(8, nameFont - 2);
-        ctx.font = `400 ${valueFont}px sans-serif`;
-        ctx.fillText(`$${point.value}k`, x, y + valueFont * 0.75);
+        if (showValue) {
+          ctx.fillText(point.label, x, y - nameFont * 0.65);
+          const valueFont = Math.max(8, nameFont - 2);
+          ctx.font = `400 ${valueFont}px sans-serif`;
+          ctx.fillText(`$${point.value}k`, x, y + valueFont * 0.75);
+        } else {
+          ctx.fillText(point.label, x, y);
+        }
       });
     });
     ctx.restore();
   },
   afterDraw(chart) {
-    const { ctx } = chart;
+    const { ctx, chartArea } = chart;
     ctx.save();
-    ctx.font = "600 15px sans-serif";
+    ctx.font = "600 16px sans-serif";
     ctx.textBaseline = "middle";
-    let ly = 44;
-    GROUPS.forEach((g) => {
+    const dotR = 8;
+    const dotTextGap = 10;
+    const itemGap = 34;
+    const widths = GROUPS.map((g) => dotR * 2 + dotTextGap + ctx.measureText(g).width);
+    const totalWidth = widths.reduce((a, b) => a + b, 0) + itemGap * (GROUPS.length - 1);
+    let lx = (chartArea.left + chartArea.right - totalWidth) / 2;
+    const ly = chartArea.top + 22;
+    GROUPS.forEach((g, i) => {
       ctx.fillStyle = groupColor[g];
       ctx.beginPath();
-      ctx.arc(44, ly, 9, 0, Math.PI * 2);
+      ctx.arc(lx + dotR, ly, dotR, 0, Math.PI * 2);
       ctx.fill();
       ctx.fillStyle = t.ink;
       ctx.textAlign = "left";
-      ctx.fillText(g, 62, ly);
-      ly += 30;
+      ctx.fillText(g, lx + dotR * 2 + dotTextGap, ly);
+      lx += widths[i] + itemGap;
     });
     ctx.restore();
   },
