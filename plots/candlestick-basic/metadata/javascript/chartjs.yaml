@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: candlestick-basic
 created: '2026-08-24T19:52:57Z'
-updated: '2026-08-24T19:57:25Z'
+updated: '2026-08-24T20:08:13Z'
 generated_by: claude-sonnet
 workflow_run: 32770061440
 issue: 812
@@ -12,57 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 96
 review:
   strengths:
-  - 'Clever, spec-compliant workaround for Chart.js''s missing candlestick type: two
-    overlaid floating-bar datasets (thin wick, wider body) on the same category axis
-    via grouped: false, using only core Chart.js bar-chart features as the library
-    rules require.'
-  - 'Correct semantic color mapping per the style guide''s finance exception: bullish
-    uses Imprint position 1 (#009E73), bearish uses the matte-red semantic anchor
-    (#AE3030, position 5) rather than an arbitrary color.'
-  - Custom legend via generateLabels clearly explains 'Bullish (close >= open)' /
-    'Bearish (close < open)', and the tooltip is filtered to the Body dataset only
-    with a formatted O/H/L/C readout, avoiding duplicate wick+body entries.
-  - Data realistically shows both bullish and bearish candles with varying wick lengths
-    and body sizes, a weekday-only trading calendar, and deterministic LCG-seeded
-    generation for reproducibility.
-  - Theme tokens are threaded correctly through title, legend, ticks, axis titles,
-    and grid; data colors are identical between light and dark renders while chrome
-    flips correctly.
-  - Explicit font sizes throughout (title 22, legend 16, axis titles 16, ticks 14);
-    x-axis labels rotated 45 degrees with autoSkip/maxTicksLimit to avoid crowding
-    across 26 data points.
+  - 'Fixed the prior VQ-04 finding by adding a redundant shape cue: bearish candle
+    bodies now get a 1px ink outline while bullish bodies have none, so direction
+    no longer relies on hue alone for CVD viewers.'
+  - Added a 5-session moving-average overlay (dashed line dataset) that gives the
+    chart clear trend context and visual hierarchy beyond raw candles.
+  - 'Added a custom Chart.js plugin (beforeDatasetsDraw/afterDatasetsDraw) that highlights
+    the single widest daily range with a muted band, connector line, and amber marker
+    labeled ''Widest range: $6.08'' - turns the previously ''incidental'' price arc
+    into intentional, guided storytelling.'
+  - 'Retains the clean, spec-compliant floating-bar-overlay technique (thin wick +
+    wide body via grouped: false) using only core Chart.js features, plus correct
+    semantic color mapping (bullish #009E73, bearish Imprint red anchor) and theme-adaptive
+    chrome.'
+  - Data generation, reproducibility (seeded LCG), title/legend format, and all spec/data-quality
+    criteria remain solid and correct.
   weaknesses:
-  - 'Data storytelling is incidental rather than intentional: the random-walk price
-    series happens to trend up then down, but nothing in the chart emphasizes a specific
-    insight or notable move (e.g. the largest single-day range around Jan 20-21).
-    A subtle annotation or muted background band around the most significant move
-    would lift this from ''default'' to ''guided''.'
-  - Candle direction relies solely on the bullish/bearish hue with no redundant encoding
-    (shape, pattern, texture) - an inherent limitation of candlestick charts, but
-    worth a minor VQ-04 deduction since this implementation is otherwise close to
-    the top threshold.
-  - 'Aesthetic polish is strong but stops short of publication-ready: no additional
-    refined touches (e.g. subtle volume bars, a moving-average overlay, or shaded
-    background zones marking the broad up/down phases) that would elevate Design Excellence
-    further.'
+  - Annotation text uses a hardcoded '13px sans-serif' font instead of a token-driven
+    size, slightly inconsistent with the explicit font-size system used elsewhere
+    (title 22 / legend 16 / ticks 14) - cosmetic only.
+  - The legend still shows only color swatches and doesn't hint at the new outline
+    cue on bearish bodies, so a legend-only reader may not immediately notice why
+    bearish candles look outlined.
+  - Design Excellence is strong but still single-layered (one annotation + one MA
+    overlay); an additional refinement (e.g. a muted volume subplot or shaded macro
+    up/down phases) could push DE-03 closer to the ceiling.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Title "candlestick-basic · javascript · chartjs · anyplot.ai" in dark ink, clearly readable and not clipped at top. Custom legend below title with green "Bullish (close >= open)" and red "Bearish (close < open)" swatches, both legible. Y-axis "Price (USD)" and tick labels ($139-$157) in soft dark ink, fully visible with no leftmost-digit clipping. X-axis "Date" title and rotated 45-degree tick labels (Jan 2 ... Feb 5) readable, not overlapping each other or the axis title. Subtle horizontal gridlines only (x-axis grid disabled).
-      Data: 26 candlesticks with thin wicks and wider bodies. First (brand) color is #009E73 green for bullish candles, #AE3030 matte red for bearish candles - correct Imprint semantic mapping for finance. Wicks clearly thinner than bodies and both clearly visible against the background.
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "candlestick-basic · javascript · chartjs · anyplot.ai" in bold dark ink, fully visible, not clipped at top. Custom legend below the title with green "Bullish (close >= open)", red "Bearish (close < open)", and a dashed gray "5-session avg" swatch - all legible. Y-axis "Price (USD)" title and $139-$157 tick labels in soft dark ink, fully visible with no leftmost-digit clipping. X-axis "Date" title and 45-degree-rotated tick labels (Jan 2 ... Feb 5) are readable and don't overlap each other or the axis title. Subtle horizontal gridlines only (x grid disabled). A muted gray vertical band with an amber marker and "Widest range: $6.08" annotation sits over the single widest-range session without overlapping any other element.
+      Data: 26 candlesticks with thin wicks and wider bodies. Bullish bodies are #009E73 green with no border; bearish bodies are the Imprint semantic red with a thin dark ink outline (redundant shape cue). A dashed 5-session moving-average line tracks the trend. Wicks are clearly thinner than bodies and both are clearly visible against the background.
       Legibility verdict: PASS - all text is dark-on-light and clearly readable, no overlap, no edge clipping observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Same title, legend, and axis chrome as the light render but rendered in light/white text - all clearly legible against the dark background, no dark-on-dark failures observed. Gridlines are subtle but visible.
-      Data: Candle colors are visually identical to the light render (green #009E73 bullish, red #AE3030 bearish) - only the chrome (background, text, grid) flipped as required.
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Same title, legend, axis titles/ticks, and annotation as the light render but rendered in light/white text - all clearly legible against the dark background, no dark-on-dark failures observed. Gridlines remain subtle but visible. The amber annotation marker and connector line are still clearly visible on the dark surface.
+      Data: Candle colors and the bearish-outline cue are visually identical to the light render (#009E73 bullish, Imprint semantic red bearish with dark outline) - only chrome (background, text, grid, band shading) flipped as required. The moving-average dashed line switches to a lighter tone for contrast against the dark background, as expected from theme tokens.
       Legibility verdict: PASS - all text is light-on-dark and clearly readable, no dark-on-dark issues, data colors match the light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -71,36 +63,35 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22, legend 16, axis titles 16,
-          ticks 14); readable in both themes, rotated x-ticks avoid crowding across
+          ticks 14); readable in both themes; rotated x-ticks avoid crowding across
           26 points.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis labels, or candles.
+        comment: No overlap between title, legend, axis labels, candles, or the new
+          widest-range annotation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candle bodies (18px) and wicks (3px) well-proportioned for 26 data
-          points.
+        comment: Candle bodies (18px) and wicks (3px) remain well-proportioned for
+          26 data points.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Bullish/bearish direction relies solely on hue with no redundant
-          shape/pattern encoding - inherent to candlestick charts but not optimal
-          for CVD users.
+        passed: true
+        comment: 'Fixed from the prior review: bearish bodies now get a dark ink outline
+          (shape/pattern redundancy) so direction no longer relies on hue alone.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced share of the canvas; legend sits close
-          to the title; no cut-off content.
+        comment: 3200x1800 canvas gate passed; balanced proportions, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,35 +104,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Bullish = Imprint #009E73 (position 1), bearish = Imprint #AE3030
-          (semantic anchor), identical across themes; backgrounds are theme-correct
-          #FAF8F1/#1A1A17.'
+        comment: 'Bullish = Imprint #009E73 (position 1), bearish = Imprint semantic
+          red anchor, identical across themes; backgrounds are theme-correct #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping, custom legend and tooltip, clean
-          typography - clearly above library defaults.
+        comment: Moving-average overlay plus a custom annotation plugin add clear
+          intentional hierarchy beyond the already-solid semantic color mapping and
+          typography.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: X-axis grid disabled, y-axis grid kept subtle, generous whitespace
-          - some refinement beyond defaults.
+        comment: Dashed MA line, muted highlight band, and subtle single-axis grid
+          read as deliberate, refined choices.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data is displayed but not interpreted - the up/down price arc is
-          incidental to the RNG, no emphasis or annotation guides the viewer to an
-          insight.
+        passed: true
+        comment: 'Fixed from the prior review: the widest-range annotation and moving-average
+          trend line give the chart a clear focal point and guide the viewer to a
+          specific insight.'
     spec_compliance:
       score: 15
       max: 15
@@ -172,8 +163,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; legend labels correctly describe
-          bullish/bearish.
+        comment: Title matches the exact mandated format; legend labels correctly
+          describe bullish/bearish/MA.
     data_quality:
       score: 15
       max: 15
@@ -208,8 +199,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data-generation -> mount -> chart flow; the small LCG helper
-          is the documented workaround for the browser's lack of seeded RNG.
+        comment: Linear data-generation -> mount -> chart flow; the plugin and MA
+          loop stay simple and well-commented.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -227,8 +218,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the constraint, honest comment explaining
-          the workaround, no fake functionality.
+        comment: Appropriately complex for the constraint, honest comments explaining
+          the workaround and the CVD redundancy, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -237,7 +228,7 @@ review:
         comment: 'Mounts a canvas to #container, animation: false, current Chart.js
           API.'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -245,25 +236,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses the library-sanctioned floating-bar pattern, theme tokens, and
-          tooltip/legend callbacks idiomatically.
+        comment: Uses the library-sanctioned floating-bar pattern, theme tokens, plugin
+          API, and tooltip/legend callbacks idiomatically.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: 'grouped: false plus floating [low, high] / [open, close] bar ranges
-          is a genuine Chart.js-specific technique, though the general floating-bar-for-OHLC
-          idea exists elsewhere too.'
-  verdict: REJECTED
+        comment: Custom plugin using beforeDatasetsDraw/afterDatasetsDraw for the
+          annotation is a genuine Chart.js-specific technique beyond the base floating-bar
+          trick.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - hover-tooltips
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
+  - rolling-window
   styling:
   - grid-styling
