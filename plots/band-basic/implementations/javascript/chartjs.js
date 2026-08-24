@@ -28,13 +28,48 @@ const revenueLower = days.map((day, i) => {
   return revenueCenter[i] - spread;
 });
 
+const ciWidthAtEnd = revenueUpper[days.length - 1] - revenueLower[days.length - 1];
+
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// --- Custom plugin: callout labeling the CI width at the forecast horizon --
+// Chart.js core exposes a plugin hook (afterDraw) rather than requiring the
+// unpinned chartjs-plugin-annotation package — a distinctive, library-native
+// way to reinforce the widening-uncertainty story with a direct callout.
+const ciCalloutPlugin = {
+  id: "ciCallout",
+  afterDraw(chart) {
+    const { ctx, scales } = chart;
+    const lastIndex = days.length - 1;
+    const x = scales.x.getPixelForValue(lastIndex);
+    const yTop = scales.y.getPixelForValue(revenueUpper[lastIndex]);
+    const yBottom = scales.y.getPixelForValue(revenueLower[lastIndex]);
+
+    ctx.save();
+    ctx.strokeStyle = `${t.palette[0]}80`;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(x, yTop);
+    ctx.lineTo(x, yBottom);
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.ink;
+    ctx.font = "600 14px sans-serif";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`±$${(ciWidthAtEnd / 2).toFixed(0)}K CI`, x - 10, yTop - 8);
+    ctx.restore();
+  },
+};
+
 // --- Chart -----------------------------------------------------------------
 new Chart(canvas, {
   type: "line",
+  plugins: [ciCalloutPlugin],
   data: {
     labels: days,
     datasets: [
@@ -49,9 +84,18 @@ new Chart(canvas, {
       {
         label: "95% Confidence Interval",
         data: revenueUpper,
-        borderWidth: 0,
+        borderWidth: 1.5,
+        borderColor: `${t.palette[0]}66`,
         pointRadius: 0,
-        backgroundColor: `${t.palette[0]}33`,
+        backgroundColor: (context) => {
+          const { chart } = context;
+          const { chartArea } = chart;
+          if (!chartArea) return `${t.palette[0]}59`;
+          const gradient = chart.ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+          gradient.addColorStop(0, `${t.palette[0]}59`); // ~35% alpha near the line
+          gradient.addColorStop(1, `${t.palette[0]}33`); // ~20% alpha toward the axis
+          return gradient;
+        },
         fill: "-1",
         tension: 0.35,
       },
