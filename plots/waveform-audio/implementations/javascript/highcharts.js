@@ -98,7 +98,10 @@ Highcharts.chart("container", {
     max: durationSeconds,
   },
   yAxis: {
-    title: { text: "Amplitude", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "Amplitude (normalized)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     gridLineColor: t.grid,
     min: -1,
@@ -107,15 +110,24 @@ Highcharts.chart("container", {
     plotLines: [{ value: 0, color: t.inkSoft, width: 1.5, zIndex: 3 }],
   },
   legend: { enabled: false },
-  tooltip: { enabled: false },
+  tooltip: {
+    enabled: true,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    style: { color: t.ink, fontSize: "13px" },
+    formatter() {
+      return `t=${this.x.toFixed(3)}s, a=${this.y.toFixed(2)}`;
+    },
+  },
   plotOptions: {
     series: { animation: false },
     area: {
       threshold: 0,
-      lineWidth: 1,
+      lineWidth: 1.5,
+      lineColor: "#00694A",
       fillOpacity: 0.55,
       marker: { enabled: false },
-      states: { hover: { enabled: false } },
+      states: { hover: { lineWidthPlus: 0, halo: { size: 0 } } },
     },
   },
   series: [{ name: "Amplitude", data: envelopeData, color: t.palette[0] }],
