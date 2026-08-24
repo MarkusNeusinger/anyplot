@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: density-basic
 created: '2026-08-24T20:36:55Z'
-updated: '2026-08-24T20:41:23Z'
+updated: '2026-08-24T20:50:09Z'
 generated_by: claude-sonnet
 workflow_run: 32774311802
 issue: 912
@@ -12,46 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/muix/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
   - 'Theme-adaptive chrome is correct in both renders: identical #009E73 data color,
-    warm #FAF8F1 / #1A1A17 backgrounds, fully legible dark/light text with no dark-on-dark
-    or light-on-light failures'
-  - Font sizes are explicitly set throughout (title 22px, axis labels 16px, tick labels
-    14px) and remain balanced and legible in both themes
-  - 'Correct KDE technique: custom Gaussian kernel with Silverman''s rule-of-thumb
-    bandwidth, deterministic LCG-seeded data (reproducible without a seeded Math.random())'
-  - Realistic, neutral domain data (marathon finish times) with a sensible right skew
-    and a plausible median (~230 min)
-  - Single-series legend correctly suppressed (slotProps.legend.hidden) and grid restricted
-    to horizontal-only, matching the style guide's line-chart grid guidance
-  - Title format exactly matches the mandated `density-basic · javascript · muix ·
-    anyplot.ai` convention
+    warm #FAF8F1/#1A1A17 backgrounds, fully legible text in both themes'
+  - New peak reference line (ChartsReferenceLine) gives the chart a clear focal point
+    and directly addresses the prior review's storytelling feedback
+  - 'Correct KDE technique: custom Gaussian kernel with a widened Silverman-style
+    bandwidth, deterministic LCG-seeded data'
+  - Realistic, neutral domain data (marathon finish times) with sensible right skew
+    and plausible median (~229 min)
+  - Font sizes explicitly set throughout and balanced in both themes; single-series
+    legend correctly suppressed; grid restricted to horizontal-only
+  - Title format exactly matches the mandated convention
   weaknesses:
-  - 'Design Excellence sits close to library defaults: a single green area+line with
-    no accent styling, annotation, or emphasis beyond the fill — nothing elevates
-    it past ''correct but generic'' (e.g. mark/label the peak or median finish time,
-    or shade a percentile band).'
-  - The KDE curve shows a small secondary wiggle/bump around 420-440 minutes that
-    reads as estimation noise rather than a genuine distribution feature — widen the
-    bandwidth slightly (e.g. bump the Silverman multiplier above 1.06, or trim the
-    sparse right tail before computing bandwidth) so the curve settles smoothly to
-    zero without the artifact.
-  - No visual hierarchy or focal point beyond the fill/curve itself (DE-03) — a subtle
-    peak marker, median line, or short annotation would give the chart a clearer story.
+  - The bandwidth multiplier was raised from 1.06 to 1.8 to fix the secondary tail
+    wiggle, but zooming into plot-light.png/plot-dark.png around x=410-465 still shows
+    a small spurious hump before the curve reaches zero — the fix reduced but did
+    not eliminate the artifact. Consider clipping the sparse right tail (e.g. drop
+    the top 1-2 outlier finish times, or grid-truncate density values below a small
+    epsilon to 0) rather than relying solely on a larger bandwidth multiplier.
+  - 'Design excellence is still close to a single-color area+line composition with
+    one dashed reference line — DE-02 (visual refinement) is unchanged from the prior
+    review: the axis frame and grid are MUI X defaults rather than a deliberately
+    customized look.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "density-basic · javascript · muix · anyplot.ai" in dark ink, top-left, clearly readable. X-axis label "Marathon Finish Time (minutes)" and Y-axis label "Density (×10⁻3)" both dark ink, similar size, fully legible. Tick labels (100-470 on x, 0.0-10.0 on y) are dark, small but crisp. Horizontal grid lines are subtle, light gray, non-competing with the data.
-      Data: Single right-skewed KDE curve in brand green (#009E73), 3px stroke, with a semi-transparent green fill (~35% opacity) under the curve. Peak density ~9.8x10^-3 around x=225-230 minutes. Long right tail flattening toward zero past x=340, with a very small secondary wiggle around x=420-440.
-      Legibility verdict: PASS - all text is clearly readable against the light background, no overlap, no clipping at any canvas edge.
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "density-basic · javascript · muix · anyplot.ai" in bold dark ink, top-left, clearly readable. X-axis label "Marathon Finish Time (minutes)" and Y-axis label "Density (×10⁻³)" both dark ink, similarly sized, fully legible, with dark tick labels along both axes (60-500 on x, 0.0-9.0 on y). Subtle horizontal-only grid lines at low opacity.
+      Data: Single right-skewed KDE curve in brand green (#009E73), ~3px stroke, ~35%-opacity green fill under the curve, peaking around x≈229 min (density ≈8.9x10⁻³). A dashed inkSoft reference line marks the peak with the label "Peak ≈ 229 min" sitting cleanly at the baseline with no overlap. Zooming into the x=410-465 region shows a small residual secondary hump before the curve settles to zero — a minor KDE tail artifact, not a rendering/theme bug.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, axis labels, and tick labels are all rendered in light ink (off-white), clearly readable against the dark background. No dark-on-dark text anywhere. Horizontal grid lines are subtle light gray at low opacity, visible but not dominant.
-      Data: Same brand green (#009E73) curve and fill as the light render — colors are identical between themes, only chrome (background, text, grid) flipped as expected. Same peak, same skew, same minor tail wiggle.
-      Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark or light-on-light failures observed.
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels, now rendered in light ink — clearly readable against the dark background, no dark-on-dark failures. Grid lines are subtle and light at low opacity. Peak reference line and label use the same theme-adaptive inkSoft token, clearly visible.
+      Data: Curve and fill use the identical brand green (#009E73) as the light render — only chrome (background, text, grid, reference-line color) flipped, exactly as required. Same peak position, skew, and residual tail wiggle as the light render (confirms the artifact is data-driven, not a theme regression).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -62,72 +59,69 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
-          14px); readable in both themes, no overflow or clipping
+        comment: All font sizes explicit (title 22px, axis labels 16px, ticks 14px);
+          legible in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No text/element collisions; peak label sits cleanly at baseline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3px stroke + 35% opacity area appropriately sized for a single smooth
-          KDE curve
+        comment: Stroke width and fill opacity appropriate for a single smooth curve
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series brand green has strong contrast against both surfaces;
-          no red-green reliance
+        comment: Strong contrast, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well with balanced margins; nothing cut off
+        comment: Balanced margins, nothing cut off, good canvas use
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units (minutes, x10^-3 density)
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds correct
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+        comment: 'First series #009E73, identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: 'Well-configured library default: explicit sizing and fill opacity,
-          but a plain single-color area chart with no distinctive design touch'
+        comment: Peak annotation and bolder title improve on attempt 1, but still
+          a fairly simple single-color area+line composition
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Horizontal-only grid and hidden legend are deliberate refinements,
-          but the L-shaped axis frame is a MUI X default rather than custom effort
+        comment: 'Unchanged from prior review: axis frame and grid are MUI X defaults
+          rather than deliberately customized'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: The fill and peak create some visual hierarchy, but there is no annotation
-          or emphasis (e.g. peak/median marker) to sharpen the focal point
+        passed: true
+        comment: New dashed peak reference line with label creates a clear focal point,
+          directly addressing the prior review's ask
     spec_compliance:
       score: 15
       max: 15
@@ -137,26 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct smooth KDE density curve with area fill
+        comment: Correct smooth KDE curve with area fill
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth density curve, transparent fill, appropriate bandwidth choice
-          (Silverman's rule); rug plot omitted but explicitly optional in spec
+        comment: Smooth curve, transparent fill, Silverman-style bandwidth; rug plot
+          omitted but explicitly optional
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = finish time grid, Y = density; axes show the full estimated range
+        comment: X = finish-time grid, Y = density, full range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches mandated format; legend correctly hidden for
+        comment: Title matches mandated format exactly; legend correctly hidden for
           single series
     data_quality:
       score: 13
@@ -167,21 +161,21 @@ review:
         score: 4
         max: 6
         passed: false
-        comment: Right skew is clearly shown, but a small secondary wiggle around
-          420-440 min reads as KDE noise rather than a real feature
+        comment: Bandwidth widened from 1.06 to 1.8 but a small secondary hump around
+          x=410-465 is still visible on close inspection in both renders
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Marathon finish times: real, neutral, comprehensible domain'
+        comment: 'Marathon finish times: real, neutral, comprehensible'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Median ~230 min and spread are plausible for real-world marathon
-          finish-time distributions
+        comment: Median ~229 min and spread are plausible for real-world marathon
+          data
     code_quality:
       score: 10
       max: 10
@@ -191,35 +185,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Minimal helper functions (lcg, gaussianKernel) appropriate for a
-          from-scratch KDE in JS; no over-structuring
+        comment: Minimal helper functions appropriate for a from-scratch KDE in JS
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42) makes data fully deterministic
+        comment: Fixed-seed LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only LineChart imported, all used
+        comment: Only LineChart and ChartsReferenceLine imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no over-engineering, no fake UI elements
+        comment: Clean, no over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Default-exported component sized from window.ANYPLOT_SIZE, skipAnimation
-          set, harness-compliant
+          set
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -227,23 +220,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of LineChart's area/curve/xAxis/yAxis config and slotProps,
-          though tooltip/interaction customization is left at defaults
+        comment: Good use of LineChart area/curve/xAxis/yAxis config and slotProps
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sx-prop targeting of .MuiAreaElement-root/.MuiLineElement-root for
-          fill opacity and stroke width is a MUI-specific technique
-  verdict: REJECTED
+        comment: ChartsReferenceLine now used for a theme-adaptive peak annotation,
+          a genuinely MUI-specific feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
