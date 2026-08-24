@@ -1,0 +1,256 @@
+library: letsplot
+language: python
+specification_id: dendrogram-radial
+created: '2026-08-24T22:18:52Z'
+updated: '2026-08-24T22:31:27Z'
+generated_by: claude-sonnet
+workflow_run: 32782684632
+issue: 5245
+language_version: 3.13.15
+library_version: 4.11.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dendrogram-radial/python/letsplot/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Added the radial reference guide (faint dashed rings at h=7.5 and h=15.0 with
+    small labels) requested in the previous review -- branch length now has a legible
+    scale anchor instead of relying on bare radius comparison
+  - Added lets-plot-native interactive tooltips (layer_tooltips().line("Sample|@sample").line("Cluster|@cluster"))
+    on the leaf-tick geom_segment layer -- a genuine lets-plot-distinctive HTML-export
+    feature, not a generic ggplot-grammar port
+  - 'Hand-derived polar coordinates from scipy''s icoord/dcoord solve a real gap:
+    lets-plot has no native dendrogram/radial-layout geom, and the implementation
+    correctly matches scipy''s link_color_func node-id contract for bottom-up cluster
+    propagation'
+  - In-panel legend built manually inside the empty center hole, working around lets-plot's
+    PNG exporter mis-sizing side/bottom legends against a fixed square canvas -- a
+    well-reasoned, documented tradeoff
+  - Cluster coloring uses the Imprint palette in canonical order with the theme-adaptive
+    muted anchor correctly reserved for structural "between clusters" merges
+  - 'Both renders are fully theme-correct: identical data colors, warm off-white /
+    warm near-black backgrounds, readable chrome in both themes'
+  - Realistic, neutral data story (gene-expression clustering across tissue samples)
+    with reproducible seeding (np.random.seed(42) + random_state=42)
+  weaknesses:
+  - Three coordinate-transform helper functions (to_angle, to_radius, polar_to_xy)
+    still break strict KISS structure -- justified by the polar-projection math, but
+    still a minor CQ-01 deduction
+  - At the 400px mobile thumbnail, leaf labels remain tight where several short branches
+    cluster together (e.g. the S25/S15/S28 and S03/S06/S14 areas) -- a very minor
+    VQ-01 deduction
+  - The new radial-guide labels ("h=7.5", "h=15.0") sit close to the green cluster
+    branches near the top of the circle -- still readable but worth a small clearance
+    nudge if this file is touched again
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "dendrogram-radial · python · letsplot · anyplot.ai" top-left in dark ink, fully visible and unclipped. Two faint dashed reference rings (h=7.5, h=15.0) with small muted-ink labels give the merge-height scale a visual anchor. In-panel legend (5 rows: Type A/B/C/D + Mixed) sits inside the tree's own empty center hub.
+      Data: Radial dendrogram, root at center, 32 leaves (S01-S32) on the circumference. Four cluster arcs colored green (Type A, #009E73 as required), purple (Type B), blue (Type C), ochre (Type D); merges that cross cluster boundaries render in muted gray ("Mixed"). Rotated leaf labels read outward on both halves of the circle.
+      Legibility verdict: PASS -- title, legend, ring labels, and all 32 leaf labels are clearly readable against the light background; minor tightness only where several short branches cluster together at 400px thumbnail scale.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Same title and legend, now in light ink, fully visible and unclipped. The two reference rings and their labels remain legible in muted light-gray against the dark background.
+      Data: The four cluster colors and the muted-gray "Mixed" links are pixel-identical to the light render -- only background and text ink flip, exactly as required. No dark-on-dark text found anywhere.
+      Legibility verdict: PASS -- all text (title, legend, leaf labels, ring labels) is clearly readable against the dark background; no unreadable elements in either theme.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout, readable at full res and 400px thumbnail;
+          minor tightness where short branches cluster densely
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, legend, rings, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Branch/leaf-tick sizing well-adapted to 32 leaves
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe, position and color both encode cluster identity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Tree fills most of the 2400x2400 canvas, legend integrated in the
+          empty hub, no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No conventional axis applicable; title fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for clusters 2-4,
+          muted anchor for structural merges, both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom radial geometry, hand-built in-panel legend, and now a radial
+          distance reference guide anchoring merge-height scale
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis chrome, subtle dashed reference rings, careful angular spacing;
+          center hub otherwise just the legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Muted-gray treatment for cross-cluster merges gives an immediate
+          read of cluster purity and where the hierarchy crosses boundaries
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct radial dendrogram: root center, leaves on circumference'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: linkage_matrix, labels, cluster_colors all present and used
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle/radius mapping correct and consistent
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match cluster names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varying merge heights, 4 clusters, cross-cluster merges shown; 32
+          leaves at the lower end of the 20-500 spec range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marker-gene expression across tissue samples, neutral scientific
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values derived from real hierarchical clustering, internally consistent
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Overall imports->data->plot->save flow, but defines 3 small coordinate-transform
+          helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) + random_state=42
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity proportional to the real challenge, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot-{THEME}.png / .html via ggsave(scale=4)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics composition (multiple geoms + scale_color_manual
+          + coord_fixed)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Now uses layer_tooltips() for native interactive HTML tooltips, a
+          lets-plot-distinctive feature not available in static ggplot2/plotnine ports
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - scipy
+  - sklearn
+  techniques:
+  - layer-composition
+  - custom-legend
+  - hover-tooltips
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - hierarchical-clustering
+  styling:
+  - minimal-chrome
+  - alpha-blending
