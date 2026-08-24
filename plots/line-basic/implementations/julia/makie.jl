@@ -58,15 +58,15 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xgridvisible       = false,
     xminorgridvisible  = false,
     yminorgridvisible  = false,
     xticks             = (0:4:23, string.(0:4:23) .* ":00"),
 )
 
 # Shade the midday plateau to give the chart a focal point before drawing the line.
-vspan!(ax, 10.5, 15.5; color = RGBAf(BRAND.r, BRAND.g, BRAND.b, 0.08))
+vspan!(ax, 10.5, 15.5; color = RGBAf(BRAND, 0.08f0))
 
 lines!(ax, hours, temperatures; color = BRAND, linewidth = 3.5)
 scatter!(ax, hours, temperatures; color = BRAND, markersize = 10, strokewidth = 0)
@@ -82,9 +82,11 @@ text!(
     offset   = (0, 12),
     fontsize = 13,
     color    = INK,
+    space    = :data,
 )
 
 xlims!(ax, -0.5, 23.5)
+ylims!(ax, minimum(temperatures) - 2, maximum(temperatures) + 3)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
