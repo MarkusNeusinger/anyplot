@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: pygal 3.1.3 | Python 3.13.15
 Quality: 80/100 | Created: 2026-08-24
@@ -6,6 +6,7 @@ Quality: 80/100 | Created: 2026-08-24
 
 import os
 
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -21,16 +22,8 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # (pygal has no per-series color override, so this is how each series gets its hue).
 ANYPLOT_NEUTRAL = INK  # baseline / reference-line role (theme-adaptive)
 ANYPLOT_MUTED = INK_MUTED  # secondary construction-line role (theme-adaptive)
-SERIES_COLORS = (
-    "#009E73",
-    "#C475FD",
-    "#4467A3",
-    ANYPLOT_NEUTRAL,
-    ANYPLOT_MUTED,
-    ANYPLOT_NEUTRAL,
-    ANYPLOT_NEUTRAL,
-    "#AE3030",
-)
+UTS_COLOR = "#BD8233"  # distinct Imprint hue so UTS reads apart from the Yield dot without the legend
+SERIES_COLORS = ("#009E73", "#C475FD", "#4467A3", ANYPLOT_NEUTRAL, ANYPLOT_MUTED, ANYPLOT_NEUTRAL, UTS_COLOR, "#AE3030")
 
 # Data - mild steel tensile test: elastic modulus, 0.2% offset yield, UTS, necking to fracture
 np.random.seed(42)
@@ -99,6 +92,7 @@ chart = pygal.XY(
     show_y_guides=True,
     show_dots=False,
     margin=110,
+    margin_top=500,  # reserves a clear gutter below the title for the zoomed offset inset (see Step: Save)
     margin_bottom=260,
     margin_left=210,
     margin_right=90,
@@ -152,8 +146,96 @@ chart.add(
     stroke=False,
 )
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+# Zoomed inset: the elastic-modulus tangent + 0.2% offset line are a ~0.35%-of-axis
+# sliver on the main linear strain axis (yield strain 0.0033 vs. fracture strain 0.30),
+# so pygal's own XY chart can't render them as distinguishable geometry at this scale.
+# Hand-draw a small self-contained zoom panel (own axes, ticks, curve) directly as SVG
+# markup and splice it into the reserved gutter below the title (margin_top=500 above).
+INSET_X, INSET_Y, INSET_W, INSET_H = 260, 160, 900, 360
+INSET_X_MAX = offset_strain[1] + 0.0004  # small headroom past the offset line's top end
+INSET_Y_MAX = construction_cap + 20
+FONT_STACK = "Consolas, 'Liberation Mono', Menlo, Courier, monospace"
+
+
+def _inset_point(strain, stress):
+    x = INSET_X + (strain / INSET_X_MAX) * INSET_W
+    y = INSET_Y + INSET_H - (stress / INSET_Y_MAX) * INSET_H
+    return x, y
+
+
+def _inset_polyline(points, color, width, dasharray=None):
+    path = " ".join(f"{x:.2f},{y:.2f}" for x, y in (_inset_point(s, v) for s, v in points))
+    dash = f' stroke-dasharray="{dasharray}"' if dasharray else ""
+    return f'<polyline points="{path}" fill="none" stroke="{color}" stroke-width="{width}"{dash} />'
+
+
+def _build_offset_inset_svg():
+    parts = [f'<g class="offset-inset" font-family="{FONT_STACK}">']
+    parts.append(
+        f'<rect x="{INSET_X}" y="{INSET_Y}" width="{INSET_W}" height="{INSET_H}" '
+        f'fill="{PAGE_BG}" stroke="{INK_MUTED}" stroke-width="2" />'
+    )
+    parts.append(
+        f'<text x="{INSET_X + INSET_W / 2:.2f}" y="{INSET_Y - 18}" text-anchor="middle" '
+        f'fill="{INK}" font-size="32">Zoom: Elastic Modulus &amp; 0.2% Offset Region</text>'
+    )
+
+    # Y ticks/gridlines (stress)
+    for y_val in (0, 100, 200, 300):
+        _, py = _inset_point(0, y_val)
+        parts.append(
+            f'<line x1="{INSET_X}" y1="{py:.2f}" x2="{INSET_X + INSET_W}" y2="{py:.2f}" stroke="{INK_MUTED}" stroke-width="1" stroke-opacity="0.35" />'
+        )
+        parts.append(
+            f'<text x="{INSET_X - 12}" y="{py + 8:.2f}" text-anchor="end" fill="{INK_MUTED}" font-size="24">{y_val}</text>'
+        )
+
+    # X ticks (strain)
+    for x_val in (0.0, 0.001, 0.002, 0.003):
+        px, _ = _inset_point(x_val, 0)
+        parts.append(
+            f'<line x1="{px:.2f}" y1="{INSET_Y}" x2="{px:.2f}" y2="{INSET_Y + INSET_H}" stroke="{INK_MUTED}" stroke-width="1" stroke-opacity="0.2" />'
+        )
+        parts.append(
+            f'<text x="{px:.2f}" y="{INSET_Y + INSET_H + 30}" text-anchor="middle" fill="{INK_MUTED}" font-size="24">{x_val:.3f}</text>'
+        )
+
+    # Elastic curve + the leading sliver of the plateau, in the same colors as the main chart
+    parts.append(_inset_polyline(zip(elastic_strain, elastic_stress, strict=True), "#009E73", 4))
+    plateau_mask = plateau_strain <= INSET_X_MAX
+    parts.append(
+        _inset_polyline(zip(plateau_strain[plateau_mask], plateau_stress[plateau_mask], strict=True), "#C475FD", 4)
+    )
+
+    # 0.2% offset construction, matching the main chart's dash + colors
+    parts.append(
+        _inset_polyline([(tangent_strain[0], 0), (tangent_strain[1], construction_cap)], ANYPLOT_NEUTRAL, 3, "12,10")
+    )
+    parts.append(
+        _inset_polyline([(offset_strain[0], 0), (offset_strain[1], construction_cap)], ANYPLOT_MUTED, 3, "12,10")
+    )
+
+    # Yield point marker
+    yx, yy = _inset_point(YIELD_STRAIN, YIELD_STRESS)
+    parts.append(f'<circle cx="{yx:.2f}" cy="{yy:.2f}" r="9" fill="{ANYPLOT_NEUTRAL}" />')
+
+    parts.append(f'<text x="{INSET_X + 12}" y="{INSET_Y + 30}" fill="{INK_MUTED}" font-size="24">Stress (MPa)</text>')
+    parts.append(
+        f'<text x="{INSET_X + INSET_W - 12}" y="{INSET_Y + INSET_H - 14}" text-anchor="end" '
+        f'fill="{INK_MUTED}" font-size="24">Strain (mm/mm)</text>'
+    )
+    parts.append("</g>")
+    return "".join(parts)
+
+
+# Save: splice the hand-drawn inset into pygal's SVG before rasterizing/exporting so
+# both the PNG and the interactive HTML carry the same zoomed offset-construction panel.
+svg_markup = chart.render().decode("utf-8")
+svg_markup = svg_markup.replace("</svg>", _build_offset_inset_svg() + "</svg>")
+
+cairosvg.svg2png(
+    bytestring=svg_markup.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=3200, output_height=1800
+)
 
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg_markup.encode("utf-8"))
