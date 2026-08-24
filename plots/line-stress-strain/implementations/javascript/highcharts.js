@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-stress-strain: Engineering Stress-Strain Curve
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-24
+// Quality: pending | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -42,13 +42,17 @@ const offsetLine = [
   [strainAtYield + 0.0015, E * (strainAtYield + 0.0015 - 0.002)],
 ];
 
+// x-axis min pulled slightly negative so the origin-anchored elastic-modulus
+// and offset construction lines get breathing room from the left edge.
+const xAxisMin = -strainAtFracture * 0.03;
+
 const criticalPoints = [
   {
     x: strainAtYield,
     y: sigmaY,
     name: "Yield (0.2% offset)",
     color: t.ink,
-    dataLabels: { align: "left", x: 14, y: -6 },
+    dataLabels: { align: "left", x: 20, y: -14 },
   },
   {
     x: strainAtUTS,
@@ -87,16 +91,20 @@ Highcharts.chart("container", {
   },
   xAxis: {
     title: { text: "Engineering strain (mm/mm)", style: { color: t.inkSoft, fontSize: "16px" } },
-    min: 0,
+    min: xAxisMin,
     max: strainAtFracture * 1.05,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineWidth: 0,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     plotBands: [
-      { from: 0, to: strainAtYield, color: "transparent", label: { text: "Elastic", align: "center", verticalAlign: "top", y: 30, style: { color: t.inkMuted, fontSize: "13px", fontStyle: "italic" } } },
+      { from: xAxisMin, to: strainAtYield, color: Highcharts.color(t.palette[0]).setOpacity(0.05).get(), label: { text: "Elastic", align: "center", verticalAlign: "top", y: 30, style: { color: t.inkMuted, fontSize: "13px", fontStyle: "italic" } } },
       { from: strainAtYield, to: strainAtUTS, color: "transparent", label: { text: "Plastic (strain hardening)", align: "center", verticalAlign: "top", y: 30, style: { color: t.inkMuted, fontSize: "13px", fontStyle: "italic" } } },
-      { from: strainAtUTS, to: strainAtFracture, color: "transparent", label: { text: "Necking", align: "center", verticalAlign: "top", y: 30, style: { color: t.inkMuted, fontSize: "13px", fontStyle: "italic" } } },
+      { from: strainAtUTS, to: strainAtFracture, color: Highcharts.color(t.palette[0]).setOpacity(0.05).get(), label: { text: "Necking", align: "center", verticalAlign: "top", y: 30, style: { color: t.inkMuted, fontSize: "13px", fontStyle: "italic" } } },
+    ],
+    plotLines: [
+      { value: strainAtYield, color: t.grid, width: 1, dashStyle: "Dot", zIndex: 0 },
+      { value: strainAtUTS, color: t.grid, width: 1, dashStyle: "Dot", zIndex: 0 },
     ],
   },
   yAxis: {
@@ -144,7 +152,7 @@ Highcharts.chart("container", {
       name: "0.2% offset (yield method)",
       type: "line",
       data: offsetLine,
-      color: t.ink,
+      color: t.palette[1],
       lineWidth: 1.5,
       dashStyle: "LongDash",
       enableMouseTracking: false,
@@ -154,6 +162,7 @@ Highcharts.chart("container", {
       name: "Critical points",
       type: "scatter",
       data: criticalPoints,
+      color: t.ink,
       marker: { enabled: true, radius: 6, lineWidth: 1.5, lineColor: t.pageBg },
       dataLabels: {
         enabled: true,
