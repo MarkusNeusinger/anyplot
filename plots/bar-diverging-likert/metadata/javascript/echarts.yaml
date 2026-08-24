@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bar-diverging-likert
 created: '2026-08-24T16:28:21Z'
-updated: '2026-08-24T16:33:49Z'
+updated: '2026-08-24T16:43:27Z'
 generated_by: claude-sonnet
 workflow_run: 32750169000
 issue: 4429
@@ -12,132 +12,124 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diver
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 93
 review:
   strengths:
-  - 'Correct diverging-Likert construction: the neutral category is split evenly across
-    the zero midpoint with a subtle center markLine anchoring the divergence point,
-    exactly per spec.'
-  - 'Well-reasoned semantic color choice: matte red (palette[4]) for disagreement
-    and blue (palette[2]) for agreement, explicitly documented as avoiding a red-green
-    pairing that is ambiguous for deuteranopia/protanopia readers, and matches the
-    spec''s own suggested ''red-to-blue'' scheme.'
-  - Opacity-graded intensity hierarchy (full opacity for the 'Strongly' categories,
-    0.55 opacity for the moderate categories) creates a clear visual weight gradient
-    that reinforces Likert intensity without introducing extra colors.
-  - Rows are sorted by net agreement (agree+strongly_agree minus disagree+strongly_disagree),
-    producing an easy best-to-worst scan exactly as the spec requests.
-  - 'Clean, idiomatic ECharts usage: stacked bar series on an inverted category axis,
-    a per-point label formatter that hides labels below a 6% threshold to avoid clutter,
-    and dynamic title fontsize scaling for the long mandated title string.'
+  - Axis bounds now round to a multiple of 30 (±90 with a 30-unit interval), producing
+    clean, evenly-spaced ticks instead of the previous non-round 87/60/30/0 values
+  - Dataset now includes genuinely net-negative rows ("Compensation is fair compared
+    to market" at -62 net, "Cross-team collaboration works well" at -2 net), so the
+    chart actually demonstrates the diverging premise instead of being uniformly positive
+  - 'Canvas usage is now tight: the most negative row reaches to -81 and the most
+    positive row reaches +86.5 against a ±90 axis, eliminating the large dead whitespace
+    flagged in the prior review'
+  - 'Correct diverging-Likert construction: neutral split evenly across the zero midpoint
+    with a subtle center markLine anchoring the divergence point'
+  - Well-reasoned semantic color choice (matte red for disagreement, blue for agreement)
+    documented in-code as avoiding red-green CVD ambiguity, matching the spec's own
+    suggested red-to-blue scheme
+  - Opacity-graded intensity hierarchy (full opacity for "Strongly" categories, 0.55
+    for moderate) creates a clean visual weight gradient
+  - Rows sorted by net agreement for an easy best-to-worst scan, exactly as spec requests
+  - 'Clean, idiomatic ECharts usage: stacked bar series, inverted category axis, threshold-based
+    label formatter, dynamic title fontsize scaling'
   weaknesses:
-  - 'Large layout/proportional issue: the x-axis min/max is symmetric around a single
-    maxExtent (86.5%, from the top row''s strongly_agree+agree+half-neutral), but
-    the largest disagree-side total across all rows is only ~42%. This leaves roughly
-    a quarter of the total canvas width (about -87% to -42%) completely blank for
-    every single row - a visible, systemic dead zone on the left half of the chart.
-    Either choose survey data with a genuinely divergent (some net-negative) question
-    so both sides use more of the axis, or size the axis more tightly instead of mirroring
-    the single global one-sided max.'
-  - Non-round axis tick values (87%, 60%, 30%, 0%, 30%, 60%, 87%) - the tick intervals
-    are uneven (27-unit gap near the ends vs 30-unit gaps elsewhere) because min/max
-    is set to the exact computed maxExtent (86.5 rounded to 87) rather than a round
-    number. Round the axis bounds (e.g. to 90 or 100) for cleaner, evenly-spaced ticks.
-  - All 10 questions are net-positive (net agreement ranges from +16 to +73); none
-    diverges to net-negative. For a chart whose entire premise is 'diverging' comparison,
-    having zero rows where disagreement wins undersells the visualization's purpose
-    and directly contributes to the whitespace problem above - one or two more critical/negative
-    questions would be both more realistic for a real engagement survey and would
-    make better use of the left half of the canvas.
+  - The second "diverging" row ("Cross-team collaboration works well") is only marginally
+    net-negative (-2), so among 10 questions only one ("Compensation is fair compared
+    to market", -62) strongly showcases the diverging premise — a mid-range negative
+    question would give the chart a fuller three-tier spread
+  - The theme-adaptive "Neutral" segment reuses the same inkSoft token as the axis
+    line and tick-label color, so in the light render the neutral block sits close
+    in value to chrome elements rather than reading as a clearly distinct data color
+    — minor, not a legibility failure
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent across the whole canvas.
-      Chrome: Title "Employee Engagement Survey · bar-diverging-likert · javascript · echarts · anyplot.ai" is centered at top in dark ink, fully legible. Legend below the title lists Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree with matching color swatches, dark-ink text, all readable. X-axis tick labels (87%, 60%, 30%, 0%, 30%, 60%, 87%) and y-axis question labels are dark-ink/soft-ink text, clearly legible against the light background. Vertical gridlines are subtle light gray, visible but not dominant. A thin center line marks the zero midpoint.
-      Data: 10 horizontal diverging stacked bars, one per survey question, sorted by descending net agreement (top = most positive). Strongly Disagree segments are saturated matte red, Disagree segments are a lighter red (reduced opacity) with dark-ink percentage labels, Neutral segments are a dark muted charcoal centered on the zero line with a light label, Agree segments are a lighter blue (reduced opacity) with dark-ink labels, Strongly Agree segments are saturated blue. First categorical brand green is intentionally not used because the spec's own diverging red-to-blue sentiment scheme is used instead (documented in-code). Percentage labels appear inside segments ≥6% and are legible in all cases observed. A large blank region exists on the left of the chart (roughly from -87% to -42%) across every row, since the axis is symmetric to the single largest one-sided total but no row's disagree-side total comes close to that value.
-      Legibility verdict: PASS (all title/legend/axis/data-label text is clearly readable against the light background; no light-on-light issues).
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface, not pure white.
+      Chrome: Title "Employee Engagement Survey · bar-diverging-likert · javascript · echarts · anyplot.ai" is centered, dark-ink, and fully legible. Legend (5 entries: Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree) sits below the title with clear swatches. X-axis shows round, evenly-spaced ticks at 90/60/30/0/30/60/90%. Y-axis question labels are dark-ink and fully readable, sorted from highest to lowest net agreement.
+      Data: Ten horizontal diverging stacked bars run from saturated matte-red "Strongly Disagree" through lighter-opacity red "Disagree", a dark muted "Neutral" segment straddling the zero midpoint (with a subtle center reference line), a lighter-opacity blue "Agree", to saturated blue "Strongly Agree". First series color is not the brand green because this is a documented semantic-exception case (red=disagreement, blue=agreement per the spec's own suggested red-to-blue diverging scheme). Percentage labels sit inside segments ≥6% and are all legible; smaller segments (e.g. 3%) correctly omit labels to avoid crowding. The bottom two rows now diverge genuinely negative ("Compensation is fair compared to market" reaches to about -81%, "Cross-team collaboration works well" reaches slightly past zero), using most of the ±90% axis width instead of leaving a large blank region as in the prior attempt.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent across the whole canvas.
-      Chrome: Title and legend text switch to light/off-white ink, still centered and fully legible against the dark background. X-axis and y-axis tick labels are light soft-ink text, clearly readable. Vertical gridlines are subtle and visible without dominating. The center zero-line is visible.
-      Data: Same 10 rows, same sort order. Strongly Disagree/Disagree/Agree/Strongly Agree segment hues are visually identical in saturation/hue to the light render (red and blue positions unchanged), confirming the categorical data colors did not shift between themes. The Neutral segment flips from dark charcoal (light theme) to a light tan/gray (dark theme) because it is built from the theme-adaptive `inkSoft` token, standing in for the harness's undocumented "muted" anchor color, which per the style guide is explicitly allowed to be theme-adaptive (unlike the 8 fixed categorical palette positions). All percentage labels remain legible with no dark-on-dark instances found. The same left-side whitespace gap observed in the light render is present here too.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found; all text and data segments are clearly distinguishable from the near-black background).
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface, not pure black.
+      Chrome: Title, legend, and axis text switch to light ink/gray and remain fully legible against the dark surface. Same round axis ticks (90/60/30/0/30/60/90%) as the light render.
+      Data: Red and blue segment hues are visually identical to the light render (data colors did not shift) — confirms palette identity is preserved across themes. The "Neutral" segment flips from dark charcoal (light theme) to light warm gray (dark theme), correctly using the theme-adaptive inkSoft token since no dedicated "muted" anchor is exposed to the JS harness. No dark-on-dark text failures found; all labels remain high-contrast against their segment fills.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All title/legend/axis/data labels readable in both themes at explicit
-          font sizes.
+        comment: All text readable in both themes, dynamic title fontsize scaling
+          avoids overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions observed in either render.
+        comment: No collisions between text, labels, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar heights and spacing appropriate for 10 rows; segments clearly
-          distinguishable.
+        comment: Threshold-based labels (>=6%) keep small segments uncluttered while
+          large segments stay labeled
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/blue diverging scheme avoids red-green CVD ambiguity.
+        comment: Red/blue diverging scheme is CVD-safe, avoids red-green ambiguity
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Symmetric axis based on single largest one-sided total leaves ~25%
-          of canvas blank on the left for every row; non-round tick intervals (87/60/30/0).
+        passed: true
+        comment: Axis rounded to +/-90 with even 30-unit ticks; canvas usage tightened
+          after adding a net-negative row, eliminating the prior large blank region
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive % axis formatter, mandated title format applied correctly.
+        comment: Descriptive title with mandated suffix, percentage-formatted axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint semantic-exception red/blue positions, identical
-          across themes; correct light/dark backgrounds; neutral uses theme-adaptive
-          muted-role token per style guide allowance.
+        comment: Semantic-exception red/blue diverging scheme per style guide, backgrounds
+          correct in both themes, data colors identical across themes
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Opacity-based intensity hierarchy and dynamic title sizing show above-generic
-          thought, but wasted canvas space undercuts overall polish.
+        passed: true
+        comment: Opacity-graded hierarchy, semantic color reasoning, and now well-used
+          canvas; still a fairly standard diverging-bar composition
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid and chrome are clean and subtle, but ~25% of canvas is dead
-          whitespace rather than intentional breathing room.
+        passed: true
+        comment: Clean chrome and generous whitespace, previous ~25% dead space now
+          eliminated
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Net-agreement sort and zero-anchor markLine create hierarchy, but
-          uniformly positive data undersells the 'diverging' premise and the story.
+        passed: true
+        comment: Net-agreement sort plus genuinely divergent data now delivers the
+          diverging-chart story; second negative row is only marginally negative
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal diverging stacked bar chart.
+        comment: Correct diverging stacked horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Center on neutral, diverging color scheme, sort by net agreement,
-          inside labels, horizontal orientation - all present.
+        comment: Neutral split at midpoint, diverging color scheme with muted neutral,
+          inside labels, sorted by net agreement, horizontal orientation
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Value axis = percentage, category axis = questions, correctly mapped.
+        comment: Questions on Y, percentages on X, all 5 Likert categories represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title matches mandated format with descriptive prefix; legend labels
-          match Likert categories.
+          match data categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -177,20 +169,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 5 Likert categories present across 10 questions.
+        comment: All 5 Likert response levels shown across 10 questions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral employee engagement survey domain.
+        comment: Plausible, neutral employee engagement survey scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Percentages sum correctly to 100 per row, but all 10 questions are
-          net-positive - no genuine divergence to showcase the chart type.
+        passed: true
+        comment: 10 questions (within 5-20 spec range) with rows summing to 100%;
+          now includes genuine net-negative examples
     code_quality:
       score: 10
       max: 10
@@ -200,32 +192,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-level code, one small arrow-function helper.
+        comment: No classes; small formatter closures are idiomatic for ECharts label
+          functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hard-coded data array.
+        comment: Hard-coded deterministic data array
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses browser globals per harness contract.
+        comment: Uses only the global echarts object, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or faked interactivity; appropriate complexity.
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false set, no explicit init
-          size/devicePixelRatio.'
+        comment: 'Mounts on #container, animation disabled, no explicit init size/DPR'
     library_mastery:
       score: 7
       max: 10
@@ -235,23 +227,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic stacked bar + inverted category axis + markLine usage.
+        comment: Stacked bar with negative values for divergence, inverted category
+          axis, markLine reference
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Dynamic title fontsize, conditional label formatter threshold, and
-          zero-anchor markLine are nice distinctive touches beyond baseline bar usage.
+        passed: true
+        comment: Dynamic title sizing, threshold-based labels, computed round axis
+          interval; still fairly standard stacked-bar features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - manual-ticks
   patterns:
   - data-generation
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
