@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: band-basic
 created: '2026-08-24T15:57:21Z'
-updated: '2026-08-24T16:04:33Z'
+updated: '2026-08-24T16:12:33Z'
 generated_by: claude-sonnet
 workflow_run: 32747012194
 issue: 979
@@ -12,108 +12,97 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - 'Clever core-bundle-only workaround: builds the band from two stacked areaspline
-    series (invisible base + visible band height) plus a spline center line, since
-    arearange lives in highcharts-more which isn''t loaded — a genuinely idiomatic
-    solution to a real Highcharts constraint'
-  - Band width correctly widens with the forecast horizon (halfWidth = 8 + 0.5*t),
-    visually demonstrating the core 'growing uncertainty' feature a band plot exists
-    to show
-  - 'Data colors are theme-invariant and chrome is fully theme-adaptive in both renders
-    — first series is Imprint brand green #009E73 as required'
-  - Realistic, neutral scientific scenario (sea-level-rise projection) with a starting
-    value (~228mm since 1900) that matches real-world observational data
-  - Clean, deterministic, KISS-structured code with an explanatory comment on the
-    non-obvious stacking-order trick
+  - yAxis.min now set to 150, eliminating the ~40% wasted vertical whitespace flagged
+    in attempt 1 - the band and center line now command the full canvas height
+  - New end-of-line callout ('520.1 mm by 2075') with a highlighted marker gives the
+    chart a clear focal point and directly addresses the prior flat/under-designed
+    feedback
+  - 'Clever core-bundle-only workaround: two stacked areaspline series (invisible
+    base + visible band height) plus a spline center line, since arearange requires
+    highcharts-more which isn''t loaded here'
+  - Band width correctly widens with the forecast horizon, demonstrating the core
+    growing-uncertainty feature a band plot exists to show
+  - 'Data colors are theme-invariant, chrome is fully theme-adaptive; first series
+    is Imprint brand green #009E73'
+  - Realistic, neutral scientific scenario with a starting value that matches real-world
+    observational data
+  - Clean, deterministic, KISS-structured code with a helpful comment on the non-obvious
+    stacking-order trick
   weaknesses:
-  - yAxis is forced to start at 0 by the stacking technique (the invisible spacer
-    series stacks from 0), leaving roughly the bottom 40% of the plot area as dead
-    whitespace since data never goes below ~220mm. Set yAxis.min (e.g. ~150-200) to
-    crop that unused range — the invisible spacer series is transparent so cropping
-    it doesn't break the stacking math, it just tightens the visible viewport and
-    gives the band/line much more vertical presence.
-  - Band fill and center line both use the exact same hue (palette[0]) distinguished
-    only by opacity/line-width — acceptable for a band-around-a-trend convention,
-    but combined with the wasted vertical space above, the chart reads as visually
-    flat/under-designed rather than polished (no additional refinement like annotating
-    the current-decade value or emphasizing the widening band with a subtle end-of-line
-    data label).
-  - Title is noticeably narrow relative to the canvas (~30% of plot width) since spec-id
-    'band-basic' is short — not a violation of any rule, but there's room to grow
-    the title/subtitle font slightly or add a short descriptive prefix for better
-    visual balance without risking overflow.
+  - Band fill and center line still share the exact same hue (palette[0]), distinguished
+    only by opacity/line-width - acceptable for a band-around-a-trend convention,
+    but it caps how distinctive the design can read
+  - The stacked-areaspline technique and dataLabels callout are solid but fairly generic
+    patterns, reproducible in most other charting libraries - little that is uniquely
+    Highcharts-flavored beyond the shared tooltip
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "band-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; subtitle "Projected sea level rise, moderate-emissions scenario · 95% prediction interval" in softer dark gray, readable. X-axis "Year" (2030-2070, step 10) and Y-axis "Sea Level Rise Since 1900 (mm)" (0-600, step 50) tick labels and axis titles are dark and legible against the light background. Subtle horizontal gridlines only, no vertical gridlines. Legend at bottom center: "95% prediction interval" (light green swatch) and "Projected mean" (green line swatch), both readable.
-      Data: Semi-transparent light-green band (Imprint brand green #009E73 at ~0.25 opacity) widening steadily from left to right; a solid, more saturated green spline (also #009E73, full opacity, lineWidth 3) runs through the center of the band, clearly rising from ~230mm (2025) to ~520mm (2075). First/only categorical hue used is the mandated brand green.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Title "band-basic · javascript · highcharts · anyplot.ai" in bold dark ink and subtitle in softer gray, both fully legible. X-axis "Year" (2030-2070) and Y-axis "Sea Level Rise Since 1900 (mm)" now ranges 150-600 (previously 0-600), tick labels dark and legible, subtle horizontal-only gridlines. Legend at bottom ("95% prediction interval", "Projected mean") readable.
+      Data: Semi-transparent light-green band (#009E73 at ~0.25 opacity) widening steadily left to right, solid opaque green spline running through its center from ~230mm (2025) to ~520mm (2075). New end-of-line callout "520.1 mm by 2075" with a filled green marker sits comfortably inside the canvas with margin on all sides - not clipped.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and subtitle text now rendered in light/off-white ink, clearly legible against the dark background. Axis titles and tick labels are rendered in a soft light gray, fully legible. Gridlines are faint light horizontal lines, subtle but visible. Legend text is light-colored and readable.
-      Data: The band fill and center line use the identical #009E73 hue as the light render (confirmed — same brand green, same relative opacity), only appearing visually brighter/more saturated due to contrast with the dark background, which is expected and not a hue change. No dark-on-dark or unreadable text anywhere.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements are correctly theme-adapted.
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Same title/subtitle in light/off-white ink, fully legible. Axis titles and tick labels soft light gray, gridlines faint light horizontal lines - all legible. No dark-on-dark failures.
+      Data: Band fill and center line use the identical #009E73 hue as the light render (confirmed unchanged); the callout text and marker are equally legible and unclipped in this theme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
-          14px); readable in both themes; title fits comfortably without overflow,
-          though narrower than the 50-70% target since spec-id is short
+        comment: Explicit sizing throughout, fully readable in both themes; title
+          narrower than 50-70% target is expected for a short spec-id and not a deduction
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: New callout label and marker do not collide with any other text or
+          data element
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Band alpha (0.25) and 3px center line are well-matched to the 51-point
-          medium-density series, band clearly visible without obscuring the line
+        comment: Band alpha and line width well-matched to the 51-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between line, band fill, and background in both themes;
-          no red-green-only signaling
+        comment: Adequate contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: yAxis forced to start at 0 by the stacking technique, wasting roughly
-          the bottom 40% of the plot area as empty space below the data range (~220-550mm)
-          — should set yAxis.min to tighten the viewport
+        passed: true
+        comment: 'yAxis.min: 150 fixes the attempt-1 whitespace issue - data now occupies
+          ~74% of the visible vertical range instead of ~55%'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (mm); X-axis 'Year' is descriptive
+        comment: Y-axis has units (mm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) categorical series is Imprint brand green #009E73,
-          identical across themes; backgrounds are #FAF8F1/#1A1A17; chrome fully theme-correct
-          in both renders'
+        comment: 'Brand green #009E73 first/only series, identical across themes;
+          chrome fully theme-correct'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -121,23 +110,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured Imprint-compliant default; clean but not exceptional
-          — no additional custom flourishes beyond the mandated system
+        comment: Well-configured Imprint-compliant chart with a nice callout, but
+          still reads closer to a polished default than a bespoke design
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Grid is subtle and chrome is theme-adaptive, but the large unused
-          vertical whitespace below the data (from the forced 0-baseline) reads as
-          unrefined rather than intentional breathing room
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold center line vs. light band creates clear visual hierarchy; widening
-          band communicates growing uncertainty at a glance
+        comment: Wasted vertical whitespace from attempt 1 is resolved; spines removed,
+          grid subtle, whitespace now purposeful rather than excessive
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bold center line vs. light band creates clear hierarchy; widening
+          band communicates growing uncertainty; new endpoint callout gives the eye
+          a clear landing point
     spec_compliance:
       score: 15
       max: 15
@@ -147,30 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a band/interval plot despite Highcharts core
-          lacking arearange
+        comment: Correctly implements a band plot despite Highcharts core lacking
+          arearange
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: x/y_lower/y_upper/y_center all represented; semi-transparent fill
-          (0.25, within spec's 0.2-0.4 range); contrasting center line; smooth interpolation
-          via spline/areaspline; uncertainty source named in subtitle
+        comment: x/y_lower/y_upper/y_center represented, alpha 0.25 fill, contrasting
+          center line, smooth interpolation, uncertainty source named in subtitle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=year, Y=mm correctly mapped, full data range visible
+        comment: X/Y correctly mapped, axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the exact mandated format; legend labels ('95% prediction
-          interval', 'Projected mean') correctly describe the series, hidden spacer
-          series correctly excluded from legend
+        comment: Title format exact, legend labels correct, spacer series correctly
+          hidden
     data_quality:
       score: 15
       max: 15
@@ -180,23 +167,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates the defining band-plot feature: prediction interval
-          widening progressively with forecast horizon'
+        comment: Prediction interval visibly widens with forecast horizon
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral scientific scenario (climate/sea-level projection), comprehensible
-          and specific
+        comment: Neutral scientific scenario (sea-level-rise projection)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Baseline value (~228mm rise since 1900 at 2025) matches real-world
-          observational data; projected trajectory to ~520mm by 2075 is within plausible
-          moderate-scenario ranges
+        comment: Baseline (~228mm since 1900 at 2025) matches real observational data;
+          trajectory plausible for a moderate scenario
     code_quality:
       score: 10
       max: 10
@@ -206,34 +190,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data-generation loop followed by a single chart config object,
-          no functions/classes
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports needed; only the provided Highcharts global is used
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the stacking workaround, well-commented,
-          no fake functionality
+        comment: Well-commented on the non-obvious stacking-order trick and yAxis.min
+          rationale
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled on both chart and
-          series, credits disabled
+        comment: Harness contract respected, animation disabled
     library_mastery:
       score: 8
       max: 10
@@ -244,21 +226,20 @@ review:
         max: 5
         passed: true
         comment: Expertly uses stacked areaspline series to emulate a range band given
-          the core-bundle-only constraint (arearange lives in highcharts-more), correct
-          stacking order comment, shared tooltip
+          the core-bundle-only constraint
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Highcharts-specific shared tooltip with valueSuffix and spline
-          interpolation, but the underlying stacked-area band trick is a generic pattern
-          reproducible in other stacked-chart libraries
-  verdict: REJECTED
+        comment: Shared tooltip w/ valueSuffix, spline interpolation, and the new
+          dataLabels callout are Highcharts-flavored touches, but the underlying stacked-area
+          band trick remains a generic pattern reproducible in other libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep: []
