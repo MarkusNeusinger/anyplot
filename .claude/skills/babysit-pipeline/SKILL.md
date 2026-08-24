@@ -20,7 +20,10 @@ Never manually merge pipeline PRs, never hand-create metadata
   stale main has produced wrong counts.
 - One spec at a time: bulk-generate serializes dispatch via a
   concurrency group, but overlapping impl pipelines across specs make
-  completion unreadable. Process strictly sequentially.
+  completion unreadable. Process strictly sequentially. (Backfill with
+  `run_spec.sh` is the one exception — it reads completion per library
+  from repo metadata rather than from "is anything running?", so it
+  tolerates two specs in flight. See §5.)
 
 ## 1 · Dispatch
 
@@ -137,8 +140,14 @@ apart, then polls until each metadata file lands, and exits with
 `run_in_background: true`; it skips libraries already on main, so
 re-running it after a partial result retries exactly the gaps.
 
-**Two specs in parallel is fine** (~4 specs/h vs ~2); ten concurrent
-`impl-generate` runs showed no rate-limit effects. Keep a ledger —
+**Two specs in parallel is fine — but only in this mode** (~4 specs/h
+vs ~2); ten concurrent `impl-generate` runs showed no rate-limit
+effects. It works because `run_spec.sh` decides per library from
+`origin/main` metadata. `poll_spec.sh` and `monitor_spec.sh` must
+still run one spec at a time: their stall logic reads *any* active
+`impl-*` run as belonging to the spec they are watching (§3), so a
+second spec in flight makes them call a stalled spec healthy. Never
+mix the two modes on the same queue. Keep a ledger —
 `done.log` / `deferred.log` next to the queue file in `agentic/runs/`
 — and append the result line before dispatching the next spec, so a
 compaction or a crashed session can resume without recounting.

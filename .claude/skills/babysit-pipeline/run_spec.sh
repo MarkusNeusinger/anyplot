@@ -7,12 +7,30 @@
 # and start the next queue entry.
 # Usage: run_spec.sh <spec-id> <model> <lib1> [lib2 ...]
 set -uo pipefail
+
+usage() {
+  echo "usage: $(basename "$0") <spec-id> <model> <lib1> [lib2 ...]" >&2
+  echo "  e.g. $(basename "$0") line-basic sonnet highcharts muix" >&2
+  exit 2
+}
+# Explicit guard: with `set -u` a missing argument would otherwise surface as an
+# unbound-variable error from somewhere deep in the polling loop.
+[ "$#" -ge 3 ] || usage
 SPEC="$1"; MODEL="$2"; shift 2; LIBS=("$@")
+
 # Resolve the repo from this script's location (.claude/skills/<name>/), so the
 # driver works from any checkout and any working directory. ANYPLOT_REPO wins
 # when the script is copied elsewhere (e.g. a scratch queue under agentic/runs/).
+# Fail fast rather than falling back to $PWD: an unvalidated repo makes every
+# `meta_present` check return false, which reads as "nothing ever landed" and
+# burns the full polling timeout before anyone notices.
 HERE="$(cd "$(dirname "$0")" && pwd)"
-REPO="${ANYPLOT_REPO:-$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || echo "$PWD")}"
+REPO="${ANYPLOT_REPO:-$(git -C "$HERE" rev-parse --show-toplevel 2>/dev/null || true)}"
+if [ -z "$REPO" ] || [ ! -d "$REPO/plots" ]; then
+  echo "error: could not resolve the anyplot repo root (tried \$ANYPLOT_REPO, then git from $HERE)." >&2
+  echo "       set ANYPLOT_REPO=/path/to/anyplot and re-run." >&2
+  exit 2
+fi
 STAGGER=150      # seconds between dispatches
 INTERVAL=180     # poll interval
 LOGDIR="${POLL_LOG_DIR:-$HOME/.cache/anyplot-babysit}"
@@ -46,10 +64,17 @@ pipeline_active() {
   return 1
 }
 
+# Rough health signal for the report line: how many generate runs failed in the
+# last 25 min. The limit must cover the whole window — two specs in flight can
+# put 10+ runs in it, and a short limit silently reports "0 failures" because
+# the failures fell off the end of the list rather than because there were none.
+# `?` on error, never 0: a masked API failure reading as "all healthy" is how a
+# quota outage gets mistaken for a slow queue.
 recent_generate_failures() {
-  gh run list --workflow=impl-generate.yml --limit 15 \
+  gh run list --workflow=impl-generate.yml --limit 60 \
     --json conclusion,updatedAt \
-    --jq "[.[] | select(.conclusion==\"failure\" and (.updatedAt > (now - 1500 | todate)))] | length" 2>/dev/null || echo 0
+    --jq "[.[] | select(.conclusion==\"failure\" and (.updatedAt > (now - 1500 | todate)))] | length" 2>/dev/null \
+    || echo "?"
 }
 
 git -C "$REPO" fetch origin main --quiet
