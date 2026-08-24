@@ -1,8 +1,7 @@
 // anyplot.ai
 // campbell-basic: Campbell Diagram
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-24
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-08-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
