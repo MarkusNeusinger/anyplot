@@ -1,7 +1,7 @@
 // anyplot.ai
 // arc-basic: Basic Arc Diagram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-24
+// Quality: 93/100 | Created: 2026-08-24
 import * as React from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";

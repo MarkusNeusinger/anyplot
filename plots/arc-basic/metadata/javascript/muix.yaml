@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: arc-basic
 created: '2026-08-24T15:24:43Z'
-updated: '2026-08-24T15:31:10Z'
+updated: '2026-08-24T15:37:33Z'
 generated_by: claude-sonnet
 workflow_run: 32744053855
 issue: 991
@@ -12,109 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
+  - 'All three targeted repairs from the Attempt 1 review are cleanly applied: dashed
+    strokes now give ''Represses'' a shape-based encoding independent of hue, the
+    title/legend block gets 50px left padding matching the ChartContainer''s own left
+    margin, and the strokeOpacity floor is raised (0.32→0.42 base) so the longest,
+    weakest-strength arc stays clearly visible in both themes.'
   - Clever, correct use of MUI X's low-level useXScale/useYScale hooks with ChartContainer
-    to render an arc diagram, a chart type MUI X has no native component for, instead
+    to render an arc diagram — a chart type MUI X has no native component for — instead
     of faking it or bailing to NOT_FEASIBLE.
   - 'Faithful coverage of every spec-required feature: ordered nodes along a single
-    baseline, arc height proportional to node distance, edge weight (strength) driving
-    arc thickness/opacity, semi-transparent overlapping arcs, and readable rotated
-    node labels.'
+    baseline, arc height proportional to node distance, edge weight driving arc thickness/opacity,
+    semi-transparent overlapping arcs, and readable rotated node labels.'
   - 'Thoughtful data-driven encoding: node radius scales with node degree (highlighting
-    hub genes like TP53/BRCA1), and arc width/opacity scale with interaction strength,
-    creating real visual hierarchy.'
-  - Clean, deterministic, minimal code with only the components genuinely needed (edge
-    layer, node layer, legend, chart) and no fake interactivity.
-  - 'Correct, theme-adaptive Imprint palette usage in both renders: brand green (#009E73)
-    for ''activate'', semantic-anchor matte red (#AE3030) for ''repress'' per the
-    finance gain/loss convention, with backgrounds and text correctly flipped between
-    light and dark.'
+    hub genes like TP53/BRCA1), arc width/opacity scale with interaction strength,
+    and now dash pattern encodes edge kind redundantly with color.'
+  - Clean, deterministic, minimal code with only the components genuinely needed and
+    no fake interactivity; correct, theme-adaptive Imprint palette usage in both renders.
   weaknesses:
-  - Green (activate) vs. red (repress) is the sole visual signal distinguishing edge
-    direction; add a secondary encoding (e.g. dashed stroke for 'repress', or a subtle
-    arrowhead) so the distinction survives for readers who can't rely on hue alone.
-  - Title and legend rows sit flush against the left canvas edge (text starts at x=0,
-    no left padding), which reads inconsistently against the chart area's own 50px
-    margins — add matching left padding (~24-32px) to the title/legend container.
-  - The longest, weakest-strength arc (FOXP2-ACE2, strength 1) is quite pale in both
-    themes (strokeOpacity ~0.42) and easy to miss at a glance; raise the opacity floor
-    slightly so long-range, lower-strength connections stay clearly visible.
   - The chart never touches any of MUI X's own chart/series components (series is
     passed as an empty array) — the actual drawing is 100% custom SVG riding on ChartContainer's
-    scale context; this is the right call for an unsupported chart type but doesn't
+    scale context. This is the right call for an unsupported chart type but doesn't
     showcase MUI X-specific richness beyond the scale hooks.
+  - No explicit callout of the single key insight (e.g. the FOXP2–ACE2 long-range
+    edge or the TP53/BRCA1 hub genes) — the visual hierarchy from size/color/opacity
+    is present but nothing annotates the standout pattern for the viewer.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "arc-basic · javascript · muix · anyplot.ai" in dark ink, clearly legible top-left (flush to the canvas edge, no left padding). Legend row below the title lists a green swatch + "Activates", a red swatch + "Represses", and explanatory text "Arc height ∝ distance along the chromosome" — all in readable dark-gray secondary text. 18 gene node labels along the baseline are rotated ~-40°, dark-gray, and legible without overlapping each other or the arcs.
-      Data: 18 green node circles (radius scaled by connection degree — TP53 and BRCA1 are visibly the largest hubs) sit on a horizontal baseline. 23 arcs curve above the baseline: green for "activate" edges, matte red for "repress" edges, with stroke width and opacity increasing with interaction strength. Arc height correctly grows with node distance — the tallest arc spans the leftmost and rightmost genes. The first categorical color is #009E73 as required.
-      Legibility verdict: PASS — all title, legend, and node-label text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "arc-basic · javascript · muix · anyplot.ai" in dark ink, top-left, now with left padding matching the chart's own 50px margin (fixed from Attempt 1). Legend row below shows a solid green swatch + "Activates", a dashed red swatch + "Represses (dashed)", and "Arc height ∝ distance along the chromosome" in readable dark-gray text. All chrome text is clearly legible against the light background.
+      Data: 18 gene nodes (green circles, radius scaled by connection degree — TP53 and BRCA1 read as the biggest hubs) sit on a horizontal baseline; 23 arcs curve above it — solid green for "activate", dashed matte red for "repress" — with width/opacity increasing with strength and height growing with node distance. First/only categorical color is #009E73 (brand green); repress edges use the semantic-anchor matte red. The single longest, weakest-strength arc (FOXP2–ACE2) is thin but still clearly visible against the background, no longer near-invisible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and legend text switch to light ink/gray, clearly legible against the dark background. Node labels are light gray and legible. No dark-on-dark failures observed anywhere (title, legend, or node labels).
-      Data: Node and arc colors are identical to the light render (same green/red hues, same degree- and strength-driven sizing) — only the background and text chrome flipped, exactly as required. Brand green remains clearly visible on the dark surface.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; data colors are confirmed identical to the light render.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend, and rotated node labels switch to light ink/gray and stay clearly legible — no dark-on-dark failures anywhere. Left padding is identical to the light render.
+      Data: Node and arc colors are pixel-identical to the light render (same greens/reds, same degree/strength-driven sizing, same dash pattern on repress edges); only the background and text chrome flipped, as required. Brand green and the pale long-range arc both stay clearly visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title scales with title length, node
-          labels 13px, legend 14px); readable in both themes. Minor: title/legend
-          hug the left canvas edge with no padding.'
+        comment: Explicit font sizes throughout, readable in both themes; left-padding
+          fix removes the flush-to-edge issue from Attempt 1
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements observed in either render.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Node size scales with degree, arc width/opacity scale with strength.
-          The faintest, longest arc (strength=1) is quite pale in both themes.
+        comment: Raised strokeOpacity floor (0.42 base) keeps even the longest, weakest
+          arc clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Green/red is the sole signal distinguishing activate vs. represses
-          edges. Hues are CVD-optimized Imprint positions but no secondary encoding
-          (dash/shape) reinforces the distinction.
+        comment: Dashed stroke now gives 'Represses' a shape-based encoding independent
+          of red/green hue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Chart area has balanced 50px margins, but title and legend rows sit
-          flush against the left canvas edge (x=0) with no matching padding.
+        comment: Title/legend now share the chart's 50px left margin; balanced whitespace,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend clearly labels edge semantics (Activates/Represses) and explains
-          the arc-height encoding; node labels are descriptive gene names.
+        comment: Legend clearly explains edge semantics and the arc-height encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, semantic-exception matte red #AE3030 for represses
-          per style guide; backgrounds and chrome correctly theme-adaptive in both
-          renders.'
+        comment: Correct Imprint palette (brand green + semantic-anchor matte red)
+          and theme-adaptive chrome in both renders
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -122,24 +112,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Degree-based node sizing, strength-based arc width/opacity, and quadratic-bezier
-          arc construction show real design thought beyond a configured default.
+        comment: Degree-based node sizing, strength-based arc styling, bezier construction
+          — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Clean minimal composition, no chart junk, generous whitespace in
-          the plot area; the left-edge title/legend padding inconsistency is the one
-          rough edge.
+        comment: Clean, minimal, generous whitespace; left-padding rough edge from
+          Attempt 1 is now fixed
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy via node size (hub genes) and arc emphasis (thickness/opacity
-          by strength) guides the eye; no explicit annotation calling out the single
-          key insight.
+        comment: Size/color/opacity create real visual hierarchy toward hub genes
+          and strong interactions; no explicit callout of the single key insight
     spec_compliance:
       score: 15
       max: 15
@@ -149,28 +137,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes along a single horizontal baseline with
-          curved arcs above.'
+        comment: Correct arc diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Arc height proportional to node distance, edge weight drives arc
-          thickness/opacity, semi-transparent overlapping arcs, readable node labels.
+        comment: Distance-proportional arc height, weight-driven thickness/opacity,
+          semi-transparent overlaps, readable node labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Node index maps to x-scale position; arc height maps to y-scale correctly.
+        comment: Node index to x-scale, arc height to y-scale, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels (Activates/Represses)
-          match the data semantics.
+        comment: Title format exact; legend labels match data semantics
     data_quality:
       score: 15
       max: 15
@@ -180,22 +166,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Nodes, edges, and weights are all represented; both interaction kinds
-          and a range of strengths/distances are present.
+        comment: Nodes, edges, and weights all represented; both interaction kinds
+          present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral genomics scenario (gene regulatory network along
-          a chromosome).
+        comment: Plausible, neutral gene-regulatory-network scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 18 nodes / 23 edges sits well within the spec's 10-50 node guidance;
-          strengths and distances are sensible.
+        comment: 18 nodes / 23 edges, well within spec guidance
     code_quality:
       score: 10
       max: 10
@@ -205,32 +189,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Minimal, purposeful component structure with no unnecessary abstraction.
+        comment: Minimal, purposeful component structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no randomness.
+        comment: Fully deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used (React, ChartContainer, useXScale, useYScale).
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Elegant use of ChartContainer's scale hooks to render a chart type
-          MUI X has no native component for; no fake UI.
+        comment: Elegant scale-hook-based custom rendering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct default-export contract, skipAnimation set, sized via window.ANYPLOT_SIZE.
+        comment: Correct default-export contract, skipAnimation set, sized via ANYPLOT_SIZE
     library_mastery:
       score: 7
       max: 10
@@ -240,17 +223,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ChartContainer + useXScale/useYScale, the library's documented
-          pattern for custom marks/chart types it doesn't natively support.
+        comment: Uses ChartContainer + useXScale/useYScale, the documented pattern
+          for chart types MUI X doesn't natively support
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: The scale-hook-driven custom SVG overlay is a genuine MUI X-specific
-          mechanism, though the drawing itself is generic SVG portable to another
-          scale-aware library.
-  verdict: REJECTED
+        passed: false
+        comment: Genuine MUI X-specific scale-hook mechanism, but the drawing itself
+          is generic SVG portable to another scale-aware library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -261,4 +243,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - publication-ready
