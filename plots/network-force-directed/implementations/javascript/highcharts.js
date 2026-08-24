@@ -74,8 +74,8 @@ const positions = nodeIds.map(() => ({
 }));
 
 const k = 0.75 * Math.sqrt((FIELD * FIELD) / nodeCount);
-const gravity = 0.06; // pull-to-center so loosely-connected nodes don't drift too far
-const bound = FIELD * 0.42; // hard wall — keeps a single weak leaf from stretching the frame
+const gravity = 0.09; // pull-to-center so loosely-connected nodes don't drift too far
+const bound = FIELD * 0.38; // hard wall — keeps a single weak leaf from stretching the frame
 const iterations = 500;
 let temperature = FIELD / 10;
 
@@ -134,7 +134,7 @@ const centerX = (Math.min(...xs) + Math.max(...xs)) / 2;
 const centerY = (Math.min(...ys) + Math.max(...ys)) / 2;
 positions.forEach((p) => { p.x -= centerX; p.y -= centerY; });
 
-const extent = Math.max(...positions.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.15;
+const extent = Math.max(...positions.map((p) => Math.max(Math.abs(p.x), Math.abs(p.y)))) * 1.08;
 
 const maxDegree = Math.max(...degree);
 const hubThreshold = 6;
@@ -147,14 +147,34 @@ edges.forEach(([a, b]) => {
   edgeSeriesData.push(null);
 });
 
-const nodeSeriesData = nodeIds.map((id, i) => ({
-  x: positions[i].x,
-  y: positions[i].y,
-  name: id,
-  degree: degree[i],
-  marker: { radius: 6 + (degree[i] / maxDegree) * 14 },
-  dataLabels: { enabled: degree[i] >= hubThreshold },
-}));
+// Radial gradient fill (light-to-brand-green) gives every node a subtle 3D
+// lift; hub nodes additionally get a heavier, ink-colored stroke so degree
+// reads through both size AND a second visual channel.
+const nodeFill = {
+  radialGradient: { cx: 0.35, cy: 0.35, r: 0.75 },
+  stops: [
+    [0, Highcharts.color(t.palette[0]).brighten(0.3).get()],
+    [1, t.palette[0]],
+  ],
+};
+
+const nodeSeriesData = nodeIds.map((id, i) => {
+  const isHub = degree[i] >= hubThreshold;
+  return {
+    x: positions[i].x,
+    y: positions[i].y,
+    name: id,
+    degree: degree[i],
+    marker: {
+      symbol: "circle",
+      radius: 9 + (degree[i] / maxDegree) * 12,
+      fillColor: nodeFill,
+      lineColor: isHub ? t.ink : t.pageBg,
+      lineWidth: isHub ? 2.5 : 1,
+    },
+    dataLabels: { enabled: isHub },
+  };
+});
 
 Highcharts.chart("container", {
   chart: {
@@ -197,7 +217,7 @@ Highcharts.chart("container", {
       type: "scatter",
       data: nodeSeriesData,
       color: t.palette[0],
-      marker: { fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 1.5 },
+      marker: { symbol: "circle", fillColor: nodeFill, lineColor: t.pageBg, lineWidth: 1 },
       dataLabels: {
         formatter() { return this.point.name; },
         style: { color: t.ink, fontSize: "13px", fontWeight: "500", textOutline: "none" },
