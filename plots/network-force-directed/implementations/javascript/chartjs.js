@@ -90,7 +90,10 @@ const rand = lcg(42);
 
 const nodeCount = nodes.length;
 const area = 4; // layout unfolds inside a [-1, 1] x [-1, 1] square
-const k = Math.sqrt(area / nodeCount);
+// A slightly stronger repulsion constant than the classic sqrt(area/n) gives
+// dense hub neighborhoods (catalog-svc/checkout-svc/user-svc + shared infra)
+// more breathing room so individual edges stay traceable at a glance.
+const k = Math.sqrt(area / nodeCount) * 1.3;
 const pos = nodes.map(() => ({ x: rand() * 2 - 1, y: rand() * 2 - 1 }));
 
 let temperature = 0.15;
@@ -127,6 +130,15 @@ for (let iter = 0; iter < iterations; iter++) {
     disp[b].x += dx;
     disp[b].y += dy;
   });
+
+  // Weak centering (gravity) force pulls every node gently toward the
+  // origin so no straggling branch drifts the whole point cloud toward one
+  // corner, which otherwise leaves the opposite quadrant of the canvas
+  // empty once the layout stabilizes.
+  for (let i = 0; i < nodeCount; i++) {
+    disp[i].x -= pos[i].x * 0.02;
+    disp[i].y -= pos[i].y * 0.02;
+  }
 
   // Apply displacement, capped by the cooling temperature
   for (let i = 0; i < nodeCount; i++) {
