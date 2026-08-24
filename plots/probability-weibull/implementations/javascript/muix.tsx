@@ -1,7 +1,7 @@
 // anyplot.ai
 // probability-weibull: Weibull Probability Plot for Reliability Analysis
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-24
+// Quality: 89/100 | Created: 2026-08-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { LinePlot } from "@mui/x-charts/LineChart";
