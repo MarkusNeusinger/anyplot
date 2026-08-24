@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-basic: Basic Line Plot
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 83/100 | Created: 2026-08-24
+# Quality: 78/100 | Created: 2026-08-24
 
 using CairoMakie
 using Colors
