@@ -3,11 +3,12 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-08-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
+import { useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 
 const title = "treemap-basic · javascript · muix · anyplot.ai";
-const titleFontSize = Math.max(16, Math.round(22 * Math.min(1, 67 / title.length)));
+const titleFontSize = Math.max(18, Math.min(34, Math.round(34 * Math.min(1, 67 / title.length))));
 
 // --- Data: a company expense breakdown by department (category) and cost
 // center / project (subcategory), in $ thousands -- one of the spec's listed
@@ -197,11 +198,15 @@ function textColorFor(hex) {
   return textColorForRgb(hexToRgb(hex));
 }
 
-const DEPT_COLORS = departments.map((_, i) => t.palette[i % t.palette.length]);
+// Keyed by department name (not array position) so color assignment stays
+// correct even if DEPARTMENTS is reordered or rebalanced -- squarify() sorts
+// its output by value, so indexing colors by position would silently
+// misassign hues once input order no longer matches value order.
+const DEPT_COLOR_BY_NAME = new Map(DEPARTMENTS.map((d, i) => [d.name, t.palette[i % t.palette.length]]));
 
 // --- Layout: departments squarified over the chart area, then each
 // department's cost centers squarified again inside a header-inset rect --
-const MARGIN = { top: 108, right: 32, bottom: 24, left: 32 };
+const MARGIN = { top: 130, right: 32, bottom: 24, left: 32 };
 const GUTTER = 3;
 const HEADER_H = 30;
 const LABEL_FONT_SIZE = 15;
@@ -223,7 +228,7 @@ function TreemapRect({ x, y, w, h, fill, stroke, strokeWidth, label, sublabel, f
         <title>{tooltip}</title>
       </rect>
       {showLabel && (
-        <text x={x + 8} y={y + fontSize + 4} fontSize={fontSize} fontWeight={600} fill={textFill} pointerEvents="none">
+        <text x={x + 8} y={y + fontSize + 4} fontSize={fontSize} fontWeight={500} fill={textFill} pointerEvents="none">
           {label}
         </text>
       )}
@@ -237,14 +242,12 @@ function TreemapRect({ x, y, w, h, fill, stroke, strokeWidth, label, sublabel, f
 }
 
 function Treemap() {
-  const { width, height } = window.ANYPLOT_SIZE;
-  const chartArea = {
-    x: MARGIN.left,
-    y: MARGIN.top,
-    w: width - MARGIN.left - MARGIN.right,
-    h: height - MARGIN.top - MARGIN.bottom,
-  };
-  const deptRects = squarify(departments, chartArea).map((d, i) => ({ ...d, color: DEPT_COLORS[i % DEPT_COLORS.length] }));
+  // The drawing area comes from MUI X's own DrawingProvider (via
+  // ChartContainer's `margin` prop) rather than a hand-rolled offset -- the
+  // same layout primitive MUI X's own axis/legend components rely on.
+  const { left, top, width, height } = useDrawingArea();
+  const chartArea = { x: left, y: top, w: width, h: height };
+  const deptRects = squarify(departments, chartArea).map((d) => ({ ...d, color: DEPT_COLOR_BY_NAME.get(d.name) }));
 
   return (
     <g>
@@ -321,21 +324,30 @@ function Treemap() {
   );
 }
 
+const topDept = departments.reduce((a, b) => (b.value > a.value ? b : a));
+const topDeptPct = ((topDept.value / grandTotal) * 100).toFixed(0);
+const insight = `${topDept.name} leads at ${fmtK(topDept.value)} — ${topDeptPct}% of total budget`;
+
 // --- Chart (default-exported component -- the harness mounts it) ----------
-// ChartContainer supplies the <ChartsSurface> SVG root (and theme context);
-// the treemap itself is laid out in absolute pixel space via squarify()
-// above, so no axis/scale is needed -- xAxis/yAxis are omitted entirely.
+// ChartContainer supplies the <ChartsSurface> SVG root and theme context; its
+// `margin` prop drives the DrawingProvider that Treemap() reads back via
+// useDrawingArea(), so the top-chrome/plot split is expressed through MUI X's
+// own layout system rather than a parallel hand-rolled offset. The treemap
+// body itself is laid out in absolute pixel space via squarify() above, so no
+// axis/scale is needed -- xAxis/yAxis are omitted entirely.
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const subtitle = `Company expense breakdown by department and cost center · values in $K, area ∝ budget`;
 
   return (
-    <ChartContainer width={width} height={height} series={[]} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} skipAnimation>
-      <text x={width / 2} y={44} textAnchor="middle" fontSize={titleFontSize} fontWeight={600} fill={t.ink}>
+    <ChartContainer width={width} height={height} series={[]} margin={MARGIN} skipAnimation>
+      <text x={width / 2} y={48} textAnchor="middle" fontSize={titleFontSize} fontWeight={600} fill={t.ink}>
         {title}
       </text>
-      <text x={width / 2} y={70} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
-        {subtitle}
+      <text x={width / 2} y={78} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
+        Company expense breakdown by department and cost center · values in $K, area ∝ budget
+      </text>
+      <text x={width / 2} y={102} textAnchor="middle" fontSize={13} fontStyle="italic" fill={DEPT_COLOR_BY_NAME.get(topDept.name)}>
+        {insight}
       </text>
       <Treemap />
     </ChartContainer>
