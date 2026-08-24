@@ -1,0 +1,258 @@
+library: d3
+language: javascript
+specification_id: drawdown-basic
+created: '2026-08-24T23:13:40Z'
+updated: '2026-08-24T23:27:38Z'
+generated_by: claude-sonnet
+workflow_run: 32788063106
+issue: 3752
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - All three spec-required statistics (max drawdown %, duration, recovery time) are
+    now shown in a compact subtitle callout, closing the SC-02 gap from the previous
+    review.
+  - The single recovery marker is explicitly labeled 'Recovery from max drawdown',
+    removing the earlier ambiguity about which of the many zero-crossings it refers
+    to.
+  - The drawdown fill now uses a subtle linear gradient (low opacity near zero, deeper
+    opacity toward the trough) instead of a flat semi-transparent red, and the x-axis
+    tick marks were removed — both directly address the prior Visual Refinement feedback.
+  - 'Thoughtful semantic color use: drawdown fill/line uses the Imprint semantic-red
+    anchor (palette[4], #AE3030) for loss, while the recovery marker uses brand green
+    (palette[0], #009E73) — a well-justified semantic exception per the style guide.'
+  - 'Both renders are fully theme-correct: warm off-white/near-black backgrounds,
+    theme-adaptive ink/inkSoft chrome, and pixel-identical data colors (red fill/line,
+    green marker) between light and dark.'
+  - 'Clean, idiomatic D3: scaleTime/scaleLinear, d3.area()/d3.line() generators, an
+    SVG linearGradient built via defs, proper axis token mapping, deterministic fixed-seed
+    LCG + Box-Muller data generation, no fake interactivity.'
+  weaknesses:
+  - Only the single recovery point tied to the max-drawdown trough is marked, even
+    though the series crosses back to 0% many other times (visible as repeated zero-baseline
+    touches). The label change made this clear, but lightly marking one or two of
+    the other major recoveries would further strengthen the storytelling.
+  - Spec's optional suggestion to 'consider a secondary y-axis or annotation to show
+    the underlying price/value series' is still skipped; a thin secondary NAV line
+    or small inset sparkline would add useful context and is a good target for further
+    Data Storytelling polish.
+  - 'Design Excellence is strong but not yet publication-grade: beyond the new gradient
+    fill, there is no further refinement such as a lighter secondary drawdown-depth
+    reference band or more distinctive D3-only technique (e.g. Voronoi/brush-based
+    emphasis) to push Library Mastery higher.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "drawdown-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered; below it a subtitle "Max drawdown: -13.6% · Duration: 69 trading days · Recovery: 123 days" in softer dark gray, both clearly legible. "Date" and "Drawdown from Peak (%)" axis labels in dark ink; tick labels (dates on x, percentages on y) in softer dark gray, all legible with no tick marks cluttering the axis. Subtle light-gray horizontal gridlines at each y tick; a solid dark zero-baseline is prominent at the top of the plotted range.
+      Data: Drawdown line and gradient fill are matte red (#AE3030, Imprint palette position 5, the semantic loss anchor) — the fill is faint near the zero line and deepens toward the trough. One recovery point near mid-2025 is marked with a hollow brand-green (#009E73) circle labeled "Recovery from max drawdown"; the deepest trough (~-13.6% in Feb 2025) is marked with a filled red dot and a bold dark "Max drawdown: -13.6%" label positioned just below the point (auto-flipped since the trough sits low in the plot area).
+      Legibility verdict: PASS — all text is dark-on-light and fully readable, no overlaps observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and subtitle stats line rendered in light off-white / soft-light ink; "Date"/"Drawdown from Peak (%)" axis labels in light ink; tick labels in a softer light gray; gridlines are faint light-gray horizontal lines; the zero-baseline is now a light/white horizontal rule, still clearly visible against the dark background.
+      Data: The drawdown gradient fill/line remain the identical matte red (#AE3030) as the light render; the recovery marker and label remain the identical brand green (#009E73); the "Max drawdown: -13.6%" annotation text switches to light ink and is clearly readable — no dark-on-dark text anywhere.
+      Legibility verdict: PASS — all chrome text is light-on-dark and fully readable; data colors are confirmed identical to the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14/16/22/15px), readable in both themes, well-proportioned
+          title and axis labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; trough label flips position to avoid the
+          zero line; new subtitle stats line doesn't crowd the title
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line stroke width 2.5, markers r=6-7 read clearly; adequate for ~756
+          daily points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green markers are each redundantly labeled with text, avoiding
+          red-green-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the majority of the canvas with balanced margins; no cut-off
+          content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Drawdown from Peak (%)'' and ''Date'' are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic-red (#AE3030) for loss and brand-green (#009E73) for recovery,
+          both from the Imprint palette; theme-correct chrome in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color mapping plus the new gradient fill push this clearly
+          above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Gradient fill and removed x-axis tick marks address prior feedback;
+          grid remains subtle and spines minimal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Max-drawdown and clearly-labeled recovery annotations plus the new
+          stats subtitle give the viewer the full story at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct drawdown area/line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Drawdown calc, semi-transparent gradient fill, max-drawdown marker,
+          zero baseline, AND now max-drawdown duration + recovery time stats are all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=drawdown%, full series shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend needed for single series, correctly
+          omitted
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Multiple drawdown cycles of varying depth plus one deep max drawdown
+          and a recovery
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible synthetic NAV/portfolio series over 3 years
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily drift/vol parameters produce a realistic equity curve and drawdown
+          magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes beyond the required
+          RNG helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG + Box-Muller, deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no deprecated D3 API, no animation
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper scales, axis generators, data-driven area/line joins
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: SVG linearGradient built via defs for the fill is a genuine D3/SVG-level
+          technique beyond a flat color
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - gradient-fill
