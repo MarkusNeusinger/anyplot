@@ -167,6 +167,13 @@ function seqColor(frac: number): string {
   const [r2, g2, b2] = hexRgb(t.seq[1]);
   return `rgb(${Math.round(r1 + (r2 - r1) * frac)},${Math.round(g1 + (g2 - g1) * frac)},${Math.round(b1 + (b2 - b1) * frac)})`;
 }
+// Gamma < 1 stretches the low end of the dB range across more of the color
+// ramp, so quiet early note onsets read against the background instead of
+// blending into a flat mid-tone field.
+const COLOR_GAMMA = 0.6;
+function gammaFrac(frac: number): number {
+  return Math.pow(Math.max(0, frac), COLOR_GAMMA);
+}
 
 // Mel-band cells drawn directly at their frame/bin boundaries via the MUI X scale hooks
 function SpectrogramCells() {
@@ -189,7 +196,7 @@ function SpectrogramCells() {
               y={yTop}
               width={x1 - x0 + 0.5}
               height={yBottom - yTop + 0.5}
-              fill={seqColor(frac)}
+              fill={seqColor(gammaFrac(frac))}
             />
           );
         });
@@ -208,8 +215,9 @@ function Colorbar() {
     <>
       <defs>
         <linearGradient id="melCbGrad" x1="0" y1="1" x2="0" y2="0">
-          <stop offset="0%" stopColor={t.seq[0]} />
-          <stop offset="100%" stopColor={t.seq[1]} />
+          {[0, 0.25, 0.5, 0.75, 1].map((stop) => (
+            <stop key={stop} offset={`${stop * 100}%`} stopColor={seqColor(gammaFrac(stop))} />
+          ))}
         </linearGradient>
       </defs>
       <rect x={cbX} y={top} width={cbW} height={gH} fill="url(#melCbGrad)" />
@@ -249,6 +257,7 @@ export default function Chart() {
       width={width}
       height={height}
       series={[]}
+      skipAnimation
       xAxis={[{
         scaleType: "linear",
         min: 0,
