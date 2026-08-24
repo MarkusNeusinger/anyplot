@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-stress-strain
 created: '2026-08-24T21:15:13Z'
-updated: '2026-08-24T21:20:24Z'
+updated: '2026-08-24T21:33:38Z'
 generated_by: claude-sonnet
 workflow_run: 32777494095
 issue: 4413
@@ -12,58 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stre
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stress-strain/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 89
 review:
   strengths:
-  - 'Well-executed semantic color exception: the fracture point is rendered in matte
-    red (#AE3030) per the ''bad/error/fail -> red'' convention, while non-primary
-    construction/reference elements (elastic-modulus tangent, 0.2% offset line, yield/UTS
-    markers) use neutral ink tones instead of burning through extra palette slots
-    -- a deliberate, sophisticated color hierarchy.'
-  - 'Theme handling is correct and complete: identical data colors in both renders,
-    chrome (background/text/grid) flips correctly between #FAF8F1 and #1A1A17, all
-    text legible in both themes, and the canvas gate passes at 3200x1800.'
-  - Clean, idiomatic pygal usage -- a single Style object carries all theme tokens,
-    dasharray stroke_style differentiates construction lines from data curves, dots_size
-    isolates critical-point markers, x_labels_major_count plus a custom x_labels list
-    controls the tick set, and truncate_legend avoids legend clipping.
-  - Physically grounded, realistic mild-steel tensile data (E ~ 200 GPa, yield 250
-    MPa, UTS 400 MPa, fracture 330 MPa) with distinct elastic/plateau/hardening/necking
-    regions, generated deterministically via np.random.seed(42).
+  - Hand-drawn SVG inset panel (spliced into both the PNG and HTML output) elegantly
+    solves the previously-flagged illegibility of the elastic-modulus/0.2%-offset
+    construction -- a creative, well-executed workaround for pygal's lack of a native
+    inset-axes primitive.
+  - Ultimate Tensile Strength marker is now differentiated with a distinct Imprint
+    hue (#BD8233) from the neutral-ink Yield Point marker, fixing the previous at-a-glance
+    ambiguity while keeping the semantic red exception for the fracture point.
+  - 'Theme handling remains correct and complete: identical data colors between light/dark
+    renders, chrome flips correctly between #FAF8F1 and #1A1A17, canvas gate passes
+    at 3200x1800, and all text -- including the new inset''s small-font labels --
+    stays legible in both themes.'
+  - Physically realistic, deterministic mild-steel tensile data (np.random.seed(42))
+    with clearly labeled elastic/plastic/necking regions and all three critical points
+    (yield, UTS, fracture) called out with computed MPa values directly in the legend.
   weaknesses:
-  - The elastic region and the entire 0.2% offset construction -- both explicitly
-    required by the spec as a 'visible slope line' -- are compressed into roughly
-    the leftmost 1% of the plot width, because engineering strain at yield (~0.0013)
-    is tiny next to the fracture strain (~0.30) on a linear x-axis. The two parallel
-    offset lines end up only ~15-20px apart at native resolution and read as a single
-    blurred hairline against the y-axis rather than an illustrative construction.
-    Consider a zoomed inset panel (a second small pygal.XY chart placed in a corner)
-    for the elastic/offset region, or a leader-line/text callout pointing at the compressed
-    region, so the offset method is actually legible rather than just technically
-    present in the data.
-  - Yield Point and Ultimate Tensile Strength markers both use the same neutral ink
-    color (ANYPLOT_NEUTRAL), so without reading the legend text a viewer cannot tell
-    them apart by color alone -- differentiate at least one marker color (e.g. keep
-    UTS on a palette hue) for at-a-glance identification.
-  - 'DQ-03 (appropriate scale) tension: the underlying data is realistic, but the
-    resulting chart doesn''t clearly communicate the elastic-modulus/offset construction
-    it was asked to illustrate -- this should be the primary fix target for the next
-    attempt.'
+  - The reserved top gutter (margin_top=500) leaves a large empty band to the right
+    of the inset panel -- the inset occupies only the top-left corner of the reserved
+    space, and the remaining ~60% width x full height of the gutter reads as unbalanced
+    negative space rather than intentional whitespace. Widen the inset to use more
+    of the gutter, or shrink margin_top and re-anchor the inset (e.g. centered under
+    the title, or paired with a short text callout stating the computed offset yield
+    strain/stress) to avoid the awkward empty rectangle.
+  - On the main-scale axes the elastic segment and 0.2% offset construction are still
+    compressed to a ~2px sliver at x=0 -- fully unreadable without the inset. A thin
+    leader line or bracket connecting the inset to the compressed region on the main
+    plot would make the zoom relationship explicit at a glance instead of relying
+    on the viewer to infer it from the shared title.
+  - The three inset-drawing helper functions (_inset_point, _inset_polyline, _build_offset_inset_svg)
+    push the script away from a flat, top-to-bottom KISS structure -- justified here
+    by the raw-SVG-splicing requirement, but worth keeping minimal if the inset technique
+    is reused elsewhere.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "line-stress-strain · python · pygal · anyplot.ai" centered at top in dark ink, fully visible and not clipped. Y-axis title "Engineering Stress (MPa)" and x-axis title "Engineering Strain (mm/mm)" both dark and clearly readable. Tick labels (0-400 on y, 0-0.3 on x) are dark and legible. Horizontal grid lines are subtle dashed gray, visible but not dominant. Legend sits below the x-axis title in a 3-column grid, all 8 entries readable with no overlap.
-      Data: First series (Elastic) is brand green #009E73, second series (Plastic/Strain Hardening) is lavender #C475FD, third series (Necking) is blue #4467A3 -- matches canonical Imprint order. Construction lines (Elastic Modulus tangent, 0.2% Offset Line) are dashed neutral/muted ink tones. Yield Point and UTS markers are dark dots; Fracture Point marker is matte red #AE3030 (semantic exception for failure, appropriate). The elastic region and the offset construction are compressed into a very narrow sliver near x=0 (strain ~0-0.0035 against a 0-0.33 axis range), making the parallel-offset geometry hard to distinguish at normal viewing size.
-      Legibility verdict: PASS (all text readable; the compressed elastic/offset region is a data-scale/design issue, not a text-legibility failure).
+      Chrome: Title "line-stress-strain · python · pygal · anyplot.ai" centered at top in dark ink, fully visible, not clipped, occupying ~58% of plot width (well within the 50-70% guideline). Y-axis title "Engineering Stress (MPa)" (wrapped, rotated) and x-axis title "Engineering Strain (mm/mm)" are both dark and clearly readable. Tick labels (0-400 MPa on y, 0-0.3 on x) are dark and legible. A new inset panel top-left, titled "Zoom: Elastic Modulus & 0.2% Offset Region," has its own small dark-ink axis labels/ticks, all legible at native resolution. Horizontal-only grid lines are subtle dotted gray, visible but not dominant. Legend sits below the x-axis title in a 3-column, 3-row grid; all 8 entries readable with no overlap.
+      Data: First series (Elastic) is brand green #009E73, second (Plastic/Strain Hardening) is lavender #C475FD, third (Necking) is blue #4467A3 -- canonical Imprint order for the first three categorical series. Construction lines (Elastic Modulus tangent, 0.2% Offset Line) are dashed neutral/muted ink tones. Yield Point marker is a neutral-ink dot; UTS marker is now a distinct amber (#BD8233) dot; Fracture Point marker is matte red #AE3030 (semantic exception, appropriate). On the main axes the elastic/offset construction is still a compressed sliver near x=0, but the inset panel reproduces the same geometry at a legible scale, with the tangent and offset lines clearly diverging and the yield-point dot marked.
+      Legibility verdict: PASS (all text readable in both the main chart and the inset; no clipping or overlap observed).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: Title, axis titles, and tick labels all render in light/white ink, clearly visible against the dark background. Grid lines are subtle dashed gray, still visible on dark. Legend text is white and fully legible, no dark-on-dark failures observed anywhere (title, axes, ticks, legend all pass).
-      Data: Colors are identical to the light render -- green Elastic, lavender Plastic, blue Necking, red Fracture marker -- confirming only chrome flipped between themes. Yield Point and UTS markers are white/light dots (still both the same color as each other). The same elastic/offset compression issue from the light render is present here.
-      Legibility verdict: PASS (all text readable in dark theme; no dark-on-dark issues; same compression weakness as the light render).
+      Chrome: Title, axis titles, tick labels, and the inset panel's labels all render in light/white ink, clearly visible against the dark background -- no dark-on-dark failures anywhere. Grid lines remain subtly visible on dark. Legend text is light-colored and fully legible.
+      Data: Colors are identical to the light render -- green Elastic, lavender Plastic, blue Necking, amber UTS, red Fracture -- confirming only chrome flipped between themes. The inset panel's border, gridlines, and construction-line dashes switch to light-on-dark tones (INK_MUTED becomes the lighter #A8A79F) while preserving the same series colors, so the zoomed offset geometry is equally legible here as in the light render.
+      Legibility verdict: PASS (all text readable in dark theme; no dark-on-dark issues in the main chart or the inset).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -71,34 +68,38 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; all text readable in both themes.
+        comment: Explicit font sizes throughout, including the new inset's small labels;
+          all text readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; legend, title, and axes all clear of each
-          other.
+        comment: No text/data collisions anywhere, including between the new inset
+          and the title/main plot.
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Elastic curve and 0.2% offset construction compressed into ~1% of
-          plot width, effectively unreadable as separate geometry.
+        passed: true
+        comment: The inset now makes the elastic-modulus/0.2%-offset construction
+          clearly legible; the main-scale axes still show it as an unreadable ~2px
+          sliver, but the inset compensates.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast; no red-green-only signal.
+        comment: Adequate contrast; no red-green-only signal; UTS now has its own
+          distinct hue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas gate passes at 3200x1800, title proportion fine, but left-edge
-          crowding from the compressed elastic region hurts layout balance.
+        comment: Canvas gate passes at 3200x1800; title proportion fine, but the reserved
+          top gutter leaves a large unbalanced empty area to the right of the small
+          inset panel.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,10 +111,11 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Canonical order for first 3 series; well-justified semantic exception
-          (red for fracture); correct theme backgrounds in both renders.
+        comment: Canonical order for first 3 series; well-justified semantic exceptions
+          (red fracture, amber UTS, neutral construction lines); correct theme backgrounds
+          in both renders.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -121,24 +123,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful neutral-vs-semantic color hierarchy for construction lines
-          vs. the fracture point.
+        comment: Thoughtful neutral-vs-semantic color hierarchy plus the custom inset
+          technique; undercut somewhat by the unbalanced empty gutter space.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle y-only grid, generous margins, restrained chrome.
+        comment: Subtle y-only grid, restrained chrome; the large empty area beside
+          the inset reads as awkward rather than generous whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Region labels and red fracture point create a focal narrative, but
-          the compressed offset construction undercuts the key 'yield determination'
-          storytelling beat.
+        passed: true
+        comment: Region labels, red fracture point, and now a legible offset-yield
+          construction via the inset create a coherent narrative that resolves the
+          prior storytelling gap.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,12 +152,11 @@ review:
         comment: Correct XY line chart for a stress-strain curve.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
+        passed: true
         comment: Elastic/plastic/necking labels, yield/UTS/fracture markers, and the
-          offset line are all present in the data, but the offset line and elastic
-          slope fail the 'visible' requirement at render scale.
+          offset line are all present AND now visibly legible via the inset panel.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -169,12 +171,12 @@ review:
         comment: Title matches mandated format; legend labels are descriptive and
           match the series.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Covers elastic, yield-plateau, strain hardening, necking, and fracture
@@ -187,22 +189,22 @@ review:
         comment: Mild-steel values (E, yield, UTS, fracture) are realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Physically accurate values create a ~240:1 strain ratio between yield
-          and fracture, compressing the required elastic/offset annotation into illegibility
-          on a linear axis.
+        passed: true
+        comment: Physically accurate values still produce a large yield/fracture strain
+          ratio, but the inset now resolves the previous readability tension entirely.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes.
+        comment: Three helper functions were added to build the inset SVG -- a deviation
+          from a flat script, though justified by the raw-SVG-splicing requirement.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -214,21 +216,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal, pygal.style.Style -- all used.
+        comment: os, cairosvg, numpy, pygal, pygal.style.Style -- all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; clear intent comments.
+        comment: No fake UI or simulated interactivity; the SVG splice is a legitimate
+          technique, not faked functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html via current pygal API.
+        comment: Saves plot-{THEME}.png (via cairosvg) and plot-{THEME}.html with
+          the spliced SVG.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -236,18 +240,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Style object, XY chart, legend/margin config all idiomatic pygal.
+        comment: Style object, XY chart, legend/margin config are idiomatic pygal;
+          the inset is a manual SVG workaround layered on top rather than a pygal
+          API call.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: dasharray stroke_style, dots_size for isolated markers, truncate_legend
-          -- goes beyond generic usage but not exhaustive of pygal's distinctive surface.
+        comment: dasharray stroke_style, dots_size for isolated markers, truncate_legend,
+          and a hand-spliced inset exploiting pygal's raw-SVG render() output -- a
+          distinctive, library-aware technique.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
+  - inset-axes
   - manual-ticks
   - html-export
   patterns:

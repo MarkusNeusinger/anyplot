@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stress-strain: Engineering Stress-Strain Curve
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 80/100 | Created: 2026-08-24
+Quality: 89/100 | Created: 2026-08-24
 """
 
 import os
