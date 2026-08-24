@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-08-24
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -32,6 +33,7 @@ const temperatures = dates.map((_, day) => {
   const noise = (rand() - 0.5) * 3;
   return Math.round((8 + seasonalRise + noise) * 10) / 10;
 });
+const avgTemperature = Math.round((temperatures.reduce((sum, v) => sum + v, 0) / temperatures.length) * 10) / 10;
 
 const TITLE = "line-basic · javascript · muix · anyplot.ai";
 
@@ -81,6 +83,7 @@ export default function Chart() {
               color: t.palette[0],
               showMark: true,
               curve: "monotoneX",
+              area: true,
               valueFormatter: (v) => `${v}°C`,
             },
           ]}
@@ -103,10 +106,19 @@ export default function Chart() {
           slotProps={{ legend: { hidden: true } }}
           sx={{
             "& .MuiLineElement-root": { strokeWidth: 3 },
-            "& .MuiMarkElement-root": { r: 4, stroke: t.pageBg, strokeWidth: 2, fill: t.palette[0] },
+            "& .MuiMarkElement-root": { r: 6, stroke: t.pageBg, strokeWidth: 2, fill: t.palette[0] },
+            "& .MuiAreaElement-root": { fill: t.palette[0], fillOpacity: 0.12 },
             "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
           }}
-        />
+        >
+          <ChartsReferenceLine
+            y={avgTemperature}
+            label={`Avg ${avgTemperature}°C`}
+            labelAlign="end"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "6 4", strokeWidth: 1.5 }}
+            labelStyle={{ fontSize: 13, fill: t.inkSoft }}
+          />
+        </LineChart>
       </Box>
     </Box>
   );
