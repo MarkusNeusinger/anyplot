@@ -1,0 +1,264 @@
+library: chartjs
+language: javascript
+specification_id: box-basic
+created: '2026-08-24T16:59:43Z'
+updated: '2026-08-24T17:15:30Z'
+generated_by: claude-sonnet
+workflow_run: 32753299478
+issue: 689
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'First categorical series is exactly #009E73 and the remaining classes follow
+    the Imprint canonical order (lavender, blue, ochre, matte red) in both renders,
+    with data colors identical across themes.'
+  - 'Genuine box-and-whisker construction: a custom afterDatasetsDraw plugin draws
+    real whiskers, caps, a page-bg-contrast median line, and individually plotted
+    outlier points on top of a floating-bar Q1-Q3 box — Chart.js has no native boxplot
+    type, so this is real engineering, not a fake.'
+  - 'Data storytelling: ''Highest median'' and ''Widest spread (IQR)'' callouts are
+    computed from the actual data (reduce over medians / IQRs) and placed above the
+    relevant box, giving the viewer an immediate takeaway instead of a flat data dump.'
+  - Theme-adaptive chrome is threaded correctly everywhere (title/axis text via t.ink,
+    ticks via t.inkSoft, grid via t.grid, whisker/cap strokes via t.ink, median line
+    and outlier strokes via t.pageBg) and remains fully legible in both the light
+    and dark renders.
+  - 'Data quality: five classes with distinct mean/SD/n combinations (n=50-90, within
+    the spec''s 20-500 range) produce genuinely different spreads and two categories
+    show real outliers beyond the 1.5*IQR fence.'
+  - Deterministic LCG + Box-Muller sampling with a fixed seed (42) makes the dataset
+    fully reproducible, and quantile()/IQR-fence logic is computed directly from the
+    sorted sample rather than hard-coded.
+  weaknesses:
+  - The mandated title only reaches ~32% of canvas width at font size 26 — well under
+    the 50-70% comfort band for a title this length (45 chars). It reads fine, but
+    a slightly larger title (e.g. 30-32px) would balance better against the wide 3200px
+    canvas.
+  - Only Class A and Class B show outliers; Class C/D/E display none, so the outlier-rendering
+    path is only exercised twice across five categories — one more engineered outlier
+    in a low-variance class (e.g. Class D) would demonstrate the feature more fully.
+  - Legend is intentionally disabled since the x-axis already labels each class, which
+    is a reasonable call, but a 1-line note in code comments confirming that reasoning
+    would help future maintainers avoid 're-adding' a redundant legend.
+  - outlier marker radius (6px) and whisker-cap half-width (0.3 * bar width) are hard-coded
+    constants rather than densitya-adapted values; with only 1-2 outliers per class
+    this reads fine, but the sizes don't scale with n the way the box width does.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "box-basic · javascript · chartjs · anyplot.ai" in bold dark ink, centered near the top with generous headroom (verified no clipping via pixel crop). Axis titles "Class" (x) and "Exam Score (0-100 pts)" (y) in dark ink; tick labels in a slightly softer gray-brown. Subtle horizontal gridlines only on the y-axis. All chrome elements are clearly readable against the light background.
+      Data: Five floating bar-boxes (Q1-Q3) in Imprint palette order — Class A brand green #009E73, Class B lavender, Class C blue, Class D ochre, Class E matte red. Each box has a white/near-page-bg median line for contrast, thin dark whiskers with caps extending to 1.5*IQR fences, and individually plotted outlier dots (Class A and Class B) styled in the series color with a light stroke. Two text callouts ("Highest median" over Class D, "Widest spread (IQR)" over Class E) sit comfortably above their respective boxes without overlapping the axis or other text.
+      Legibility verdict: PASS — no dark-on-light or missing text; title, axis text, tick labels, and callouts fully readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis titles now render in light off-white ink; tick labels in a lighter secondary gray. Gridlines remain subtle. Box borders switch to a light stroke (matching t.ink flipping to the light token), keeping the boxes well-defined against the dark background.
+      Data: Same five box colors as the light render, confirmed pixel-identical (green/lavender/blue/ochre/red) — only chrome flipped. The median line strokes with the dark page-bg token; cropped close-ups over the blue, ochre, and red boxes confirm the dark median line remains visibly distinct from each fill color thanks to line weight and the light box border, so it does not blend into the dark canvas outside the box. Outlier dots keep their series color with a dark stroke, clearly visible against the near-black background.
+      Legibility verdict: PASS — no dark-on-dark failures found; all text and the median line remain legible against both the canvas background and the saturated box fills.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 26, axis titles 16, ticks 14);
+          readable in both themes; no clipping or overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axis text, ticks, boxes, or the two
+          story callouts.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Box widths, whiskers, caps, and outlier markers are all clearly visible
+          at this data density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Page-bg-contrast median line remains distinguishable against every
+          fill color, verified via close crops on blue/ochre/red boxes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the canvas well with balanced margins; nothing cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Exam Score (0-100 pts)'' includes units; ''Class'' is descriptive
+          for a categorical axis.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; remaining series follow canonical Imprint
+          order; theme-correct backgrounds and chrome in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-drawn whiskers/caps/median/outliers on top of a floating-bar
+          base is genuinely above a library default, though not quite FiveThirtyEight-level
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No visible spines/frame, subtle single-axis gridlines, generous category
+          spacing (barPercentage 0.45).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Explicit 'Highest median' / 'Widest spread (IQR)' callouts computed
+          from the data actively guide the viewer to the key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box-and-whisker plot with all standard elements.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median line, outliers, 1.5*IQR whiskers, and per-category color all
+          present as required by the spec.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, numeric exam score on y; all data represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          since categories are already labeled on the x-axis.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Different spreads/medians across classes and real outliers shown,
+          though only 2 of 5 categories exhibit outliers.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam scores across classes — realistic, neutral education scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 exam score range with plausible means/SDs per class.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Includes small helper functions (lcg, randNormal, quantile) and a
+          plugin object, but these are necessary to implement a boxplot that Chart.js
+          has no native support for.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) makes the dataset fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided Chart.js global; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; the custom plugin is an appropriate, real
+          technique for this plot type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container, uses new Chart(), animation:false set correctly.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's plugin hook system (afterDatasetsDraw) and floating-bar
+          data ([q1,q3]) idiomatically to build a chart type the library lacks natively.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The afterDatasetsDraw custom-draw plugin combined with floating-bar
+          ranges is a Chart.js-specific technique, not trivially portable to another
+          library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - quartile-calculation
+  styling:
+  - edge-highlighting

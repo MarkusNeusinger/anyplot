@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: bubble-basic
+created: '2026-08-24T17:58:24Z'
+updated: '2026-08-24T18:13:00Z'
+generated_by: claude-sonnet
+workflow_run: 32759157170
+issue: 755
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Standout bubble (best revenue-growth-per-R&D-dollar company) is drawn as a separate,
+    fully-opaque, ink-outlined series with a direct label, giving the chart a clear
+    focal point that was missing in attempt 1
+  - Market-share field was reframed as a 'Relative Market Index' scored independently
+    per company (0-100) and the code explicitly documents this is not a literal share
+    of one shared 100% pie, fixing the aggregate-realism weakness from attempt 1
+  - Bubble size scaled by sqrt(value) so on-screen AREA (not radius) is proportional
+    to the index value, exactly matching the spec's explicit requirement
+  - Transparency (opacity 0.6) plus a subtle pageBg/ink edge stroke handles the heavy
+    overlap among 65 bubbles while keeping individual bubbles distinguishable
+  - Custom size legend built from ECharts graphic elements (three reference bubbles
+    labeled with min/mid/max index values) clearly explains the size encoding, satisfying
+    the spec's legend requirement
+  - 'Both renders are theme-correct: #FAF8F1 light / #1A1A17 dark backgrounds, theme-adaptive
+    ink tokens throughout, first series is brand green #009E73, identical data colors
+    across themes'
+  - Deterministic fixed-seed LCG generates data in-memory, correct for the browser
+    runtime with no filesystem/network access
+  - Canvas gate passed (3200x1800), animation disabled, no explicit width/height/devicePixelRatio
+    passed to echarts.init
+  weaknesses:
+  - Densest cluster (bottom-left, low R&D spend / low growth) merges into an indistinct
+    green blob where individual bubble boundaries are hard to trace — a touch more
+    opacity contrast or slight jitter would help element visibility there
+  - Library mastery is solid but still fairly generic scatter + manual graphic legend;
+    a more ECharts-distinctive technique (e.g. visualMap-driven sizing/legend) would
+    push Library Mastery further
+  - 'Design excellence is good but not yet publication-level: a bespoke color treatment
+    (e.g. subtle color gradient tied to growth-per-R&D ratio) beyond the single standout
+    label would elevate the aesthetic further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-basic · javascript · echarts · anyplot.ai" centered at top in bold dark ink (~35% of plot width, well within the 50-70% guideline). Axis titles "R&D Investment ($M)" (x) and "Revenue Growth Rate (%)" (y) in dark ink, both clearly readable. Tick labels in medium-gray ink. Grid lines thin and subtle on both axes. A "Relative Market Index" size legend at the right edge shows three reference bubbles labeled 9, 54, 100, fully within canvas bounds. All chrome elements are dark-on-light and legible.
+      Data: All ~65 data bubbles are brand-green (#009E73) at 60% opacity with a thin off-white edge stroke for definition where bubbles overlap; diameter scales with sqrt(value) so area is proportional to the index. One bubble (lowest R&D spend, positive growth) is drawn fully opaque with a thick dark-ink outline and a bold "Best growth per R&D $" label above it, creating a clear focal point.
+      Legibility verdict: PASS — no light-on-light issues, all text readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Identical title/axis/legend layout, now rendered in light ink (near-white primary text, light-gray secondary/tick/legend text) — all clearly legible. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend text, standout label all use theme-adaptive ink tokens).
+      Data: Data bubbles use the identical brand-green hue as the light render (confirmed — only chrome flipped), now with a thin dark-ink edge stroke instead of off-white on regular bubbles, and a light-ink outline on the standout bubble. Bubble sizing and positions are pixel-identical to the light render.
+      Legibility verdict: PASS — no dark-on-dark issues, all text and data clearly distinguishable from the background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title comfortably fits at ~35% of
+          width; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; standout label placed in clear space
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha-blending and edge strokes work well, but the densest cluster
+          still merges into an indistinct blob
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe single-hue encoding with edge strokes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, legend near plot, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, theme-correct chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom graphic legend and standout treatment go beyond default, but
+          overall look is still a single-hue scatter
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, generous whitespace, thoughtful edge strokes, but not
+          fully polished in the densest region
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: New standout-bubble focal point with direct label creates clear visual
+          hierarchy, addressing attempt 1's weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bubble chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area-correct sizing, alpha within spec range, legend present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y/size correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match the reframed index field
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range of x/y/size values plus a highlighted outlier
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral business scenario (R&D spend vs. growth vs. market index)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reframed as an independent relative index, fixing the aggregate market-share
+          realism issue from attempt 1
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script with small scaling helpers, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Correct scatter + graphic usage but doesn't leverage ECharts' more
+          advanced patterns (e.g. visualMap)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Custom graphic-based legend plus z-ordered overlay series for the
+          standout bubble, distinctive to ECharts' graphic component API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

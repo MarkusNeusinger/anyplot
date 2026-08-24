@@ -1,0 +1,282 @@
+library: highcharts
+language: javascript
+specification_id: arc-basic
+created: '2026-08-24T15:24:13Z'
+updated: '2026-08-24T15:37:49Z'
+generated_by: claude-sonnet
+workflow_run: 32743800084
+issue: 991
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct arc-diagram form via a legitimate Highcharts technique (chart.renderer.path
+    drawn on the chart 'render' event over a scatter baseline) since the core-only
+    bundle has no native arc/network module.
+  - 'Attempt-1 feedback was substantively addressed: the opacity floor was raised
+    from 0.28 to 0.38 (weight-driven ramp now 0.38-0.70), so even the faintest long-range
+    edges stay clearly visible against both backgrounds.'
+  - The arc-height formula switched from a linear distance ratio to sqrt(distance/maxDistance),
+    which lifts mid-distance arcs into a graduated cascade instead of one lone thin
+    arc jumping straight to a dense cluster at the baseline - a real improvement to
+    visual rhythm and data storytelling.
+  - Coupling strength is encoded redundantly via both stroke width and opacity, giving
+    a clear, readable visual hierarchy without relying on color alone.
+  - 'Correct Imprint palette usage (brand green #009E73 for the single series) and
+    fully theme-adaptive chrome - title, subtitle, rotated node labels, and node markers
+    all flip correctly and stay legible in both the light and dark renders.'
+  - Realistic, neutral CI/CD pipeline scenario (14 stages, 23 weighted dependencies)
+    with plausible coupling weights spanning the full range, illustrating the arc-diagram
+    use case well.
+  - Title format matches the mandated pattern exactly, the single-series legend is
+    correctly omitted, and animation is disabled per the harness contract.
+  weaknesses:
+  - 'The top ~35-38% of the canvas is still empty apart from the title/subtitle, and
+    it is essentially unchanged from attempt 1 despite the sqrt() rescale - the root
+    cause was never touched: for a quadratic Bezier ''Q'' path with both endpoints
+    at baseY and the control point at baseY - arcHeight, the curve''s actual peak
+    at t=0.5 is only (baseY + controlY) / 2, i.e. arcHeight / 2 above the baseline,
+    not arcHeight. Since the longest-distance edge (distance = maxDistance) still
+    resolves to arcHeight = maxHeight under both the old linear and the new sqrt formula
+    (sqrt(1) = 1 same as 1/1), the tallest arc''s visual peak is exactly the same
+    height as before the fix - only the mid-distance arcs moved. Fix by compensating
+    for the halving (e.g. controlY = baseY - 2 * arcHeight, or fold a factor of 2
+    into maxHeight) so the tallest arc''s rendered peak actually reaches close to
+    plotTop.'
+  - 'The implementation file currently has two duplicated header comment blocks (lines
+    1-10): a stale block with no License line and ''Quality: 87/100'', followed immediately
+    by the correct block with ''Quality: pending'' and the License line - the ''//#
+    anyplot-orientation: landscape'' directive is sandwiched between them instead
+    of sitting cleanly after a single header. Likely an artifact of the header-rewrite
+    step re-running without removing the prior block; worth a clean single header
+    on the next touch.'
+  - Design Excellence is still held back by the top-heavy composition noted above
+    - the sqrt() cascade improved the middle of the plot but the fix did not change
+    canvas utilization at the top the way the attempt-1 feedback intended.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Bold dark title "arc-basic · javascript · highcharts · anyplot.ai" and a grey subtitle explaining the arc-height/thickness/opacity encoding are both clearly legible at the top. 14 node labels ("Checkout" through "Monitor") are rotated ~-55° below the baseline in a soft dark-grey tone, evenly spaced and fully readable with no overlap or clipping. No axis lines, ticks, or grid are shown (deliberately minimal chrome, appropriate for this plot type).
+      Data: All arcs render in a single green hue (brand #009E73) with stroke width and opacity scaled by coupling weight - thick, saturated, tightly-nested arcs for short-range stage pairs near the baseline, several graduated mid-height arcs, and one thin arc spanning almost the full width reaching roughly 60% up the plot area for the longest-range connection. Node markers are solid dark dots with a light ring, evenly spaced along the baseline. The top ~35-38% of the canvas (above the tallest arc) remains empty.
+      Legibility verdict: PASS - all text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Title and subtitle both render in light cream/grey tones and remain fully legible; the same 14 rotated node labels appear in a light grey tone, readable against the dark background with no dark-on-dark failures.
+      Data: Arc colors are identical to the light render (same brand green #009E73, same weight-based thickness/opacity gradient, same graduated cascade of arc heights) - only the chrome (background, text, node-marker fill/stroke) has flipped. Node markers now render as light dots with a dark ring, correctly inverted for contrast on the dark surface. The same top-of-canvas empty region is present, consistent between themes.
+      Legibility verdict: PASS - all text is clearly readable against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout (title 22px, subtitle/labels 14px);
+          all text readable in both themes with no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-text or text-data collisions; rotated node labels are evenly
+          spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Opacity floor raised from 0.28 to 0.38 since attempt 1 - even the
+          lowest-weight, longest-distance arcs are now clearly visible on both backgrounds.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue encoding with adequate contrast against both surfaces;
+          no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Top ~35-38% of the canvas remains empty above the tallest arc - unchanged
+          from attempt 1 because the tallest edge (distance=maxDistance) resolves
+          to the same arcHeight under both the old linear and new sqrt formulas; only
+          mid-distance arcs were lifted.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Node labels use the actual pipeline stage names; subtitle explains
+          the visual encoding clearly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series uses Imprint brand green #009E73; theme-correct
+          backgrounds and chrome in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful weight-based visual encoding, explanatory subtitle, and
+          now a more graduated arc-height cascade, but the persisting top-of-canvas
+          whitespace still undercuts full polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome (no grid/spines/ticks) and generous margins; the fix
+          improved the mid-canvas distribution but the layout is still top-empty /
+          unbalanced.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The graduated cascade (short arcs low, mid-distance arcs progressively
+          higher) now reads as a clearer distance story than the attempt-1 single-jump
+          version.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct arc diagram: nodes on a single horizontal line, arcs curving
+          above.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Arc height proportional to node distance, semi-transparent arcs,
+          readable node labels along the axis all present; weight-based color coding
+          is explicitly optional in the spec and is instead conveyed via thickness/opacity.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X position encodes node order/index; edges correctly connect endpoint
+          pairs on the baseline.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; single-series legend correctly
+          omitted.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both short-range dense coupling and a clear long-range weak
+          connection, plus a full weight range (2-9).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, comprehensible, neutral CI/CD pipeline scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stage ordering and coupling weights are plausible for a real pipeline;
+          no factual or logical violations.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> chart structure; the render-event handler is the minimum
+          needed for custom arcs.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals; only Highcharts + tokens used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is justified by the lack of a native arc/network chart
+          type; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          credits disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses chart.renderer + the 'render' event, the documented Highcharts
+          pattern for custom overlays when no built-in series type fits.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Direct SVGRenderer path drawing (chart.renderer.path with quadratic
+          Bezier 'Q' commands) tied to the chart lifecycle is a Highcharts-specific
+          technique, not a generic cross-library pattern.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending

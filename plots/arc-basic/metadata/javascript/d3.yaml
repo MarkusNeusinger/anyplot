@@ -1,0 +1,250 @@
+library: d3
+language: javascript
+specification_id: arc-basic
+created: '2026-08-24T15:17:09Z'
+updated: '2026-08-24T15:32:53Z'
+generated_by: claude-sonnet
+workflow_run: 32743282717
+issue: 991
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'The scaleSqrt fix for arcHeight (replacing the prior linear scale) resolves the
+    attempt-1 VQ-05 finding: arcs now spread across most of the vertical canvas instead
+    of compressing into a thin band under one dominant outlier arc, and the code comment
+    explicitly documents why sqrt was chosen over linear.'
+  - Weight is encoded through two redundant channels (stroke-width 1.5-7px and stroke-opacity
+    0.25-0.65), so interaction strength stays legible even where several arcs cluster
+    near the same nodes.
+  - Arc height is proportional to node distance exactly as the spec's notes require,
+    so the one long-range connection (Elena-Sana) still reads as clearly the longest-range
+    link even after the sqrt compression.
+  - Title font-size is deliberately computed via the mandated linear scaling formula
+    for the longer descriptive-prefixed title, avoiding overflow while staying comfortably
+    readable.
+  - Theme tokens are threaded through every chrome element (baseline, node stroke/fill,
+    labels, title); both renders are legible and the arc color is identical across
+    themes.
+  weaknesses:
+  - No secondary encoding differentiates edge type/category - every arc is the single
+    Imprint green; the spec's optional note ('Consider color coding edges by type
+    or weight when applicable') is still skipped.
+  - Arc paths are built with a manual 'M ... Q ... ' string rather than a d3-shape
+    generator (d3.line/d3.linkHorizontal/custom arc), so the library-mastery ceiling
+    for distinctive d3-shape usage is not reached.
+  - In the dense left cluster (Elena/Marcus/Priya/Wren), several similarly-sized arcs
+    overlap tightly enough that individual edges are hard to trace back to their exact
+    endpoints without careful visual tracing.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark-ink title "Character Interactions in a Novel · arc-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Twelve character names run along a thin dark baseline as small open circles (cream fill, dark-ink stroke) with soft gray labels beneath each. No grid used, appropriate for an arc diagram.
+      Data: All arcs are brand green (#009E73). Arc height now scales with sqrt(node distance), so short/medium-range arcs (most of the 20 edges) fill a large share of the vertical canvas in a fan-like arrangement, while the single long-range Elena-Sana edge still rises highest and reads as the clear outlier. Stroke width (1.5-7px) and opacity (0.25-0.65) both scale with edge weight, giving heavier interactions a thicker, more opaque line.
+      Legibility verdict: PASS - title, node labels, and baseline are all clearly readable against the light background; no light-on-light text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Title renders in light/off-white ink, still clearly readable; node labels render in lighter gray; baseline and node-outline strokes flip to a light ink tone. No dark-on-dark text found anywhere.
+      Data: Arcs remain the identical brand green (#009E73) seen in the light render - same hue, same width/opacity encoding by weight - confirming only chrome flipped between themes, matching the Imprint palette rule.
+      Legibility verdict: PASS - all text is legible against the dark background; brand green reads well on the near-black surface.
+
+    Theme-readability checklist: both renders pass - no missing/unreadable text elements, no wrong-theme chrome, no dark-on-dark or light-on-light failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title and node labels are fully readable in both themes, comfortable
+          font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions with other text or with arcs/nodes
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Weight-scaled width/opacity keeps arcs distinguishable, though the
+          dense left cluster (Elena/Marcus/Priya/Wren) is visually busy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast brand green against both backgrounds, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: scaleSqrt fix resolves the attempt-1 vertical-imbalance finding;
+          arcs now use most of the canvas height and nothing is cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive-prefixed title in the mandated format; node names serve
+          as the axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds are theme-correct on both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Redundant weight encoding, documented sqrt-scale reasoning, minimalist
+          open-circle nodes
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chrome, generous whitespace, no grid clutter; not exceptional
+          beyond that
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Height + width/opacity hierarchy highlights the standout long-range
+          connection while now giving the bulk of edges real visual presence
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct arc diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes, edges, and weights (thickness+opacity) all present; arc height
+          reflects node distance per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Nodes correctly positioned along baseline, arcs correctly connect
+          source/target
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; single-series legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers nodes, edges, weight-driven width/opacity, and distance-driven
+          height
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral novel-character-interaction scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 nodes / 20 edges fits the spec's 10-50 node guidance; weights
+          2-8 are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container, sizes svg from ANYPLOT_SIZE, no animation'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: scalePoint + data-join + quadratic-Bezier path is the standard D3
+          arc-diagram pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Redundant scale-based encoding is a nice touch, but path is a manual
+          string rather than a d3-shape generator
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

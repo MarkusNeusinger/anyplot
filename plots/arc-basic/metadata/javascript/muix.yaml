@@ -1,0 +1,245 @@
+library: muix
+language: javascript
+specification_id: arc-basic
+created: '2026-08-24T15:24:43Z'
+updated: '2026-08-24T15:37:33Z'
+generated_by: claude-sonnet
+workflow_run: 32744053855
+issue: 991
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three targeted repairs from the Attempt 1 review are cleanly applied: dashed
+    strokes now give ''Represses'' a shape-based encoding independent of hue, the
+    title/legend block gets 50px left padding matching the ChartContainer''s own left
+    margin, and the strokeOpacity floor is raised (0.32→0.42 base) so the longest,
+    weakest-strength arc stays clearly visible in both themes.'
+  - Clever, correct use of MUI X's low-level useXScale/useYScale hooks with ChartContainer
+    to render an arc diagram — a chart type MUI X has no native component for — instead
+    of faking it or bailing to NOT_FEASIBLE.
+  - 'Faithful coverage of every spec-required feature: ordered nodes along a single
+    baseline, arc height proportional to node distance, edge weight driving arc thickness/opacity,
+    semi-transparent overlapping arcs, and readable rotated node labels.'
+  - 'Thoughtful data-driven encoding: node radius scales with node degree (highlighting
+    hub genes like TP53/BRCA1), arc width/opacity scale with interaction strength,
+    and now dash pattern encodes edge kind redundantly with color.'
+  - Clean, deterministic, minimal code with only the components genuinely needed and
+    no fake interactivity; correct, theme-adaptive Imprint palette usage in both renders.
+  weaknesses:
+  - The chart never touches any of MUI X's own chart/series components (series is
+    passed as an empty array) — the actual drawing is 100% custom SVG riding on ChartContainer's
+    scale context. This is the right call for an unsupported chart type but doesn't
+    showcase MUI X-specific richness beyond the scale hooks.
+  - No explicit callout of the single key insight (e.g. the FOXP2–ACE2 long-range
+    edge or the TP53/BRCA1 hub genes) — the visual hierarchy from size/color/opacity
+    is present but nothing annotates the standout pattern for the viewer.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "arc-basic · javascript · muix · anyplot.ai" in dark ink, top-left, now with left padding matching the chart's own 50px margin (fixed from Attempt 1). Legend row below shows a solid green swatch + "Activates", a dashed red swatch + "Represses (dashed)", and "Arc height ∝ distance along the chromosome" in readable dark-gray text. All chrome text is clearly legible against the light background.
+      Data: 18 gene nodes (green circles, radius scaled by connection degree — TP53 and BRCA1 read as the biggest hubs) sit on a horizontal baseline; 23 arcs curve above it — solid green for "activate", dashed matte red for "repress" — with width/opacity increasing with strength and height growing with node distance. First/only categorical color is #009E73 (brand green); repress edges use the semantic-anchor matte red. The single longest, weakest-strength arc (FOXP2–ACE2) is thin but still clearly visible against the background, no longer near-invisible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend, and rotated node labels switch to light ink/gray and stay clearly legible — no dark-on-dark failures anywhere. Left padding is identical to the light render.
+      Data: Node and arc colors are pixel-identical to the light render (same greens/reds, same degree/strength-driven sizing, same dash pattern on repress edges); only the background and text chrome flipped, as required. Brand green and the pale long-range arc both stay clearly visible on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes; left-padding
+          fix removes the flush-to-edge issue from Attempt 1
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Raised strokeOpacity floor (0.42 base) keeps even the longest, weakest
+          arc clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dashed stroke now gives 'Represses' a shape-based encoding independent
+          of red/green hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title/legend now share the chart's 50px left margin; balanced whitespace,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Legend clearly explains edge semantics and the arc-height encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint palette (brand green + semantic-anchor matte red)
+          and theme-adaptive chrome in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Degree-based node sizing, strength-based arc styling, bezier construction
+          — clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean, minimal, generous whitespace; left-padding rough edge from
+          Attempt 1 is now fixed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size/color/opacity create real visual hierarchy toward hub genes
+          and strong interactions; no explicit callout of the single key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct arc diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distance-proportional arc height, weight-driven thickness/opacity,
+          semi-transparent overlaps, readable node labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Node index to x-scale, arc height to y-scale, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels match data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Nodes, edges, and weights all represented; both interaction kinds
+          present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral gene-regulatory-network scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 18 nodes / 23 edges, well within spec guidance
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Minimal, purposeful component structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant scale-hook-based custom rendering, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export contract, skipAnimation set, sized via ANYPLOT_SIZE
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ChartContainer + useXScale/useYScale, the documented pattern
+          for chart types MUI X doesn't natively support
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Genuine MUI X-specific scale-hook mechanism, but the drawing itself
+          is generic SVG portable to another scale-aware library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending

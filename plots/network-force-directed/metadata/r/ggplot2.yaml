@@ -1,0 +1,261 @@
+library: ggplot2
+language: r
+specification_id: network-force-directed
+created: '2026-08-24T14:53:27Z'
+updated: '2026-08-24T15:06:42Z'
+generated_by: claude-sonnet
+workflow_run: 32740512688
+issue: 990
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Implements a genuine custom Fruchterman-Reingold force-directed layout (matrix-based
+    repulsion/attraction, 400 iterations with cooling) since ggplot2 has no native
+    graph layout and ggraph is out of scope
+  - Node size correctly scales by degree and edge linewidth correctly scales by weight,
+    both visibly differentiated across the graph
+  - 'Correct Imprint categorical palette in canonical order (#009E73, #C475FD, #4467A3,
+    #BD8233) for the four architectural layers, identical between light and dark renders'
+  - 'Both renders are fully theme-correct: warm off-white / warm near-black backgrounds,
+    all chrome (title, legend, hub labels) readable with proper contrast in both themes'
+  - 'Hub-node labels (highest-degree nodes: orders, auth, gateway, mobile, web) create
+    a clear visual focal point and guide the reader to the most connected services'
+  - Realistic, neutral microservice dependency graph (Frontend/Backend/Data/Infra
+    layers) with plausible intra- and cross-layer edges
+  - 'Clean KISS-style script: single set.seed(42), only used imports (ggplot2, dplyr,
+    ragg), correct ragg::agg_png save with theme-parameterized filename'
+  weaknesses:
+  - 'Hub-node labels overlap their own node markers: the ''auth'' label box sits directly
+    on top of roughly half of the auth node circle, and the ''gateway'' label box
+    covers part of the gateway node circle (both edges and both themes) — increase
+    nudge_y further or switch to a repel-style offset so the label sits fully clear
+    of its node.'
+  - 'Canvas whitespace is imbalanced: the network fills the center but leaves a visibly
+    empty band along the right edge and top-right corner (confirmed empty in a targeted
+    right-edge crop) while the left/bottom margins are tighter — consider widening
+    the x anchor spread or trimming scale_x_continuous expansion to rebalance.'
+  - The lone degree-0 node (small dot with no visible edges, right of the Backend
+    cluster near 'auth') renders very small and could be trivially confused for visual
+    noise — a slightly larger minimum size or dropping true isolates would read cleaner.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "network-force-directed · r · ggplot2 · anyplot.ai" is dark, bold-weight-adjacent, centered, ~55-60% of canvas width, fully readable. Bottom legend "Layer" with four swatches (Frontend/Backend/Data/Infra) is dark text, clearly legible. Hub node labels (orders, auth, gateway, mobile, web) use dark bold text on a light label-box background — readable, though the auth and gateway boxes visibly overlap their own node's marker circle.
+      Data: Four node clusters colored #009E73 (Frontend, green), #C475FD (Backend, lavender), #4467A3 (Data, blue), #BD8233 (Infra, ochre) — matches Imprint canonical order 1-4, first series is the brand green. Edges are muted gray with alpha, thickness scaled by weight; node size scaled by degree, largest nodes (gateway, orders, auth) clearly the visual hubs.
+      Legibility verdict: PASS (all title/legend/label text reads clearly against the light background; the only defect is label boxes partially covering node markers, not text illegibility).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend text render in light off-white, fully legible against the dark background — no dark-on-dark failures observed. Hub node labels use light bold text on a dark label-box background, readable; same auth/gateway node-overlap issue as the light render.
+      Data: Identical node/edge colors to the light render (#009E73, #C475FD, #4467A3, #BD8233 for the four layers) — confirms only chrome flipped between themes, data colors held constant.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light text failures in either theme; label/node overlap is a layout defect, not a legibility defect).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes at full size;
+          minor deduction because hub labels crowd their own nodes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minimal overlap: ''auth'' and ''gateway'' label boxes partially
+          cover their own node markers in both themes; all text itself remains fully
+          readable'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Degree-scaled node sizes and weight-scaled edge widths read well;
+          one isolated degree-0 node is very small/borderline visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four CVD-safe hues, no red-green-only encoding, edges use neutral
+          gray so data hues stay distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Network fills a healthy diagonal cross of the canvas but leaves a
+          visibly empty band on the right edge/top-right corner
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A treated as full marks — force-directed layouts have no meaningful
+          axes; title is descriptive and correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order positions 1-4, first series #009E73, identical
+          across themes, correct theme-adaptive backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom FR layout, intentional cluster-color + degree-size hierarchy,
+          well above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome/spines, generous margins, subtle edge
+          alpha — some refinement still possible around label placement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Hub labels + size/color encoding create a clear focal point on the
+          most-connected services without needing annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine force-directed graph via custom FR simulation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Degree-scaled node size, weight-scaled edge thickness, key-node labels,
+          400-iteration stabilization all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: FR-simulated x/y positions correctly plotted, all nodes and edges
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend labels (Frontend/Backend/Data/Infra) match
+          cluster data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Visible degree variation, weight variation, and cluster structure
+          across the whole graph
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible microservice architecture dependency graph
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 36 nodes, sensible intra/cross-layer edge counts and weights for
+          a microservice topology
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> layout -> plot -> save, no custom functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used, nothing extraneous
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The manual FR simulation is justified complexity given ggraph is
+          out of scope for ggplot2; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave via ragg::agg_png with theme-parameterized filename, current
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_segment/geom_point/geom_label layering, scale_*_manual/continuous,
+          coord_equal, theme_void
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layered geoms with aes-mapped linewidth/size and label halos go beyond
+          generic usage, though the FR algorithm itself isn't ggplot2-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-directed-layout
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

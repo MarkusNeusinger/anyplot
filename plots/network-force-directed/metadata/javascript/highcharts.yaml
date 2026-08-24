@@ -1,0 +1,267 @@
+library: highcharts
+language: javascript
+specification_id: network-force-directed
+created: '2026-08-24T14:18:30Z'
+updated: '2026-08-24T14:33:41Z'
+generated_by: claude-sonnet
+workflow_run: 32736150590
+issue: 990
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Correct workaround for the missing networkgraph module: hand-rolled Fruchterman-Reingold
+    force layout computed in-memory, exactly matching the guidance in prompts/library/highcharts.md,
+    then plotted as plain scatter + line series'
+  - Hub differentiation via a second visual channel (radius scaled by degree, heavier
+    ink-colored stroke, selective dataLabels for degree >= 6) creates a clear visual
+    hierarchy pointing to the central modules (logger, db-client, core-utils, config,
+    user-service, cache)
+  - Radial gradient node fill (Highcharts.color().brighten()) gives subtle depth without
+    introducing extra hues, keeping the single-series palette rule intact
+  - 'Both renders keep node/edge colors identical (#009E73 family) and correctly flip
+    only chrome: node stroke uses t.ink (hub) / t.pageBg (leaf) in light and their
+    dark-theme equivalents, title/subtitle/labels all readable in both themes'
+  - Deterministic LCG-seeded layout (seed 42), no imports, single self-contained top-to-bottom
+    script with no functions/classes
+  - Title format exact, credits disabled, chart+series animation disabled, transparent
+    background, no add-on modules used
+  weaknesses:
+  - The busiest central cluster (around db-client/logger/config) has heavy edge-line
+    crossings that read as a mild 'hairball' — increasing the repulsion constant k
+    slightly or lowering edge line opacity (e.g. Highcharts.color(t.grid).setOpacity(0.6))
+    would declutter this region and sharpen the visual hierarchy further
+  - 'Edge thickness is uniform (lineWidth: 1.5) for every connection; the spec allows
+    edge thickness to optionally encode weight/connection strength, which would add
+    a second data-storytelling channel (not required, but a missed opportunity for
+    higher Design Excellence / Data Storytelling)'
+  - Header comment block omits the '// License:' line that prompts/library/highcharts.md
+    asks every Highcharts snippet to carry (commercial-license visibility) — cosmetic
+    only, does not affect the rendered output, and is a repo-wide gap shared by most
+    existing highcharts.js implementations rather than something unique to this PR
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Bold dark title "network-force-directed · javascript · highcharts · anyplot.ai" (~50% of canvas width, well within bounds) and a gray subtitle "Software module dependency graph — node size scales with degree", both clearly readable against the light background. No axes (intentionally hidden — correct for a force-directed layout). Edge lines render as subtle light-gray strokes.
+      Data: 24 green (#009E73) circular nodes connected by 56 gray edges. Six hub nodes (core-utils, user-service, config, logger, db-client, cache) are visibly larger, carry a dark ink stroke, and are labeled in dark text directly above the node; the remaining 18 peripheral nodes are smaller, thin-stroked, and unlabeled (matches the spec guidance to label only key nodes). Node fills use a subtle radial gradient (light-to-brand-green) for depth. No text overlaps another text element or is clipped at the canvas edge (checked all four borders and the densest node cluster).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Same title/subtitle now in light/white text, clearly readable against the dark background — no dark-on-dark failures anywhere (title, subtitle, and all six hub labels checked individually). Edge lines remain a subtle mid-gray, still visible but not dominant.
+      Data: Identical node/edge geometry and identical green (#009E73) data color to the light render — only chrome (background, title/label ink color, hub node stroke color, which flips from dark ink to a light stroke) adapts to the theme, exactly as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 22px, subtitle 14px, dataLabels 13px all explicitly set; readable
+          in both themes; title fits comfortably at ~50% width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: allowOverlap:false plus selective hub-only labeling keeps every label
+          clear of nodes, edges, and other labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node radius scales 9-21px with degree, clearly distinguishing hubs
+          from leaves; edges thin enough not to obscure nodes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green nodes on neutral gray edges, no red-green reliance,
+          good contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Layout spans ~90% width / ~75% height of the 2400x2400 canvas with
+          balanced margins; nothing clipped at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a force-directed layout (correctly hidden); descriptive
+          subtitle explains the size encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73, identical across themes; backgrounds
+          match #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Radial gradient marker fill + hub stroke differentiation is clearly
+          above library defaults, though limited to a single hue family rather than
+          a fuller custom palette treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axes/grid/spines, generous whitespace, subtle edge strokes; the
+          densest central cluster has noticeable line-crossing clutter that keeps
+          this just short of perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size + stroke + selective labeling create a clear focal hierarchy
+          toward central infrastructure modules (logger, db-client, core-utils), though
+          edge weight is not used as an additional storytelling channel
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine force-directed node-link layout, physics-simulated
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes/edges present, node size scales by degree, labels limited to
+          key nodes, 500 iterations for stabilization, 24 nodes/56 edges within the
+          spec's 20-200 range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y are layout coordinates (axes hidden by design), all nodes and
+          edges visible within frame
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the required format; no legend needed for a
+          single-series network graph
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows hub/leaf variation, community structure (service clusters around
+          db-client/logger vs. ui-components/theme-engine), varying degree
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Software module dependency graph is a realistic, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Module names, dependency directions, and hub concentration (logger/db-client/core-utils
+          as widely-depended-upon utilities) are all plausible for a real codebase
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear top-to-bottom script: data -> layout simulation -> chart;
+          no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (lcgState = 42) drives all randomness deterministically
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only window.ANYPLOT_TOKENS and Highcharts globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The from-scratch force-layout simulation is appropriate complexity
+          given Highcharts core has no networkgraph module, not over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Renders via Highcharts.chart('container', ...) into the harness mount
+          node, animation disabled, current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scatter/line series composition with a custom tooltip formatter and
+          dataLabels formatter is exactly the documented workaround for the missing
+          networkgraph module
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Highcharts.color().brighten() radial-gradient marker fill and per-point
+          marker overrides are Highcharts-specific idioms, though the overall approach
+          is portable to other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - gradient-fill
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - gradient-fill
+  - edge-highlighting

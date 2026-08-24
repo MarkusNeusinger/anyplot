@@ -1,0 +1,246 @@
+library: makie
+language: julia
+specification_id: line-basic
+created: '2026-08-24T13:21:24Z'
+updated: '2026-08-24T13:52:55Z'
+generated_by: claude-sonnet
+workflow_run: 32731229050
+issue: 653
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Peak highlight, midday shading, and annotation label are now fully visible and
+    correctly rendered in both themes -- the attempt 2 rendering defect (invisible
+    vspan!, oversized marker, and text! label) is resolved.
+  - Canvas lands exactly on the 3200x1800 landscape target; both renders pass the
+    theme-readability check with warm off-white (#FAF8F1) / warm near-black (#1A1A17)
+    backgrounds and correctly flipped chrome tokens (title, axis labels, ticks, grid).
+  - 'Data color is #009E73 and byte-identical between light and dark renders; only
+    chrome and the shading tint adapt to theme.'
+  - Grid is now Y-axis-only per the style guide (xgridvisible = false), addressing
+    the reviewer's prior feedback.
+  - 'Clean, reproducible code: no unused imports, Random.seed!(42), single-file KISS
+    structure, correct plot-$(THEME).png output with current size=/px_per_unit API.'
+  weaknesses:
+  - 'Peak annotation text (''Peak: 23.1C'') sits at a modest 13pt fontsize relative
+    to the 3200x1800 canvas -- readable but could be nudged up slightly for stronger
+    visual hierarchy and mobile legibility.'
+  - Distinctive Makie features are present (vspan! shading, text! annotation, manual
+    hour:00 tick formatting) but still relatively modest -- no advanced primitive
+    (e.g. band! for a confidence range, custom colormap, faceting) to further showcase
+    library mastery.
+  - Title omits the optional descriptive prefix (e.g. 'Daily Temperature Curve (c)
+    line-basic (c) julia (c) makie (c) anyplot.ai'), leaving the title well under
+    the 50-70% width guideline -- not a deduction since the prefix is optional, but
+    a free lever for extra polish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "line-basic - julia - makie - anyplot.ai" centered at top, fully visible with margin above. "Hour of Day" (X) and "Temperature (C)" (Y) axis labels in dark ink, clearly legible. Tick labels ("0:00"-"20:00" on X, "5"-"25" on Y) in a softer gray-brown, clearly readable. Only left/bottom spines shown; a subtle low-opacity horizontal (Y-axis-only) grid.
+      Data: A single continuous brand-green (#009E73) line with matching circular markers at all 24 hourly points, tracing a smooth diurnal curve from ~3C overnight up to a ~23C midday plateau and back down to ~10C by 23:00. A pale green vspan band shades the ~10:30-15:30 midday plateau. The peak point (~14:00, 23.1C) carries a visibly larger marker with a dark stroke outline, labeled "Peak: 23.1C" in dark ink positioned just above the marker with no overlap.
+      Legibility verdict: PASS -- all text is readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and axis labels now rendered in light ink (~#F0EFE8), tick labels in a lighter soft gray (~#B8B7B0), all clearly legible. Grid remains a subtle light horizontal line set.
+      Data: The brand-green (#009E73) line, markers, and vspan shading tint are positioned and colored identically to the light render -- only chrome (background, text, grid) flipped, exactly as required. The peak marker retains its enlarged size and stroke, now outlined against the dark background; the "Peak: 23.1C" label is rendered in light ink and stays clearly readable.
+      Legibility verdict: PASS -- no dark-on-dark failures; all text and highlighted elements are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, tick labels, and peak annotation are all readable
+          in both themes; annotation text is modest in size but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, line, markers, shaded band, or annotation.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: vspan! shading, enlarged/stroked peak marker, and text! label all
+          render correctly now (fixed since attempt 2).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong contrast, single hue, no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt); proportions
+          clean, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (Hour of Day, Temperature (C)).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; both
+          renders theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Shaded midday plateau, distinct peak marker, and label form an intentional,
+          working design story beyond generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, Y-only subtle grid, generous whitespace, consistent
+          theme tokens.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point (labeled daily peak within a shaded plateau) now
+          actually guides the viewer.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct single-line plot.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Line connecting points, optional markers included, grid lines, clear
+          axis labels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = hour of day, Y = temperature, full range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; no legend needed for a single
+          series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 hourly samples show the full diurnal shape (rise, plateau, fall).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral daily-temperature dataset.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 3-23C range and 24-point count are sensible for the domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; flat script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random -- all used; no dead imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: All visual elements (vspan!, scatter!, text!) now function as intended
+          -- no dead code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save(...; px_per_unit=2) API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/lines!/scatter!/vspan!/text! usage, correct theme-token
+          mapping.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: vspan! region highlight and text! annotation are genuine distinctive
+          touches beyond bare lines!/scatter!, though still modest in scope.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

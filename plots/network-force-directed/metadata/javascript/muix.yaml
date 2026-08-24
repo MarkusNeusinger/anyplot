@@ -1,0 +1,259 @@
+library: muix
+language: javascript
+specification_id: network-force-directed
+created: '2026-08-24T14:13:40Z'
+updated: '2026-08-24T14:27:49Z'
+generated_by: claude-sonnet
+workflow_run: 32736405725
+issue: 990
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-force-directed/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Genuine client-side Fruchterman-Reingold force simulation (300 iterations with
+    a cooling schedule and mild centering gravity) — a real computed layout, not a
+    static/fake one
+  - 'Community structure reads instantly: five clearly separated clusters, hub nodes
+    emphasized with a soft halo, larger radius, and a label so the viewer can find
+    central nodes at a glance'
+  - 'Correct Imprint palette: first series (Machine Learning) is brand green #009E73,
+    remaining four groups follow canonical order 2-5, identical across both themes'
+  - Deterministic reproducibility via a small fixed-seed LCG since the browser has
+    no seeded RNG
+  - Theme-adaptive chrome verified correct in both renders (warm off-white / near-black
+    backgrounds, ink/inkSoft text, identical data colors)
+  - Idiomatic and creative use of MUI X's ChartContainer + useXScale/useYScale extension
+    hooks to render fully custom SVG layers — the correct fallback since community
+    MUI X has no native graph/network chart type
+  - Square canvas orientation is the right call for this radially symmetric multi-cluster
+    layout
+  - Both edge weight (line thickness) and node degree (node radius) are encoded visually
+    per the spec's optional notes, and inter-group bridge edges are visually distinguished
+    (dashed, lower opacity) from intra-group ties
+  weaknesses:
+  - 'LM-02: everything is drawn as bespoke <line>/<circle> SVG layered on ChartContainer;
+    no native MUI X chart component or ChartsTooltip is ever touched, so distinctive
+    library features (built-in tooltip/highlight interactions) go unused in the HTML
+    output — an acceptable fallback given MUI X community has no graph chart, but
+    it caps the library-mastery score'
+  - No legend or annotation tells the viewer that edge thickness encodes co-authorship
+    weight or that dashed edges mean an inter-group bridge — that mapping only exists
+    in code comments, not in the chart itself
+  - Aside from the hub halo, edges get little additional visual refinement (uniform
+    gray stroke for all intra-group ties) — a touch more depth (e.g. weight-based
+    opacity) would sharpen the design further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "network-force-directed · javascript · muix · anyplot.ai" in dark ink, top-left, clearly legible. Legend row below title shows 5 circular swatches + labels (Machine Learning, Robotics, Bioinformatics, Network Science, Cryptography) in dark secondary-ink text, all readable against the light background. Hub node labels (group names) render in dark ink above each hub circle, fully legible.
+      Data: Five spatially separated node clusters, each a distinct Imprint color (green/lavender/blue/ochre/red) matching the legend swatches. Hub nodes are visibly larger with a soft halo ring. Edges are subtle gray, thicker near hubs (encoding weight/degree), with dashed lighter-opacity edges bridging clusters. First series (Machine Learning) is brand green #009E73 as required.
+      Legibility verdict: PASS — no light-on-light or illegible text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend text render in light ink/inkSoft tones, clearly visible against the dark background. Hub labels are in light-colored text and remain legible over the dark surface.
+      Data: Same five clusters in the identical Imprint hues as the light render (green/lavender/blue/ochre/red) — only the chrome (background, text, node stroke outline color which matches page background) flipped, confirming data-color consistency across themes. Edge styling (thickness/dash/opacity) also matches the light render's encoding.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, legend, hub labels readable in both themes; only hub nodes
+          labeled (unlabeled leaves are intentional per spec)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node/edge sizing scales with degree/weight, appropriate for ~35-node
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 5 categorical colors from Imprint, borderline count per style guide
+          but redundant-encoded via spatial clustering + hub labels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square correct for symmetric multi-cluster layout, generous
+          whitespace, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format exact; axes intentionally hidden (force-layout coordinates
+          are not meaningful data axes)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green #009E73, canonical order 1-5, identical
+          across themes, correct theme backgrounds'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hub halo rings, degree-based sizing, dashed bridge edges show intentional
+          polish beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines/grid to begin with, generous whitespace; edges themselves
+          are visually uniform beyond the halo treatment
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal points via hub emphasis; cluster separation makes community
+          structure the obvious story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine physics-based force-directed layout
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with IDs/labels, edges with source/target, weight, degree-scaled
+          sizing, all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Simulation-derived coordinates correctly mapped via chart scales,
+          full graph shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; legend labels match group names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Communities, hubs, peer chains, weighted edges, inter-group bridges
+          all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Research co-authorship network is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 35 nodes / ~50 edges, within spec's 20-200 typical range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Functions present are the required React components plus a justified
+          seeded-RNG helper, not needless abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, deterministic fixed-iteration simulation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only React + ChartContainer + scale hooks, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, real simulation code, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of ChartContainer + useXScale/useYScale as the documented
+          extension mechanism for custom chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Bypasses native MUI X series/tooltip entirely in favor of raw custom
+          SVG — justified fallback but leaves distinctive library features (built-in
+          tooltip/highlight) unused
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - force-directed-layout
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome

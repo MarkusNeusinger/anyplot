@@ -1,0 +1,264 @@
+library: muix
+language: javascript
+specification_id: waveform-audio
+created: '2026-08-24T10:38:28Z'
+updated: '2026-08-24T10:53:08Z'
+generated_by: claude-sonnet
+workflow_run: 32717353100
+issue: 4563
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Implements the spec's min/max envelope downsampling technique exactly as prescribed
+    (900 buckets over 44,100 raw samples) to avoid aliasing at the rendered zoom level
+  - Symmetric mirrored area fill around a zero baseline with semi-transparent fill
+    (fillOpacity 0.55) and an explicit ChartsReferenceLine at y=0, matching every
+    'Notes' requirement in the spec
+  - 'Realistic synthetic speech-utterance data: fundamental + two harmonics shaped
+    by six overlapping Gaussian syllable envelopes plus low-level breath noise, giving
+    a plausible amplitude envelope shape rather than a flat repeating tone'
+  - 'Nice storytelling touch: locates and annotates the loudest syllable with a highlighted
+    mark and a dashed ChartsReferenceLine + label, creating a clear focal point without
+    faking interactivity'
+  - Explicit font sizing throughout (tickLabelStyle, labelStyle, title) and theme-correct
+    Imprint palette/backgrounds identical data color across both renders
+  - 'Clean single-purpose file: deterministic LCG-seeded data generation, only the
+    two needed imports, current MUI X community API (LineChart area series + ChartsReferenceLine),
+    skipAnimation set'
+  weaknesses:
+  - 'Design Excellence is still close to library-default: the extreme horizontal/vertical
+    gridlines coincide with the axis extents and read as a boxed frame rather than
+    an intentionally refined chrome — consider disabling the outermost grid lines
+    or lightening them further, and trimming spines-equivalent chrome for a more polished
+    look'
+  - The envelope never dips toward true silence between syllables (troughs bottom
+    out around 0.5-0.6 rather than near-zero), so the 'silence' dynamic the spec's
+    Description calls out (alongside dynamics/clipping/transients) isn't really demonstrated
+  - LM-02 usage is solid but not maximally distinctive — leans on standard area-series
+    + ChartsReferenceLine; a more MUI X-specific flourish (e.g. custom axis formatting,
+    richer showMark logic, or a second reference band) would push Library Mastery
+    higher
+  - The 'Loudest syllable' annotation text (fontSize 12) is the smallest element on
+    the canvas — still legible at full resolution, but among the first things to disappear
+    when the PNG is scaled down for mobile thumbnails
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Speech Utterance · waveform-audio · javascript · muix · anyplot.ai" in dark ink, top-left, clearly legible. X-axis "Time (s)" labeled 0.00s-2.00s in 0.20s steps, Y-axis "Amplitude" labeled -1.0 to 1.0 in 0.1 steps. Grid lines (horizontal + lighter vertical) are subtle but visible. A gray horizontal zero-reference line and a gray dashed vertical "Loudest syllable" reference line with small label are both present and readable.
+      Data: Single filled waveform in brand green (#009E73-looking), mirrored symmetrically above/below the zero baseline, semi-transparent so overlapping strokes stay visible. A single highlighted green dot marks the loudest syllable peak (~1.53s, ~0.82 amplitude). Six visible amplitude "bumps" trace the six syllable envelopes described in the code.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, annotation) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title now rendered in light/white ink, fully legible. Axis labels and tick labels are light-colored and readable. Grid lines are subtle light lines against the dark background. Zero-reference line and dashed "Loudest syllable" reference line remain visible in a muted light gray.
+      Data: Waveform fill and peak marker are the identical brand green as the light render — only the chrome (background, text, grid) flipped to the dark theme, exactly as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every title/axis/tick/annotation element is clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14/16/22px); readable in both themes,
+          well-proportioned; smallest element is the 12px annotation label
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Min/max envelope rendering (900 buckets) exactly matches the spec's
+          guidance for dense waveforms; peak marker isolated and clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green fill with good contrast against both warm backgrounds;
+          not reliant on red/green distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the vast majority of the canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Time (s)" has units; "Amplitude" is descriptive (unitless quantity,
+          correctly unlabeled)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is Imprint brand green #009E73, identical across themes;
+          backgrounds are theme-correct #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Semi-transparent fill, highlighted peak marker, and a dashed reference-line
+          annotation show design thought beyond raw defaults, but overall look is
+          still fairly standard MUI X styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid opacity tuned (vertical grid at 0.4), stroke widths customized;
+          extreme gridlines read as a boxed frame rather than fully refined chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Loudest-syllable annotation and marker create a clear focal point
+          and the syllable-envelope shape itself guides the eye through the utterance's
+          dynamics
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct waveform/area representation, mirrored around zero
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled symmetric area, semi-transparent fill, zero-line, min/max
+          envelope downsampling, time-in-seconds axis — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, normalized amplitude on Y, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend correctly
+          hidden for a single conceptual series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows dynamics, transients, and multiple syllable envelopes; troughs
+          never approach true silence
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Simulated speech utterance is a realistic, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 22.05kHz sample rate, 180Hz fundamental, and normalized -1..1 range
+          are all plausible for speech
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data generation -> component; small helper functions
+          are appropriate for JS data-gen
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart and ChartsReferenceLine imported, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Current MUI X community API, skipAnimation set, harness mount contract
+          respected
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Area-series LineChart with conditional showMark and sx overrides
+          is a solid idiomatic use of MUI X for a chart type it has no native primitive
+          for
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses ChartsReferenceLine (x and y) plus a per-index showMark predicate
+          — MUI X-specific, though not maximally distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - publication-ready

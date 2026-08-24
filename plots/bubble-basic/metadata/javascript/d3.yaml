@@ -1,0 +1,252 @@
+library: d3
+language: javascript
+specification_id: bubble-basic
+created: '2026-08-24T17:55:07Z'
+updated: '2026-08-24T18:09:48Z'
+generated_by: claude-sonnet
+workflow_run: 32758912770
+issue: 755
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Bubble sizes scaled by area via d3.scaleSqrt, matching the spec's area-not-radius
+    requirement, with a clear three-value size legend (10/50/100 employees)
+  - 'Genuine data storytelling: a least-squares trend line plus an explicit annotation
+    ("Growth slows as funding scales up") gives the viewer an immediate takeaway instead
+    of a raw data dump'
+  - Theme-adaptive bubble stroke (t.pageBg) separates overlapping circles cleanly
+    in both light and dark renders
+  - 'Clean, idiomatic D3: data joins, scales, and axes built directly with explicit
+    font sizing throughout; no functions/classes beyond the small deterministic LCG
+    seed generator'
+  - Realistic, neutral startup-funding dataset (funding vs. growth vs. team size)
+    with a full spread of density and correlation
+  weaknesses:
+  - Bubble fill-opacity (0.48) sits slightly below the 0.5-0.7 recommended for this
+    density bucket (n=120 falls in the 100-300 point range) - the densest cluster
+    around funding=120-150 has bubbles blending together heavily, making individual
+    points hard to distinguish. Consider nudging opacity to ~0.55-0.6.
+  - The trend annotation ("Growth slows as funding scales up") is small, italic, and
+    sits in a visually busy area of the chart - it could be slightly more prominent
+    (larger font or a subtle background) to fully anchor the story at a glance.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Bold dark title "bubble-basic · javascript · d3 · anyplot.ai" centered at top, fully visible with margin above (no clipping). Axis labels "Funding Raised ($M)" and "Revenue Growth Rate (%)" are dark, descriptive, with units. Tick labels dark and legible on both axes, similar size. Grid lines are light gray and subtle but visible. A size legend box ("Team Size (employees)" with 10/50/100 reference circles) sits top-right inside a rounded, bordered card, fully within canvas bounds.
+      Data: ~120 bubbles in Imprint green (#009E73) at ~0.48 fill-opacity with light-colored strokes separating overlaps; a dashed gray regression line with an italic annotation ("Growth slows as funding scales up") calls out the negative funding/growth correlation.
+      Legibility verdict: PASS - all text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Title and axis labels render in light/white text, clearly legible against the dark background. Tick labels light-colored. Grid lines are faint but visible gray. The size legend card uses a dark elevated surface with light text and light-stroked reference circles, fully legible.
+      Data: Bubbles are the same #009E73 green as the light render (confirmed identical data color), now with dark-colored strokes (matching the dark page background) separating overlaps instead of light ones - a correct theme-adaptive touch. The dashed trend line and annotation remain legible in light gray against the dark background.
+      Legibility verdict: PASS - no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-22px); readable at full size and
+          at ~400px mobile scale in both themes; title fits comfortably without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions; legend, trend label,
+          and axis text all clear of each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bubbles well-sized overall, but the densest cluster (funding 120-150)
+          blends together at the current 0.48 alpha
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue palette with alpha and stroke separation, not reliant
+          on hue distinctions; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; legend nested near
+          the plot, not isolated; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels descriptive with units ($M, %)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is Imprint #009E73, identical across themes;
+          backgrounds are theme-correct #FAF8F1/#1A1A17; chrome fully theme-adaptive'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Thoughtful touches beyond the required D3 build-out: rounded/bordered
+          legend card, theme-adaptive bubble stroke separators, italic annotation
+          styling'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, refined legend box; axis domain
+          lines are fairly solid rather than minimal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Regression trend line + explicit annotation surfaces the negative
+          correlation insight directly, though the annotation itself is visually understated
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area-based sizing (scaleSqrt), alpha transparency for overlap, size
+          legend, bounded min/max bubble size all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=funding, y=growth, size=team correctly mapped; axes show full data
+          range via .nice()
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend label accurately describes
+          the size encoding
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide spread of funding, growth (including negative), and team-size
+          values; shows both dense and sparse regions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Startup funding-round scenario is realistic, comprehensible, and
+          neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Funding ($2-150M), growth (-5 to 67%), and team size (10-100) are
+          all plausible and internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom structure; only helper is the small deterministic
+          LCG seed function
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) for deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3 bundle
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a bespoke D3 bubble chart; no fake UI
+          or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container per the harness contract; current d3 v7 join
+          API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic data-join pattern, scaleLinear/scaleSqrt, axisBottom/axisLeft,
+          d3-array helpers (extent/max/median/sum)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom-built regression trend line and hand-constructed size legend
+          showcase D3's low-level flexibility beyond generic chart-library usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - regression
+  styling:
+  - alpha-blending
+  - edge-highlighting

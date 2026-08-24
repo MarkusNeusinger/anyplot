@@ -1,0 +1,240 @@
+library: muix
+language: javascript
+specification_id: swimmer-clinical-timeline
+created: '2026-08-24T10:14:01Z'
+updated: '2026-08-24T10:29:19Z'
+generated_by: claude-sonnet
+workflow_run: 32715004682
+issue: 4670
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Distinctive marker vocabulary (triangle/star/diamond/circle/arrow) makes event
+    types instantly scannable and is fully colorblind-safe via redundant shape+color
+    encoding.
+  - 'Thoughtful semantic color use: matte-red for progression and amber for adverse
+    events follow the style guide''s semantic-anchor guidance exactly.'
+  - The "Longest on study" bracket annotation adds a genuine narrative focal point
+    without cluttering the rest of the chart.
+  - Both renders are pixel-consistent in data color and fully theme-correct in chrome,
+    with no legibility failures in either theme.
+  - Correct, idiomatic use of MUI X's scale hooks to build a live-scale SVG overlay,
+    exactly matching how the library intends child-composition to work.
+  weaknesses:
+  - Legend swatches (bar-color rects) are plain, unrounded rectangles while the actual
+    bars use borderRadius=3, a very minor visual mismatch between legend and chart.
+  - Several small helper components (marker path builders, overlay, legend helpers)
+    push the file past a minimal single-block structure; the three simple polygon-path
+    builders (trianglePath/diamondPath/arrowPath) could be consolidated into one parameterized
+    helper for further simplification.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (not pure white, not dark).
+      Chrome: Title, subtitle, legend, axis label, and tick labels all render in dark ink and are clearly readable; faint vertical gridlines are subtle but visible; "ongoing" arrowheads render in black ink.
+      Data: First series (Chemotherapy) is brand green #009E73, second series (Targeted Therapy) is lavender #C475FD; event markers use cyan (partial response), lime (complete response), matte-red (progressive disease, semantic "bad" anchor), and amber (adverse event, semantic "warning" anchor).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 (not pure black, not light).
+      Chrome: Title, subtitle, legend, axis label, and tick labels all flip to light ink and remain fully readable; no dark-on-dark failures anywhere; gridlines remain faint but visible; "ongoing" arrowheads correctly flip to white ink (theme-adaptive structural marker, not a data color).
+      Data: All series and event-marker colors (green, lavender, cyan, lime, matte-red, amber) are pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; fully readable in both themes, no
+          overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers sized to band height, clearly visible against bars
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape is primary encoding, color is redundant reinforcement; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has explicit units; y-axis carries self-explanatory patient
+          IDs
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; semantic anchors used correctly for progression/adverse-event;
+          theme-correct chrome and identical data colors across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom marker shapes, semantic color/shape system, rounded bars,
+          hand-built callout go beyond default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Ticks removed, minimal axis lines, faint grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Duration sort plus bracket annotation gives an explicit, immediate
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct swimmer plot with horizontal per-patient bars sorted by duration
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: markers, ongoing arrow, legend, axis
+          labels, group color-coding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=duration, Y=patient ID, all 20 patients visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four event types, both arms, ongoing and closed-out patients,
+          full duration range
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible Phase II oncology trial scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Durations and event timings are internally consistent and clinically
+          plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper components needed for MUI X's overlay pattern,
+          more structure than minimal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded, deterministic patient data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity proportional to swimmer-plot requirements, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export contract, skipAnimation set
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic BarChart config plus correct use of scale hooks as documented
+          extension pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Children-overlay pattern reading live scale hooks is MUI X-specific
+          architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
