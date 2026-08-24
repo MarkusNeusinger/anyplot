@@ -44,6 +44,9 @@ function percentile(sorted, p) {
 const categoryNames = classes.map((c) => c.name);
 const boxData = [];
 const outlierData = [];
+const allScores = [];
+const iqrByClass = [];
+const upperWhiskerByClass = [];
 
 classes.forEach((cls, catIndex) => {
   const scores = [];
@@ -52,6 +55,7 @@ classes.forEach((cls, catIndex) => {
   }
   cls.extra.forEach((v) => scores.push(v));
   scores.sort((a, b) => a - b);
+  allScores.push(...scores);
 
   const q1 = percentile(scores, 0.25);
   const median = percentile(scores, 0.5);
@@ -63,10 +67,13 @@ classes.forEach((cls, catIndex) => {
   const inliers = scores.filter((v) => v >= lowerFence && v <= upperFence);
   const outliers = scores.filter((v) => v < lowerFence || v > upperFence);
 
+  iqrByClass.push(iqr);
+  upperWhiskerByClass.push(inliers[inliers.length - 1]);
+
   const color = t.palette[catIndex];
   boxData.push({
     value: [inliers[0], q1, median, q3, inliers[inliers.length - 1]],
-    itemStyle: { color: t.elevatedBg, borderColor: color, borderWidth: 2.5 },
+    itemStyle: { color: t.elevatedBg, borderColor: color, borderWidth: 3 },
   });
   outliers.forEach((v) => {
     outlierData.push({
@@ -75,6 +82,26 @@ classes.forEach((cls, catIndex) => {
     });
   });
 });
+
+// Data storytelling: call out the class with the widest spread (largest IQR)
+// with a bolder border plus an annotation, and add an ECharts markLine
+// referencing the overall mean across all classes.
+const widestIdx = iqrByClass.indexOf(Math.max(...iqrByClass));
+boxData[widestIdx].itemStyle.borderWidth = 5;
+const overallMean = allScores.reduce((sum, v) => sum + v, 0) / allScores.length;
+const calloutData = [
+  {
+    value: [widestIdx, upperWhiskerByClass[widestIdx]],
+    label: {
+      show: true,
+      formatter: `Widest spread (IQR ${iqrByClass[widestIdx].toFixed(1)})`,
+      position: "top",
+      color: t.ink,
+      fontSize: 14,
+      fontWeight: 600,
+    },
+  },
+];
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -87,7 +114,7 @@ chart.setOption({
   title: {
     text: "box-basic · javascript · echarts · anyplot.ai",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 24, fontWeight: 500 },
   },
   grid: { left: 90, right: 60, top: 100, bottom: 80 },
   xAxis: {
@@ -95,7 +122,7 @@ chart.setOption({
     data: categoryNames,
     boundaryGap: true,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitLine: { show: false },
   },
@@ -117,12 +144,32 @@ chart.setOption({
       type: "boxplot",
       data: boxData,
       boxWidth: [24, 60],
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          formatter: `Overall mean: ${overallMean.toFixed(1)}%`,
+          color: t.inkSoft,
+          fontSize: 13,
+          position: "insideEndTop",
+        },
+        data: [{ yAxis: overallMean }],
+      },
     },
     {
       name: "Outliers",
       type: "scatter",
       data: outlierData,
-      symbolSize: 11,
+      symbolSize: 13,
+    },
+    {
+      name: "Spread callout",
+      type: "scatter",
+      data: calloutData,
+      symbolSize: 0,
+      silent: true,
+      tooltip: { show: false },
     },
   ],
 });
