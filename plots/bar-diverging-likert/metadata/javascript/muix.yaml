@@ -1,0 +1,255 @@
+library: muix
+language: javascript
+specification_id: bar-diverging-likert
+created: '2026-08-24T16:35:17Z'
+updated: '2026-08-24T16:49:21Z'
+generated_by: claude-sonnet
+workflow_run: 32750664465
+issue: 4429
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-diverging-likert/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Bar-segment labels on the three darker diverging segments (Strongly Disagree,
+    Disagree, Strongly Agree) now use white fill via a targeted MuiBarLabel-series
+    sx override, fixing the borderline ~3.7:1 contrast flagged in the prior review
+    while leaving the lighter cyan/muted segments on the theme-default ink fill
+  - X-axis now carries an explicit '% of Responses' title (labelStyle fontSize 15),
+    addressing the prior review's axis-title gap — the axis is no longer self-describing
+    only through the '%' tick suffix
+  - Correct diverging-stack construction — neutral is split evenly across the zero
+    midpoint and documented in code, matching the spec's 'center on neutral' requirement
+    exactly
+  - Questions sorted by net agreement (agree + strongly_agree − disagree − strongly_disagree),
+    giving genuine data storytelling and easy cross-question comparison as the spec
+    requests
+  - Diverging red↔muted↔blue color scheme avoids the classic red-green colorblind
+    confusion pair while still reading as a clear negative-neutral-positive gradient
+    — a thoughtful, spec-sanctioned ('red-to-blue') CVD-safe choice
+  - ChartsReferenceLine at x=0 anchors the diverging halves and adapts correctly between
+    themes (dark ink on light bg, light ink on dark bg)
+  - Custom barLabel logic correctly suppresses labels on segments narrower than 30px
+    and shows the true unsplit neutral value once instead of the halved value twice
+  weaknesses:
+  - Brand green (#009E73) never appears anywhere in the chart; the red-to-blue diverging
+    scheme is spec-sanctioned and CVD-safer than red-green, so this is a minor cosmetic
+    note rather than a compliance issue
+  - Design excellence is solid but not exceptional — no gridlines or extra refinement
+    touches beyond the clean diverging-stack layout; DE-01/DE-02 remain in the 'well-configured,
+    not exceptional' band
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, confirmed #FAF8F1 by pixel sample (250,248,241) at the corner — not pure white, not dark.
+      Chrome: Centered title "bar-diverging-likert · javascript · muix · anyplot.ai" in dark ink, clearly readable. Eight question labels on the y-axis (dark text) are fully visible with no clipping or overlap. X-axis now carries an explicit "% of Responses" title beneath the 100%→0%→100% tick labels, plus a black zero reference line. A custom five-item legend (Strongly Disagree, Disagree, Neutral, Agree, Strongly Agree) sits centered below the chart with color swatches matching the bars.
+      Data: Five-segment diverging stacked bars per question — matte red (Strongly Disagree) and rose (Disagree) extend left, muted gray (Neutral) straddles the center, cyan (Agree) and blue (Strongly Agree) extend right. Percentage labels on the red/rose/blue segments now render in white (verified by pixel crop) for solid contrast; labels on the lighter cyan/gray segments stay dark ink. Rows are sorted top-to-bottom by descending net agreement.
+      Legibility verdict: PASS. No legibility failures observed; the prior review's dark-segment-label contrast weakness is fixed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, confirmed #1A1A17 by pixel sample (26,26,23) at the corner — not pure black, not light.
+      Chrome: Same title, now in light ink, clearly readable against the dark surface. Y-axis question labels are light-colored and fully legible. The "% of Responses" x-axis title and zero reference line are rendered in light ink (correctly flipped from the light render). Legend text is light and readable; swatches are unchanged.
+      Data: Identical five data colors to the light render (matte red, rose, muted gray, cyan, blue) — confirmed only chrome flipped, not data colors. Percentage labels on the darker red/rose/blue segments still render in white (same targeted sx override, verified by pixel crop) and remain fully legible; labels on the lighter segments use the theme's light ink fill.
+      Legibility verdict: PASS. No dark-on-dark or light-on-light failures observed in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Readable in both themes; the prior fixed-ink-color contrast issue
+          on the darker red/rose/blue segments is fixed via a targeted white-fill
+          sx override; all font sizes explicit
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Segments visible; smallest (~2%) segments are thin but correctly
+          represent the data, intentionally unlabeled below the 30px width threshold
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red-to-blue diverging scheme deliberately avoids red-green confusion;
+          CVD-safe; label fill now adapts per-segment for contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); no overflow or clipping; bottom margin
+          increased to fit the new axis title; balanced proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; x-axis now has an explicit '% of Responses'
+          title, fixing the prior review's gap
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All colors drawn from the Imprint palette + muted anchor; semantic-exception
+          diverging order justified by spec text and CVD-safety; identical data colors
+          across themes (pixel-verified backgrounds #FAF8F1 / #1A1A17); correct chrome
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful diverging construction and custom legend, but overall
+          polish is solid rather than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Minimal chrome and generous margins; no gridlines at all, no extra
+          refinement touches explored
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sorting by net agreement plus the zero reference line create a genuine
+          focal point and narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal diverging stacked bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Neutral split at midpoint, diverging color scheme with muted neutral,
+          sorted by net agreement, in-segment percentage labels, horizontal orientation
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Questions on y, percentages on x; all 5 categories and all 8 questions
+          represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match series
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 5 Likert categories and 8 questions shown, each row sums to 100%
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Employee engagement survey is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentages are sensible and internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes/functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports (BarChart, ChartsReferenceLine, Typography)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-reasoned, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation, sized to
+          window.ANYPLOT_SIZE'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of MUI X stacking semantics, band scale, barLabel context
+          API, and sx-based per-series label styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine and the split-series diverging-stack trick are
+          genuinely distinctive, not a generic bar chart
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - reference-line
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - diverging-color-scheme
