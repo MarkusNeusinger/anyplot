@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: drawdown-basic
 created: '2026-08-24T23:18:07Z'
-updated: '2026-08-24T23:23:18Z'
+updated: '2026-08-24T23:34:52Z'
 generated_by: claude-sonnet
 workflow_run: 32788260029
 issue: 3752
@@ -12,127 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Comprehensive feature coverage — semi-transparent filled drawdown area, a max-drawdown
-    pin annotation, a recovery marker, a stats subtitle (max drawdown %, decline days,
-    recovery days), a dual-axis NAV overlay, and a clear 0% reference line implement
-    every item from the specification's Notes section.
-  - Correct Imprint palette usage — Portfolio NAV uses the brand green (palette[0])
-    and Drawdown uses the matte-red semantic-loss anchor (palette[4]), consistent
-    and identical between light and dark renders.
-  - Clean, deterministic, idiomatic ECharts code — a small fixed-seed LCG + Box-Muller
-    generator produces a plausible 3-year NAV series, the mount-node contract and
-    animation:false rule are followed correctly, and theme tokens are threaded through
-    nearly every chrome element.
+  - 'Both blocking issues from attempt 1 are cleanly fixed: the max-drawdown pin label
+    now uses a fixed white color (#FFFFFF) so it reads crisply on the matte-red pin
+    in both themes, and the NAV axis now uses scale:true instead of a hard $0 floor,
+    so the secondary axis (~$80-$200) uses the plot area efficiently instead of leaving
+    ~40% empty.'
+  - Reduced daily-return noise makes the annotated max-drawdown episode (now a ~50-day
+    decline vs. 122 days in attempt 1) read as a distinct V-shaped event rather than
+    blending into routine noise, improving data storytelling.
+  - 'Comprehensive spec coverage: semi-transparent filled drawdown area, max-drawdown
+    pin annotation, conditional recovery marker, stats subtitle (max DD / decline
+    days / recovery days), dual-axis NAV overlay, and zero-line reference implement
+    every item from the spec''s Notes section.'
+  - Clean, deterministic, idiomatic ECharts code — fixed-seed LCG+Box-Muller synthetic
+    data, correct mount-node contract, animation disabled, theme tokens threaded through
+    all chrome elements, identical data colors across themes.
   weaknesses:
-  - 'Dark-theme markPoint label uses t.pageBg (#1A1A17, near-black) as the ''27.2%''
-    text color drawn on the fixed matte-red pin (#AE3030) — since the pin fill does
-    not change between themes, this produces low-contrast near-black-on-dark-red text
-    in the dark render, much weaker than the crisp white-on-red text in the light
-    render. Fix: use a fixed high-contrast color (e.g. white) for the pin label instead
-    of the theme-adaptive page-background token.'
-  - The Drawdown series' high daily-noise oscillation produces dozens of near-identical
-    small V-shaped dips touching the 0% line across the full 3-year span, creating
-    a dense, almost-solid red mass that makes the single annotated maximum-drawdown
-    period harder to visually isolate from routine noise — slightly lower daily volatility
-    or light smoothing would let the highlighted period stand out more.
-  - The secondary NAV axis is fixed to start at $0 while the NAV line only ranges
-    roughly $85–$210, leaving about the bottom 40% of the plot area visually empty
-    — raising the axis floor (or enabling scale:true) would use the canvas more effectively
-    for this line series.
+  - The Drawdown fill still forms a near-solid mass across most of the top ~85% of
+    the plot (dozens of small dips touching 0%), so the highlighted max-drawdown period,
+    while now more distinct than attempt 1, still competes visually with routine noise
+    for attention.
+  - Twin-axis design is a fairly standard finance-chart layout (dual y-axis + line
+    + fill); no additional visual device (e.g. shaded recession band, secondary highlight)
+    elevates it beyond above-generic polish.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Tech Growth Fund · drawdown-basic · javascript · echarts · anyplot.ai" and subtitle "Max Drawdown: -27.2% · Decline: 122d · Recovery: 109d" are dark ink on the light surface, fully legible. Legend ("Portfolio NAV" green dot, "Drawdown" red dot) is dark text, legible. Left axis "Drawdown (%)" ticks (0% to -30%) and right axis "NAV ($)" ticks ($0 to $210) are soft-ink gray, legible. X-axis month/year ticks legible.
-      Data: Portfolio NAV is a thin brand-green (#009E73) line rising from ~$100 to ~$210 with a mid-series dip. Drawdown is a matte-red (#AE3030) line with a semi-transparent red fill from the line down to the 0% baseline, oscillating between 0% and about -27%. A red pin marker labeled "27.2%" (white text, good contrast) sits at the deepest drawdown (~mid-2022). A black "Recovery" dot with black label marks the first return to a new high after that trough.
-      Legibility verdict: PASS — all title/axis/legend/tick text is clearly readable; the max-drawdown pin label ("27.2%") reads crisply as white-on-red.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Tech Growth Fund · drawdown-basic · javascript · echarts · anyplot.ai" and subtitle "Max Drawdown: -23.0% · Decline: 50d · Recovery: 120d" render in dark ink, fully legible. Legend shows "Portfolio NAV" (green) and "Drawdown" (red) centered above the plot. Left axis "Drawdown (%)" runs 0% to -25%; right axis "NAV ($)" runs $80 to $200, both in soft-ink gray, both with units.
+      Data: A brand-green (#009E73) Portfolio NAV line rises from ~$100 to ~$180 over ~3 years of daily data with a mid-series decline. A matte-red Drawdown line with semi-transparent (opacity 0.32) fill oscillates between 0% and -23%, with a red pin marker labeled "-23.0%" in crisp white bold text at the deepest trough (mid-2022) and a black "Recovery" dot marking the first new high afterward (early 2023). The pin and NAV line touch only briefly at the trough itself, without any label/text collisions elsewhere.
+      Legibility verdict: PASS — all text (title, subtitle, legend, axis labels, tick labels, pin label, Recovery label) is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and subtitle are light (#F0EFE8-family) text on the dark surface, fully legible. Legend text is light and legible. Both axes' tick labels are light-gray, legible. X-axis ticks legible.
-      Data: Portfolio NAV green line and Drawdown red line/fill use the identical hex values as the light render (#009E73 / #AE3030) — confirmed colors did not shift, only chrome flipped. The "Recovery" dot is correctly inverted to a light/white dot with light label text (theme-adaptive, legible). However, the max-drawdown pin's "27.2%" label is rendered in near-black text (the pin's label color is bound to the page-background token, which is near-black in this theme) sitting on the matte-red pin fill — this is a real dark-on-(dark-)red contrast problem, noticeably weaker than the light render's white-on-red label, though still just barely decipherable.
-      Legibility verdict: FAIL (partial) — title, axis labels, ticks, legend, and the Recovery marker are all fine, but the Max Drawdown pin's "27.2%" annotation has degraded contrast in this theme (near-black text on red pin) because its color is wired to the theme's near-black page-background token instead of a fixed high-contrast color.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, legend, and both axes' tick/name labels correctly flip to light-colored text and remain fully legible. The "Recovery" dot correctly inverts to a light-colored marker with light label text.
+      Data: Data colors are confirmed identical to the light render (#009E73 NAV / same matte-red Drawdown fill and line) — only chrome flipped. The max-drawdown pin label reads "-23.0%" in the same crisp white bold text as the light render — the attempt-1 dark-on-dark contrast bug (label bound to t.pageBg) is fixed; the label now uses a fixed white color that is high-contrast in both themes.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures found; all text including the pin annotation is clearly readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Title/axis/legend/tick text legible in both themes, but the Max Drawdown
-          pin's '27.2%' label uses t.pageBg as text color, producing low-contrast
-          near-black-on-red text in the dark render.
+        passed: true
+        comment: All text legible in both themes; attempt-1 pin dark-on-dark bug fixed
+          via fixed white label color
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No text/element collisions found in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: No markers on the 756-point time series is appropriate for the density,
-          but the very high daily noise makes the fill a dense near-solid mass across
-          most of the timeline.
+        comment: Dense daily noise still forms a near-solid fill mass across most
+          of the timeline, slightly diluting distinguishability of individual dips
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Red/green pairing is disambiguated by redundant shape encoding —
-          Drawdown is a filled area, NAV is a plain thin line.
+        comment: Red/green disambiguated by shape (area fill vs. plain line), not
+          color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is 3200x1800, title occupies a comfortable ~60% of width,
-          margins are generous, nothing overflows.
+        comment: 3200x1800 canvas gate passed, generous margins, nothing clipped or
+          overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Drawdown (%)'' and ''NAV ($)'' axis names are descriptive with
-          units.'
+        comment: '"Drawdown (%)" and "NAV ($)" both descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (NAV) is brand green #009E73, Drawdown correctly uses
-          the matte-red semantic-loss anchor; backgrounds are theme-correct in both
-          renders.'
+        comment: NAV = palette[0] brand green, Drawdown = palette[4] matte red; backgrounds
+          theme-correct in both renders; data colors identical across themes
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Stats subtitle, pin annotation, and dual-axis overlay show above-generic
-          polish, but the overall composition is a fairly standard twin-axis finance
-          chart.
+        passed: false
+        comment: Stats subtitle + pin annotation + dual-axis show above-generic polish,
+          but overall still a fairly standard twin-axis finance chart
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Subtle grid, no default chartjunk, generous whitespace around title/legend/plot.
+        passed: false
+        comment: Subtle grid, generous whitespace, no chartjunk
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        comment: The pin and Recovery marker do create focal points, but the dense
-          noisy fill across the whole timeline dilutes the visual hierarchy around
-          the highlighted max-drawdown period.
+        passed: false
+        comment: Reduced noise (50d decline vs. 122d in attempt 1) makes the max-drawdown
+          episode read as a clearer focal V-shape; still competes somewhat with the
+          noisy background fill
     spec_compliance:
       score: 15
       max: 15
@@ -142,50 +136,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct drawdown chart with filled area below zero.
+        comment: Correct drawdown chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All Notes items present: fill, max-DD highlight, recovery indicator,
-          stats, zero line, secondary NAV axis.'
+        comment: Fill, max-DD highlight, recovery marker, stats, zero line, secondary
+          NAV axis all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = date, left Y = drawdown %, right Y = NAV $ — correct.
+        comment: x=date, primary y=drawdown %, secondary y=NAV $
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · spec-id · javascript · echarts
-          · anyplot.ai'; legend labels match series names.
+        comment: Title format correct with descriptive prefix; legend labels match
+          series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Shows drawdown line+fill, NAV overlay, max-DD marker, recovery marker,
-          and summary stats — all facets of the plot type.
+        passed: true
+        comment: Drawdown, price, recovery, and max-DD statistics all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Generic 'Tech Growth Fund' NAV series, plausible bull/bear/recovery
-          pattern, neutral subject matter.
+        passed: true
+        comment: '"Tech Growth Fund", 3 years of daily NAV data, plausible and neutral'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        comment: NAV range ($100→$210) and max drawdown (-27.2%) are sensible, but
-          the NAV axis fixed at $0 floor wastes ~40% of vertical space since the line
-          never drops below ~$85.
+        passed: true
+        comment: NAV axis now uses scale:true, ranging ~$80-$200 efficiently instead
+          of a fixed $0 floor
     code_quality:
       score: 10
       max: 10
@@ -194,28 +188,33 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: No classes; only small helper functions for RNG, appropriate for
-          the data-generation need.
+        passed: true
+        comment: No classes; small lcg/gaussian helpers are the JS-appropriate substitute
+          for a seeded RNG
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fixed-seed LCG (20260111).
+        passed: true
+        comment: Fixed-seed LCG (20260111)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No imports; echarts global used directly.
+        passed: true
+        comment: No unused imports; uses only window globals
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: No fake interactivity; real markPoint/legend/dual-axis usage.
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Follows the mount-node contract, animation:false, single chart.setOption.
+        passed: true
+        comment: Correct mount-node contract, animation:false
     library_mastery:
       score: 8
       max: 10
@@ -224,13 +223,14 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic use of time xAxis, dual value yAxis, areaStyle, and legend.
+        passed: true
+        comment: Dual yAxis, time axis, areaStyle, idiomatic setOption structure
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: markPoint with custom pin symbol/label formatter and conditional
-          recovery marker show good command of ECharts-specific annotation APIs.
+        passed: true
+        comment: Custom markPoint pin symbol + formatter, conditional recovery marker
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -241,6 +241,5 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
-  - cumulative-sum
   styling:
   - alpha-blending
