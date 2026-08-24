@@ -17,7 +17,7 @@ const rows = [
   { question: "I feel valued by my manager", sd: 4, d: 9, n: 12, a: 40, sa: 35 },
   { question: "I have the resources I need to do my job well", sd: 5, d: 12, n: 18, a: 38, sa: 27 },
   { question: "I see a clear path for career growth here", sd: 8, d: 18, n: 22, a: 32, sa: 20 },
-  { question: "My workload is manageable", sd: 10, d: 20, n: 20, a: 30, sa: 20 },
+  { question: "I trust leadership to make the right decisions during organizational change", sd: 25, d: 9, n: 8, a: 15, sa: 43 },
   { question: "I receive regular, constructive feedback", sd: 9, d: 19, n: 24, a: 31, sa: 17 },
   { question: "Leadership communicates changes effectively", sd: 12, d: 23, n: 20, a: 28, sa: 17 },
   { question: "I feel comfortable raising concerns to leadership", sd: 15, d: 22, n: 18, a: 27, sa: 18 },
@@ -28,9 +28,12 @@ const categories = rows.map((r) => r.question);
 
 // --- Diverging red-to-blue palette, muted neutral -----------------------------
 const RED = "#AE3030"; // Imprint matte red — semantic anchor for disagreement
-const RED_SOFT = "rgba(174, 48, 48, 0.55)";
+// Precomputed opaque tint (RED blended 55% over white) — a plain hex, not an
+// alpha-blend over the mount background, so it stays pixel-identical across
+// the light (#FAF8F1) and dark (#1A1A17) themes.
+const RED_SOFT = "#D28D8D";
 const BLUE = "#4467A3"; // Imprint blue — agreement
-const BLUE_SOFT = "rgba(68, 103, 163, 0.55)";
+const BLUE_SOFT = "#98ABCC"; // Precomputed opaque tint (BLUE blended 55% over white)
 // ANYPLOT_TOKENS has no "muted" key (only pageBg/elevatedBg/ink/inkSoft/grid/
 // palette/amber/seq/div) — hardcode the theme-adaptive muted anchor from
 // prompts/default-style-guide.md "Semantic anchors".
