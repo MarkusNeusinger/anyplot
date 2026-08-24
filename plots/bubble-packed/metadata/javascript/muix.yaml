@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bubble-packed
 created: '2026-08-24T18:46:18Z'
-updated: '2026-08-24T18:52:54Z'
+updated: '2026-08-24T19:05:25Z'
 generated_by: claude-sonnet
 workflow_run: 32763265960
 issue: 992
@@ -12,119 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/muix/plot-dark.html
-quality_score: 79
+quality_score: 82
 review:
   strengths:
-  - 'Palette compliance verified by pixel-sampling both renders: series 1 (Consumer
-    Electronics) is exactly #009E73, and all four division fill colors are byte-identical
-    RGB between plot-light.png and plot-dark.png — only chrome (page background, legend/title
-    ink) flips between #FAF8F1 and #1A1A17.'
-  - Genuine force-directed packing (hand-rolled attraction-to-anchor + pairwise overlap
-    resolution over 400 iterations), with circle area scaled by sqrt(revenue) so size
-    differences read accurately, matching the spec's 'scale by area, not radius' note.
-  - 'Optional grouping is well executed: four divisions cluster into clearly separated
-    quadrants with visible whitespace between groups, exactly matching the spec''s
-    ''clusters related circles with spacing between groups'' guidance.'
-  - Deterministic LCG (seed 42) for the small jitter applied before packing keeps
-    the layout fully reproducible.
-  - 'Clean code: single default export, only the one used import (ChartContainer),
-    skipAnimation set, chart sized from window.ANYPLOT_SIZE, no fake/simulated UI.'
-  - 'Canvas gate passed (2400x2400 square, matching the `anyplot-orientation: square`
-    directive); no edge clipping of title, legend, or bubble labels in either render.'
+  - 'The attempt-1 contrast weakness is fixed and verified: per-division WCAG contrast
+    ratios were recomputed against each bubble''s own fill (not the page theme) and
+    now all clear 4.5:1 AA in both themes — consumer 5.10:1, software 6.07:1, industrial
+    5.32:1, health 5.32:1 (vs. as low as ~2.7:1 before).'
+  - 'Palette compliance confirmed by direct comparison: series 1 (Consumer Electronics)
+    is #009E73, and all four division fill colors are byte-identical between plot-light.png
+    and plot-dark.png — only chrome (background, title, legend text) flips between
+    #FAF8F1 and #1A1A17.'
+  - Genuine force-directed packing (anchor attraction + 400 iterations of pairwise
+    overlap resolution) with circle area scaled by sqrt(revenue), matching the spec's
+    "scale by area, not radius" requirement — no overlapping circles in either render.
+  - 'Truncation logic improved: labels now cut on a word boundary ("Productivity…"
+    not "Productivity Su…") with an initials fallback for very small circles, and
+    the full product name + division + value is still available via the native SVG
+    <title> tooltip for every bubble.'
+  - Deterministic LCG (seed 42) for pre-packing jitter keeps the layout fully reproducible;
+    clean single-import code with skipAnimation set and no fake/simulated interactivity.
+  - Canvas gate passed (2400×2400 square, no drift) and no edge clipping of title,
+    legend, or bubble labels in either render.
   weaknesses:
-  - 'On-bubble label text uses fill={t.pageBg}, tying text color to the page theme
-    rather than to each bubble''s own fill color. Measured contrast (WCAG formula)
-    against the actual rendered pixel colors falls below the 4.5:1 AA baseline for
-    several divisions: Software & Cloud (purple) bubbles in the LIGHT render are ~2.7:1
-    (e.g. ''Productivity Suite $61M''), Health & Wearables (gold) bubbles in LIGHT
-    are ~3.1:1, Consumer Electronics (green) bubbles in LIGHT are ~3.2:1, and Industrial
-    Equipment (blue) bubbles in the DARK render are ~3.1:1 (e.g. ''Robotic Arms $71M'').
-    Fix: choose each label''s text color from the bubble''s own fill luminance (e.g.
-    a per-division light/dark ink pair) instead of the theme''s pageBg token, so labels
-    stay high-contrast against their own circle color in both themes.'
-  - ChartContainer is used only as a bare SVG canvas (series=[], margin 0) — circles,
-    labels, legend, and physics are all hand-drawn SVG, with none of MUI X's own affordances
-    used (no ChartsTooltip, no built-in ChartsLegend, no useDrawingArea, no scale
-    primitives). This is a defensible fallback since the community package has no
-    packed-bubble/circle-pack chart type, but the raw SVG `<title>` tooltip and hand-rolled
-    legend forgo MUI X's interaction/legend components that would make the result
-    feel more like a MUI X chart. Consider ChartsTooltip (custom trigger) for hover
-    detail and ChartsLegend/useDrawingArea for chrome.
-  - Many bubble labels are hard-truncated to just a few characters plus an ellipsis
-    (e.g. 'Productivity Su…', 'Video Conferen…', 'Industrial Sen…', 'Packaging Mach…',
-    'Fitness Tracke…', 'Glucose Monito…', 'Collaboration…'), hiding the category identity
-    for a large share of the 35 products in the static PNG. Consider raising the min-radius
-    gate for showing names, or a shorter fallback label (e.g. initials) instead of
-    an awkward mid-word cut.
+  - ChartContainer is still used only as a bare SVG canvas (series=[], margin all
+    0) — circles, labels, legend, and the physics layout are entirely hand-rolled
+    SVG, with none of MUI X's own primitives wired in (no ChartsTooltip, no MUI X
+    Legend component, no useDrawingArea). This was flagged in attempt 1 and remains
+    unaddressed, so Library Mastery stays low.
+  - At mobile scale (~400px wide), the ~15 small circles that show only a "$XXM" value
+    (no name) become hard to read — the text shrinks below a comfortable size once
+    the PNG is scaled down, even though it's fully legible at native 2400x2400 resolution.
+  - Design Excellence is still closer to a functional, grid-like bubble layout than
+    a highly polished visualization — the four quadrants read as a forced grid rather
+    than an organic space-filling cloud, and refinement beyond the background-colored
+    bubble strokes is minimal.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 (confirmed by pixel sampling: RGB 250,248,241).
-      Chrome: Title "bubble-packed · javascript · muix · anyplot.ai" in dark ink, top-left, clearly legible. Legend row below the title shows four swatches (Consumer Electronics, Software & Cloud, Industrial Equipment, Health & Wearables) with dark-ink labels — all clearly readable against the light background.
-      Data: 35 circles packed into four spatially separated quadrants (one per division), sized by revenue (area-scaled) and colored by division. Series-1 (Consumer Electronics) swatch and bubbles sample to exactly #009E73 (brand green), matching the Imprint palette requirement. Larger bubbles show a bold product name plus a "$XXM" value in cream-colored text (fill tied to the page background token); smaller bubbles show only the value; the smallest show neither.
-      Legibility verdict: PASS for title/legend/chrome. PARTIAL FAIL for in-bubble text: measured contrast of the cream label text against several bubble fill colors falls below WCAG AA 4.5:1 for body text — Software & Cloud (purple) bubbles measure ~2.7:1, Health & Wearables (gold) ~3.1:1, Consumer Electronics (green) ~3.2:1. Text remains readable but is lower-contrast than it should be.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "bubble-packed · javascript · muix · anyplot.ai" and the four-item legend (Consumer Electronics, Software & Cloud, Industrial Equipment, Health & Wearables) render in dark ink at top-left; both are fully legible against the light background.
+      Data: 35 circles packed into four spatially separated quadrants (one per division), sized by revenue via area scaling (sqrt), colored by division. Series 1 (Consumer Electronics) is #009E73. Larger bubbles show a bold product name plus a "$XXM" value in a per-bubble computed ink color (dark or light depending on the bubble's own fill luminance); smaller bubbles show only the value; the smallest show nothing (name/value in the native SVG tooltip on hover). No circles overlap.
+      Legibility verdict: PASS — all chrome and in-bubble text is readable at full resolution; small "$XXM"-only labels shrink to a size that is harder to read once the image is scaled to mobile width (~400px), which is a mobile-legibility weakness rather than a light-theme-specific failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 (confirmed by pixel sampling: RGB 26,26,23).
-      Chrome: Title and legend text render in light ink, clearly legible against the dark background — no dark-on-dark chrome failures found.
-      Data: Confirmed via pixel sampling that all four division fill colors are byte-identical to the light render (e.g. Consumer Electronics = RGB 0,158,115 in both renders) — only chrome flips between themes, as required. In-bubble labels flip to near-black text (same fill={t.pageBg} pattern, now resolving to the dark token) on top of the same saturated bubble colors.
-      Legibility verdict: PASS for title/legend/chrome. PARTIAL FAIL for in-bubble text on Industrial Equipment (blue) bubbles specifically: near-black text on the blue fill measures ~3.1:1, below the 4.5:1 AA baseline (e.g. "Robotic Arms $71M"). Other divisions actually gain contrast in dark mode (green ~5.2:1, purple ~6.1:1, gold ~5.4:1) since near-black text sits well on their brighter dark-mode-rendered fills.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and legend text flip to light ink and stay clearly legible — no dark-on-dark chrome failures observed.
+      Data: Confirmed identical to the light render — same 35 circles, same positions, same four division fill colors (byte-identical RGB), same area-based sizing. In-bubble label ink is computed per bubble fill (not per page theme), so it is the SAME text color as in the light render for a given bubble (e.g. white text on the blue Industrial Equipment bubbles in both themes, dark text on the lavender Software & Cloud bubbles in both themes) — this is correct: the labels were designed to be theme-independent since they sit on a fixed-color bubble, not on the page background.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light label failures; per-division contrast against each bubble's own fill computes to 5.10:1–6.07:1 in all four cases, clearing WCAG AA (4.5:1).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Title/legend/tick text fully legible in both themes, but in-bubble
-          labels use fill=pageBg (theme-tied, not bubble-tied) producing sub-4.5:1
-          contrast on several division colors — see weaknesses.
+        passed: true
+        comment: Explicit font sizing and the attempt-1 contrast bug is fixed (per-bubble
+          ink, WCAG AA in all four divisions), but the ~15 value-only small bubbles
+          get hard to read once scaled to ~400px mobile width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; truncation used instead of overflow, packing
-          keeps circles from overlapping (padding=5).
+        comment: 400-iteration overlap resolution leaves zero colliding circles or
+          text in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Circle sizes area-scaled by revenue, clearly distinguishable across
-          the 35-item density; fillOpacity 0.88 + background-colored stroke separates
-          adjacent circles cleanly.
+        comment: Area-based sizing (sqrt of revenue) keeps all 35 bubbles visible
+          and proportionally accurate
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Measured WCAG contrast for on-bubble text falls below 4.5:1 for several
-          division/theme combinations (as low as ~2.7:1); palette itself is not red-green
-          reliant.
+        passed: true
+        comment: Per-bubble label ink now measured at 5.10-6.07:1 contrast against
+          each division's fill, clearing WCAG AA in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas gate passed; four quadrants use the frame
-          well with comfortable margins; no overflow or cut-off elements.
+        comment: Canvas gate passed (2400x2400), four quadrants balanced with generous
+          but not excessive whitespace, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed (position is meaningless per spec); title format matches
-          the mandated pattern exactly.
+        comment: Position is intentionally meaningless per spec; title and legend
+          fully substitute for axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Series 1 = #009E73 confirmed by pixel sampling; all division colors
-          byte-identical between light/dark; backgrounds match #FAF8F1/#1A1A17 exactly.'
+        comment: 'First series #009E73; all four division colors byte-identical between
+          light/dark renders; theme-correct backgrounds and chrome'
     design_excellence:
       score: 11
       max: 20
@@ -134,25 +123,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Radius-based dynamic typography, opacity, and truncation logic show
-          real design effort beyond generic defaults, but overall look is a functional
-          bubble grid rather than a highly polished piece.
+        comment: Radius-based dynamic typography, per-bubble ink, and truncation logic
+          show real effort, but the overall look remains a functional bubble grid
+          rather than a highly polished visualization
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: No grid/spines needed for this chart type; page-background-colored
-          strokes give subtle circle separation, but refinement is otherwise minimal
-          (no gradients, shadows, or finer chrome touches).
+        comment: Background-colored bubble strokes give subtle separation, but refinement
+          is otherwise minimal
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
         comment: Quadrant grouping communicates division structure, but the four rigid
-          corners read more like a forced grid than an organic, space-efficient bubble
-          cloud; no single clear focal point beyond 'biggest circle per quadrant'.
+          corners read more like a forced grid than an organic space-filling cloud
     spec_compliance:
       score: 15
       max: 15
@@ -162,56 +149,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine force-directed packed bubble chart, not a scatter/treemap
-          substitute.
+        comment: Correct packed bubble chart with non-meaningful position and overlap-free
+          physics layout
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-scaled size, force-simulated non-overlap packing, in-circle
-          labels above a size threshold, native tooltip via <title>, color-by-group,
-          optional group clustering — all present.
+        comment: Area-scaled circles, force simulation, optional group clustering,
+          and tooltip labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correctly treats position as meaningless (packing output only); size
-          and color carry all the semantic data.
+        comment: Revenue correctly drives circle area; division correctly drives color/grouping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai' exactly;
-          legend labels match division names used in the data.
+        comment: Title matches the mandated format exactly; legend labels match the
+          four division names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers sizing, grouping, labeling, and tooltips; docked slightly
-          since many labels are truncated to 3-4 chars, hiding category identity in
-          the static PNG for a large share of items.
+        comment: 35 products spanning a wide revenue range ($12M-$95M) across 4 divisions
+          show both size variation and grouping clearly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral electronics-company product revenue dataset across
-          four divisions.
+        comment: Neutral, plausible electronics-company product-line revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue values ($12M-$95M) are sensible for individual product lines
-          within named divisions.
+        comment: Revenue figures and relative division sizes are realistic for a mid-size
+          electronics group
     code_quality:
       score: 10
       max: 10
@@ -221,35 +204,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary classes; two small helper components plus a compact
-          physics loop, appropriately concise.
+        comment: Data, geometry, and rendering flow top-to-bottom; helper functions
+          are idiomatic React sub-components, not over-structuring
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG (seed 42) for jitter; no Math.random().
+        comment: Seeded LCG (42) for all jitter
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer imported, and used.
+        comment: Only ChartContainer imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a hand-rolled packing simulation; no fake/simulated
-          UI.
+        comment: Appropriate complexity for a hand-rolled packed-bubble layout; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports the component with no manual mount/HTML; skipAnimation
-          set; sized from window.ANYPLOT_SIZE; harness produces plot-{theme}.png/.html
-          as expected for an interactive library.
+        comment: Default-exports the Chart component per the harness contract; skipAnimation
+          set
     library_mastery:
       score: 3
       max: 10
@@ -259,29 +241,25 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: ChartContainer is reduced to a bare SVG canvas (series=[], margin
-          0); none of MUI X's own primitives (scales, ChartsTooltip, useDrawingArea)
-          are used. Defensible given no native packed-bubble chart type exists in
-          the community package, but minimal library engagement.
+        comment: ChartContainer reduced to a bare SVG canvas (series=[], margin 0);
+          none of MUI X's own primitives (scales, ChartsTooltip, useDrawingArea) used
+          — unchanged from attempt 1
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No MUI X-distinctive features (ChartsTooltip, ChartsLegend, axis
-          highlighting) leveraged; tooltip is a raw SVG <title>, legend is hand-drawn
-          SVG rather than MUI X's Legend component.
-  verdict: REJECTED
+        comment: No MUI X-distinctive features leveraged; tooltip is a raw SVG <title>,
+          legend is hand-drawn SVG
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - hover-tooltips
+  - force-directed-layout
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - publication-ready
-  - alpha-blending
-  - edge-highlighting
+  styling: []
