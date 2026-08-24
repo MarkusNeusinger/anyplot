@@ -68,18 +68,34 @@ g.selectAll(".bump-line")
   .attr("stroke-linecap", "round")
   .attr("d", (d) => line(d.ranks));
 
+// --- Flattened {entity, period, rank} join, used by both the crossover
+// halo and the markers below ---------------------------------------------------
+const flat = rankings.flatMap((d) => d.ranks.map((rank, i) => ({ entity: d.entity, period: quarters[i], rank })));
+
+// --- Crossover emphasis — subtle halo on the Netflix/Disney+ #1 swap ---------
+const crossoverPeriod = "Q1 '25";
+const crossoverEntities = ["Netflix", "Disney+"];
+g.selectAll(".crossover-ring")
+  .data(flat.filter((d) => d.period === crossoverPeriod && crossoverEntities.includes(d.entity)))
+  .join("circle")
+  .attr("cx", (d) => x(d.period))
+  .attr("cy", (d) => y(d.rank))
+  .attr("r", (d) => 12 - (d.rank - 1) * 1.1 + 7)
+  .attr("fill", "none")
+  .attr("stroke", (d) => color(d.entity))
+  .attr("stroke-width", 1.5)
+  .attr("stroke-opacity", 0.4);
+
 // --- Markers — radius encodes rank prominence (rank 1 largest) ---------------
-for (const d of rankings) {
-  g.selectAll(`.dot-${d.entity.replace(/[^a-zA-Z0-9]/g, "")}`)
-    .data(d.ranks)
-    .join("circle")
-    .attr("cx", (r, i) => x(quarters[i]))
-    .attr("cy", (r) => y(r))
-    .attr("r", (r) => 12 - (r - 1) * 1.1)
-    .attr("fill", color(d.entity))
-    .attr("stroke", t.pageBg)
-    .attr("stroke-width", 2);
-}
+g.selectAll(".dot")
+  .data(flat)
+  .join("circle")
+  .attr("cx", (d) => x(d.period))
+  .attr("cy", (d) => y(d.rank))
+  .attr("r", (d) => 12 - (d.rank - 1) * 1.1)
+  .attr("fill", (d) => color(d.entity))
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 2);
 
 // --- End-of-line entity labels (redundant encoding alongside color) ----------
 g.selectAll(".end-label")
