@@ -18,6 +18,9 @@ IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 BRAND <- IMPRINT_PALETTE[1]
 BAD   <- IMPRINT_PALETTE[5]  # matte red — semantic anchor for fracture/failure
+# ggplot2's element_line() has no alpha argument, so soften gridlines by
+# baking a low-alpha channel into the color itself.
+GRID_COLOR <- grDevices::adjustcolor(INK, alpha.f = 0.2)
 
 # --- Material model (aluminum alloy, uniaxial tensile test) ------------------
 elastic_modulus_mpa <- 70000  # ~70 GPa, aluminum alloy
@@ -67,7 +70,8 @@ critical_points <- tibble::tibble(
   label      = c("Yield (0.2% offset)", "UTS", "Fracture"),
   strain     = c(yield_strain, e_uts, e_fracture),
   stress_mpa = c(yield_stress, stress_uts_mpa, fracture_stress_mpa),
-  fill_color = c(INK, INK, BAD)
+  fill_color = c(INK, INK, BAD),
+  point_size = c(3.0, 3.6, 4.2)  # size hierarchy: yield -> UTS -> fracture
 )
 
 offset_y_end <- min(340, yield_stress + 25)
@@ -84,13 +88,14 @@ title_size  <- max(8, round(12 * title_ratio))
 
 # --- Plot ----------------------------------------------------------------------
 p <- ggplot(df, aes(strain, stress_mpa)) +
+  geom_ribbon(aes(ymin = 0, ymax = stress_mpa), fill = BRAND, alpha = 0.08) +
   geom_vline(xintercept = c(e_proportional, e_uts), linetype = "dotted",
              color = INK_MUTED, linewidth = 0.4, alpha = 0.6) +
   geom_line(data = offset_line, aes(strain, stress_mpa),
-            linetype = "dashed", color = INK_MUTED, linewidth = 0.7) +
+            linetype = "dashed", color = INK_MUTED, linewidth = 0.7, alpha = 0.65) +
   geom_line(color = BRAND, linewidth = 1.3) +
   geom_point(data = critical_points, aes(strain, stress_mpa),
-             shape = 21, size = 3.4, fill = critical_points$fill_color,
+             shape = 21, size = critical_points$point_size, fill = critical_points$fill_color,
              color = PAGE_BG, stroke = 0.9) +
   annotate("text", x = e_proportional / 2, y = 335, label = "Elastic",
            hjust = 0, vjust = 1, size = 3.0, color = INK_SOFT) +
@@ -118,7 +123,7 @@ p <- ggplot(df, aes(strain, stress_mpa)) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major.y = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major.y = element_line(color = GRID_COLOR, linewidth = 0.4),
     panel.grid.major.x = element_blank(),
     panel.grid.minor   = element_blank(),
     axis.title         = element_text(color = INK, size = 10),
