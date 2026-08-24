@@ -49,10 +49,18 @@ function quantile(sorted, q) {
     : sorted[base];
 }
 
+// A couple of classes get one deliberate, deterministic extreme score on top
+// of the random draws (e.g. a single struggling or exceptional student) so
+// the outlier-marker feature is demonstrated in more than one class instead
+// of relying on chance alone.
+const injectedOutliers = { "Class B": 18, "Class D": 24 };
+
 const boxStats = classes.map(({ name, mean, std, size }) => {
   const scores = Array.from({ length: size }, () =>
     Math.min(100, Math.max(0, randomNormal(rand, mean, std))),
-  ).sort((a, b) => a - b);
+  );
+  if (name in injectedOutliers) scores.push(injectedOutliers[name]);
+  scores.sort((a, b) => a - b);
 
   const q1 = quantile(scores, 0.25);
   const median = quantile(scores, 0.5);
@@ -76,6 +84,13 @@ const boxStats = classes.map(({ name, mean, std, size }) => {
 
 const categories = boxStats.map((s) => s.name);
 
+// The tightest, highest-scoring distribution is the clearest "best in class"
+// story the data tells on its own — give it a subtle visual focal point
+// (bolder stroke + soft shadow) rather than a text callout.
+const focalClass = boxStats.reduce((best, s) =>
+  s.q3 - s.q1 < best.q3 - best.q1 ? s : best,
+).name;
+
 // --- Box-and-whisker overlay -------------------------------------------------
 // The community package (7.29.1) has no BoxPlot component (Pro-only in other
 // charting suites is irrelevant here — @mui/x-charts community simply doesn't
@@ -90,14 +105,24 @@ function BoxWhiskers() {
 
   return (
     <g>
+      <defs>
+        <filter id="box-focal-shadow" x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity={0.35} />
+        </filter>
+      </defs>
       {boxStats.map((s, i) => {
         const center = xScale(s.name) + bandwidth / 2;
         const left = center - boxWidth / 2;
         const right = center + boxWidth / 2;
         const color = t.palette[i % t.palette.length];
+        const isFocal = s.name === focalClass;
+        const boxStroke = isFocal ? 3.5 : 2.5;
 
         return (
-          <g key={s.name}>
+          <g
+            key={s.name}
+            filter={isFocal ? "url(#box-focal-shadow)" : undefined}
+          >
             <line
               x1={center}
               x2={center}
@@ -105,6 +130,7 @@ function BoxWhiskers() {
               y2={yScale(s.q3)}
               stroke={color}
               strokeWidth={2}
+              strokeLinecap="round"
             />
             <line
               x1={center}
@@ -113,6 +139,7 @@ function BoxWhiskers() {
               y2={yScale(s.whiskerLow)}
               stroke={color}
               strokeWidth={2}
+              strokeLinecap="round"
             />
             <line
               x1={left}
@@ -121,6 +148,7 @@ function BoxWhiskers() {
               y2={yScale(s.whiskerHigh)}
               stroke={color}
               strokeWidth={2}
+              strokeLinecap="round"
             />
             <line
               x1={left}
@@ -129,16 +157,19 @@ function BoxWhiskers() {
               y2={yScale(s.whiskerLow)}
               stroke={color}
               strokeWidth={2}
+              strokeLinecap="round"
             />
             <rect
               x={left}
               y={yScale(s.q3)}
               width={boxWidth}
               height={Math.max(1, yScale(s.q1) - yScale(s.q3))}
+              rx={4}
+              ry={4}
               fill={color}
               fillOpacity={0.28}
               stroke={color}
-              strokeWidth={2.5}
+              strokeWidth={boxStroke}
             />
             <line
               x1={left}
@@ -147,6 +178,7 @@ function BoxWhiskers() {
               y2={yScale(s.median)}
               stroke={color}
               strokeWidth={3.5}
+              strokeLinecap="round"
             />
             {s.outliers.map((v, j) => (
               <circle
@@ -215,7 +247,15 @@ export default function Chart() {
           },
         ]}
       >
-        <ChartsGrid horizontal />
+        <ChartsGrid
+          horizontal
+          sx={{
+            "& .MuiChartsGrid-line": {
+              opacity: 0.55,
+              strokeDasharray: "2 5",
+            },
+          }}
+        />
         <BoxWhiskers />
         <ChartsXAxis axisId="classes" />
         <ChartsYAxis axisId="scores" />
