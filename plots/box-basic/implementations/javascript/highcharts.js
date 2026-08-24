@@ -1,8 +1,7 @@
 // anyplot.ai
 // box-basic: Basic Box Plot
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-08-24
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-08-24
 
 // The core bundle (no highcharts-more) has no "boxplot" series type, so the box
 // is built from two stacked "column" series (an invisible floor up to Q1, then
