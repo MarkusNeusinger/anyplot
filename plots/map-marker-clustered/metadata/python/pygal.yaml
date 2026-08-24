@@ -1,0 +1,262 @@
+library: pygal
+language: python
+specification_id: map-marker-clustered
+created: '2026-08-24T22:13:25Z'
+updated: '2026-08-24T22:28:31Z'
+generated_by: claude-sonnet
+workflow_run: 32782882788
+issue: 3766
+language_version: 3.13.15
+library_version: 3.1.3
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/pygal/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - The repair added a minimal geographic reference layer (theme-derived water-tint
+    coastline band via chart.add(None, water_band, fill=True)) that gives the plot
+    a genuine map identity without introducing off-palette colors, directly addressing
+    the attempt-1 basemap weakness.
+  - DBSCAN-based clustering (eps=0.012, min_samples=8) faithfully reproduces fixed-zoom
+    cluster aggregation, with isolated points correctly kept as individual markers
+    (label -1).
+  - Cluster markers display the aggregated count directly on the bubble (value_label_font_size
+    raised to 44 for legibility), and bubble radius scales with sqrt(count), giving
+    intuitive visual weight to larger clusters.
+  - Dominant-category color assignment for mixed clusters (Counter(...).most_common(1))
+    matches the spec's 'reflecting the dominant or mixed category' requirement.
+  - 'Full Imprint palette compliance: brand green first series, correct theme-adaptive
+    chrome tokens, identical data colors between light and dark renders, warm off-white/near-black
+    backgrounds correctly applied.'
+  - Realistic, neutral synthetic dataset (245 points across NYC-area coffee-shop hubs
+    plus outliers) within the spec's 100-5000 point range.
+  - 'Clean, reproducible, single-pass script: seeded RNG, no dead imports, no fake
+    UI controls, correct plot-{THEME}.png/.html outputs.'
+  weaknesses:
+  - The coastline/water band is a thin, low-contrast sliver crowded against the bottom
+    axis edge — it registers as geographic context on close inspection but doesn't
+    strongly read as a map at a glance; a slightly taller/higher-contrast water band
+    would sell the 'map' identity more convincingly.
+  - Cluster bubbles still partially occlude a few nearby individual markers at cluster
+    boundaries (visible around the '50' cluster near -73.89,40.80 and the '72' cluster
+    near -74.00,40.71) even with dot_opacity=0.88 — the underlying markers are barely
+    distinguishable through the bubble edge.
+  - Spec Notes call for click-to-zoom on clusters and a convex-hull/spider-line hover
+    reveal of member locations; only a plain tooltip string is present. This remains
+    a reasonable scope cut given pygal's lack of native geo/zoom APIs, but is still
+    an unaddressed gap from the spec's Notes section.
+  - Plot type is still fundamentally an XY scatter with lat/lon axes rather than a
+    recognizable map with boundaries/streets/terrain — the coastline band is a good-faith
+    minimal gesture but not a full basemap.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), no pure-white or dark patches.
+      Chrome: Title "map-marker-clustered · python · pygal · anyplot.ai", axis titles "Longitude"/"Latitude", tick labels, and the top-left legend (Flagship/Standard/Kiosk) all render in dark ink and are clearly readable. Gridlines are subtle dashed gray. A faint gray wavy coastline band with a light-tinted water fill sits along the bottom edge of the plot area.
+      Data: Brand green (#009E73, Flagship), lavender/purple (#C475FD, Standard), and blue (#4467A3, Kiosk) markers scattered across an NYC-area lat/lon grid. Four DBSCAN-cluster bubbles print dark count labels ("72", "41", "50", "40") in a legible larger font than the prior attempt. Cluster color reflects the dominant category within that cluster. All text is readable against the light background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), no pure-black or light patches.
+      Chrome: Title, axis titles, tick labels, and legend all flip to light ink and remain clearly readable — no dark-on-dark failures observed. Gridlines are subtle dashed light-gray. The coastline/water band flips to a darker tinted gray consistent with the theme.
+      Data: Data colors (green/purple/blue) are pixel-identical to the light render — only chrome flipped, as expected. Cluster bubbles, count labels, and marker positions match the light render exactly. All text is readable against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/axis/tick/legend text readable in both themes; cluster
+          count labels now larger (value_label_font_size=44) and clearly legible
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Cluster bubbles still partially occlude a few nearby individual markers
+          at boundaries despite dot_opacity=0.88; no text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bubble size scales with sqrt(cluster count); a few singles near cluster
+          edges remain partly hidden
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue trio has adequate contrast, not a red-green pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title, axes, legend all within bounds,
+          no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude descriptive; mandated title format followed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, Imprint colors, correct theme-adaptive
+          backgrounds, identical data colors across themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom palette, size-encoded bubbles, and new coastline band show
+          intent, but plot area is still fairly plain
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and clean chrome; the added water-fill band is a refinement
+          step up from a plain scatter
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bubble size + dominant-category color creates a clear visual hierarchy
+          drawing the eye to major clusters
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct clustering behavior; now has a minimal coastline/water reference
+          layer giving it a map identity, though not a full basemap
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Cluster count, dominant-category color, and a minimal basemap are
+          now implemented; click-to-zoom and hover convex-hull/spider-lines from the
+          Notes remain unaddressed (reasonable pygal scope cut)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude/Latitude correctly mapped to X/Y, axes cover full data
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match the three categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows clustering, individual markers, count labels, dominant-category
+          coloring, and a geographic reference layer
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral NYC-metro coffee-shop chain scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 245 points, within the spec's 100-5000 point range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (os, Counter, numpy, pygal, Style, DBSCAN) are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the clustering + coastline logic, no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper Style object usage, XY chart with theme-adaptive tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses pygal's per-node styling (node r, label, tooltip) and a titleless
+          fill series for the water band, but doesn't push further into pygal-specific
+          interactivity
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - sklearn
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
