@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bump-basic
 created: '2026-08-24T19:28:23Z'
-updated: '2026-08-24T19:33:06Z'
+updated: '2026-08-24T19:41:21Z'
 generated_by: claude-sonnet
 workflow_run: 32767812918
 issue: 982
@@ -12,56 +12,60 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 91
 review:
   strengths:
   - 'Correct bump-chart construction: inverted rank axis (rank 1 at top), one line
-    per entity, circular markers at every period, and a deterministic no-tie rank
-    permutation per race column.'
+    per entity, markers at every period, and a deterministic no-tie rank permutation
+    per race column.'
+  - 'Repair pass fixed the previous review''s top weakness: Nova Racing (the eventual
+    champion) now gets a distinct diamond marker, a thicker line (5px vs 3.5px), and
+    a bold end-label, creating a clear focal point that tells the season''s story
+    at a glance (addresses prior DE-01/DE-03 feedback).'
+  - Marker sizing was increased (14px to 16px, 20px for the champion) per the prior
+    VQ-03 feedback, giving the sparse 8-point-per-line dataset more prominent, legible
+    markers.
   - Elegant direct end-labeling instead of a separate legend — each line's team name
-    is attached at its final point, avoiding a legend/data collision and scaling cleanly
-    to 8 series (the exact 'direct labels per series' mitigation the style guide recommends
+    attaches at its final point, avoiding legend/data collisions and scaling cleanly
+    to 8 series (the 'direct labels per series' mitigation the style guide recommends
     at n=8).
   - 'Perfect Imprint palette compliance: canonical color order across all 8 series,
     brand green first (Nova Racing), identical data hues between light and dark renders,
-    and fully theme-correct chrome (background, ticks, grid, end-labels) in both.'
+    fully theme-correct chrome (background, ticks, grid, end-labels) in both.'
+  - 'Realistic, neutral fictional-racing dataset showing the full range of bump-chart
+    storytelling: an early lead change, a mid-season overtake for first place, late-season
+    swings among the mid/back pack, and long stable stretches.'
   - 'Clean, deterministic, KISS-structured code — no unused imports, hardcoded reproducible
-    data, and correct harness contract (animation: false, no explicit init size or
-    devicePixelRatio).'
-  - 'Realistic, neutral fictional-racing dataset that shows the full range of bump-chart
-    storytelling: early lead changes, a mid-season overtake for first place, late-season
-    swings, and long stable stretches.'
+    data, correct harness contract (animation: false, no explicit init size or devicePixelRatio).'
   weaknesses:
-  - Design Excellence is solid but stops short of publication-quality — no visual
-    emphasis distinguishes the season's eventual champion (Nova Racing) from the pack
-    once it takes the lead; add a slightly bolder line weight, a markPoint/markLine
-    annotation, or a subtle highlight on the top-ranked series to create a clear focal
-    point (DE-01, DE-03).
-  - 8 series sit at the palette's CVD-distinguishability floor (ΔE≈8.81); direct end-labels
-    already mitigate this well, but a repair pass could push Library Mastery further
-    with e.g. a distinct symbol shape or emphasis styling for the top 2-3 ranked teams
-    to reinforce the story (LM-02).
-  - Marker size (symbolSize 14) is adequate but on the small side given the sparse
-    dataset (8 points per line, well under the <50-point 'prominent markers' guidance)
-    — consider increasing symbolSize slightly, especially for the leading series (VQ-03).
-  - Grid/margin balance is good but the right-hand margin reserved for end-labels
-    (210px) leaves slightly more unused whitespace than the left (70px) — minor tightening
-    would improve canvas utilization (VQ-05).
+  - Grid right margin (190px, reserved for end-labels) is still noticeably larger
+    than the left margin (70px); the repair pass narrowed it from 210px but a fully
+    balanced layout would trim it further or size it dynamically from the longest
+    team name (VQ-05, minor).
+  - Only the top-ranked team receives distinct emphasis styling; the mid/back-pack
+    cluster (ranks 5-8, where most of the crossing action happens) still relies on
+    color alone to differentiate — a subtle secondary cue (e.g. slightly reduced line
+    weight or opacity for teams that never reach the podium) would sharpen the visual
+    hierarchy further (DE-03).
+  - Library Mastery usage is solid but still fairly generic ECharts patterns (line
+    series + endLabel + emphasis.focus); a markLine at the podium threshold (rank
+    3) or an areaStyle band highlighting the top-3 zone would showcase a more distinctive
+    ECharts feature (LM-02).
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
       Chrome: Bold dark title "bump-basic · javascript · echarts · anyplot.ai" centered at top; y-axis labeled "Rank (1 = best)" with inverted scale (1 at top, 8 at bottom); x-axis shows "Race 1" through "Race 8"; subtle horizontal-only gridlines mark each rank row; no vertical gridlines. All text renders in dark ink against the cream background.
-      Data: 8 lines with circular markers, one per team, in Imprint palette canonical order (green, lavender, blue, ochre, red, cyan, rose, lime). First series (Nova Racing) is #009E73 brand green. Each line ends with a directly-attached label naming the team instead of a separate legend.
+      Data: 8 lines with markers, one per team, in Imprint palette canonical order (green, lavender, blue, ochre, red, cyan, rose, lime). First series (Nova Racing) is #009E73 brand green and is visually emphasized with a diamond marker, a thicker line, and a bold end-label — it becomes rank 1 from Race 3 onward and stays there, making it the clear focal point of the chart. Each line ends with a directly-attached label naming the team instead of a separate legend.
       Legibility verdict: PASS — title, axis labels, tick labels, and all 8 end-labels are clearly readable against the light background; no light-on-light text.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
       Chrome: Same title, axis labels, and gridline layout as the light render, now rendered in light/off-white text. Gridlines are subtle light gray at low opacity.
-      Data: Confirmed identical data colors to the light render — the same green/lavender/blue/ochre/red/cyan/rose/lime hues track the same entities, only the background and text chrome flipped.
+      Data: Confirmed identical data colors to the light render — the same green/lavender/blue/ochre/red/cyan/rose/lime hues track the same entities, only the background and text chrome flipped. The Nova Racing champion emphasis (diamond marker, thicker line, bold label) is equally visible on the dark surface.
       Legibility verdict: PASS — all text (title, ticks, y-axis name, end-labels) is clearly readable against the dark background; no dark-on-dark failures observed anywhere in the chart.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -80,11 +84,11 @@ review:
           other, data, or ticks.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Markers/lines visible and appropriately sized for 8 sparse points
-          per line, but slightly on the small side for the <50-point guidance.
+        comment: Marker sizes increased to 16px (20px for the champion) since the
+          prior review, well-adapted to the sparse 8-point-per-line dataset.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -97,8 +101,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the large majority of the canvas with balanced margins;
-          minor right/left asymmetry from label reservation.
+        comment: Plot fills the large majority of the canvas with generally balanced
+          margins; right margin narrowed from 210px to 190px, still slightly larger
+          than the left (70px) to fit end-labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -114,30 +119,32 @@ review:
         comment: Canonical Imprint order across all 8 series, brand green first, identical
           hues light/dark, theme-correct chrome both renders.
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful direct-labeling and palette use, clearly above defaults,
-          but not yet fully publication-level polish.
+        comment: Repair added intentional visual hierarchy (diamond marker, bold line,
+          bold label for the champion) on top of the already-thoughtful direct-labeling
+          and palette use — clearly above a configured default now.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Subtle horizontal-only grid, no vertical gridlines, generous whitespace;
-          some refinement still possible.
+          margin balance improved slightly but not perfect.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color and crossing lines guide the reader through overtakes and stability,
-          but no explicit emphasis marks the eventual champion.
+        comment: The champion emphasis now gives the viewer an immediate focal point
+          (Nova Racing's rise to and hold on rank 1), while the mid/back-pack jockeying
+          is still visible as secondary story.
     spec_compliance:
       score: 15
       max: 15
@@ -147,27 +154,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bump chart: inverted rank axis, connected lines per entity.'
+        comment: Correct bump/rank-line chart with connected lines and period markers.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, dot markers at each period, lines connect same entity
-          across periods, y-axis inverted — all spec notes satisfied.
+        comment: Inverted y-axis, distinct colors + labels per entity, dot markers
+          at each period, lines connecting the same entity across all periods — all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=period (races), Y=rank, correctly mapped, all data visible.
+        comment: X = period (race), Y = rank; all 8 teams x 8 races fully visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; direct end-labels
-          correctly substitute for a legend.
+        comment: Title exactly matches 'bump-basic · javascript · echarts · anyplot.ai';
+          end-labels serve as a correctly-matching per-series legend.
     data_quality:
       score: 15
       max: 15
@@ -177,21 +185,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows overtakes, stability, crossings, and late-season swings — full
-          range of bump-chart patterns.
+        comment: Shows lead changes, a mid-season overtake for first place, late-season
+          swings, and long stability stretches — the full range of bump-chart storytelling.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible fictional racing-championship scenario.
+        comment: Fictional racing championship — real, comprehensible, neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Valid rank permutation each race, no ties, sensible for 8-team season
-          standings.
+        comment: 8 teams over 8 races within spec's 5-10 entity / 4-8 period guidance;
+          ranks form a valid no-tie permutation each race.
     code_quality:
       score: 10
       max: 10
@@ -201,32 +209,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data -> init -> option, no functions/classes.
+        comment: Flat data -> init -> setOption structure, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully hardcoded, deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unnecessary imports; echarts global only.
+        comment: No imports beyond the global echarts instance.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or over-engineering.
+        comment: Appropriate complexity, no fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct chart.setOption() harness contract, animation: false set,
-          no explicit init size/devicePixelRatio.'
+        comment: 'Correct mount-node contract, animation: false, no explicit init
+          size/devicePixelRatio.'
     library_mastery:
       score: 7
       max: 10
@@ -236,16 +244,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard idiomatic ECharts bump-chart pattern (line series + inverted
-          value yAxis), tooltip axis trigger.
+        comment: Idiomatic ECharts line-series option object with emphasis.focus and
+          endLabel; correct high-level API usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses endLabel formatter and emphasis.focus='series', moderately distinctive
-          but could push further.
-  verdict: REJECTED
+        comment: Uses ECharts-distinctive endLabel direct-labeling plus per-series
+          symbol/lineStyle overrides for the champion; a markLine/areaStyle podium
+          highlight would push this further.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -255,4 +264,4 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - publication-ready
