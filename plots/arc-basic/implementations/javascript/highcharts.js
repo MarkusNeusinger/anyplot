@@ -62,11 +62,11 @@ Highcharts.chart("container", {
           const x1 = xAxis.toPixels(from);
           const x2 = xAxis.toPixels(to);
           const distance = Math.abs(from - to);
-          const arcHeight = (distance / maxDistance) * maxHeight;
+          const arcHeight = Math.sqrt(distance / maxDistance) * maxHeight;
           const midX = (x1 + x2) / 2;
           const controlY = baseY - arcHeight;
           const strokeWidth = 1.5 + (weight / maxWeight) * 4.5;
-          const opacity = 0.28 + (weight / maxWeight) * 0.42;
+          const opacity = 0.38 + (weight / maxWeight) * 0.32;
 
           chart.renderer
             .path(["M", x1, baseY, "Q", midX, controlY, x2, baseY])
