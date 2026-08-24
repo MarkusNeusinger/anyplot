@@ -9,13 +9,20 @@ const theme = window.ANYPLOT_THEME || "light";
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Quarterly KPIs normalized to a common "% of target" scale so the bullets
 // stay comparable at a glance, per anyplot's own dashboard-alignment note.
+// Market Share deliberately lands in the "Poor" band so the demo covers all
+// three qualitative outcomes, not just satisfactory/good.
 const metrics = [
   { name: "Revenue Growth", actual: 92, target: 100 },
   { name: "Customer Retention", actual: 105, target: 100 },
-  { name: "Market Share", actual: 68, target: 100 },
+  { name: "Market Share", actual: 45, target: 100 },
   { name: "Net Promoter Score", actual: 130, target: 100 },
 ];
 const ranges = [60, 85, 140]; // poor / satisfactory / good band boundaries
+const rangeBounds = [
+  [0, ranges[0]],
+  [ranges[0], ranges[1]],
+  [ranges[1], ranges[2]],
+];
 
 // Grayscale bands read as chrome (structural, not data) — built from the ink
 // token so they stay theme-adaptive while staying strictly grayscale.
@@ -30,35 +37,54 @@ const actualThickness = 26;
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Custom draw: target ticks + actual-value labels --------------------------
-// Core Chart.js plugin API (afterDatasetsDraw hook) — no external plugin
-// package, just canvas drawing keyed off the chart's own scale geometry.
+// --- Custom draw: qualitative bands + target ticks + value labels -----------
+// Core Chart.js plugin API (beforeDatasetsDraw / afterDatasetsDraw hooks) — no
+// external plugin package. Chart.js's `grouped: false` does not actually
+// overlay multiple bar datasets on the same row in this version (each dataset
+// still gets its own lane), so bands, target ticks, and labels are all drawn
+// manually here off the single "Actual" bar's own row geometry — guaranteeing
+// every visual element for a row shares one y-center and never drifts apart.
 const bulletExtrasPlugin = {
   id: "bulletExtras",
-  afterDatasetsDraw(chart) {
-    const { ctx, scales, chartArea } = chart;
-    const goodMeta = chart.getDatasetMeta(0);
-    const actualMeta = chart.getDatasetMeta(3);
+  beforeDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const meta = chart.getDatasetMeta(0);
+    const half = bandThickness / 2;
     ctx.save();
     metrics.forEach((m, i) => {
-      const row = goodMeta.data[i];
-      const half = (row.height / 2) * 1.35;
+      const row = meta.data[i];
+      rangeBounds.forEach(([lo, hi], bandIdx) => {
+        const x0 = scales.x.getPixelForValue(lo);
+        const x1 = scales.x.getPixelForValue(hi);
+        ctx.fillStyle = bandColors[bandIdx];
+        ctx.fillRect(x0, row.y - half, x1 - x0, bandThickness);
+      });
+    });
+    ctx.restore();
+  },
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const meta = chart.getDatasetMeta(0);
+    const half = (bandThickness / 2) * 1.35;
+    ctx.save();
+    metrics.forEach((m, i) => {
+      const row = meta.data[i];
       const targetX = scales.x.getPixelForValue(m.target);
-      const top = Math.max(row.y - half, chartArea.top);
-      const bottom = Math.min(row.y + half, chartArea.bottom);
       ctx.strokeStyle = t.ink;
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.moveTo(targetX, top);
-      ctx.lineTo(targetX, bottom);
+      ctx.moveTo(targetX, row.y - half);
+      ctx.lineTo(targetX, row.y + half);
       ctx.stroke();
 
-      const bar = actualMeta.data[i];
+      // Shape-coded (not hue-coded) over/under-target cue — keeps the CVD-safe
+      // all-ink text while still calling out which metrics missed target.
+      const arrow = m.actual >= m.target ? "▲" : "▼";
       ctx.fillStyle = t.ink;
       ctx.font = "600 16px sans-serif";
       ctx.textBaseline = "middle";
       ctx.textAlign = "left";
-      ctx.fillText(`${m.actual}%`, bar.x + 10, bar.y);
+      ctx.fillText(`${arrow} ${m.actual}%`, row.x + 10, row.y);
     });
     ctx.restore();
   },
@@ -70,27 +96,6 @@ new Chart(canvas, {
   data: {
     labels: categories,
     datasets: [
-      {
-        label: "Good",
-        data: metrics.map(() => [ranges[1], ranges[2]]),
-        backgroundColor: bandColors[2],
-        barThickness: bandThickness,
-        borderWidth: 0,
-      },
-      {
-        label: "Satisfactory",
-        data: metrics.map(() => [ranges[0], ranges[1]]),
-        backgroundColor: bandColors[1],
-        barThickness: bandThickness,
-        borderWidth: 0,
-      },
-      {
-        label: "Poor",
-        data: metrics.map(() => [0, ranges[0]]),
-        backgroundColor: bandColors[0],
-        barThickness: bandThickness,
-        borderWidth: 0,
-      },
       {
         label: "Actual",
         data: metrics.map((m) => [0, m.actual]),
@@ -105,7 +110,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { right: 40 } },
+    layout: { padding: { right: 60 } },
     plugins: {
       title: {
         display: true,
@@ -137,7 +142,6 @@ new Chart(canvas, {
         title: { display: true, text: "Percent of Quarterly Target", color: t.ink, font: { size: 16 } },
       },
       y: {
-        grouped: false,
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { display: false },
       },
