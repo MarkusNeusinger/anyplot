@@ -49,10 +49,14 @@ chart.setOption({
     axisTick: { show: false },
     splitLine: { show: false },
   },
+  // The custom series draws a *quadratic* bezier (single control point), whose
+  // rendered peak sits at the midpoint between baseline and control height —
+  // peak = baseline + (targetIdx - sourceIdx) / 2, not the full control height.
+  // Size the axis off that actual peak so the tallest arc reaches near the top.
   yAxis: {
     type: "value",
     min: 0,
-    max: baseline + maxDistance * 1.15,
+    max: baseline + (maxDistance / 2) * 1.15,
     show: false,
   },
   series: [
