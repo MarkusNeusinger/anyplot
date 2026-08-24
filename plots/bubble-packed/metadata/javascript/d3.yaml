@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bubble-packed
 created: '2026-08-24T18:36:20Z'
-updated: '2026-08-24T18:41:54Z'
+updated: '2026-08-24T18:51:33Z'
 generated_by: claude-sonnet
 workflow_run: 32762546712
 issue: 992
@@ -12,53 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-pa
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correct area-proportional sizing via d3.scaleSqrt with force-simulation collision
-    packing (forceX/forceY/forceCollide) — matches the spec's 'scale by area, not
-    radius' and 'force simulation to avoid overlap' requirements exactly.
-  - 'Clever inline legend: colored group labels above each cluster double as the categorical
-    legend, avoiding a redundant legend box while keeping the Imprint palette in canonical
-    order (#009E73 first, then lavender/blue/ochre for the remaining groups).'
-  - Luminance-aware label ink (relativeLuminance/labelInk) keeps in-bubble text readable
-    regardless of which Imprint hue the circle uses, and word-wraps + auto-sizes labels
-    to the available chord so text never spills outside its own bubble.
-  - Realistic, neutral R&D budget dataset with genuine value variation ($8M-$132M)
-    across four plausible departments, exercising both the labeled (r>50) and unlabeled
-    small-bubble code paths — good DQ-01 feature coverage.
+  - Force-simulation packing with a post-tick clamp and a vertical-spread rebalance
+    produces tight, natural-looking clusters with no wasted whitespace
+  - Relative-luminance label-ink computation keeps in-bubble text legible against
+    any of the four palette fills, in both themes
+  - Hero-bubble stroke emphasis and cluster labels doubling as the legend add real
+    data storytelling without extra chrome
   weaknesses:
-  - 'Vertical whitespace is concentrated in two large, unbalanced gaps rather than
-    distributed evenly: roughly 20% of canvas height is empty between the group labels
-    and the bubble clusters, and another ~20% is empty below the clusters down to
-    the canvas bottom. Push clusterCenterY/bubbleBottom lower or strengthen the y-force
-    so the packing uses more of the available vertical space, and balance the top/bottom
-    margins.'
-  - No value/size legend or in-bubble value label is shown anywhere — only project
-    name and relative circle size communicate budget. A small reference circle or
-    a subtle '$M' value under each label would sharpen data storytelling (DE-03) and
-    let readers read exact magnitudes, not just rank order.
-  - Aesthetic polish is solid but still fairly plain (flat fills, uniform stroke treatment)
-    — for a 90+ score, add a touch more visual sophistication, e.g. a subtle stroke
-    or size-driven emphasis on the largest 'hero' bubble per cluster to reinforce
-    the hierarchy.
+  - Smallest labeled value line runs close to the lower comfortable font-size bound;
+    consider a slightly higher floor for the value tspan
+  - Small (r <= 50) bubbles carry no value label at all, so their exact magnitude
+    is only inferable by relative size - acceptable for this chart type but worth
+    noting as a minor coverage gap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "R&D Budget by Project · bubble-packed · javascript · d3 · anyplot.ai" is bold dark ink, fully readable, ~55% of canvas width (well within the safe range). Four group labels ("AI & ML", "Cloud Infra", "Hardware", "Dev Tools") sit above their clusters in the matching Imprint hue and are clearly legible against the light surface.
-      Data: 24 circles clustered into 4 groups. First group (AI & ML) uses brand green #009E73, then lavender, blue, and ochre for the remaining three groups — canonical Imprint order. Circle area scales with budget value; larger circles (Foundation Models, Custom AI Chips, Container Orchestration) carry white/dark auto-contrasted labels, smaller circles are unlabeled. No overlap between circles or labels.
-      Legibility verdict: PASS.
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title centered at top ("R&D Budget by Project · bubble-packed · javascript · d3 · anyplot.ai"); four colored cluster labels (AI & ML green, Cloud Infra purple, Hardware blue, Dev Tools amber) above each bubble group, doubling as the legend. All readable.
+      Data: First categorical series (AI & ML) is #009E73; bubbles packed via force simulation, sized by scaleSqrt (area-proportional) to value; largest bubble per group has a bolder "hero" stroke; large bubbles show two-line name + value ("$118M") in luminance-computed contrast ink; small bubbles unlabeled dots.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title renders in light ink, group labels keep their same Imprint hues (green/lavender/blue/ochre) and remain clearly legible against the dark surface — no dark-on-dark failures observed.
-      Data: Same 24 circles, identical positions, identical Imprint colors as the light render (only the chrome flipped) — data-color identity confirmed. In-bubble label ink is chosen per-circle via a luminance check, so text stays readable on every hue in both themes.
-      Legibility verdict: PASS.
-
-    Cross-render note: both renders share the same underlying layout issue — a large empty band below the bubble clusters (roughly 20% of canvas height) and a similarly sized gap between the group labels and the clusters, leaving vertical whitespace unbalanced (concentrated at the bottom rather than distributed). This does not affect legibility but does affect canvas utilization (VQ-05).
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title and cluster labels render in light ink, clearly legible against the dark surface. No dark-on-dark issues.
+      Data: Bubble fill colors identical to the light render (green/purple/blue/amber) - only chrome flipped. In-bubble label ink still contrasts correctly since it's computed from bubble fill luminance, not page background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -66,76 +49,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (group labels 17px, dynamic title fontsize,
-          per-bubble label fontsize 9-15px), readable in both themes at full size
-          and would remain legible when scaled down.
+        comment: All fonts explicit and readable in both themes; smallest value-line
+          text is near the lower comfortable bound but still legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions in either render.
+        comment: Force-collide simulation with post-clamp keeps every bubble non-overlapping
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 24 circles (medium density) sized well; radius range 6-95px reads
-          clearly at canvas size.
+        comment: Radius range scales cleanly with the 24-item dataset; hero stroke
+          reinforces the largest item per cluster
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 well-separated Imprint hues, no red-green-only signal; per-bubble
-          luminance-based label ink guarantees contrast.
+        comment: Computed relative-luminance label-ink swap keeps contrast solid regardless
+          of fill color
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Bubble clusters occupy roughly the middle 45% of canvas height; ~20%
-          empty band below the clusters plus ~20% empty gap between labels and clusters
-          leaves whitespace unbalanced rather than distributed.
+        passed: true
+        comment: Clean margins, four clusters evenly spaced, nothing clipped, canvas
+          gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No cartesian axes apply to this chart type (position is meaningless
-          per spec); title is descriptive with real business context.
+        comment: No axes needed; title descriptive and correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining 3 groups follow canonical Imprint
-          order 2-4; backgrounds and chrome are theme-correct in both renders.'
+        comment: 'First series is #009E73; canonical Imprint order; backgrounds correct
+          in both themes; data colors identical across themes'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
-        comment: Inline color-coded legend, luminance-aware label ink, and word-wrapped
-          auto-sized labels show thoughtful design clearly above library defaults,
-          though not yet publication-ready.
+        passed: true
+        comment: Hero-stroke emphasis, luminance-aware label ink, word-wrapped two-line
+          labels with a value line
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Clean minimalist look (no axes/spines needed, subtle bg-colored circle
-          strokes for separation), but the unbalanced vertical whitespace pulls this
-          down from perfect.
+        passed: true
+        comment: No unnecessary chrome; cluster labels double as the legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Grouping + size variation creates clear visual hierarchy (largest
-          project per cluster pops out), but no explicit value labels or size-reference
-          legend to anchor the magnitudes.
+        passed: true
+        comment: Group clustering plus hero emphasis creates a clear narrative on
+          top of raw size comparison
     spec_compliance:
       score: 15
       max: 15
@@ -144,46 +123,50 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct packed bubble chart with force-simulation collision packing.
+        passed: true
+        comment: Genuine packed bubble chart via d3-force collision
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Area-proportional sizing, no-overlap force simulation, in-bubble
-          labels for large-enough circles, and optional group clustering all present.
+        passed: true
+        comment: Area-proportional sizing, non-overlapping pack, optional group clustering,
+          in-circle labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Value correctly maps to circle area via scaleSqrt; group correctly
-          maps to cluster position + color; all 24 items visible.
+        passed: true
+        comment: value maps to radius via scaleSqrt; all 24 items rendered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches mandated format with an allowed descriptive prefix;
-          group labels function correctly as a color-matched legend.
+        passed: true
+        comment: Title format correct; cluster-colored labels map to bubble fill colors
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        comment: Wide value range ($8M-$132M) exercises both labeled and unlabeled
-          bubble code paths and shows clear size variation within and across groups.
+        passed: true
+        comment: Covers packing, area-proportional sizing, clustering, value labeling;
+          small bubbles drop the value label
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible R&D budget scenario across 4 tech departments.
+        passed: true
+        comment: R&D budget by project/department is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Dollar magnitudes and relative proportions (e.g. Custom AI Chips
-          largest, capital-intensive hardware) are factually sensible.
+        passed: true
+        comment: $8M-$132M range is sensible for departmental R&D line items
     code_quality:
       score: 9
       max: 10
@@ -192,30 +175,33 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Mostly linear imports->data->plot flow, but defines two small helper
-          functions (relativeLuminance, labelInk) — reasonable but not strictly flat.
+        passed: true
+        comment: Two small helper functions justified by contrast computation, slight
+          indirection
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic, hard-coded in-memory data.
+        passed: true
+        comment: Fully deterministic, hardcoded data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; uses only the d3 global and window tokens.
+        passed: true
+        comment: No imports, uses only the global d3
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for a force-simulated packed layout; no fake
-          UI or fake interactivity.
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Follows the mount-node contract, sizes svg from ANYPLOT_SIZE, no
-          animation/transitions on the static draw.
+        passed: true
+        comment: Correct mount-node contract, current D3 v7 API
     library_mastery:
       score: 9
       max: 10
@@ -224,15 +210,17 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: Idiomatic selection.data().join() pattern, scaleOrdinal/scaleSqrt,
-          well-structured D3 code.
+        passed: true
+        comment: d3-force with forceX/forceY/forceCollide is the canonical D3 idiom
+          for clustered non-overlapping bubbles
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Uses d3-force (forceSimulation/forceX/forceY/forceCollide) for physics-based
-          bubble packing — a distinctive D3 capability not easily replicated elsewhere.
-  verdict: REJECTED
+        passed: true
+        comment: Luminance-driven label contrast and hero-stroke emphasis are distinctive
+          touches
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
