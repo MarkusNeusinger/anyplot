@@ -38,7 +38,7 @@ chart.setOption({
     textStyle: { color: t.ink, fontSize: 22 },
   },
   tooltip: { trigger: "axis" },
-  grid: { left: 70, right: 210, top: 100, bottom: 80, containLabel: true },
+  grid: { left: 70, right: 190, top: 100, bottom: 80, containLabel: true },
   xAxis: {
     type: "category",
     data: races,
@@ -61,22 +61,27 @@ chart.setOption({
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  series: teams.map((team, i) => ({
-    name: team.name,
-    type: "line",
-    data: team.ranks,
-    color: t.palette[i],
-    symbol: "circle",
-    symbolSize: 14,
-    lineStyle: { width: 3.5 },
-    itemStyle: { color: t.palette[i] },
-    emphasis: { focus: "series" },
-    endLabel: {
-      show: true,
-      formatter: "{a}",
-      color: t.ink,
-      fontSize: 14,
-      distance: 12,
-    },
-  })),
+  series: teams.map((team, i) => {
+    // Nova Racing (index 0) is the eventual champion: rank 1 from Race 3 onward.
+    const isChampion = i === 0;
+    return {
+      name: team.name,
+      type: "line",
+      data: team.ranks,
+      color: t.palette[i],
+      symbol: isChampion ? "diamond" : "circle",
+      symbolSize: isChampion ? 20 : 16,
+      lineStyle: { width: isChampion ? 5 : 3.5 },
+      itemStyle: { color: t.palette[i] },
+      emphasis: { focus: "series" },
+      endLabel: {
+        show: true,
+        formatter: "{a}",
+        color: t.ink,
+        fontSize: 14,
+        fontWeight: isChampion ? "bold" : "normal",
+        distance: 12,
+      },
+    };
+  }),
 });
