@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-08-24
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(ragg)
 
 set.seed(42)
@@ -112,6 +111,18 @@ for (iter in seq_len(n_iter)) {
 nodes$x <- pos[, 1]
 nodes$y <- pos[, 2]
 
+# Re-center each layer's centroid onto a fixed quadrant anchor (matching the
+# wide 16:9 canvas) so the four architectural layers spread across all four
+# corners instead of drifting along a single diagonal and leaving the
+# opposite corners empty. Intra-layer structure from the FR simulation above
+# is preserved; only the whole-cluster offset changes.
+anchor_x <- c(Frontend = -1.4, Backend = 1.4, Data = -1.4, Infra = 1.4)
+anchor_y <- c(Frontend = 0.8, Backend = 0.8, Data = -0.8, Infra = -0.8)
+nodes <- nodes %>%
+  group_by(cluster) %>%
+  mutate(x = x - mean(x) + anchor_x[cluster[1]], y = y - mean(y) + anchor_y[cluster[1]]) %>%
+  ungroup()
+
 edge_positions <- edges %>%
   left_join(nodes %>% select(id, x, y), by = c("from" = "id")) %>%
   left_join(nodes %>% select(id, xend = x, yend = y), by = c("to" = "id"))
@@ -130,13 +141,15 @@ p <- ggplot() +
     data = nodes,
     aes(x = x, y = y, color = cluster, size = degree)
   ) +
-  geom_text(
+  geom_label(
     data = hub_nodes,
     aes(x = x, y = y, label = id),
-    color = INK, size = 3.2, fontface = "bold", nudge_y = 0.22
+    color = INK, fill = PAGE_BG, alpha = 0.85, label.size = NA,
+    size = 3.2, fontface = "bold", nudge_y = 0.22,
+    label.padding = unit(0.12, "lines")
   ) +
   scale_color_manual(values = IMPRINT_PALETTE[1:4], name = "Layer") +
-  scale_size_continuous(range = c(3, 9), guide = "none") +
+  scale_size_continuous(range = c(4, 9), guide = "none") +
   scale_linewidth_continuous(range = c(0.3, 1.4), guide = "none") +
   scale_x_continuous(expand = expansion(mult = 0.1)) +
   scale_y_continuous(expand = expansion(mult = 0.1)) +
