@@ -1,0 +1,251 @@
+library: plotnine
+language: python
+specification_id: network-directed
+created: '2026-08-24T22:51:08Z'
+updated: '2026-08-24T23:05:33Z'
+generated_by: claude-sonnet
+workflow_run: 32786191690
+issue: 2858
+language_version: 3.13.15
+library_version: 0.15.8
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-directed/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Native plotnine construction (geom_path with arrow() + geom_point + geom_text)
+    instead of a matplotlib fallback, correctly respecting the library's no-workaround
+    rule for network visualizations
+  - 'Repair addressed attempt 1''s DE-03 feedback: edges are now quadratic-Bezier
+    arcs (fanning parallel/overlapping straight lines into distinguishable curves)
+    instead of plain straight geom_segment lines'
+  - Node ID label size increased from 3.3 to 4.2 (bold), improving legibility at the
+    ~400px mobile thumbnail per attempt 1's VQ-01 feedback
+  - Tighter plot_margin/legend_box_spacing and adjusted coord_cartesian limits reduce
+    the dead space attempt 1 flagged around the graph and before the legend
+  - 'Correct Imprint palette in canonical order with Foundation tier mapped to #009E73,
+    correct theme-adaptive backgrounds (#FAF8F1 light / #1A1A17 dark), fully legible
+    chrome in both renders'
+  - Realistic, neutral software module-dependency dataset (15 nodes, 23 directed edges)
+    sized within the spec's recommended 10-50 node range, with arrowheads trimmed
+    by arc length so they land just outside target markers
+  weaknesses:
+  - Mid-graph edge crossing is still moderate around the auth/user_service and database/cache/http_client
+    fan-in region — the CURVATURE=0.12 bow differentiates overlapping lines but doesn't
+    meaningfully reduce crossings for skip-tier edges; consider a larger curvature
+    specifically for edges spanning more than one tier row
+  - Optional edge `weight` attribute from the spec is still unused — arrow thickness/style
+    is uniform across all 23 edges, so DQ-01/SC-02 leave a small amount of feature
+    coverage on the table
+  - 'LM-02 remains modest: beyond the Bezier arcs, there''s no further distinctive
+    plotnine technique (e.g. weight-driven line width, curvature direction alternating
+    per tier-skip distance) to set this apart'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "network-directed · python · plotnine · anyplot.ai" in dark ink, centered at top, fully readable. No axis lines/ticks/grid (correctly omitted for a spatial network layout). "Build tier" legend at the right on a subtle elevated-cream box with dark, readable swatach labels.
+      Data: Fifteen tier-colored node circles (green #009E73 Foundation, purple Data access, blue Domain services, amber Gateway, red Application — canonical Imprint order) connected by grey Bezier-curved directed edges with closed arrowheads that land just outside the target markers; bold dark node-ID labels sit just above each marker and are clearly legible.
+      Legibility verdict: PASS — all text (title, node labels, legend) is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, now rendered in light ink, clearly visible. Legend box uses a lighter elevated-dark fill with light, readable text.
+      Data: Identical graph topology, node positions, and node/edge colors as the light render — only chrome (background, text, legend box fill) flips, confirming the categorical palette is theme-invariant.
+      Legibility verdict: PASS — no dark-on-dark failures anywhere; title, node labels, tier legend, and grey edges all read clearly against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Node labels bumped from size 3.3 to 4.2 (bold), improving mobile-thumbnail
+          legibility per attempt 1 feedback; all text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text overlap, but moderate edge crossing remains around
+          auth/user_service and the database/cache/http_client fan-in
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and closed arrowheads well-sized for 15 nodes / 23 edges;
+          alpha=0.6 on edges keeps overlapping arcs distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, tier also positionally encoded by row
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Tighter plot_margin/legend_box_spacing and adjusted coord_cartesian
+          limits removed the dead space flagged in attempt 1; no clipping/overflow,
+          canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly omitted for a spatial network layout; title matches
+          mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Foundation = #009E73 first, canonical Imprint order, correct theme
+          backgrounds in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bezier-curved edges with arc-length-trimmed arrowheads read more
+          polished than attempt 1's straight geom_segment lines
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid/spines/ticks/border removed, subtle legend box, tightened margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Bottom-up tier narrative is clear, but the curvature (0.12) only
+          mildly reduces the mid-graph crossing clutter attempt 1 flagged
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network graph with arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with ids/tier attribute, directed edges, consistent closed
+          arrow style, curved edges to reduce overlap per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Layout positions and all nodes/edges correctly represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match tier names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Optional edge-weight attribute still unused
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral software module-dependency dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15 nodes / 23 edges, within the spec's 10-50 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, all top-level
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hand-rolled network layout, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png with correct dpi/width/height
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_path + arrow() + geom_point/geom_text is the idiomatic grammar-of-graphics
+          way to hand-roll a network layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Quadratic-Bezier curve construction with arc-length trimming is a
+          genuinely distinctive technique, but nothing beyond that (e.g. weight-driven
+          styling) differentiates further
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - publication-ready
