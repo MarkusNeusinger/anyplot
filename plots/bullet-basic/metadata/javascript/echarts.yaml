@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bullet-basic
 created: '2026-08-24T19:07:35Z'
-updated: '2026-08-24T19:13:29Z'
+updated: '2026-08-24T19:24:25Z'
 generated_by: claude-sonnet
 workflow_run: 32765807944
 issue: 999
@@ -12,60 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bullet-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bullet-basic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
+  - 'Directly addresses the prior review''s feedback: added an explicit x-axis name
+    (''% of Target''), boosted dark-theme band opacity so the ''Good'' range band
+    is now clearly perceptible against the near-black background, and added a data-driven
+    callout subtitle (''Widest gap vs. target: Revenue Growth (-8 pts)'') that gives
+    the chart a genuine focal point.'
   - 'Correct bullet-chart anatomy: three stacked grayscale range bands (Poor/Satisfactory/Good),
     a narrower green ''Actual'' bar overlaid via barGap: ''-100%'', and a thin rect-symbol
-    ''Target'' marker per row — exactly the Stephen Few construction the spec calls
-    for.'
-  - All four rows share one common 0-100% scale as the spec recommends, and the sample
-    data deliberately includes both above-target (Customer Retention 91 vs 85, On-Time
-    Delivery 95 vs 90) and below-target (Revenue Growth 82 vs 90, NPS Score 68 vs
-    75) cases, giving the chart genuine at-a-glance insight value.
+    ''Target'' marker per row — the Stephen Few construction the spec calls for.'
+  - All four rows share one common 0-100% scale as the spec recommends, with sample
+    data that deliberately includes both above-target (Customer Retention, On-Time
+    Delivery) and below-target (Revenue Growth, NPS Score) cases.
   - 'Theme-adaptive tokens are threaded through consistently: band shading and the
-    target marker both derive from t.ink (so the target line correctly renders black-on-light
-    and white-on-dark), and the first/only categorical data series is the mandated
-    #009E73.'
-  - Value labels ('82%', '91%', ...) are placed to the right of each bar without colliding
-    with the target marker or adjacent rows in either theme.
+    target marker derive from t.ink so the target line renders correctly in both themes,
+    and the first/only categorical data series is the mandated #009E73.'
   - Clean, deterministic, single-block KISS structure with no functions/classes, matching
     the ECharts snippet convention.
   weaknesses:
-  - No explicit x-axis title (e.g. '% of Target') — the axis relies solely on the
-    per-tick '%' suffix; add a descriptive axis name for full VQ-06 credit.
-  - 'In the dark render, the ''Good'' range band (75-100%) is nearly indistinguishable
-    from the page background (opacity 0.06 on light ink over #1A1A17) — still visible
-    in light theme but too faint in dark theme; raise the dark-theme band opacity
-    slightly or use a separate light-theme/dark-theme opacity ramp so all three bands
-    stay perceptible in both themes.'
-  - Title occupies only ~40% of canvas width at fontSize 20 despite being a ~72-character
-    mandated+prefixed string — comfortably readable but visually small relative to
-    the 3200px canvas; a modest fontSize bump (e.g. 22-24) would balance it better
-    against the rest of the chrome.
-  - Uses a scatter+rect-symbol workaround for the target marker instead of ECharts'
+  - Title still occupies only ~47% of canvas width (measured) at fontSize 24 — comfortably
+    readable and not clipped, but still below the ~50-70% comfortable range and well
+    below the 70-85% typical for this length of mandated+prefixed title. A further
+    fontsize bump (e.g. 26-28) would balance it better against the 3200px canvas.
+  - Still uses a scatter+rect-symbol workaround for the target marker instead of ECharts'
     native markLine/markPoint coord-based API — functionally correct and a common
-    community pattern for per-category bullet ticks, but doesn't showcase the library's
-    own annotation primitives.
-  - Design stays close to the textbook Stephen-Few reference implementation (grayscale
-    bands, black target, single accent color) without additional visual-hierarchy
-    touches (e.g., callout annotation on the biggest miss/beat, subtle band border,
-    or refined legend swatch shapes) that would lift it from 'good' to 'exceptional'.
+    community pattern, but doesn't showcase the library's own annotation primitives.
+  - Design remains close to the textbook Stephen-Few reference (grayscale bands, black/white
+    target, single accent color); the new callout subtitle adds a genuine storytelling
+    touch, but the chart itself still applies uniform styling to all rows rather than
+    visually emphasizing the highlighted 'widest gap' row (e.g. a subtle outline or
+    bolder label on that bar).
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Quarterly KPI Dashboard · bullet-basic · javascript · echarts · anyplot.ai" is dark, centered, and fully readable. Legend (Poor, Satisfactory, Good, Actual, Target) sits below the title in dark-gray text with matching swatches. Y-axis category labels (Revenue Growth, Customer Retention, NPS Score, On-Time Delivery) and x-axis 0%-100% tick labels are dark and clearly legible. Faint vertical gridlines mark 20% increments.
-      Data: Each row shows three grayscale stacked bands (darkest = Poor 0-50%, medium = Satisfactory 50-75%, near-invisible-but-present = Good 75-100%), a green (#009E73) "Actual" bar overlaid on top with a "%" value label to its right, and a thin black vertical "Target" tick mark. Data colors read clearly against the light background.
+      Chrome: Title "Quarterly KPI Dashboard · bullet-basic · javascript · echarts · anyplot.ai" is dark, centered, and fully readable, with the new callout subtitle "Widest gap vs. target: Revenue Growth (-8 pts)" directly beneath it in softer gray. Legend (Poor, Satisfactory, Good, Actual, Target) sits below the subtitle in dark-gray text with matching swatches. Y-axis category labels (Revenue Growth, Customer Retention, NPS Score, On-Time Delivery), the new x-axis name "% of Target", and 0%-100% tick labels are all dark and clearly legible. Faint vertical gridlines mark 20% increments.
+      Data: Each row shows three grayscale stacked bands (darkest = Poor 0-50%, medium = Satisfactory 50-75%, lightest = Good 75-100%), a green (#009E73) "Actual" bar overlaid on top with a "%" value label to its right, and a thin black vertical "Target" tick mark. Data colors read clearly against the light background.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, legend text, y-axis category labels, and x-axis percentage ticks all render in light gray/white and remain fully readable against the dark background — no dark-on-dark failures observed. Gridlines are subtle but visible.
-      Data: The "Actual" bar is the identical #009E73 green as the light render. The "Target" marker correctly flips to a light/white rect (theme-adaptive ink), keeping it visible against the dark bands. The three range bands are present but the "Good" (rightmost) band is very faint, nearly blending into the page background — a minor theme-specific legibility softness, though not a hard failure since it is a low-emphasis-by-design contextual band, not text or the primary data mark.
-      Legibility verdict: PASS (with the minor "Good" band contrast note above)
+      Chrome: Title, callout subtitle, legend text, y-axis category labels, x-axis name, and percentage ticks all render in light gray/white and remain fully readable against the dark background — no dark-on-dark failures observed. Gridlines are subtle but visible.
+      Data: The "Actual" bar is the identical #009E73 green as the light render. The "Target" marker correctly flips to a light/white rect (theme-adaptive ink), keeping it visible against the dark bands. Pixel-sampled band colors confirm all three range bands are now clearly distinguishable from the page background: Poor RGB(90,90,86) vs background RGB(26,26,23) (delta ~64), Satisfactory RGB(68,68,64) (delta ~42), and Good RGB(56,56,52) (delta ~30) — roughly double the contrast of the previous attempt's near-invisible Good band, confirming the opacity fix (0.06 → 0.14) resolved the prior weakness.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -73,23 +66,24 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; title is comfortably
-          readable but occupies only ~40% of canvas width, smaller than the ~70-85%
-          expected for this long mandated+prefixed title.
+        comment: All font sizes explicit and readable in both themes; title fontSize
+          bumped 20→24 but still measures ~47% of canvas width (pixel-verified), below
+          the ~70-85% expected for this long mandated+prefixed title.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Value labels, target markers, and category labels never collide in
-          either theme.
+        comment: Value labels, target markers, callout subtitle, and category labels
+          never collide in either theme.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
         comment: Actual bar and target marker are clearly visible; the 'Good' range
-          band is nearly invisible in the dark render (opacity 0.06 on light ink).
+          band in dark theme is now clearly perceptible (pixel-sampled delta ~30 vs.
+          background, up from ~13 in the prior attempt) after the opacity fix.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -102,15 +96,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large, balanced portion of the canvas; legend sits
-          close to the title; nothing cut off.
+        comment: Plot area fills a large, balanced portion of the canvas; legend and
+          new axis name sit close to the plot; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: X-axis has no explicit descriptive title (e.g. '% of Target'), relying
-          only on per-tick '%' suffixes.
+        passed: true
+        comment: X-axis now has an explicit descriptive name ('% of Target'), resolving
+          the prior weakness.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -119,7 +113,7 @@ review:
         comment: 'First/only categorical series is #009E73; backgrounds are theme-correct
           #FAF8F1/#1A1A17; chrome flips correctly.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -138,12 +132,13 @@ review:
           lines remain visible rather than fully minimal.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color contrast (green bar vs. gray bands) plus deliberate over/under-target
-          data choices create visual hierarchy, though no explicit callout/annotation
-          highlights the insight.
+        comment: 'New data-driven callout subtitle (''Widest gap vs. target: Revenue
+          Growth (-8 pts)'') gives the chart a clear focal point directly addressing
+          the prior weakness; falls short of ''excellent'' only because the highlighted
+          row itself isn''t visually emphasized within the chart body.'
     spec_compliance:
       score: 15
       max: 15
@@ -252,7 +247,7 @@ review:
         passed: true
         comment: 'The barGap: ''-100%'' overlay trick to combine differently-widthed
           bar series on one category axis is a distinctive ECharts-specific technique.'
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
