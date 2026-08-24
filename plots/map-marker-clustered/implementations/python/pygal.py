@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-marker-clustered: Clustered Marker Map
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-08-24
+Library: pygal 3.1.3 | Python 3.13.15
+Quality: 80/100 | Created: 2026-08-24
 """
 
 import os
