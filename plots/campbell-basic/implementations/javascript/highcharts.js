@@ -79,16 +79,55 @@ const criticalSeries = {
   type: "scatter",
   data: criticalSpeeds,
   color: t.palette[4], // matte red — semantic anchor for critical/error
-  marker: { enabled: true, symbol: "diamond", radius: 7 },
+  marker: {
+    enabled: true,
+    symbol: "diamond",
+    radius: 5,
+    lineColor: t.pageBg,
+    lineWidth: 1,
+  },
 };
 
+// Group crossings that sit close together in both RPM and Hz (visually
+// overlapping diamonds) into a shaded "critical zone" — a distinctive
+// Highcharts plotBands touch that also satisfies the spec's optional
+// zone-highlighting suggestion.
+const sortedCritical = [...criticalSpeeds].sort((a, b) => a[0] - b[0]);
+const ZONE_RPM_TOL = 60;
+const ZONE_HZ_TOL = 3;
+const clusters = [];
+sortedCritical.forEach(([speed, freq]) => {
+  const last = clusters[clusters.length - 1];
+  const [lastSpeed, lastFreq] = last ? last[last.length - 1] : [];
+  if (last && speed - lastSpeed < ZONE_RPM_TOL && Math.abs(freq - lastFreq) < ZONE_HZ_TOL) {
+    last.push([speed, freq]);
+  } else {
+    clusters.push([[speed, freq]]);
+  }
+});
+
+const ZONE_MARGIN = 30; // RPM padding around a cluster's plot band
+const criticalZones = clusters
+  .filter((cluster) => cluster.length > 1)
+  .map((cluster) => {
+    const speeds = cluster.map(([speed]) => speed);
+    return {
+      from: Math.min(...speeds) - ZONE_MARGIN,
+      to: Math.max(...speeds) + ZONE_MARGIN,
+      color: "rgba(174, 48, 48, 0.08)", // matte red at low alpha
+      zIndex: 0,
+    };
+  });
+
 // --- Chart -------------------------------------------------------------------
+const FONT_FAMILY = '"Helvetica Neue", Arial, sans-serif';
+
 Highcharts.chart("container", {
   chart: {
     type: "line",
     backgroundColor: "transparent",
     animation: false,
-    style: { fontFamily: "inherit" },
+    style: { fontFamily: FONT_FAMILY },
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -107,6 +146,7 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: criticalZones,
   },
   yAxis: {
     title: {
@@ -114,7 +154,7 @@ Highcharts.chart("container", {
       style: { color: t.inkSoft, fontSize: "16px" },
     },
     min: 0,
-    max: 110,
+    max: 100,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
