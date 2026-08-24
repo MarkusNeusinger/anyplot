@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bump-basic
 created: '2026-08-24T19:24:43Z'
-updated: '2026-08-24T19:30:13Z'
+updated: '2026-08-24T19:38:35Z'
 generated_by: claude-sonnet
 workflow_run: 32767570339
 issue: 982
@@ -12,56 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Radius-encoded rank prominence on markers (larger dot for #1, tapering to #6)
-    is a distinctive, tasteful data-driven touch.'
-  - Direct end-of-line entity labels, color-matched to each line, eliminate the need
-    for a separate floating legend and reinforce the color-to-entity mapping (redundant
-    encoding as the spec suggests).
-  - Smooth Catmull-Rom interpolation gives the lines a polished FT/Economist-style
-    bump-chart look, and stays correctly bounded within the rank range at every crossing
-    (no overshoot artifacts checked at multiple crossing points).
-  - Correct Imprint palette in canonical order across all 6 entities, identical data
-    colors between light/dark renders, fully theme-adaptive chrome (background, grid,
-    ticks, title).
-  - 'Y-axis correctly inverted (rank 1 at top, #1..#6 tick format) exactly as the
-    spec requires.'
-  - 'Clean, deterministic, in-memory data; correct d3 browser-harness contract (svg
-    sized from ANYPLOT_SIZE, no animation, single #container svg).'
+  - 'Correct rank-inverted Y-axis (#1 at top) with clean #N tick formatting via tickValues/tickFormat'
+  - 'Crossover halo on the Q1''25 Netflix/Disney+ #1 swap is a genuine storytelling
+    touch that draws the eye to the key insight without any fake interactivity'
+  - Marker radius scaled by rank prominence (rank 1 largest) adds a subtle second
+    encoding on top of color
+  - End-of-line direct labels (color-matched to each entity) replace a traditional
+    legend cleanly, freeing up plot area and keeping label-to-line association unambiguous
+  - d3.curveCatmullRom.alpha(0.8) produces smooth, readable crossing curves that make
+    simultaneous rank swaps easy to trace visually
+  - 'Imprint palette used in correct canonical order with Netflix as #009E73 first
+    series; both light and dark renders are theme-correct with identical data colors'
+  - Realistic, neutral streaming-platform scenario with plausible relative rankings
+    and genuine rank churn (ties, swaps, stable leaders) across all six entities
   weaknesses:
-  - The per-entity dot markers are drawn in a `for` loop using regex-sanitized CSS
-    class selectors (`.dot-${d.entity.replace(/[^a-zA-Z0-9]/g, "")}`) instead of a
-    single idiomatic D3 nested data join (bind a <g> per entity, then join circles
-    inside it). Works correctly but is verbose and non-idiomatic — refactor to a flattened
-    {entity, period, rank} array joined once, or a per-entity <g> group with a nested
-    join.
-  - 'Data Storytelling (DE-03) is implicit only (color + marker-size hierarchy) —
-    no visual callout on the Netflix/Disney+ #1 swap at Q1 ''25, the chart''s most
-    interesting inflection point. Not spec-mandated, but a subtle emphasis (e.g. a
-    slightly heavier stroke or small annotation at the crossover) would raise the
-    storytelling score.'
-  - Data uses real named streaming platforms (Netflix, Disney+, HBO Max, Prime Video,
-    Hulu, Apple TV+) with a specific fabricated quarterly rank-swap narrative. Directionally
-    plausible but not verifiably factual for the exact quarters shown — consider grounding
-    the narrative closer to well-known real trends, or note illustrative use of real
-    brand names more clearly.
+  - Y-axis title 'Streaming Watch-Time Rank' and X-axis 'Quarter' are both descriptive
+    but ordinal ranks inherently carry no units, so this is a minor/no-op note rather
+    than an actionable fix
+  - Rank-prominence marker sizing (12 to 6.5px across ranks 1-6) is a subtle gradient
+    - could be slightly more pronounced to strengthen the visual hierarchy between
+    top and bottom ranks
+  - Only one crossover moment (Q1'25 Netflix/Disney+) receives the halo emphasis;
+    the Q3'24/Q4'24 Disney+/HBO Max crossings and the Hulu/Apple TV+ swaps are visually
+    present but not called out, leaving some rank-swap richness undifferentiated
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bump-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered top. Y-axis labeled "Streaming Watch-Time Rank" (rotated), ticks "#1".."#6" top-to-bottom (correctly inverted, rank 1 at top). X-axis labeled "Quarter" with six tick labels ("Q1 '24".."Q2 '25"). Subtle horizontal rank gridlines. All text (title, axis titles, tick labels, end-of-line entity labels) is clearly readable against the light background — no light-on-light issues.
-      Data: Six colored lines (Netflix green #009E73, Disney+ lavender, HBO Max blue, Prime Video ochre, Hulu red, Apple TV+ cyan) with Catmull-Rom-smoothed curves connecting circular markers at each of the 6 quarters. Marker radius decreases as rank number increases (largest at #1). Each line ends in a bold, color-matched text label naming the entity, acting as an inline legend. First series (Netflix) is the Imprint brand green as required.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Bold dark title "bump-basic · javascript · d3 · anyplot.ai" centered at top, comfortably sized (~60% width), fully visible with no clipping. Y-axis shows inverted rank ticks #1-#6 (top to bottom) labeled "Streaming Watch-Time Rank"; X-axis shows six quarters Q1'24-Q2'25 labeled "Quarter". Subtle horizontal rank gridlines. All text renders in dark ink, clearly legible against the light surface.
+      Data: Six bump lines in Imprint palette order - Netflix (#009E73, brand green, first series), Disney+ (lavender), HBO Max (blue), Prime Video (ochre), Hulu (matte red), Apple TV+ (cyan). Smooth Catmull-Rom curves connect quarterly rank positions; markers sized by rank prominence; a subtle halo ring highlights the Netflix/Disney+ #1 swap at Q1'25. Color-matched entity name labels sit at the right end of each line, serving as a direct-label legend.
+      Legibility verdict: PASS - all title, axis, tick, and end-label text is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink (near-white/soft-white) — clearly legible against the dark background. Gridlines are subtle and still visible. No dark-on-dark failures found on any text element (checked title, both axis titles, x/y tick labels, and the six color-matched end labels via a cropped close-up).
-      Data: Same six line colors and marker sizes as the light render — confirmed identical hex values (only chrome flipped, data colors unchanged), matching the Imprint palette theme-invariance rule.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now render in light/white ink, clearly visible against the dark surface. Gridlines remain subtle. No dark-on-dark text observed anywhere (title, ticks, axis titles, end-labels all light-colored).
+      Data: Identical six data colors to the light render (Netflix still #009E73, same palette positions for the rest) - only the chrome (background, text, grid) flipped as expected. Crossover halo and rank-prominence marker sizing are preserved identically.
+      Legibility verdict: PASS - all text elements are clearly readable against the dark background; no dark-on-dark or light-on-light failures found.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -69,52 +60,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14/16/22px CSS), fully readable in
-          both themes, no clipping. Title is short (spec-id is short) so it fills
-          less than the typical 50-70% band — not a deduction per se, but not maximally
-          attention-grabbing either.
+        comment: All font sizes explicitly set (title 22px, axis labels 16px, ticks
+          14px, end-labels 16px); readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/text or text/data collisions anywhere, including at the dense
-          mid-chart crossings.
+        comment: No text overlaps other text or data; end-of-line labels evenly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Sparse data (6 points/line) rendered with prominent, radius-tapered
-          markers plus a page-bg stroke for separation from overlapping lines.
+        comment: Markers visible and sized by rank prominence; the rank-1-to-6 radius
+          gradient (12px to 6.5px) is subtle rather than dramatic
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant color+label encoding, all 6 hues mutually distinguishable,
-          no red-green-only signal.
+        comment: 6-series borderline case addressed with redundant color-matched direct
+          labels, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart area covers ~83% of the canvas, balanced margins, end labels
-          sit close to the plot (not isolated).
+        comment: Balanced margins, plot area occupies a healthy majority of the canvas,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Streaming Watch-Time Rank" and "Quarter" are descriptive, not generic
-          x/y.'
+        comment: Descriptive axis titles; ranks are inherently unitless so no units
+          needed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order across all 6 entities, first series is #009E73,
-          identical data colors light/dark, correct theme backgrounds.'
+        comment: 'Netflix is #009E73 first series; remaining entities follow canonical
+          Imprint order; theme-correct chrome in both renders'
     design_excellence:
       score: 15
       max: 20
@@ -124,24 +112,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Radius-by-rank markers, smooth interpolation, and inline color-matched
-          labels go clearly beyond a default D3 line chart — above the 'well-configured
-          default' tier.
+        comment: Smooth Catmull-Rom curves, rank-prominence marker sizing, and crossover
+          halo show clear design intent above default line-chart styling
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Subtle single-axis grid, L-shaped domain lines only, no boxed legend
-          (labels are inline), generous margins.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color + size hierarchy guides the eye to rank-1 changes, but no explicit
-          emphasis is placed on the Netflix/Disney+ swap, the chart's key inflection
-          point.
+        comment: Subtle single-stroke rank gridlines, generous margins, direct labels
+          replace a boxed legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Crossover halo on the Netflix/Disney+ #1 swap creates a clear focal
+          point guiding the viewer to the key insight'
     spec_compliance:
       score: 15
       max: 15
@@ -151,29 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bump chart: rank positions connected across ordered periods.'
+        comment: Correct bump chart - rank positions connected across periods
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted y-axis (rank 1 top), distinct colors AND labels per entity,
-          dot markers at each period — all present.
+        comment: Inverted Y-axis (rank 1 top), distinct colors/labels per entity,
+          dot markers per period, lines connect same entity across all periods - all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = period (quarter), Y = rank; all 6 entities × 6 periods visible.
+        comment: X=period, Y=rank correctly mapped; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches "bump-basic · javascript · d3 · anyplot.ai";
-          end labels match entity names in the data.
+        comment: Title format exactly matches spec; direct-label 'legend' correctly
+          matches entity names to line colors
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -181,26 +168,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows overtakes (Netflix/Disney+), alternating ranks (HBO Max/Disney+),
-          a late swap (Hulu/Apple TV+), and a stable rank (Prime Video) — good variety
-          of bump-chart patterns.
+        comment: Shows stable leaders, gradual shifts, ties, and a highlighted crossover;
+          good variety across 6 entities x 6 periods
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible business/tech scenario (streaming watch-time
-          share).
+        comment: Real, neutral streaming-platform watch-time ranking scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Directionally plausible (Netflix's long-standing lead, Disney+ growth)
-          but the exact fabricated quarterly rank-swap narrative for real, named companies
-          isn't independently verifiable.
+        comment: Ranking order and churn are plausible for the streaming market
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -208,33 +191,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes.
+        comment: Linear top-to-bottom structure, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hard-coded, deterministic data.
+        comment: Fully hardcoded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, no extraneous imports.
+        comment: Only the d3 global is used, no extraneous imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: The per-entity marker loop with regex-sanitized CSS class names is
-          functional but verbose/non-idiomatic compared to a flattened data join.
+        comment: No fake UI/interactivity; appropriate complexity for the halo/marker
+          techniques used
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly; no animation; harness
-          saves plot-{theme}.png/.html.
+        comment: Follows mount-node contract, no animation, current d3 join API
     library_mastery:
       score: 8
       max: 10
@@ -244,27 +226,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of scalePoint/scaleLinear/scaleOrdinal, d3.line with
-          a curve, axisBottom/axisLeft, and .join() — minus one point for the non-idiomatic
-          per-entity selector loop for markers.
+        comment: Idiomatic scalePoint/scaleLinear/scaleOrdinal + data-join pattern
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Data-driven marker radius tied to rank and curveCatmullRom tension
-          are D3-specific fine-grained control not easily replicated in a higher-level
-          charting library.
-  verdict: REJECTED
+        comment: d3.curveCatmullRom shape generator and manually composed halo/marker
+          layers are distinctive, low-level D3 control not easily replicated in higher-level
+          charting libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - wide-to-long
   styling:
-  - publication-ready
+  - alpha-blending
   - edge-highlighting
+  - publication-ready
