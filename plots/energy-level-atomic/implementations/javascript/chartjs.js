@@ -17,7 +17,9 @@ const levels = [
 const ionizationEnergy = 0;
 const levelByN = new Map(levels.map((lvl) => [lvl.n, lvl]));
 
-// Emission transitions (Lyman series -> n=1, Balmer series -> n=2)
+// Transitions: "from" -> "to" gives the physical direction. Emission drops
+// from a higher level to a lower one (arrow points down); absorption climbs
+// from a lower level to a higher one (arrow points up).
 const transitions = [
   { from: 2, to: 1, series: "Lyman-α", wavelengthNm: 121.6 },
   { from: 3, to: 1, series: "Lyman-β", wavelengthNm: 102.6 },
@@ -25,6 +27,7 @@ const transitions = [
   { from: 3, to: 2, series: "Balmer-α (Hα)", wavelengthNm: 656.3 },
   { from: 4, to: 2, series: "Balmer-β (Hβ)", wavelengthNm: 486.1 },
   { from: 5, to: 2, series: "Balmer-γ (Hγ)", wavelengthNm: 434.0 },
+  { from: 1, to: 3, series: "Lyman-β absorption", wavelengthNm: 102.6 },
 ];
 
 // Levels converge toward the ionization limit as n grows, so a linear energy
@@ -35,8 +38,8 @@ const COMPRESSION = 0.35;
 const toPlotY = (energyEv) =>
   energyEv === 0 ? 0 : -Math.pow(Math.abs(energyEv), COMPRESSION);
 
-const deltaEs = transitions.map(
-  (tr) => levelByN.get(tr.from).energy - levelByN.get(tr.to).energy,
+const deltaEs = transitions.map((tr) =>
+  Math.abs(levelByN.get(tr.from).energy - levelByN.get(tr.to).energy),
 );
 const minDelta = Math.min(...deltaEs);
 const maxDelta = Math.max(...deltaEs);
@@ -75,36 +78,47 @@ const levelDatasets = levels.map((lvl) => ({
   showLine: true,
 }));
 
-const ionizationDataset = {
-  label: "Ionization limit",
-  data: [
-    { x: LEVEL_X0, y: toPlotY(ionizationEnergy) },
-    { x: LEVEL_X1, y: toPlotY(ionizationEnergy) },
-  ],
-  borderColor: t.ink,
-  borderWidth: 2,
-  borderDash: [10, 6],
-  pointRadius: 0,
-  showLine: true,
-};
-
 // --- Custom plugin: level labels + transition arrows colored by wavelength -
-const drawArrow = (ctx, x, yTopPx, yBottomPx, color) => {
+// drawArrow points from (x, yStartPx) to (x, yEndPx); the arrowhead lands at
+// the end, so the same helper draws both downward (emission) and upward
+// (absorption) arrows depending on which pixel coordinate is larger.
+const drawArrow = (ctx, x, yStartPx, yEndPx, color) => {
   const headLen = 16;
   const headWidth = 12;
+  const dir = yEndPx >= yStartPx ? 1 : -1;
+  const shaftEndPx = yEndPx - dir * headLen;
   ctx.strokeStyle = color;
   ctx.fillStyle = color;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(x, yTopPx);
-  ctx.lineTo(x, yBottomPx - headLen);
+  ctx.moveTo(x, yStartPx);
+  ctx.lineTo(x, shaftEndPx);
   ctx.stroke();
   ctx.beginPath();
-  ctx.moveTo(x - headWidth / 2, yBottomPx - headLen);
-  ctx.lineTo(x + headWidth / 2, yBottomPx - headLen);
-  ctx.lineTo(x, yBottomPx);
+  ctx.moveTo(x - headWidth / 2, shaftEndPx);
+  ctx.lineTo(x + headWidth / 2, shaftEndPx);
+  ctx.lineTo(x, yEndPx);
   ctx.closePath();
   ctx.fill();
+};
+
+// Dashed line whose dash+gap period is rescaled to divide evenly into the
+// segment length, so the pattern always ends on a full dash/gap instead of
+// leaving a stray partial dash near the endpoint.
+const drawEvenDashedLine = (ctx, x0Px, x1Px, yPx, color, dashLen, gapLen, lineWidth) => {
+  const totalPx = x1Px - x0Px;
+  const period = dashLen + gapLen;
+  const periods = Math.max(1, Math.round(totalPx / period));
+  const scale = totalPx / (period * periods);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.setLineDash([dashLen * scale, gapLen * scale]);
+  ctx.beginPath();
+  ctx.moveTo(x0Px, yPx);
+  ctx.lineTo(x1Px, yPx);
+  ctx.stroke();
+  ctx.restore();
 };
 
 const energyDiagramPlugin = {
@@ -114,6 +128,19 @@ const energyDiagramPlugin = {
     const xScale = scales.x;
     const yScale = scales.y;
     ctx.save();
+
+    // Ionization line, dashed with a period rescaled to end cleanly (no
+    // stray partial dash) right before its label.
+    drawEvenDashedLine(
+      ctx,
+      xScale.getPixelForValue(LEVEL_X0),
+      xScale.getPixelForValue(LEVEL_X1),
+      yScale.getPixelForValue(toPlotY(ionizationEnergy)),
+      t.ink,
+      10,
+      6,
+      2,
+    );
 
     // Level + ionization labels, placed to the right of each line
     ctx.font = "16px sans-serif";
@@ -137,7 +164,10 @@ const energyDiagramPlugin = {
       yScale.getPixelForValue(toPlotY(ionizationEnergy)) - 6,
     );
 
-    // Transition arrows, spaced evenly across the right-hand column
+    // Transition arrows, spaced evenly across the right-hand column. Arrow
+    // direction follows tr.from -> tr.to: downward for emission (from a
+    // higher level to a lower one), upward for absorption (from a lower
+    // level to a higher one).
     const step =
       transitions.length > 1
         ? (ARROW_X1 - ARROW_X0) / (transitions.length - 1)
@@ -145,22 +175,22 @@ const energyDiagramPlugin = {
     transitions.forEach((tr, i) => {
       const xData = ARROW_X0 + i * step;
       const xPx = xScale.getPixelForValue(xData);
-      const upperEnergy = levelByN.get(tr.from).energy;
-      const lowerEnergy = levelByN.get(tr.to).energy;
-      const yTopPx = yScale.getPixelForValue(toPlotY(upperEnergy));
-      const yBottomPx = yScale.getPixelForValue(toPlotY(lowerEnergy));
-      const deltaE = upperEnergy - lowerEnergy;
+      const fromEnergy = levelByN.get(tr.from).energy;
+      const toEnergy = levelByN.get(tr.to).energy;
+      const yStartPx = yScale.getPixelForValue(toPlotY(fromEnergy));
+      const yEndPx = yScale.getPixelForValue(toPlotY(toEnergy));
+      const deltaE = Math.abs(fromEnergy - toEnergy);
       const frac =
         maxDelta > minDelta ? (deltaE - minDelta) / (maxDelta - minDelta) : 0;
       const color = lerpColor(t.seq[0], t.seq[1], frac);
-      drawArrow(ctx, xPx, yTopPx, yBottomPx, color);
+      drawArrow(ctx, xPx, yStartPx, yEndPx, color);
 
       ctx.save();
-      ctx.translate(xPx + 16, (yTopPx + yBottomPx) / 2);
+      ctx.translate(xPx + 16, (yStartPx + yEndPx) / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.font = "13px sans-serif";
+      ctx.font = "16px sans-serif";
       ctx.fillStyle = t.inkSoft;
       ctx.fillText(`${tr.series} · ${tr.wavelengthNm} nm`, 0, 0);
       ctx.restore();
@@ -175,7 +205,7 @@ const title = "energy-level-atomic · javascript · chartjs · anyplot.ai";
 
 new Chart(canvas, {
   type: "line",
-  data: { datasets: [...levelDatasets, ionizationDataset] },
+  data: { datasets: levelDatasets },
   options: {
     responsive: true,
     maintainAspectRatio: false,
