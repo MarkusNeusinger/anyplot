@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: campbell-basic
 created: '2026-08-24T19:50:31Z'
-updated: '2026-08-24T19:55:23Z'
+updated: '2026-08-24T20:06:57Z'
 generated_by: claude-sonnet
 workflow_run: 32769964591
 issue: 4241
@@ -12,135 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - 'Complete feature set: 4 natural-frequency mode curves (forward/backward whirl),
-    3 engine-order excitation lines with the correct order/60 RPM-to-Hz slope, and
-    critical-speed markers computed via numerical intersection with linear interpolation.'
-  - 'Correct Imprint palette application: first series is #009E73, remaining mode
-    curves follow canonical positions 2-4, and critical speeds use the matte-red semantic
-    anchor (position 5) rather than the next ordinal slot.'
-  - 'Theme-adaptive chrome is correct in both renders: engine-order lines use t.ink
-    so they read as black-on-cream in light and white-on-near-black in dark, and all
-    text/grid/legend tokens flip correctly with no dark-on-dark or light-on-light
-    failures.'
-  - Deterministic, reproducible data generation with clean KISS structure and explicit
-    font sizing (title 22px, axis titles 16px, tick/legend 14px) matching the style
-    guide.
-  - Mode curves show realistic gyroscopic behavior (some increasing, some decreasing
-    with speed) and the mandated title format and units-bearing axis labels are both
-    correct.
+  - 'Excellent semantic palette usage: matte red reserved for critical/error markers,
+    theme-adaptive ink/neutral token used for engine-order reference lines, matching
+    the style guide''s documented semantic roles precisely'
+  - plotBands critical-zone shading is a distinctive, well-motivated Highcharts feature
+    that directly serves the spec's optional zone-highlighting suggestion
+  - Numerically robust critical-speed detection (sign-change scan + linear interpolation)
+    rather than hard-coded intersection points
+  - Both themes fully readable, data colors verified identical across light/dark
   weaknesses:
-  - 'Design Excellence is close to a well-configured library default: fontFamily is
-    left as ''inherit'' (generic sans, no typographic personality) and the grid is
-    styled purely via the standard token with no additional refinement beyond the
-    baseline contract.'
-  - Two pairs of critical-speed diamonds nearly touch/overlap near RPM 400 and RPM
-    600 (where 1x/2x order lines cross closely spaced modes) - consider a small radial
-    offset or slightly smaller marker radius in that cluster so the two intersections
-    stay visually distinct.
-  - The spec's optional 'shade or highlight critical speed zones' is not used - adding
-    a subtle plotBands/plotLines highlight around the critical-speed clusters (or
-    per-point data labels for the RPM value) would strengthen data storytelling and
-    give the chart a stronger focal point beyond the diamond markers alone.
-  - Y-axis range (0-110 Hz) leaves a fairly empty band above ~90 Hz for most of the
-    RPM range once the 2x/3x order lines exit the frequency window - not incorrect
-    (this is realistic Campbell-diagram behavior) but a tighter max (e.g. 100) would
-    improve canvas utilization slightly.
-  - Library Mastery is generic Highcharts usage (chart() with a mixed line/scatter
-    series array) - no library-distinctive feature (e.g. plotBands for critical zones,
-    custom point formatter, or data labels on the critical-speed markers) is used
-    to earn extra credit here.
+  - Critical-speed diamonds cluster tightly near 380-650 RPM (low-order, low-frequency
+    crossings); consider a slightly smaller marker radius or a subtle offset in that
+    zone to keep them individually legible
+  - Chart chrome (axis lines, grid) still reads close to a well-configured default
+    rather than a fully bespoke treatment; axis lines/grid could be lightened further
+    for extra polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "campbell-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top-center, clearly readable. X-axis "Rotational Speed (RPM)" and Y-axis "Natural Frequency (Hz)" titles in soft dark gray, both readable with units. Tick labels dark gray, legible. Grid lines are very subtle horizontal lines, present but unobtrusive. Legend sits below the plot in a single horizontal row (4 mode curves, 3 order lines, 1 critical-speed marker), all dark-ink text on the light surface.
-      Data: First mode curve "1st Bending (Forward)" renders in brand green #009E73, "1st Bending (Backward)" in lavender, "2nd Bending" in blue, "1st Torsional" in ochre - correct canonical Imprint order. Three dashed black lines radiate from the origin (1x/2x/3x engine orders). Red diamond markers sit at each curve/order intersection.
-      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light issues.
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title, axis titles, tick labels, and legend all in dark ink - all readable
+      Data: first series (1st Bending Forward) is #009E73 brand green; lavender/blue/ochre follow for the other modes; engine-order lines are black dashed (ink token); critical-speed markers are matte red diamonds; faint pink plotBands mark clustered critical zones
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, axis titles, tick labels, and legend text all render in light off-white/gray tones, clearly visible against the dark surface. Grid lines are faint light lines, subtle but present. No dark-on-dark text anywhere.
-      Data: Mode curve colors are pixel-identical to the light render (green, lavender, blue, ochre) - only the chrome flipped. The engine-order lines flip from black to white (they're bound to the theme-adaptive ink token rather than a fixed color), which is the correct behavior for a chrome/reference element. Critical-speed diamonds remain the same matte red in both renders.
-      Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark failures; brand green remains legible on the near-black surface.
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, axis titles, tick labels, and legend all in light ink - all readable, no dark-on-dark issues
+      Data: identical colors to light render (green/lavender/blue/ochre modes, matte-red critical markers); engine-order lines flip to white dashed (ink token correctly theme-adaptive); plotBands flip to a dark maroon tint
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, tick/legend
-          14px); readable in both themes, no overflow or clipping
+        comment: All sizes explicit, well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Two pairs of critical-speed diamonds sit close together near RPM
-          400 and 600; readable but slightly crowded
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths (3px modes, 2px orders) and diamond radius (7px) well
-          matched to ~61 points/curve and ~8-9 sparse critical markers
+        comment: No text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Critical-speed diamonds cluster tightly near 380-650 RPM
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint hues, no red-green-only encoding
+        comment: Dashed vs solid gives redundant encoding beyond hue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); plot fills a large, balanced share
-          of the canvas with no cut-off content
+        comment: Plot fills the vast majority of canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles include units (RPM, Hz)
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order for remaining modes, matte-red
-          semantic anchor for critical speeds, theme-correct chrome in both renders'
+        comment: Correct canonical order, correct semantic exceptions for red/neutral,
+          theme-correct chrome
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured default: sensible semantic color choices but generic
-          typography (fontFamily: inherit) and no distinctive custom palette work'
+        passed: true
+        comment: Thoughtful semantically-motivated color usage, clearly above default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Baseline token-driven grid/legend styling only; no extra refinement
-          beyond the standard theme contract
+        passed: true
+        comment: Subtle grid, generous whitespace, axis lines still present
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Red diamond markers create a genuine focal point at critical-speed
-          intersections, but the optional zone-highlighting from the spec isn't used
+        passed: true
+        comment: Shaded critical zones + red markers create a clear focal point on
+          the insight
     spec_compliance:
       score: 15
       max: 15
@@ -150,28 +122,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Campbell diagram: natural frequency curves + engine order
-          lines + critical speed markers'
+        comment: Correct Campbell diagram
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Mode curves, order lines, critical markers, all labeled, clean legend
-          distinguishing curve types
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Speed on X, frequency on Y, all data visible within axis ranges
+        comment: X=RPM, Y=Hz, full data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match series
-          names
+        comment: Title format correct, legend matches series
     data_quality:
       score: 15
       max: 15
@@ -181,21 +150,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Forward and backward whirl modes, multiple engine orders, multiple
-          critical-speed crossings all shown
+        comment: Shows gyroscopic stiffening/softening, multiple orders, clustered/isolated
+          critical speeds
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral rotordynamics scenario
+        comment: Neutral, plausible rotordynamics scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequency and RPM ranges, gyroscopic drift magnitudes, and order-line
-          slopes are all physically plausible for turbomachinery
+        comment: Physically sensible RPM/frequency/order values
     code_quality:
       score: 10
       max: 10
@@ -205,59 +173,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> data -> chart flow, only small arrow-function helpers
-          for data prep
+        comment: Linear script, idiomatic helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no randomness
+        comment: Fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for numeric critical-speed root-finding; no
-          fake functionality
+        comment: Clean, appropriately complex, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled on chart and series
+        comment: Correct mount-node contract, animation disabled, credits disabled
     library_mastery:
-      score: 4
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct high-level Highcharts.chart() usage with mixed line/scatter
-          series types, but nothing beyond the basics
+        passed: true
+        comment: Correct high-level API, mixed series types, theme tokens threaded
+          throughout
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Mixed series types and enableMouseTracking:false are generic charting-library
-          capabilities, not distinctively Highcharts
-  verdict: REJECTED
+        passed: true
+        comment: Uses xAxis.plotBands for critical-zone shading, a distinctive Highcharts
+          technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - plot-bands
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - interpolation
-  styling: []
+  styling:
+  - alpha-blending
