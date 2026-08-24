@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-directed: Directed Network Graph
 Library: plotnine 0.15.8 | Python 3.13.15
-Quality: 81/100 | Created: 2026-08-24
+Quality: 88/100 | Created: 2026-08-24
 """
 
 import os
