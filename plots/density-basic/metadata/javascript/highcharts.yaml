@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: density-basic
+created: '2026-08-24T20:33:07Z'
+updated: '2026-08-24T20:45:25Z'
+generated_by: claude-sonnet
+workflow_run: 32774068041
+issue: 912
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-basic/javascript/highcharts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'All four Attempt 1 weaknesses are addressed: axis lines fully removed (xAxis/yAxis
+    lineWidth:0), a linearGradient fill fades opacity toward the tails instead of
+    a flat single-tone fill, a dashed plotLines peak marker with a rotated label now
+    anchors the story at the mode (~310ms), and that plotLines usage is a genuine
+    Highcharts-distinctive feature beyond generic charting APIs'
+  - 'Full spec compliance retained: smooth Gaussian KDE curve (manual Silverman-bandwidth
+    implementation), transparent gradient fill, and an optional rug plot of all 400
+    raw observations'
+  - 'Correct Imprint palette and theme-adaptive chrome in both renders: #009E73 identical
+    between light/dark, backgrounds match #FAF8F1/#1A1A17, ink tokens correctly threaded
+    through title/axis/tick/peak-label styles'
+  - Deterministic, realistic data generation (seeded LCG, sum-of-exponentials reaction-time
+    model) producing a plausible right-skewed distribution that clearly demonstrates
+    skewness and modality
+  - Clean, KISS-structured code with no fake interactivity, explicit font sizing throughout,
+    and animation disabled on both chart and series
+  weaknesses:
+  - Still a single-hue green composition overall; the gradient fill and peak marker
+    add polish but there is no secondary visual accent (e.g. a subtle mean/median
+    reference or shaded interquartile band) to further lift it past a well-executed
+    default look
+  - Only one library-distinctive feature (plotLines) is used; a plotBand marking a
+    range of interest, or dataLabels on the rug, would further showcase Highcharts-specific
+    capability
+  - Rug-plot dots cluster into a near-continuous smear under the peak region (expected
+    given 400 close-together points) — a slightly lower marker opacity in the densest
+    region could preserve more individual-point legibility there
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — correct Imprint light surface.
+      Chrome: Title "density-basic · javascript · highcharts · anyplot.ai" in dark ink, bold, centered near the top. Axis titles "Reaction Time (ms)" (x) and "Probability Density" (y) in medium-gray ink. Tick labels in the same tone, all clearly legible. X/Y axis spines are removed (lineWidth:0); only subtle horizontal gridlines remain. A dashed vertical plotLine at x≈310ms carries a rotated "Peak ≈ 310 ms" label in dark ink, positioned clear of the title and the curve.
+      Data: Single smooth, right-skewed areaspline KDE curve in Imprint green (#009E73) with a horizontal linearGradient fill that is transparent at the left/right tails and most opaque (~35%) under the peak — a deliberate refinement over a flat-opacity fill. Below the x-axis (y pushed slightly negative to make room), a dense strip of small semi-transparent green rug-plot dots represents the 400 raw observations, thinning out visibly in the long right tail.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — correct Imprint dark surface.
+      Chrome: Title, axis titles, and tick labels render in light/off-white tones, clearly legible against the dark background. The dashed peak plotLine and its rotated "Peak ≈ 310 ms" label render in light gray/white — no dark-on-dark failure. Axis spines remain removed; gridlines are subtly visible.
+      Data: The KDE curve, gradient fill, and rug dots use the identical Imprint green (#009E73) as the light render — same shape, peak position (~310ms), and tail behavior — confirming only chrome flipped between themes, not data color.
+      Legibility verdict: PASS — all text clearly readable, no dark-on-dark issues detected.
+
+    Both renders pass the theme-readability checklist with no clipping (AR-09 not triggered) and no overlap between the peak label, title, and curve.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (22/16/14/13px), well-proportioned, readable
+          in both themes including the rotated peak label.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak label sits clear of title and curve; no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width, gradient fill, and rug marker size all well-adapted to
+          400 points.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High contrast single hue, no red-green reliance, CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas gate passed; balanced margins; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Reaction Time (ms) has units; Probability Density is descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 identical across themes; correct #FAF8F1/#1A1A17 backgrounds;
+          chrome tokens correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Gradient fill fading toward tails plus peak annotation lifts it beyond
+          a flat single-tone default, though still single-hue overall.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis spines fully removed (lineWidth:0), grid subtle, whitespace
+          generous.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak plotLine + label now gives the viewer a clear focal point at
+          the distribution's mode; rug plot reinforces the shape.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct KDE/density plot via smoothed areaspline over a computed
+          density curve.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth curve, transparent fill, and optional rug plot all present;
+          Silverman bandwidth.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction time, Y = probability density; full range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; legend correctly omitted for
+          single distribution.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Skewness, mode, and individual observations (rug) all visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Cognitive-test reaction times, neutral and plausible domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 180-800ms range realistic for a reaction-time task with a long tail.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data-generation -> KDE calc -> chart structure, no unnecessary
+          abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser/Highcharts globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real KDE math, no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation:false on chart and series; renders via Highcharts.chart
+          into #container per mount-node contract.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: areaspline with gradient fillColor and plotLines is idiomatic, high-level
+          Highcharts usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: plotLines with a styled label is now a genuine Highcharts-distinctive
+          feature, addressing the prior attempt's gap.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - gradient-fill
+  - alpha-blending
+  - minimal-chrome
