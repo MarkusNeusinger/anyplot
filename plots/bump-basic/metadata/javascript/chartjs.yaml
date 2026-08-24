@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bump-basic
 created: '2026-08-24T19:21:27Z'
-updated: '2026-08-24T19:26:43Z'
+updated: '2026-08-24T19:37:38Z'
 generated_by: claude-sonnet
 workflow_run: 32767325189
 issue: 982
@@ -12,127 +12,126 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bump-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bump-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 95
 review:
   strengths:
-  - 'Perfect Imprint palette compliance: Netflix is #009E73 and the remaining five
-    entities follow the canonical order (#C475FD, #4467A3, #BD8233, #AE3030, #2ABCCD)
-    identically across both themes'
-  - 'Theme chrome is fully correct in both renders: warm off-white / near-black backgrounds,
-    all title/axis/tick/legend text readable with no dark-on-dark or light-on-light
-    failures'
-  - 'Correct idiomatic Chart.js pattern for a bump chart: line type + reversed y-scale
-    + integer stepSize + a tick callback that renders ''#1'', ''#2'', ... instead
-    of raw numbers'
-  - pointBorderColor set to the page background creates a clean 'punch-through' outline
-    on markers, keeping crossing lines legible where they overlap
-  - 'All spec requirements met: inverted rank axis (rank 1 at top), distinct color+label
-    per entity, dot markers at each period, unbroken lines per entity across all 8
-    weeks'
-  - Clean, deterministic, single-block KISS script with animation disabled and no
-    functions/classes
+  - 'Clear narrative device: the subtle #1-row highlight band, the color-matched "Apple
+    TV+ overtakes for #1" annotation, and the thicker/larger lead line work together
+    to give the chart an obvious focal point that directly serves the spec''s rank-change
+    storytelling goal.'
+  - Correct Imprint palette in canonical order (green, lavender, blue, ochre, red,
+    cyan) with data colors pixel-identical between light and dark renders; only chrome
+    flips correctly.
+  - 'All spec notes satisfied: inverted y-axis with rank #1 at top, dot markers at
+    every period, continuous lines per entity, distinct colors and legend labels for
+    all 6 platforms.'
+  - Deterministic, idiomatic Chart.js implementation using the native plugin API (beforeDatasetsDraw/afterDatasetsDraw)
+    for the highlight band and annotation instead of reaching for an external annotation
+    package, exactly matching the library's 'no workarounds' rule.
+  - 'Title format, legend labels, canvas contract (animation: false, no fixed canvas
+    sizing, single canvas appended to #container) are all correct.'
   weaknesses:
-  - 'Design feels like a well-configured default rather than a distinctive composition:
-    canonical palette order, standard right-side legend box, no visual emphasis on
-    the actual story (e.g., the Netflix/Disney+ battle for #1) — consider a subtle
-    line-weight or opacity boost on the lead entity, or a cleaner unboxed legend treatment'
-  - 'Data lacks full-range volatility: Apple TV+ and Paramount+ swap once in week
-    2-3 and then freeze in ranks 5-6 for the remaining 6 of 8 weeks, and neither ever
-    crosses into the top-4 cluster — a stronger bump-chart example would show at least
-    one entity moving across a wider rank range to fully demonstrate the ''overtake''
-    storytelling the chart type is built for'
-  - 'Distinctive-feature usage is modest: the reversed scale + tick-callback + edge-colored
-    markers are the right idiomatic choices but are fairly standard Chart.js configuration
-    rather than something that showcases a feature unique to the library'
+  - The overtake annotation is rendered at 13px, the smallest text element in the
+    chart (title 22px, axis titles 16px, ticks/legend 14px) — bump it to 14px for
+    consistency with the rest of the type scale.
+  - 5 of the 6 series (everything except the bolded Apple TV+ lead line) share identical
+    line weight and marker size and rely on color alone for differentiation. At 6
+    series this is within the palette's safe range, but a distinct dash pattern on
+    1-2 secondary lines would add helpful redundant encoding per the style guide's
+    5-6 series guidance.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bump-basic · javascript · chartjs · anyplot.ai" in dark ink, centered, fully visible with margin above/below. "Week" (x) and "Rank" (y) axis titles in dark ink. Y-axis tick labels are "#1" through "#6" (custom callback), x-axis tick labels "Wk 1"..."Wk 8", both in a softer dark gray. Legend sits at the right edge with 6 entries (Netflix, Disney+, Max, Prime Video, Apple TV+, Paramount+), text in dark ink, comfortably inside the canvas. Only horizontal gridlines are shown, subtle light gray, no vertical grid. All text is clearly readable against the light background — no light-on-light issues.
-      Data: Six lines with round markers (radius 7, white/page-colored marker border) tracking rank 1-6 across 8 weeks. First series (Netflix) is Imprint brand green #009E73; remaining five follow canonical Imprint order (lavender, blue, ochre, matte red, cyan). Multiple crossings visible among the top-4 cluster (Netflix/Disney+/Max/Prime Video); the bottom two (Apple TV+/Paramount+) swap once early then stay flat in ranks 5-6.
-      Legibility verdict: PASS
+      Chrome: Title "bump-basic · javascript · chartjs · anyplot.ai" in dark ink, centered at top, fully visible and not clipped. Y-axis labeled "Rank" with inverted tick labels #1 (top) through #6 (bottom). X-axis labeled "Week" with ticks Wk 1 through Wk 8. A subtle light-gray band highlights the #1 row. A red annotation "Apple TV+ overtakes for #1" sits above the #1 line near week 7-8, color-matched to the Apple TV+ series. Legend at right lists all 6 platforms with circular swatches, fully within the canvas with margin to the right edge.
+      Data: 6 lines in Imprint canonical order — Netflix (#009E73 green), Disney+ (lavender), Max (blue), Prime Video (ochre), Apple TV+ (matte red, thicker/larger markers as the lead series), Paramount+ (cyan). Circular markers at every week for every entity; lines connect the same entity across all 8 weeks; several visible crossings/overtakes (Disney+/Max swap early, Apple TV+'s long climb from #6 to #1 crossing every other series).
+      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and both axis titles render in light/off-white ink, fully legible. Tick labels (rank "#1".."#6", weeks "Wk 1".."Wk 8") render in a lighter secondary gray, clearly visible against the dark surface — no dark-on-dark failures anywhere. Legend text is light-colored and fully legible at the right edge. Gridlines are subtle light-gray horizontal lines only, matching the light render's pattern (inverted for dark chrome).
-      Data: Same six lines, same marker style; data colors are pixel-identical to the light render (Netflix still #009E73, and the rest of the sequence unchanged) — only the chrome (background, text, grid) flipped as required. The same crossing pattern (top-4 cluster active swaps, bottom-2 cluster frozen after week 3) is visible.
-      Legibility verdict: PASS
+      Chrome: Same layout as the light render — title, axis titles, tick labels, legend, and the #1-row highlight band and annotation are all present in theme-adapted light colors (white/light-gray text). The gray highlight band reads as a slightly lighter overlay against the dark background rather than darker, correctly inverted for the theme.
+      Data: Identical 6 data colors to the light render — Netflix green, Disney+ lavender, Max blue, Prime Video ochre, Apple TV+ red, Paramount+ cyan — confirming only chrome flipped, not data colors. The red annotation text remains legible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, tick labels, legend, annotation) renders in light tones clearly distinguishable from the near-black background. Brand green (Netflix) remains vivid and clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, axis titles 16, ticks/legend
-          14); readable in both themes with no overflow or clipping
+        comment: 'All font sizes explicitly set (title 22, axis titles 16, ticks/legend
+          14); readable in both themes at full and mobile scale. Minor: annotation
+          text at 13px is the smallest element in the type scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker collisions in either render
+        comment: 'No text overlaps other text or data; annotation sits clear of the
+          #1 line.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers (radius 7) and 3.5px lines are well-adapted to the sparse
-          8-period, 6-series data
+        comment: Markers and lines well-sized for 8-period/6-series density; lead
+          series (Apple TV+) intentionally emphasized with thicker line and larger
+          markers.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; page-background marker borders add extra
-          contrast where lines overlap
+        comment: Imprint palette provides CVD-safe contrast; no red-green-only signaling.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the large majority of canvas height and width; legend
-          sits close to the plot, not isolated
+        comment: Balanced margins, legend sits near the plot, chart area fills a large
+          majority of the canvas, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Week'' and ''Rank'' are descriptive; neither axis needs a unit'
+        comment: '"Week" and "Rank" are descriptive and appropriate; units not needed
+          for this data type.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order thereafter, theme-correct
-          chrome and identical data colors across both renders'
+        comment: 'First series is #009E73; remaining series follow canonical Imprint
+          order; backgrounds and chrome are theme-correct in both renders.'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default; canonical palette order and standard
-          legend box rather than a distinctive composition
+        passed: true
+        comment: Highlight band, color-matched callout, and differentiated lead-series
+          treatment go clearly beyond a configured default.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle single-axis gridlines and page-colored marker borders show
-          some refinement, but legend/spine treatment is still default
+        passed: true
+        comment: Subtle single-axis grid, generous whitespace, white/page-bg point
+          borders for definition; very close to perfect polish.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Color contrast and marker prominence create some hierarchy, but no
-          explicit emphasis calls out the actual rivalry/insight
+        passed: true
+        comment: 'The highlight band plus annotation plus bolded lead line create
+          an unmistakable focal point — the viewer immediately sees Apple TV+''s rise
+          to #1.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,51 +141,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct bump-chart pattern via reversed line-chart scale
+        comment: 'Correct bump chart: rank-position lines connected across periods
+          on an inverted rank axis.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Inverted rank axis, per-period markers, distinct entity colors/labels,
-          continuous connecting lines all present
+        comment: Inverted y-axis (rank 1 at top), dot markers at each period, distinct
+          colors/labels, lines connect the same entity across all periods — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Week on x, rank on y, all 6 entities × 8 weeks visible
+        comment: X = week (period), Y = rank; all 6 entities × 8 periods visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match entity
-          names
+        comment: Title matches the mandated format exactly; legend labels match entity
+          names.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Shows overtakes within the top-4 cluster but the bottom two entities
-          freeze in ranks 5-6 for 6 of 8 weeks and never cross into the top tier
+        passed: true
+        comment: Shows overtakes, crossings, stability at the bottom, a steady long
+          climb, and a decline — a wide range of bump-chart rank dynamics.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral streaming-platform popularity-ranking scenario
+        comment: Streaming-platform weekly popularity ranking is a real, comprehensible,
+          neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Unique rank per period, internally consistent 1-6 permutation each
-          week
+        comment: Rank values (1-6) are internally consistent across all periods with
+          no logical violations.
     code_quality:
       score: 10
       max: 10
@@ -196,33 +197,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Single-flow script, no functions/classes
+        comment: Straightforward data -> mount -> chart flow; the two plugin objects
+          are the idiomatic Chart.js pattern for this feature, not over-structuring.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Uses only the global Chart.js API, nothing unused
+        comment: Only uses the provided globals; no unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, appropriate complexity, no fake functionality
+        comment: Appropriately complex for the two custom visual effects; no fake
+          UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly; animation:false set
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -230,24 +234,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Textbook idiomatic Chart.js bump-chart implementation: reversed
-          scale, stepSize, tick callback'
+        comment: Native Chart.js plugin hooks (beforeDatasetsDraw/afterDatasetsDraw)
+          used exactly as the library recommends, no external annotation plugin.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses page-background marker borders and rank-formatting callback,
-          but these are fairly standard Chart.js configuration, not a truly unique
-          feature
-  verdict: REJECTED
+        passed: true
+        comment: Custom-drawn plugin layer (highlight band + scale-synced annotation)
+          is a genuinely Chart.js-specific technique, not trivially portable.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting

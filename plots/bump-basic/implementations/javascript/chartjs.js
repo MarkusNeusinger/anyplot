@@ -1,7 +1,7 @@
 // anyplot.ai
 // bump-basic: Basic Bump Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-24
+// Quality: 95/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 
