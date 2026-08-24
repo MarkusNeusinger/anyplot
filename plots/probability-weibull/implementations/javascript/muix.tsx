@@ -9,7 +9,7 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
+import { useDrawingArea, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
@@ -35,7 +35,9 @@ const CENSORED_EVERY = 6; // every 6th-ranked blade pulled for inspection, unfai
 
 const sortedTimes = Array.from({ length: N }, () => {
   const u = rand();
-  return Math.round(ETA_TRUE * Math.pow(-Math.log(1 - u), 1 / BETA_TRUE) * 10) / 10;
+  return (
+    Math.round(ETA_TRUE * Math.pow(-Math.log(1 - u), 1 / BETA_TRUE) * 10) / 10
+  );
 }).sort((a, b) => a - b);
 
 // Never censor the very first (smallest) time — a suspension needs at least
@@ -105,7 +107,9 @@ const yAt632 = weibullY(0.632);
 // evenly spaced in y — that nonlinearity is the whole point of the transform.
 const PROB_TICKS = [1, 2, 5, 10, 20, 30, 50, 63.2, 80, 90, 95, 99];
 const yTickValues = PROB_TICKS.map((p) => weibullY(p / 100));
-const yTickLabels = new Map(PROB_TICKS.map((p, i) => [yTickValues[i], `${p}%`]));
+const yTickLabels = new Map(
+  PROB_TICKS.map((p, i) => [yTickValues[i], `${p}%`]),
+);
 const Y_MIN = weibullY(0.01);
 const Y_MAX = weibullY(0.99);
 
@@ -138,7 +142,119 @@ const TITLE_FONT_SIZE =
 // built-in `label` prop, because ChartsYAxis offsets it by a fixed
 // `tickFontSize + tickSize + 10` regardless of the actual (custom-formatted)
 // tick label width, which collided with "63.2%"-style ticks.
-const MARGIN = { top: 96, right: 64, bottom: 84, left: 140 };
+// `top` is tall enough for the hand-rolled 3-row legend below the title.
+const MARGIN = { top: 132, right: 64, bottom: 84, left: 140 };
+
+// Hand-rolled legend: the built-in ChartsLegend only draws solid-color square
+// swatches, which can't reflect the filled-vs-hollow marker encoding used on
+// the chart. Swatches here mirror the on-chart marks exactly (dash for the
+// fit line, filled circle for failures, hollow ring for suspensions).
+const LEGEND_FONT_SIZE = 13;
+const LEGEND_ROW_HEIGHT = 22;
+const LEGEND_TOP = 60;
+
+function Legend({ right }: { right: number }) {
+  const legendItems = [
+    {
+      kind: "dash" as const,
+      label: `Fit: β≈${beta.toFixed(2)}, η≈${Math.round(eta)} kcycles`,
+      swatchColor: t.ink,
+    },
+    { kind: "filled" as const, label: "Failure", swatchColor: t.palette[0] },
+    {
+      kind: "hollow" as const,
+      label: "Suspended (censored)",
+      swatchColor: t.palette[0],
+    },
+  ];
+  const legendWidth = Math.max(
+    ...legendItems.map(
+      (item) => 22 + item.label.length * LEGEND_FONT_SIZE * 0.58,
+    ),
+  );
+  const left = right - legendWidth;
+  return (
+    <g>
+      {legendItems.map((item, i) => {
+        const y = LEGEND_TOP + i * LEGEND_ROW_HEIGHT;
+        return (
+          <g key={item.kind}>
+            {item.kind === "dash" && (
+              <line
+                x1={left}
+                x2={left + 14}
+                y1={y}
+                y2={y}
+                stroke={item.swatchColor}
+                strokeWidth={2.5}
+                strokeDasharray="6 3"
+              />
+            )}
+            {item.kind === "filled" && (
+              <circle cx={left + 7} cy={y} r={6} fill={item.swatchColor} />
+            )}
+            {item.kind === "hollow" && (
+              <circle
+                cx={left + 7}
+                cy={y}
+                r={6}
+                fill="none"
+                stroke={item.swatchColor}
+                strokeWidth={2.5}
+              />
+            )}
+            <text
+              x={left + 22}
+              y={y}
+              dominantBaseline="central"
+              fontSize={LEGEND_FONT_SIZE}
+              fill={t.inkSoft}
+            >
+              {item.label}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+// Small elevated callout for the eta/63.2% crossing — a filled rounded box
+// behind the label sharpens the focal point beyond a thin dashed line + text.
+function ReferenceCallout({ y, label }: { y: number; label: string }) {
+  const { left, width: drawWidth } = useDrawingArea();
+  const yScale = useYScale();
+  const yPixel = yScale(y);
+  const paddingX = 8;
+  const boxWidth = label.length * 6.8 + paddingX * 2;
+  const boxHeight = 22;
+  const boxX = left + drawWidth - boxWidth;
+  const boxY = yPixel - boxHeight - 8;
+  return (
+    <g>
+      <rect
+        x={boxX}
+        y={boxY}
+        width={boxWidth}
+        height={boxHeight}
+        rx={4}
+        fill={t.elevatedBg}
+        stroke={INK_MUTED}
+        strokeWidth={1}
+      />
+      <text
+        x={boxX + boxWidth / 2}
+        y={boxY + boxHeight / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fontSize={LEGEND_FONT_SIZE}
+        fill={INK_MUTED}
+      >
+        {label}
+      </text>
+    </g>
+  );
+}
 
 // --- Chart (default-exported component — the harness mounts it) -----------
 export default function Chart() {
@@ -146,7 +262,10 @@ export default function Chart() {
   const plotMidY = MARGIN.top + (height - MARGIN.top - MARGIN.bottom) / 2;
 
   return (
-    <ChartContainer width={width} height={height} margin={MARGIN}
+    <ChartContainer
+      width={width}
+      height={height}
+      margin={MARGIN}
       series={[
         {
           type: "line",
@@ -156,22 +275,19 @@ export default function Chart() {
           color: t.ink,
           showMark: false,
           disableHighlight: true,
-          label: `Fit: β≈${beta.toFixed(2)}, η≈${Math.round(eta)} kcycles`,
         },
         {
           type: "scatter",
           id: "failure",
-          label: "Failure",
           data: failureData,
-          markerSize: 9,
+          markerSize: 12,
           color: t.palette[0],
         },
         {
           type: "scatter",
           id: "censored",
-          label: "Suspended (censored)",
           data: censoredData,
-          markerSize: 9,
+          markerSize: 12,
           color: t.palette[0],
         },
       ]}
@@ -210,18 +326,17 @@ export default function Chart() {
       <ChartsYAxis />
       <ChartsReferenceLine
         y={yAt632}
+        lineStyle={{
+          stroke: INK_MUTED,
+          strokeDasharray: "4 4",
+          strokeWidth: 1.5,
+        }}
+      />
+      <ReferenceCallout
+        y={yAt632}
         label={`63.2% · η ≈ ${Math.round(eta)} kcycles`}
-        labelAlign="end"
-        lineStyle={{ stroke: INK_MUTED, strokeDasharray: "4 4", strokeWidth: 1.5 }}
-        labelStyle={{ fill: INK_MUTED, fontSize: 13 }}
       />
-      <ChartsLegend
-        direction="row"
-        position={{ horizontal: "right", vertical: "top" }}
-        itemMarkWidth={14}
-        itemMarkHeight={14}
-        labelStyle={{ fontSize: 13, fill: t.inkSoft }}
-      />
+      <Legend right={width - MARGIN.right} />
       <text
         x={width / 2}
         y={44}
