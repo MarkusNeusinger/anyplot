@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: box-basic
 created: '2026-08-24T16:59:41Z'
-updated: '2026-08-24T17:04:21Z'
+updated: '2026-08-24T17:14:57Z'
 generated_by: claude-sonnet
 workflow_run: 32753547058
 issue: 689
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
+  - Fully idiomatic quantile computation now uses D3's built-in d3.quantile() (d3-array)
+    instead of a hand-rolled function, addressing the prior LM-01 weakness
+  - Insight annotations ('Tightest, highest scores' on Class C, 'Widest spread' on
+    Class D) plus a thicker box stroke on those two categories create genuine visual
+    hierarchy and storytelling, directly addressing the prior DE-01/DE-03 weakness
+  - Outliers now appear in three of five categories (Class A, B, D) instead of just
+    one, showcasing the 'outliers as individual points' spec feature much more clearly
+  - Grid line stroke reads directly from t.grid with no extra opacity multiplier,
+    resolving the prior DE-02 over-tuning concern
   - Canonical Imprint palette order (green, lavender, blue, ochre, matte red) correctly
-    applied across all 5 categories, identical between light and dark renders
+    applied across all 5 abstract categories, identical between light and dark renders
   - 'Theme-adaptive chrome is fully correct: warm off-white/near-black backgrounds,
-    readable text and subtle y-only gridlines in both themes'
-  - 'Complete box-plot feature set: IQR box, median line (visually thicker for hierarchy),
-    1.5*IQR whiskers with caps, and an outlier marker'
-  - Deterministic, seeded data generation (LCG + Box-Muller) with realistic exam-score
-    context and varied per-class distributions
-  - Clean KISS structure with explicit font sizes throughout and a correctly formatted
-    title matching the mandated pattern
+    readable text, and subtle y-only gridlines in both themes'
+  - 'Complete box-plot feature set: IQR box, median line, 1.5*IQR whiskers with caps,
+    and outlier markers, all deterministic via a seeded LCG + Box-Muller sampler'
   weaknesses:
-  - 'LM-01: Reimplements a manual quantile() function instead of using D3''s built-in
-    d3.quantile() (part of the pinned d3-array module) - use the library''s idiomatic
-    API rather than reinventing it'
-  - 'DQ-01: Only one outlier appears across all 5 categories (Class A) - tune the
-    per-class std/n or inject a couple of extra outliers in 1-2 more classes so the
-    ''outliers as individual points'' feature from the spec is showcased more clearly'
-  - 'DE-01/DE-03: Solid, well-configured box plot but visually conventional - no visual
-    hierarchy or emphasis (e.g., annotation or subtle highlight) draws the eye to
-    a specific insight (e.g., Class C''s tight, high-scoring distribution vs Class
-    D''s wide spread)'
-  - 'DE-02: Grid opacity is applied as an extra 0.6 multiplier on top of the already-transparent
-    grid token, which is fine but worth double-checking it isn''t over-tuned relative
-    to the style guide''s 15-25% target when combined with the token''s own alpha'
+  - 'LM-02: Box construction is still a fairly standard manual D3 box-plot pattern
+    (scaleBand + scaleOrdinal + per-group rects/lines) - no feature distinctive to
+    D3 beyond the basics is leveraged'
+  - Box width is capped at 140px while the band per category is much wider, leaving
+    noticeably more whitespace between boxes than within them - slightly wider boxes
+    could improve canvas utilization without crowding
+  - Insight annotations only cover 2 of 5 categories - the narrative could extend
+    a touch further (e.g. a subtle note on Class B or E) without becoming noisy
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Bold dark title "box-basic · javascript · d3 · anyplot.ai" centered at top, dark rotated y-axis label "Exam Score (%)", dark x-axis category labels (Class A-E) and y-axis tick labels (40-100), all clearly legible against the light background. Subtle horizontal gridlines only on the y-axis.
-      Data: Five box-and-whisker plots in canonical Imprint order - Class A green (#009E73), Class B lavender (#C475FD), Class C blue (#4467A3), Class D ochre (#BD8233), Class E matte red (#AE3030). Each box shows a semi-transparent fill, a colored median line, whisker caps, and Class A has one visible outlier circle below its lower whisker.
+      Chrome: Bold dark title "box-basic · javascript · d3 · anyplot.ai" centered at top, dark rotated y-axis label "Exam Score (%)", dark x-axis category labels (Class A-E) and y-axis tick labels (20-100), all clearly legible against the light background. Subtle horizontal gridlines only on the y-axis. Two small italic annotations ("Tightest, highest scores" above Class C, "Widest spread" above Class D) in a soft dark gray, clearly readable.
+      Data: Five box-and-whisker plots in canonical Imprint order - Class A green (#009E73), Class B lavender (#C475FD), Class C blue (#4467A3), Class D ochre (#BD8233), Class E matte red (#AE3030). Each box shows a semi-transparent fill, a colored median line, whisker caps, and outlier circles below/above the whiskers for Class A, Class B, and Class D.
       Legibility verdict: PASS - all text is clearly readable, no dark-on-light or light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, y-axis label, and all tick/category labels render in light-colored text, fully legible against the dark background. Gridlines remain subtle.
-      Data: Same five colors as the light render (green, lavender, blue, ochre, matte red) - confirmed identical, only the chrome (background/text/grid) flipped to the dark theme.
-      Legibility verdict: PASS - no dark-on-dark failures observed; all labels and ticks are clearly visible light-colored text on the near-black surface.
+      Chrome: Title, y-axis label, and all tick/category labels render in light-colored text, fully legible against the dark background. The two italic insight annotations render in a light soft-gray tone, fully readable. Gridlines remain subtle.
+      Data: Same five colors as the light render (green, lavender, blue, ochre, matte red) - confirmed identical, only the chrome (background/text/grid) flipped to the dark theme. Outlier circles remain visible with page-background fill and colored stroke.
+      Legibility verdict: PASS - no dark-on-dark failures observed; all labels, ticks, and annotations are clearly visible light-colored text on the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,20 +62,21 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (16px ticks, 18px axis label, 22px
-          title); readable in both themes, no overflow
+          title, 13px annotations); readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No overlapping text or data elements in either render, including
+          the new insight annotations
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Boxes, whiskers, median lines and outlier marker all clearly visible
-          and appropriately sized
+        comment: Boxes, whiskers, median lines and outlier markers all clearly visible
+          and appropriately sized for 5 categories with 55-71 points each
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -101,33 +102,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order across all 5 categories, identical colors
-          in both themes, theme-correct chrome
+        comment: Canonical Imprint order across all 5 abstract categories, identical
+          colors in both themes, theme-correct chrome
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a bare default (opacity fill + stroke, thicker median line
-          for hierarchy) but not publication-level distinctive design
+        passed: true
+        comment: Opacity fill + colored stroke, thicker stroke and annotations on
+          highlighted categories - clearly above a bare default, though not fully
+          publication-level
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Top/right spines removed, tick marks removed, subtle y-only grid,
-          generous margins
+        comment: Tick marks removed, L-shaped domain kept, subtle y-only grid with
+          no extra opacity multiplier, generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Varied distributions are visible but no explicit visual hierarchy
-          or emphasis highlights a specific insight
+        passed: true
+        comment: Insight annotations on Class C (tightest/highest) and Class D (widest
+          spread) create clear visual hierarchy and guide the viewer to a specific
+          insight
     spec_compliance:
       score: 15
       max: 15
@@ -159,16 +162,16 @@ review:
         comment: Title exactly matches mandated format; no legend needed since categories
           are labeled on the x-axis
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Different spreads/medians per class shown, but only one class exhibits
-          a visible outlier
+        comment: Different spreads/medians per class, and outliers now shown across
+          3 of 5 categories
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -180,7 +183,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Score range (~40-100%) is realistic and internally consistent
+        comment: Score range (~20-100%) is realistic and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -218,34 +221,34 @@ review:
         comment: 'Correctly mounts into #container and uses current d3 v7 join API;
           harness handles the save'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct scale/axis/join usage, but reimplements quantile() manually
-          instead of using D3's built-in d3.quantile() from d3-array
+        passed: true
+        comment: Now uses D3's built-in d3.quantile() from d3-array instead of a manual
+          implementation, plus correct scale/axis/join usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
         comment: Custom per-category group composition and manual box-plot geometry
-          leverage D3's low-level flexibility, though the overall pattern is fairly
-          standard for a D3 box plot
-  verdict: REJECTED
+          leverage D3's low-level flexibility, though the overall pattern remains
+          fairly standard for a D3 box plot
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
   - minimal-chrome
