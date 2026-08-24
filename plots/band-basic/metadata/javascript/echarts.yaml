@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: band-basic
 created: '2026-08-24T15:51:38Z'
-updated: '2026-08-24T15:56:22Z'
+updated: '2026-08-24T16:05:04Z'
 generated_by: claude-sonnet
 workflow_run: 32746751620
 issue: 979
@@ -12,47 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Correct ECharts idiom: two stacked line series (invisible lower bound + span)
-    with transparent line/opacity area is the well-known ECharts technique for building
-    a range band, rather than a workaround.'
-  - 'Central forecast line renders in brand green #009E73 with visible markers, clearly
-    contrasting against the translucent 22%-opacity band fill.'
-  - 'Deterministic LCG-seeded data models a realistic, neutral weather-forecast scenario:
-    diurnal temperature cycle plus a 90% confidence band that widens with lead time,
-    matching real forecast-skill decay.'
-  - Custom tooltip formatter surfaces the forecast value and the confidence range
-    together in the interactive HTML view.
-  - Both light and dark renders correctly theme-adapt background, text, and grid;
-    the data colors stay visually identical across themes with only chrome flipping.
+  - 'Idiomatic ECharts stacked-area technique for the confidence band (hidden lower-bound
+    line + non-negative span series stacked with stack: "confidence-band") — the correct
+    native ECharts recipe for a range/band chart'
+  - 'Realistic, neutral weather-forecast scenario that tells a clear story: uncertainty
+    widens with lead time (classic forecast-skill decay), diurnal cycle plus mild
+    warming drift on the central trend'
+  - 'Theme-correct chrome in both renders — background, ink, inkSoft, and grid all
+    sourced from ANYPLOT_TOKENS; brand green #009E73 identical across light and dark'
+  - Custom tooltip formatter computes the live 90% range per hour, adding real value
+    in the interactive HTML detail view
+  - Deterministic in-memory data via a seeded LCG (seed=42), no fetch/network calls,
+    reproducible across runs
   weaknesses:
-  - 'Legend swatch for "90% confidence band" renders in ECharts'' built-in default
-    color (a yellowish-green, roughly #91cc75) instead of the Imprint brand green
-    used for the actual band fill, because the series never sets itemStyle.color and
-    no top-level color: t.palette array is set. Fix: add itemStyle: { color: t.palette[0]
-    } to the "90% confidence band" series (or set the top-level color: t.palette array)
-    so the legend swatch matches the rendered band exactly.'
-  - 'Y-axis auto-includes zero (no min or scale: true), wasting roughly a quarter
-    of the vertical plot area below the lowest band value (~8.8°C) down to 0. Setting
-    scale: true or an explicit min would let the band/line fill more of the canvas
-    and read as more intentional.'
-  - The confidence band only widens monotonically with lead time; a touch more variation
-    (e.g. temporary narrowing) would better demonstrate how the band responds to changing
-    uncertainty, though this is a minor nice-to-have.
+  - 'Band boundary series ("Lower bound", "90% confidence band") don''t set smooth,
+    while the center line uses smooth: 0.3 — a minor inconsistency between the smoothed
+    trend line and the linearly-interpolated band edges; not very visible at 48pt
+    density but worth aligning for polish'
+  - 'Center-line markers (symbolSize: 6) are modest for a ~48-point series; per the
+    style guide''s density heuristic, slightly larger markers (8-10) would be more
+    prominent without crowding'
+  - x-axis max is pinned to HOURS-1 (47), producing an uneven last tick interval (40
+    to 47) versus the even 10-unit steps before it — minor tick-spacing imbalance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "band-basic · javascript · echarts · anyplot.ai" in dark ink, centered top. Legend below title with two entries ("90% confidence band", "Forecast temperature"). Y-axis label "Temperature (°C)" (rotated), x-axis label "Hours Since Forecast Issued". Tick labels on both axes in soft gray-ink. Subtle horizontal gridlines only (y-axis), no vertical gridlines. All chrome text is clearly legible against the light background.
-      Data: A translucent green band (90% confidence interval) spans roughly 8-29°C over hours 0-47, following a double diurnal hump and widening steadily with lead time. A solid brand-green (#009E73) line with small circular markers tracks the central forecast through the middle of the band. First (and only real) data series correctly uses #009E73.
-      Legibility verdict: PASS — however the legend swatch for "90% confidence band" is a yellow-green dot that does NOT match the actual teal-green band fill color (see weaknesses — likely ECharts' default itemStyle color, not Imprint).
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "band-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend ("90% confidence band", "Forecast temperature") sits just below the title with dark text and green swatches. X-axis "Hours Since Forecast Issued" and Y-axis "Temperature (°C)" are dark, readable, well-balanced in size. Tick labels are legible gray-ink. Subtle horizontal gridlines only (y-axis), no vertical gridlines.
+      Data: Brand green (#009E73) used for both the center forecast line (with circular markers, smooth curve) and the semi-transparent confidence band (~0.22 alpha fill) beneath/around it. Band widens visibly from hour 0 toward hour 47, and narrows again mid-forecast — matches the forecast-skill-decay pattern from the spec.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light ink/off-white, clearly readable against the dark background. Gridlines are subtle and still visible. No dark-on-dark text found anywhere.
-      Data: Band and center line colors are visually identical to the light render (band area teal-green with lower opacity against the dark backdrop, forecast line the same brand green #009E73) — confirms data colors are theme-independent as required.
-      Legibility verdict: PASS — same legend-swatch color mismatch as the light render (cosmetic legend icon only, not the actual data fill).
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, and axis text all render in light ink/gray tones, fully legible against the dark surface. Gridlines remain subtle. No dark-on-dark failures observed — every text element (title, legend, axis names, tick labels) is clearly visible.
+      Data: Data colors are identical to the light render — the forecast line and confidence band both use the same brand green #009E73, only the chrome (background/text/grid) flipped to the dark theme tokens, as required.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures found.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -60,78 +56,75 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22, legend 16, axis name 14,
-          ticks 13); readable in both themes; no overflow.
+          tick 13), readable in both themes; minor uneven x-tick spacing at the end
+          (40->47) keeps this just short of perfect
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Line width 3px + 6px markers well-matched to 48 data points; band
-          fill clearly visible at 22% opacity.
+        comment: Line and band clearly visible; center-line markers (size 6) are a
+          bit modest for ~48 points, could be slightly larger
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue with strong luminance separation between line and translucent
-          fill; not reliant on hue-only distinction.
+        comment: Good contrast between line, band fill, and background in both themes;
+          no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall canvas utilization, but the y-axis auto-includes zero,
-          wasting ~25% of vertical space below the lowest band value.
+        comment: Plot fills the canvas well with balanced margins, legend near the
+          plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Temperature (°C)" and "Hours Since Forecast Issued" are descriptive
-          with units where applicable.'
+        comment: Temperature (°C) includes unit; Hours Since Forecast Issued is descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Data (band fill + forecast line) correctly uses Imprint #009E73
-          and theme-correct backgrounds/chrome, but the confidence-band legend swatch
-          falls back to ECharts'' default color instead of the Imprint palette.'
+        passed: true
+        comment: 'First series is Imprint brand green #009E73, identical across themes;
+          backgrounds and chrome are theme-correct in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Polished translucent band + smooth central line and considered typography;
-          tasteful but fairly conventional composition.
+        comment: Single-hue band design is clean and intentional for the forecast-uncertainty
+          use case, above a bare default but not publication-level custom design
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: true
-        comment: Spines/ticks trimmed, y-only subtle grid; refinement undercut by
-          the wasted zero-baseline whitespace.
+        comment: Y-axis line and tick marks removed, grid limited to subtle horizontal
+          lines, generous whitespace, no legend box
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Widening band vs. lead time visually communicates forecast-skill
-          decay without needing annotations.
+        comment: Visual hierarchy via line weight/markers vs. band alpha guides the
+          eye to the widening-uncertainty story, though no explicit annotation calls
+          it out
     spec_compliance:
       score: 15
       max: 15
@@ -140,53 +133,47 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
         comment: 'Correct band plot: filled region between lower/upper bounds plus
-          a contrasting center line.'
+          a central trend line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Semi-transparent fill (alpha 0.22, within 0.2-0.4 spec range), contrasting
-          central line, smooth interpolation all present.
+        comment: Semi-transparent fill (alpha 0.22, within 0.2-0.4 spec range), contrasting-weight
+          central line, dense hourly points read as smooth
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: X = hours since issue, Y = temperature, full 0-47 range shown correctly.
+        comment: X = hours since issue, Y = temperature; full 0-47 range and full
+          band range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title format exactly matches spec-id · language · library · anyplot.ai;
-          legend labels accurately describe both series.
+        comment: Title matches the mandated format exactly; legend labels describe
+          the band and center line accurately
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: true
-        comment: Shows diurnal rise/fall and steadily widening uncertainty; only monotonic
-          widening, no narrowing variation.
+        comment: Shows band widening with lead time, diurnal center-line oscillation,
+          and warming drift — full feature set of a forecast band
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Neutral, comprehensible weather-forecast scenario.
+        comment: Neutral, comprehensible weather-forecast scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Temperature range, diurnal amplitude, drift, and CI growth are all
-          realistic for a 48h forecast.
+        comment: Temperature range and diurnal amplitude are realistic; band growth
+          with lead time matches real forecast-skill decay
     code_quality:
       score: 10
       max: 10
@@ -195,34 +182,28 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Linear imports -> data -> init -> option; the tiny LCG helper is
-          the library-doc-recommended pattern for browser reproducibility.
+        comment: Flat data -> init -> option script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic.
+        comment: Seeded LCG (seed=42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No imports needed; only browser globals used.
+        comment: No unused imports; echarts global used directly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        passed: true
-        comment: Clean, appropriately commented, no fake UI or interactivity.
+        comment: Clean, appropriately complex, no fake UI or fake-interactivity code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: 'Follows mount-node contract exactly: no explicit size, no devicePixelRatio,
-          animation: false.'
+        comment: 'Follows the mount-node contract correctly: no explicit width/height,
+          no devicePixelRatio, animation: false set'
     library_mastery:
       score: 8
       max: 10
@@ -231,25 +212,24 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        passed: true
-        comment: Uses the canonical ECharts stacked-transparent-area band technique
-          plus axis-trigger tooltip with custom formatter.
+        comment: Textbook ECharts stacked-area band technique with silent hidden series,
+          z-layering, and axis-trigger tooltip
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: The stack + invisible-line/area composition to synthesize a range
-          band is somewhat ECharts-specific, but no advanced features (visualMap,
-          dataZoom, custom series) are used.
-  verdict: REJECTED
+        comment: Stack-based band construction plus a custom range-computing tooltip
+          formatter are echarts-specific touches, though the overall pattern is a
+          well-known recipe rather than a rare feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - layer-composition
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
   - alpha-blending
-  - grid-styling
