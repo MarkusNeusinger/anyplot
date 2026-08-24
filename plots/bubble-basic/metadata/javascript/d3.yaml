@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bubble-basic
 created: '2026-08-24T17:55:07Z'
-updated: '2026-08-24T17:59:18Z'
+updated: '2026-08-24T18:09:48Z'
 generated_by: claude-sonnet
 workflow_run: 32758912770
 issue: 755
@@ -12,46 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-basic/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Correct area-proportional bubble sizing via d3.scaleSqrt with a sensible 8-42px
-    radius range
-  - Deterministic seeded data generation (LCG) producing a plausible negative correlation
-    between funding and growth rate, with team size scaling alongside funding
-  - Clear, well-labeled size legend with a rounded elevated-bg box, placed in a corner
-    that avoids overlapping data
-  - Theme-adaptive chrome is fully correct in both light and dark renders; palette
-    compliance is perfect (#009E73 first series, correct backgrounds)
-  - Explicit font sizing throughout (13-22px), clean L-shaped axes, subtle gridlines,
-    pageBg-colored bubble strokes that help separate overlapping circles
+  - Bubble sizes scaled by area via d3.scaleSqrt, matching the spec's area-not-radius
+    requirement, with a clear three-value size legend (10/50/100 employees)
+  - 'Genuine data storytelling: a least-squares trend line plus an explicit annotation
+    ("Growth slows as funding scales up") gives the viewer an immediate takeaway instead
+    of a raw data dump'
+  - Theme-adaptive bubble stroke (t.pageBg) separates overlapping circles cleanly
+    in both light and dark renders
+  - 'Clean, idiomatic D3: data joins, scales, and axes built directly with explicit
+    font sizing throughout; no functions/classes beyond the small deterministic LCG
+    seed generator'
+  - Realistic, neutral startup-funding dataset (funding vs. growth vs. team size)
+    with a full spread of density and correlation
   weaknesses:
-  - Dense bubble cluster around funding=130-150 merges into a near-solid blob where
-    individual bubbles are hard to distinguish from heavy overlap; lower fill-opacity
-    slightly (e.g. to ~0.45-0.5) or trim the max radius in the r scale to keep bubbles
-    distinguishable in the densest region
-  - Design Excellence is fairly generic/default — single hue with no visual hierarchy
-    beyond the size encoding itself; consider a subtle annotation or callout highlighting
-    the funding-vs-growth trend, or vary stroke weight/opacity by team-size tier for
-    added depth
-  - n=60 data points sits at the low end of the spec's recommended 50-500 range; bumping
-    toward ~100-150 points would give richer feature coverage and a denser, more convincing
-    bubble-chart look
-  - Size legend circles use fixed values [20, 50, 90] rather than values derived from
-    the actual teamExtent — tie the legend values to the data's min/median/max for
-    tighter alignment with what's visible on the chart
+  - Bubble fill-opacity (0.48) sits slightly below the 0.5-0.7 recommended for this
+    density bucket (n=120 falls in the 100-300 point range) - the densest cluster
+    around funding=120-150 has bubbles blending together heavily, making individual
+    points hard to distinguish. Consider nudging opacity to ~0.55-0.6.
+  - The trend annotation ("Growth slows as funding scales up") is small, italic, and
+    sits in a visually busy area of the chart - it could be slightly more prominent
+    (larger font or a subtle background) to fully anchor the story at a glance.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bubble-basic · javascript · d3 · anyplot.ai" in bold dark text at top center. Axis labels "Funding Raised ($M)" (x) and "Revenue Growth Rate (%)" (y) in dark ink, clearly readable. Tick labels in a slightly softer dark gray, legible. Subtle off-white/gray gridlines on both axes. A rounded, elevated off-white legend box top-right titled "Team Size (employees)" with three outlined reference circles (20/50/90) and labels beneath.
-      Data: ~60 green (#009E73) bubbles with ~0.6 fill-opacity and a thin off-white stroke separating overlapping circles. Bubbles are small at low funding and grow larger toward high funding (team size increases with funding), while growth rate trends downward as funding increases — a visible negative correlation. A cluster of bubbles in the funding=130-150 region overlaps heavily, forming a denser blob where individual circles are harder to separate.
-      Legibility verdict: PASS — all title/axis/tick/legend text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Bold dark title "bubble-basic · javascript · d3 · anyplot.ai" centered at top, fully visible with margin above (no clipping). Axis labels "Funding Raised ($M)" and "Revenue Growth Rate (%)" are dark, descriptive, with units. Tick labels dark and legible on both axes, similar size. Grid lines are light gray and subtle but visible. A size legend box ("Team Size (employees)" with 10/50/100 reference circles) sits top-right inside a rounded, bordered card, fully within canvas bounds.
+      Data: ~120 bubbles in Imprint green (#009E73) at ~0.48 fill-opacity with light-colored strokes separating overlaps; a dashed gray regression line with an italic annotation ("Growth slows as funding scales up") calls out the negative funding/growth correlation.
+      Legibility verdict: PASS - all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and axis labels now rendered in light (near-white) text, tick labels in a softer light gray — both fully legible against the dark background. Gridlines are faint light lines, subtle but visible. The legend box is now a dark elevated panel (#242420-like) with light text and light-stroked reference circles.
-      Data: The same ~60 green (#009E73) bubbles, identical color and position/size to the light render — only the chrome (background, text, grid, legend box) has flipped. The stroke around each bubble is now a dark (near-background) color instead of off-white, still separating overlapping bubbles. The same dense cluster near funding=130-150 shows the same heavy overlap.
-      Legibility verdict: PASS — no dark-on-dark text; title, axis labels, tick labels, and legend text all read clearly against the near-black surface.
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Title and axis labels render in light/white text, clearly legible against the dark background. Tick labels light-colored. Grid lines are faint but visible gray. The size legend card uses a dark elevated surface with light text and light-stroked reference circles, fully legible.
+      Data: Bubbles are the same #009E73 green as the light render (confirmed identical data color), now with dark-colored strokes (matching the dark page background) separating overlaps instead of light ones - a correct theme-adaptive touch. The dashed trend line and annotation remain legible in light gray against the dark background.
+      Legibility verdict: PASS - no dark-on-dark failures observed; all text and data elements are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -62,73 +57,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (13-22px), readable in both themes,
-          balanced axis label sizes, title well within width budget
+        comment: All font sizes explicitly set (14-22px); readable at full size and
+          at ~400px mobile scale in both themes; title fits comfortably without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; legend does not collide with data
+        comment: No text-on-text or text-on-data collisions; legend, trend label,
+          and axis text all clear of each other
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Area-correct sqrt scaling and alpha help, but the dense cluster near
-          funding=130-150 blends into a near-solid blob
+        comment: Bubbles well-sized overall, but the densest cluster (funding 120-150)
+          blends together at the current 0.48 alpha
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single hue with consistent alpha and pageBg strokes for separation;
-          CVD-safe
+        comment: Single-hue palette with alpha and stroke separation, not reliant
+          on hue distinctions; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy share of the canvas, legend
-          placed near an empty corner, nothing cut off
+        comment: Plot fills the canvas well with balanced margins; legend nested near
+          the plot, not isolated; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels include units ($M, %)
+        comment: Both axis labels descriptive with units ($M, %)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds and chrome are theme-correct
-          in both renders'
+        comment: 'First (only) series is Imprint #009E73, identical across themes;
+          backgrounds are theme-correct #FAF8F1/#1A1A17; chrome fully theme-adaptive'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a raw default (halo strokes, rounded legend box, consistent
-          typography) but not publication-level custom design
+        passed: true
+        comment: 'Thoughtful touches beyond the required D3 build-out: rounded/bordered
+          legend card, theme-adaptive bubble stroke separators, italic annotation
+          styling'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Subtle grid, L-shaped spines, generous margins, polished legend box;
-          some refinement visible beyond plain defaults
+        passed: true
+        comment: Subtle grid, generous whitespace, refined legend box; axis domain
+          lines are fairly solid rather than minimal
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Negative funding/growth correlation and size-based hierarchy are
-          visible, but nothing calls it out explicitly for the viewer
+        passed: true
+        comment: Regression trend line + explicit annotation surfaces the negative
+          correlation insight directly, though the annotation itself is visually understated
     spec_compliance:
       score: 15
       max: 15
@@ -138,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct bubble chart: joined circles, x/y position, area-scaled
-          size'
+        comment: 'Correct bubble chart: x/y position plus size-encoded third dimension'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Area-based sizing, alpha for overlap, size legend all present per
-          spec notes
+        comment: Area-based sizing (scaleSqrt), alpha transparency for overlap, size
+          legend, bounded min/max bubble size all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=funding, y=growth correctly mapped, domains cover all data via
-          .nice()
+        comment: x=funding, y=growth, size=team correctly mapped; axes show full data
+          range via .nice()
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend title/labels match the team-size data
+        comment: Title matches required format exactly; legend label accurately describes
+          the size encoding
     data_quality:
       score: 14
       max: 15
@@ -169,21 +166,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows a range of positions and sizes with a clear trend; more spread/outliers
-          would strengthen coverage further
+        comment: Wide spread of funding, growth (including negative), and team-size
+          values; shows both dense and sparse regions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible startup-funding business scenario
+        comment: Startup funding-round scenario is realistic, comprehensible, and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Funding ($2-150M), growth rate (-5% to 65%), and team size (10-100)
-          are all realistic and internally consistent
+        comment: Funding ($2-150M), growth (-5 to 67%), and team size (10-100) are
+          all plausible and internally consistent
     code_quality:
       score: 10
       max: 10
@@ -193,57 +191,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions/classes
+        comment: Linear top-to-bottom structure; only helper is the small deterministic
+          LCG seed function
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG(42) for deterministic data
+        comment: Fixed-seed LCG (seed=42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Uses only the d3 global, no unused imports
+        comment: No imports beyond the global d3 bundle
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake UI
+        comment: Appropriate complexity for a bespoke D3 bubble chart; no fake UI
+          or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly follows the mount-node contract, no filesystem writes
+        comment: 'Mounts into #container per the harness contract; current d3 v7 join
+          API'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic data-join pattern, scaleLinear/scaleSqrt, axisBottom/axisLeft,
+          d3-array helpers (extent/max/median/sum)
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scale/axis/join usage, scaleSqrt correctly chosen for area-proportional
-          sizing
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Custom hand-built legend and data-join pattern are reasonably distinctive
-          d3 usage, though not pushing beyond common patterns
-  verdict: REJECTED
+        comment: Custom-built regression trend line and hand-constructed size legend
+          showcase D3's low-level flexibility beyond generic chart-library usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending
   - edge-highlighting
