@@ -1,13 +1,9 @@
-// anyplot.ai
-// bubble-packed: Basic Packed Bubble Chart
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 79/100 | Created: 2026-08-24
 //# anyplot-orientation: square
 // anyplot.ai
 // bubble-packed: Basic Packed Bubble Chart
 // Library: MUI X Charts | React | Node 22
 // License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-24
+// Quality: 79/100 | Created: 2026-08-24
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 
 const t = window.ANYPLOT_TOKENS;
@@ -64,6 +60,36 @@ const PRODUCTS = [
 ];
 
 const divisionByKey = Object.fromEntries(DIVISIONS.map((d) => [d.key, d]));
+
+// --- Per-division label ink, chosen for WCAG contrast against the bubble's OWN
+// fill color (not the page theme) so on-bubble text clears 4.5:1 AA in both
+// themes regardless of how saturated/light the division hue is. -------------
+const DARK_TEXT = "#1A1A17";
+const LIGHT_TEXT = "#FAF8F1";
+function relativeLuminance(hex) {
+  const n = hex.replace("#", "");
+  const channel = (v) => {
+    const c = parseInt(v, 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+  const r = channel(n.slice(0, 2));
+  const g = channel(n.slice(2, 4));
+  const b = channel(n.slice(4, 6));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrastRatio(l1, l2) {
+  const [hi, lo] = l1 > l2 ? [l1, l2] : [l2, l1];
+  return (hi + 0.05) / (lo + 0.05);
+}
+function bestLabelInk(fillHex) {
+  const fillLum = relativeLuminance(fillHex);
+  const darkContrast = contrastRatio(fillLum, relativeLuminance(DARK_TEXT));
+  const lightContrast = contrastRatio(fillLum, relativeLuminance(LIGHT_TEXT));
+  return darkContrast >= lightContrast ? DARK_TEXT : LIGHT_TEXT;
+}
+DIVISIONS.forEach((d) => {
+  d.labelInk = bestLabelInk(d.color);
+});
 
 // --- Layout geometry (local to the ChartContainer surface, below the title) -
 const TITLE_HEIGHT = 56;
@@ -146,8 +172,21 @@ for (let iter = 0; iter < ITERATIONS; iter++) {
   }
 }
 
+// Truncate on a word boundary so a cut lands after a whole word ("Productivity…")
+// rather than mid-word ("Productivity Su…"); when no whole word fits, fall back
+// to initials ("PS") instead of an unreadable 2-3 letter fragment.
+function initials(label) {
+  return label
+    .split(" ")
+    .map((w) => w[0])
+    .join("");
+}
 function truncate(label, maxChars) {
-  return label.length > maxChars ? `${label.slice(0, maxChars - 1)}…` : label;
+  if (label.length <= maxChars) return label;
+  const cut = label.slice(0, maxChars);
+  const lastSpace = cut.lastIndexOf(" ");
+  if (lastSpace >= 3) return `${cut.slice(0, lastSpace)}…`;
+  return maxChars >= 6 ? `${cut}…` : initials(label);
 }
 
 // --- Legend (division colors) -----------------------------------------------
@@ -189,7 +228,7 @@ function Bubbles() {
               cy={b.y}
               r={b.r}
               fill={division.color}
-              fillOpacity={0.88}
+              fillOpacity={0.95}
               stroke={t.pageBg}
               strokeWidth={2}
             >
@@ -202,7 +241,7 @@ function Bubbles() {
                 textAnchor="middle"
                 fontSize={nameFontSize}
                 fontWeight={600}
-                fill={t.pageBg}
+                fill={division.labelInk}
               >
                 {truncate(b.name, maxChars)}
               </text>
@@ -213,8 +252,7 @@ function Bubbles() {
                 y={b.y + (showName ? nameFontSize * 1.1 : 4)}
                 textAnchor="middle"
                 fontSize={valueFontSize}
-                fill={t.pageBg}
-                opacity={0.85}
+                fill={division.labelInk}
               >
                 {`$${b.revenue}M`}
               </text>
