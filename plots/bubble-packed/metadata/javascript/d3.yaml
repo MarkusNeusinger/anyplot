@@ -1,0 +1,233 @@
+library: d3
+language: javascript
+specification_id: bubble-packed
+created: '2026-08-24T18:36:20Z'
+updated: '2026-08-24T18:51:33Z'
+generated_by: claude-sonnet
+workflow_run: 32762546712
+issue: 992
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-packed/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Force-simulation packing with a post-tick clamp and a vertical-spread rebalance
+    produces tight, natural-looking clusters with no wasted whitespace
+  - Relative-luminance label-ink computation keeps in-bubble text legible against
+    any of the four palette fills, in both themes
+  - Hero-bubble stroke emphasis and cluster labels doubling as the legend add real
+    data storytelling without extra chrome
+  weaknesses:
+  - Smallest labeled value line runs close to the lower comfortable font-size bound;
+    consider a slightly higher floor for the value tspan
+  - Small (r <= 50) bubbles carry no value label at all, so their exact magnitude
+    is only inferable by relative size - acceptable for this chart type but worth
+    noting as a minor coverage gap
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Bold dark title centered at top ("R&D Budget by Project · bubble-packed · javascript · d3 · anyplot.ai"); four colored cluster labels (AI & ML green, Cloud Infra purple, Hardware blue, Dev Tools amber) above each bubble group, doubling as the legend. All readable.
+      Data: First categorical series (AI & ML) is #009E73; bubbles packed via force simulation, sized by scaleSqrt (area-proportional) to value; largest bubble per group has a bolder "hero" stroke; large bubbles show two-line name + value ("$118M") in luminance-computed contrast ink; small bubbles unlabeled dots.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title and cluster labels render in light ink, clearly legible against the dark surface. No dark-on-dark issues.
+      Data: Bubble fill colors identical to the light render (green/purple/blue/amber) - only chrome flipped. In-bubble label ink still contrasts correctly since it's computed from bubble fill luminance, not page background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicit and readable in both themes; smallest value-line
+          text is near the lower comfortable bound but still legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Force-collide simulation with post-clamp keeps every bubble non-overlapping
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Radius range scales cleanly with the 24-item dataset; hero stroke
+          reinforces the largest item per cluster
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Computed relative-luminance label-ink swap keeps contrast solid regardless
+          of fill color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Clean margins, four clusters evenly spaced, nothing clipped, canvas
+          gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed; title descriptive and correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; canonical Imprint order; backgrounds correct
+          in both themes; data colors identical across themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Hero-stroke emphasis, luminance-aware label ink, word-wrapped two-line
+          labels with a value line
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No unnecessary chrome; cluster labels double as the legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Group clustering plus hero emphasis creates a clear narrative on
+          top of raw size comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine packed bubble chart via d3-force collision
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area-proportional sizing, non-overlapping pack, optional group clustering,
+          in-circle labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: value maps to radius via scaleSqrt; all 24 items rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; cluster-colored labels map to bubble fill colors
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers packing, area-proportional sizing, clustering, value labeling;
+          small bubbles drop the value label
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: R&D budget by project/department is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $8M-$132M range is sensible for departmental R&D line items
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions justified by contrast computation, slight
+          indirection
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, uses only the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current D3 v7 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3-force with forceX/forceY/forceCollide is the canonical D3 idiom
+          for clustered non-overlapping bubbles
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Luminance-driven label contrast and hero-stroke emphasis are distinctive
+          touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - force-simulation
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
