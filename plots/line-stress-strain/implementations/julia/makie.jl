@@ -66,6 +66,10 @@ offset_line_stress = elastic_modulus .* (offset_line_strain .- offset)
 yield_point_strain = offset + yield_stress / elastic_modulus
 yield_point_stress = yield_stress
 
+# Bounds of the elastic-region inset (zoomed view of the near-vertical rise)
+zoom_x_max = offset_strain_end * 1.3
+zoom_y_max = yield_stress * 1.2
+
 # --- Title (scale fontsize to length; 67-char baseline) -----------------------
 title_str = "Mild Steel Tensile Test · line-stress-strain · julia · makie · anyplot.ai"
 title_ratio = length(title_str) > 67 ? 67 / length(title_str) : 1.0
@@ -121,21 +125,31 @@ text!(ax, (uts_strain + fracture_strain) / 2, label_y; text="Necking",
 
 # 0.2% offset construction line
 lines!(ax, offset_line_strain, offset_line_stress; color=INK_SOFT, linewidth=2, linestyle=:dash)
-text!(ax, offset_strain_end + 0.003, offset_line_stress[end]; text="0.2% offset\nconstruction line",
-      color=INK_SOFT, fontsize=13, align=(:left, :center))
 
 # Stress-strain curve — first (and only) series, always Imprint position 1
 lines!(ax, strain, stress; color=BRAND, linewidth=3.5)
 
-# Elastic modulus annotation
-text!(ax, yield_strain + 0.02, yield_stress * 0.5; text="E ≈ 200 GPa\n(elastic modulus)",
-      color=INK, fontsize=14, align=(:left, :center))
+# Dotted marker box around the elastic region, linking it to the zoomed inset below
+lines!(ax, [0.0, zoom_x_max, zoom_x_max, 0.0, 0.0], [0.0, 0.0, zoom_y_max, zoom_y_max, 0.0];
+       color=INK_SOFT, linewidth=1, linestyle=:dot)
 
-# Critical points
+# Critical points — labels pulled well clear of the crowded origin cluster.
+# Each leader drops straight down from its marker (staying at constant strain,
+# so it never cuts diagonally across the near-flat Luders plateau) before
+# stepping right into open space below the curve for the label text.
 scatter!(ax, [yield_point_strain], [yield_point_stress];
          color=ANYPLOT_AMBER, markersize=22, strokewidth=2, strokecolor=PAGE_BG)
-text!(ax, yield_point_strain, yield_point_stress - 26; text="Yield point\n(0.2% offset)",
-      color=INK, fontsize=13, align=(:left, :top))
+yield_leader_y = 130.0
+lines!(ax, [yield_point_strain, yield_point_strain], [yield_point_stress, yield_leader_y];
+       color=INK_SOFT, linewidth=1)
+text!(ax, yield_point_strain + 0.006, yield_leader_y; text="Yield point\n(0.2% offset)",
+      color=INK, fontsize=13, align=(:left, :center))
+
+offset_leader_y = 205.0
+lines!(ax, [offset_strain_end, offset_strain_end], [offset_line_stress[end], offset_leader_y];
+       color=INK_SOFT, linewidth=1)
+text!(ax, offset_strain_end + 0.006, offset_leader_y; text="0.2% offset\nconstruction line",
+      color=INK_SOFT, fontsize=13, align=(:left, :center))
 
 scatter!(ax, [uts_strain], [uts_stress];
          color=IMPRINT_PALETTE[3], markersize=22, strokewidth=2, strokecolor=PAGE_BG)
@@ -146,6 +160,52 @@ scatter!(ax, [fracture_strain], [fracture_stress];
          color=IMPRINT_PALETTE[5], markersize=24, marker=:xcross, strokewidth=3)
 text!(ax, fracture_strain, fracture_stress - 26; text="Fracture",
       color=INK, fontsize=13, align=(:right, :top))
+
+# --- Elastic-region inset: makes the near-vertical modulus slope genuinely
+# visible instead of just annotated in text (addresses DE-03 review feedback).
+# Occupies the bottom-right of the main axis, where the curve never reaches.
+inset_ax = Axis(
+    fig[1, 1];
+    width = Relative(0.30),
+    height = Relative(0.36),
+    halign = 0.97,
+    valign = 0.07,
+    backgroundcolor = PAGE_BG,
+    title = "Elastic region (zoomed)",
+    titlesize = 12,
+    titlecolor = INK_SOFT,
+    xlabel = "Strain",
+    ylabel = "Stress (MPa)",
+    xlabelsize = 10,
+    ylabelsize = 10,
+    xlabelcolor = INK_SOFT,
+    ylabelcolor = INK_SOFT,
+    xticklabelsize = 9,
+    yticklabelsize = 9,
+    xticklabelcolor = INK_SOFT,
+    yticklabelcolor = INK_SOFT,
+    xtickcolor = INK_SOFT,
+    ytickcolor = INK_SOFT,
+    topspinevisible = true,
+    rightspinevisible = true,
+    topspinecolor = INK_SOFT,
+    rightspinecolor = INK_SOFT,
+    leftspinecolor = INK_SOFT,
+    bottomspinecolor = INK_SOFT,
+    xgridvisible = false,
+    ygridvisible = false,
+)
+
+zoom_mask = strain .<= zoom_x_max
+lines!(inset_ax, strain[zoom_mask], stress[zoom_mask]; color=BRAND, linewidth=2.5)
+lines!(inset_ax, offset_line_strain, offset_line_stress; color=INK_SOFT, linewidth=1.5, linestyle=:dash)
+scatter!(inset_ax, [yield_point_strain], [yield_point_stress];
+         color=ANYPLOT_AMBER, markersize=14, strokewidth=1.5, strokecolor=PAGE_BG)
+text!(inset_ax, zoom_x_max * 0.08, zoom_y_max * 0.62; text="E ≈ 200 GPa",
+      color=INK, fontsize=11, align=(:left, :center))
+
+xlims!(inset_ax, 0, zoom_x_max)
+ylims!(inset_ax, 0, zoom_y_max)
 
 # --- Save ------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit=2)
