@@ -1,0 +1,266 @@
+library: highcharts
+language: javascript
+specification_id: spectrogram-mel
+created: '2026-08-24T09:14:35Z'
+updated: '2026-08-24T09:36:47Z'
+generated_by: claude-sonnet
+workflow_run: 32709339799
+issue: 4672
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/spectrogram-mel/javascript/highcharts/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - Correct dB-scaled Imprint sequential colormap (green -> blue, imprint_seq) for
+    the continuous power data, with identical data colors between the light and dark
+    renders.
+  - 'Clean core-only Highcharts substitute for the missing heatmap module: chart.renderer.rect()
+    + axis.toPixels() produces a pixel-exact mel grid, plus a hand-built colorbar
+    labeled in dB.'
+  - Theme-adaptive chrome (title, axis titles, tick labels, frame) is correctly threaded
+    through window.ANYPLOT_TOKENS in both renders, with a transparent chart background
+    over the page surface.
+  - Mel-to-Hz frequency-edge mapping is implemented correctly and labeled with real
+    Hz values on the y-axis, matching the spec's 'mel-scaled frequency with Hz labels
+    at key mel band edges' requirement.
+  - Deterministic, reproducible synthetic audio generated in-browser via a seeded
+    LCG (no Math.random()), with no network/fetch calls.
+  weaknesses:
+  - The pluck-like envelope (exp(-22 * timeInNote)) decays each 0.3s note to near-silence
+    within roughly its first 100-150ms, so most of every note's duration reads as
+    background noise floor. The result is a mostly uniform green field with thin vertical
+    onset transients rather than sustained horizontal pitch bands tracing the rising-then-falling
+    melody -- the mel-spectrogram's core storytelling feature (visible harmonic/pitch
+    structure over time) is largely absent. Slow the decay rate (or lengthen the note)
+    so each note's fundamental band stays visible for a larger fraction of its 0.3s
+    duration.
+  - Because sustained tone energy is barely visible, there is no clear visual hierarchy
+    or focal point guiding the viewer to the melodic contour -- a slower envelope
+    decay or higher sustained loudness relative to the -90 dB floor would let the
+    melody's shape read clearly at a glance.
+  - n_mels=48 is below the spec's typical guidance of 64-128 mel bands; not a hard
+    requirement, but more bands would show finer frequency granularity.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white -- matches the required light surface.
+      Chrome: Title "spectrogram-mel · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Synthetic melody · 2.4 s at 16 kHz · 48 mel bands" in softer gray, both fully readable. X-axis "Time (s)" (0.0-2.0+ s) and y-axis "Frequency (Hz, mel-scaled)" (80 Hz-850 Hz) labels and tick labels are dark and legible against the light background. The colorbar on the right is labeled "Power (dB)" with tick labels "0 dB", "-45 dB", "-90 dB", all clearly readable.
+      Data: The mel-power grid is rendered as a continuous green-to-blue gradient (imprint_seq: #009E73 -> blue), with the grid mostly a uniform green (low power / near noise floor) punctuated by several vertical blue streaks around note onsets (roughly every ~0.3s, matching the melody's note duration). No red/orange hues present -- consistent with the sequential (non-diverging) colormap mandated for this single-polarity data.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black -- matches the required dark surface.
+      Chrome: Title, subtitle, axis titles, tick labels, and colorbar labels ("Power (dB)", "0 dB", "-45 dB", "-90 dB") all render in light gray/off-white and are clearly legible against the dark background. No dark-on-dark failures observed anywhere (title, axes, colorbar all confirmed).
+      Data: The green-to-blue gradient in the mel-power grid is visually identical to the light render (same #009E73 start hue and same vertical streak positions/intensities) -- only the chrome (background, text, frame stroke) flipped between themes, as required.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, no dark-on-dark issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via style objects; title, subtitle,
+          axis titles, tick labels, and colorbar text all readable in both themes
+          with no overflow or clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; colorbar, labels, and grid are cleanly
+          separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Mel-power cells and colorbar swatches are appropriately sized for
+          the 48x~78 grid density and clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-blue gradient offers good contrast and is CVD-safe;
+          not red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization and balanced margins; colorbar area on the
+          right is slightly tight relative to the left margin.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time (s) and Frequency (Hz, mel-scaled) both include units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses imprint_seq (t.seq[0] -> t.seq[1]) for the continuous power
+          data, correct theme-adaptive backgrounds and chrome in both renders.
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Thoughtful custom colormap and hand-built colorbar clearly above
+          library defaults, but the mostly-uniform data field limits overall visual
+          sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: No grid lines, clean frame, generous margins -- refined chrome, though
+          the outer grid frame is the only structural element.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: The melody's rising-then-falling pitch contour is not clearly visible
+          -- sustained tone energy decays too fast to form readable horizontal pitch
+          bands, so the viewer must hunt for the story rather than see it immediately.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mel-spectrogram heatmap-style rendering via colored grid
+          cells.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: dB conversion, sequential colormap, time x-axis, mel-scaled Hz y-axis,
+          and labeled dB colorbar are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time, Y=mel-scaled frequency, full data range shown on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated 'spectrogram-mel · javascript · highcharts
+          · anyplot.ai' format; colorbar serves as the legend and is correctly labeled.
+    data_quality:
+      score: 11
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 2
+        max: 6
+        passed: false
+        comment: Fast pluck-like decay leaves most of each note's duration at the
+          noise floor, so the plot mostly shows uniform low-energy texture with brief
+          onset transients rather than sustained pitch-tracking bands demonstrating
+          the mel-spectrogram's key feature.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic melody is a neutral, comprehensible audio-ML scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: dB range (-90 to 0), mel-frequency range (80-850 Hz), and note frequencies
+          are all realistic for audio analysis.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom script, but several helper functions (Goertzel,
+          mel/Hz conversion, color interpolation) are needed for the from-scratch
+          DSP pipeline.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (state=42) for all randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a core-only mel-spectrogram pipeline;
+          no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart('container', ...) with no explicit width/height,
+          animation disabled, credits disabled.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer.rect() + axis.toPixels() is the correct core-only
+          substitute given the vendored bundle has no heatmap module; well-executed
+          within that constraint.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom SVG-group rendering, pixel-exact axis-to-pixel mapping, and
+          a manually constructed colorbar go beyond generic chart usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
