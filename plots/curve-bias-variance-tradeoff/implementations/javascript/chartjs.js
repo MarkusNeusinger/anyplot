@@ -1,7 +1,7 @@
 // anyplot.ai
 // curve-bias-variance-tradeoff: Bias-Variance Tradeoff Curve
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-24
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 91/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 
