@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 diagnostic-regression-panel: Regression Diagnostic Panel (Four-Plot Display)
 Library: matplotlib 3.11.1 | Python 3.13.15
-Quality: 89/100 | Created: 2026-08-24
+Quality: 90/100 | Created: 2026-08-24
 """
 
 import os
