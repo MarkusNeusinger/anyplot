@@ -39,21 +39,17 @@ const dataset = classConfig.map((c) => ({
   ),
 }));
 
-// --- Box-plot statistics (median, quartiles, 1.5*IQR whiskers, outliers) ---
-function quantile(sorted, q) {
-  const pos = (sorted.length - 1) * q;
-  const base = Math.floor(pos);
-  const rest = pos - base;
-  return sorted[base + 1] !== undefined
-    ? sorted[base] + rest * (sorted[base + 1] - sorted[base])
-    : sorted[base];
-}
+// Inject a couple of deterministic low-score outliers beyond Class A's so the
+// "outliers as individual points" feature reads clearly across multiple categories.
+dataset[1].scores.push(25); // Class B
+dataset[3].scores.push(20); // Class D
 
+// --- Box-plot statistics (median, quartiles, 1.5*IQR whiskers, outliers) ---
 const boxStats = dataset.map((d) => {
   const sorted = [...d.scores].sort((a, b) => a - b);
-  const q1 = quantile(sorted, 0.25);
-  const median = quantile(sorted, 0.5);
-  const q3 = quantile(sorted, 0.75);
+  const q1 = d3.quantile(sorted, 0.25);
+  const median = d3.quantile(sorted, 0.5);
+  const q3 = d3.quantile(sorted, 0.75);
   const iqr = q3 - q1;
   const lowerFence = q1 - 1.5 * iqr;
   const upperFence = q3 + 1.5 * iqr;
@@ -95,13 +91,15 @@ const y = d3
 const color = d3.scaleOrdinal().domain(boxStats.map((d) => d.label)).range(t.palette);
 const boxWidth = Math.min(x.bandwidth(), 140);
 
+// Insight annotations: draw the eye to the tightest vs. the widest distribution
+const insightNotes = { "Class C": "Tightest, highest scores", "Class D": "Widest spread" };
+
 // --- Y-axis gridlines (subtle, y-only) -------------------------------------
 g.append("g")
   .call(d3.axisLeft(y).ticks(6).tickSize(-iw).tickFormat(""))
   .call((sel) => sel.select(".domain").remove())
   .selectAll("line")
-  .attr("stroke", t.grid)
-  .attr("stroke-opacity", 0.6);
+  .attr("stroke", t.grid);
 
 // --- Box groups -------------------------------------------------------------
 const groups = g
@@ -142,7 +140,7 @@ groups
   .attr("fill", (d) => color(d.label))
   .attr("fill-opacity", 0.35)
   .attr("stroke", (d) => color(d.label))
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", (d) => (insightNotes[d.label] ? 3.5 : 2.5));
 
 // Median line
 groups
@@ -153,6 +151,17 @@ groups
   .attr("y2", (d) => y(d.median))
   .attr("stroke", (d) => color(d.label))
   .attr("stroke-width", 3.5);
+
+groups
+  .filter((d) => insightNotes[d.label])
+  .append("text")
+  .attr("x", boxWidth / 2)
+  .attr("y", (d) => y(d.whiskerMax) - 14)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .style("font-style", "italic")
+  .text((d) => insightNotes[d.label]);
 
 // Outliers
 groups.each(function (d) {
