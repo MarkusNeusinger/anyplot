@@ -32,6 +32,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A disabled `daily-regen` no longer fails every watchdog scan** — the watchdog's
+  cron-liveness rescue read the growing silence of a manually disabled schedule as
+  starvation and tried to dispatch it; GitHub answers `workflow_dispatch` on a disabled
+  workflow with HTTP 422, so the scan step died under `set -e` after sections A and B had
+  already run, and the run reported failure. The rescue now checks the workflow's state
+  first and skips with a notice when it is not `active` (#10540).
 - **Image structured data carries the licensing fields Google recommends** — Search
   Console flagged every implementation page's `ImageObject` for missing `creator`,
   `copyrightNotice`, `creditText`, and `acquireLicensePage`. The bot-page JSON-LD now
