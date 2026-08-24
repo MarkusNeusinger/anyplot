@@ -1,7 +1,7 @@
 // anyplot.ai
 // candlestick-basic: Basic Candlestick Chart
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-24
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 83/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 const UP = t.palette[0]; // #009E73 — bullish (price up)
