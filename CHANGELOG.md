@@ -32,6 +32,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The generation retry cap counted a library's entire failure history, not the current
+  run** — `impl-generate.yml` derives its "3 attempts" budget from hidden marker comments
+  on the spec issue, and nothing ever deletes those markers. A `(spec, library)` pair that
+  failed twice at any point in the past was therefore capped forever: every later dispatch
+  got a single attempt, and one hit of the intermittent "agent reports success but writes
+  no implementation file" failure (8 of 85 generate runs on 2026-08-24) parked it under
+  `impl:<library>:failed`, which nothing retries — the watchdog only reports it as needing
+  manual attention. Repo-wide that state had accumulated on **87 `(spec, library)` pairs**.
+  Marker counting is now scoped to a 12-hour campaign window, so stale history ages out and
+  a fresh dispatch gets its full three attempts. The fail-closed behaviour on an unreadable
+  counter (issue #1010: ~1,200 runs in 38 h) is untouched (#10554).
+- **A failed library no longer claims three attempts it never made** — the cap message read
+  `Marking <lib> as failed: 3 generation attempts` even when the run made exactly one, which
+  reads as "tried repeatedly, must be a genuine capability gap". It now names the counted
+  failures and the window. Three pairs written off under the old wording on 2026-08-24
+  succeeded on the very next dispatch (#10554).
 - **Image structured data carries the licensing fields Google recommends** — Search
   Console flagged every implementation page's `ImageObject` for missing `creator`,
   `copyrightNotice`, `creditText`, and `acquireLicensePage`. The bot-page JSON-LD now
