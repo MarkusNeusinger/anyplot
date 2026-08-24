@@ -1,7 +1,7 @@
 // anyplot.ai
 // candlestick-basic: Basic Candlestick Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-24
+// Quality: 90/100 | Created: 2026-08-24
 
 // The core bundle (no highcharts-more / modules/stock) has no "candlestick"
 // series — that type ships in modules/stock.js, which isn't loaded. Each

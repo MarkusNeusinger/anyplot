@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: candlestick-basic
 created: '2026-08-24T20:04:15Z'
-updated: '2026-08-24T20:09:18Z'
+updated: '2026-08-24T20:19:02Z'
 generated_by: claude-sonnet
 workflow_run: 32770780465
 issue: 812
@@ -12,54 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
+  - 'Repair loop directly addressed the prior review''s Design Excellence / storytelling
+    weaknesses: a data-derived shaded plotBand marks the largest peak-to-trough pullback
+    and a dashed plotLine marks the largest single-day move, both explained in a concise
+    subtitle — a real focal point that guides the viewer instead of a plain default
+    candlestick'
   - 'Correct semantic color mapping — bullish uses brand green #009E73 (Imprint position
     1) and bearish uses the matte-red anchor #AE3030 (Imprint position 5), consistent
-    with the style guide''s explicit finance semantic exception, and identical across
+    with the style guide''s finance semantic exception, and pixel-identical across
     both themes'
-  - 'Clever, well-documented workaround: builds a genuine candlestick (body + high-low
-    wick) from core-only column/line series (invisible floor + colorByPoint body,
-    null-separated wick line pairs) since the native ''candlestick'' series type lives
-    in the unavailable modules/stock bundle'
+  - Genuine OHLC candlestick built from core-only column/line series (invisible floor
+    + colorByPoint body, null-separated wick line pairs) since the native 'candlestick'
+    series type lives in the unavailable modules/stock bundle — a clever, well-documented
+    workaround
   - Deterministic LCG-seeded OHLC data with realistic daily volatility, a clear mid-January
     pullback, an overall uptrend, and a mix of bullish, bearish, and a near-doji day
   - Both themes render correctly with full chrome adaptation (background, title, axis
-    labels, grid) while data colors (green/red) stay pixel-identical between light
+    labels, grid, plotBand tint) while data colors stay pixel-identical between light
     and dark
-  - Wicks are visibly thinner (lineWidth 1.5) than candle bodies (pointWidth 12) per
-    the spec's explicit instruction, and the datetime x-axis formats dates appropriately
+  - Annotation values (pullback size, move size, move date) are computed from the
+    data itself rather than hard-coded, so the callouts stay accurate if the data
+    changes
   weaknesses:
-  - Design Excellence reads as a well-configured default rather than a distinctive,
-    publication-ready design — grid, spines, and typography are correct but unremarkable;
-    consider a stronger visual hierarchy (e.g., a subtle callout on the largest single-day
-    move, or refined legend/box treatment)
+  - 'Header block is missing the mandated ''// License: Highcharts — commercial license,
+    free for non-commercial use (highcharts.com/license)'' line required by prompts/library/highcharts.md
+    — add it back so the commercial-license disclosure ships with every generated
+    snippet'
+  - chart.plotBorderWidth/plotBorderColor draws a full four-sided box around the plot
+    area in both themes; the style guide's default is an L-shaped frame (top/right
+    spines removed) — drop plotBorderWidth or set it to 0 unless a fully enclosed
+    frame is intentionally needed
   - 'VQ-04: hue (green vs. red) is the sole signal distinguishing bullish from bearish
     candles, with no redundant encoding for colorblind readers (e.g., outline weight
-    or a small directional glyph on notable candles) — this is an inherent limitation
-    of candlestick charts industry-wide and matches the spec''s own guidance, so it
-    is a minor deduction rather than a rejection'
+    or a small directional glyph) — this is an inherent limitation of candlestick
+    charts industry-wide and matches the spec''s own guidance, so it remains a minor
+    deduction rather than a rejection'
   - 'Library Mastery: the floor+body+wick construction is functionally correct and
-    clever, but is a generic rect+line workaround rather than something that uniquely
-    leverages a Highcharts-only capability — the canonical high-level ''candlestick''
-    series API isn''t available in the core-only bundle, capping how much idiomatic/distinctive
-    credit is reachable here'
-  - Data storytelling relies only on directional coloring and the overall trend; no
-    explicit annotation or focal-point emphasis (e.g., a callout on the mid-January
-    pullback or the largest move) actively guides the viewer to the most interesting
-    insight
+    clever, and the new plotBands/plotLines annotations add some Highcharts-flavored
+    polish, but the core mechanism is still a generic rect+line workaround rather
+    than something that uniquely leverages a Highcharts-only capability — the canonical
+    high-level ''candlestick'' series API isn''t available in the core-only bundle,
+    capping how much distinctive credit is reachable here'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "candlestick-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top-center; x-axis title "Trading Date" and y-axis title "Share Price (USD)" in medium-dark ink; date tick labels (Jan 3 … Feb 12) and price tick labels (123–138) in a slightly softer dark gray; subtle horizontal gridlines at ~15% opacity; legend ("Bullish (Close ≥ Open)" / "Bearish (Close < Open)") centered below the x-axis title with green/red circular swatches. All chrome text is clearly legible against the light background.
-      Data: 30 candlesticks over Jan 2 – Feb 12, 2024 (weekdays only). Bullish candles render in brand green (#009E73), bearish candles in matte red (#AE3030). Wicks are thin lines in the matching color, clearly thinner than the candle bodies. A near-doji (very thin cross-shaped body) appears around Jan 25. Overall price trend moves from ~$128 up to ~$134 with a visible dip to ~$124 around Jan 18–19.
+      Chrome: Title "candlestick-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top-center; subtitle "Shaded band: largest pullback (-$4.10) · Dashed line: largest single-day move (-$2.00 on Jan 18)" in lighter dark-gray beneath it; x-axis title "Trading Date" and y-axis title "Share Price (USD)" in medium-dark ink; date tick labels (Jan 3 … Feb 12) and price tick labels (123–138) in softer dark gray; subtle horizontal gridlines at low opacity; a thin four-sided plot border in a matching subtle tone; a pale rose-tinted vertical band spans roughly Jan 12–18 marking the largest pullback, with a black dash-dot vertical line near its right edge marking the largest single-day move; legend ("Bullish (Close ≥ Open)" / "Bearish (Close < Open)") centered below the x-axis title with green/red circular swatches. All chrome text is clearly legible against the light background.
+      Data: 30 candlesticks over Jan 2 – Feb 12, 2024 (weekdays only). Bullish candles render in brand green (#009E73), bearish candles in matte red (#AE3030). Wicks are thin lines in the matching color, clearly thinner than the candle bodies. A near-doji (very thin cross-shaped body) appears around Jan 25. Overall price trend moves from ~$128 up to ~$134 with a visible dip to ~$124 around Jan 18–19, which sits inside the annotated pullback band.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis titles, and legend now rendered in light/off-white ink; tick labels in a lighter secondary gray; gridlines remain subtle at low opacity against the dark surface. No title/label/tick text is dark-on-dark — all chrome flipped correctly to light-on-dark.
-      Data: Candle colors are pixel-identical to the light render — same brand green (#009E73) for bullish and matte red (#AE3030) for bearish — confirming only chrome (not data color) changed between themes. Wick-to-body thickness ratio and candle placement are unchanged.
+      Chrome: Same title, subtitle, axis titles, and legend now rendered in light/off-white ink; tick labels in a lighter secondary gray; gridlines and the plot border remain subtle at low opacity against the dark surface; the pullback band renders as a dark maroon tint and the dashed move-line renders in light-gray, both still clearly visible on the dark surface. No title/subtitle/label/tick text is dark-on-dark — all chrome flipped correctly to light-on-dark.
+      Data: Candle colors are pixel-identical to the light render — same brand green (#009E73) for bullish and matte red (#AE3030) for bearish — confirming only chrome (not data color) changed between themes. Wick-to-body thickness ratio, candle placement, and annotation positions are unchanged.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -71,14 +78,16 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
-          14px); readable in both themes, no overflow, balanced axis labels
+        comment: All font sizes explicitly set (title 22px, subtitle 13px, axis titles
+          16px, ticks/legend 14px); readable in both themes, no overflow, balanced
+          axis labels
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or candles in either render
+        comment: No collisions between text, legend, plotBand/plotLine annotations,
+          or candles in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -118,30 +127,32 @@ review:
           semantic anchor #AE3030; correct theme backgrounds in both renders; data
           colors identical across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Looks like a well-configured library default — correct but not exceptional
+        passed: true
+        comment: Data-derived pullback band + move line lift this clearly above a
+          well-configured default; strong, thoughtful use of color and typography
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle single-axis grid and generous whitespace show some refinement,
-          but nothing beyond a clean default
+        comment: Subtle single-axis grid, generous whitespace, and refined annotation
+          opacity (0.08) show real polish, but a full four-sided plotBorder box (rather
+          than the style guide's default L-shaped frame) keeps this from 'perfect'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Color contrast between bullish/bearish and the overall uptrend/pullback
-          create some visual hierarchy, but no explicit focal point or annotation
-          guides the viewer
+        passed: true
+        comment: Shaded pullback band + dashed move-line + explanatory subtitle create
+          a clear, data-driven focal point that guides the viewer to the two most
+          interesting moves in the series
     spec_compliance:
       score: 15
       max: 15
@@ -197,7 +208,7 @@ review:
         comment: Daily swings and overall ~5% move over 30 trading days are realistic
           for a mid-priced stock
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -220,10 +231,12 @@ review:
         comment: No imports; only the provided Highcharts/tokens globals are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Appropriately complex given the core-bundle constraint; no fake functionality
+        passed: false
+        comment: Data-derived annotation logic is clean and appropriately complex,
+          but the header is missing the mandated '// License:' disclosure line from
+          prompts/library/highcharts.md
       - id: CQ-05
         name: Output & API
         score: 1
@@ -240,23 +253,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Strong, clever use of plotOptions/stacking/colorByPoint given that
-          the canonical 'candlestick' series type isn't available in the core bundle
+        comment: Strong use of plotOptions/stacking/colorByPoint plus idiomatic plotBands/plotLines/tooltip
+          formatter, given that the canonical 'candlestick' series type isn't available
+          in the core bundle
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: The floor+body+wick construction uses some Highcharts-specific stacking/tooltip
-          behavior, but is fundamentally a generic rect+line workaround rather than
-          a uniquely Highcharts feature
-  verdict: REJECTED
+        comment: plotBands/plotLines annotations add some Highcharts-flavored polish,
+          but the floor+body+wick construction remains fundamentally a generic rect+line
+          workaround rather than a uniquely Highcharts feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  styling:
+  - alpha-blending
