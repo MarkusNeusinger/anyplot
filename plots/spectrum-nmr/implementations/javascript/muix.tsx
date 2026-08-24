@@ -1,7 +1,3 @@
-// anyplot.ai
-// spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 80/100 | Created: 2026-08-24
 //# anyplot-orientation: landscape
 // anyplot.ai
 // spectrum-nmr: NMR Spectrum (Nuclear Magnetic Resonance)
@@ -27,7 +23,7 @@ function rng() {
 // --- Data: synthetic 1H NMR spectrum of ethanol (CH3-CH2-OH) ---------------
 const PPM_MIN = -0.5;
 const PPM_MAX = 4.6;
-const POINT_COUNT = 4000;
+const POINT_COUNT = 6000;
 const step = (PPM_MAX - PPM_MIN) / (POINT_COUNT - 1);
 const chemicalShift = Array.from({ length: POINT_COUNT }, (_, i) => PPM_MIN + i * step);
 const intensity = chemicalShift.map(() => rng() * 0.6); // clean baseline, minimal noise
@@ -49,12 +45,14 @@ function addMultiplet(center, splitting, relativeWeights, halfWidth, unitHeight)
 
 // TMS internal standard — singlet reference at 0 ppm
 addMultiplet(0.0, 0, [1], 0.006, 24);
-// CH3 — triplet (coupled to adjacent CH2, J ≈ 7 Hz)
-addMultiplet(1.2, 0.016, [1, 2, 1], 0.007, 34);
+// CH3 — triplet (coupled to adjacent CH2); narrow lines with wide spacing so
+// the 1:2:1 pattern resolves into three distinct peaks, not one blob
+addMultiplet(1.2, 0.024, [1, 2, 1], 0.004, 34);
 // OH — singlet, slightly broadened by proton exchange
 addMultiplet(2.6, 0, [1], 0.012, 52);
-// CH2 — quartet (coupled to adjacent CH3, J ≈ 7 Hz)
-addMultiplet(3.7, 0.016, [1, 3, 3, 1], 0.007, 20);
+// CH2 — quartet (coupled to adjacent CH3); narrow lines with wide spacing so
+// the 1:3:3:1 pattern resolves into four distinct peaks, not one blob
+addMultiplet(3.7, 0.024, [1, 3, 3, 1], 0.004, 20);
 
 const PEAK_LABELS = [
   { shift: 0.0, label: "0.00 (TMS)" },
@@ -93,6 +91,7 @@ export default function Chart() {
         yAxis={[
           {
             min: -5,
+            max: 90,
             label: "Intensity (a.u.)",
             tickLabelStyle: { fontSize: 14 },
             labelStyle: { fontSize: 16 },
