@@ -1,0 +1,239 @@
+library: d3
+language: javascript
+specification_id: curve-bias-variance-tradeoff
+created: '2026-08-24T20:24:30Z'
+updated: '2026-08-24T20:29:01Z'
+generated_by: claude-sonnet
+workflow_run: 32773057397
+issue: 4134
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Excellent data storytelling: underfitting/overfitting zone shading is tinted
+    with the same Imprint colors as the Bias² and Variance curves that dominate each
+    zone, tying the visual encoding to the concept'
+  - Optimal-complexity point is called out with a dashed vertical guide, a marker
+    dot, and a text annotation — exactly matching the spec's request
+  - The mandated 'Total Error = Bias² + Variance + Irreducible Error' formula is rendered
+    as a subtitle
+  - 'Theme-adaptive chrome is correct in both renders: identical data colors, correct
+    #FAF8F1/#1A1A17 backgrounds, all text legible in both themes with no dark-on-dark
+    or light-on-light failures'
+  - 'Palette compliance: Total Error (the headline curve) uses brand green #009E73,
+    Bias² and Variance follow canonical Imprint order, and Irreducible Error uses
+    the theme-adaptive ink token as a semantically appropriate ''baseline/reference
+    line'' choice'
+  - Direct end-of-line labels replace a legend, with a collision-avoidance pass ensuring
+    no vertical overlap between adjacent labels
+  - Each curve gets a distinct line style (solid, dashed, dotted, fine-dotted) in
+    addition to color, which is good redundant encoding for accessibility
+  - Clean, deterministic, KISS-structured code with no functions/classes, only d3.js
+    and no unused imports
+  weaknesses:
+  - Title occupies only ~35-40% of the plot width, below the comfortable 50-70% band
+    from the style guide — not a rule violation (no overflow/clipping), but the title
+    could carry a bit more visual weight
+  - 'LM-02: the direct-label collision-avoidance is a generic JS loop rather than
+    a D3-native technique (e.g. d3-force / d3-quadtree label placement), so distinctive-feature
+    usage is present but modest'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "curve-bias-variance-tradeoff · javascript · d3 · anyplot.ai" in bold dark ink, italic formula subtitle "Total Error = Bias² + Variance + Irreducible Error" below it, dark axis titles "Model Complexity (Low → High)" and "Prediction Error", dark tick labels on both axes, subtle horizontal gridlines. All text is clearly readable against the light background.
+      Data: Four curves — Total error (thick solid brand green #009E73, U-shaped), Bias² (dashed lavender/purple, decreasing), Variance (dotted blue, increasing), Irreducible error (fine-dotted dark ink, flat horizontal line at y=1). A dashed vertical guide plus a green marker dot and "Optimal complexity ≈ 6.8" label mark the minimum of the total-error curve. Two lightly tinted background zones (pink-lavender left, gray-blue right) labeled "Underfitting zone" / "Overfitting zone" sit behind the curves, tinted to match the Bias²/Variance curve colors respectively. Direct end-of-line text labels (color-matched to each curve) replace a legend.
+      Legibility verdict: PASS — no overlapping text, no clipped elements, first series correctly uses Imprint brand green #009E73.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Same title/subtitle/axis-title/tick-label content, all re-rendered in light ink (white/off-white) — fully legible against the dark background. Gridlines are subtle light hairlines. The irreducible-error line correctly re-renders in white/light ink (it uses the theme-adaptive `ink` token) instead of the light-render's dark ink.
+      Data: Identical data colors to the light render — Total error is still #009E73 green, Bias² still lavender, Variance still blue — only the chrome (background, text, gridlines, zone-tint contrast) flips. No dark-on-dark or light-on-light failures anywhere; brand green remains clearly visible on the dark surface.
+      Legibility verdict: PASS — all text and curves are readable, chrome is fully theme-adaptive, data colors match the light render exactly.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable at full size in both themes;
+          title is smaller than the ideal 50-70% band (no overflow) which keeps this
+          from a perfect score
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Collision-avoided end labels, zone labels, and optimal-point annotation
+          never collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights (2.5-4px) and distinct dash patterns are well matched
+          to ~81-point curve density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant encoding via distinct dash styles in addition to color;
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy majority of canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles, direction cue on x-axis (Low → High)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/primary series is #009E73, secondary series follow canonical
+          Imprint order, irreducible-error baseline uses the theme-adaptive ink token;
+          both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Zone tints color-matched to their dominant curve, clear typographic
+          hierarchy, formula subtitle — clearly above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: L-shaped spines only, single subtle y-grid, generous margins, polished
+          detail throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        comment: Zone shading + optimal-point callout + bold total-error line create
+          an immediate, clear insight for the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct multi-curve theoretical decomposition chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: All 4 curves, optimal-complexity marker, formula annotation, and
+          under/overfitting zones are present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X=model complexity, Y=prediction error, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format exactly matches the mandated pattern; direct end-of-line
+          labels correctly substitute for a legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Decreasing bias, increasing variance, constant irreducible error,
+          and U-shaped total error all clearly shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Standard, neutral ML-education theoretical decomposition, matches
+          the spec's own recommended formulas
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Plausible textbook-shaped curves and minimum point
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fully deterministic functional data generation, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: Only the d3 global is used, nothing unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: 'Correct #container mount pattern, current d3 v7 API, animations
+          not used'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Proper scales/axes/line-generator/curve-interpolation patterns, .join()
+          used for label data-binding
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Data-join-driven collision-avoided labeling and curve interpolation
+          go beyond generic chart config, though the collision logic itself is plain
+          JS rather than a D3-native technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - direct-labeling
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
