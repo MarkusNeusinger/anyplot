@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: arc-basic
 created: '2026-08-24T15:21:40Z'
-updated: '2026-08-24T15:26:02Z'
+updated: '2026-08-24T15:33:26Z'
 generated_by: claude-sonnet
 workflow_run: 32743542108
 issue: 991
@@ -12,128 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/arc-basic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - 'Correct, idiomatic ECharts approach: a custom series with renderItem drawing
-    bezierCurve shapes, since ECharts has no native arc-diagram type — this is genuinely
-    distinctive to the library.'
-  - Edge weight is redundantly encoded through both stroke opacity and line width,
-    which is CVD-safe and avoids relying on hue alone.
-  - Node degree is encoded via marker size, adding a second structural signal (hub
-    visibility) beyond the raw arcs.
-  - Realistic, neutral data-pipeline narrative (Ingest → Publish) with deterministic,
-    in-memory data and no randomness needed.
-  - 'Both themes are theme-correct: arcs stay identical #009E73 green, chrome (background,
-    ink, node fill/border) flips correctly, and all text is legible in both renders.'
+  - 'The yAxis.max whitespace bug from attempt 1 is fixed: the tallest arc''s rendered
+    peak (accounting for the quadratic bezier''s midpoint peak) now fills the plot
+    area, eliminating the ~40-45% empty band above the arcs.'
+  - Correct, idiomatic ECharts approach — a custom series with renderItem drawing
+    bezierCurve shapes, since ECharts has no native arc-diagram type.
+  - Edge weight is redundantly encoded through both stroke opacity and line width
+    (CVD-safe, no reliance on hue alone).
+  - Node degree is encoded via marker size, adding a second structural signal for
+    hub visibility.
+  - Realistic, neutral data-pipeline narrative (Ingest to Publish) with deterministic,
+    in-memory data.
+  - 'Both themes are theme-correct: arcs stay identical #009E73 green, chrome flips
+    correctly, all text legible in both renders.'
   - 12 rotated category labels along the baseline read cleanly with no overlap.
   weaknesses:
-  - 'Large unused vertical space (roughly 40-45% of canvas height) between the title
-    and the arcs. Root cause: yAxis max is computed from the raw bezier control-point
-    height (`baseline + maxDistance*1.15`), but the custom series only supplies a
-    single control point (cpx1/cpy1), so ECharts renders a quadratic bezier whose
-    visual peak sits at the midpoint between baseline and control height — peak ≈
-    (baseline + controlHeight) / 2, not controlHeight. The tallest arc therefore only
-    reaches about half of the axis range, leaving the top of the canvas empty. Fix:
-    size yAxis max from the actual rendered peak (e.g. `baseline + maxDistance/2 *
-    1.15`), or raise the control-point height so the visual peak reaches closer to
-    yAxis max, so the plot fills more of the 3200x1800 canvas.'
-  - 'Design Excellence is capped by that same layout imbalance: the weight/degree
-    encoding concept is strong, but the top-heavy whitespace makes the composition
-    read as under-filled rather than publication-ready. Once the vertical space is
-    reclaimed, consider slightly larger baseline arcs or a touch more visual refinement
-    (e.g. subtle grid-free zone shading) to push DE-01/DE-02 further.'
+  - Arcs are single-hue (opacity/width only) — the spec's optional 'color coding edges
+    by type or weight' suggestion is only partially explored; a subtle secondary encoding
+    (e.g. distance-based hue shift within the Imprint palette) could add another layer
+    of storytelling.
+  - Aesthetic sophistication is solid but not exceptional — the composition relies
+    on the weight/degree dual-encoding alone; slightly more refined touches (e.g.
+    a soft baseline guide or emphasis on the highest-weight path) would push Design
+    Excellence further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "arc-basic · javascript · echarts · anyplot.ai" centered near the top in dark ink, clearly readable. 12 stage labels (Ingest, Validate, Dedupe, Enrich, Normalize, Transform, Aggregate, Score, Rank, Filter, Cache, Publish) rotated ~30deg beneath the baseline in soft dark-gray ink, all legible with no overlap.
-      Data: Nodes are dark circular markers with a light ring border, sized by degree (busier stages are visibly larger). Arcs above the baseline are all brand green (#009E73), varying in opacity (~0.32-0.72) and stroke width (~1.5-5.5px) proportional to edge weight — thin/faint arcs for weak (weight=1) long-range dependencies, thick/opaque arcs for strong (weight=9) short-range dependencies.
-      Legibility verdict: PASS — all text is clearly readable against the light background. Notable layout issue (not a legibility failure): roughly the top 40-45% of the canvas, between the title and the tallest arc, is empty whitespace.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "arc-basic · javascript · echarts · anyplot.ai" centered near the top in dark ink, clearly readable. 12 stage labels (Ingest -> Publish) rotated ~30 degrees beneath the baseline, legible with no overlap or clipping.
+      Data: Nodes are dark circular markers with a light ring border, sized by degree (busier stages get bigger dots). Arcs above the baseline are brand green (#009E73), varying in opacity (~0.32-0.72) and stroke width (~1.5-5.5px) proportional to edge weight. The tallest arc (Ingest -> Publish) now reaches close to the top of the plot area, filling the vertical space that was empty in attempt 1.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and stage labels, now rendered in light ink/soft-gray against the dark background — fully readable, no dark-on-dark failures observed.
-      Data: Node markers flip to light fill with a dark ring border (correct theme-adaptive chrome), while the arcs remain the identical #009E73 green with the same opacity/width encoding as the light render — confirms data colors are unchanged across themes, only chrome flipped.
-      Legibility verdict: PASS — all text and data elements are clearly readable against the dark background. Same top-of-canvas whitespace issue as the light render (a layout concern, not a legibility concern).
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title and axis labels, now rendered in light ink — fully readable, no dark-on-dark failures.
+      Data: Node markers flip to light fill with a dark ring border (correct theme-adaptive chrome), while arcs remain the identical #009E73 green with the same opacity/width encoding, confirming data colors are unchanged across themes — only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 22px, axis labels 15px); all text
-          readable in both themes with no overlap.
+        comment: Title, tick labels readable in both themes at correct size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 12 rotated stage labels read cleanly with no collisions.
+        comment: 12 rotated labels and nodes have no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Weight-encoded opacity/width make arcs distinguishable; the faintest
-          (weight=1) long-range arc is intentionally subtle but still visible.
+        comment: Arc opacity/width and node size scale sensibly with weight/degree
+          for a 12-node, 20-edge graph
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue encoding with redundant width+opacity channels, CVD-safe,
-          no red-green reliance.
+        comment: Single-hue arcs with opacity+width redundancy, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Top ~40-45% of the canvas is empty whitespace because yAxis max is
-          sized off the raw bezier control-point height rather than the actual rendered
-          quadratic-bezier peak (peak sits at ~50% of control height above baseline).
+        passed: true
+        comment: 'Attempt-1 whitespace bug fixed: yAxis.max now sized off the actual
+          quadratic-bezier peak, arcs fill the plot area, nothing cut off'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stage names along the baseline are fully descriptive; title matches
-          mandated format.
+        comment: Title matches mandated format; stage labels are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Arcs use Imprint palette[0] (#009E73) identically in both themes;
-          backgrounds and chrome are theme-correct.
+        comment: 'First series #009E73, correct backgrounds both themes, identical
+          data color across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Weight+degree dual encoding is thoughtful and above generic defaults,
-          but the top-heavy whitespace undercuts the polish.
+        passed: true
+        comment: Weight/degree dual encoding is thoughtful and now well-proportioned;
+          single-hue arcs cap it short of exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines/gridlines removed and chrome is minimal, but whitespace is
-          unbalanced (all wasted space concentrated above the plot) rather than generous/even.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
+        comment: Minimal chrome (no axis line/ticks/gridlines), balanced whitespace
+          now that the layout bug is fixed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
         comment: Node size (degree) and arc weight (opacity+width) create real visual
-          hierarchy — hubs and strong dependencies are immediately visible.
+          hierarchy, now unobscured by empty canvas space
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct arc diagram: nodes on a horizontal line, curved arcs above.'
+        comment: 'Correct arc diagram: nodes on a horizontal line, arcs above'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Arc height grows with node distance, arcs are semi-transparent for
-          overlap, labels are readable, edges are weight-encoded.
+        comment: Arc height proportional to distance, semi-transparent overlapping
+          arcs, readable node labels, weight encoding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 nodes and 20 edges are mapped and visible.
+        comment: Nodes and edges map correctly; all 12 stages and 20 dependencies
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches `arc-basic · javascript · echarts · anyplot.ai`; no
-          legend needed for single-series data.
+        comment: Title matches mandated format exactly; single-series plot needs no
+          legend
     data_quality:
       score: 14
       max: 15
@@ -173,22 +165,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows varying edge weights (1-9), varying node distances, and varying
-          node degree — not fully exhaustive (e.g. no isolated node) but strong coverage.
+        comment: Weighted edges, degree, and distance-based arc height all shown;
+          edge-type color coding not explored (optional per spec)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Data-pipeline stage dependencies is a real, neutral, comprehensible
-          scenario.
+        comment: Data-pipeline stage dependencies are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Weight range and dependency structure are plausible for a pipeline
-          DAG.
+        comment: 12 nodes, 20 edges — within the spec's 10-50 node range, weights
+          1-9 sensible
     code_quality:
       score: 10
       max: 10
@@ -198,32 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data -> init -> option structure; renderItem is required by
-          the ECharts custom-series API, not incidental complexity.
+        comment: No functions/classes, flat top-to-bottom script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data.
+        comment: Fully deterministic, hard-coded in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global echarts is used.
+        comment: No unused imports; only the echarts global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for a custom arc-diagram series.
+        comment: renderItem/bezierCurve custom series is appropriately complex for
+          the task, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: animation:false, mount-node contract respected, no deprecated API.
+        comment: animation:false set; harness owns file output per the JS mount-node
+          contract
     library_mastery:
       score: 9
       max: 10
@@ -233,16 +225,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Custom series + renderItem is the correct, recommended ECharts pattern
-          for chart types with no built-in support.
+        comment: Custom series is the correct idiomatic path since ECharts has no
+          native arc-diagram type
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Programmable renderItem/bezierCurve rendering is a feature distinctive
-          to ECharts, not trivially replicated elsewhere.
-  verdict: REJECTED
+        comment: Programmable renderItem/bezierCurve rendering is distinctive to ECharts
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -251,5 +242,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - minimal-chrome
+  - alpha-blending
