@@ -80,6 +80,7 @@ chart.setOption({
     max: SPEED_MAX,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { show: false },
   },
   yAxis: {
@@ -91,6 +92,7 @@ chart.setOption({
     min: 0,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
+    axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
   series: [
@@ -129,6 +131,16 @@ chart.setOption({
         borderWidth: 1.5,
       },
       z: 10,
+      // Light resonance-zone shading around each intersection — showcases
+      // markArea while reinforcing the diamond markers as the focal points.
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.amber, opacity: 0.12 },
+        data: criticalSpeeds.map(([s, f]) => [
+          { xAxis: s - 100, yAxis: f - 12 },
+          { xAxis: s + 100, yAxis: f + 12 },
+        ]),
+      },
     },
   ],
 });
