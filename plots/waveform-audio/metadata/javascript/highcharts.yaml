@@ -1,0 +1,245 @@
+library: highcharts
+language: javascript
+specification_id: waveform-audio
+created: '2026-08-24T10:36:12Z'
+updated: '2026-08-24T10:47:41Z'
+generated_by: claude-sonnet
+workflow_run: 32717145054
+issue: 4563
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/waveform-audio/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Both repair-loop fixes are correctly applied: Y-axis title now reads "Amplitude
+    (normalized)" per the spec''s data notes, and the tooltip is re-enabled with a
+    `t=…s, a=…` formatter instead of being fully disabled'
+  - Implements min/max envelope downsampling exactly as the spec requires (900 buckets
+    from 12,000 raw samples), avoiding aliasing artifacts while keeping the dense
+    waveform crisp
+  - 'Both renders are theme-correct: warm off-white/near-black backgrounds, identical
+    Imprint green (#009E73) waveform fill in both themes, visible zero-line reference'
+  - New darker-green crest stroke (#00694A, lineWidth 1.5) outlining the semi-transparent
+    fill (fillOpacity 0.55) adds a layered, more polished look versus the flat single-tone
+    fill from attempt 1
+  - Synthetic speech-like signal (syllable amplitude envelope × multi-harmonic voice
+    carrier with fixed-seed jitter) is realistic, neutral, and creates four distinct
+    amplitude peaks with a natural visual rhythm
+  - Fully deterministic via a fixed-seed LCG, generated in-memory, no fetch/import/network
+    dependency
+  - Title format matches the mandated pattern exactly; legend correctly omitted for
+    a single series; canvas gate passed with no clipping or overflow
+  weaknesses:
+  - 'Design excellence is still moderate: the crest stroke is a nice touch, but there
+    is no explicit emphasis distinguishing the loudest syllable (peak near t=0.9s)
+    from the others — a viewer must infer the story themselves rather than have it
+    pointed out'
+  - CQ-01 KISS structure uses two small helper functions (lcgRandom, syllableEnvelope)
+    rather than flat inline code — reasonably justified for audio synthesis but a
+    minor deviation from the pure Imports→Data→Plot→Save shape
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "waveform-audio · javascript · highcharts · anyplot.ai" renders bold and dark, clearly legible. X-axis title "Time (s)" with ticks 0.0-1.5 in 0.1 increments; Y-axis title "Amplitude (normalized)" with ticks at -1, -0.5, 0, 0.5, 1 — all dark ink, fully readable. Subtle horizontal grid lines with a slightly bolder zero-baseline reference line.
+      Data: Single-series waveform filled in Imprint green (#009E73, fillOpacity 0.55) with a darker green crest stroke (#00694A), symmetric above/below zero, showing four syllable-shaped amplitude envelopes (peaks near t=0.2, 0.55, 0.9, 1.25s) separated by near-silent gaps. First (and only) series correctly uses palette position 1.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title, axis titles, and tick labels now render in light/off-white text against the dark background — clearly legible, no dark-on-dark issues. Grid lines and the zero-baseline remain visible at reduced but sufficient contrast.
+      Data: Waveform is the identical green fill (#009E73) and crest stroke (#00694A) shape/amplitude as the light render — confirmed only chrome (background, text, grid) flips between themes; data colors are unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes, well-proportioned
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Min/max envelope downsampling keeps the dense waveform clear without
+          aliasing
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, balanced proportions, no cutoff
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis now reads "Amplitude (normalized)" per spec; X-axis "Time
+          (s)" has units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes; backgrounds match
+          FAF8F1/1A1A17'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: false
+        comment: Layered fill + darker crest stroke elevates it above a flat single-tone
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid, generous whitespace, crest stroke adds
+          polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Four syllable peaks create a natural focal rhythm, but no explicit
+          emphasis on the loudest syllable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct time-domain waveform
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill, zero-line, min/max envelope rendering, symmetric
+          amplitude
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=time (s), Y=amplitude, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated pattern exactly; legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Dynamics, silence gaps, transient shape via syllable envelopes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Speech-like signal, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12,000 samples at 8kHz over 1.5s, amplitude bounded [-1,1]
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: Two small helper functions justified for audio synthesis, minor structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set correctly on chart and series
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic area/plotLines usage; tooltip now tuned with a useful formatter
+          for the HTML output
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Min/max bucket downsampling into paired area vertices is a distinctive,
+          well-chosen technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
