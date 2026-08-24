@@ -74,6 +74,34 @@ const pad = (Math.max(...allHighs) - Math.min(...allLows)) * 0.08;
 const yMin = Math.floor(Math.min(...allLows) - pad);
 const yMax = Math.ceil(Math.max(...allHighs) + pad);
 
+// --- Focal-point annotations (derived from the data, not hard-coded) --------
+// Largest single-day move, by |close - open|.
+let moveIdx = 0;
+candles.forEach((c, i) => {
+  const move = Math.abs(c.close - c.open);
+  const bestMove = Math.abs(candles[moveIdx].close - candles[moveIdx].open);
+  if (move > bestMove) moveIdx = i;
+});
+const moveCandle = candles[moveIdx];
+const moveSize = Math.abs(moveCandle.close - moveCandle.open);
+
+// Largest peak-to-trough pullback (max drawdown on closing price).
+let peakIdx = 0;
+let drawdownPeakIdx = 0;
+let drawdownTroughIdx = 0;
+let maxDrawdown = 0;
+candles.forEach((c, i) => {
+  if (c.close > candles[peakIdx].close) peakIdx = i;
+  const drawdown = candles[peakIdx].close - c.close;
+  if (drawdown > maxDrawdown) {
+    maxDrawdown = drawdown;
+    drawdownPeakIdx = peakIdx;
+    drawdownTroughIdx = i;
+  }
+});
+const pullbackFrom = candles[drawdownPeakIdx].time - dayMs / 2;
+const pullbackTo = candles[drawdownTroughIdx].time + dayMs / 2;
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -81,6 +109,8 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    plotBorderWidth: 1,
+    plotBorderColor: t.grid,
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -88,12 +118,35 @@ Highcharts.chart("container", {
     text: "candlestick-basic · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
+  subtitle: {
+    text:
+      `Shaded band: largest pullback (-$${maxDrawdown.toFixed(2)}) · ` +
+      `Dashed line: largest single-day move (${moveCandle.bullish ? "+" : "-"}$${moveSize.toFixed(2)} on ${Highcharts.dateFormat("%b %e", moveCandle.time)})`,
+    style: { color: t.inkSoft, fontSize: "13px" },
+  },
   xAxis: {
     type: "datetime",
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Trading Date", style: { color: t.inkSoft, fontSize: "16px" } },
+    plotBands: [
+      {
+        from: pullbackFrom,
+        to: pullbackTo,
+        color: Highcharts.color(downColor).setOpacity(0.08).get(),
+        zIndex: 0,
+      },
+    ],
+    plotLines: [
+      {
+        value: moveCandle.time,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1.5,
+        zIndex: 3,
+      },
+    ],
   },
   yAxis: {
     min: yMin,
@@ -107,6 +160,9 @@ Highcharts.chart("container", {
     enabled: true,
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
+    symbolRadius: 6,
+    itemDistance: 24,
+    padding: 12,
   },
   tooltip: {
     outside: false,
