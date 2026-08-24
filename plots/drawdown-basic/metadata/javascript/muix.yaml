@@ -1,0 +1,267 @@
+library: muix
+language: javascript
+specification_id: drawdown-basic
+created: '2026-08-24T23:27:39Z'
+updated: '2026-08-24T23:32:25Z'
+generated_by: claude-sonnet
+workflow_run: 32788649667
+issue: 3752
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Comprehensive spec coverage: implements every optional Notes bullet — peak-to-trough
+    shading, amber max-drawdown reference line with label, green recovery shading
+    with label, dual-axis NAV overlay, and a stats line with max drawdown %, underwater
+    duration, and recovery time.'
+  - 'Correct semantic color usage: the drawdown series uses Imprint red (palette[4]
+    = #AE3030) for the loss/decline semantics instead of the ordinal first slot, and
+    amber/green shaded windows reinforce the decline-to-recovery narrative — a well-justified
+    application of the style guide''s semantic-exception rule (loss to red, recovery
+    to green, warning to amber).'
+  - 'Distinctive MUI X usage: a custom DrawdownWindow overlay built with useXScale/useDrawingArea
+    hooks layers shaded rectangles directly into the chart''s SVG coordinate space
+    — a technique unique to MUI X''s hook-based extension model, not easily replicated
+    in other libraries.'
+  - Theme-adaptive chrome is fully correct in both renders — text, grid, the secondary
+    NAV line, and shaded-region backgrounds all flip appropriately while the two data
+    colors (red drawdown, green recovery highlight, amber warning) stay identical
+    across themes.
+  - Explicit font sizing throughout (title 22px, stats 15px, axis label 16px, tick/legend
+    14px, annotation 13px) with no reliance on library defaults, and a secondary series
+    (Portfolio NAV) rendered in a muted ink tone with dashing so it stays legible
+    without competing with the primary drawdown series.
+  weaknesses:
+  - Secondary y-axis label 'NAV' has no unit/context (e.g., 'NAV (Index, base 100)')
+    — minor VQ-06 nit.
+  - DrawdownWindow is a small helper component that departs from strict KISS (imports
+    -> data -> plot) — acceptable as the idiomatic way to layer custom overlays via
+    MUI X hooks, but it does add structural complexity versus a single flat script.
+  - Title occupies only ~28% of plot width, well under the style guide's 50-70% target
+    band for the mandated title format — a consequence of the short spec-id rather
+    than a defect (no overflow or clipping), but there was room to size it slightly
+    larger.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white.
+      Chrome: Bold dark title "drawdown-basic · javascript · muix · anyplot.ai" top-left; a secondary gray stats line ("Max drawdown -45.5% · Underwater 353d (Mar 8, 2024 -> Feb 24, 2025) · Recovered in 121d") beneath it; rotated "Drawdown (%)" y-axis label on the far left; "NAV" label on the secondary right axis; dark tick labels on both axes and the x-axis date ticks (Jan 24 ... Dec 25). All chrome text renders in dark ink, clearly legible against the light background. A subtle horizontal grid is visible without competing with the data.
+      Data: Primary series is a red (#AE3030-family) filled drawdown area with a bold red outline, dropping to about -45% around Feb/Mar 2025 then recovering to ~0%; a secondary dashed dark-gray line traces the underlying Portfolio NAV against the right axis. An amber-tinted rectangle spans the peak-to-trough decline window with an amber dashed vertical reference line and "Max drawdown -45.5%" label; a green-tinted rectangle spans the trough-to-recovery window with a green dashed line and "Recovered" label. Legend top-right shows "Drawdown" (red swatch) and "Portfolio NAV" (dark swatch).
+      Legibility verdict: PASS — all title, stats, axis, tick, legend, and annotation text is clearly readable against the light surface; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black.
+      Chrome: Same layout as the light render — title, stats line, axis labels, tick labels, and legend all render in light ink/off-white tones. The amber and green shaded windows are still visible as subtly tinted overlays against the dark background. Grid lines are faint and theme-correct.
+      Data: The red drawdown fill and outline are visually identical to the light render (same #AE3030-family red), confirming data-color consistency across themes. The secondary NAV series correctly flips from dark gray (light theme) to a light gray/white dashed line (dark theme) so it stays visible against the dark background — this is the theme-adaptive "ink-soft" token, not a hardcoded color. Amber and green reference lines/labels are unchanged in hue and remain legible.
+      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, stats, ticks, axis labels, legend, annotations) is light-colored and clearly readable against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, stats 15px, axis 16px,
+          ticks/legend 14px, annotations 13px); readable in both themes with no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights (2.5 primary, 1.75 dashed secondary) and 0.55 fill opacity
+          well adapted to ~500-point daily series; no markers needed at this density.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red vs. muted-gray NAV line distinguished by hue, dashing, and axis
+          separation — not reliant on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the large majority of the canvas with balanced margins;
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Drawdown (%) has explicit units; NAV axis label present though could
+          add index context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Red (palette[4]) for loss, amber for warning, brand green for recovery
+          — valid semantic-exception usage; theme-correct backgrounds and chrome in
+          both renders.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping and layered annotations clearly
+          above library defaults, though styling stays within MUI X's conventional
+          dashboard look rather than a fully custom typographic system.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, generous whitespace; left/right/bottom axis
+          lines are functionally required for the dual-axis layout rather than leftover
+          chrome.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Shaded decline/recovery windows plus annotated reference lines make
+          the drawdown-and-recovery story immediately legible without requiring the
+          viewer to interpret raw lines.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct drawdown chart with filled area below zero baseline.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec Notes bullets present: drawdown calc, semi-transparent
+          fill, max-drawdown highlight, recovery indicator, key stats, zero line,
+          secondary NAV series.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = date, primary Y = drawdown %, secondary Y = NAV; all data visible
+          across the full date range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels ('Drawdown',
+          'Portfolio NAV') match the series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows a dominant deep drawdown with full recovery plus a smaller
+          secondary drawdown near the end, demonstrating multiple drawdown/recovery
+          cycles.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible portfolio-NAV finance scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Drawdown percentages, NAV levels, and durations are all internally
+          consistent and realistic for a multi-year equity/portfolio series.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly imports -> data -> plot, but includes a small DrawdownWindow
+          helper component required for the overlay technique.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG generator.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only imports that are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for the overlay technique; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export harness contract; skipAnimation set; no manual
+          mount/save code.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses multi-axis LineChart, ChartsReferenceLine, slotProps.legend,
+          and valueFormatters idiomatically.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom overlay via useXScale/useDrawingArea hooks is genuinely MUI
+          X-specific and not trivially replicated elsewhere.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
+  - grid-styling
