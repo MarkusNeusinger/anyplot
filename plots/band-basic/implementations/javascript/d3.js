@@ -52,7 +52,21 @@ g.append("g")
   .selectAll("line")
   .attr("stroke", t.grid);
 
-// --- Band (semi-transparent prediction interval) -------------------------------
+// --- Band (semi-transparent prediction interval, soft vertical gradient) -------
+// A single-hue gradient (still built only from t.palette[0]) that fades from the
+// band's outer edges toward its vertical middle, echoing the center trend line.
+const bandGradient = svg
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", "bandGradient")
+  .attr("x1", "0")
+  .attr("x2", "0")
+  .attr("y1", "0")
+  .attr("y2", "1");
+bandGradient.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.16);
+bandGradient.append("stop").attr("offset", "50%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.36);
+bandGradient.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.16);
+
 const area = d3
   .area()
   .x((d) => x(d.day))
@@ -60,7 +74,7 @@ const area = d3
   .y1((d) => y(d.yUpper))
   .curve(d3.curveMonotoneX);
 
-g.append("path").datum(data).attr("d", area).attr("fill", t.palette[0]).attr("fill-opacity", 0.28).attr("stroke", "none");
+g.append("path").datum(data).attr("d", area).attr("fill", "url(#bandGradient)").attr("stroke", "none");
 
 // --- Center trend line -----------------------------------------------------------
 const line = d3
@@ -77,6 +91,27 @@ g.append("path")
   .attr("stroke-width", 3.5)
   .attr("stroke-linejoin", "round")
   .attr("stroke-linecap", "round");
+
+// --- Insight annotation: the forecast band widens sharply with lead time -------
+const first = data[0];
+const last = data[data.length - 1];
+const widenFactor = (last.yUpper - last.yLower) / (first.yUpper - first.yLower);
+g.append("line")
+  .attr("x1", x(last.day))
+  .attr("x2", x(last.day))
+  .attr("y1", y(last.yLower))
+  .attr("y2", y(last.yUpper))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "4,3");
+g.append("text")
+  .attr("x", x(last.day) - 14)
+  .attr("y", y(last.yUpper) - 12)
+  .attr("text-anchor", "end")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-style", "italic")
+  .text(`Spread widens ~${widenFactor.toFixed(1)}× from day 1 to day ${last.day}`);
 
 // --- Axes -------------------------------------------------------------------------
 const xAxis = g
@@ -108,6 +143,61 @@ g.append("text")
   .style("font-size", "16px")
   .text("River Streamflow (m³/s)");
 
+// --- Interactive hover: guide line + day/lower/center/upper readout ------------
+// Genuine D3 interactivity for the HTML detail view; hidden by default so the
+// static PNG (no synthetic mouse events) is unaffected.
+const bisectDay = d3.bisector((d) => d.day).left;
+const hoverGroup = g.append("g").style("opacity", 0);
+const hoverLine = hoverGroup
+  .append("line")
+  .attr("y1", 0)
+  .attr("y2", ih)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1)
+  .attr("stroke-dasharray", "3,3");
+const hoverDotLower = hoverGroup.append("circle").attr("r", 4).attr("fill", t.pageBg).attr("stroke", t.palette[0]).attr("stroke-width", 2);
+const hoverDotCenter = hoverGroup.append("circle").attr("r", 5).attr("fill", t.palette[0]);
+const hoverDotUpper = hoverGroup.append("circle").attr("r", 4).attr("fill", t.pageBg).attr("stroke", t.palette[0]).attr("stroke-width", 2);
+const hoverText = hoverGroup.append("text").attr("fill", t.ink).style("font-size", "14px").style("font-weight", "600");
+
+g.append("rect")
+  .attr("width", iw)
+  .attr("height", ih)
+  .attr("fill", "none")
+  .attr("pointer-events", "all")
+  .on("mousemove", function (event) {
+    const [mx] = d3.pointer(event, this);
+    const day = x.invert(mx);
+    let i = bisectDay(data, day, 1);
+    i = Math.min(Math.max(i, 1), data.length - 1);
+    const d0 = data[i - 1];
+    const d1 = data[i];
+    const d = day - d0.day > d1.day - day ? d1 : d0;
+    const px = x(d.day);
+    const labelOnRight = px < iw - 210;
+    const lx = labelOnRight ? px + 14 : px - 14;
+
+    hoverLine.attr("x1", px).attr("x2", px);
+    hoverDotLower.attr("cx", px).attr("cy", y(d.yLower));
+    hoverDotCenter.attr("cx", px).attr("cy", y(d.yCenter));
+    hoverDotUpper.attr("cx", px).attr("cy", y(d.yUpper));
+
+    hoverText.selectAll("tspan").remove();
+    hoverText.attr("text-anchor", labelOnRight ? "start" : "end");
+    [`Day ${d.day}`, `Upper ${d.yUpper.toFixed(1)} m³/s`, `Center ${d.yCenter.toFixed(1)} m³/s`, `Lower ${d.yLower.toFixed(1)} m³/s`].forEach(
+      (lineText, idx) => {
+        hoverText
+          .append("tspan")
+          .attr("x", lx)
+          .attr("y", 24 + idx * 18)
+          .text(lineText);
+      }
+    );
+
+    hoverGroup.style("opacity", 1);
+  })
+  .on("mouseleave", () => hoverGroup.style("opacity", 0));
+
 // --- Title ------------------------------------------------------------------------
 svg
   .append("text")
@@ -115,7 +205,7 @@ svg
   .attr("y", 48)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
+  .style("font-size", "24px")
   .style("font-weight", "600")
   .text("Streamflow Forecast · band-basic · javascript · d3 · anyplot.ai");
 
