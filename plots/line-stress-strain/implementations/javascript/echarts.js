@@ -177,8 +177,7 @@ chart.setOption({
             symbol: "circle",
             label: {
               formatter: "Yield ≈ 250 MPa\n(0.2% offset)",
-              position: "right",
-              distance: 12,
+              position: [28, 44],
             },
           },
           {
@@ -271,7 +270,7 @@ chart.setOption({
       data: aluminumCurve,
       showSymbol: false,
       smooth: false,
-      lineStyle: { color: t.palette[2], width: 3 },
+      lineStyle: { color: t.palette[1], width: 3 },
       z: 1,
     },
   ],
