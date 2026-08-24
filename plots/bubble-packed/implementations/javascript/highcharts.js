@@ -1,13 +1,9 @@
 // anyplot.ai
 // bubble-packed: Basic Packed Bubble Chart
-// Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-24
-//# anyplot-orientation: square
-// anyplot.ai
-// bubble-packed: Basic Packed Bubble Chart
 // Library: Highcharts 12.6.0 | Node 22.23.2
 // License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: pending | Created: 2026-08-24
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -56,16 +52,48 @@ const MAX_VALUE = Math.max(...ITEMS.map((d) => d.value));
 const RADIUS_SCALE = 122 / Math.sqrt(MAX_VALUE);
 const radiusFor = (value) => RADIUS_SCALE * Math.sqrt(value);
 
+// Fit a data label to its circle: prefer a two-line "name + value" label,
+// fall back to a single shrunk-to-fit line, then an ellipsis-truncated line,
+// so text never spills past the bubble's edge regardless of radius.
+const LABEL_PAD = 0.86;
+const AVG_CHAR_WIDTH = 0.6;
+const MIN_FONT = 9;
+const MAX_FONT = 14;
+function fitLabel(name, value, radius) {
+  const usableWidth = radius * 2 * LABEL_PAD;
+  const fits = (text, fontSize) => text.length * fontSize * AVG_CHAR_WIDTH <= usableWidth;
+
+  let fontSize = Math.min(MAX_FONT, Math.max(MIN_FONT, Math.round(radius * 2 * 0.16)));
+  const valueLine = `$${value}K`;
+  const twoLineHeight = fontSize * 1.15 * 2;
+  if (twoLineHeight <= usableWidth && fits(name, fontSize) && fits(valueLine, fontSize)) {
+    return { text: `${name}<br/>${valueLine}`, fontSize };
+  }
+
+  while (fontSize > MIN_FONT && !fits(name, fontSize)) {
+    fontSize -= 1;
+  }
+  if (fits(name, fontSize)) {
+    return { text: name, fontSize };
+  }
+
+  const maxChars = Math.floor(usableWidth / (fontSize * AVG_CHAR_WIDTH));
+  if (maxChars < 3) return null;
+  return { text: `${name.slice(0, maxChars - 1)}…`, fontSize };
+}
+
 const GROUP_START_RADIUS = 220;
 const nodes = ITEMS.map((item) => {
   const groupIndex = GROUPS.indexOf(item.group);
   const theta = Math.PI / 4 + groupIndex * (Math.PI / 2);
   const cx = GROUP_START_RADIUS * Math.cos(theta);
   const cy = GROUP_START_RADIUS * Math.sin(theta);
+  const r = radiusFor(item.value);
   return {
     ...item,
     groupIndex,
-    r: radiusFor(item.value),
+    r,
+    labelPlan: fitLabel(item.label, item.value, r),
     x: cx + (rand() - 0.5) * 160,
     y: cy + (rand() - 0.5) * 160,
   };
@@ -153,6 +181,9 @@ const series = GROUPS.map((group, gi) => ({
       name: n.label,
       marker: { radius: n.r },
       custom: { value: n.value, radius: n.r },
+      dataLabels: n.labelPlan
+        ? { enabled: true, format: n.labelPlan.text, style: { fontSize: `${n.labelPlan.fontSize}px` } }
+        : { enabled: false },
     })),
 }));
 
@@ -186,12 +217,16 @@ Highcharts.chart(
       itemHoverStyle: { color: t.ink },
     },
     tooltip: {
+      useHTML: true,
       backgroundColor: t.elevatedBg,
       borderColor: t.grid,
       style: { color: t.ink, fontSize: "13px" },
       pointFormatter: function pointFormatter() {
+        const swatch =
+          `<span style="display:inline-block;width:9px;height:9px;border-radius:50%;` +
+          `background:${this.color};margin-right:5px;"></span>`;
         return (
-          `<b>${this.name}</b><br/>` + `${this.series.name}<br/>` + `$${this.custom.value}K / month`
+          `<b>${this.name}</b><br/>${swatch}${this.series.name}<br/>` + `$${this.custom.value}K / month`
         );
       },
     },
@@ -205,14 +240,7 @@ Highcharts.chart(
           states: { hover: { lineWidthPlus: 2 } },
         },
         dataLabels: {
-          enabled: true,
-          formatter: function formatter() {
-            if (this.point.custom.radius < 34) return null;
-            return this.point.custom.radius > 60
-              ? `${this.point.name}<br/>$${this.point.custom.value}K`
-              : this.point.name;
-          },
-          style: { color: "contrast", textOutline: "1px contrast", fontSize: "13px", fontWeight: "600" },
+          style: { color: "contrast", textOutline: "1px contrast", fontWeight: "600" },
         },
       },
     },
