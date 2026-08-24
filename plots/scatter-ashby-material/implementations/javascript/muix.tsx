@@ -57,7 +57,7 @@ const FAMILIES = [
   },
   {
     name: "Ceramics",
-    rho: [1800, 4200],
+    rho: [2000, 4200],
     e: [10, 450],
     materials: [
       "Alumina", "Silicon Carbide", "Silicon Nitride", "Zirconia",
@@ -68,7 +68,7 @@ const FAMILIES = [
   },
   {
     name: "Composites",
-    rho: [500, 2200],
+    rho: [500, 1900],
     e: [5, 200],
     materials: [
       "CFRP", "GFRP", "Kevlar Composite", "Boron Composite",
@@ -99,11 +99,22 @@ const FAMILIES = [
   },
 ];
 
+// A few named materials are common knowledge and would look wrong if sampled
+// from their family's full range — dense refractory metals/ceramics and PTFE
+// sit well outside the rest of their family, so they get a tight sub-range
+// around their real published density/modulus instead.
+const MATERIAL_OVERRIDES = {
+  Tungsten: { rho: [18900, 19600], e: [385, 411] },
+  "Tungsten Carbide": { rho: [15400, 15800], e: [530, 650] },
+  PTFE: { rho: [2150, 2200], e: [0.4, 0.75] },
+};
+
 const familyPoints = FAMILIES.map((family) => ({
   ...family,
   points: family.materials.map((material) => {
-    const logRho = Math.log10(family.rho[0]) + rng() * (Math.log10(family.rho[1]) - Math.log10(family.rho[0]));
-    const logE = Math.log10(family.e[0]) + rng() * (Math.log10(family.e[1]) - Math.log10(family.e[0]));
+    const range = MATERIAL_OVERRIDES[material] ?? { rho: family.rho, e: family.e };
+    const logRho = Math.log10(range.rho[0]) + rng() * (Math.log10(range.rho[1]) - Math.log10(range.rho[0]));
+    const logE = Math.log10(range.e[0]) + rng() * (Math.log10(range.e[1]) - Math.log10(range.e[0]));
     return { material, rho: 10 ** logRho, e: 10 ** logE };
   }),
 }));
@@ -154,7 +165,7 @@ function convexHull(points) {
   return lower.concat(upper);
 }
 
-const HULL_MARGIN = 26;
+const HULL_MARGIN = 15;
 
 // Renders each family as an inflated convex-hull region behind the points,
 // with a direct color-matched label — the standard Ashby-chart convention
@@ -184,7 +195,7 @@ function FamilyRegions() {
             <path
               d={d}
               fill={t.palette[i]}
-              fillOpacity={0.12}
+              fillOpacity={0.07}
               stroke={t.palette[i]}
               strokeOpacity={0.6}
               strokeWidth={1.5}
@@ -274,7 +285,7 @@ function PerformanceGuideLines() {
 const TITLE = "scatter-ashby-material · javascript · muix · anyplot.ai";
 const SUBTITLE = "Density vs. Young's modulus · dashed lines mark constant specific stiffness E/ρ";
 
-const MARGIN = { top: 130, right: 60, bottom: 90, left: 110 };
+const MARGIN = { top: 130, right: 105, bottom: 90, left: 110 };
 
 export default function Chart() {
   return (
