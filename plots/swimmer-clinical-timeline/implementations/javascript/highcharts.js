@@ -1,7 +1,7 @@
 // anyplot.ai
 // swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-24
+// Quality: 93/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 // ANYPLOT_TOKENS has no "muted" anchor — derive it the same way the style

@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: swimmer-clinical-timeline
 created: '2026-08-24T10:11:51Z'
-updated: '2026-08-24T10:17:44Z'
+updated: '2026-08-24T10:28:12Z'
 generated_by: claude-sonnet
 workflow_run: 32714774384
 issue: 4670
@@ -12,22 +12,25 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/swimmer-clinical-timeline/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
   - 'Correct swimmer-plot structure: horizontal bars sorted by duration, consistently
     longest at the bottom / shortest at the top of the inverted axis, patient IDs
     on the y-axis, weeks with a descriptive unit label on the x-axis.'
-  - 'Complete event-type coverage: partial response (triangle), complete response
-    (star), progressive disease (diamond), adverse event (square), and ongoing/censored
-    (arrow) all appear on real patients — including two custom SVGRenderer symbols
-    (star, arrow) built specifically because core Highcharts lacks them.'
-  - 'Thoughtful semantic color mapping rather than arbitrary palette cycling: brand
-    green for Arm A / complete response, Imprint red (palette[4]) for progressive
-    disease, amber for partial response, a neutral muted gray for adverse events,
-    and ink-toned arrows for ongoing patients.'
-  - 'Correct Imprint palette compliance in both themes (first series #009E73, canonical
-    order for Arm B), and theme-adaptive chrome flips correctly light/dark with no
+  - 'Complete event-type coverage with redundant color+shape encoding: partial response
+    (amber triangle), complete response (green star), progressive disease (red diamond),
+    adverse event (gray square), ongoing/censored (arrow) — including two custom SVGRenderer
+    symbols (star, arrow) built specifically because core Highcharts lacks them, each
+    with a page-background cutout border so markers stay legible on top of bars.'
+  - 'The repair pass directly addressed the prior review''s two named weaknesses:
+    subtle alternating row banding (rgba alpha 0.035) now aids scanning across the
+    25 stacked patient rows, and a data-derived cohort-median plotLine (computed from
+    the actual sorted duration array, not a hardcoded value) gives the chart an explicit
+    storytelling focal point.'
+  - 'Correct Imprint palette compliance in both themes (first series #009E73, Arm
+    B at canonical position 2) and fully theme-adaptive chrome — text, gridlines,
+    tooltip, and zebra-band tint all flip correctly between light and dark with no
     unreadable text in either render.'
   - Clean, deterministic data generation via a seeded LCG; realistic, neutral Phase
     II oncology dataset with event timing plausibly proportional to each patient's
@@ -35,53 +38,48 @@ review:
   - Legend covers both treatment arms and all five event markers; title format matches
     the mandated `{spec-id} · {language} · {library} · anyplot.ai` pattern exactly.
   weaknesses:
-  - 'Design Excellence is solid but not yet publication-ready: grid/spine treatment
-    and typography still read as a well-configured Highcharts default rather than
-    a fully custom editorial layout. Consider a touch more visual refinement (e.g.
-    subtle alternating row banding across the 25 patients to aid scanning, or slightly
-    stronger title/subtitle weight contrast).'
-  - No single explicit visual focal point highlights the 'story' of the cohort (e.g.
-    the fastest responder, the longest-surviving patient, or the progression cluster)
-    — the plot displays all data cleanly but relies on the viewer to find the insight
-    themselves.
-  - Y-axis patient-ID tick labels become hard to distinguish individually once the
-    PNG is scaled down to a ~400px mobile thumbnail, purely due to the density of
-    25 stacked category rows — an inherent tradeoff of the cohort size rather than
-    a sizing mistake, but worth a look if any incremental legibility improvement is
-    possible without harming the desktop render.
+  - Y-axis patient-ID tick labels still become hard to individually distinguish once
+    the PNG is scaled down to a ~400px mobile thumbnail, purely due to the density
+    of 25 stacked category rows — an inherent tradeoff of the cohort size rather than
+    a sizing mistake, and not fixed by this repair pass (zebra banding helps row-scanning
+    but doesn't change label size).
+  - Aesthetic sophistication is strong but still reads as a very well-configured Highcharts
+    chart rather than a fully bespoke editorial layout — e.g. typography weight/letter-spacing
+    choices are tasteful defaults rather than a distinctive custom type scale.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "swimmer-clinical-timeline · javascript · highcharts · anyplot.ai" in bold dark navy/ink is clearly visible at the top; subtitle "Phase II oncology trial · 25 patients · two treatment arms" in soft gray beneath it is readable; "Patient ID" (y-axis) and "Time on Study (weeks)" (x-axis) titles are dark/soft-ink and legible; x-axis tick numbers (0-62 by 2s) and y-axis patient-ID category labels (PT-001..PT-025) are dark and legible at full resolution; vertical gridlines are subtle light gray, visible but not dominant.
-      Data: 25 horizontal bars sorted by ascending duration (shortest at top, longest at bottom); teal-green bars for Arm A (#009E73) and light purple/lilac bars for Arm B (Imprint palette position 2); event markers — amber triangles (partial response), green stars with light outlines (complete response), red diamonds (progressive disease), gray squares (adverse event), and dark arrows (ongoing/censored) — are all clearly distinguishable by both shape and color against the bars and background.
+      Chrome: Title "swimmer-clinical-timeline · javascript · highcharts · anyplot.ai" in bold dark ink is clearly visible at the top; subtitle "Phase II oncology trial · 25 patients · two treatment arms" in soft gray beneath it is readable; "Patient ID" (y-axis) and "Time on Study (weeks)" (x-axis) titles are dark/soft-ink and legible; x-axis tick numbers (0-62 by 2s) and y-axis patient-ID category labels (PT-001..PT-025) are dark and legible at full resolution; subtle alternating row bands (light gray tint) run behind every other patient row, aiding scanning without competing with the data; the dashed "Cohort median: 38 wk" line and italic label are clearly readable and don't collide with any bar or marker.
+      Data: 25 horizontal bars sorted by ascending duration (shortest at top, longest at bottom); teal-green bars for Arm A (#009E73) and light purple/lilac bars for Arm B (Imprint palette position 2); event markers — amber triangles (partial response), green stars with page-background cutout outlines (complete response), red diamonds (progressive disease), gray squares (adverse event), and dark arrows (ongoing/censored) — are all clearly distinguishable by both shape and color against the bars and background. No clipped text at any canvas edge.
       Legibility verdict: PASS — all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in white/light-gray and are clearly visible; axis titles and tick labels are light gray/off-white and legible against the dark background; gridlines are subtle dark-gray, still visible; legend text is light and readable.
+      Chrome: Title and subtitle render in white/light-gray and are clearly visible; axis titles and tick labels are light gray/off-white and legible against the dark background; gridlines and the alternating row bands are subtle light-tinted-on-dark, still visible without dominating; the median dashed line and its label are light and legible; legend text is light and readable.
       Data: Same teal-green (Arm A) and light purple (Arm B) bar colors as the light render — data colors are identical across themes. Event markers keep the same amber/green/red/gray colors as light mode; only the "ongoing" arrow marker flips from dark ink to white ink (an intentional theme-adaptive semantic-neutral choice, not a categorical-palette color) and reads clearly on the dark background.
       Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/legend text remains clearly legible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title / 16px axis titles / 12-14px
-          ticks) and readable at full canvas size in both themes; y-axis patient-ID
-          labels get hard to individually distinguish once scaled to ~400px, purely
-          a density effect from 25 categories.
+        comment: All font sizes explicitly set (23px title / 16px axis titles / 12-14px
+          ticks) and readable at full canvas size in both themes; new zebra row banding
+          aids scanning the dense 25-row list, though patient-ID labels still compress
+          at ~400px mobile thumbnail scale (inherent to the 25-category density).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: No text-text or text-data collisions; event markers sit cleanly on
-          bars with contrasting outlines.
+          bars with page-background cutout outlines; median line label does not collide
+          with any bar or marker.
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -95,14 +93,14 @@ review:
         max: 2
         passed: true
         comment: Arm colors + distinct marker shapes give redundant (color+shape)
-          encoding, CVD-safe.
+          encoding, CVD-safe; no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Plot fills the canvas well, balanced margins, legend anchored below
-          the plot, nothing cut off.
+          the plot, nothing cut off; canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -116,32 +114,37 @@ review:
         passed: true
         comment: 'First series #009E73, Arm B at canonical palette position 2, event
           colors drawn from Imprint pool + allowed semantic anchors (amber, neutral
-          ink); chrome theme-correct in both renders.'
+          ink); chrome theme-correct in both renders, backgrounds match #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful semantic color mapping beyond default cycling, but standard
-          Highcharts typography — above a plain default, short of publication-ready.
+        passed: true
+        comment: Thoughtful semantic color mapping, custom star/arrow symbols, zebra
+          banding, and a data-derived median annotation together read as considered
+          design work, though typography is still close to a well-configured Highcharts
+          default rather than a fully bespoke type scale.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle single-axis gridlines, clean chrome; some refinement visible
-          but not maximal polish.
+        passed: true
+        comment: New subtle alternating row banding (rgba alpha 0.035) plus clean
+          single-axis gridlines and page-background cutout marker borders add genuine
+          refinement over the prior attempt.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Duration-sorted staircase layout plus color/shape hierarchy guides
-          the reader, but no explicit focal-point callout.
+        passed: true
+        comment: New cohort-median dashed line with label (computed from the actual
+          sorted duration data) gives the chart an explicit focal point that the prior
+          attempt lacked, on top of the existing duration-sorted staircase layout
+          and color/shape hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -249,12 +252,15 @@ review:
         max: 5
         passed: true
         comment: Custom SVGRenderer.prototype.symbols registration for star/arrow
-          markers is a genuinely Highcharts-specific technique.
-  verdict: REJECTED
+          markers plus plotBands/plotLines usage is a genuinely Highcharts-specific
+          technique set.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
@@ -262,3 +268,4 @@ impl_tags:
   styling:
   - edge-highlighting
   - grid-styling
+  - alpha-blending
