@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-diverging-likert: Likert Scale Diverging Bar Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-24
+// Quality: 91/100 | Created: 2026-08-24
 
 const t = window.ANYPLOT_TOKENS;
 
