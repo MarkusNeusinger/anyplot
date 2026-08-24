@@ -1,0 +1,247 @@
+library: echarts
+language: javascript
+specification_id: campbell-basic
+created: '2026-08-24T19:48:35Z'
+updated: '2026-08-24T20:03:03Z'
+generated_by: claude-sonnet
+workflow_run: 32769715883
+issue: 4241
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correct Imprint palette usage, including properly skipping the semantic-red anchor
+    (position 5) since no error/loss category applies here
+  - 'All required spec features present: 5 labeled natural frequency curves, 3 labeled
+    engine order lines, and diamond-marked critical speed intersections (~10, within
+    the spec''s 6-10 range)'
+  - Effective use of distinctive ECharts features (markArea zone highlighting, endLabel)
+    that reinforce the diagram's storytelling purpose by drawing the eye to resonance
+    zones
+  - Full theme-adaptive chrome — both renders are clean and legible, no clipping or
+    dark-on-dark/light-on-light failures
+  - Clean, deterministic, KISS-structured code with a correct mount-node contract
+    (no explicit size/devicePixelRatio, animation disabled)
+  weaknesses:
+  - Legend swatches for the '1x/2x/3x' engine-order series render as plain circles
+    rather than reflecting the dashed line style used in the plot itself — a custom
+    legend icon (short dash) would let the legend distinguish order lines from natural-frequency
+    curves at a glance, matching the spec's ask for a legend that separates the two
+    families
+  - Two critical-speed markArea highlight boxes near ~2600 RPM (2nd Torsional x1 and
+    2nd Bending x1 intersections) sit close together vertically — tightening the markArea
+    half-height slightly would reduce visual crowding at high critical-speed density
+  - Title fontsize (22px) leaves the title comfortably small relative to the 3200px
+    canvas — not a legibility issue, but there's room to lean into more visual weight
+    for the headline
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "campbell-basic · javascript · echarts · anyplot.ai" in dark ink, centered top. Axis titles "Rotational Speed (RPM)" (x) and "Natural Frequency (Hz)" (y, rotated) in dark ink. Tick labels and legend text in softer dark gray. Subtle horizontal gridlines only (y-axis). All chrome elements clearly readable.
+      Data: 5 solid natural-frequency curves in Imprint palette order (green "1st Bending", lavender "2nd Bending", blue "1st Torsional", ochre "2nd Torsional", cyan "Axial" — correctly skipping the reserved red slot 5). 3 dashed gray/ink engine-order lines from the origin, each labeled "1x"/"2x"/"3x" at their line ends. Amber diamond markers (ink-bordered) mark ~10 critical-speed intersections, each surrounded by a faint amber highlight box. First series is confirmed brand green #009E73.
+      Legibility verdict: PASS — all text and data elements are clearly distinguishable against the light background; no clipping at any edge (checked top-right "2x"/"3x" end labels and bottom legend row).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and axis titles now rendered in light/off-white ink; tick labels and legend text in a softer light gray. Gridlines remain subtle. No dark-on-dark or light-on-light failures observed anywhere.
+      Data: Same 5 curve colors as the light render (green, lavender, blue, ochre, cyan) — confirmed identical hex values, only chrome flipped. Dashed order lines and amber diamond critical-speed markers remain clearly visible against the dark surface; the amber markArea highlight boxes read as a warm olive tint that stays distinguishable from the background.
+      Legibility verdict: PASS — all text and data elements are clearly readable against the dark background; no clipping observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; tick/legend text sized per JS-library
+          house convention
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse critical-speed diamonds are prominent (18px), curve lines
+          appropriately weighted (3.5px primary, 2px dashed secondary)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; amber used for critical speed, no red-green
+          as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Nothing cut off, generous margins (grid left/right 90, top 110, bottom
+          150), title well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (RPM, Hz)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; canonical order used with correct skip
+          of the reserved red slot; backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, professional composition using the Imprint palette correctly;
+          not exceptionally elaborate
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal spines, subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: markArea zone highlighting plus elevated (z:10) diamond markers create
+          clear focal points at resonance crossings, directly serving the Campbell
+          diagram's purpose
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Campbell/interference diagram with engine-order overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: labeled modes, labeled order lines, marked
+          critical speeds, optional zone shading'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Speed on x, frequency on y, full 0-6000 RPM range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 modes, 3 engine orders, ~10 critical speeds — within spec ranges
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral rotordynamics values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequencies (35-270 Hz) and speeds (0-6000 RPM) are sensible for
+          turbomachinery
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: containLabel, endLabel, scroll legend, and value-axis configuration
+          all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markArea + endLabel are genuine ECharts-specific features used purposefully
+          to highlight resonance zones
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending

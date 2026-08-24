@@ -1,0 +1,230 @@
+library: highcharts
+language: javascript
+specification_id: campbell-basic
+created: '2026-08-24T19:50:31Z'
+updated: '2026-08-24T20:06:57Z'
+generated_by: claude-sonnet
+workflow_run: 32769964591
+issue: 4241
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/campbell-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Excellent semantic palette usage: matte red reserved for critical/error markers,
+    theme-adaptive ink/neutral token used for engine-order reference lines, matching
+    the style guide''s documented semantic roles precisely'
+  - plotBands critical-zone shading is a distinctive, well-motivated Highcharts feature
+    that directly serves the spec's optional zone-highlighting suggestion
+  - Numerically robust critical-speed detection (sign-change scan + linear interpolation)
+    rather than hard-coded intersection points
+  - Both themes fully readable, data colors verified identical across light/dark
+  weaknesses:
+  - Critical-speed diamonds cluster tightly near 380-650 RPM (low-order, low-frequency
+    crossings); consider a slightly smaller marker radius or a subtle offset in that
+    zone to keep them individually legible
+  - Chart chrome (axis lines, grid) still reads close to a well-configured default
+    rather than a fully bespoke treatment; axis lines/grid could be lightened further
+    for extra polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: title, axis titles, tick labels, and legend all in dark ink - all readable
+      Data: first series (1st Bending Forward) is #009E73 brand green; lavender/blue/ochre follow for the other modes; engine-order lines are black dashed (ink token); critical-speed markers are matte red diamonds; faint pink plotBands mark clustered critical zones
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: title, axis titles, tick labels, and legend all in light ink - all readable, no dark-on-dark issues
+      Data: identical colors to light render (green/lavender/blue/ochre modes, matte-red critical markers); engine-order lines flip to white dashed (ink token correctly theme-adaptive); plotBands flip to a dark maroon tint
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit, well-proportioned, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Critical-speed diamonds cluster tightly near 380-650 RPM
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dashed vs solid gives redundant encoding beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the vast majority of canvas, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct canonical order, correct semantic exceptions for red/neutral,
+          theme-correct chrome
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantically-motivated color usage, clearly above default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, axis lines still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Shaded critical zones + red markers create a clear focal point on
+          the insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Campbell diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=RPM, Y=Hz, full data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend matches series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows gyroscopic stiffening/softening, multiple orders, clustered/isolated
+          critical speeds
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible rotordynamics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Physically sensible RPM/frequency/order values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, idiomatic helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, credits disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level API, mixed series types, theme tokens threaded
+          throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses xAxis.plotBands for critical-zone shading, a distinctive Highcharts
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - plot-bands
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending

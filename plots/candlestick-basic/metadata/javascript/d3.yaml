@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: candlestick-basic
+created: '2026-08-24T19:52:26Z'
+updated: '2026-08-24T20:05:45Z'
+generated_by: claude-sonnet
+workflow_run: 32770299403
+issue: 812
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Dual-cue bull/bear signal (hollow-green stroke vs. filled-red) now survives colorblind
+    simulation without relying on hue alone, directly fixing the prior review's VQ-04
+    flag
+  - Peak/trough annotations (circled markers + $-labeled callouts) give the chart
+    a clear focal point and a guided narrative instead of a raw OHLC dump, directly
+    fixing the prior review's DE-03 flag
+  - 'Correct candlestick anatomy: 2px wicks clearly thinner than the ~49px candle
+    bodies, matching the spec''s ''wicks thinner than body'' requirement'
+  - 'Imprint semantic color usage is textbook-correct: brand green (palette[0], #009E73)
+    for bullish, dedicated matte-red semantic anchor (palette[4], #AE3030) for bearish'
+  - 'Both renders are theme-correct: identical data colors in light/dark, only chrome
+    flips, backgrounds match #FAF8F1 / #1A1A17, all text legible in both themes'
+  - Deterministic fixed-seed LCG produces a coherent, realistic 40-day price walk
+    with genuine variety (doji-like small bodies, long wicks, multi-day trend reversal)
+  weaknesses:
+  - Manual line+rect candlestick construction remains the standard D3 idiom rather
+    than a distinctive library showcase (LM-02) — no fix expected, D3 has no built-in
+    candlestick mark
+  - Small isBull()/annotate() helper functions are a minor departure from the strict
+    CQ-01 'no functions/classes' ideal, though justified to avoid duplicating the
+    bull/bear ternary and the peak/trough annotation drawing code
+  - Rotated Y-axis title ('Share Price (USD)') anchors only ~28px from the left canvas
+    edge (x = margin.left - 72); it renders fully visible in both renders today, but
+    there is little margin for regression if the label text ever grows longer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "candlestick-basic · javascript · d3 · anyplot.ai" centered at top. Legend top-left with a hollow green "Bullish (close ≥ open)" swatch and a solid red "Bearish (close < open)" swatch. Y-axis "Share Price (USD)" with $-prefixed ticks ($175-$190); X-axis "Trading Date" with rotated (-30°) date labels every ~4th day. Subtle horizontal-only gridlines. All title, axis, tick, and legend text is clearly dark-on-light and readable — no light-on-light issues.
+      Data: 40 daily OHLC candles walking from ~$181 up to a "Peak $191" (Sep 13, circled + labeled) down to a "Trough $176" (early Sep, circled + labeled) and oscillating through early October. Bullish candles are hollow with a green (#009E73) outline and cream fill; bearish candles are solid matte-red (#AE3030) fill. Wicks are thin (2px) and clearly thinner than the ~49px candle bodies.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis labels now rendered in light/off-white text, clearly visible against the near-black surface. Gridlines remain subtle but visible. No dark-on-dark failures — every label, tick, and legend entry is legible.
+      Data: Identical bullish/bearish candle colors and hollow/filled encoding as the light render — confirms only chrome (background, text, grid) flips between themes, data colors are unchanged. Peak/trough annotations render in the same positions with light-colored callout text.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (13-22px), readable in both themes;
+          minor headroom left before hitting 'perfect' calibration
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axis labels, ticks, or annotations
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Candle bodies and thin wicks well-sized for 40-candle density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dual-cue hollow/filled fix means bull/bear no longer relies on hue
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area fills ~90%+ of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Share Price (USD)'' has units, ''Trading Date'' is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, bearish uses palette[4] red semantic exception,
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hollow/filled candlestick convention is a thoughtful, professional
+          (Bloomberg-terminal-like) design choice, above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines mostly minimal, subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak/trough annotations now create a clear focal point and narrative,
+          fixing the prior review's flag
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct candlestick chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: OHLC bodies/wicks, bull/bear color coding, date-formatted time axis,
+          subtle grid
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, price on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format, legend labels correctly describe
+          bull/bear condition
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows bullish AND bearish candles, varying body/wick sizes, doji-like
+          small bodies
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible stock-price scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Prices and daily drift/wick magnitudes are realistic for a mid-cap
+          stock
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: lcg(), isBull(), and annotate() helpers are small and justified but
+          a minor departure from the no-functions ideal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the d3 global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract, current d3 API, no animation
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scaleBand/scaleLinear/axis + data-join pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Manual line+rect candlestick construction is the standard, expected
+          D3 idiom — no built-in candlestick mark exists to showcase beyond this
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - edge-highlighting
