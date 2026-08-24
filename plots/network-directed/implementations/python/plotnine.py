@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-directed: Directed Network Graph
 Library: plotnine 0.15.8 | Python 3.13.15
 Quality: 81/100 | Created: 2026-08-24
@@ -15,8 +15,8 @@ from plotnine import (
     element_blank,
     element_rect,
     element_text,
+    geom_path,
     geom_point,
-    geom_segment,
     geom_text,
     ggplot,
     labs,
@@ -90,8 +90,8 @@ positions = {}
 for row, tier in enumerate(tier_order):
     members = tier_rows[tier]
     count = len(members)
-    xs = np.linspace(0.08, 0.92, count) if count > 1 else np.array([0.5])
-    y = 0.08 + row * (0.84 / (len(tier_order) - 1))
+    xs = np.linspace(0.03, 0.97, count) if count > 1 else np.array([0.5])
+    y = 0.06 + row * (0.88 / (len(tier_order) - 1))
     for module_id, x in zip(members, xs, strict=True):
         positions[module_id] = (float(x), float(y))
 
@@ -104,23 +104,38 @@ node_df = pd.DataFrame(
     }
 )
 
-# Pull the arrow endpoint back from the target node center so the arrowhead
-# lands just outside the marker instead of hiding under it.
-margin = 0.028
+# Every edge bows along a quadratic Bezier with the same curvature ratio, so
+# parallel/overlapping straight lines fan out into distinguishable arcs while
+# the arrow style stays consistent across the whole graph (per spec notes).
+# Endpoints are trimmed by arc length so the line starts clear of the source
+# marker and the arrowhead lands just outside the target marker.
+CURVATURE = 0.12
+START_MARGIN = 0.018
+END_MARGIN = 0.032
+
 edge_rows = []
-for src, tgt in imports:
-    x0, y0 = positions[src]
-    x1, y1 = positions[tgt]
-    dx, dy = x1 - x0, y1 - y0
-    dist = max((dx**2 + dy**2) ** 0.5, 1e-6)
-    edge_rows.append(
-        {
-            "x": x0 + (dx / dist) * margin * 0.5,
-            "y": y0 + (dy / dist) * margin * 0.5,
-            "xend": x1 - (dx / dist) * margin,
-            "yend": y1 - (dy / dist) * margin,
-        }
-    )
+for edge_id, (src, tgt) in enumerate(imports):
+    p0 = np.array(positions[src])
+    p2 = np.array(positions[tgt])
+    direction = p2 - p0
+    dist = max(float(np.hypot(*direction)), 1e-6)
+    unit = direction / dist
+    normal = np.array([-unit[1], unit[0]])
+    control = (p0 + p2) / 2 + normal * CURVATURE * dist
+
+    t = np.linspace(0, 1, 40)
+    curve_x = (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * control[0] + t**2 * p2[0]
+    curve_y = (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * control[1] + t**2 * p2[1]
+
+    seg_len = np.hypot(np.diff(curve_x), np.diff(curve_y))
+    dist_from_start = np.concatenate([[0], np.cumsum(seg_len)])
+    dist_from_end = dist_from_start[-1] - dist_from_start
+    keep = (dist_from_start >= START_MARGIN) & (dist_from_end >= END_MARGIN)
+    if keep.sum() < 2:
+        keep = np.array([True] * len(t))
+
+    for x, y in zip(curve_x[keep], curve_y[keep], strict=True):
+        edge_rows.append({"edge_id": edge_id, "x": x, "y": y})
 edge_df = pd.DataFrame(edge_rows)
 
 tier_colors = dict(zip(tier_order, IMPRINT_PALETTE, strict=True))
@@ -128,18 +143,26 @@ tier_colors = dict(zip(tier_order, IMPRINT_PALETTE, strict=True))
 # Plot
 plot = (
     ggplot()
-    + geom_segment(
+    + geom_path(
         data=edge_df,
-        mapping=aes(x="x", y="y", xend="xend", yend="yend"),
+        mapping=aes(x="x", y="y", group="edge_id"),
         color=INK_SOFT,
         size=0.5,
         alpha=0.6,
         arrow=arrow(angle=22, length=0.09, ends="last", type="closed"),
     )
     + geom_point(data=node_df, mapping=aes(x="x", y="y", color="tier"), size=8, alpha=0.95, stroke=0.6)
-    + geom_text(data=node_df, mapping=aes(x="x", y="y", label="label"), color=INK, size=3.3, nudge_y=0.032, va="bottom")
+    + geom_text(
+        data=node_df,
+        mapping=aes(x="x", y="y", label="label"),
+        color=INK,
+        size=4.2,
+        fontweight="bold",
+        nudge_y=0.046,
+        va="bottom",
+    )
     + scale_color_manual(values=tier_colors, name="Build tier")
-    + coord_cartesian(xlim=(-0.02, 1.02), ylim=(-0.02, 1.05))
+    + coord_cartesian(xlim=(-0.03, 1.03), ylim=(-0.03, 1.0))
     + labs(title="network-directed · python · plotnine · anyplot.ai")
     + theme(
         figure_size=(8, 4.5),
