@@ -1,7 +1,7 @@
 // anyplot.ai
 // swimmer-clinical-timeline: Swimmer Plot for Clinical Trial Timelines
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-24
+// Quality: pending | Created: 2026-08-24
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
@@ -94,13 +94,23 @@ function EventMarker({ type, cx, cy, size }) {
   }
 }
 
+// The two longest-surviving patients (both Targeted Therapy) are the chart's
+// clearest insight; called out with a bracket + caption rather than a heavier
+// annotation so sorting/color still do most of the storytelling work.
+const LONGEST_IDS = new Set([...patients].sort((a, b) => b.duration - a.duration).slice(0, 2).map((p) => p.id));
+
 // Must render inside BarChart's ChartContainer to read its live scales.
 function SwimmerOverlay() {
   const xScale = useXScale();
   const yScale = useYScale();
   if (!xScale || !yScale || typeof yScale.bandwidth !== "function") return null;
   const bw = yScale.bandwidth();
-  const markerSize = Math.min(bw * 0.4, 10);
+  const markerSize = Math.min(bw * 0.42, 13);
+
+  const longestRows = patients
+    .filter((p) => LONGEST_IDS.has(p.id))
+    .map((p) => ({ cy: +yScale(p.id) + bw / 2, xEnd: xScale(p.duration) }))
+    .sort((a, b) => a.cy - b.cy);
 
   return (
     <g>
@@ -117,6 +127,27 @@ function SwimmerOverlay() {
           </g>
         );
       })}
+      {longestRows.length === 2 && (
+        <g>
+          <path
+            d={`M ${Math.max(longestRows[0].xEnd, longestRows[1].xEnd) + 14} ${longestRows[0].cy} h 5 V ${longestRows[1].cy} h -5`}
+            fill="none"
+            stroke={t.inkSoft}
+            strokeWidth={1.25}
+            opacity={0.6}
+          />
+          <text
+            x={Math.max(longestRows[0].xEnd, longestRows[1].xEnd) + 24}
+            y={(longestRows[0].cy + longestRows[1].cy) / 2}
+            fontSize={11}
+            fontStyle="italic"
+            fill={t.inkSoft}
+            dominantBaseline="middle"
+          >
+            Longest on study
+          </text>
+        </g>
+      )}
     </g>
   );
 }
@@ -154,7 +185,7 @@ const LEGEND_ITEMS = [
 ];
 
 const TITLE = "swimmer-clinical-timeline · javascript · muix · anyplot.ai";
-const HEADER_HEIGHT = 152;
+const HEADER_HEIGHT = 160;
 
 export default function Chart() {
   const { width: W, height: H } = window.ANYPLOT_SIZE;
@@ -200,6 +231,7 @@ export default function Chart() {
             labelStyle: { fontSize: 16, fill: t.ink },
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             disableTicks: true,
+            tickNumber: 5,
           },
         ]}
         yAxis={[
@@ -213,11 +245,11 @@ export default function Chart() {
           },
         ]}
         grid={{ vertical: true }}
-        margin={{ top: 10, right: 70, bottom: 66, left: 92 }}
+        margin={{ top: 30, right: 70, bottom: 66, left: 92 }}
         slotProps={{ legend: { hidden: true } }}
         sx={{
           "& .MuiChartsAxis-line": { stroke: t.inkSoft },
-          "& .MuiChartsGrid-line": { stroke: t.grid },
+          "& .MuiChartsGrid-line": { stroke: t.grid, opacity: 0.7 },
         }}
       >
         <SwimmerOverlay />
