@@ -58,6 +58,8 @@ for (let i = 0; i < gridPoints; i++) {
 const maxDensity = Math.max(...densityCurve.map((p) => p[1]));
 const rugY = -maxDensity * 0.06;
 const rugData = reactionTimes.map((v) => [v, rugY]);
+const peakPoint = densityCurve.reduce((best, p) => (p[1] > best[1] ? p : best));
+const peakX = peakPoint[0];
 
 // --- Chart -------------------------------------------------------------
 Highcharts.chart("container", {
@@ -75,23 +77,40 @@ Highcharts.chart("container", {
   },
   xAxis: {
     title: { text: "Reaction Time (ms)", style: { color: t.inkSoft, fontSize: "16px" } },
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickWidth: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [
+      {
+        value: peakX,
+        color: t.inkSoft,
+        dashStyle: "Dash",
+        width: 1.5,
+        zIndex: 5,
+        label: {
+          text: `Peak ≈ ${Math.round(peakX)} ms`,
+          style: { color: t.inkSoft, fontSize: "13px" },
+          align: "left",
+          x: 6,
+          y: 16,
+        },
+      },
+    ],
   },
   yAxis: {
     min: -maxDensity * 0.09,
     title: { text: "Probability Density", style: { color: t.inkSoft, fontSize: "16px" } },
+    lineWidth: 0,
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotLines: [{ value: 0, color: t.inkSoft, width: 1, zIndex: 1 }],
   },
   legend: { enabled: false },
   plotOptions: {
     series: { animation: false },
     areaspline: {
       lineWidth: 3,
-      fillOpacity: 0.3,
       marker: { enabled: false },
     },
     scatter: {
@@ -100,7 +119,21 @@ Highcharts.chart("container", {
     },
   },
   series: [
-    { type: "areaspline", name: "Density", data: densityCurve, color: t.palette[0] },
+    {
+      type: "areaspline",
+      name: "Density",
+      data: densityCurve,
+      color: t.palette[0],
+      fillColor: {
+        linearGradient: { x1: 0, y1: 0, x2: 1, y2: 0 },
+        stops: [
+          [0, Highcharts.color(t.palette[0]).setOpacity(0).get("rgba")],
+          [0.45, Highcharts.color(t.palette[0]).setOpacity(0.35).get("rgba")],
+          [0.55, Highcharts.color(t.palette[0]).setOpacity(0.35).get("rgba")],
+          [1, Highcharts.color(t.palette[0]).setOpacity(0).get("rgba")],
+        ],
+      },
+    },
     { type: "scatter", name: "Observations", data: rugData, color: t.palette[0] },
   ],
 });
