@@ -174,6 +174,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **`babysit-pipeline` learned gap backfill** — closing coverage gaps across the catalogue is
+  a different job from watching one fresh spec, and the skill only described the latter. It
+  now documents reading the missing set from `plots/*/metadata/` instead of from labels
+  (most affected specs have closed issues, so their labels are absent or stale), the
+  per-spec `run_spec.sh` driver, two-specs-in-parallel pacing, and the one-retry rule. Four
+  new gotchas record traps that cost real implementations during the 2026-08-24 backfill:
+  the failure-marker count spanning more than the current run, `impl:<lib>:failed` being
+  both terminal and unreliable (42 of 87 sat on implementations that had since landed), the
+  intermittent "reports success, writes no file" generation failure, and the one gap shape
+  that usually is real — a static library against an interactive or 3D spec (#10628).
 - **llms.txt now tells agents how to actually fetch things** — the file linked nine human-facing
   HTML pages and named no machine endpoint. New sections document the REST API (base URL, the
   retrieval endpoints, OpenAPI), the GCS render URL pattern (themes, responsive widths, WebP),
