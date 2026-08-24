@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: candlestick-basic
 created: '2026-08-24T20:01:32Z'
-updated: '2026-08-24T20:06:30Z'
+updated: '2026-08-24T20:15:50Z'
 generated_by: claude-sonnet
 workflow_run: 32771030644
 issue: 812
@@ -12,128 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-basic/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Correct candlestick composition using useXScale/useYScale against ChartContainer
-    — the documented MUI X community pattern for chart types with no native series
-    type, since @mui/x-charts has no built-in candlestick.
-  - 'Complete OHLC representation: wicks rendered thinner than bodies, both bullish
-    and bearish candles present with realistic hour-to-hour BTC/USD variation and
-    a readable overall price arc.'
-  - Palette applies the style guide's documented finance semantic exception correctly
-    — bullish uses brand green (#009E73, position 1), bearish uses matte red (#AE3030,
-    position 5, the deferred semantic-red anchor) — identical data colors across both
-    themes, chrome fully theme-correct in both renders.
-  - Axis labels are descriptive with units ("Time (Hourly)", "Price (USD)"), tick
-    density is thinned to every 4th hour to avoid crowding, and the title correctly
-    follows the mandated format with dynamic fontsize scaling for the long anyplot
-    title string.
-  - Clean, deterministic code (seeded LCG PRNG, no fetch/Math.random), correct harness
-    contract (default export, skipAnimation, sized from window.ANYPLOT_SIZE).
+  - OHLC candlesticks are hand-drawn against the shared band/linear scales via useXScale/useYScale
+    — the documented ChartContainer composition pattern for chart types outside the
+    MUI X community series surface, correctly worked around the lack of a native candlestick
+    series.
+  - Wicks are visibly thinner (strokeWidth 1.5) than the candle bodies (62% of band
+    width), matching the spec's legibility note.
+  - Session-high and session-low callouts (dashed reference lines + circle markers
+    + labels) give the chart a deliberate focal point instead of a flat, uniform OHLC
+    run — strong data storytelling.
+  - Data colors (brand green for bullish, red for bearish) are pixel-identical between
+    the light and dark renders; only chrome (background, grid, text) adapts per theme,
+    exactly as required.
+  - Date-label formatting switches between a date format at midnight and a time format
+    for other hours, matching the spec's 'appropriate date formatting based on frequency'
+    requirement.
+  - Deterministic in-memory data generation via a small fixed-seed LCG, no fetch/network
+    calls.
+  - Title follows the exact mandated format with a sensible descriptive prefix, and
+    shrinks its font size proportionally for the longer combined string so it doesn't
+    overflow.
   weaknesses:
-  - 'Design excellence reads as competent-but-conventional: no deliberate visual hierarchy
-    or focal point (e.g. calling out the largest single-hour move or the intraday
-    low) — the chart displays the data without emphasizing an insight.'
-  - Bullish/bearish are distinguished by hue alone (green vs. matte red) with no redundant
-    encoding. Consider the style guide's 'Optional outline pattern' (thin ink-color
-    stroke on the low-contrast half) or a subtle secondary cue for stronger colorblind-safety
-    on this two-category signal.
-  - 'Visual refinement is subtle-default rather than distinctive: grid and axis-line
-    opacity are toned down appropriately, but nothing (whitespace rhythm, axis-line
-    treatment, legend framing) pushes the polish past ''good default'' into publication-grade
-    territory.'
-  - Legend is a plain centered swatch row — functional and correctly labeled, but
-    a generic pattern rather than a design choice that reinforces the chart's story.
+  - 'The file header is duplicated and inconsistent: lines 1-4 are a stale header
+    block ("Library: muix 7.29.1 | JavaScript 22.23.2", "Quality: 88/100") immediately
+    followed by a second, different header block on lines 6-10 ("Library: MUI X Charts
+    | React | Node 22", "Quality: pending"), with the //# anyplot-orientation directive
+    sandwiched between them on line 5 instead of on the very first line as the muix
+    header-style rule requires. Remove the stale first block entirely and put //#
+    anyplot-orientation: landscape back on line 1.'
+  - Bullish vs. bearish candles are distinguished by color alone (green vs. red fill);
+    a colorblind viewer without hue discrimination has no secondary cue (e.g. hollow
+    vs. filled body, or a directional icon) to tell the two apart beyond the body
+    outline, which is applied uniformly to both.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Bitcoin Hourly Price · candlestick-basic · javascript · muix · anyplot.ai" is centered at top in dark ink, clearly legible. X-axis shows "Time (Hourly)" with tick labels (Jan 8, 04:00, 08:00, 12:00, 16:00, 20:00, Jan 9) every 4 hours, no overlap. Y-axis shows "Price (USD)" with dollar-formatted gridline labels ($41,650–$42,500). Subtle horizontal gridlines visible but not competing with data. Legend below the chart with two color swatches: "Bullish (close ≥ open)" and "Bearish (close < open)".
-      Data: 48 hourly candlesticks spanning Jan 8–9. Bullish candles are brand green (#009E73), bearish candles are matte red (#AE3030). Wicks are visibly thinner than the candle bodies. Price traces a clear down-then-up arc across the 48-hour window.
-      Legibility verdict: PASS — all text (title, axis labels, tick labels, legend) is clearly readable against the light background.
+      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
+      Chrome: Title "Bitcoin Hourly Price · candlestick-basic · javascript · muix · anyplot.ai" in dark ink, centered; subtitle "Jan 8 – Jan 9, 2024 · Hourly candles" in soft gray below it. X-axis "Time (Hourly)" and Y-axis "Price (USD)" labels are dark and clearly legible; tick labels ($41,700–$42,500, hourly time stamps) are readable soft-gray text against the cream background. Subtle horizontal gridlines are visible but do not dominate. Legend at the bottom uses two pill-shaped badges ("Bullish (close ≥ open)", "Bearish (close < open)") with a light border and elevated background, text clearly readable.
+      Data: 48 hourly OHLC candlesticks in brand green (bullish) and matte red (bearish), each with a thin wick and a wider body outlined with a subtle ink stroke. Dashed reference lines with open-circle markers and bold labels call out the Session High ($42,482) and Session Low ($41,707), both fully legible and not overlapping any candle or axis text.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and legend as the light render, now rendered in light ink/off-white text, fully legible against the dark background. Gridlines are subtle light horizontal lines. No dark-on-dark text anywhere — title, tick labels, axis labels, and legend text all read clearly.
-      Data: Candle colors are pixel-identical to the light render — bullish green (#009E73), bearish matte red (#AE3030) — confirming only chrome flipped between themes, not data colors.
-      Legibility verdict: PASS — no legibility failures in either theme; brand green and matte red both remain clearly visible against the dark surface.
+      Background: Warm near-black (~#1A1A17), not pure black, not light.
+      Chrome: Same title and subtitle, now rendered in white/light-gray text, clearly legible against the dark background. Axis titles and tick labels are light gray/white and easily readable. Gridlines are subtle but visible. Legend badges use a lighter/elevated dark background with light-gray text — no dark-on-dark text was found anywhere in the render.
+      Data: Candle body and wick colors (brand green / red) are identical to the light render — only the chrome (background, text, grid, legend frame) flips. Session High/Low callout lines, circle markers, and labels remain crisp and legible against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title scales dynamically for the long
-          mandated string; readable in both themes
+        comment: All text readable in both themes; fontsize scaled down for the longer
+          title so it doesn't crowd the canvas.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, ticks, legend, or data
+        comment: No collisions between text, callouts, and candle data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candle bodies and wicks well-proportioned for 48-period density
+        comment: Wicks visibly thinner than bodies; 48 candles at a density that stays
+          clearly separated.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: true
-        comment: Bullish/bearish rely on green/red hue alone with no redundant encoding
-          (acceptable — documented finance semantic exception — but no stroke/pattern
-          cue for CVD readers)
+        passed: false
+        comment: Bullish/bearish bodies are distinguished by hue alone (green vs.
+          red); no shape/fill secondary cue for CVD viewers.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, chart fills a large majority of the canvas, nothing
-          cut off
+        comment: Canvas dimension gate passed; good proportions, nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Time (Hourly)" and "Price (USD)" are descriptive with units'
+        comment: Both axes labeled with units (Price (USD), Time (Hourly)).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Imprint finance semantic exception (green pos.1 bullish,
-          matte red pos.5 bearish), theme-correct chrome in both renders
+        comment: 'Bullish uses brand green (palette[0]); backgrounds correct #FAF8F1/#1A1A17;
+          data colors identical across themes.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured, tasteful, but reads as a competent default rather
-          than distinctive design
+        passed: true
+        comment: Pill-shaped legend badges, subtitle typography, and annotated callouts
+          show intentional polish beyond MUI X defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid and axis-line opacity subdued appropriately; some refinement
-          visible but not exhaustive
+        passed: true
+        comment: Custom-drawn chart has no chrome frame, subtle horizontal-only grid,
+          generous margins.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data is displayed without deliberate emphasis or a called-out focal
-          point
+        passed: true
+        comment: Session-high/low callouts create a clear focal point and guide the
+          viewer beyond a flat OHLC run.
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct candlestick chart with body and wicks
+        comment: Correct candlestick chart, hand-drawn via ChartContainer composition
+          since community MUI X lacks a native series.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: OHLC, up/down color coding, frequency-aware date formatting, subtle
-          grid — all present
+        comment: Up/down color coding, thin wicks vs. wide bodies, frequency-aware
+          date labels, subtle grid — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X, price on Y, all periods visible
+        comment: Time on X, price on Y; full OHLC range represented via wick + body
+          geometry.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels precisely match the bullish/bearish
-          semantics
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match the semantic bullish/bearish convention.
     data_quality:
       score: 15
       max: 15
@@ -173,22 +176,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish candles present with varied body/wick sizes
+        comment: All four OHLC fields represented for every period.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible BTC/USD hourly scenario
+        comment: Plausible BTC/USD hourly price action around $42k, neutral subject.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Hour-to-hour drift and price band are plausible for short-term crypto
-          volatility
+        comment: Hour-to-hour drift and intraday range are realistic for crypto volatility.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -196,60 +198,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat, minimal structure appropriate to the React/MUI X idiom
+        comment: Two small functions (Candlesticks, Chart); no unneeded abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG, fully deterministic
+        comment: Fixed-seed LCG PRNG, deterministic calendar anchor.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used
+        comment: Every import is used.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No fake UI/functionality, appropriate complexity for a custom-drawn
-          series
+        passed: false
+        comment: Duplicated/stale header block (two conflicting Library/Quality comment
+          lines) is sloppy and should be cleaned up.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized from
-          window.ANYPLOT_SIZE'
+        comment: Default-exports the component, skipAnimation set, sized from window.ANYPLOT_SIZE.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of the ChartContainer + useXScale/useYScale composition
-          pattern for an unsupported series type
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom SVG marks driven by MUI X's scale hooks are genuinely distinctive
-          to this library's architecture
-  verdict: REJECTED
+        comment: Uses the documented ChartContainer + useXScale/useYScale composition
+          pattern for a series type outside the community surface.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Band-scale hooks, ChartsGrid, and manual SVG marks go beyond a generic
+          bar/line chart call.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - time-series
   styling:
-  - grid-styling
+  - publication-ready
+  - edge-highlighting
+  - alpha-blending
