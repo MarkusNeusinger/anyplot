@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: band-basic
 created: '2026-08-24T15:46:36Z'
-updated: '2026-08-24T15:52:08Z'
+updated: '2026-08-24T16:04:34Z'
 generated_by: claude-sonnet
 workflow_run: 32746493392
 issue: 979
@@ -12,55 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/band-basi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/band-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Band + center-line combination is fully correct: d3.area() draws the fill between
-    yLower/yUpper, d3.line() draws the trend, both using curveMonotoneX for smooth
-    interpolation as the spec requests'
-  - Fill opacity 0.28 sits squarely inside the spec's 0.2-0.4 range, and the band
-    stays clearly legible on both the light and dark surfaces
-  - Deterministic LCG (seed=42) generates the streamflow series in-memory with no
-    fetch/CSV/JSON load, matching the D3 reproducibility rule
-  - Forecast uncertainty growing with lead time (spread = 3 + 0.35*day) is a physically
-    sensible touch for a prediction-interval band, not just decorative width
-  - 'Theme-adaptive chrome is threaded correctly throughout: axis text, ticks, domain
-    lines, grid, title, and subtitle all pull from window.ANYPLOT_TOKENS, and the
-    first (only) series is the mandated #009E73'
-  - 'Title format is exactly right: ''Streamflow Forecast · band-basic · javascript
-    · d3 · anyplot.ai'', with a subtitle that explains what the band represents (serves
-    as an implicit legend for the two visual elements)'
-  - 'Clean KISS structure: flat top-to-bottom script with explicit font sizes (14/15/16/22px),
-    y-axis-only subtle grid, and an L-shaped (left+bottom only) spine frame'
+  - Vertical linearGradient on the band fill (16%/36%/16% opacity, built only from
+    t.palette[0]) replaces the flat single-opacity fill from attempt 1, adding real
+    depth without breaking palette compliance
+  - New dashed guide line + annotation ('Spread widens ~7.2x from day 1 to day 60')
+    gives the plot an explicit, calculated focal point instead of leaving the widening-uncertainty
+    story implicit
+  - Genuine D3 mousemove interactivity (d3.bisector-driven guide line, three boundary
+    dots, multi-line tspan readout) is real, hidden-by-default interaction for the
+    HTML detail view -- not simulated, and distinctively D3 (native DOM event handling)
+    rather than generic area+line
+  - 'Band + center-line combination remains fully correct: d3.area() for yLower/yUpper,
+    d3.line() for the trend, both curveMonotoneX for smooth interpolation as the spec
+    requests'
+  - Deterministic LCG (seed=42) keeps the streamflow series reproducible; forecast
+    spread growing with lead time is physically sensible, not just decorative
+  - 'Theme-adaptive chrome threaded correctly throughout; first (only) series is the
+    mandated #009E73 in both renders'
+  - Title format is exactly right; subtitle substitutes for a legend and explains
+    both visual elements
   weaknesses:
-  - Design Excellence is capped by a flat, single-opacity fill on the band — a native
-    SVG <linearGradient> (e.g. fading opacity slightly from the center line outward,
-    or top-to-bottom) would add real polish without breaking the Imprint color rule
-    (still built only from t.palette[0])
-  - No visual emphasis calls out the actual insight (uncertainty roughly doubling
-    from day 1 to day 60) — a small text annotation or thin guide line near the widest
-    part of the band would give the reader an immediate takeaway per DE-03
-  - 'Library Mastery is generic: area()+line()+scaleLinear()+axisBottom/Left is idiomatic
-    D3 but easily replicated in any charting library. Since D3 is an interactive library
-    and the harness ships an HTML detail view, consider adding a genuine (non-fake)
-    mousemove handler that shows a guide line + the day/lower/center/upper values
-    at the cursor — this is real interactivity (not AR-08 fake tooltips) and would
-    make the implementation distinctively D3'
-  - Title occupies roughly 45-50% of the plot width at 22px, on the low end for a
-    custom-prefixed mandated title — a modest fontsize bump would give it more visual
-    presence without risking overflow
+  - Title still sits around ~44% of plot width at 24px even with the descriptive 'Streamflow
+    Forecast ·' prefix layered onto the mandated string -- on the low end for a prefixed
+    mandated title; a further fontsize bump (e.g. 26-28px) would give it more presence
+    without risking overflow
+  - The band's vertical gradient is a nice touch but subtle enough to be barely perceptible
+    at a glance -- a slightly wider opacity range (e.g. 0.12/0.40/0.12) would make
+    the polish more legible without leaving the spec's 0.2-0.4 guidance for the visible
+    middle stop
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "Streamflow Forecast · band-basic · javascript · d3 · anyplot.ai" is clearly readable, centered near the top; a lighter gray subtitle below it explains the band. Axis titles "Forecast Day" (x) and "River Streamflow (m³/s)" (y) are dark ink and fully legible. Y tick labels ("10 m³/s" .. "90 m³/s") and x tick labels ("Day 5" .. "Day 60") are legible gray text with no overlap. Horizontal grid lines are subtle light-gray, y-axis only, not competing with the data. Only left and bottom spines are drawn (L-shaped frame).
-      Data: A semi-transparent green band (first Imprint series, #009E73 at ~0.28 opacity) widens steadily from day 1 to day 60, with a solid, thicker #009E73 line tracing the fluctuating center trend through the middle of the band.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or light-on-light failures.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Bold dark title "Streamflow Forecast · band-basic · javascript · d3 · anyplot.ai" and lighter gray subtitle are both clearly readable. Axis titles "Forecast Day" (x) and "River Streamflow (m³/s)" (y) are dark ink and fully legible; tick labels are gray, evenly spaced, non-overlapping. Subtle y-axis-only gridlines, L-shaped spines. A dashed guide line at day 60 with an italic annotation ("Spread widens ~7.2x from day 1 to day 60") sits fully inside the canvas, not clipped.
+      Data: Semi-transparent green band (#009E73, vertical gradient ~0.16-0.36-0.16 opacity) widens from day 1 to day 60 around a solid, thicker #009E73 center trend line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title and axis titles render in light/white text, fully readable against the dark surface. Tick labels are light gray and legible. Grid lines are faint light-gray, still visible but subtle. Only left and bottom spines are drawn, matching the light render.
-      Data: The band and center line use the identical #009E73 green as the light render — the fill reads as a dark teal-green against the near-black background, still clearly distinguishable from the page background, and the center line remains bright and prominent.
-      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, subtitle, axis labels, ticks) is clearly visible, and the data colors match the light render exactly (only chrome flipped).
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, subtitle, axis titles, tick labels, and the widening-spread annotation all render in light/white text and are fully readable -- no dark-on-dark failures anywhere. Gridlines and spines remain subtle but visible.
+      Data: Band and center line use the identical #009E73 green as the light render (reads as a dark teal fill against the near-black page); only chrome flipped between themes, data colors unchanged.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check; no AR-09 edge clipping observed on either canvas.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -71,74 +67,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14/15/16/22px), readable and balanced
-          in both themes; title sits at the low end of the ideal width proportion
-          (~45-50%)
+        comment: Explicit font sizes throughout, readable in both themes; title still
+          on the low end of proportional width (~44%) despite the fontsize bump
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No collisions between text, band, line, or annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Band opacity (0.28) and 3.5px line width are well-matched to the
-          60-point time series; no overplotting
+        comment: Band and center line clearly visible and well-sized for 60-point
+          series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue band/line combo, good contrast against both surfaces,
-          no red-green reliance
+        comment: Good contrast, CVD-safe; band alpha keeps center line clearly distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Balanced margins, plot fills a healthy share of canvas, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive with units (m3/s)
+        comment: Descriptive axis labels with units (m3/s, Day N)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds and chrome are theme-correct
-          in both renders'
+        comment: 'First series #009E73 in both themes; gradient built only from palette[0];
+          backgrounds theme-correct'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean and above library defaults, but the flat single-opacity fill
-          keeps it short of publication-level polish
+        passed: true
+        comment: Vertical gradient fill on the band moves this above a well-configured
+          default toward thoughtful, above-average polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
         comment: Subtle y-axis-only grid, L-shaped spines, generous whitespace, rounded
-          line caps/joins
+          line caps/joins, dashed guide line for the annotation
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Widening band and trend line create visual hierarchy, but no explicit
-          emphasis on the growing-uncertainty insight
+        passed: true
+        comment: Explicit widening-uncertainty annotation with guide line gives the
+          viewer a clear, calculated focal point beyond just displaying the data
     spec_compliance:
       score: 15
       max: 15
@@ -148,27 +142,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct band plot with filled interval + center line
+        comment: Correct band plot with center trend line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Semi-transparent fill in spec range, contrasting solid center line,
-          smooth interpolation, uncertainty explained in subtitle
+        comment: Semi-transparent band (alpha in spec range), contrasting center line,
+          smooth curveMonotoneX interpolation, 60 points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=day, y=streamflow correctly mapped, full data range visible
+        comment: x=day, y_lower/y_upper form the band, y_center is the trend line
+          -- all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; subtitle substitutes
-          for a legend and explains both visual elements
+        comment: Title format exactly right; subtitle substitutes for a legend and
+          explains both visual elements
     data_quality:
       score: 15
       max: 15
@@ -178,22 +173,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows growing spread, seasonal oscillation, and trend all in one
-          series
+        comment: Shows widening uncertainty, seasonal wiggle, and trend all together
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: River streamflow forecast is a real, neutral, comprehensible scenario
-          with correct units
+        comment: Real, neutral hydrology scenario (streamflow forecast with prediction
+          interval)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (34-90 m3/s) and the widening lead-time uncertainty are physically
-          plausible for a forecast
+        comment: Plausible m3/s magnitudes and growth for a river forecast
     code_quality:
       score: 10
       max: 10
@@ -203,33 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, no functions/classes
+        comment: Linear top-to-bottom script, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3, no unused imports
+        comment: Only the d3 global is used, no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately simple, no fake UI or interactivity
+        comment: Appropriate complexity; the added hover interactivity is genuine,
+          not fake
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Builds one svg into #container per the mount-node contract, no animation'
+        comment: 'Mounts into #container per the harness contract, no manual file
+          writes'
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -237,23 +232,24 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly follows D3's recommended margin/scale/axis/shape-generator
-          pattern for an area+line combo
+        comment: Correct D3 margin/scale/axis/shape-generator pattern
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: area()+line()+linear scales is generic and easily replicated in other
-          charting libraries; no feature unique to D3's low-level/interactive strengths
-          is used
-  verdict: REJECTED
+        passed: true
+        comment: Real d3.bisector-driven mousemove interactivity (guide line, boundary
+          dots, multi-line readout) is genuinely D3-specific, addressing attempt 1's
+          generic area+line-only critique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
+  - gradient-fill
   - alpha-blending
