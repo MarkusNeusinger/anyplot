@@ -305,7 +305,17 @@ new Chart(canvas, {
           },
         },
       },
-      tooltip: { enabled: false },
+      tooltip: {
+        backgroundColor: t.elevatedBg,
+        titleColor: t.ink,
+        bodyColor: t.ink,
+        borderColor: t.grid,
+        borderWidth: 1,
+        callbacks: {
+          label: (ctx) =>
+            `${ctx.dataset.label}: ${ctx.dataset.labelValues[ctx.dataIndex]}%`,
+        },
+      },
     },
     scales: {
       x: {
