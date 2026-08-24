@@ -16,8 +16,8 @@ const responses = [
   { question: "Leadership vision is clear", sd: 7, d: 13, n: 18, a: 36, sa: 26 },
   { question: "Feel recognized for work", sd: 9, d: 15, n: 17, a: 34, sa: 25 },
   { question: "Workload is manageable", sd: 10, d: 17, n: 19, a: 32, sa: 22 },
-  { question: "Cross-team collaboration works well", sd: 11, d: 19, n: 21, a: 30, sa: 19 },
-  { question: "Manager supports career growth", sd: 13, d: 20, n: 18, a: 28, sa: 21 },
+  { question: "Cross-team collaboration works well", sd: 18, d: 24, n: 18, a: 25, sa: 15 },
+  { question: "Compensation is fair compared to market", sd: 48, d: 30, n: 6, a: 10, sa: 6 },
 ];
 
 // Sort by net agreement (agree + strongly_agree - disagree - strongly_disagree), best first.
@@ -36,6 +36,8 @@ const maxExtent = Math.max(
   ...responses.map((r) => r.sd + r.d + r.n / 2),
   ...responses.map((r) => r.sa + r.a + r.n / 2)
 );
+// Round up to a multiple of 30 so the axis renders 3 evenly-spaced ticks per side.
+const axisExtent = Math.ceil(maxExtent / 30) * 30;
 
 const insideLabel = (color) => ({
   show: true,
@@ -137,8 +139,9 @@ chart.setOption({
   grid: { left: 440, right: 60, top: 120, bottom: 70, containLabel: false },
   xAxis: {
     type: "value",
-    min: -maxExtent,
-    max: maxExtent,
+    min: -axisExtent,
+    max: axisExtent,
+    interval: axisExtent / 3,
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: (v) => `${Math.round(Math.abs(v))}%` },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
