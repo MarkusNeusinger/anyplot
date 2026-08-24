@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: box-basic
 created: '2026-08-24T17:31:15Z'
-updated: '2026-08-24T17:36:07Z'
+updated: '2026-08-24T17:46:25Z'
 generated_by: claude-sonnet
 workflow_run: 32754032711
 issue: 689
@@ -12,53 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-basic
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-basic/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - 'Clean, well-reasoned engineering workaround for the missing native boxplot series:
-    stacked invisible-floor + IQR column (colorByPoint) with two null-separated line
-    series for whiskers/caps and the median, all documented with clear header comments
-    explaining the layering rationale.'
-  - Median line uses t.pageBg as its stroke color, which self-adapts to a light or
-    dark cutout groove against any box color in either theme without needing a separate
-    contrast token.
-  - Correct Imprint canonical color order across all 5 categories (green, lavender,
-    blue, ochre, red), identical between light and dark renders; only chrome flips.
+  - 'Data-driven storytelling now added: xAxis.plotBands (with computed widestIdx/tightestIdx)
+    shade and label the classes with the widest spread and the tightest, most consistent
+    distribution — directly fixes Attempt 1''s DE-03 gap and stays correct if the
+    underlying data changes.'
+  - Box border, whisker caps, and outlier markers were visibly softened (borderColor
+    ink to inkSoft, borderWidth 1.5 to 1.25, borderRadius 2 added, whisker linecap
+    round, outlier fillOpacity 0.85) — a genuine polish pass over Attempt 1, addressing
+    the DE-01/DE-02 feedback.
+  - 'Clean, well-documented engineering workaround for the missing native boxplot
+    series: stacked invisible-floor + IQR column (colorByPoint) plus two null-separated
+    line series for whiskers/caps and the median.'
+  - Median line uses t.pageBg as its stroke color, self-adapting to a light or dark
+    cutout groove against any box color in either theme without a separate contrast
+    token — confirmed legible on every box color in both renders.
+  - Correct Imprint canonical color order across all 5 categories, identical between
+    light and dark renders — only chrome flips.
   - Whiskers correctly computed at 1.5*IQR with outliers rendered as separate scatter
-    points colored to match their category.
-  - 'Realistic, varied data: different means/stds/n per class produces genuinely different
-    spreads and medians, with outliers present in 3 of 5 categories.'
-  - Explicit font sizing throughout (title 22px, axis titles 16px, tick labels 14px)
-    and both renders are fully legible with no dark-on-dark or light-on-light failures.
+    points colored to match their category; realistic varied data (different means/stds/n
+    per class) with outliers in 3 of 5 categories.
+  - Explicit font sizing throughout, fully legible in both themes with no theme-adaptation
+    failures; canvas dimension gate passed (3200x1800).
   weaknesses:
-  - 'Design Excellence is solid but short of publication-grade polish (DE-01 6/8):
-    box borders, whisker caps, and outlier markers are functional but fairly plain
-    — slightly refined stroke weights or subtler cap styling would elevate it further.'
-  - Visual refinement (DE-02 4/6) is good but still close to library defaults — grid
-    lines and the box border weight could be softened a touch more for a more premium
-    feel.
-  - Data storytelling (DE-03 4/6) relies only on per-category color to differentiate
-    groups; there's no visual emphasis calling out the most notable pattern (e.g.
-    Geometry's unusually wide spread and low outlier, or Algebra II's tight, high
-    distribution) — a subtle highlight or annotation would strengthen the narrative.
-  - 'Library Mastery (LM-02 3/5): stacking, colorByPoint, and the custom tooltip pointFormatter
-    are solid Highcharts idioms but not deeply distinctive — leaning further into
-    Highcharts-unique capabilities would raise this.'
-  - Helper functions (lcg, randNormal, quartile, boxStats) push CQ-01 (KISS Structure)
-    to 2/3 — necessary here since Highcharts' core bundle has no native boxplot stats,
-    but still a deviation from the ideal flat imports→data→plot→save structure.
+  - Grid line weight/opacity is unchanged from Attempt 1 — still close to library
+    defaults; a touch more restraint would push Visual Refinement further.
+  - Helper functions (lcg, randNormal, quartile, boxStats) still push KISS structure
+    down slightly — necessary here since Highcharts' core bundle has no native boxplot
+    stats, but a deviation from a flat imports to data to plot to save structure.
+  - Library Mastery is solid (plotBands storytelling, colorByPoint, custom tooltip
+    pointFormatter) but could lean further into Highcharts-unique capabilities (e.g.
+    dataLabels or zones) for a top Library Mastery score.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Dark bold title "box-basic · javascript · highcharts · anyplot.ai" clearly readable at top center; axis titles "Class" (x) and "Final Exam Score (%)" (y) in a soft dark gray, fully legible; tick labels (class names, percentage values) dark and crisp against the light background; horizontal gridlines are subtle, light gray, visible but not dominant.
-      Data: 5 box-and-whisker groups (Algebra I, Geometry, Algebra II, Precalculus, Calculus) each in a distinct Imprint palette color in canonical order — green (#009E73), lavender, blue, ochre, red. Each box has a dark 1.5px border, a white median line crossing it, thin gray whisker lines with end caps, and colored outlier dots below the lower whisker for 3 of 5 categories. All elements are clearly distinguishable from the background and from each other.
-      Legibility verdict: PASS.
+      Background: Warm off-white (~#FAF8F1), not pure white and not dark.
+      Chrome: Bold dark title "box-basic · javascript · highcharts · anyplot.ai" clearly readable at top center. Axis titles "Class" (x) and "Final Exam Score (%)" (y) render in soft dark gray, fully legible. Tick labels (class names, percentage values 40-100) are dark and crisp. Horizontal gridlines are subtle but visible. Two shaded xAxis.plotBands with italic labels "Widest spread" (over Geometry) and "Most consistent" (over Algebra II) are legible and unobtrusive.
+      Data: Five box-and-whisker groups (Algebra I, Geometry, Algebra II, Precalculus, Calculus) each use a distinct Imprint color in canonical order — green #009E73, lavender, blue, ochre, red. First series confirmed brand green. Each box has a softened dark-gray border, a near-white median line that reads as a cutout groove against every box color, thin gray whiskers with rounded end caps, and colored outlier dots (3 of 5 categories have outliers).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title now rendered in light/white text, fully legible against the dark background; axis titles and tick labels rendered in a light warm-gray, fully readable; gridlines are subtle light gray on the dark surface, visible without dominating.
-      Data: Same 5 categories in the identical Imprint colors as the light render (green, lavender, blue, ochre, red) — confirmed unchanged data-color mapping. Box borders switch to a light/near-white stroke for contrast against the dark background, median line renders as a near-black cutout line inside each colored box (still clearly visible against every box color), whiskers in light gray, outlier dots colored to match their category. No dark-on-dark or light-on-light failures observed anywhere.
-      Legibility verdict: PASS.
+      Background: Warm near-black (~#1A1A17), not pure black and not light.
+      Chrome: Title renders in light/white text, fully legible. Axis titles and tick labels render in light warm-gray, fully readable. Gridlines remain subtle on the dark surface. The same two plotBands ("Widest spread" over Geometry, "Most consistent" over Algebra II) are legible with light-gray italic labels.
+      Data: The five boxes use identical Imprint colors to the light render (green, lavender, blue, ochre, red) — confirmed unchanged data-color mapping; only the box border and median-line strokes flip to a near-black cutout groove that stays visible against every box color. No dark-on-dark or light-on-light failures observed anywhere. Brand green remains clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -69,72 +67,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks
-          14px); fully readable in both themes with no overflow
+        comment: All font sizes explicit; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render
+        comment: No text/data collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Box borders, whisker caps, median line, and outlier markers all clearly
-          visible and appropriately sized
+        comment: Outliers, whiskers, and pageBg-cutout median line all distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, dark/light box borders give extra separation
-          beyond hue alone
+        comment: Imprint palette, CVD-safe, category labels are redundant encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off
+        comment: Canvas gate passed (3200x1800); nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (Final Exam Score (%))
+        comment: Descriptive labels with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order for all 5 categories,
-          identical across themes, theme-correct backgrounds'
+        comment: Canonical Imprint order across 5 categories, correct theme backgrounds
     design_excellence:
-      score: 14
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful composite-series technique and background-cutout median
-          line, clearly above defaults but not yet publication-perfect
+        comment: Refined border/marker treatment over Attempt 1; composite box-plot
+          technique is polished
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, no unnecessary spines, but border weights still close
-          to default
+        comment: Softened box border and whisker caps; grid still close to default
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Per-category color and varied spreads/outliers create visual hierarchy,
-          but no explicit emphasis on the standout pattern
+        comment: Data-driven plotBands call out widest-spread and most-consistent
+          classes
     spec_compliance:
       score: 15
       max: 15
@@ -144,27 +137,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct box-and-whisker plot with all subtypes present
+        comment: Correct box-and-whisker plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Median line, outliers, 1.5*IQR whiskers, per-category colors all
-          present
+        comment: Median, quartile box, whiskers at 1.5*IQR, outliers, per-category
+          colors all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x-axis, score on y-axis, all data visible
+        comment: Categories on x, score on y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed since categories are labeled
-          on the x-axis
+        comment: Title matches mandated format; legend correctly omitted (x-axis labels
+          categories)
     data_quality:
       score: 15
       max: 15
@@ -174,19 +167,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Outliers and clearly different spreads/medians across categories
+        comment: All box-plot elements present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral scenario: exam scores across math classes'
+        comment: Plausible, neutral test-score data across 5 classes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 0-100% scores with realistic means/std devs per class
+        comment: 0-100 score scale, axis zoomed to data spread
     code_quality:
       score: 9
       max: 10
@@ -196,8 +189,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Helper functions (lcg, randNormal, quartile, boxStats) are necessary
-          given no native boxplot stats in the core bundle
+        comment: Helper functions (lcg, randNormal, quartile, boxStats) needed for
+          stats, but deviate from flat structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -209,21 +202,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only global Highcharts/ANYPLOT_TOKENS used
+        comment: No unused imports; Highcharts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; appropriate complexity for the workaround
+        comment: Appropriate complexity, no fake UI, legitimate core-bundle workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current API, animation disabled
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,23 +224,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: High-quality use of column/line series and plotOptions given the
-          core-bundle boxplot limitation
+        comment: Idiomatic core-only composite series, colorByPoint, tooltip pointFormatter
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Stacking, colorByPoint, and custom tooltip pointFormatter are solid
-          Highcharts-specific idioms but not deeply unique
-  verdict: REJECTED
+        comment: plotBands + label storytelling added this attempt, directly per feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - quartile-calculation
   styling:
-  - edge-highlighting
+  - publication-ready
+  - alpha-blending
