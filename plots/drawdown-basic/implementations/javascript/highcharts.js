@@ -1,7 +1,7 @@
 // anyplot.ai
 // drawdown-basic: Drawdown Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-24
+// Quality: 90/100 | Created: 2026-08-24
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
 
