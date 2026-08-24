@@ -1,0 +1,249 @@
+library: chartjs
+language: javascript
+specification_id: curve-bias-variance-tradeoff
+created: '2026-08-24T20:30:21Z'
+updated: '2026-08-24T20:34:45Z'
+generated_by: claude-sonnet
+workflow_run: 32772814588
+issue: 4134
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/curve-bias-variance-tradeoff/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'All 4 required curves present with correct qualitative shapes: Bias² decreasing,
+    Variance increasing, Irreducible Error flat, Total Error U-shaped'
+  - Optimal complexity clearly marked with a vertical amber reference line plus a
+    direct 'Optimal' label
+  - Direct on-chart curve labels (Bias², Variance, Irreducible Error, Total Error)
+    reduce reliance on the legend and aid readability
+  - 'Correct Imprint palette usage with thoughtful semantic anchors: theme-adaptive
+    ink for the ''Total Error'' reference curve, amber for the ''Optimal'' marker'
+  - Required formula 'Total Error = Bias² + Variance + Irreducible Error' included
+    as a subtitle
+  - 'Theme-adaptive chrome correctly implemented — both renders pass legibility checks,
+    backgrounds match #FAF8F1/#1A1A17, data colors identical across themes'
+  - Clean, deterministic, KISS-structured code with no fake interactivity and correct
+    mount-node/animation:false contract
+  weaknesses:
+  - Underfitting/overfitting shaded zones are visually present and correctly positioned
+    but not explicitly labeled on the chart (filtered out of the legend) — a small
+    text label per zone would make the storytelling intent unambiguous
+  - Direct curve labels are drawn with a plain hardcoded canvas font (600 18px sans-serif)
+    rather than one tied into the same typography hierarchy as the title/legend —
+    minor refinement opportunity
+  - Y-axis label 'Prediction Error' has no explicit unit, though acceptable since
+    it is a theoretical/normalized error metric with no natural physical unit
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "curve-bias-variance-tradeoff · javascript · chartjs · anyplot.ai" in bold dark ink, clearly readable. Italic subtitle "Total Error = Bias² + Variance + Irreducible Error" in soft gray, readable. Legend (Total Error, Bias², Variance, Irreducible Error, Optimal Complexity) with color swatches, dark text, fully readable. X-axis "Model Complexity (Polynomial Degree)" and Y-axis "Prediction Error" titles and tick labels (0/5/10/15/20, 0–4.0) all dark and legible against the light surface.
+      Data: Bias² curve in brand green (#009E73) decreasing from ~3.4 to ~0.15; Variance curve in violet increasing from ~0 to ~2.4; Irreducible Error as a dashed blue horizontal line at 0.2; Total Error as a thick black U-shaped curve with visible minimum around x≈5.7; a dashed amber vertical line marks the optimal complexity with an "Optimal" label; subtle gray wash right of the optimal line marks the overfitting zone vs. a near-invisible wash left of it for the underfitting zone. Curves are directly labeled on the plot (Bias², Variance, Irreducible Error, Total Error) in matching colors.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle rendered in white/light-gray, fully legible. Legend text is white; swatches (including "Total Error" which flips from black to white via the theme-adaptive ink token) all readable. Axis titles and tick labels are light-colored and legible against the dark surface. No dark-on-dark or light-on-light failures observed anywhere.
+      Data: Bias² green (#009E73), Variance violet, Irreducible Error dashed blue, Optimal Complexity dashed amber — all pixel-identical in hue to the light render; only the Total Error curve and chrome elements flip via the theme-adaptive ink token as intended. Zone shading is still present, using the light-ink-tinted overlay appropriate for the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes at full size;
+          title fits within bounds
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights (2.5-4px) well suited to a 4-curve continuous line chart
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues plus dashed/solid line-style variation avoids reliance
+          on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, good canvas utilization, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles; no natural unit exists for this theoretical
+          error metric
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Bias²=palette[0] #009E73, Variance=palette[1], Irreducible=palette[2],
+          neutral ink for Total Error, amber for Optimal marker; theme-correct chrome
+          and backgrounds in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy (neutral for total, amber for optimal),
+          direct labeling, above default configuration
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X grid removed, subtle zone shading, generous whitespace; y grid
+          still standard
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Optimal line + direct labels guide the reader to the key insight;
+          zones add hierarchy but are unlabeled
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line chart correctly represents theoretical curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 4 curves, optimal marker, direct labels, formula, and under/overfit
+          zones all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=complexity, Y=prediction error, all data visible across full axis
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format; legend labels match curve names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows decreasing bias, increasing variance, flat noise floor, and
+          U-shaped total together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard, neutral ML-education visualization with clear semantic
+          labels
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible synthetic curve values consistent with textbook bias-variance
+          illustrations
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic generated data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a multi-curve annotated chart; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation:false set, current Chart.js
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic dataset/options config plus a well-formed inline plugin
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's afterDraw plugin hook for direct labels and fill:'origin'
+          area datasets for zone shading
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
