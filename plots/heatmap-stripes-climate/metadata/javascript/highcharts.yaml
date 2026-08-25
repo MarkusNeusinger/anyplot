@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: heatmap-stripes-climate
 created: '2026-08-25T01:17:17Z'
-updated: '2026-08-25T01:22:16Z'
+updated: '2026-08-25T01:39:18Z'
 generated_by: claude-sonnet
 workflow_run: 32796511710
 issue: 4423
@@ -12,53 +12,65 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 79
 review:
   strengths:
-  - Correct blue-to-red diverging warming-stripes encoding, symmetric around zero
-    anomaly, matching the spec's core requirement
-  - No axes, gridlines, tick marks, or legend — matches the spec's minimalist mandate
-  - Deterministic LCG-seeded synthetic data producing a realistic accelerating-warming
-    curve, 1850-2024 (175 years, at the spec's upper bound)
-  - Correctly works around the missing heatmap/colorAxis module by computing per-point
-    column colors from t.div, with the rationale clearly documented in a comment
-  - Title correctly formatted ("heatmap-stripes-climate · javascript · highcharts
-    · anyplot.ai") and legible in both themes; canvas passes the 3200x1800 gate
-  - Diverging colormap endpoints (deep red / deep blue) are pixel-identical between
-    light and dark renders as required; only the theme-adaptive midpoint (per the
-    style guide's imprint_div spec) flips
+  - 'Minimalist execution matches the spec exactly: axes, tick marks, gridlines, legend,
+    and tooltip are all disabled, leaving pure color-encoded data as required.'
+  - 'Deterministic, realistic data: fixed-seed LCG generates 175 years (1850-2024,
+    the upper end of the spec''s 100-175 range) with a plausible accelerating-warming
+    shape and a magnitude (~-0.45 to ~+1.2C) consistent with real HadCRUT/GISS-style
+    anomaly series.'
+  - 'Correct diverging color direction and rationale: cold->blue, warm->red is implemented
+    via the Imprint imprint_div stops with a documented semantic-exception justification,
+    and the two color poles (t.div[0]/t.div[2]) are theme-independent so the most
+    extreme years render pixel-identical in light and dark (verified: rightmost bar
+    is RGB(160,46,45) in both renders).'
+  - 'Genuinely Highcharts-distinctive touch: a subtle SVGRenderer radial vignette
+    confined to the plot box (excludes the title band) adds depth without adding forbidden
+    chrome.'
+  - 'Clean, honest code: no fake interactivity, no unused imports/dependencies, animation
+    disabled at both chart and series level per the harness contract, mandated title
+    format followed exactly.'
   weaknesses:
-  - Bars for near-zero anomalies interpolate all the way to the exact page-background
-    color (t.div[1] = pageBg), so low-magnitude years become effectively invisible
-    against the canvas in both themes — acceptable for the warming-stripes genre,
-    but consider a small minimum-distance floor from bg so no year is fully indistinguishable
-    from the frame
-  - Design Excellence is solid but generic within the color-only presentation — the
-    chart is correct but not especially refined; consider a touch more visual polish
-    (e.g. a very subtle vertical vignette or edge treatment) without adding forbidden
-    chrome
-  - 'Library Mastery is modest: only basic per-point column coloring is demonstrated,
-    no other Highcharts-distinctive capability (acceptable given the minimalist spec,
-    but flagged for parity with more idiomatic Highcharts usage)'
-  - Five small helper functions (lcgRandom, hexToRgb, rgbToHex, lerpColor, colorForAnomaly)
-    push past a simple KISS import-to-plot flow — justified by the core-bundle constraint
-    (documented in the code comment), but hexToRgb/rgbToHex could be merged into one
-    small utility to trim it down
+  - 'Visible gaps between bars at the top edge, violating the spec''s explicit ''no
+    gaps between bars'' rule: Highcharts columns default to a non-zero borderRadius,
+    so every one of the 175 bars has rounded top corners, creating small page-background-colored
+    notches along the entire top border of the stripe field (confirmed by pixel sampling:
+    rows y=140-155 in plot-light.png are full-width page-background color between
+    bar tops, directly under the title). Fix: set `borderRadius: 0` in `plotOptions.column`
+    (or on the series/point config) so bars are flat-topped rectangles that butt against
+    each other with zero gap, matching pointPadding/groupPadding/borderWidth which
+    are already correctly set to 0.'
+  - 'Data colors are not read-consistent between light and dark for low/medium-magnitude
+    years, going beyond the allowed ''only chrome flips'' rule: colorForAnomaly()
+    blends each bar from t.div[1] (the theme-adaptive midpoint, #FAF8F1 light / #1A1A17
+    dark) toward the warm/cold pole, so the same year renders very differently by
+    theme. Example measured at x=10 (leftmost/earliest year, magnitude ~0.38): light
+    = RGB(172,182,196) pale blue-gray, dark = RGB(38,49,66) deep navy -- a large lightness/saturation
+    jump for identical underlying data, even though the two extreme-magnitude years
+    at the far right do correctly converge to an identical color in both themes. Only
+    the strongest years currently look consistent; the majority of the record (low/medium
+    magnitude) looks qualitatively different across themes. Fix: blend against a fixed,
+    theme-independent neutral anchor (or reduce how much of the blend range is anchored
+    to the page background) so the color read at a given magnitude stays recognizable
+    between the two renders, reserving the theme-adaptive midpoint behavior for the
+    true near-zero region only.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
-      Chrome: Title "heatmap-stripes-climate · javascript · highcharts · anyplot.ai" in bold dark ink, centered at top, clearly legible against the light background. No other chrome (axes, ticks, gridlines, legend) is present, matching the spec's minimalist mandate.
-      Data: ~175 vertical column stripes span the full canvas width and height edge-to-edge with no gaps. Colors progress smoothly from steel/slate blue on the left (coldest anomalies, ~1850s), through near-background cream in the low-magnitude middle years, to deep brick red on the right (warmest anomalies, ~2020s). No red-green confound; blue/red is CVD-safe.
-      Legibility verdict: PASS — title text is fully readable, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), correct — not pure white, not dark.
+      Chrome: Only a single text element, the mandated title "heatmap-stripes-climate · javascript · highcharts · anyplot.ai", set in dark ink (t.ink), bold, ~22px, centered near the top. Clearly legible against the light background. No axes, ticks, gridlines, or legend present (correct per spec — this plot type is meant to be pure color encoding).
+      Data: 175 vertical stripes spanning the full canvas width, one per year 1850-2024, colored on a blue-to-red diverging scale. Left third reads as muted blue-gray, fading through a near-white/pale-pink neutral band roughly in the middle-left, then intensifying into saturated red toward the right edge (most recent years). First-glance the trend "from cool to warm" reads clearly. On close inspection (pixel sampling), the very top ~15px of every bar has a small rounded-corner notch that lets the page background peek through between adjacent bars — a thin but visible scalloped seam runs along the entire top edge, just below the title.
+      Legibility verdict: PASS (title fully legible; no dark-on-light or missing-contrast issues).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black, not light.
-      Chrome: Same title text rendered in light/cream ink, centered at top, clearly legible against the dark background. No dark-on-dark failures — the title color flips correctly with theme.
-      Data: Same stripe progression as the light render — blue on the left transitioning through near-black in the low-magnitude middle years to deep red on the right. The extreme endpoint colors (deepest blue, deepest red) are visually identical to the light render, confirming only chrome (background + title ink) flips between themes, as required. The near-black middle stripes blend closely with the dark chrome background — this is the intended behavior of the style guide's theme-adaptive imprint_div midpoint (pageBg-colored center), not a bug, though it does make those years hard to distinguish from the canvas.
-      Legibility verdict: PASS — title text is fully readable, no dark-on-dark issues.
+      Background: Warm near-black (#1A1A17), correct — not pure black, not light.
+      Chrome: Same title text, now in light ink (t.ink for dark theme), clearly legible against the dark background. Same absence of axes/ticks/grid/legend, consistent with the light render.
+      Data: Same 175-stripe layout and left-to-right blue-to-red progression. However, the actual pixel colors of low/medium-magnitude years differ substantially from the light render — e.g. the leftmost (earliest, ~1850) stripe is a much darker, more saturated navy in this render versus a washed-out pale blue-gray in the light render, because the color-blend basis is the theme-adaptive page background rather than a fixed neutral. Only the most extreme (highest-magnitude, rightmost) stripes converge to an identical color across both renders (confirmed via pixel sampling: RGB(160,46,45) in both). The same top-edge rounded-corner notch/gap artifact is present here too, using the dark page background color instead.
+      Legibility verdict: PASS (title fully legible, no dark-on-dark failure) — but data-color consistency across themes is a real weakness (see Weaknesses).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -66,72 +78,83 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title clearly readable in both themes; only text element on the canvas
+        comment: Only the mandated title is present; fully legible in both themes
+          with correct token colors.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Title has generous top spacing, no collision with data area
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Near-zero-anomaly stripes interpolate to the exact page-background
-          color, making them nearly invisible against the canvas in both themes
+        comment: No text/data collisions, but the thin background seams at bar tops
+          read as a minor 'gap' artifact adjacent to this category.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 175 stripes at ~18px each are clearly visible and appropriately sized
+          for the density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-to-red diverging scale is CVD-safe, not red-green
+        comment: Blue-vs-red hot/cold convention is CVD-reasonable and matches domain
+          expectation; no red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 3200x1800 canvas gate passed, no overflow, no clipping
+        passed: false
+        comment: Rounded default column borderRadius creates visible page-background
+          notches along the entire top edge of the stripe field (confirmed by pixel
+          sampling y=140-155) -- violates the 'no gaps between bars' spec rule.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes by design (spec mandate); title correctly formatted
+        comment: Axes correctly hidden per spec; title matches the mandated format
+          exactly.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Uses t.div (imprint_div) correctly; correct theme-adaptive backgrounds;
-          data colors identical at endpoints between themes
+        passed: false
+        comment: Correct Imprint imprint_div hues and correct convergence at extremes,
+          but the theme-adaptive-background blend basis makes low/medium-magnitude
+          years look substantially different between light and dark (e.g. leftmost
+          year RGB(172,182,196) light vs RGB(38,49,66) dark) -- goes beyond 'only
+          chrome flips'.
     design_excellence:
-      score: 13
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Faithful, professional execution of the canonical warming-stripes
-          genre; smooth calculated gradient
+        passed: false
+        comment: Custom diverging color computation and a vignette show real intent,
+          but the visible top-edge gap artifact undercuts overall polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Minimal chrome by design, generous top margin, no spines/grid to
-          remove; lacks extra polish beyond the base genre
+        passed: false
+        comment: Chrome (axes/grid/legend) is cleanly removed as intended, but the
+          seamless-stripe look the plot type depends on is broken by the rounded-corner
+          gaps.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Color progression itself is the story; clear left-to-right focal
-          progression, though no additional visual hierarchy is layered on top
+        passed: false
+        comment: The blue-to-red gradient and vignette create a clear focal read,
+          but the cross-theme color-magnitude inconsistency slightly undermines a
+          consistent story.
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -139,31 +162,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct warming-stripes column chart
+        comment: 'Correct warming-stripes technique: full-height columns colored per-anomaly,
+          no built-in Highcharts type needed.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: No axes/labels/gridlines, diverging colormap centered at 0, equal-width
-          bars with no gaps, symmetric color scale
+        passed: false
+        comment: No axes/labels/ticks/gridlines (correct), symmetric diverging scale
+          (correct), but 'no gaps between bars' is visibly violated by the default
+          column borderRadius.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=year index, color=anomaly, full-height bars; landscape canvas is
-          the fixed platform default (spec's 3:1 note is unreachable within the two
-          canonical canvas sizes, a systemic constraint, not an implementation flaw)
+        comment: Chronological x-position + anomaly-driven color correctly encodes
+          both data dimensions given the deliberately hidden axes.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; no legend needed for a single continuous
-          series
+        comment: Title matches '{spec-id} · javascript · highcharts · anyplot.ai'
+          exactly; legend correctly omitted for single implicit series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -171,84 +195,88 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 175 years (1850-2024), at the spec's upper bound
+        comment: 175 rows (1850-2024), at the upper end of the 100-175 spec range;
+          every year has both fields.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible accelerating-warming curve resembling real global-mean
-          anomaly records; clearly synthetic but neutral
+        comment: Plausible, non-controversial accelerating-warming synthetic series
+          in the style of standard climate anomaly datasets.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Anomaly range ~-0.45 to +1.2C, consistent with real-world climate
-          data scale
+        comment: Anomaly range (~-0.45C to ~+1.2C) is a sensible magnitude relative
+          to a 1961-1990 baseline.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Five small helper functions beyond the plain import-data-plot flow,
-          justified by the missing colorAxis module but still adds structure
+        comment: Flat procedural script; the handful of small helper functions (rgbToHex,
+          lerpColor, colorForAnomaly, drawVignette) are each justified by a genuine
+          need, no classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for deterministic noise
+        comment: Fixed-seed LCG (seed=42), fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the provided Highcharts global
-          and tokens
+        comment: No imports beyond the Highcharts global, as required for this library.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the constraint, well-documented rationale
-          in comments
+        comment: No fake UI or simulated interactivity; appropriate complexity for
+          a manual per-point diverging color map.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled on chart and series
+        comment: Correct mount-node contract, animation disabled at chart and series
+          level, no explicit width/height.
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct idiomatic workaround (per-point column color) given the core-bundle
-          constraint
+        comment: Sound workaround for the missing colorAxis/heatmap module (documented
+          in comments), but it's a necessity-driven workaround rather than a showcase
+          of idiomatic column-series usage.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Only basic per-point coloring is used; no other Highcharts-distinctive
-          capability demonstrated
+        comment: The SVGRenderer-drawn radial vignette is a genuine Highcharts-distinctive
+          touch, though modest in scope.
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - radial-gradient-overlay
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
   - gradient-fill
