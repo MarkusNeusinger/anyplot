@@ -11,11 +11,13 @@ const t = window.ANYPLOT_TOKENS;
 // other and would collide on a literal linear axis, so yPos compresses the
 // lower levels and keeps generous, legible spacing near the ionization limit
 // while preserving the true ordering and the visual sense of convergence.
+// n=1 is pulled up from its literal -13.6 to -10.6 to shrink the otherwise
+// empty gap below n=2 while it still reads as clearly the most-isolated level.
 const LEVEL_X0 = 0.6;
 const LEVEL_X1 = 5.6;
 
 const levels = [
-  { n: 1, energy: -13.6, yPos: -14.4 },
+  { n: 1, energy: -13.6, yPos: -10.6 },
   { n: 2, energy: -3.4, yPos: -5.9 },
   { n: 3, energy: -1.51, yPos: -3.5 },
   { n: 4, energy: -0.85, yPos: -2.2 },
@@ -32,7 +34,7 @@ const transitionFamilies = [
     color: t.palette[0],
     dashStyle: "Solid",
     transitions: [
-      { x: 7.0, fromN: 2, toN: 1, label: "121.6 nm" },
+      { x: 7.0, fromN: 2, toN: 1, label: "121.6 nm", highlight: true },
       { x: 8.0, fromN: 3, toN: 1, label: "102.6 nm" },
     ],
   },
@@ -70,6 +72,7 @@ const transitionSeries = transitionFamilies.map((family) => {
     const yTo = yPosOf(tr.toN);
     const emission = yTo < yFrom;
     const topY = Math.max(yFrom, yTo);
+    const label = tr.highlight ? `<b>${tr.label} (Ly-α)</b>` : tr.label;
     data.push(
       {
         x: tr.x,
@@ -77,7 +80,7 @@ const transitionSeries = transitionFamilies.map((family) => {
         marker: { enabled: false },
         dataLabels: {
           enabled: yFrom === topY,
-          custom: { label: tr.label },
+          custom: { label },
         },
       },
       {
@@ -86,13 +89,13 @@ const transitionSeries = transitionFamilies.map((family) => {
         marker: {
           enabled: true,
           symbol: emission ? "triangle-down" : "triangle",
-          radius: 9,
+          radius: tr.highlight ? 12 : 9,
           fillColor: family.color,
           lineWidth: 0,
         },
         dataLabels: {
           enabled: yTo === topY,
-          custom: { label: tr.label },
+          custom: { label },
         },
       }
     );
@@ -205,13 +208,13 @@ Highcharts.chart("container", {
     title: { text: null },
   },
   yAxis: {
-    min: -15.4,
+    min: -11.6,
     max: 1.3,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     gridLineWidth: 0,
     title: {
-      text: "Energy (increasing ↑, non-linear scale)",
+      text: "Energy (eV, increasing ↑, non-linear scale)",
       style: { color: t.inkSoft, fontSize: "16px" },
     },
     labels: { enabled: false },
