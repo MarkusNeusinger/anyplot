@@ -1,8 +1,7 @@
 // anyplot.ai
 // genome-track-multi: Genome Track Viewer
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-25
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 95/100 | Created: 2026-08-25
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { useXScale, useDrawingArea } from "@mui/x-charts/hooks";
