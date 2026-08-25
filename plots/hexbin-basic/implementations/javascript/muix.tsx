@@ -121,12 +121,41 @@ const binCountMin = Math.min(...hexBins.map((b) => b.count));
 const colorDomainMin = Math.log1p(binCountMin);
 const colorDomainMax = Math.log1p(binCountMax);
 
-const hexBinPoints = hexBins.map((bin) => ({
-  id: bin.id,
-  x: bin.cx,
-  y: bin.cy,
-  z: Math.log1p(bin.count),
-}));
+// Every hex cell that overlaps the domain, occupied or not — filling in the
+// zero-count cells (instead of only plotting occupied bins) avoids blank
+// "swiss cheese" gaps in the sparse fringe; empty cells get a faint fixed
+// tint below instead of participating in the log-count color scale.
+function fullHexGrid() {
+  const cells = [];
+  const rowPad = 1;
+  const pjMin = Math.floor(-DOMAIN / hexDy) - rowPad;
+  const pjMax = Math.ceil(DOMAIN / hexDy) + rowPad;
+  for (let pj = pjMin; pj <= pjMax; pj += 1) {
+    const offset = (pj & 1) / 2;
+    const piMin = Math.floor(-DOMAIN / hexDx - offset) - rowPad;
+    const piMax = Math.ceil(DOMAIN / hexDx - offset) + rowPad;
+    for (let pi = piMin; pi <= piMax; pi += 1) {
+      const cx = (pi + (pj & 1) / 2) * hexDx;
+      const cy = pj * hexDy;
+      if (Math.abs(cx) > DOMAIN + HEX_RADIUS || Math.abs(cy) > DOMAIN + HEX_RADIUS) continue;
+      cells.push({ id: `${pi}-${pj}`, cx, cy });
+    }
+  }
+  return cells;
+}
+
+const occupiedById = new Map(hexBins.map((bin) => [bin.id, bin]));
+const hexBinPoints = fullHexGrid().map((cell) => {
+  const occupied = occupiedById.get(cell.id);
+  const count = occupied ? occupied.count : 0;
+  return {
+    id: cell.id,
+    x: cell.cx,
+    y: cell.cy,
+    z: count > 0 ? Math.log1p(count) : colorDomainMin,
+    isEmpty: count === 0,
+  };
+});
 
 // Community @mui/x-charts has no hexbin/heatmap component (Pro-only) — a
 // ScatterChart with a custom hexagon-path marker, positioned from the
@@ -169,7 +198,8 @@ function HexCell(props) {
           <path
             key={point.id}
             d={`${d}Z`}
-            fill={colorGetter ? colorGetter(i) : color}
+            fill={point.isEmpty ? t.seq[0] : colorGetter ? colorGetter(i) : color}
+            fillOpacity={point.isEmpty ? 0.12 : 1}
             stroke={t.pageBg}
             strokeWidth={1}
           />
@@ -200,69 +230,85 @@ export default function Chart() {
       >
         hexbin-basic · javascript · muix · anyplot.ai
       </Typography>
-      <ScatterChart
-        width={width}
-        height={height - titleHeight}
-        series={[
-          {
-            id: "hex-density",
-            type: "scatter",
-            data: hexBinPoints,
-            label: "Ping count",
-            zAxisId: "count",
-          },
-        ]}
-        xAxis={[
-          {
-            scaleType: "linear",
-            min: -DOMAIN,
-            max: DOMAIN,
-            label: "Distance east of plaza (m)",
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
-          },
-        ]}
-        yAxis={[
-          {
-            scaleType: "linear",
-            min: -DOMAIN,
-            max: DOMAIN,
-            label: "Distance north of plaza (m)",
-            tickFontSize: 42,
-            tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
-            labelStyle: { fontSize: 16, fill: t.ink },
-          },
-        ]}
-        zAxis={[
-          {
-            id: "count",
-            min: colorDomainMin,
-            max: colorDomainMax,
-            colorMap: {
-              type: "continuous",
+      <Box sx={{ position: "relative", flex: 1 }}>
+        <ScatterChart
+          width={width}
+          height={height - titleHeight}
+          series={[
+            {
+              id: "hex-density",
+              type: "scatter",
+              data: hexBinPoints,
+              label: "Ping count",
+              zAxisId: "count",
+            },
+          ]}
+          xAxis={[
+            {
+              scaleType: "linear",
+              min: -DOMAIN,
+              max: DOMAIN,
+              label: "Distance east of plaza (m)",
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 16, fill: t.ink },
+            },
+          ]}
+          yAxis={[
+            {
+              scaleType: "linear",
+              min: -DOMAIN,
+              max: DOMAIN,
+              label: "Distance north of plaza (m)",
+              tickFontSize: 42,
+              tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              labelStyle: { fontSize: 16, fill: t.ink },
+            },
+          ]}
+          zAxis={[
+            {
+              id: "count",
               min: colorDomainMin,
               max: colorDomainMax,
-              color: [t.seq[0], t.seq[1]],
+              colorMap: {
+                type: "continuous",
+                min: colorDomainMin,
+                max: colorDomainMax,
+                color: [t.seq[0], t.seq[1]],
+              },
             },
-          },
-        ]}
-        margin={{ top: 40, right: 90, bottom: 170, left: 190 }}
-        slots={{ scatter: HexCell }}
-        slotProps={{ legend: { hidden: true } }}
-        skipAnimation
-      >
-        <ContinuousColorLegend
-          axisId="count"
-          axisDirection="z"
-          direction="row"
-          position={{ horizontal: "middle", vertical: "bottom" }}
-          length="45%"
-          thickness={16}
-          minLabel={`${binCountMin}`}
-          maxLabel={`${binCountMax}`}
-          labelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: "inherit" }}
-        />
-      </ScatterChart>
+          ]}
+          margin={{ top: 40, right: 90, bottom: 90, left: 190 }}
+          slots={{ scatter: HexCell }}
+          slotProps={{ legend: { hidden: true } }}
+          skipAnimation
+        >
+          <ContinuousColorLegend
+            axisId="count"
+            axisDirection="z"
+            direction="row"
+            position={{ horizontal: "middle", vertical: "bottom" }}
+            length="45%"
+            thickness={16}
+            minLabel={`${binCountMin}`}
+            maxLabel={`${binCountMax}`}
+            labelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: "inherit" }}
+          />
+        </ScatterChart>
+        <Typography
+          sx={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 26,
+            textAlign: "center",
+            color: t.inkSoft,
+            fontSize: 14,
+            fontFamily: "inherit",
+          }}
+        >
+          Ping count per bin (log scale)
+        </Typography>
+      </Box>
     </Box>
   );
 }
