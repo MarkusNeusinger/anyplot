@@ -68,6 +68,23 @@ const riverLonLat = [
   [-73.7, 40.9],
 ];
 
+// Street waypoints — a second base-map context cue alongside the river, thin
+// and neutral so they read as street lines rather than data
+const streetLonLats = [
+  [
+    [-74.3, 40.615],
+    [-74.0, 40.622],
+    [-73.75, 40.615],
+    [-73.68, 40.605],
+  ],
+  [
+    [-73.98, 40.58],
+    [-73.965, 40.7],
+    [-73.945, 40.78],
+    [-73.9, 40.92],
+  ],
+];
+
 // --- Layout -------------------------------------------------------------
 const margin = { top: 110, right: 230, bottom: 90, left: 90 };
 const mapW = width - margin.left - margin.right;
@@ -135,6 +152,10 @@ const meanExtent = d3.extent(hexData, (d) => d.mean);
 const countMax = d3.max(hexData, (d) => d.count);
 const color = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain(meanExtent);
 const hexOpacity = d3.scaleLinear().domain([1, countMax]).range([0.55, 0.92]).clamp(true);
+// Sparse cells get a firmer stroke to stay legible against the page background;
+// dense, high-fill-opacity cells get a near-invisible stroke so the frame
+// doesn't compete with the color/opacity encoding.
+const hexStrokeOpacity = d3.scaleLinear().domain([1, countMax]).range([0.85, 0.18]).clamp(true);
 
 // --- SVG mount ---------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -160,11 +181,32 @@ mapG
   .datum(riverLonLat)
   .attr("d", riverLine)
   .attr("fill", "none")
-  .attr("stroke", t.palette[2])
+  .attr("stroke", t.inkSoft)
   .attr("stroke-width", 46)
   .attr("stroke-linecap", "round")
   .attr("stroke-linejoin", "round")
-  .attr("opacity", 0.32);
+  .attr("opacity", 0.22);
+
+// Streets — thin neutral lines crossing the hotspots, a second geographic
+// context cue so the map reads as more than a coordinate grid with one
+// decoration
+const streetLine = d3
+  .line()
+  .x((d) => xScale(d[0]))
+  .y((d) => yScale(d[1]))
+  .curve(d3.curveBasis);
+mapG
+  .selectAll("path.street")
+  .data(streetLonLats)
+  .join("path")
+  .attr("class", "street")
+  .attr("d", streetLine)
+  .attr("fill", "none")
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 3)
+  .attr("stroke-linecap", "round")
+  .attr("stroke-dasharray", "2,5")
+  .attr("opacity", 0.4);
 
 // Tooltip — real hover, only live in the exported interactive HTML
 const tooltip = d3
@@ -200,9 +242,10 @@ mapG
   .attr("fill-opacity", (d) => hexOpacity(d.count))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.2)
+  .attr("stroke-opacity", (d) => hexStrokeOpacity(d.count))
   .style("cursor", "pointer")
   .on("mouseenter", function (event, d) {
-    d3.select(this).attr("stroke", t.ink).attr("stroke-width", 2);
+    d3.select(this).attr("stroke", t.ink).attr("stroke-width", 2).attr("stroke-opacity", 1);
     tooltip.style("opacity", 1);
   })
   .on("mousemove", function (event, d) {
@@ -218,8 +261,11 @@ mapG
           `<strong>Center:</strong> ${lon.toFixed(3)}°, ${lat.toFixed(3)}°`,
       );
   })
-  .on("mouseleave", function () {
-    d3.select(this).attr("stroke", t.pageBg).attr("stroke-width", 1.2);
+  .on("mouseleave", function (event, d) {
+    d3.select(this)
+      .attr("stroke", t.pageBg)
+      .attr("stroke-width", 1.2)
+      .attr("stroke-opacity", hexStrokeOpacity(d.count));
     tooltip.style("opacity", 0);
   });
 
@@ -229,7 +275,8 @@ g.append("rect")
   .attr("height", mapH)
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 1.5);
+  .attr("stroke-width", 1)
+  .attr("stroke-opacity", 0.5);
 
 const lonAxis = d3
   .axisBottom(xScale)
@@ -333,3 +380,12 @@ svg
   .style("font-size", "24px")
   .style("font-weight", "600")
   .text("hexbin-map-geographic · javascript · d3 · anyplot.ai");
+
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 78)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "15px")
+  .text("Color: mean PM2.5 · Opacity: sample count");
