@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: hexbin-map-geographic
 created: '2026-08-25T02:02:38Z'
-updated: '2026-08-25T02:08:03Z'
+updated: '2026-08-25T02:16:19Z'
 generated_by: claude-sonnet
 workflow_run: 32799369403
 issue: 3767
@@ -12,66 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Continuous PM2.5 aggregate is correctly mapped through imprint_seq (d3.interpolateRgbBasis(t.seq))
-    — the sequential Imprint colormap, not a viridis/turbo substitute — and the hex
-    fill colors are pixel-identical between the light and dark renders, only chrome
-    flips.
-  - Real hex-grid binning is implemented from first principles (pixel-to-axial projection
-    + cube rounding, pointy-top hexagon polygons) rather than a bar/square-grid shortcut
-    — a genuinely distinctive, low-level D3 technique that a high-level charting library
-    could not replicate as directly.
-  - 'Thoughtful double-encoding: fill color maps mean PM2.5 while fill-opacity maps
-    sample count (hexOpacity scale 0.55-0.92), letting sparsely-sampled cells recede
-    and let the river context layer show through — matches the spec''s ''apply transparency
-    to allow base map features to show through'' requirement.'
-  - The tooltip is a real, functioning hover interaction (count, sum, mean, and lon/lat
-    all shown on mousemove) rather than a simulated/faked one — appropriate use of
-    d3's event handling for an interactive library.
+  - 'Base-map geographic context is now genuinely multi-cue: the river line is joined
+    by two thin, dashed street lines crossing the hotspot corridor, so the map reads
+    as an urban context layer rather than a single decorative line — directly resolves
+    the attempt-1 weakness.'
+  - 'A new subtitle (''Color: mean PM2.5 · Opacity: sample count'') under the title
+    makes the double encoding legible from the static PNG alone, so viewers without
+    hover access can decode the chart without guessing — directly resolves the attempt-1
+    ambiguity around count/sum only being available in the tooltip.'
+  - The river and street lines now use the neutral t.inkSoft token instead of a categorical
+    Imprint palette slot, correctly reserving the categorical palette for actual data
+    series and using a semantic/neutral token for non-data basemap chrome.
+  - The map frame is now a thinner, lower-opacity rectangle (stroke-opacity 0.5) instead
+    of a plain full-opacity default border, a small but real visual-refinement improvement.
+  - Real hex-grid binning from first principles (pixel-to-axial projection + cube
+    rounding, pointy-top hexagon polygons) is a genuinely distinctive, low-level D3
+    technique not easily replicated in a high-level charting library.
+  - 'Thoughtful double-encoding is preserved: fill color maps mean PM2.5 while fill-opacity
+    maps sample count, letting sparsely-sampled cells recede and the basemap context
+    show through, matching the spec''s transparency requirement.'
+  - The tooltip is a real, functioning hover interaction (count, sum, mean, lon/lat)
+    rather than simulated — appropriate use of d3 event handling for an interactive
+    library.
   - Theme-adaptive chrome is correctly threaded through every non-data element (axis
-    text/lines/domain, title, legend text, map frame) via window.ANYPLOT_TOKENS with
-    no dark-on-dark or light-on-light failures in either render.
-  - Legend is a well-constructed vertical color-bar with its own axis, title, and
-    unit sublabel, positioned close to the map rather than floating isolated in whitespace.
+    text/lines/domain, title, subtitle, legend text, map frame) with no dark-on-dark
+    or light-on-light failures in either render.
+  - imprint_seq is used correctly for the single-polarity continuous PM2.5 aggregate,
+    with hex fill colors pixel-identical between light and dark renders — only chrome
+    flips.
   weaknesses:
-  - Base-map geographic context is limited to a single semi-transparent river line.
-    The spec calls for 'a base map showing geographic context (coastlines, country
-    boundaries, or street map)' — one water-feature line reads as thin context on
-    its own; consider adding a second cue (e.g. a couple of thin road/street lines
-    crossing the hotspots, or a subtle coastline curve) so the map reads less like
-    an empty coordinate grid with a single decoration.
-  - 'The spec asks the implementation to ''support aggregation methods: count (default),
-    sum, and mean'' — count and sum are computed but only ever surface in the tooltip
-    (invisible in the static PNG); the primary visible encoding is entirely mean-based
-    (color) plus a secondary count cue (opacity). Consider a small caption/subtitle
-    under the title clarifying the double encoding (e.g. ''Color: mean · Opacity:
-    sample count'') so PNG viewers without hover access can read the encoding without
-    guessing.'
-  - 'DE-02 visual refinement is solid but not fully polished: the four-sided rectangular
-    map frame (t.inkSoft, 1.5px) and the per-hex stroke against the page background
-    are both plain defaults with no additional hierarchy (e.g. a lighter/thinner frame,
-    or varying hex-stroke opacity by density) — small refinements here would elevate
-    the perceived craft further.'
-  - The river uses the categorical Imprint palette slot (`t.palette[2]`, the canonical
-    blue) for a purely decorative geographic feature rather than a semantic/neutral
-    token — it happens to read fine visually, but reserving a categorical slot for
-    non-data chrome is a slightly imprecise use of the palette; a `neutral`/`muted`
-    token (or a plain gray) would be the more semantically correct choice for base-map
-    decoration that isn't itself a data series.
+  - The diagonal river band (46px stroke, opacity 0.22) is quite wide and, where it
+    crosses hex-grid gaps in the upper-right of the map, reads as a bright light-gray
+    glare/highlight cutting across the map rather than a subtle waterway — consider
+    narrowing the stroke or lowering opacity further so it stays clearly secondary
+    to the hexagon data.
+  - Sum aggregation is still only exposed via the tooltip and never surfaces in the
+    static PNG (color=mean, opacity=count); this is a minor, not disqualifying gap
+    since interactive libraries are not penalized for hover-only detail, but a compact
+    'Σ' or count/sum crosscheck in the legend area would make the aggregation story
+    fully self-contained without hovering.
+  - DE-02 visual refinement, while improved (lighter frame), still relies on a plain
+    rectangular map border and default hex-stroke treatment rather than a more distinctive
+    frame treatment (e.g. rounded corners, drop shadow-free elevation cue, or removing
+    the frame entirely in favor of the hex edges as the natural boundary).
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "hexbin-map-geographic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Longitude/Latitude axis titles and degree-formatted tick labels (e.g. "-74.30°", "40.90°") render in dark ink against the light background, fully legible. A thin dark rectangular frame outlines the map area. The vertical "Mean PM2.5 (µg/m³)" legend sits just right of the map with readable dark tick labels (5-25).
-      Data: Hexagonal cells tile the map area, colored on a green-to-blue sequential scale (Imprint imprint_seq) — pale green/teal for low-mean cells, deeper blue-teal for high-mean cells concentrated along a diagonal band (river/highway corridor) and in a cluster in the lower-right (downtown hotspot). A translucent lavender-gray diagonal river line runs beneath the hexagons, visible through the semi-transparent fills. First-touch color at the low end of the scale is the Imprint brand green.
+      Chrome: Bold dark title "hexbin-map-geographic · javascript · d3 · anyplot.ai" centered at top, with a new lighter subtitle "Color: mean PM2.5 · Opacity: sample count" directly beneath it, both clearly readable. Longitude/Latitude axis titles and degree-formatted tick labels (e.g. "-74.30°", "40.90°") render in dark ink against the light background, fully legible. A thin, low-opacity dark rectangular frame outlines the map area. The vertical "Mean PM2.5 (µg/m³)" legend sits just right of the map with readable dark tick labels (5-25).
+      Data: Hexagonal cells tile the map area on a green-to-blue sequential scale (Imprint imprint_seq) — pale green/teal for low-mean cells, deeper blue-teal for high-mean cells concentrated along a diagonal corridor and in a lower-right cluster. A translucent light-gray river line and two thin dashed street lines cross the map beneath the hexagons, visible through the semi-transparent fills and through gaps between sparsely-populated cells — giving multi-cue basemap context rather than a single decoration. First-touch color at the low end of the scale is the Imprint brand green.
       Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title renders in light/white text, fully legible against the dark background. Axis titles and tick labels render in light gray, clearly legible. The map frame outline is faintly visible in light ink. Legend title, unit sublabel, and tick labels are all light-colored and readable.
-      Data: The same green-to-blue hex fill colors as the light render appear identically placed — the diagonal high-density corridor and the lower-right cluster are unchanged in color and position, confirming data colors are theme-independent. Gaps between hexagons with very low sample density show the near-black page background rather than being filled cells (expected sparse-bin behavior, not a defect). The river line is now a darker slate-blue translucent stripe, still visible against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, and legend text remains clearly visible against the near-black background.
+      Chrome: Title and subtitle render in light/white and light-gray text, fully legible against the dark background. Axis titles and tick labels render in light gray, clearly legible. The map frame outline is faintly visible in light ink. Legend title, unit sublabel, and tick labels are all light-colored and readable.
+      Data: The same green-to-blue hex fill colors as the light render appear identically placed — the diagonal high-density corridor and the lower-right cluster are unchanged in color and position, confirming data colors are theme-independent. Empty/sparse bins show the near-black page background as expected gaps in the hex grid. The river and street lines are now darker slate-gray translucent strokes, still visible against the dark background and crossing through the hex gaps.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, subtitle, axis, tick, and legend text remains clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -82,24 +80,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24px title, 16px axis labels, 14px
-          ticks/legend axis, 13px legend unit sublabel); readable in both themes with
-          good hierarchy; not a full 8 since axis-label vs. tick-label gap is modest
-          and there's no evidence of mobile-scale testing beyond visual estimate.
+        comment: All font sizes explicitly set (24px title, 15px subtitle, 16px axis
+          labels, 14px ticks/legend axis, 13px legend unit sublabel); readable in
+          both themes with clear hierarchy including the new subtitle.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend sits clear of the map, axis ticks evenly
-          spaced.
+        comment: No overlapping text; subtitle sits cleanly below the title with no
+          collision; legend clear of the map.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~27x15 hex grid over 5000 points is well-tuned; count-driven opacity
-          (0.55-0.92) keeps sparse and dense cells both legible.
+        comment: Hex grid over 5000 points is well-tuned; count-driven opacity keeps
+          sparse and dense cells both legible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -112,15 +109,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Map area uses ~62% of the mount, balanced margins, legend adjacent
-          to plot, nothing cut off; canvas-dimension gate passed.
+        comment: Map area uses a large, balanced portion of the mount, legend adjacent
+          to plot, nothing cut off; canvas-dimension gate passed (no gate file present).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude labeled, tick labels carry the degree unit; legend
-          carries µg/m³ unit.
+        comment: Longitude/Latitude labeled with degree-unit ticks; legend carries
+          µg/m³ unit.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -128,37 +125,37 @@ review:
         passed: true
         comment: 'imprint_seq used correctly for single-polarity continuous data;
           identical hex colors across themes; correct #FAF8F1/#1A1A17 backgrounds;
-          chrome theme-correct in both renders.'
+          chrome theme-correct in both renders; basemap chrome now uses neutral t.inkSoft
+          instead of a categorical palette slot.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Above a bare default thanks to the double color/opacity encoding
-          and constructed legend, but not publication-level — raised from the DE-01=4
-          default only modestly.
+        passed: true
+        comment: Richer basemap (river + two street lines), clarifying subtitle, and
+          the double color/opacity encoding push this above a bare default, though
+          not yet fully publication-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Some refinement (subtle hex strokes, generous whitespace) but the
-          plain rectangular frame and default hex-stroke treatment leave clear room
-          for more polish.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: The diagonal high-density corridor tracking the river/highway line
-          plus the isolated downtown cluster gives the reader a clear visual narrative
-          without needing annotations.
+        passed: true
+        comment: Frame is now thinner and lower-opacity, density-scaled hex strokes
+          remain; still a plain rectangular frame rather than a more distinctive treatment.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The diagonal high-density corridor tracking the river/highway lines
+          plus the isolated downtown cluster gives a clear visual narrative, reinforced
+          by the now-visible street context.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -169,12 +166,12 @@ review:
         comment: Correct hexagonal-binning geographic map.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Sequential colormap+legend, transparency, and hover tooltip all present;
-          base-map context is thin (single river line) and count/sum aggregation modes
-          are tooltip-only, not visible in the static PNG.
+        passed: true
+        comment: Sequential colormap+legend, transparency, hover tooltip, multi-cue
+          basemap context (river + streets), and a subtitle clarifying the mean/count
+          double encoding are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -198,7 +195,7 @@ review:
         max: 6
         passed: true
         comment: Shows density variation, hotspot clustering, and sparse/dense cell
-          contrast; sum aggregation is computed but never surfaced visually.
+          contrast; sum aggregation is computed but still tooltip-only.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -222,9 +219,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helper functions (cubeRound, pixelToAxial, axialToPixel, hexPoints)
-          are geometry primitives required for hex binning, not over-engineering;
-          flow is Data -> Bin -> Draw.
+        comment: Small helper functions are geometry primitives required for hex binning,
+          not over-engineering; flow is Data -> Bin -> Draw.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -268,7 +264,7 @@ review:
         passed: true
         comment: Hand-rolled axial cube-rounding hex-grid binning is a distinctive
           low-level D3 technique not easily replicated in a high-level charting library.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
