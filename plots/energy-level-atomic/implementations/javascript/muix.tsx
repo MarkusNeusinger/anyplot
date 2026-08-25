@@ -11,9 +11,8 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Hydrogen atom (Z = 1) bound-state energies from the Rydberg formula,
-// E_n = -13.6 eV / n^2. Levels n = 1..5 cover the full "5-15 levels" range
-// while keeping the diagram legible; n = 6+ would add negligible visual
-// separation on any scale.
+// E_n = -13.6 eV / n^2. Levels n = 1..6 span the "5-15 levels" range while
+// keeping the diagram legible.
 const RYDBERG_EV = 13.6;
 const levels = [
   { n: 1, label: "n = 1 (1s) — ground state" },
@@ -21,28 +20,32 @@ const levels = [
   { n: 3, label: "n = 3 (3s, 3p, 3d)" },
   { n: 4, label: "n = 4 (4s–4f)" },
   { n: 5, label: "n = 5 (5s–5g)" },
+  { n: 6, label: "n = 6 (6s–6h)" },
 ].map((level) => ({ ...level, energy: -RYDBERG_EV / (level.n * level.n) }));
 const energyOf = (n) => levels.find((level) => level.n === n).energy;
 
 const LYMAN = t.palette[0]; // brand green — always first categorical series
 const BALMER = t.palette[1];
 const ABSORPTION = t.palette[2];
+const EXCITED_ABSORPTION = t.palette[3];
 
 // Downward arrows = emission (photon out); upward arrows = absorption (photon in).
 const transitions = [
-  { from: 2, to: 1, x: 2.8, color: LYMAN, group: "Lyman", wavelength: "121.6 nm" },
-  { from: 3, to: 1, x: 3.25, color: LYMAN, group: "Lyman", wavelength: "102.6 nm" },
-  { from: 4, to: 1, x: 3.7, color: LYMAN, group: "Lyman", wavelength: "97.3 nm" },
-  { from: 3, to: 2, x: 4.15, color: BALMER, group: "Balmer", wavelength: "656.3 nm" },
-  { from: 4, to: 2, x: 4.6, color: BALMER, group: "Balmer", wavelength: "486.1 nm" },
-  { from: 1, to: 3, x: 5.05, color: ABSORPTION, group: "Absorption", wavelength: "102.6 nm" },
-  { from: 1, to: 4, x: 5.5, color: ABSORPTION, group: "Absorption", wavelength: "97.3 nm" },
+  { from: 2, to: 1, x: 2.9, color: LYMAN, group: "Lyman", wavelength: "121.6 nm" },
+  { from: 3, to: 1, x: 3.44, color: LYMAN, group: "Lyman", wavelength: "102.6 nm" },
+  { from: 4, to: 1, x: 3.99, color: LYMAN, group: "Lyman", wavelength: "97.3 nm" },
+  { from: 3, to: 2, x: 4.53, color: BALMER, group: "Balmer", wavelength: "656.3 nm" },
+  { from: 4, to: 2, x: 5.07, color: BALMER, group: "Balmer", wavelength: "486.1 nm" },
+  { from: 1, to: 3, x: 5.61, color: ABSORPTION, group: "Absorption", wavelength: "102.6 nm" },
+  { from: 1, to: 4, x: 6.16, color: ABSORPTION, group: "Absorption", wavelength: "97.3 nm" },
+  { from: 2, to: 6, x: 6.7, color: EXCITED_ABSORPTION, group: "Excited absorption", wavelength: "410.2 nm" },
 ];
 
 const LEGEND_ITEMS = [
   { color: LYMAN, label: "Lyman series · emission → n = 1 (UV) ↓" },
   { color: BALMER, label: "Balmer series · emission → n = 2 (visible) ↓" },
   { color: ABSORPTION, label: "Ground-state absorption ↑" },
+  { color: EXCITED_ABSORPTION, label: "Excited-state absorption (n=2→n=6) ↑" },
 ];
 
 // Levels bunch up near the ionization limit under a raw eV scale, so the
@@ -56,8 +59,8 @@ const Y_DOMAIN_MAX = 0.3;
 const Y_TICKS = [0, -1, -3, -6, -13.6];
 
 const LEVEL_X1 = 2.3;
-const LEVEL_X2 = 6.0;
-const X_DOMAIN_MAX = 9;
+const LEVEL_X2 = 7.1;
+const X_DOMAIN_MAX = 8.3;
 
 // --- Axis: manual ticks + gridlines in the compressed energy space ---------
 function EnergyAxis() {
@@ -112,7 +115,7 @@ function EnergyLevels() {
 function Transitions() {
   const xScale = useXScale();
   const yScale = useYScale();
-  const arrowColors = [LYMAN, BALMER, ABSORPTION];
+  const arrowColors = [LYMAN, BALMER, ABSORPTION, EXCITED_ABSORPTION];
   return (
     <g>
       <defs>
@@ -148,12 +151,12 @@ function Transitions() {
               markerEnd={`url(#arrowhead-${transition.color.replace("#", "")})`}
             />
             <text
-              x={x + 11}
+              x={x + 15}
               y={midY}
-              fontSize={11}
+              fontSize={13}
               fill={transition.color}
               textAnchor="middle"
-              transform={`rotate(-90 ${x + 11} ${midY})`}
+              transform={`rotate(-90 ${x + 15} ${midY})`}
             >
               {transition.wavelength}
             </text>
@@ -188,7 +191,7 @@ export default function Chart() {
       }}
     >
       <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", pl: "28px" }}>
-        <Typography sx={{ color: t.ink, fontSize: 22, fontWeight: 600 }}>
+        <Typography sx={{ color: t.ink, fontSize: 27, fontWeight: 600 }}>
           energy-level-atomic · javascript · muix · anyplot.ai
         </Typography>
       </Box>
