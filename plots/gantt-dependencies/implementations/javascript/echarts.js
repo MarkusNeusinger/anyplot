@@ -1,12 +1,8 @@
 // anyplot.ai
 // gantt-dependencies: Gantt Chart with Dependencies
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-25
-//# anyplot-orientation: landscape
-// anyplot.ai
-// gantt-dependencies: Gantt Chart with Dependencies
-// Library: echarts 6.1.0 | JavaScript 22
 // Quality: pending | Created: 2026-08-24
+//# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -65,15 +61,45 @@ const barData = rows.map((row, i) => {
   };
 });
 
+// Critical path (CPM forward/backward pass): a dependency edge is on the
+// critical path when both ends have zero slack against the fixed schedule
+// and the edge itself is the tight one (no idle gap) — this is what
+// distinguishes the true scheduling bottleneck (e.g. Frontend Implementation
+// feeding Integration Testing) from a converging predecessor with slack
+// (e.g. Database Setup, which finishes days early).
+const taskRows = rows.filter((r) => !r.isGroup);
+const successorsOf = new Map(taskRows.map((r) => [r.name, []]));
+taskRows.forEach((r) => (r.deps || []).forEach((dep) => successorsOf.get(dep).push(r.name)));
+const taskByName = new Map(taskRows.map((r) => [r.name, r]));
+const projectFinish = Math.max(...taskRows.map((r) => r.end));
+
+const lateFinish = new Map();
+for (let i = taskRows.length - 1; i >= 0; i--) {
+  const r = taskRows[i];
+  const succs = successorsOf.get(r.name);
+  lateFinish.set(
+    r.name,
+    succs.length
+      ? Math.min(...succs.map((s) => lateFinish.get(s) - (taskByName.get(s).end - taskByName.get(s).start)))
+      : projectFinish
+  );
+}
+const isCritical = (name) => {
+  const r = taskByName.get(name);
+  return lateFinish.get(name) - (r.end - r.start) === r.start;
+};
+
 // Dependency edges: predecessor's end (finish) -> successor's start.
 const depData = [];
 rows.forEach((row) => {
   if (!row.deps) return;
   row.deps.forEach((predName) => {
     const pred = rows[rowIndex.get(predName)];
-    depData.push({ value: [rowIndex.get(predName), pred.end, rowIndex.get(row.name), row.start] });
+    const critical = pred.end === row.start && isCritical(predName) && isCritical(row.name);
+    depData.push({ value: [rowIndex.get(predName), pred.end, rowIndex.get(row.name), row.start, critical ? 1 : 0] });
   });
 });
+depData.sort((a, b) => a.value[4] - b.value[4]); // critical-path arrows paint last, on top
 
 function renderTask(params, api) {
   const idx = api.value(0);
@@ -86,16 +112,22 @@ function renderTask(params, api) {
     { x: start[0], y: start[1] - barHeight / 2, width: Math.max(end[0] - start[0], 2), height: barHeight },
     { x: params.coordSys.x, y: params.coordSys.y, width: params.coordSys.width, height: params.coordSys.height }
   );
+  if (shape) shape.r = isGroup ? 2 : 4;
   return shape && { type: "rect", shape, style: api.style() };
 }
 
 // Elbow connector (horizontal-vertical-horizontal) with an arrowhead landing on
 // the successor's left edge — keeps the line out of the row band between the
-// two tasks rather than cutting diagonally across intermediate bars.
+// two tasks rather than cutting diagonally across intermediate bars. Edges on
+// the critical path render bolder and in accent amber so the scheduling
+// bottleneck reads at a glance.
 function renderDependency(params, api) {
   const p1 = api.coord([api.value(1), api.value(0)]);
   const p2 = api.coord([api.value(3), api.value(2)]);
-  const arrow = 9;
+  const critical = api.value(4) === 1;
+  const stroke = critical ? t.amber : t.inkSoft;
+  const lineWidth = critical ? 3 : 2;
+  const arrow = critical ? 11 : 9;
   const gap = Math.min(28, Math.max((p2[0] - p1[0]) / 2, 10));
   const midX = p1[0] + gap;
   return {
@@ -111,7 +143,7 @@ function renderDependency(params, api) {
             [p2[0] - arrow, p2[1]],
           ],
         },
-        style: { stroke: t.inkSoft, lineWidth: 2, fill: "none" },
+        style: { stroke, lineWidth, fill: "none" },
       },
       {
         type: "polygon",
@@ -122,7 +154,7 @@ function renderDependency(params, api) {
             [p2[0] - arrow, p2[1] + arrow / 2],
           ],
         },
-        style: { fill: t.inkSoft },
+        style: { fill: stroke },
       },
     ],
   };
@@ -139,7 +171,7 @@ function formatRowLabel(name, index) {
 }
 
 const title = "Software Release Plan · gantt-dependencies · javascript · echarts · anyplot.ai";
-const titleFontSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
+const titleFontSize = title.length > 67 ? Math.round(24 * (67 / title.length)) : 24;
 
 const minStart = Math.min(...rows.map((r) => r.start));
 const maxEnd = Math.max(...rows.map((r) => r.end));
@@ -154,11 +186,13 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: title,
+    subtext: "Amber connectors trace the critical path (zero slack) through Integration Testing to Deployment",
     left: "center",
-    top: 20,
+    top: 18,
     textStyle: { color: t.ink, fontSize: titleFontSize, fontWeight: 500 },
+    subtextStyle: { color: t.inkSoft, fontSize: 13 },
   },
-  grid: { left: 300, right: 70, top: 90, bottom: 70 },
+  grid: { left: 300, right: 70, top: 116, bottom: 76 },
   xAxis: {
     // A plain value axis (timestamps in ms) rather than type "time" — the
     // "time" axis's automatic "nice" tick picker always adds a tick at each
@@ -169,8 +203,12 @@ chart.setOption({
     min: minStart - pad,
     max: maxEnd + pad,
     interval: 4 * 24 * 60 * 60 * 1000,
+    name: "Timeline",
+    nameLocation: "middle",
+    nameGap: 34,
+    nameTextStyle: { color: t.inkSoft, fontSize: 13 },
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: formatDate },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { lineStyle: { color: t.grid, width: 1 } },
     axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
@@ -186,7 +224,7 @@ chart.setOption({
         task: { color: t.inkSoft, fontSize: 14, padding: [0, 0, 0, 22] },
       },
     },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { lineStyle: { color: t.grid, width: 1 } },
     axisTick: { show: false },
     splitLine: { show: false },
   },
