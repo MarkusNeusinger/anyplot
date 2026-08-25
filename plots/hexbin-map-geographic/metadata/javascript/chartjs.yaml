@@ -1,0 +1,257 @@
+library: chartjs
+language: javascript
+specification_id: hexbin-map-geographic
+created: '2026-08-25T02:04:20Z'
+updated: '2026-08-25T02:18:55Z'
+generated_by: claude-sonnet
+workflow_run: 32799203061
+issue: 3767
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Genuine axial hex-binning implemented from raw lat/lon coordinates (cube-rounding
+    algorithm), rendered as pre-drawn canvas icons via Chart.js's pointStyle API rather
+    than a disguised scatter/heatmap
+  - 'All three edge-clipped hex icons from the previous review are now fully contained:
+    axis min/max padded by one hex circumradius beyond the data bounding box'
+  - Thin page-background stroke now separates adjacent hex cells, sharpening the aggregation
+    boundaries that are hexbin's key advantage over continuous heatmaps
+  - New numeric callout ("78") on the single highest-density cell gives the plot an
+    explicit focal point tied to a real Monterey Bay whale-migration hotspot
+  - imprint_seq gradient applied identically across both themes via a custom afterDraw
+    colorbar plugin, compensating for Chart.js's lack of a native continuous legend
+  - 'Realistic, neutral ecological scenario: gray whale sightings clustered near real
+    Central California feeding grounds (Cordell Bank, Monterey Bay canyon, Big Sur,
+    Point Conception) with a simplified coastline for geographic context'
+  - Tooltip surfaces all three aggregation methods from the spec notes (count, sum,
+    mean) plus cell-center coordinates
+  - Deterministic fixed-seed LCG + Box-Muller PRNG, zero external dependencies beyond
+    the Chart.js global
+  weaknesses:
+  - Base map context is a single simplified coastline; a subtle land-mass fill or
+    secondary reference (e.g. a lighter offshore depth contour) would strengthen geographic
+    anchoring further, though a coastline alone already satisfies the spec's base-map
+    requirement
+  - Sum and mean aggregation are only surfaced through the tooltip (not visible in
+    the static PNG) — acceptable per the interactive-library fairness rule since the
+    color encoding correctly defaults to count, but a small secondary cue (e.g. cell
+    size keyed to pod-mean) could deepen the story further in a future pass
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "hexbin-map-geographic · javascript · chartjs · anyplot.ai" in dark ink, comfortably sized (~40-45% of plot width), fully legible. "Coastline" legend swatch sits directly below the title. Axis titles "Longitude (°W)" / "Latitude (°N)" and tick labels render in dark ink, clearly readable. Gridlines are subtle warm-cream lines. The custom colorbar (bottom-right, "Sightings / hex", labeled 0-78) and its text are fully legible.
+      Data: Hexagon icons use the imprint_seq gradient from brand green (#009E73, low density) to blue (#4467A3, high density), each cell separated by a thin cream-colored stroke. A dark gray coastline curve runs diagonally through the point field, tracing the real Central California coast. The single highest-density cell (Monterey Bay canyon area) carries a white numeric callout "78" with a subtle drop shadow for contrast. All top-row hex icons that were previously clipped at the top edge are now fully contained inside the padded axis bounds.
+      Legibility verdict: PASS — no light-on-light issues, no clipped elements at the canvas or axis border.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis titles now render in light ink (#F0EFE8-family), fully legible against the dark surface — no dark-on-dark failures. The coastline stroke flips to a light gray, gridlines are subtle light lines, and the colorbar text remains light-colored and readable.
+      Data: Hexagon fill colors are IDENTICAL to the light render — same green-to-blue gradient at the same bin positions and same per-cell page-background-colored separator stroke (which itself flips to near-black to match the dark surface, correctly theme-adaptive) — confirming only chrome flipped. The "78" peak callout remains legible with its drop shadow.
+      Legibility verdict: PASS — no dark-on-dark issues, no clipped elements.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22, axis titles 16, ticks 14, colorbar
+          13); readable in both themes; title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, hex icons, or the colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Edge-of-range hex icons that were previously clipped are now fully
+          contained after padding scales.x/y min/max by one hex circumradius
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe imprint_seq gradient, alpha=0.82, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Large, well-balanced plot area; no content cut off at the canvas
+          edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (Longitude (°W), Latitude (°N))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for continuous density; theme-correct
+          chrome in both renders; data colors identical across themes
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hex-binning geometry, custom colorbar plugin, and peak callout
+          are clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, and now a page-background stroke
+          separating adjacent hex cells sharpens the aggregation boundaries
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-intensity gradient plus the new numeric peak callout gives
+          the viewer an explicit focal point on the real migration hotspot
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine hexagonal binning via axial cube-rounding, not a disguised
+          scatter/heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential colormap + legend, coastline base map, transparency, hover
+          tooltips with count/sum/mean all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude/latitude correctly mapped to X/Y, full extent shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend label matches the coastline series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide density range across multiple hotspots plus sparse background;
+          all three aggregation types exposed via tooltip
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real ecological monitoring scenario tied to actual California
+          coast geography
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sighting counts, pod sizes, and lat/lon ranges all factually plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions justified by algorithmic complexity
+          (PRNG, hex geometry, color interpolation, icon drawing); no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Chart.js global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hex-binning, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container, animation: false, current Chart.js v4 API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scatter + custom pointStyle icons + afterDraw plugins is the idiomatic
+          Chart.js path to a continuous-legend density map given no native hexbin/colorbar
+          support
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom canvas-rendered hexagon markers and a bespoke colorbar plugin
+          go beyond generic chart-type usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
+  - edge-highlighting
