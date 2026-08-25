@@ -62,10 +62,13 @@ function coastlineY(x) {
 // (lat, lon, value=fare $) aggregated per hex cell into count / sum / mean.
 const N_POINTS = 4000;
 const HOTSPOTS = [
-  { name: "Downtown", cx: -1.6, cy: 0.9, spread: 0.85, weight: 0.38 },
-  { name: "Transit Hub", cx: 0.6, cy: 1.1, spread: 0.55, weight: 0.27 },
-  { name: "Waterfront Promenade", cx: 2.1, cy: -0.15, spread: 0.5, weight: 0.2 },
-  { name: "North Residential", cx: -3.0, cy: 1.3, spread: 1.0, weight: 0.15 },
+  { name: "Downtown", cx: -1.3, cy: 0.9, spread: 0.85, weight: 0.38 },
+  { name: "Transit Hub", cx: 0.35, cy: 1.1, spread: 0.55, weight: 0.27 },
+  // Waterfront Promenade sits on a pier, so its pickups are allowed to dip
+  // below the coastline — this is what actually lets the hex-cell alpha=0.85
+  // fill show the water polygon underneath instead of only ever sitting on land.
+  { name: "Waterfront Promenade", cx: 1.6, cy: -0.15, spread: 0.5, weight: 0.2, waterMargin: -0.22 },
+  { name: "North Residential", cx: -2.5, cy: 1.3, spread: 1.0, weight: 0.15 },
 ];
 
 const points = [];
@@ -73,12 +76,13 @@ HOTSPOTS.forEach((hotspot) => {
   const target = Math.round(N_POINTS * hotspot.weight);
   let placed = 0;
   let attempts = 0;
+  const waterMargin = hotspot.waterMargin ?? 0.05;
   while (placed < target && attempts < target * 20) {
     attempts += 1;
     const x = hotspot.cx + jitter(hotspot.spread);
     const y = hotspot.cy + jitter(hotspot.spread);
     if (x < X_MIN || x > X_MAX || y < Y_MIN || y > Y_MAX) continue;
-    if (y < coastlineY(x) + 0.05) continue; // no pickups on water
+    if (y < coastlineY(x) + waterMargin) continue; // no pickups on open water
     const distFromCenter = Math.hypot(x - hotspot.cx, y - hotspot.cy);
     const fare = Math.max(4, 7 + distFromCenter * 1.4 + jitter(3));
     points.push({ x, y, value: fare });
@@ -167,6 +171,38 @@ for (let i = 0; i <= 40; i++) {
   coastlineSamples.push([x, coastlineY(x)]);
 }
 
+// Schematic street grid — additional base-map context beyond the coastline
+// alone (per spec: "base map showing geographic context"). Each line is its
+// own tiny series (not one multi-segment series) so Highcharts never
+// re-sorts the two endpoints by x, which would otherwise scramble the grid.
+const streetRgb = hexToRgb(t.inkSoft);
+const streetLineColor = `rgba(${streetRgb[0]},${streetRgb[1]},${streetRgb[2]},0.45)`;
+const STREET_GRID_X_FRACS = [0.2, 0.4, 0.6, 0.8];
+const STREET_GRID_Y_FRACS = [0.35, 0.55, 0.75];
+function streetLine(data) {
+  return {
+    type: "line",
+    data,
+    color: streetLineColor,
+    lineWidth: 1,
+    dashStyle: "Dash",
+    marker: { enabled: false },
+    enableMouseTracking: false,
+    showInLegend: false,
+    zIndex: 0,
+  };
+}
+const streetGridSeries = [
+  ...STREET_GRID_X_FRACS.map((f) => streetLine([
+    [X_MIN + f * X_RANGE_KM, Y_MAX],
+    [X_MIN + f * X_RANGE_KM, Y_MIN],
+  ])),
+  ...STREET_GRID_Y_FRACS.map((f) => streetLine([
+    [X_MIN, Y_MIN + f * Y_RANGE_KM],
+    [X_MAX, Y_MIN + f * Y_RANGE_KM],
+  ])),
+];
+
 // --- Custom hexagon marker symbol --------------------------------------------
 // Pointy-top orientation to match the axial math above; registering a symbol on
 // the SVGRenderer is a core-Highcharts feature (no add-on module needed).
@@ -228,6 +264,24 @@ function drawWaterLabel(chart) {
     .add();
 }
 
+// Label the two densest hotspots directly on the chart (turns the color
+// contrast into a named story instead of leaving it to the tooltip alone).
+// Placed in the margin band just above the plot area — hex cells can be
+// clipped right up to the axis-max edge, so any label inside the plot area
+// risks sitting on top of a cell; the margin band is guaranteed clear.
+function drawHotspotLabels(chart) {
+  const topHotspots = [HOTSPOTS[0], HOTSPOTS[1]]; // Downtown, Transit Hub
+  const py = chart.plotTop - 10;
+  topHotspots.forEach((h) => {
+    const px = chart.xAxis[0].toPixels(h.cx, false);
+    chart.renderer
+      .text(h.name, px, py)
+      .attr({ align: "center" })
+      .css({ color: t.ink, fontSize: "13px", fontWeight: "700" })
+      .add();
+  });
+}
+
 Highcharts.chart(
   "container",
   {
@@ -249,7 +303,7 @@ Highcharts.chart(
       style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
     },
     subtitle: {
-      text: "Ride-hailing pickups aggregated into 0.28 km hexagonal cells near Meridian Bay",
+      text: "Ride-hailing pickups aggregated into 0.28 km hexagonal cells near Meridian Bay — hover a cell for total & average fare",
       align: "left",
       style: { color: t.inkSoft, fontSize: "14px" },
     },
@@ -288,6 +342,7 @@ Highcharts.chart(
       series: { animation: false },
     },
     series: [
+      ...streetGridSeries,
       {
         name: "Bay waters",
         type: "area",
@@ -330,5 +385,6 @@ Highcharts.chart(
   function (chart) {
     drawColorLegend(chart);
     drawWaterLabel(chart);
+    drawHotspotLabels(chart);
   },
 );
