@@ -230,6 +230,7 @@ graphicEls.push(
 const chart = echarts.init(document.getElementById("container"));
 chart.setOption({
   animation: false,
+  color: t.palette,
   backgroundColor: "transparent",
   title: {
     text: "genome-track-multi · javascript · echarts · anyplot.ai",
@@ -298,6 +299,7 @@ chart.setOption({
       xAxisIndex: 1,
       yAxisIndex: 1,
       barWidth: 3,
+      itemStyle: { color: variantColor.SNP },
       data: variants
         .filter((v) => v.type === "SNP")
         .map((v) => ({ value: [v.pos, v.quality], itemStyle: { color: variantColor.SNP } })),
@@ -308,6 +310,7 @@ chart.setOption({
       xAxisIndex: 1,
       yAxisIndex: 1,
       barWidth: 3,
+      itemStyle: { color: variantColor.Indel },
       data: variants
         .filter((v) => v.type === "Indel")
         .map((v) => ({ value: [v.pos, v.quality], itemStyle: { color: variantColor.Indel } })),
@@ -319,6 +322,7 @@ chart.setOption({
       yAxisIndex: 1,
       symbolSize: (val) => 6 + val[1] * 0.25,
       legendHoverLink: false,
+      itemStyle: { color: variantColor.SNP },
       data: variants
         .filter((v) => v.type === "SNP")
         .map((v) => ({ value: [v.pos, v.quality], itemStyle: { color: variantColor.SNP } })),
@@ -330,6 +334,7 @@ chart.setOption({
       yAxisIndex: 1,
       symbolSize: (val) => 6 + val[1] * 0.25,
       legendHoverLink: false,
+      itemStyle: { color: variantColor.Indel },
       data: variants
         .filter((v) => v.type === "Indel")
         .map((v) => ({ value: [v.pos, v.quality], itemStyle: { color: variantColor.Indel } })),
