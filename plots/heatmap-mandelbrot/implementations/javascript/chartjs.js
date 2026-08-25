@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-25
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-08-25
 //# anyplot-orientation: landscape
 
 // Chart.js has no native heatmap/matrix chart type (chartjs-chart-matrix is an
