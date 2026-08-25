@@ -97,12 +97,18 @@ cycles.forEach((cycle, i) => {
 // the page background shows through instead of a drawn (misleadingly
 // "zero-but-colored") cell.
 let cycleCountMax = 0;
+let cycleCountMin = Infinity;
+let peakBinKey = null;
 const matrixPoints = [];
 binWeights.forEach((weight, key) => {
   const [amplitudeIndex, meanIndex] = key.split("-").map(Number);
   const count = Math.round(weight);
   if (count <= 0) return;
-  cycleCountMax = Math.max(cycleCountMax, count);
+  if (count > cycleCountMax) {
+    cycleCountMax = count;
+    peakBinKey = key;
+  }
+  cycleCountMin = Math.min(cycleCountMin, count);
   matrixPoints.push({
     id: key,
     x: meanMin + (meanIndex + 0.5) * meanBinWidth,
@@ -112,7 +118,11 @@ binWeights.forEach((weight, key) => {
 });
 // Color on a log scale — rainflow matrices are heavily right-skewed (many
 // low-count bins, a few dominant ones), so log contrast reads much better
-// than linear. The legend still shows the true (un-logged) count range.
+// than linear. The domain (and legend) bottom anchors on the true rendered
+// minimum (count=1's log1p), not log1p(0), since zero-count bins are never
+// drawn at all — anchoring at 0 would understate how saturated the palest
+// rendered cell actually is.
+const colorDomainMin = Math.log1p(cycleCountMin);
 const colorDomainMax = Math.log1p(cycleCountMax);
 
 // Community @mui/x-charts has no Heatmap component (that's Pro-only) — a
@@ -126,16 +136,24 @@ function MatrixCell(props) {
 
   return (
     <g>
-      {series.data.map((point, i) => (
-        <rect
-          key={point.id}
-          x={xScale(point.x) - cellWidth / 2}
-          y={yScale(point.y) - cellHeight / 2}
-          width={Math.max(cellWidth - 2, 0)}
-          height={Math.max(cellHeight - 2, 0)}
-          fill={colorGetter ? colorGetter(i) : color}
-        />
-      ))}
+      {series.data.map((point, i) => {
+        // Outline the single dominant cell — the spec calls out "identifying
+        // dominant cycle combinations" as a use case, so the peak bin gets a
+        // visible focal point instead of blending into the ramp.
+        const isPeak = point.id === peakBinKey;
+        return (
+          <rect
+            key={point.id}
+            x={xScale(point.x) - cellWidth / 2}
+            y={yScale(point.y) - cellHeight / 2}
+            width={Math.max(cellWidth - 2, 0)}
+            height={Math.max(cellHeight - 2, 0)}
+            fill={colorGetter ? colorGetter(i) : color}
+            stroke={isPeak ? t.ink : "none"}
+            strokeWidth={isPeak ? 3 : 0}
+          />
+        );
+      })}
     </g>
   );
 }
@@ -154,8 +172,8 @@ export default function Chart() {
       <Typography
         sx={{
           color: t.ink,
-          fontSize: 22,
-          fontWeight: 500,
+          fontSize: 26,
+          fontWeight: 600,
           textAlign: "center",
           lineHeight: 1.2,
           pt: "18px",
@@ -205,9 +223,14 @@ export default function Chart() {
         zAxis={[
           {
             id: "count",
-            min: 0,
+            min: colorDomainMin,
             max: colorDomainMax,
-            colorMap: { type: "continuous", min: 0, max: colorDomainMax, color: [t.seq[0], t.seq[1]] },
+            colorMap: {
+              type: "continuous",
+              min: colorDomainMin,
+              max: colorDomainMax,
+              color: [t.seq[0], t.seq[1]],
+            },
           },
         ]}
         margin={{ top: 24, right: 150, bottom: 88, left: 130 }}
@@ -222,7 +245,7 @@ export default function Chart() {
           position={{ horizontal: "right", vertical: "middle" }}
           length="55%"
           thickness={16}
-          minLabel="0"
+          minLabel={`${cycleCountMin}`}
           maxLabel={`${cycleCountMax}`}
           labelStyle={{ fontSize: 14, fill: t.inkSoft, fontFamily: "inherit" }}
         />
