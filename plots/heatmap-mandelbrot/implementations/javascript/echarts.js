@@ -19,15 +19,16 @@ const DATA_ASPECT = (X_MAX - X_MIN) / (Y_MAX - Y_MIN);
 const GRID_H = 800;
 const GRID_W = Math.round(GRID_H * DATA_ASPECT);
 
-// --- Colors: Imprint sequential gradient for escaped points, ink for the ------
-// --- bounded interior (a distinct solid color, per spec) --------------------
+// --- Colors: Imprint sequential gradient for escaped points, a fixed solid --
+// --- color for the bounded interior (a data color, so it must stay identical
+// --- across themes rather than following the theme-adaptive ink token) ------
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 const seqStart = hexToRgb(t.seq[0]);
 const seqEnd = hexToRgb(t.seq[1]);
-const insideRgb = hexToRgb(t.ink);
+const insideRgb = hexToRgb("#1A1A17");
 
 // z(n+1) = z(n)^2 + c, smooth-colored via the normalized (fractional) escape
 // count so bands don't appear at integer iteration boundaries.
