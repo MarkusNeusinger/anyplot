@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: energy-level-atomic
+created: '2026-08-24T23:48:27Z'
+updated: '2026-08-24T23:52:36Z'
+generated_by: claude-sonnet
+workflow_run: 32790435812
+issue: 4434
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Physically accurate hydrogen energy levels via the Rydberg formula (E(n) = -13.606/n^2
+    eV) and real physical constants (hc = 1239.84 eV·nm) for wavelength conversion
+  - Nonlinear (sqrt) y-axis scale correctly spreads the high-n levels that converge
+    near the ionization limit, exactly matching the spec's nonlinear-scale suggestion
+  - Transition arrows colored by wavelength using the Imprint sequential palette (t.seq)
+    with a clear vertical colorbar legend — spectral information conveyed visually
+    as required
+  - Partial-width level lines labeled with quantum numbers, dashed ionization-limit
+    reference line, and series-grouping labels (Absorption / Lyman series / Balmer
+    series) beneath the arrows
+  - 'Both themes render correctly: identical data colors between light and dark, chrome
+    (background, text, grid) properly flips, no legibility failures'
+  weaknesses:
+  - Large expanse of unused whitespace between the n=X level labels and the wavelength
+    colorbar on the right side of the canvas — tightening the right margin or moving
+    the colorbar closer would produce a more balanced composition
+  - Title occupies well under 50% of canvas width at the current 22px size; could
+    be sized slightly larger for stronger visual presence without risking overflow
+  - Distinctive-feature usage leans on a fairly standard manual SVG linearGradient
+    for the colorbar; a more D3-specific technique (e.g. d3-shape curve interpolation
+    for the arrows, or d3.forceSimulation for automatic label collision avoidance)
+    would further showcase library mastery
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "energy-level-atomic · javascript · d3 · anyplot.ai" centered at top in dark bold text. Y-axis labeled "Energy (eV)" (rotated) with explicit tick values matching each level's energy (-13.61, -3.40, -1.51, -0.85, -0.54, -0.38, 0 eV). Level lines labeled "n = 1" through "n = 6" to the right in dark text. Dashed "Ionization limit" reference line at 0 eV, italic label. Direction legend "↓ emission ↑ absorption" top-left. Series labels "Absorption", "Lyman series", "Balmer series" in italic below the arrows. All chrome text renders clearly readable against the light background.
+      Data: Six horizontal black energy-level lines spanning ~54% of plot width. Transition arrows colored by wavelength on a green-to-blue sequential (Imprint seq) scale: four green arrows (UV, 97-121 nm, Lyman + absorption) and two blue arrows (visible, 486-656 nm, Balmer). Each arrow labeled with its wavelength in nm. A vertical colorbar legend on the right (labeled "Wavelength") shows the green(97nm)-to-blue(656nm) gradient with three tick labels.
+      Legibility verdict: PASS — all text and data elements are clearly readable, no light-on-light issues, no clipping at canvas edges.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis, level labels, ionization line, direction legend, and series labels as the light render, all rendered in light/off-white text (t.ink / t.inkSoft) against the dark background. Level lines and axis domain rendered in light color instead of black.
+      Data: Same six horizontal level lines (now light-colored) and the same six wavelength-colored transition arrows — green (97-121 nm) and blue (486-656 nm) — identical hues to the light render, confirming data colors are theme-independent. Colorbar legend unchanged in color, labels rendered in light text.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/label text and the blue transition arrows remain clearly distinguishable against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (13-22px), all readable in both themes; no light-on-light
+          or dark-on-dark issues
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions found in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Arrow thickness and marker sizes appropriate for the sparse (6-level,
+          6-transition) dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-blue scale plus arrow direction encode the data;
+          not red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No cutoff/overflow; right-side whitespace is a minor composition
+          note, not a hard violation
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Energy (eV)" is descriptive with units; title matches the mandated
+          format exactly'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses imprint_seq for the continuous wavelength encoding; backgrounds
+          are theme-correct #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Colorbar-driven spectral encoding and a nonlinear energy scale go
+          beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No frame/spine clutter, minimal grid; right-side whitespace between
+          labels and colorbar is a bit loose
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-coded arrows plus series grouping labels give a clear visual
+          narrative of spectral transitions
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct energy-level diagram with horizontal levels and transition
+          arrows
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Partial-width labeled lines, directional arrows, wavelength coloring,
+          nonlinear scale, ionization reference line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y = energy correctly mapped; all levels shown on axis via explicit
+          tickValues
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar legend clearly labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers levels, transitions, emission/absorption, wavelength coloring,
+          ionization limit, nonlinear scale
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hydrogen atom physics (Rydberg formula), neutral educational
+          topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 levels, 6 transitions within spec range (5-15 levels, 3-10 transitions);
+          realistic eV/nm values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes beyond a trivial lookup helper; flat top-to-bottom
+          script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, formula-derived data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly mounts into #container per the harness contract; modern
+          D3 v7 API throughout'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of scalePow, scaleSequential, axisLeft, rollup
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.rollup for series-mean grouping and scalePow for the nonlinear
+          energy axis are genuine D3-specific touches; colorbar gradient is a more
+          standard SVG technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
