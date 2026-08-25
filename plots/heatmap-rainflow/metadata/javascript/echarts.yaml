@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-rainflow
 created: '2026-08-25T01:12:17Z'
-updated: '2026-08-25T01:18:10Z'
+updated: '2026-08-25T01:27:59Z'
 generated_by: claude-sonnet
 workflow_run: 32795605195
 issue: 4465
@@ -12,63 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-r
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-dark.html
-quality_score: 79
+quality_score: 87
 review:
   strengths:
-  - Correct imprint_seq log-scale color mapping with a clean colorbar (numeric + text
-    labels) and an accurate log10 back-conversion formatter used consistently in both
-    the tooltip and the visualMap legend
+  - The tapering "diamond" envelope shape is now correctly realized via envelope-constrained
+    mean spread (meanLimit = ENV_LIMIT - amp, parabolic falloff) — this fully resolves
+    attempt 1's near-uniform-fill weakness and gives the chart a clear 2D focal point/hierarchy
+    exactly as the code's own comments describe.
+  - 'The stray y-axis axisLine poking above the topmost cells (attempt 1 weakness)
+    is fixed via axisLine: { show: false }.'
+  - Correct imprint_seq log-scale color mapping with an accurate log10 round-trip
+    formatter used consistently in both the tooltip and the visualMap legend.
   - Zero/near-zero-count bins are correctly omitted so the page background shows through,
     matching the spec's 'zero-count bins should be visually distinct (transparent)'
-    requirement
+    requirement.
   - Theme-adaptive chrome is fully correct in both renders — title, axis labels, tick
-    labels, axis lines and colorbar text all use theme tokens with no dark-on-dark
-    or light-on-light failures
+    labels, axis lines, and colorbar text all use theme tokens with no dark-on-dark
+    or light-on-light failures.
   - Correct axis mapping (amplitude on y, mean on x per spec) with bin-center tick
-    labels and physically meaningful units (kN·m) tied to a realistic, neutral engineering
-    scenario (wind-turbine blade-root fatigue)
-  - 2400×2400 square canvas is the right orientation choice for a symmetric bin-grid
-    heatmap
-  - 'Clean mount-node contract: animation disabled, no explicit init dimensions, no
-    devicePixelRatio override'
+    labels, physical units (kN·m), and a realistic, neutral engineering scenario (wind-turbine
+    blade-root fatigue).
   weaknesses:
-  - The data doesn't form the 'classic diamond' rainflow shape the code's own comments
-    describe. Because the radial falloff `r = sqrt(((amp-5)/24)**2 + (mean/30)**2)`
-    weighs the amplitude term too gently relative to the domain range, the count stays
-    above the display threshold (>2) across almost the ENTIRE mean range for nearly
-    every amplitude row up to ~amp=175 — only the top 1-2 rows (amp≈185-195) show
-    real sparsity. Visually this reads as a near-uniform filled rectangle with a jagged
-    skyline only at the very top, instead of a matrix that tapers and narrows in mean-spread
-    as amplitude grows. Strengthen the amplitude term's decay (e.g. divide by a smaller
-    constant, or make the mean-spread itself a function of amplitude so it narrows
-    at high amplitude) so the concentration/tapering pattern that defines a real rainflow
-    matrix is visible.
-  - Because most cells cluster in the low amplitude rows regardless of mean, the color
-    variation reads mostly as a top-to-bottom (amplitude-only) gradient with only
-    weak left-right (mean) variation — the spec's 'clearly distinguish high-frequency
-    from low-frequency cycle bins' via a 2D pattern is only weakly realized; the fix
-    above (real diamond tapering) will also resolve this.
-  - 'The y-axis''s default axisLine spans the full category-axis height, so in both
-    themes it visibly pokes up as a thin vertical stroke above the topmost colored
-    cells (since the top 1-2 rows are transparent) — looks like a stray line floating
-    in empty space above the chart. Either hide it (`yAxis.axisLine.show: false`,
-    common for echarts heatmaps that already have cell borders) or fix the data so
-    the top row is populated flush with the axis line''s extent.'
+  - ~25% of the y-axis range (amp 150-195 kN·m) is permanently empty because the hard
+    envelope cutoff (meanLimit = ENV_LIMIT - amp reaches 0 at amp=150) zeroes every
+    cell above that row — consider trimming N_AMP/ampCenters so the axis domain matches
+    where data can actually exist, or softening the envelope with a probabilistic
+    tail of rare outlier cycles, both tightening the layout and matching real-world
+    rainflow matrices which usually show sparse outliers rather than a hard void.
+  - Design Excellence stays close to a well-executed standard heatmap — no additional
+    embellishment (e.g., a subtle highlight/annotation on the peak-count cell, or
+    a callout naming the diamond envelope pattern) to push DE-01/DE-03 further.
+  - Axis-title fontsize (18) is noticeably larger than tick-label fontsize (13); a
+    smaller gap would read as more balanced.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-ish), not pure white and not dark.
-      Chrome: Title "heatmap-rainflow · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Mean bending moment (kN·m)" and Y-axis title "Cycle amplitude, half-range (kN·m)" both dark ink, readable. Rotated (45°) x tick labels (-95..85) and horizontal y tick labels (5..185) in a softer grey ink, all legible. Colorbar on the right shows "High" / "3798" at top and "0" / "Low" at bottom in grey text — readable. A thin dark vertical line (the y-axis axisLine) is visible poking up above the topmost colored cells into empty space, since the top 1-2 rows of the grid are mostly transparent.
-      Data: The heatmap grid is a 20x20 array of colored cells using the imprint_seq gradient (brand green -> blue). Nearly the entire grid (from the bottom row up through roughly the 17th-18th row) is solidly filled with color, with only the very top 1-2 rows showing a jagged, partially-transparent skyline where individual cells are omitted (page background shows through). The color varies mostly from blue (bottom, low-amplitude rows = highest counts) to green (top rows = lowest counts), with only weak left-right (mean-axis) variation — the intended radial "hot spot" concentrated near (low amplitude, zero mean) is not clearly visible because count stays above the display threshold across almost the full mean range at low-to-mid amplitudes.
-      Legibility verdict: PASS (all text readable, no light-on-light issues; the near-full-block data shape is a data-quality/design concern, not a legibility failure).
+      Chrome: Title "heatmap-rainflow · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Mean bending moment (kN·m)" and Y-axis title "Cycle amplitude, half-range (kN·m)" both dark ink, readable. Rotated (45°) x tick labels (-95..85, every 20 units) and horizontal y tick labels (5..185) in softer grey ink, all legible. Colorbar on the right shows "High"/"4645" at top and "0"/"Low" at bottom in grey text — readable. No stray axis lines poking into empty space (fixed from attempt 1).
+      Data: The heatmap forms a clean tapering diamond/pyramid shape using the imprint_seq gradient (brand green -> blue): wide at the bottom (low amplitude, full mean spread), narrowing to a single-cell apex near amp≈135-145, mean≈0-5. Color varies clearly in both dimensions — blue (high count) concentrated near center-bottom, green (low count) toward the diamond's edges — giving a genuine 2D pattern instead of attempt 1's near-uniform block.
+      Legibility verdict: PASS (all text readable, no light-on-light issues).
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-ish), not pure black and not light.
-      Chrome: Title, axis titles, and tick labels all render in light ink, clearly legible against the dark surface. Colorbar "High"/"3798" and "0"/"Low" text is light-grey, readable. The same stray vertical y-axis line above the top rows is visible here too.
-      Data: Data colors are identical to the light render (imprint_seq green-to-blue gradient, same cell layout, same jagged top-row skyline) — only the chrome (background, text, axis lines) flipped for the theme, as required. No dark-on-dark failures — every tick label, title, and colorbar label is clearly distinguishable from the near-black background.
-      Legibility verdict: PASS (no dark-on-dark issues; same data-shape concern noted above, not a legibility failure).
+      Chrome: Title, axis titles, and tick labels all render in light ink, clearly legible against the dark surface. Colorbar "High"/"4645" and "0"/"Low" text is light-grey, readable. No stray axis line.
+      Data: Data colors are identical to the light render (imprint_seq green-to-blue gradient, same diamond-shaped cell layout, same colorbar min/max) — only the chrome (background, text, axis lines) flipped for the theme, as required. No dark-on-dark failures — every tick label, title, and colorbar label is clearly distinguishable from the near-black background.
+      Legibility verdict: PASS (no dark-on-dark issues).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -76,21 +66,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; minor size imbalance
-          between axis-title fontsize (18) and tick fontsize (13)
+        comment: All text readable in both themes; minor size gap between axis-title
+          fontsize (18) and tick fontsize (13)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Cells clearly visible but color variation is compressed into a narrow
-          green-blue band because most of the grid sits at similar (high) counts
+        comment: Color now spans the full imprint_seq range from center (high count)
+          to edges (low count), a clear improvement over attempt 1's compressed band
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -102,8 +92,9 @@ review:
         score: 3
         max: 4
         passed: true
-        comment: Good proportions overall; deduct for the stray y-axis line floating
-          above the topmost colored cells
+        comment: Stray y-axis line from attempt 1 is fixed; deduct for ~25% of the
+          y-axis range (amp 150-195) being permanently empty since the envelope constraint
+          zeroes meanLimit at amp=150
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -118,7 +109,7 @@ review:
         comment: Correct imprint_seq gradient, correct theme backgrounds, identical
           data colors across themes
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -126,23 +117,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom log-scale colorbar formatter and tooltip add polish beyond
-          a bare default heatmap
+        comment: Custom log-scale colorbar/tooltip round-trip and physically-motivated
+          envelope-constrained data generation add real polish beyond a bare default
+          heatmap, but overall styling stays close to library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Minimal chrome, subtle cell borders; reasonably refined but not exceptional
+        comment: Minimal chrome, subtle cell borders, no stray elements; solid but
+          not exceptional
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Weak focal point/hierarchy — the near-full-block fill (see weaknesses)
-          mutes the intended hot-spot narrative
+        passed: true
+        comment: The diamond taper now gives the chart a clear focal point and 2D
+          hierarchy, fixing attempt 1's near-block-fill problem
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,12 +146,11 @@ review:
         comment: Correct 2D heatmap
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All literal features present (colorbar, log scale, units, bin-center
-          ticks, transparent zero bins) but 'clearly distinguish high/low-frequency
-          bins' is only weakly realized
+        comment: Colorbar, log scale, units, bin-center ticks, transparent zero bins,
+          and now a genuine 2D distinction between high/low-frequency bins
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -172,29 +164,30 @@ review:
         passed: true
         comment: Title format exactly matches spec-id · language · library · anyplot.ai
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The defining 'tapering diamond' shape of a rainflow matrix isn't
-          achieved — see weaknesses
+        comment: The defining tapering-diamond shape of a rainflow matrix is now achieved;
+          slight deduction because the envelope is a hard cutoff rather than a soft/probabilistic
+          tail
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral wind-turbine fatigue-analysis scenario
+        comment: Realistic, neutral wind-turbine blade-root fatigue-analysis scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Units/magnitudes plausible; deduct slightly since near-full-domain
-          saturation understates real-world rainflow-matrix sparsity
+        comment: Units/magnitudes plausible; envelope-based tapering now correctly
+          reflects real-world rainflow-matrix sparsity
     code_quality:
       score: 10
       max: 10
@@ -204,7 +197,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script; the tiny lcg() helper is the library-recommended
+        comment: Flat procedural script; the small lcg() helper is the library-recommended
           seeded-RNG pattern
       - id: CQ-02
         name: Reproducibility
@@ -232,23 +225,24 @@ review:
         comment: Correct mount-node contract, animation disabled, no devicePixelRatio
           override
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper heatmap series + continuous visualMap + category axes; minor
-          nit on leaving the default axisLine visible (see weaknesses)
+        comment: Proper heatmap series + continuous visualMap + category axes; the
+          attempt-1 axisLine nit is now fixed
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
+        passed: false
         comment: Log-transform with custom formatter round-tripping to real counts
-          is a nice touch beyond a baseline heatmap
+          is a nice touch, but no other distinctive ECharts-specific feature beyond
+          a baseline heatmap
   verdict: APPROVED
 impl_tags:
   dependencies: []
