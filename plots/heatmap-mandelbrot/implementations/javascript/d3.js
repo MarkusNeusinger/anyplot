@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-25
+// Quality: 93/100 | Created: 2026-08-25
 
 const tok = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
