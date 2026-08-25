@@ -1,0 +1,259 @@
+library: echarts
+language: javascript
+specification_id: hexbin-basic
+created: '2026-08-25T01:46:49Z'
+updated: '2026-08-25T01:52:25Z'
+generated_by: claude-sonnet
+workflow_run: 32798098733
+issue: 859
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - ECharts has no built-in hexbin series, so the implementation hand-rolls hexagonal
+    binning and a custom renderItem — exactly the idiomatic approach the echarts library
+    rules call for (a native capability, not a workaround)
+  - Uses the Imprint sequential colormap (green -> blue, tokens.seq) via visualMap
+    for the continuous density encoding, with matching 'High density'/'Low density'
+    text labels
+  - 'Both renders pass the theme-readability check: warm off-white / near-black backgrounds,
+    all text legible, data colors identical between light and dark'
+  - Minimal, refined chrome — axis ticks and split lines removed, thin axis line only,
+    generous balanced whitespace, hexagon strokes matched to the page background for
+    a clean 'floating' look
+  - Deterministic data generation via a fixed-seed LCG, with a realistic three-regime
+    industrial-sensor scenario (temperature vs. vibration) plus background noise that
+    produces genuine density variation
+  - No edge clipping anywhere — title, axis labels, tick labels, and the colorbar/legend
+    all sit comfortably inside the 3200x1800 canvas with room to spare
+  weaknesses:
+  - 'Data storytelling is only partial: only the ''normal operation'' cluster (low
+    temperature/vibration) reads as a clear dark-blue hotspot — the ''elevated load''
+    and ''thermal-stress'' regimes described in the code comments blend into the same
+    background green and aren''t visually distinguishable as separate regimes in the
+    final render'
+  - The hexbin resolution (HEX_COLUMNS = 24) is on the coarse side for ~4,500 points,
+    which flattens some of the finer density structure between the three regimes into
+    a single broad green field
+  - Code needs several helper functions (LCG, normal sampler, hex binning, custom
+    renderItem) to work around ECharts' lack of a native hexbin series, so it doesn't
+    follow a strict flat Imports -> Data -> Plot -> Save structure — understandable
+    given the required custom rendering, but still a deviation from the KISS ideal
+  - Vibration amplitude values reach ~60 mm/s in the 'thermal-stress' cluster, which
+    is high relative to typical industrial vibration-severity scales (ISO 10816-style
+    unacceptable thresholds are often well below that) — plausible for a stress-test
+    scenario but worth a sanity check
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "hexbin-basic · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. X-axis "Operating Temperature (°C)" and Y-axis "Vibration Amplitude (mm/s)" labels both descriptive with units and fully legible. Tick labels (0-100 on x, 0-60 on y) are dark gray and readable. Vertical colorbar on the right with "High density"/"Low density" text labels, both readable against the light background. No gridlines (removed by design), thin single axis line only.
+      Data: A dense field of regular hexagons tiling the plot area, colored on an Imprint sequential green (#009E73-ish, low count) to blue (~#4467A3, high count) gradient. The darkest/bluest hexagons cluster around x≈25-35, y≈10-20 (the "normal operation" regime), with the rest of the field a fairly uniform green — some hexagon-shaped gaps appear where no points fell (real sparse-data gaps in the tail, not overlap or rendering errors). Hexagon edges are separated by a thin stroke matching the page background, giving a clean "floating" appearance.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, now in white/light text, fully legible against the dark background. Axis names and tick labels rendered in light gray, clearly readable — no dark-on-dark failures observed. Colorbar text labels also light-colored and legible.
+      Data: Same hexagon field with identical green-to-blue data colors as the light render — only the chrome (background, text) has flipped to the dark theme, confirming color identity is preserved between themes.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis names 16, ticks/legend
+          14); readable in both themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, hexagons, or the colorbar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hexagon field clearly visible with a coherent density gradient
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential scale, CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, colorbar comfortably placed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (°C, mm/s)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses Imprint imprint_seq (green->blue) for density; theme-correct
+          chrome in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful continuous color mapping and stroke treatment, clearly
+          above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Gridlines and ticks removed, spines minimized, generous whitespace;
+          colorbar margin slightly generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point (dense cluster) but the intended three-regime narrative
+          only partially reads in the final render
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine hexagonal binning via custom series
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar present, perceptually uniform Imprint sequential cmap, adjustable
+          bin resolution constant; log-scale color mapping is only 'consider' in the
+          spec, not required
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped, axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern; colorbar labels
+          correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows dense clusters, sparse tails, and empty bins — full range of
+          hexbin density behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic industrial-sensor monitoring scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature and vibration ranges are plausible for the described
+          industrial scenario
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions required for custom hexbin/rendering, justified
+          but not a flat Imports->Data->Plot->Save structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is appropriate given the lack of a native hexbin series;
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no explicit size/devicePixelRatio
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series is exactly the library-sanctioned way to implement
+          hexbin in ECharts
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages renderItem/api.coord/api.visual custom rendering and continuous
+          visualMap, both ECharts-distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-rendering
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - minimal-chrome
