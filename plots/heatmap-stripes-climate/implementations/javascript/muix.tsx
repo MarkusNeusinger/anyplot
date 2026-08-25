@@ -58,8 +58,16 @@ function mixColor(from, to, fraction) {
 const COLD = tokens.div[2]; // Imprint imprint_div — blue, cold anomalies
 const MID = tokens.div[1]; // Imprint imprint_div — theme-adaptive midpoint (zero anomaly)
 const HOT = tokens.div[0]; // Imprint imprint_div — matte red, warm anomalies
+// The diverging midpoint token is the theme-adaptive page background, so a
+// fraction that reaches exactly 0 mixes to a color pixel-identical to the
+// backdrop and the bar disappears. Floor the magnitude so every bar keeps a
+// faint but real, non-zero-contrast tint — the fixed red/blue endpoints are
+// untouched since |fraction| is already >= this floor near them.
+const MIN_FRACTION = 0.15;
 function anomalyToColor(value) {
-  const fraction = value / maxAbsAnomaly; // symmetric around zero, per spec
+  const rawFraction = value / maxAbsAnomaly; // symmetric around zero, per spec
+  const sign = rawFraction < 0 ? -1 : 1;
+  const fraction = sign * Math.max(MIN_FRACTION, Math.abs(rawFraction));
   return fraction < 0 ? mixColor(MID, COLD, -fraction) : mixColor(MID, HOT, fraction);
 }
 const stripeColors = anomalies.map(anomalyToColor);
