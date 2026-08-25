@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-mandelbrot: Mandelbrot Set Fractal Visualization
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-25
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 82/100 | Created: 2026-08-25
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
