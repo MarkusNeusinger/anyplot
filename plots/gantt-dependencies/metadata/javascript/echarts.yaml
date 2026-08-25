@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: gantt-dependencies
 created: '2026-08-25T00:02:31Z'
-updated: '2026-08-25T00:07:56Z'
+updated: '2026-08-25T00:18:52Z'
 generated_by: claude-sonnet
 workflow_run: 32791243326
 issue: 3830
@@ -12,58 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dep
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Correct Imprint palette usage: first group (Requirements) is #009E73, subsequent
-    phases follow canonical order (#C475FD, #4467A3, #BD8233); identical data colors
-    across both light and dark renders'
-  - Theme-adaptive chrome is fully correct in both renders — warm off-white/near-black
-    backgrounds, readable ink-toned text, subtle grid, no dark-on-dark or light-on-light
-    failures
-  - 'Genuinely comprehensive dependency modeling: sequential finish-to-start chains
-    plus a 3-way convergence (Integration Testing depends on Backend API, Database
-    Setup, and Frontend Implementation) with clean elbow connectors and arrowheads
-    landing precisely on the successor''s left edge'
-  - Group rows render as thin translucent outlined bars spanning the aggregate min/max
-    of their children, visually distinct from the solid child task bars, with bold
-    vs. regular typography reinforcing the hierarchy
-  - Idiomatic use of ECharts' custom series API (renderItem with api.coord/api.size/clipRectByRect)
-    to draw both the Gantt bars and the dependency arrows — a technique genuinely
-    distinctive to this library
-  - Deterministic, realistic software-release-plan data with sensible task durations
-    and a coherent overall project timeline
+  - Genuine CPM (critical-path-method) forward/backward pass computes the true zero-slack
+    path and highlights it in amber, directly serving the spec's 'identify critical
+    path dependencies' use case rather than just drawing arrows
+  - Distinct group-header (thin outlined, semi-transparent fill) vs task (solid) bar
+    styling gives immediate visual hierarchy between phases and their child tasks,
+    satisfying the spec's 'vertical alignment should clearly show task hierarchy'
+    note
+  - Elbow connectors with arrowheads correctly land finish-to-start dependencies on
+    the successor's left edge instead of cutting diagonally across the chart
+  - Explicit, theme-adaptive font sizing threaded through title/subtitle/axis/tick/row
+    labels; both renders are fully legible with correct FAF8F1/1A1A17 backgrounds
+    and identical data colors
+  - Idiomatic, distinctive use of ECharts' custom-series API (renderItem, api.coord/api.size/api.style,
+    echarts.graphic.clipRectByRect) — the correct approach since ECharts has no native
+    Gantt series
+  - Deterministic, realistic software-release-plan dataset that exercises sequential,
+    parallel, and converging dependencies plus group aggregation
   weaknesses:
-  - No explicit axis title on the timeline (x) axis — tick labels are descriptive
-    dates but there is no 'Timeline'/'Date' label reinforcing what the axis represents
-    (VQ-06)
-  - 'Design Excellence is solid but not exceptional: the group-to-color mapping is
-    the straightforward canonical palette order rather than a more deliberate custom
-    scheme, and the L-shaped left/bottom spines are kept rather than removed entirely
-    — push DE-01/DE-02 further with more refined chrome (e.g. thinner axis line, tighter
-    tick treatment)'
-  - No visual emphasis on the critical path itself — with three parallel streams converging
-    on Integration Testing, highlighting the longest chain (e.g. a slightly bolder
-    stroke or accent color on the critical-path arrows) would sharpen the data storytelling
-    (DE-03)
-  - Title occupies only ~40% of the plot width after the length-based font-scaling
-    formula — correct per the scaling formula, but there is visual headroom to size
-    it slightly larger without overflowing
+  - Two dependency connectors (Backend API -> Integration Testing and Database Setup
+    -> Integration Testing) route their vertical elbow segment directly through the
+    Frontend Implementation bar near its right portion (~x=1480-1530 in the 3200-wide
+    source) -- the spec explicitly asks arrows to avoid overlapping task bars where
+    possible; offset the vertical segment or route it above/below the intervening
+    row band when it must cross another task's row
+  - The subtitle only explains the amber (critical-path) connector; the gray/inkSoft
+    non-critical connector styling is left unexplained -- a small connector-key or
+    legend would remove reader ambiguity about what the two line styles mean
+  - 'Minor: the Frontend Implementation -> Integration Testing connector''s vertical
+    segment clips slightly into the left edge of the Testing group''s outlined header
+    bar'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white and not dark.
-      Chrome: Title "Software Release Plan · gantt-dependencies · javascript · echarts · anyplot.ai" is dark ink text, centered top, fully legible. Y-axis category labels show bold group headers (Requirements, Design, Development, Testing) above their regular-weight indented child task names (Gather Requirements, Stakeholder Review, etc.), all dark/soft-ink and clearly readable. X-axis date ticks (Jan 3 ... Feb 15) are legible gray text. Vertical grid lines are thin and subtle, not competing with data. No spines beyond a thin left/bottom axis line.
-      Data: Task bars are colored by phase group following the Imprint canonical order — Requirements = #009E73 (brand green), Design = lavender/purple (#C475FD), Development = blue (#4467A3), Testing = ochre (#BD8233). Group-header rows render as thin, translucent, outlined bars spanning the aggregate start/end of their children; individual task rows render as solid bars. Elbow-shaped dependency connectors with small triangular arrowheads run from each predecessor's end to each successor's start, including a 3-way convergence into "Integration Testing". Connector lines are dark ink-soft gray, clearly distinguishable from the colored bars.
-      Legibility verdict: PASS — all title, axis, tick, and legend-equivalent (category label) text is clearly readable against the light background.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Software Release Plan · gantt-dependencies · javascript · echarts · anyplot.ai" in dark ink, centered, ~70% of canvas width (expected for the long mandated title). Subtitle in soft gray explains the amber critical-path connectors. Y-axis shows 4 bold group labels (Requirements, Design, Development, Testing) each followed by their indented, regular-weight child task labels. X-axis shows date ticks (Jan 3 - Feb 15) on a 4-day cadence with subtle vertical gridlines only. All text is clearly readable against the light background -- no light-on-light issues found.
+      Data: Group header bars render as thin, semi-transparent outlined spans; task bars render as solid fills. Colors cycle in canonical Imprint order by group: Requirements = brand green #009E73, Design = lavender/purple, Development = blue, Testing = ochre/amber-brown. Elbow connector arrows link predecessor end to successor start; amber, thicker connectors trace the critical path (Gather Requirements -> Stakeholder Review -> System Architecture -> Backend API -> Integration Testing -> QA Review -> Deployment), gray/ink connectors mark non-critical dependencies (e.g. Database Setup, UI/UX Design branches).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black and not light.
-      Chrome: Title renders in light/near-white text, fully legible against the dark background. Y-axis group headers and task labels are light-toned (bold white for groups, soft light gray for tasks), clearly readable — no dark-on-dark failures observed. X-axis date labels are light gray and legible. Grid lines are faint and appropriately subtle for the dark surface.
-      Data: All four phase colors (green, lavender, blue, ochre) are visually identical to the light render — only the chrome (background, text, connector-line color) flips as expected. Dependency connector lines are light gray/off-white, clearly visible against the dark background, mirroring the ink-soft line color used in the light render.
-      Legibility verdict: PASS — no dark-on-dark or unreadable text observed anywhere in this render; all chrome elements adapted correctly to the dark theme.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title/subtitle/axis/tick layout as the light render, now rendered in light ink (#F0EFE8-family) and soft light gray for secondary text. Gridlines and axis lines are subtle and theme-flipped correctly. No dark-on-dark failures observed -- every label, tick, and group/task name is clearly legible against the near-black surface.
+      Data: Group and task bar colors are pixel-identical to the light render (green, lavender, blue, ochre) -- only the chrome (background, text, grid) flipped, as required. The amber critical-path connectors and gray non-critical connectors keep the same hues in both themes, with the non-critical connector now correctly rendered light gray/white instead of near-black ink to stay visible on the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -71,77 +67,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; title fontsize correctly scaled down
-          via the length-based formula for the long mandated title; readable in both
-          themes
+        comment: Explicit sizes throughout; all readable in both themes; title fits
+          within the expected 70-85% width for the long mandated string
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: No text or element overlap observed in either render
+        comment: No text overlap, but two dependency connectors route through the
+          Frontend Implementation bar -- minor visual overlap with data, not text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Group header bars (thin, translucent) clearly distinguished from
-          solid task bars; sizing appropriate for 14 rows
+        comment: Bar heights (56% task / 32% group) and arrowheads are well-sized
+          for 13 rows of sparse data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; connectors use a neutral ink tone distinct from data
-          colors; no red-green-only encoding
+        comment: Good contrast, CVD-safe distinct hues, critical vs non-critical connectors
+          distinguishable beyond color alone via line weight
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the majority of the canvas with balanced margins; nothing
-          cut off
+        comment: Chart fills the canvas well, balanced margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No explicit timeline axis title; tick labels (dates, task names)
-          are descriptive but an axis title is entirely absent
+        passed: true
+        comment: '''Timeline'' x-axis name plus explicit date ticks is descriptive
+          for a time axis; task/group names serve as the y-axis label'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical palette order for subsequent groups,
-          theme-correct backgrounds and chrome in both renders'
+        comment: 'First series = #009E73, subsequent groups follow canonical Imprint
+          order, backgrounds correct, both themes fully theme-adaptive'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful group/task bar distinction and semantic color-per-phase,
-          but palette assignment is the straightforward canonical order rather than
-          a more bespoke scheme
+        passed: true
+        comment: Custom critical-path computation and group/task visual differentiation
+          are clearly above defaults; the bar-crossing arrows keep it just short of
+          flawless
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and generous whitespace, but the standard L-shaped spines
-          are retained rather than further refined
+        passed: true
+        comment: Minimal single-axis gridlines, generous whitespace, restrained chrome
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Bold/regular typography and color-by-phase create hierarchy, and
-          the 3-way convergence is visible, but the critical path is not visually
-          emphasized
+        passed: true
+        comment: Amber critical-path highlight with an explanatory subtitle gives
+          viewers an immediate, clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -151,28 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt chart with dependency connectors
+        comment: Correct Gantt-with-dependencies chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Finish-to-start dependency arrows, group aggregate spans, hierarchy
-          via indentation/typography, no dependent task starts before its predecessor
-          ends
+        comment: Dependency arrows, group aggregate spans, hierarchy indentation,
+          and finish-to-start scheduling constraints (successors never start before
+          predecessor end) all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = timeline, Y = tasks/groups, all data visible
+        comment: Time on x, task/group category on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; no legend
-          needed since only one dependency type (finish-to-start) is used
+        comment: Title format correct with descriptive prefix; no color legend needed
+          since group identity is conveyed via adjacent labels/colors
     data_quality:
       score: 15
       max: 15
@@ -182,21 +175,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows groups, individual tasks, sequential chains, and a multi-predecessor
-          convergence
+        comment: Sequential, parallel, and converging dependencies plus group aggregation
+          all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic software release plan
+        comment: Neutral, plausible software release plan
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Task durations and overall ~6-week timeline are plausible for the
-          described project
+        comment: Task durations and dependency chaining are realistic for a software
+          project timeline
     code_quality:
       score: 9
       max: 10
@@ -206,56 +199,56 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses several helper functions, but these are required by ECharts'
-          custom-series renderItem/formatter API, not avoidable over-engineering
+        comment: Helper functions are required by ECharts' custom-series renderItem/formatter
+          contract, not avoidable structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data
+        comment: Fully deterministic in-memory data via day() helper
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; echarts is the global
+        comment: No unused imports; echarts global only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the requirement, no fake UI
+        comment: Complexity (CPM pass) is justified by the critical-path feature it
+          enables; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current API
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio,
+          finished-event ready flag
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Custom series is the idiomatic ECharts approach for a chart type
-          with no built-in Gantt series
+        comment: Custom series with renderItem is the correct, recommended ECharts
+          pattern for Gantt charts
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: renderItem with api.coord/api.size/clipRectByRect for both bars and
-          dependency connectors is genuinely ECharts-specific and hard to replicate
-          identically elsewhere
-  verdict: REJECTED
+        comment: Deep use of ECharts' coordinate-system API (api.coord/api.size/api.style,
+          clipRectByRect) that would be hard to replicate in another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-series
   - manual-ticks
   patterns:
   - data-generation
@@ -263,3 +256,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
+  - publication-ready
