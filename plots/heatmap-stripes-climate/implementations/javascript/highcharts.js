@@ -33,28 +33,28 @@ const anomalies = years.map((year) => {
 // [red, neutral, blue]).
 const maxAbsAnomaly = Math.max(...anomalies.map(Math.abs));
 
-const hexToRgb = (hex) => [
-  parseInt(hex.slice(1, 3), 16),
-  parseInt(hex.slice(3, 5), 16),
-  parseInt(hex.slice(5, 7), 16),
-];
 const rgbToHex = (rgb) =>
   `#${rgb.map((c) => Math.round(c).toString(16).padStart(2, "0")).join("")}`;
 const lerpColor = (colorA, colorB, ratio) => {
-  const a = hexToRgb(colorA);
-  const b = hexToRgb(colorB);
+  const parse = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  const a = parse(colorA);
+  const b = parse(colorB);
   return rgbToHex(a.map((v, i) => v + (b[i] - v) * ratio));
 };
 
 // column series has no built-in colorAxis coloring (that composition ships
 // only with the heatmap/treemap modules, which are not loaded), so each
 // bar's color is computed directly from the diverging Imprint stops.
+// Magnitude is floored at 10% so a near-zero anomaly still blends slightly
+// toward its pole instead of landing on the exact page-background color
+// (which would make that year invisible against the canvas).
+const MIN_TINT = 0.1;
 const colorForAnomaly = (value) => {
   const cold = t.div[2];
   const neutral = t.div[1];
   const warm = t.div[0];
-  const u = 0.5 + value / (2 * maxAbsAnomaly);
-  return u < 0.5 ? lerpColor(cold, neutral, u / 0.5) : lerpColor(neutral, warm, (u - 0.5) / 0.5);
+  const magnitude = Math.max(Math.abs(value) / maxAbsAnomaly, MIN_TINT);
+  return value >= 0 ? lerpColor(neutral, warm, magnitude) : lerpColor(neutral, cold, magnitude);
 };
 
 const stripes = years.map((year, i) => ({
@@ -62,6 +62,30 @@ const stripes = years.map((year, i) => ({
   y: 1,
   color: colorForAnomaly(anomalies[i]),
 }));
+
+// Subtle radial vignette drawn with the SVGRenderer (a genuinely
+// Highcharts-distinctive capability, not available via plain CSS on the
+// mount node) so the stripe field reads with a touch more depth instead of
+// flat edge-to-edge color, without adding any forbidden chrome. Fixed to a
+// single ink-based tint (not theme-branched) and confined to the plot box
+// (excludes the title band) so it never touches title legibility and never
+// breaks the required pixel-identical data colors across themes.
+const drawVignette = function () {
+  const { plotLeft, plotTop, plotWidth, plotHeight } = this;
+  this.renderer
+    .rect(plotLeft, plotTop, plotWidth, plotHeight)
+    .attr({
+      fill: {
+        radialGradient: { cx: 0.5, cy: 0.5, r: 0.75 },
+        stops: [
+          [0, "rgba(26,26,23,0)"],
+          [1, "rgba(26,26,23,0.14)"],
+        ],
+      },
+      zIndex: 6,
+    })
+    .add();
+};
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -71,6 +95,7 @@ Highcharts.chart("container", {
     animation: false,
     spacing: [40, 0, 0, 0],
     style: { fontFamily: "inherit" },
+    events: { load: drawVignette },
   },
   credits: { enabled: false },
   title: {
