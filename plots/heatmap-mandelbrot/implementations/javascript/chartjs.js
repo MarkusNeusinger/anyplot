@@ -43,6 +43,34 @@ function buildPalette(seqColors) {
 
 const PALETTE = buildPalette(t.seq);
 
+// Draws a short leader line from a labeled point down to a target point inside
+// a fractal structure, plus a small dot marking the target — a lightweight
+// callout so the teaching-tool framing names the cardioid and period-2 bulb.
+function drawCallout(ctx, scaleX, scaleY, labelCx, labelCy, targetCx, targetCy, text) {
+  const labelPx = { x: scaleX.getPixelForValue(labelCx), y: scaleY.getPixelForValue(labelCy) };
+  const targetPx = { x: scaleX.getPixelForValue(targetCx), y: scaleY.getPixelForValue(targetCy) };
+
+  ctx.save();
+  ctx.strokeStyle = t.inkSoft;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(labelPx.x, labelPx.y + 4);
+  ctx.lineTo(targetPx.x, targetPx.y);
+  ctx.stroke();
+
+  ctx.fillStyle = t.inkSoft;
+  ctx.beginPath();
+  ctx.arc(targetPx.x, targetPx.y, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.font = "bold 16px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.fillStyle = t.ink;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(text, labelPx.x, labelPx.y);
+  ctx.restore();
+}
+
 // Renders the Mandelbrot set into an offscreen canvas using smooth (continuous)
 // escape-time coloring — no discrete iteration bands. Points that never escape
 // (bounded, inside the set) render solid black, per the spec.
@@ -122,9 +150,16 @@ const mandelbrotPlugin = {
     ctx.lineWidth = 2;
     ctx.strokeRect(chartArea.left, chartArea.top, areaW, areaH);
 
+    // --- Callouts naming the mathematically significant structures --------
+    // Both anchor points are known to lie inside the respective structure:
+    // (-0.3, 0.35) satisfies the main cardioid's boundary test, and
+    // (-1, 0.2) lies inside the period-2 bulb (center -1, radius 0.25).
+    drawCallout(ctx, chart.scales.x, chart.scales.y, -0.3, 0.85, -0.3, 0.35, "Cardioid");
+    drawCallout(ctx, chart.scales.x, chart.scales.y, -1, 0.6, -1, 0.2, "Period-2 bulb");
+
     // --- Colorbar legend (escape-time scale + "in set" swatch) -------------
     const barX = chartArea.left;
-    const barW = Math.min(420, areaW * 0.4);
+    const barW = Math.min(560, areaW * 0.5);
     const barY = chart.height - 95;
     const barH = 22;
 
@@ -178,7 +213,7 @@ const chart = new Chart(canvas, {
         display: true,
         text: "heatmap-mandelbrot · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 28 },
       },
       legend: { display: false },
     },
@@ -188,7 +223,9 @@ const chart = new Chart(canvas, {
         max: X_MAX,
         grid: { display: false },
         border: { display: false },
-        ticks: { color: t.inkSoft, font: { size: 14 }, callback: (v) => v.toFixed(2) },
+        // stepSize + includeBounds:false snap ticks to clean integers instead
+        // of the raw aspect-widened endpoints (e.g. -3.59, 2.09).
+        ticks: { color: t.inkSoft, font: { size: 14 }, stepSize: 1, includeBounds: false, callback: (v) => v.toFixed(0) },
         title: { display: true, text: "Real axis — Re(c)", color: t.ink, font: { size: 16 } },
       },
       y: {
