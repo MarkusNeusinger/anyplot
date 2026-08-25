@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: hexbin-basic
+created: '2026-08-25T01:53:48Z'
+updated: '2026-08-25T02:05:57Z'
+generated_by: claude-sonnet
+workflow_run: 32798258550
+issue: 859
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Genuine hexagonal-binning geometry (axial-coordinate rounding, pointy-top tiling
+    via a fixed-radius LCG-seeded pixel binning) — a real aggregation, not a faked/simulated
+    one
+  - Continuous density encoding uses imprint_seq exclusively, plus a hand-built gradient
+    colorbar labeled "Pings / bin" with min/max annotations — fully Imprint-compliant,
+    identical data colors across both themes
+  - log1p-scaled color mapping directly answers the spec's note about wide density
+    variance, and now with ~19,200 points the hex tiling reads as a genuinely dense
+    field where a scatter would be illegible
+  - Clean theme-adaptive chrome; title matches the mandated format exactly; axis titles
+    descriptive with units (km)
+  - Deterministic seeded LCG for reproducible data generation
+  - No AR-08/AR-09 violations — no clipped text at the canvas edges, no simulated
+    interactivity
+  weaknesses:
+  - Still relies on a lower-level SVGRenderer workaround (manual chart.renderer.path()
+    hex drawing plus an invisible boundary series only to trigger axis layout) instead
+    of a built-in series type, since colorAxis lives in an unloaded module — well-commented
+    and functional, but non-idiomatic and scores low on Library Mastery (LM-01)
+  - Heavy use of custom helper functions for hex-grid math (makeLcg, gaussian, axialRound,
+    pixelToAxial, axialToPixel, hexPath) runs against strict KISS "no functions" expectations,
+    though justified by the binning algorithm
+  - The three simulated hotspots (downtown, stadium, airport) now merge into one continuous
+    blob at this density — the density gradient still highlights two brighter cores,
+    but the three-cluster structure implied by the code comments is not clearly legible
+    as three distinct peaks in the render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "hexbin-basic · javascript · highcharts · anyplot.ai" is bold, dark, and fully visible at top center. Both axis titles ("Longitude offset from city center (km)" / "Latitude offset from city center (km)") and tick labels render in soft dark ink and are clearly legible. Grid lines are thin and subtle, visible without competing with the data.
+      Data: Hexagonal bins tile a dense, mostly-merged blob spanning the plot area, colored on a green(#009E73)-to-blue sequential ramp (imprint_seq). A manual colorbar on the right is labeled "Pings / bin" with max "167" and min "1", clearly separated from the plot and fully inside the canvas.
+      Legibility verdict: PASS — no light-on-light text anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis titles, tick labels, and colorbar labels all switch to light ink and remain fully legible against the dark surface. Grid lines are still subtle but visible.
+      Data: The hex-cell gradient (green→blue, max "167" / min "1") is pixel-identical to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; brand green #009E73 still reads clearly on the dark surface.
+
+    Both renders pass the theme-readability check; no AR-09 edge clipping observed on title, axis labels, tick labels, or colorbar text in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px axis titles, 14px
+          ticks, 13px colorbar labels); readable in both themes; title comfortably
+          within width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hex cells sized appropriately for ~19,200-point density; log1p color
+          scale resolves the wide count range
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient is CVD-safe and high-contrast against both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the majority of the canvas with balanced margins; colorbar
+          sits close to the plot, not isolated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles descriptive with units (km)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses imprint_seq exclusively (green->blue), identical
+          across themes; backgrounds are #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hex geometry and hand-built gradient colorbar show real polish,
+          a step above configured defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Page-bg-stroked hex cells, subtle grid, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Gradient draws the eye to the two brighter density cores, though
+          the three hotspots merge into one blob rather than reading as three distinct
+          peaks
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hexagonal binning plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color bar present, perceptually-uniform sequential ramp, log-scaled
+          color mapping for wide density variance, gridsize-equivalent HEX_SIZE control
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned with padded bounds showing all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar used in place of a legend, appropriate
+          for continuous data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both sparse-edge and dense-core density regions across a multimodal
+          spatial distribution
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: GPS pings around city hotspots (downtown/stadium/airport) is a realistic,
+          neutral urban-analytics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ~19,200 points now clearly demonstrates hexbin's value over an illegible
+          scatter, addressing the prior review's low-end point-count weakness
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions for hex-grid math, justified by the algorithm
+          but a deviation from strict KISS
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity matches the task
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; animation disabled; credits removed
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Legitimate core SVGRenderer usage, but bypasses the typical series/colorAxis
+          idiom via a manual boundary-series workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: From-scratch axial hex-grid binning, Highcharts.color().tweenTo()
+          interpolation, and a custom SVGRenderer gradient colorbar for a library
+          with no native hexbin support
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - publication-ready
