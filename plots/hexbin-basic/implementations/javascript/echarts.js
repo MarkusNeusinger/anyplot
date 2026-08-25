@@ -1,7 +1,7 @@
 // anyplot.ai
 // hexbin-basic: Basic Hexbin Plot
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-25
+// Quality: 93/100 | Created: 2026-08-25
 
 const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
