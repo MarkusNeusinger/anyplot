@@ -70,7 +70,9 @@ function coastLonAt(lat) {
       return lonA + f * (lonB - lonA);
     }
   }
-  return COASTLINE[COASTLINE.length - 1][0];
+  // Outside the traced range: snap to whichever end (north/Point Conception
+  // or south/Point Loma) is actually closest, not always the last vertex.
+  return lat > COASTLINE[0][1] ? COASTLINE[0][0] : COASTLINE[COASTLINE.length - 1][0];
 }
 
 // --- Data: synthetic gray-whale & common-dolphin sighting reports, clustered
@@ -106,7 +108,7 @@ for (let i = 0; i < 140; i += 1) {
 // screen distance to every neighbor, the property that makes hex grids
 // superior to square grids for spatial aggregation. --------------------------
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 165, right: 40, bottom: 180, left: 60 };
+const margin = { top: 165, right: 40, bottom: 180, left: 82 };
 const innerWidth = width - margin.left - margin.right;
 const innerHeight = height - margin.top - margin.bottom;
 
@@ -283,6 +285,19 @@ export default function Chart() {
       </text>
       <text x={width / 2} y={78} textAnchor="middle" fontSize={15} fill={t.inkSoft}>
         Southern California coast · gray whale &amp; dolphin sighting reports, hex-binned by count
+      </text>
+      <text x={margin.left + innerWidth / 2} y={height - margin.bottom + 46} textAnchor="middle" fontSize={13} fill={t.inkSoft}>
+        Longitude
+      </text>
+      <text
+        x={20}
+        y={margin.top + innerHeight / 2}
+        textAnchor="middle"
+        fontSize={13}
+        fill={t.inkSoft}
+        transform={`rotate(-90 20 ${margin.top + innerHeight / 2})`}
+      >
+        Latitude
       </text>
       <DensityLegend />
     </ScatterChart>
