@@ -96,8 +96,12 @@ const bins = Array.from(counts, ([key, count]) => {
 const maxCount = d3.max(bins, (d) => d.count);
 
 // Sqrt-transformed domain so the single densest hexagon doesn't swamp the
-// scale (the spec's "consider log scale when density varies widely").
+// scale (the spec's "consider log scale when density varies widely"); sqrt is
+// preferred over log here because bin counts start at 1 (log(1) = 0 would
+// collapse the low end of the ramp) and the count range (1-155) is moderate
+// enough that sqrt already spreads it well without a log's extreme low-end stretch.
 const colorScale = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain([0, Math.sqrt(maxCount)]);
+const hotspot = bins.reduce((best, d) => (d.count > best.count ? d : best), bins[0]);
 
 // --- SVG mount --------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -112,6 +116,21 @@ g.selectAll(".hex")
   .attr("fill", (d) => colorScale(Math.sqrt(d.count)))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 0.75);
+
+// Direct on-chart label for the densest hexagon (the "downtown core" cluster),
+// with a page-background halo stroke so it reads over any hex fill color.
+g.append("text")
+  .attr("x", hotspot.cx)
+  .attr("y", hotspot.cy - drawRadius - 10)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .style("paint-order", "stroke")
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 4)
+  .attr("stroke-linejoin", "round")
+  .text("Downtown core");
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).ticks(8));
@@ -189,7 +208,7 @@ svg
   .attr("y", 50)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "26px")
+  .style("font-size", "32px")
   .style("font-weight", "600")
   .text("hexbin-basic · javascript · d3 · anyplot.ai");
 
