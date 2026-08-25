@@ -126,9 +126,25 @@ for (const p of points) {
 
 const hexData = Array.from(bins.values()).map((bin) => {
   const [lon, lat] = unproject(bin.cx, bin.cy);
-  return [lon, lat, bin.count, bin.sumFare / bin.count];
+  return [lon, lat, bin.count, bin.sumFare / bin.count, bin.sumFare];
 });
 const maxCount = Math.max(...hexData.map((d) => d[2]));
+
+// --- Ocean tint: fills the water side of the coastline (west of the coast) -
+const OCEAN_POLYGON = [
+  [LON_MIN, LAT_MAX],
+  ...COASTLINE,
+  [LON_MIN, LAT_MIN],
+];
+function renderOcean(params, api) {
+  const shapePoints = OCEAN_POLYGON.map(([lon, lat]) => api.coord([lon, lat]));
+  return {
+    type: "polygon",
+    shape: { points: shapePoints },
+    style: { fill: t.palette[2], opacity: 0.2 },
+    silent: true,
+  };
+}
 
 // --- Custom series: draw one regular hexagon per occupied cell -------------
 function renderHex(params, api) {
@@ -148,13 +164,13 @@ function renderHex(params, api) {
       fill: api.visual("color"),
       stroke: t.pageBg,
       lineWidth: 1,
-      opacity: 0.85,
+      opacity: 0.65,
     }),
   };
 }
 
 // --- Title (fontsize scaled to the ~67-char baseline) -----------------------
-const titleText = "Bay Area Taxi Pickups · hexbin-map-geographic · javascript · echarts · anyplot.ai";
+const titleText = "SF Taxi Pickups · hexbin-map-geographic · javascript · echarts · anyplot.ai";
 const titleFontSize = Math.round(22 * Math.min(1, 67 / titleText.length));
 
 // --- Init ---------------------------------------------------------------
@@ -212,6 +228,16 @@ chart.setOption({
   },
   series: [
     {
+      name: "Ocean",
+      type: "custom",
+      coordinateSystem: "cartesian2d",
+      clip: true,
+      renderItem: renderOcean,
+      data: [[LON_MIN, LAT_MIN]],
+      encode: { x: 0, y: 1 },
+      z: 0,
+    },
+    {
       name: "Coastline",
       type: "line",
       coordinateSystem: "cartesian2d",
@@ -229,11 +255,12 @@ chart.setOption({
       clip: true,
       renderItem: renderHex,
       data: hexData,
-      dimensions: ["lon", "lat", "count", "meanFare"],
-      encode: { x: 0, y: 1, tooltip: [2, 3] },
+      dimensions: ["lon", "lat", "count", "meanFare", "sumFare"],
+      encode: { x: 0, y: 1, tooltip: [2, 3, 4] },
       tooltip: {
         formatter: (params) =>
-          `Pickups: ${params.value[2]}<br/>Avg fare: $${params.value[3].toFixed(2)}<br/>` +
+          `Pickups: ${params.value[2]}<br/>Total fares: $${params.value[4].toFixed(2)}<br/>` +
+          `Avg fare: $${params.value[3].toFixed(2)}<br/>` +
           `Center: ${params.value[1].toFixed(3)}°N, ${Math.abs(params.value[0]).toFixed(3)}°W`,
       },
       z: 3,
