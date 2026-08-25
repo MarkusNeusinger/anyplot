@@ -192,7 +192,9 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   three attempts under a fresh budget. Added: spec ids harvested from issue titles must be
   intersected with the actual `plots/` directories (14 of 26 pointed at specs that no
   longer exist), and a `TIMEOUT` with zero recent failures means the failures aged out of
-  the driver's window, not that nothing failed (#10660).
+  the driver's window, not that nothing failed. `run_spec.sh` also retries its
+  `git fetch`: two drivers polling one checkout collide on the `origin/main` ref lock,
+  and a lost fetch made the poller read stale metadata and understate progress (#10660).
 - **`babysit-pipeline` learned gap backfill** — closing coverage gaps across the catalogue is
   a different job from watching one fresh spec, and the skill only described the latter. It
   now documents reading the missing set from `plots/*/metadata/` instead of from labels

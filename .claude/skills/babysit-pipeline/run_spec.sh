@@ -77,7 +77,21 @@ recent_generate_failures() {
     || echo "?"
 }
 
-git -C "$REPO" fetch origin main --quiet
+# Two drivers polling the same checkout collide on `.git/refs/remotes/origin/main`
+# ("cannot lock ref ... is at X but expected Y"). A lost fetch leaves origin/main
+# stale, which makes meta_present understate progress — so retry, and say so in
+# the log when all three attempts lose, rather than silently polling a stale ref.
+fetch_main() {
+  local i
+  for i in 1 2 3; do
+    git -C "$REPO" fetch origin main --quiet 2>/dev/null && return 0
+    sleep $(( i * 3 ))
+  done
+  echo "[warn] git fetch origin main failed 3x — origin/main may be stale this round" | tee -a "$LOG"
+  return 1
+}
+
+fetch_main
 TODO=()
 for lib in "${LIBS[@]}"; do
   if meta_present "$lib"; then
@@ -106,7 +120,7 @@ iters=$(( MAXMIN * 60 / INTERVAL ))
 idle=0; last_done=-1
 for ((i=1; i<=iters; i++)); do
   sleep "$INTERVAL"
-  git -C "$REPO" fetch origin main --quiet
+  fetch_main
   missing=(); done_n=0
   for lib in "${TODO[@]}"; do
     if meta_present "$lib"; then done_n=$((done_n+1)); else missing+=("$lib"); fi
