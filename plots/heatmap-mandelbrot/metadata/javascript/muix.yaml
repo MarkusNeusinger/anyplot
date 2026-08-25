@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-mandelbrot
 created: '2026-08-25T00:43:18Z'
-updated: '2026-08-25T00:48:38Z'
+updated: '2026-08-25T00:57:53Z'
 generated_by: claude-sonnet
 workflow_run: 32794037001
 issue: 4431
@@ -12,119 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/muix/plot-dark.html
-quality_score: 81
+quality_score: 89
 review:
   strengths:
-  - Smooth (renormalized) escape-time coloring avoids discrete banding, and the gamma=0.42
-    curve pulls filamentary boundary detail out of what would otherwise be a flat
-    green field — genuinely thoughtful use of the sequential ramp.
-  - 'Clean creative solution to the community-only constraint: MUI X''s Heatmap is
-    Pro-only, so the fractal is rasterized onto a plain <canvas> sized/positioned
-    via useDrawingArea() to exactly fill the real ChartContainer axes rectangle —
-    axes, ticks and legend stay genuine MUI X/Imprint pieces.'
-  - Full classic Mandelbrot silhouette (main cardioid + period-2 bulb + surrounding
-    satellite bulbs and filaments) is clearly visible and well-composed within the
-    cropped square window.
-  - Custom legend clearly separates the continuous escape-time gradient from the discrete
-    'bounded (never escapes)' swatch, with readable end labels ('fast escape' / 'slow
-    escape') and no overlap with the plot or axis chrome.
-  - Title format, axis labeling (Re(c)/Im(c) with proper math notation), and deterministic/seed-free
-    computation all match spec and code-quality expectations.
+  - 'Y-axis label/tick collision from Attempt 1 is fixed: ''Im(c)'' now sits clear
+    of the ''0.0'' tick label with visible whitespace in both themes'
+  - Bounded-interior fill is now a fixed hex (#1A1A17) instead of the theme-adaptive
+    `ink` token, so the data color is identical between light and dark; a theme-adaptive
+    stroke keeps the legend swatch visible even when the fill matches the dark page
+    background
+  - Smooth (renormalized) escape-time coloring with a gamma=0.42 curve pulls filamentary
+    boundary detail out of the ramp instead of leaving a flat green field
+  - 'Clever, well-integrated solution to the community-only Heatmap gap: fractal rasterized
+    onto a `<canvas>` sized/positioned via `useDrawingArea()` to exactly fill the
+    real MUI X axes rectangle'
+  - Full classic Mandelbrot silhouette (cardioid, period-2 bulb, satellites) clearly
+    visible and well-composed
+  - Correct title format, descriptive Re(c)/Im(c) axis labels, deterministic computation
   weaknesses:
-  - Y-axis label 'Im(c)' collides with the '0.0' tick label in BOTH renders — the
-    label's closing parenthesis and 'c' glyph visually merge with the '0' digit right
-    at the vertical center of the axis. Confirmed by pixel-level crop of both plot-light.png
-    and plot-dark.png at the y=0.0 tick. Increase the y-axis label's offset from the
-    tick labels (e.g. via ChartsYAxis's axis `labelStyle`/margin/tickLabelStyle padding
-    or a larger left margin allocation) so the rotated label clears the widest tick
-    text ('-0.2'/'0.2') with visible whitespace.
-  - The 'bounded (never escapes)' interior fill is built from `t.ink`, a theme-adaptive
-    CHROME token, not a fixed data value — so the fractal's interior renders solid
-    black in the light theme but solid near-white/cream in the dark theme. This breaks
-    the hard rule that data colors (here, the escape-time series including its bounded-point
-    sentinel) must stay identical between themes; only chrome (background, text, grid)
-    should flip. Fix by picking one fixed hex for the interior (e.g. a constant near-black,
-    independent of ANYPLOT_THEME) and keeping it identical across plot-light.png and
-    plot-dark.png — the legend swatch should follow the same fixed color.
-  - 'The complex-plane window was narrowed from the spec''s default (x: -2.5 to 1.0)
-    to (x: -2.0 to 0.5) to force a square aspect ratio; while the cardioid and period-2
-    bulb are fully captured, this sits right at the edge of clipping the spec-mentioned
-    needle tip at Re(c)=-2 and diverges from the documented default range without
-    it being strictly necessary (a wider landscape canvas could have preserved the
-    spec''s default window).'
+  - 'Plotted window is still narrowed from the spec''s default (x: -2.5 to 1.0) to
+    (x: -2.0 to 0.5) to force a square aspect ratio — captures the cardioid/bulb fine
+    but diverges from the documented default (minor, unresolved from Attempt 1)'
+  - A modest strip of empty whitespace remains below the legend swatch at the bottom
+    of the canvas
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "heatmap-mandelbrot · javascript · muix · anyplot.ai" and subtitle centered above the plot, both clearly readable dark-on-cream. X-axis "Re(c)" and Y-axis "Im(c)" labels and tick labels are dark/soft-gray and legible EXCEPT the y-axis label visually overlaps the "0.0" tick label at the vertical center (the "c" of "Im(c)" merges into the "0" glyph) — a real collision, not just proximity. Legend below the plot ("Escape-time colour scale", the green-to-blue gradient bar, "fast escape"/"slow escape" end labels, and the "bounded (never escapes)" swatch + caption) is cleanly laid out with no overlap anywhere.
-      Data: Continuous escape-time gradient runs brand green (#009E73, fast escape near the boundary) to blue (slow escape, near-boundary halo), matching imprint_seq. The bounded interior (main cardioid, period-2 bulb, satellite bulbs) is solid black. Full classic Mandelbrot silhouette is visible with filamentary boundary detail pulled out by the gamma-adjusted ramp.
-      Legibility verdict: FAIL — the y-axis label/tick-label overlap at "0.0" is a real, visible collision in the busiest reading zone of the axis (confirmed via pixel crop).
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Bold dark title "heatmap-mandelbrot · javascript · muix · anyplot.ai" with subtitle "z(n+1) = z(n)² + c · escape-time coloured over the complex plane", both clearly readable. Re(c)/Im(c) axis labels and tick labels are dark/soft-gray and legible. The Attempt-1 y-axis label/"0.0" tick collision is fixed: a pixel-level crop around the vertical center confirms "Im(c)" now sits with clear whitespace to the left of the tick labels, no merging. Legend below (gradient bar, "fast escape"/"slow escape", "bounded (never escapes)" swatch) is cleanly laid out with no overlap; the swatch renders as a solid near-black square with a thin dark border.
+      Data: Continuous escape-time gradient runs brand green → blue (imprint_seq). Bounded interior (cardioid, period-2 bulb, satellites) is solid near-black (#1A1A17), full classic Mandelbrot silhouette with filament detail pulled out by the gamma-adjusted ramp.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in light ink, clearly readable against the dark background. Tick labels and axis labels are light-gray/soft-white and legible against dark, EXCEPT the same y-axis label/"0.0" tick collision reproduces here too (light-on-dark glyphs overlapping, same location as the light render). No dark-on-dark failures — all chrome text is appropriately inverted for the dark surface. Legend is unchanged in layout and fully readable.
-      Data: Green-to-blue escape-time gradient is pixel-identical to the light render, as required. However, the bounded interior fill is NOT identical between renders — it renders solid near-white/cream here (versus solid black in light), because the implementation sources this fill from the theme-adaptive `ink` token instead of a fixed data color. This is a palette-compliance violation: data colors (including the bounded-point sentinel) must stay constant across themes; only chrome should flip.
-      Legibility verdict: FAIL — same axis-label/tick-label overlap as the light render, plus the interior fill color inconsistency (a palette-compliance issue, not a legibility one, but it does mean the "distinct solid color" required by the spec for the interior differs by theme).
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title/subtitle/axis text correctly inverted to light ink, no dark-on-dark failures. Same y-axis label region checked via pixel-level crop: "Im(c)" and "0.0" no longer collide — clear gap visible, same fix holds in this theme. Legend swatch for "bounded" now renders as an outline-only square (light-ink stroke) because its fixed fill color (#1A1A17) matches the dark page background — this is the intended behavior for keeping the underlying data color identical across themes; the stroke (theme-adaptive chrome) keeps it visible.
+      Data: Green → blue escape-time gradient is pixel-identical to the light render. Bounded-interior fill is now the same fixed hex in both renders (verified via source: INTERIOR_HEX = "#1A1A17" is a hard-coded constant, no longer sourced from the theme-adaptive `t.ink` token) — the Attempt-1 VQ-07 issue (black in light vs. near-white in dark) is resolved.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Font sizes explicit and readable in both themes overall, but the
-          y-axis label 'Im(c)' visually merges with the '0.0' tick label in both renders,
-          degrading legibility at that spot.
+        passed: true
+        comment: All font sizes explicit, y-axis label/tick collision from Attempt
+          1 fixed, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Confirmed pixel-level collision between the rotated 'Im(c)' axis
-          label and the '0.0' tick label at the vertical center of the y-axis, in
-          both plot-light.png and plot-dark.png. Localized to one spot, not a severe/pervasive
-          overlap, so not scored at 0.
+        passed: true
+        comment: Y-axis label/tick collision fixed; confirmed via pixel-level crop
+          in both renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Smooth renormalized escape-time coloring with gamma correction keeps
-          filament detail visible; interior vs. exterior clearly distinguished.
+        comment: Fractal detail and gamma-adjusted ramp render at good density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq green-to-blue gradient has good contrast and is CVD-safe;
-          no red-green as sole signal.
+        comment: Green-to-blue gradient, good contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas correct, no clipping, generous margins; legend
-          area has a bit more empty whitespace at the very bottom than necessary.
+        comment: Plot area uses a healthy majority of the canvas; modest leftover
+          whitespace below the legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(c)/Im(c) axis labels are descriptive and mathematically correct;
-          title includes the mandated spec-id/language/library/anyplot.ai format.
+        comment: Re(c)/Im(c) descriptive for the domain, no units needed for complex-plane
+          coordinates
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Sequential ramp and backgrounds are theme-correct, but the bounded-interior
-          data color is built from the theme-adaptive 'ink' chrome token, so it renders
-          black in light and near-white in dark — data colors must stay identical
-          across themes.
+        passed: true
+        comment: Fixed hex interior color now identical across themes; imprint_seq
+          gradient; theme-correct backgrounds in both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -132,24 +108,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Gamma-corrected color ramp, custom canvas-raster technique layered
-          into genuine MUI X axes, and a purpose-built legend show clear design intent
-          beyond defaults.
+        comment: Gamma-corrected ramp, custom canvas-raster technique inside real
+          MUI X axes, purpose-built legend
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean minimal chrome, no unnecessary grid, generous whitespace; the
-          axis-label overlap and theme-inconsistent interior color hold this back
-          from full marks.
+        comment: Clean minimal chrome; both Attempt-1 refinement issues (overlap,
+          theme-inconsistent fill) resolved
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color directly encodes escape-time, legend explains the scale, and
-          the fractal itself is the clear focal point of the composition.
+        comment: Color directly encodes escape-time with a clear focal point
     spec_compliance:
       score: 14
       max: 15
@@ -159,30 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct continuous escape-time heatmap-style raster over the complex
-          plane.
+        comment: Correct escape-time fractal heatmap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Smooth coloring, cardioid + period-2 bulb visible, axes labeled with
-          real/imaginary values, distinct solid color for interior points.
+        comment: Smooth coloring, cardioid/period-2 bulb, labeled axes, distinct interior
+          color all present
       - id: SC-03
         name: Data Mapping
         score: 2
         max: 3
         passed: true
-        comment: Re(c)/Im(c) correctly mapped to x/y, but the plotted window (-2.0..0.5
-          x -1.25..1.25) is narrower than the spec's stated default (-2.5..1.0), cropped
-          specifically to force a square aspect.
+        comment: Window still narrowed from spec default (-2.5..1.0) to (-2.0..0.5)
+          to force a square aspect, unresolved from Attempt 1
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai' exactly;
-          legend labels are accurate and match the data encoding.
+        comment: Correct title format, legend matches
     data_quality:
       score: 15
       max: 15
@@ -192,22 +162,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full classic Mandelbrot silhouette with cardioid, period-2 bulb,
-          satellite bulbs, and filamentary boundary detail all visible.
+        comment: Cardioid, period-2 bulb, satellites, filament detail all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematically exact and neutral; no controversial content applicable
-          to a fractal visualization.
+        comment: Neutral mathematical scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: max_iterations=100 matches the spec default and gives good boundary
-          detail without excessive compute.
+        comment: Mathematically correct proportions
     code_quality:
       score: 10
       max: 10
@@ -217,35 +184,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Structure (small helper functions + two components) is the minimum
-          needed for a React/MUI X entry — no unnecessary abstraction.
+        comment: Clean, focused components
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic escape-time computation; no randomness involved.
+        comment: Deterministic escape-time computation, no RNG needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only React and the specific @mui/x-charts subpaths actually used
-          are imported.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Legitimate workaround for the community-only Heatmap gap (canvas
-          raster inside the real drawing area), no fake/simulated UI.
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports the component, sizes from window.ANYPLOT_SIZE, sets
-          skipAnimation — follows the harness contract.
+        comment: Harness contract followed correctly, skipAnimation set
     library_mastery:
       score: 7
       max: 10
@@ -255,25 +218,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses ChartContainer + useDrawingArea + ChartsXAxis/ChartsYAxis as
-          intended for composing custom layers into MUI X's coordinate system.
+        comment: Composes ChartContainer + useDrawingArea + axes idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Creative, well-integrated solution to the Pro-only Heatmap gap using
-          the community drawing-area API; not a generic bar/line usage.
-  verdict: REJECTED
+        comment: Creative, well-integrated workaround for the Pro-only Heatmap gap
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
+  - manual-ticks
   patterns:
   - matrix-construction
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
   - custom-colormap
   - gradient-fill
