@@ -22,9 +22,9 @@ function gaussian() {
 }
 
 const hotspots = [
-  { cx: 30, cy: 62, sx: 9, sy: 7, n: 1400 }, // downtown core
-  { cx: 74, cy: 50, sx: 11, sy: 9, n: 1100 }, // stadium district
-  { cx: 48, cy: 18, sx: 7, sy: 6, n: 900 }, // airport corridor
+  { cx: 30, cy: 62, sx: 9, sy: 7, n: 8000 }, // downtown core
+  { cx: 74, cy: 50, sx: 11, sy: 9, n: 6200 }, // stadium district
+  { cx: 48, cy: 18, sx: 7, sy: 6, n: 5000 }, // airport corridor
 ];
 
 const pings = [];
