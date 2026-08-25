@@ -14,6 +14,13 @@ const yMax = 1.25;
 const maxIterations = 100;
 const bailoutSq = 4; // |z|^2 escape radius^2
 
+// Contrast-curve exponent applied to the normalized escape fraction before it
+// hits the LUT. Most background pixels escape within a handful of iterations,
+// so a low exponent (well below 1) pushes that dense low-iteration cluster
+// further along the green->blue ramp, spreading perceptual detail across the
+// escape zone instead of leaving it a flat near-uniform green.
+const COLOR_GAMMA = 0.3;
+
 // --- Layout -------------------------------------------------------------------
 // Reserve space for title, axis labels/ticks, and a colorbar on the right.
 const margin = { top: 90, right: 190, bottom: 90, left: 110 };
@@ -86,7 +93,7 @@ for (let py = 0; py < canvasH; py++) {
       const logZn = Math.log(zr2 + zi2) / 2;
       const nu = Math.log(logZn / Math.LN2) / Math.LN2;
       const smoothed = n + 1 - nu;
-      const t = Math.pow(Math.min(1, Math.max(0, smoothed / maxIterations)), 0.45);
+      const t = Math.pow(Math.min(1, Math.max(0, smoothed / maxIterations)), COLOR_GAMMA);
       const lutIdx = Math.round(t * (LUT_STEPS - 1)) * 3;
       pixels[idx] = lut[lutIdx];
       pixels[idx + 1] = lut[lutIdx + 1];
@@ -155,6 +162,63 @@ svg
   .style("font-size", "16px")
   .text("Imaginary Axis — Im(c)");
 
+// --- Landmark annotations (data storytelling) ----------------------------
+// Callout the two features the spec names explicitly: the main cardioid and
+// the period-2 bulb tangent to it at c = -0.75. Labels sit on a pill so they
+// stay legible over both the black interior and the green/blue escape field.
+function addLandmark(dataX, targetDataY, labelDataY, text) {
+  const px = plotX + x(dataX);
+  const targetPy = plotY + y(targetDataY);
+  const labelPy = plotY + y(labelDataY);
+
+  svg
+    .append("line")
+    .attr("x1", px)
+    .attr("y1", targetPy)
+    .attr("x2", px)
+    .attr("y2", labelPy)
+    .attr("stroke", tok.inkSoft)
+    .attr("stroke-width", 1);
+
+  svg
+    .append("circle")
+    .attr("cx", px)
+    .attr("cy", targetPy)
+    .attr("r", 3)
+    .attr("fill", tok.elevatedBg)
+    .attr("stroke", tok.inkSoft)
+    .attr("stroke-width", 1.5);
+
+  const labelText = svg
+    .append("text")
+    .attr("x", px)
+    .attr("y", labelPy)
+    .attr("text-anchor", "middle")
+    .attr("dominant-baseline", "middle")
+    .attr("fill", tok.ink)
+    .style("font-size", "14px")
+    .style("font-weight", "500")
+    .text(text);
+
+  const bbox = labelText.node().getBBox();
+  const padX = 8;
+  const padY = 5;
+  svg
+    .insert("rect", () => labelText.node())
+    .attr("x", bbox.x - padX)
+    .attr("y", bbox.y - padY)
+    .attr("width", bbox.width + padX * 2)
+    .attr("height", bbox.height + padY * 2)
+    .attr("rx", 4)
+    .attr("fill", tok.elevatedBg)
+    .attr("stroke", tok.inkSoft)
+    .attr("stroke-width", 1)
+    .attr("opacity", 0.94);
+}
+
+addLandmark(-0.3, 0.45, 0.95, "Main cardioid");
+addLandmark(-1.0, 0.15, 0.75, "Period-2 bulb");
+
 // --- Colorbar legend (escape-iteration scale) ---------------------------------
 const legendW = 22;
 const legendH = plotH;
@@ -174,7 +238,7 @@ const gradient = defs
 const GRADIENT_STOPS = 12;
 for (let i = 0; i <= GRADIENT_STOPS; i++) {
   const frac = i / GRADIENT_STOPS;
-  const t = Math.pow(frac, 0.45); // matches the raster's contrast curve
+  const t = Math.pow(frac, COLOR_GAMMA); // matches the raster's contrast curve
   gradient
     .append("stop")
     .attr("offset", `${frac * 100}%`)
@@ -196,7 +260,7 @@ const legendAxis = svg
   .append("g")
   .attr("transform", `translate(${legendX + legendW},${legendY})`)
   .call(d3.axisRight(legendScale).ticks(5));
-legendAxis.selectAll("text").attr("fill", tok.inkSoft).style("font-size", "13px");
+legendAxis.selectAll("text").attr("fill", tok.inkSoft).style("font-size", "14px");
 legendAxis.selectAll("line").attr("stroke", tok.grid);
 legendAxis.select(".domain").attr("stroke", tok.inkSoft);
 
@@ -205,7 +269,7 @@ svg
   .attr("transform", `translate(${legendX + legendW + 55},${legendY + legendH / 2}) rotate(-90)`)
   .attr("text-anchor", "middle")
   .attr("fill", tok.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "15px")
   .text("Escape iterations");
 
 // --- Title ----------------------------------------------------------------
