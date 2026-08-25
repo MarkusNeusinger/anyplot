@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: gantt-dependencies
+created: '2026-08-24T23:56:39Z'
+updated: '2026-08-25T00:19:57Z'
+generated_by: claude-sonnet
+workflow_run: 32791062552
+issue: 3830
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Dependency arrows now route around every intervening task and group-aggregate
+    bar via a real lane-search collision-avoidance algorithm, fully resolving the
+    attempt-1 VQ-03/SC-02 finding
+  - Schedule now shows genuine slack/float (Database Schema, Unit Testing, Staging
+    Deployment each start a few days after their predecessor ends) alongside tight
+    back-to-back dependencies, resolving the attempt-1 DQ-01 finding
+  - Bars, row labels, and dependency arrows now use idiomatic selection.data(rows).join(...)
+    instead of forEach+append, resolving the attempt-1 LM-01 finding
+  - Correct Imprint palette canonical order (green -> lavender -> blue -> ochre ->
+    matte red) applied consistently, identical across light and dark renders
+  - Clear group/task hierarchy via bold group headers, indentation, translucent aggregate
+    span bars, and per-group coloring
+  - Explicit font sizing and theme-token-driven chrome keep all text legible in both
+    themes with no dark-on-dark or light-on-light failures
+  - Title format and legend labels match the spec/style-guide requirements exactly
+  weaknesses:
+  - A few dependency trunks still take long detours around wide group-aggregate span
+    bars (e.g. Database Schema -> Backend API/Auth Module reroutes around the entire
+    Development group span) -- consider letting arrows cross the low-opacity decorative
+    aggregate bars (only avoid actual task bars) or use a bezier dip to shorten these
+    paths
+  - Title occupies only ~30-35% of canvas width, on the small side relative to the
+    style-guide's ~50-70% guidance -- a modest fontsize increase would strengthen
+    the visual hierarchy (not a hard violation, just a polish opportunity)
+  - No explicit visual emphasis distinguishes the critical path from slack paths --
+    all task bars carry equal visual weight within their group color, so the viewer
+    must trace arrows manually to find the critical chain
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold centered title "gantt-dependencies · javascript · d3 · anyplot.ai" in dark ink at top; 5-item swatch legend (Requirements/Design/Development/Testing/Deployment) below it; 16 rows of dark-ink bold group labels and softer-ink task labels, right-aligned and indented to show hierarchy; thin vertical weekly gridlines; bottom x-axis with "Jan 04"..."Mar 08" date ticks. All text clearly readable against the light background.
+      Data: Task bars and translucent group-aggregate span bars colored by group using the Imprint palette in canonical order (green #009E73, lavender, blue, ochre, matte red). Dark elbow-routed connector lines with triangular arrowheads run from each predecessor's right edge to each successor's left edge, now routed around intervening bars instead of crossing them.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title/legend/row-label layout, rendered in light ink -- all clearly legible, no dark-on-dark failures anywhere. Gridlines and connector strokes flip to lighter tones appropriate for the dark surface.
+      Data: Identical to light render -- same 5 Imprint hues, first series still #009E73; only chrome flips.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes, balanced proportions
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: lane-search routing now avoids all intervening task/group
+          bars'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Formatted dates on x-axis, descriptive row labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color-by-group design with custom routing, though some
+          long detour paths remain
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, minimal spines, generous whitespace; minor clutter from
+          detour routing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Hierarchy and dependency chain are traceable, but no explicit critical-path
+          emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Gantt-with-dependencies chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed: arrows now avoid overlapping bars per spec note'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on X, task/group hierarchy on Y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format and legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: shows slack and zero-float dependencies, single- and multi-predecessor
+          tasks'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible software project scenario, neutral domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic task durations and project timeline
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, appropriate helper functions for the routing
+          algorithm
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity for the dependency-routing requirement
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container, no animation, harness-compliant'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fixed: now uses selection.data().join() throughout'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom lane-search collision-avoidance routing and marker defs are
+          distinctly D3-idiomatic
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
