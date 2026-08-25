@@ -1,3 +1,7 @@
+// anyplot.ai
+// gantt-dependencies: Gantt Chart with Dependencies
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-08-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // gantt-dependencies: Gantt Chart with Dependencies
