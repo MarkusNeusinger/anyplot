@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-stripes-climate: Climate Warming Stripes
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 49/100 | Created: 2026-08-25
+// Quality: 87/100 | Created: 2026-08-25
 //# anyplot-orientation: landscape
 // anyplot.ai
 // heatmap-stripes-climate: Climate Warming Stripes

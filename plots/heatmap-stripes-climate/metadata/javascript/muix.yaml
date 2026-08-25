@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-stripes-climate
 created: '2026-08-25T01:20:44Z'
-updated: '2026-08-25T01:27:17Z'
+updated: '2026-08-25T01:36:54Z'
 generated_by: claude-sonnet
 workflow_run: 32796671123
 issue: 4423
@@ -12,69 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/muix/plot-dark.html
-quality_score: 49
+quality_score: 87
 review:
   strengths:
+  - 'Fixes the attempt-1 CRITICAL defect: pixel-verified min RGB distance from the
+    page background is now 36.8 (light) / 22.6 (dark) — no bar is literally identical
+    to the background anymore, versus the previous 0-distance invisible band at the
+    zero-crossing (~1958)'
+  - The MIN_FRACTION=0.15 floor added since attempt 1 is exactly the fix the prior
+    review recommended, applied cleanly with a clear explanatory comment
   - 'Faithful, minimalist recreation of the canonical Ed Hawkins warming-stripes form:
     no axes, ticks, labels, or gridlines, matching the spec''s ''strip away everything
     but color'' requirement'
   - Creative, idiomatic use of MUI X's ordinal xAxis colorMap on a single-value BarChart
-    to fake a continuous per-year color stripe, working around the community package's
+    to render a continuous per-year color stripe, working around the community package's
     lack of a native heatmap component
-  - 'Correct ~3:1 aspect ratio (stripeHeight = stripeWidth / 3.1) matching the spec''s
-    ''wide and short'' guidance, with equal-width, zero-gap bars (categoryGapRatio:
-    0)'
-  - 'Fixed diverging endpoints (matte red #AE3030 / blue) are pixel-verified identical
-    between light and dark renders at the chart''s hottest year, and the symmetric
-    fraction = value / maxAbsAnomaly normalization mathematically satisfies the spec''s
-    ''equal visual intensity for equal +/- anomalies'' requirement'
-  - Deterministic LCG-seeded synthetic data with a plausible accelerating-warming
-    trend, clean code with no unused imports, and a correct output contract (skipAnimation,
-    sizes from window.ANYPLOT_SIZE, no hardcoded canvas)
+  - 'Correct ~3:1 aspect ratio, equal-width zero-gap bars (categoryGapRatio: 0), fixed
+    diverging endpoints (#AE3030/#4467A3) pixel-verified identical between light and
+    dark renders, deterministic LCG-seeded data with a plausible accelerating-warming
+    trend'
   weaknesses:
-  - 'CRITICAL — invisible bars at the zero-crossing: the diverging scale''s midpoint
-    (tokens.div[1]) is the theme-adaptive page-background color, so as anomaly ->
-    0 the interpolated bar color converges on the exact page background. Pixel-sampling
-    both PNGs confirms this is not just ''pale'' but literally zero RGB distance from
-    the background at the zero-crossing (~year 1958) in BOTH themes: light bar RGB
-    (250,248,241) == page bg (250,248,241); dark bar RGB (25,25,22) ~= page bg (26,26,23).
-    A multi-year band of bars is fully invisible, reading as a blank gap in the stripe
-    sequence where the data says there IS a year with an anomaly value.'
-  - 'Widespread low-contrast band, not just a single seam: because the trend is ''slow
-    start, accelerating post-1975'' (progress**2.2), roughly the first 60-70 years
-    (1900s-1960s) have small |anomaly| and therefore land close to the theme-adaptive
-    midpoint. Sampling a horizontal scanline across the full stripe width shows 30.7%
-    of the light render and 49.6% of the dark render sit within a 30-unit RGB distance
-    of the page background — i.e. nearly half the dark-theme chart is barely distinguishable
-    from its own backdrop. Fix: clamp the interpolation so |fraction| never drives
-    the mix all the way to the exact background color — e.g. floor |fraction| at ~0.12-0.15
-    before mixing, or interpolate toward a genuine off-background neutral (e.g. a
-    fixed light/dark gray offset ~10-15% in lightness from pageBg) rather than literally
-    pageBg itself, while keeping the fixed red/blue endpoints unchanged.'
-  - 'Because the midpoint token is theme-dependent, every non-endpoint bar''s color
-    differs between light and dark renders (verified: a bar at a middling fraction
-    reads RGB (212,218,225) in light vs (35,42,52) in dark) — this is the intended
-    behavior per the imprint_div style-guide formula for a diverging midpoint, but
-    combined with the near-invisible band above it means a large fraction of the chart''s
-    data colors are not just theme-flipped but theme-erased.'
-  - Pale intermediate hues across roughly the pre-1975 half of the timeline reduce
-    color discriminability for low-vision readers beyond what's typical for a diverging
-    scale, compounding the contrast issue above (VQ-04).
+  - 'Dark render still has a wide, genuinely low-contrast band: pixel sampling shows
+    44% of the years (44/125, matching every year whose |anomaly| falls under the
+    MIN_FRACTION floor) land within 30 RGB units of the #1A1A17 page background in
+    the dark render (min distance 22.6), producing a visible dark maroon/near-black
+    patch roughly a quarter to a third of the chart''s width where bars are hard to
+    distinguish from the backdrop. The same fraction-0.15 floor produces much better
+    separation in light mode (min distance 36.8, 0% of years under the 30-unit threshold)
+    because mixing a fixed fraction toward a saturated red/blue moves RGB values further
+    from a bright background (#FAF8F1) than from a near-black one (#1A1A17) in raw
+    Euclidean terms — the floor needs a theme-aware adjustment (e.g., a larger MIN_FRACTION
+    when mixing against the dark midpoint, or interpolating via perceptual lightness/contrast-ratio
+    rather than a flat linear fraction) so both themes reach comparable contrast.'
+  - Color Accessibility (VQ-04) is still weighed down by that same low-contrast dark-mode
+    band for low-vision readers, even though the hue pairing itself (blue/red) is
+    CVD-safe.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, confirmed by pixel sampling (250, 248, 241) at the canvas edge.
-      Chrome: Single title line "heatmap-stripes-climate · javascript · muix · anyplot.ai" in dark ink, centered above the stripe block. Clearly readable, no axes/ticks/gridlines/legend present, matching the spec's "pure data visualization" requirement.
-      Data: A horizontal band of ~125 equal-width, zero-gap vertical bars running left (1900, cool blue-gray) to right (2024, deep matte red #AE3030-ish). The left half is dominated by pale blue-gray/off-white bars; the right half deepens steadily into saturated red. A visible band of bars roughly a third of the way from the left is barely tinted, nearly blending into the cream background — pixel sampling confirms at least one bar column is an EXACT match to the page background (0 RGB distance), i.e. genuinely invisible, not just faint.
-      Legibility verdict: FAIL — the title and overall chrome are legible, but a real portion of the DATA (the near-zero-anomaly bars) is not legible: it is indistinguishable from the background, which is a data-visibility failure even though no text is affected.
+      Background: Warm off-white, matching #FAF8F1.
+      Chrome: Single title line "heatmap-stripes-climate · javascript · muix · anyplot.ai" in dark ink, centered above the stripe block. Clearly readable, no axes/ticks/gridlines/legend, matching the spec's "pure data visualization" requirement.
+      Data: A horizontal band of 125 equal-width, zero-gap vertical bars running left (1900, cool blue-gray) to right (2024, deep matte red #AE3030). A paler blue-gray-to-pink transition band sits roughly a third of the way across (the 1930s-1970s, where |anomaly| is small), but pixel sampling confirms even the palest bar is at least ~37 RGB units from the page background — visible and distinguishable, not invisible. Attempt-1's exact-background-match bug (0 RGB distance at the zero-crossing) is fixed.
+      Legibility verdict: PASS — title is legible, and all data bars, including the palest near-zero-anomaly ones, are distinguishable from the background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, confirmed by pixel sampling (26, 26, 23) at the canvas edge.
-      Chrome: Same title text now in light ink, clearly readable against the dark surface. No axes/ticks/gridlines/legend, matching spec.
-      Data: Same left-to-right cool-to-warm progression, but roughly half the chart (pixel-sampled: 49.6% of the scanned width is within a 30-unit RGB distance of the page background) is so dark it nearly disappears into the near-black backdrop — far worse than in the light render because both the low-anomaly bar tint and the page background are dark. The exact zero-crossing band is again pixel-identical to the background (0 RGB distance measured), producing a literal blank gap. The fixed hot-red endpoint at the far right is confirmed pixel-identical to the light render's endpoint (174, 48, 48 in both), so the two extremes of the palette are correctly theme-invariant — the problem is confined to the theme-adaptive midpoint and its surrounding low-fraction band.
-      Legibility verdict: FAIL — text is fine, but the dark-on-dark data problem (not text) is worse here than in light mode: a wide swath of early-20th-century bars is effectively invisible against the near-black page.
+      Background: Warm near-black, matching #1A1A17.
+      Chrome: Same title now in light ink, clearly readable against the dark surface. No axes/ticks/gridlines/legend, matching spec.
+      Data: Same left-to-right cool-to-warm progression; the fixed hot-red endpoint at the far right and cold-blue endpoint at the far left are pixel-identical to the light render's endpoints, confirming theme-invariant extremes as required. However, a visibly dark maroon/near-black patch spans roughly the middle-left third of the stripe block (years with small |anomaly|, ~1930s-1970s) where bars sit only ~22-30 RGB units from the page background — clearly darker/lower-contrast than the equivalent region in the light render, though no longer a literal blank gap like attempt 1.
+      Legibility verdict: PASS with a caveat — text is fully legible, and no bar is pixel-identical to the background (the outright invisibility bug from attempt 1 is fixed), but a real low-contrast band remains specific to the dark theme and should be tightened in a future pass.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -82,8 +69,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title clearly readable in both themes; only text element present,
-          per spec's axis-free design
+        comment: Title clearly readable in both themes with explicit font size; only
+          text element present, per spec's axis-free design
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -92,86 +79,95 @@ review:
         comment: No collisions; single title, no other text
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 3
         max: 6
-        passed: false
-        comment: 'Pixel-verified: bars at the zero-crossing are an EXACT RGB match
-          to the page background in both themes (0 distance), and ~30-50% of the chart
-          width is within 30 RGB units of the background — a real, measured invisible-elements
-          failure'
+        passed: true
+        comment: Attempt-1's literal invisible band (0 RGB distance from bg) is fixed
+          via the new MIN_FRACTION=0.15 floor, but pixel sampling shows 44% of years
+          still sit within 30 RGB units of the dark-theme background (min distance
+          22.6), producing a visibly low-contrast maroon/near-black patch in plot-dark.png
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Not a CVD hue conflict (blue/red diverging is fine), but the wide
-          pale/dark band around the midpoint gives very low lightness-contrast for
-          low-vision readers
+        comment: Blue/red diverging hues are CVD-safe, but the residual dark-theme
+          low-contrast band around the floored midpoint reduces legibility for low-vision
+          readers
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; ~3:1 stripe block, generous margins, no overflow
-          or clipping
+        comment: Canvas gate passed; ~3:1 stripe block, generous balanced margins,
+          no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes per spec (correct); title format matches mandate
+        comment: No axes per spec (correct); title format matches mandate exactly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_div correctly chosen for diverging data; fixed red/blue
-          endpoints pixel-verified theme-invariant; backgrounds pixel-verified #FAF8F1/#1A1A17'
+        comment: 'imprint_div correctly used for diverging data: fixed matte-red/blue
+          endpoints pixel-verified identical across themes, theme-adaptive midpoint
+          per style guide, backgrounds pixel-verified #FAF8F1/#1A1A17'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Faithful, restrained warming-stripes execution, undermined by the
-          invisible-band bug
+        passed: true
+        comment: Faithful, restrained warming-stripes execution; the invisible-band
+          bug that undermined attempt 1 is largely resolved
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: Fully chromeless per spec, clean composition
+        passed: true
+        comment: Fully chromeless per spec, clean minimal composition
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Cold-to-warm progression is a strong story, but the blank invisible
-          band breaks visual continuity mid-timeline
+        passed: true
+        comment: Cold-to-warm progression reads as a clear story; visual continuity
+          is mostly restored, still slightly muted through the dark-theme low-contrast
+          band
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct warming-stripes form
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: No axes/gaps/labels satisfied, 3:1 aspect satisfied; symmetric-intensity
-          math is correct but visually undermined by near-invisible low-fraction bars
+        passed: true
+        comment: No axes/gaps/labels, ~3:1 aspect, symmetric-around-zero color scale
+          all satisfied and now visually legible in both themes
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Years 1900-2024 mapped left-to-right chronologically, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title matches mandated format exactly; no legend needed and correctly
           omitted
     data_quality:
@@ -182,17 +178,20 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
+        passed: true
         comment: 125 years, within spec's 100-175 row range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Plausible accelerating-warming trend resembling real instrumental-record
-          anomalies, neutral framing
+          anomalies, neutral scientific framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Anomaly range (~-0.5 to +1.2 C) matches real-world HadCRUT/GISS-style
           magnitudes
     code_quality:
@@ -203,27 +202,32 @@ review:
         name: KISS Structure
         score: 3
         max: 3
+        passed: true
         comment: Small focused helper functions, no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Seeded LCG (seed 42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: Only BarChart, Box, Typography, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: No fake UI/interactivity; appropriate complexity for the color-math
-          workaround
+          workaround, floor logic clearly commented
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: 'Correct harness contract: default export, skipAnimation, sized from
           window.ANYPLOT_SIZE'
     library_mastery:
@@ -234,14 +238,16 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
+        passed: true
         comment: Uses BarChart's documented ordinal xAxis colorMap correctly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: Genuinely creative repurposing of colorMap + domainLimit + categoryGapRatio
+        passed: true
+        comment: Creative repurposing of colorMap + domainLimit + categoryGapRatio
           to fake a continuous heatmap stripe within the community-only surface
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
