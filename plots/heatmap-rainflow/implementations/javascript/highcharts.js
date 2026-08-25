@@ -111,7 +111,17 @@ cycles.forEach((c) => {
 });
 
 let maxCount = 0;
-matrix.forEach((row) => row.forEach((v) => { if (v > maxCount) maxCount = v; }));
+let peakRow = 0;
+let peakCol = 0;
+matrix.forEach((row, r) =>
+  row.forEach((v, c) => {
+    if (v > maxCount) {
+      maxCount = v;
+      peakRow = r;
+      peakCol = c;
+    }
+  })
+);
 const maxLog = Math.log10(maxCount + 1);
 
 // --- Color: imprint_seq on a log scale — cycle counts are heavily skewed ---
@@ -120,16 +130,10 @@ function hexToRgb(hex) {
 }
 const SEQ_LO = hexToRgb(t.seq[0]); // #009E73
 const SEQ_HI = hexToRgb(t.seq[1]); // #4467A3
-function lerp(a, b, f) {
-  return a + (b - a) * f;
-}
-function countRgb(count) {
-  const f = Math.log10(count + 1) / maxLog;
-  return [Math.round(lerp(SEQ_LO[0], SEQ_HI[0], f)), Math.round(lerp(SEQ_LO[1], SEQ_HI[1], f)), Math.round(lerp(SEQ_LO[2], SEQ_HI[2], f))];
-}
 function countFill(count) {
-  const [red, green, blue] = countRgb(count);
-  return `rgb(${red},${green},${blue})`;
+  const f = Math.log10(count + 1) / maxLog;
+  const rgb = SEQ_LO.map((lo, i) => Math.round(lo + (SEQ_HI[i] - lo) * f));
+  return `rgb(${rgb.join(',')})`;
 }
 
 // --- Title (fontsize scaled off the 67-char baseline) ----------------------
@@ -156,6 +160,9 @@ function clearDrawn() {
   drawn.length = 0;
 }
 
+// Intentional: no heatmap/colorAxis module is loaded in the core bundle, so
+// drawAll() paints the matrix cell-by-cell via chart.renderer primitives
+// instead of a Highcharts series — a deliberate workaround, not an oversight.
 function drawAll() {
   const chart = this;
   clearDrawn();
@@ -184,6 +191,47 @@ function drawAll() {
       );
     }
   }
+
+  // Explicit callout on the dominant high-count cluster (DE-03: sharpen the
+  // story instead of relying solely on implicit color/spatial pattern). The
+  // label is pushed past the last occupied row within +/-2 columns of the
+  // peak so it never lands on top of colored data (VQ-02: no overlap).
+  const peakX = chart.plotLeft + (peakCol + 0.5) * cellW;
+  const peakCellY = chart.plotTop + (N_AMP - 1 - peakRow) * cellH;
+  const labelAbove = peakRow < N_AMP / 2;
+  const neighborhoodClear = (row) => {
+    for (let col = Math.max(0, peakCol - 2); col <= Math.min(N_MEAN - 1, peakCol + 2); col++) {
+      if (matrix[row][col] > 0) return false;
+    }
+    return true;
+  };
+  let clearRow = peakRow;
+  if (labelAbove) {
+    while (clearRow + 1 < N_AMP && !neighborhoodClear(clearRow + 1)) clearRow++;
+  } else {
+    while (clearRow - 1 >= 0 && !neighborhoodClear(clearRow - 1)) clearRow--;
+  }
+  const boundaryY = labelAbove ? chart.plotTop + (N_AMP - 1 - clearRow) * cellH : chart.plotTop + (N_AMP - clearRow) * cellH;
+  const labelY = labelAbove ? Math.max(boundaryY - 24, chart.plotTop + 14) : Math.min(boundaryY + 24, chart.plotTop + chart.plotHeight - 6);
+  drawn.push(
+    r
+      .rect(chart.plotLeft + peakCol * cellW + 0.5, peakCellY + 0.5, cellW - 1, cellH - 1, 1)
+      .attr({ fill: 'none', stroke: t.ink, 'stroke-width': 2.5, zIndex: 3 })
+      .add()
+  );
+  drawn.push(
+    r
+      .path(['M', peakX, boundaryY, 'L', peakX, labelY + (labelAbove ? 12 : -12)])
+      .attr({ stroke: t.ink, 'stroke-width': 1.5, zIndex: 3 })
+      .add()
+  );
+  drawn.push(
+    r
+      .text(`Peak: ${Math.round(maxCount)} cycles`, peakX, labelY)
+      .attr({ align: 'center', zIndex: 3 })
+      .css({ color: t.ink, fontSize: '13px', fontWeight: '600' })
+      .add()
+  );
 
   // Amplitude tick labels (left, every 4th bin edge) + rotated axis title.
   for (let row = 0; row <= N_AMP; row += 4) {
@@ -274,13 +322,13 @@ function drawAll() {
   );
   drawn.push(
     r
-      .rect(barLeft, barTop + barHeight + 22, barWidth, barWidth * 0.6)
+      .rect(barLeft, barTop + barHeight + 10, barWidth, barWidth * 0.6)
       .attr({ fill: 'transparent', stroke: t.grid, 'stroke-width': 1, zIndex: 2 })
       .add()
   );
   drawn.push(
     r
-      .text('0 cycles', barLeft + barWidth + 10, barTop + barHeight + 22 + barWidth * 0.35 + 4)
+      .text('0 cycles', barLeft + barWidth + 10, barTop + barHeight + 10 + barWidth * 0.35 + 4)
       .attr({ align: 'left', zIndex: 2 })
       .css({ color: t.inkSoft, fontSize: '13px' })
       .add()
