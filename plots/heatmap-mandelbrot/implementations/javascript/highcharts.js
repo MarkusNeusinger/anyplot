@@ -188,6 +188,25 @@ function drawAll() {
       .css({ color: t.inkSoft, fontSize: '14px', fontWeight: '500' })
       .add()
   );
+
+  // Feature callouts: the cardioid and period-2 bulb are visible in the raster
+  // but unlabeled — a light callout naming each one strengthens the data
+  // storytelling on top of the spec-required visual (cardioid cusp is the
+  // real point c=0.25; the period-2 bulb is the circle centered at c=-1).
+  const toPx = (x, y) => [chart.xAxis[0].toPixels(x, false), chart.yAxis[0].toPixels(y, false)];
+  const addCallout = (text, boxX, boxY, anchorX, anchorY) => {
+    const [bx, by] = toPx(boxX, boxY);
+    const [ax, ay] = toPx(anchorX, anchorY);
+    drawn.push(
+      r
+        .label(text, bx, by, 'callout', ax, ay)
+        .attr({ fill: t.elevatedBg, stroke: t.inkSoft, 'stroke-width': 1, r: 4, padding: 6, zIndex: 3 })
+        .css({ color: t.ink, fontSize: '13px' })
+        .add()
+    );
+  };
+  addCallout('Cardioid', -0.05, 0.85, 0.15, 0.25);
+  addCallout('Period-2 bulb', -1.55, 0.55, -1.05, 0.2);
 }
 
 Highcharts.chart('container', {
