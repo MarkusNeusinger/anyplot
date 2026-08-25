@@ -180,6 +180,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **`babysit-pipeline`'s gap-backfill guidance corrected against a completed run** — the
+  section shipped in #10628 was written mid-backfill and three of its claims did not
+  survive the rest of it. The halt-on-cluster threshold counted raw failed runs, but one
+  impossible pair now burns three runs on its own retries, so two bad pairs tripped it
+  while the pipeline was healthy; it counts distinct `(spec, library)` pairs now. The
+  "static library against an interactive or 3D spec is the gap that is usually real"
+  gotcha is replaced by its opposite: every category-level prediction made during the
+  backfill was wrong — 17 of 20 parked pairs generated fine, and `bar-3d-categorical`
+  succeeded in plotnine while `scatter-3d` did not — so a gap counts as real only after
+  three attempts under a fresh budget. Added: spec ids harvested from issue titles must be
+  intersected with the actual `plots/` directories (14 of 26 pointed at specs that no
+  longer exist), and a `TIMEOUT` with zero recent failures means the failures aged out of
+  the driver's window, not that nothing failed (#10633).
 - **`babysit-pipeline` learned gap backfill** — closing coverage gaps across the catalogue is
   a different job from watching one fresh spec, and the skill only described the latter. It
   now documents reading the missing set from `plots/*/metadata/` instead of from labels
