@@ -1,0 +1,266 @@
+library: chartjs
+language: javascript
+specification_id: gantt-dependencies
+created: '2026-08-24T23:55:18Z'
+updated: '2026-08-25T00:10:43Z'
+generated_by: claude-sonnet
+workflow_run: 32790887923
+issue: 3830
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Dependency elbow connectors now route their vertical segment through a day offset
+    free of unrelated task bars (freeElbowX), directly fixing the prior attempt's
+    overlap-avoidance weakness
+  - Critical-path detection (walking back from the last-finishing task via the latest-finishing
+    predecessor) is rendered with heavier, darker connectors, giving the chart a clear
+    point of view on which chain drives the schedule
+  - Axis tick, axis title, and y-row fonts all increased versus the previous attempt
+    (13/14/15px -> 15/16/16px), tightening legibility at both full canvas size and
+    mobile thumbnail scale
+  - Group aggregate spans (hollow, colored-border bars) correctly computed as min/max
+    of member task dates, with bold headers and indented children making the group/task
+    hierarchy explicit
+  - 'First categorical series is #009E73 brand green, remaining groups follow Imprint
+    canonical order; data colors identical across light/dark renders, chrome (title,
+    ticks, grid, connector ink) correctly theme-adaptive'
+  - All dependent task start dates verified correct - never before the latest-finishing
+    predecessor (e.g. Requirements Sign-off starts day 5 = max(4,5); Integration Testing
+    starts day 33 = max(33,30); User Acceptance Testing starts day 38 = max(38,32))
+  - Idiomatic Chart.js floating-bar technique for the Gantt layout combined with a
+    distinctive low-level canvas plugin (afterDatasetsDraw) for the dependency arrows
+    - leverages the library's plugin architecture rather than faking the feature
+  weaknesses:
+  - At the ~400px mobile thumbnail the 17-row list (4 group headers + 13 tasks) is
+    still tight to read despite the larger fonts this attempt - an inherent density
+    tradeoff of a 13-task Gantt rather than a simple sizing fix.
+  - The critical-path line-weight distinction (ink width 3 vs inkSoft width 2) is
+    a nice touch but the two connector styles are subtle to tell apart at a glance
+    in the full-size render; a small color or dash difference in addition to weight
+    would make the critical chain pop more.
+  - Y-axis has no explicit axis title (relies on the task-name category labels alone)
+    - acceptable for a categorical Gantt axis, keeps VQ-06 just short of the absolute
+    top tier.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "Software Delivery Plan · gantt-dependencies · javascript · chartjs · anyplot.ai" is bold dark ink, centered, comfortably within canvas bounds (no clipping/overflow, no edge cropping). Y-axis shows bold group headers (REQUIREMENTS, DESIGN, DEVELOPMENT, TESTING) in dark ink and indented task names in softer gray ink, both readable at full size. X-axis shows date ticks (Feb 2 .. Mar 19) and axis title "Project Timeline (2026)" in dark/soft ink, subtle vertical gridlines only (no horizontal grid clutter).
+      Data: Group task bars colored green (Requirements), lavender (Design), blue (Development), ochre (Testing) - first series is #009E73 brand green, matching Imprint canonical order. Hollow colored-border bars above each group show the aggregate group span. Elbow connector lines with small triangular arrowheads route from each predecessor's end to each successor's start; the connectors along the critical chain (Gather Requirements -> Requirements Sign-off -> System Architecture -> Database Schema -> API Development -> Auth Integration -> Integration Testing -> User Acceptance Testing) are drawn heavier and darker than the non-critical branches (Stakeholder Interviews, UI/UX Design -> Frontend Build, Data Pipeline -> Unit Testing).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title, now light-colored ink, fully readable, no clipping. Group headers and task labels rendered in light ink / soft light-gray, both legible against the dark background - no dark-on-dark text anywhere. Axis ticks, axis title, and gridlines flipped to light tones.
+      Data: Bar colors identical to the light render (green/lavender/blue/ochre) - only chrome flipped, confirming palette consistency across themes. Dependency connectors flipped from dark ink to light ink/soft-light, remaining clearly visible against the dark canvas with the critical-path chain still visually heavier than the rest.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit font sizes increased across the board this attempt (13/14/15px
+          -> 15/16/16px); readable at full canvas size in both themes, tight only
+          at the ~400px thumbnail due to inherent 17-row density.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; freeElbowX now routes connectors around unrelated
+          task bars instead of crossing through them.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, arrowheads, and the critical-path emphasis are all clearly
+          visible at full resolution.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues per group with redundant hierarchy/position encoding,
+          no red-green-only signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas, balanced margins, nothing cut off;
+          canvas gate passed at 3200x1800.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has a descriptive title with year context; y-axis is a self-describing
+          categorical task list.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining groups follow Imprint canonical
+          order; theme-correct chrome in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic per-group coloring, hollow-vs-filled bar distinction, and
+          critical-path emphasis go clearly beyond library defaults; short of full
+          publication-level typographic polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, no chart border/frame, generous title padding;
+          some room remains for whitespace refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New critical-path highlighting makes the schedule-driving chain immediately
+          traceable - the core insight of a dependency Gantt - on top of the existing
+          group hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Gantt chart with dependency connectors.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dependency arrows, group aggregate spans, hierarchy indentation,
+          collision-avoiding routing all present; single dependency type so no legend
+          required.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = timeline, Y = task/group hierarchy, all tasks visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; no legend needed for
+          a single dependency style.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Single- and multi-predecessor dependencies, varying durations, grouped
+          phases, and a distinct critical chain vs. slack branches all represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic software delivery sprint scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All dependent-task start dates verified correct (never before the
+          latest predecessor's end).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Top-level data/mount/chart flow, no classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: freeElbowX and critical-path walk-back add real capability without
+          over-engineering; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'animation: false set, mount-node contract respected, current Chart.js
+          API.'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Floating horizontal bar chart is the standard idiomatic Chart.js
+          Gantt pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin now does collision-avoiding elbow
+          routing plus critical-path-aware styling - a level of low-level canvas plugin
+          work distinctive to Chart.js.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-plugin
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - grid-styling
