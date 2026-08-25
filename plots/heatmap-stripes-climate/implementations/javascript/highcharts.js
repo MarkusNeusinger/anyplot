@@ -45,13 +45,20 @@ const lerpColor = (colorA, colorB, ratio) => {
 // column series has no built-in colorAxis coloring (that composition ships
 // only with the heatmap/treemap modules, which are not loaded), so each
 // bar's color is computed directly from the diverging Imprint stops.
+// The blend anchor is the midpoint of the two poles (t.div[0]/t.div[2]),
+// not t.div[1] (the page-background-adaptive midpoint): t.div[1] is
+// #FAF8F1 on light / #1A1A17 on dark, so blending toward it would make
+// every low/medium-magnitude year render a different color per theme.
+// The pole midpoint is theme-independent, so a given anomaly reads as the
+// same color in both renders, matching the "data colors are identical,
+// only chrome flips" rule.
 // Magnitude is floored at 10% so a near-zero anomaly still blends slightly
-// toward its pole instead of landing on the exact page-background color
-// (which would make that year invisible against the canvas).
+// toward its pole instead of landing on the exact neutral color (which
+// would make that year hard to distinguish from its neighbors).
 const MIN_TINT = 0.1;
+const neutral = lerpColor(t.div[2], t.div[0], 0.5);
 const colorForAnomaly = (value) => {
   const cold = t.div[2];
-  const neutral = t.div[1];
   const warm = t.div[0];
   const magnitude = Math.max(Math.abs(value) / maxAbsAnomaly, MIN_TINT);
   return value >= 0 ? lerpColor(neutral, warm, magnitude) : lerpColor(neutral, cold, magnitude);
@@ -124,6 +131,7 @@ Highcharts.chart("container", {
       pointPadding: 0,
       groupPadding: 0,
       borderWidth: 0,
+      borderRadius: 0,
     },
   },
   series: [
