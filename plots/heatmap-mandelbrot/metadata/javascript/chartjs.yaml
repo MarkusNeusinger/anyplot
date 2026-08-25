@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: heatmap-mandelbrot
 created: '2026-08-25T00:31:40Z'
-updated: '2026-08-25T00:37:11Z'
+updated: '2026-08-25T00:45:01Z'
 generated_by: claude-sonnet
 workflow_run: 32793338962
 issue: 4431
@@ -12,9 +12,15 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
+  - 'All four weaknesses from the attempt-1 review are directly addressed: title font
+    bumped 22px→28px and now sits at a legible ~44% of canvas width, x-axis ticks
+    use an explicit stepSize so endpoints read as clean integers (-3… 2) instead of
+    aspect-widened decimals (-3.59, 2.09), leader-line callouts now label the Cardioid
+    and Period-2 bulb, and the colorbar cap was widened (420→560px) for better balance
+    under the chart.'
   - Correctly works around Chart.js's lack of a native heatmap/matrix type by using
     the library's own `plugins` afterDraw hook to paint a raster onto a real linear
     scatter coordinate system — no forbidden community plugin, honest complex-plane
@@ -24,42 +30,35 @@ review:
   - Correct Imprint `imprint_seq` continuous colormap (green→blue) with the right
     single-polarity semantics for escape-time data; data colors are pixel-identical
     between light and dark renders, chrome is theme-correct in both.
-  - Precomputed 256-step palette lookup table (`buildPalette`) keeps the per-pixel
-    hot loop free of hex parsing — clean, deliberate engineering for a computationally
-    heavy render.
   - Widens only the real-axis range to match the chart area's aspect ratio (never
     touching the imaginary range), directly satisfying the spec's 'aspect ratio should
     preserve the mathematical proportions of the complex plane' requirement.
-  - Hand-built colorbar + solid-black 'in the set' swatch clearly communicates the
-    escape-time scale despite Chart.js having no native colorbar/heatmap legend.
+  - New callouts anchor at mathematically verified points (-0.3, 0.35 inside the cardioid;
+    -1, 0.2 inside the period-2 bulb) with leader lines that don't collide with any
+    other chrome, raising the educational value of the teaching-tool framing.
   weaknesses:
-  - Title occupies only ~30-35% of the canvas width — well under the 50-70% the style
-    guide targets for a title of this length. At 22px it reads a bit small relative
-    to the 3200x1800 canvas; bumping to ~26-28px would give it more visual weight
-    without risking overflow.
-  - X-axis ticks show irregular, non-round endpoint values (-3.59, 2.09) produced
-    by the aspect-preserving range widening — consider an explicit tick step (e.g.
-    `ticks.stepSize`) so the extremes read as clean numbers instead of auto-generated
-    decimals.
-  - No callout/annotation names the cardioid or the period-2 bulb even though the
-    spec frames this as a teaching visualization — a small text label pointing at
-    each would raise the educational value and give the plot a clearer visual hierarchy/focal
-    point.
-  - The colorbar width is capped at `min(420, areaW*0.4)`, which looks a little small
-    relative to how much canvas width is available on a 3200px-wide render — could
-    grow slightly for better balance with the chart above it.
+  - Title still occupies only ~44% of canvas width — better than attempt 1's ~30-35%
+    but still under the 50-70% soft target. Not a deduction-worthy overflow/squeeze
+    case per the style guide's counter-example rule, but there is still headroom to
+    grow the fontsize a couple more points for extra visual weight.
+  - The `hexToRgb`/`buildPalette`/`renderMandelbrot`/`drawCallout` helper-function
+    split is a deviation from strict single-block KISS structure; justified by the
+    per-pixel computation but keeps CQ-01 shy of full marks.
+  - LM-02 (Distinctive Features) is solid but not maximal — the canvas-overlay-on-real-axes
+    technique is clever, but nothing here is unique to Chart.js beyond its plugin/draw-hook
+    API (the same raster-overlay trick would work in any canvas-based library).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "heatmap-mandelbrot · javascript · chartjs · anyplot.ai" in bold dark ink at top-center; "Real axis — Re(c)" / "Imaginary axis — Im(c)" axis titles in dark ink; tick labels (-3.59 to 2.09 on x, -1.25 to 1.25 on y) in a softer dark gray; a thin dark frame encloses the plot area (all four spines, intentional for the enclosed heatmap grid). All chrome text is clearly readable against the light background.
-      Data: The full Mandelbrot set is rendered — large cardioid, period-2 bulb on top/bottom, smaller bulb to the left, plus fine self-similar boundary detail. Escape-time region is a smooth green-to-blue gradient (Imprint imprint_seq, brand green #009E73 at 0 escape iterations transitioning to blue at 100+). Points inside the set (never escape) are solid black, per spec. A colorbar gradient + black swatch legend sits below the plot, labeled "Escape iterations (smooth-colored)" with "0" / "100+" endpoints and "In the set (bounded, never escapes)".
-      Legibility verdict: PASS — all text is clearly readable, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "heatmap-mandelbrot · javascript · chartjs · anyplot.ai" centered at top (~44% of canvas width, no overflow/clipping). "Real axis — Re(c)" / "Imaginary axis — Im(c)" axis titles in dark ink. Tick labels are now clean round integers/decimals (-3, -2, -1, 0, 1, 2 on x; 1.25, 1.00, 0.50, 0.00, -0.50, -1.00, -1.25 on y) — fixed from attempt 1's irregular aspect-widened endpoints. A thin dark frame encloses the plot area on all four sides (intentional, reads well for an enclosed heatmap grid). Two new leader-line callouts labeled "Cardioid" and "Period-2 bulb" point into the correct fractal structures without overlapping any other element. All chrome text is clearly readable against the light background.
+      Data: Full Mandelbrot set rendered — large cardioid, period-2 bulb top/bottom, smaller bulb to the left along the real axis, plus fine self-similar boundary fringe detail. Escape-time region is a smooth green-to-blue gradient (Imprint imprint_seq, brand green #009E73 at 0 escape iterations transitioning to blue at 100+), no banding. Points inside the set (never escape) are solid black, per spec. A colorbar gradient + black swatch legend sits directly below the plot, labeled "Escape iterations (smooth-colored)" with "0" / "100+" endpoints and "In the set (bounded, never escapes)".
+      Legibility verdict: PASS — all text and legend elements are clearly readable, no light-on-light issues, no edge clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light ink/off-white against the dark background; frame border rendered in a light soft tone. All chrome text reads clearly, no dark-on-dark failures observed.
-      Data: Identical green-to-blue gradient and black "in-set" region as the light render — data colors are pixel-for-pixel unchanged, confirming only chrome flipped between themes. The fractal shape (cardioid, period-2 bulb, boundary fringe) matches the light render exactly.
-      Legibility verdict: PASS — all text and legend elements are legible against the dark surface; brand green remains vivid on the dark background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical title, axis titles, tick labels, and callout text, all rendered in light ink/off-white against the dark background; the enclosing frame border switches to a light soft tone. No dark-on-dark failures — every label is clearly legible against the dark surface.
+      Data: Identical green-to-blue gradient and black "in-set" region as the light render — confirms only chrome flipped between themes, data colors are pixel-for-pixel unchanged. The fractal shape, callout leader lines, and colorbar all match the light render exactly in position and content.
+      Legibility verdict: PASS — all text and legend elements legible against the dark surface; brand green remains vivid on the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -70,21 +69,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; title
-          is a touch small relative to the 50-70% target proportion
+        comment: All font sizes explicitly set, readable in both themes; title bumped
+          22px→28px and now ~44% width, still shy of the 50-70% soft target
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between any text, legend, or data elements
+        comment: No collisions between title, axis text, callouts, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Raster detail, gradient, and colorbar are all clearly visible and
-          well-sized for the canvas
+        comment: Raster detail, gradient, colorbar, and callouts all clearly visible
+          and well-sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -98,13 +97,14 @@ review:
         max: 4
         passed: true
         comment: Chart fills a large, balanced share of the canvas; legend sits directly
-          below the plot, not isolated
+          below the plot; nothing overflows or clips
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with mathematical notation (Re(c), Im(c))
+        comment: Descriptive axis titles with mathematical notation (Re(c), Im(c));
+          ticks now clean round values
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -113,16 +113,16 @@ review:
         comment: imprint_seq used with correct single-polarity semantics; identical
           data colors across themes; theme-correct backgrounds and chrome
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful custom gradient and hand-built legend, clearly above library
-          defaults, but not exceptional publication polish
+        comment: Custom gradient, hand-built legend, and new mathematically-anchored
+          callouts push clearly past library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -132,12 +132,12 @@ review:
           for enclosed heatmap grid), generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color gradient and black interior create clear visual hierarchy and
-          an obvious focal point, though no explicit annotation names the cardioid/bulb
-          structures
+        comment: Color gradient and black interior create a clear focal point; Cardioid/Period-2
+          bulb callouts now give explicit narrative structure, fixing attempt 1's
+          gap
     spec_compliance:
       score: 15
       max: 15
@@ -155,15 +155,14 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Cardioid, period-2 bulb, smooth coloring, black interior, axis labels
-          all present
+        comment: Cardioid, period-2 bulb (now labeled), smooth coloring, black interior,
+          axis labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Real/imaginary axes correctly mapped; full required region shown
-          (and then some, by design)
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -203,9 +202,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses a few small helper functions (hexToRgb, buildPalette, renderMandelbrot),
-          justified by the per-pixel computation but a deviation from strict linear
-          KISS structure
+        comment: Uses a few small helper functions (hexToRgb, buildPalette, renderMandelbrot,
+          drawCallout), justified by per-pixel computation but a deviation from strict
+          linear KISS structure
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -248,14 +247,15 @@ review:
         max: 5
         passed: true
         comment: Leverages Chart.js's canvas-based plugin architecture to overlay
-          a precomputed raster onto real linear axes, a technique distinctive to canvas-based
-          rendering
-  verdict: REJECTED
+          a precomputed raster onto real linear axes, distinctive to canvas-based
+          rendering but not unique beyond that
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
