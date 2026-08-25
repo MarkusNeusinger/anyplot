@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-rainflow
+created: '2026-08-25T00:59:33Z'
+updated: '2026-08-25T01:13:40Z'
+generated_by: claude-sonnet
+workflow_run: 32795281679
+issue: 4465
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Elegant custom Chart.js plugin implements a true heatmap matrix (scatter chart
+    + afterDraw hook) since Chart.js has no native heatmap type -- a legitimate workaround
+    built entirely within the library's own plugin system, not a shell-out to another
+    library.
+  - Correct rainflow counting algorithm (ASTM E1049 four-point stack method) applied
+    to a physically plausible turbine blade load history, producing an authentic triangular-shaped
+    rainflow matrix.
+  - Sequential Imprint colormap (imprint_seq, log-scaled) correctly applied to continuous
+    single-polarity count data; data colors are pixel-identical between light and
+    dark renders.
+  - Peak-cell highlight adds a clear visual focal point without cluttering the chart.
+  - Custom-drawn colorbar with clean gradient, tick labels, and rotated axis title
+    is a nice piece of polish.
+  - Rounded, evenly-spaced heatmap cells with theme-adaptive strokes; zero-count bins
+    blend into the page background per the spec's 'visually distinct' requirement.
+  weaknesses:
+  - The upper portion of the matrix (high-amplitude bins) is sparsely populated, leaving
+    a visually empty region above the main cluster in both renders -- inherent to
+    the data but worth considering whether a denser/log-binned dataset would balance
+    canvas usage better.
+  - Code comment labels the peak (most-populated) cell as 'the dominant fatigue-damage
+    contributor' -- domain overreach, since Miner's-rule cumulative damage is dominated
+    by amplitude^m, not raw cycle count, so a low-amplitude/high-count cell is rarely
+    the true top damage contributor. Rephrase the comment or drive the highlight from
+    an estimated-damage metric (e.g. amplitude^m x count) instead of raw count.
+  - Axis units are labeled 'MPa' (stress) while the data/comments describe a raw 'bending-moment'
+    signal -- minor unit/domain mismatch. Either convert to true bending-moment units
+    (e.g. kN*m) or adjust the comment to describe stress directly.
+  - Several small math helper functions (hexToRgb, lerp, sequentialRgb, rgbToCss)
+    add structural complexity beyond the KISS ideal, though reasonably justified by
+    the custom-heatmap-plugin requirement.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Turbine Blade Load Spectrum · heatmap-rainflow · javascript · chartjs · anyplot.ai" in bold dark ink at top-left, comfortably within canvas bounds. X-axis title "Cycle Mean (MPa)" and Y-axis title "Cycle Amplitude (MPa)" in dark ink. Tick labels (mean: -88..80, amplitude: 3..96) in a softer dark gray, evenly spaced, no overlap. Colorbar on the right labeled "Cycle Count (log scale)" (rotated) with tick values 0, 3, 17, 73.
+      Data: 20x20 grid of rounded cells forming a triangular/wedge-shaped rainflow matrix -- dense, blue-leaning cells across the bottom two rows (low amplitude, high count), thinning to sparse green cells at higher amplitude, plus an isolated small cluster near amplitude ~85-99 / mean ~0-10 (gust-driven cycles). Zero-count bins are unpainted and blend into the page background, matching the spec's requirement. The single most-populated cell (bottom row, mean ≈ -32) is outlined with a dark stroke as a focal highlight. Colors run from brand green (#009E73, low count) to blue (#4467A3, high count) -- the Imprint imprint_seq sequential colormap.
+      Legibility verdict: PASS -- all title, axis, and tick text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/soft-light gray, clearly legible against the dark background. Colorbar and its tick/axis labels are also light-colored and readable. The peak-cell highlight stroke switches to a light/white outline (theme-adaptive), still clearly visible.
+      Data: Identical cell layout and color values to the light render -- same green-to-blue imprint_seq gradient, same triangular density pattern, same gust cluster near high amplitude. Confirms data colors are unchanged between themes; only chrome flipped.
+      Legibility verdict: PASS -- no dark-on-dark text; all title/axis/tick/colorbar text is clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 18px, axis titles 16px, ticks
+          14px, colorbar labels 16/18px); readable in both themes, title fits without
+          clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, axis labels, tick labels, or colorbar text.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 20x20 rounded cells are well-sized and clearly visible; density-adapted,
+          no overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient is CVD-safe; no red-green as sole
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Matrix + colorbar occupy the majority of the square canvas with balanced
+          margins; some natural whitespace above the sparse high-amplitude bins (data-driven,
+          not a hard layout defect).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Cycle Mean (MPa)'' / ''Cycle Amplitude (MPa)'' are descriptive
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for single-polarity continuous data; identical
+          data colors across themes; theme-correct backgrounds and chrome.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Bespoke plugin-drawn heatmap with rounded cells, custom colorbar,
+          and focal highlight -- clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Grid and spines removed, generous padding around colorbar, subtle
+          background-matched cell strokes.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Peak-cell outline creates a clear focal point and visual hierarchy,
+          though the underlying 'dominant damage' framing is domain-questionable (see
+          weaknesses).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct 2D heatmap/matrix representation.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Sequential colormap, log scale, colorbar, bin-center tick labels,
+          and visually-distinct zero-count bins all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Amplitude on Y-axis, mean on X-axis, matching the spec exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format correct with descriptive prefix; colorbar serves as
+          the legend and is clearly labeled.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Shows the expected dense low-amplitude cluster plus a sparse high-amplitude
+          tail with a distinct gust-driven sub-cluster.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Turbine blade root load spectrum is a real, neutral engineering scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        comment: Value ranges are plausible, but the 'bending moment' data is axis-labeled
+          in MPa (stress) -- a minor unit/domain mismatch.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Several small helper functions and a plugin object add structure
+          beyond the ideal linear script, but are justified by the custom-heatmap
+          requirement.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic seeded LCG (seed=42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No imports beyond the global Chart.js.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: No fake UI/functionality; complexity is appropriate for a hand-rolled
+          heatmap plugin.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: 'Canvas correctly mounted to #container, animation disabled, current
+          Chart.js API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Uses Chart.js's own plugin lifecycle (afterDraw) to implement a chart
+          type the library lacks natively, rather than shelling out to another library.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Canvas-level custom drawing (rounded cells, gradient colorbar) via
+          Chart.js's plugin hooks is distinctive and not trivially portable to another
+          library.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - edge-highlighting

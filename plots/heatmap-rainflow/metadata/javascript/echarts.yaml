@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: heatmap-rainflow
+created: '2026-08-25T01:12:17Z'
+updated: '2026-08-25T01:27:59Z'
+generated_by: claude-sonnet
+workflow_run: 32795605195
+issue: 4465
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - The tapering "diamond" envelope shape is now correctly realized via envelope-constrained
+    mean spread (meanLimit = ENV_LIMIT - amp, parabolic falloff) — this fully resolves
+    attempt 1's near-uniform-fill weakness and gives the chart a clear 2D focal point/hierarchy
+    exactly as the code's own comments describe.
+  - 'The stray y-axis axisLine poking above the topmost cells (attempt 1 weakness)
+    is fixed via axisLine: { show: false }.'
+  - Correct imprint_seq log-scale color mapping with an accurate log10 round-trip
+    formatter used consistently in both the tooltip and the visualMap legend.
+  - Zero/near-zero-count bins are correctly omitted so the page background shows through,
+    matching the spec's 'zero-count bins should be visually distinct (transparent)'
+    requirement.
+  - Theme-adaptive chrome is fully correct in both renders — title, axis labels, tick
+    labels, axis lines, and colorbar text all use theme tokens with no dark-on-dark
+    or light-on-light failures.
+  - Correct axis mapping (amplitude on y, mean on x per spec) with bin-center tick
+    labels, physical units (kN·m), and a realistic, neutral engineering scenario (wind-turbine
+    blade-root fatigue).
+  weaknesses:
+  - ~25% of the y-axis range (amp 150-195 kN·m) is permanently empty because the hard
+    envelope cutoff (meanLimit = ENV_LIMIT - amp reaches 0 at amp=150) zeroes every
+    cell above that row — consider trimming N_AMP/ampCenters so the axis domain matches
+    where data can actually exist, or softening the envelope with a probabilistic
+    tail of rare outlier cycles, both tightening the layout and matching real-world
+    rainflow matrices which usually show sparse outliers rather than a hard void.
+  - Design Excellence stays close to a well-executed standard heatmap — no additional
+    embellishment (e.g., a subtle highlight/annotation on the peak-count cell, or
+    a callout naming the diamond envelope pattern) to push DE-01/DE-03 further.
+  - Axis-title fontsize (18) is noticeably larger than tick-label fontsize (13); a
+    smaller gap would read as more balanced.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-ish), not pure white and not dark.
+      Chrome: Title "heatmap-rainflow · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Mean bending moment (kN·m)" and Y-axis title "Cycle amplitude, half-range (kN·m)" both dark ink, readable. Rotated (45°) x tick labels (-95..85, every 20 units) and horizontal y tick labels (5..185) in softer grey ink, all legible. Colorbar on the right shows "High"/"4645" at top and "0"/"Low" at bottom in grey text — readable. No stray axis lines poking into empty space (fixed from attempt 1).
+      Data: The heatmap forms a clean tapering diamond/pyramid shape using the imprint_seq gradient (brand green -> blue): wide at the bottom (low amplitude, full mean spread), narrowing to a single-cell apex near amp≈135-145, mean≈0-5. Color varies clearly in both dimensions — blue (high count) concentrated near center-bottom, green (low count) toward the diamond's edges — giving a genuine 2D pattern instead of attempt 1's near-uniform block.
+      Legibility verdict: PASS (all text readable, no light-on-light issues).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-ish), not pure black and not light.
+      Chrome: Title, axis titles, and tick labels all render in light ink, clearly legible against the dark surface. Colorbar "High"/"4645" and "0"/"Low" text is light-grey, readable. No stray axis line.
+      Data: Data colors are identical to the light render (imprint_seq green-to-blue gradient, same diamond-shaped cell layout, same colorbar min/max) — only the chrome (background, text, axis lines) flipped for the theme, as required. No dark-on-dark failures — every tick label, title, and colorbar label is clearly distinguishable from the near-black background.
+      Legibility verdict: PASS (no dark-on-dark issues).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; minor size gap between axis-title
+          fontsize (18) and tick fontsize (13)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Color now spans the full imprint_seq range from center (high count)
+          to edges (low count), a clear improvement over attempt 1's compressed band
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq is CVD-safe sequential, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Stray y-axis line from attempt 1 is fixed; deduct for ~25% of the
+          y-axis range (amp 150-195) being permanently empty since the envelope constraint
+          zeroes meanLimit at amp=150
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (kN·m)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq gradient, correct theme backgrounds, identical
+          data colors across themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom log-scale colorbar/tooltip round-trip and physically-motivated
+          envelope-constrained data generation add real polish beyond a bare default
+          heatmap, but overall styling stays close to library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle cell borders, no stray elements; solid but
+          not exceptional
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The diamond taper now gives the chart a clear focal point and 2D
+          hierarchy, fixing attempt 1's near-block-fill problem
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 2D heatmap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Colorbar, log scale, units, bin-center ticks, transparent zero bins,
+          and now a genuine 2D distinction between high/low-frequency bins
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Amplitude on y, mean on x, matches spec
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec-id · language · library · anyplot.ai
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: The defining tapering-diamond shape of a rainflow matrix is now achieved;
+          slight deduction because the envelope is a hard cutoff rather than a soft/probabilistic
+          tail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral wind-turbine blade-root fatigue-analysis scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Units/magnitudes plausible; envelope-based tapering now correctly
+          reflects real-world rainflow-matrix sparsity
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script; the small lcg() helper is the library-recommended
+          seeded-RNG pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; echarts global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no devicePixelRatio
+          override
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper heatmap series + continuous visualMap + category axes; the
+          attempt-1 axisLine nit is now fixed
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Log-transform with custom formatter round-tripping to real counts
+          is a nice touch, but no other distinctive ECharts-specific feature beyond
+          a baseline heatmap
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap

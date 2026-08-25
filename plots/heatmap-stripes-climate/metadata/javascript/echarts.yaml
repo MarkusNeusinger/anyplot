@@ -1,0 +1,252 @@
+library: echarts
+language: javascript
+specification_id: heatmap-stripes-climate
+created: '2026-08-25T01:13:39Z'
+updated: '2026-08-25T01:26:46Z'
+generated_by: claude-sonnet
+workflow_run: 32796349437
+issue: 4423
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Faithful, minimalist recreation of the Ed Hawkins warming-stripes style — no axes,
+    ticks, or gridlines, exactly as the spec requires.
+  - 'Diverging color scale is correctly symmetric around zero: both cold and warm
+    sides normalize against the same maxAbsAnomaly, so equal +/- anomalies get equal
+    visual intensity.'
+  - 'Thoughtful theme handling for the near-zero midpoint: a fixed off-white (#FAF8F1)
+    is used instead of the theme-adaptive imprint_div midpoint, specifically so the
+    pale near-zero band stays visible against the near-black dark background instead
+    of vanishing into it — while the cold/warm endpoint hues stay theme-invariant,
+    so data colors read as identical between light and dark renders.'
+  - 'Realistic data trajectory: roughly -0.35°C in the 1850s rising to ~+1.2°C by
+    2024, matching real HadCRUT/GISS global anomaly magnitudes relative to a 1961-1990
+    baseline.'
+  - Uses the full 175-year range (1850-2024), the upper bound of the spec's suggested
+    row count, with a deterministic seeded LCG for reproducibility.
+  - Custom tooltip formatter adds real interactive value (per-year anomaly on hover)
+    in the HTML detail view without affecting the static PNG.
+  weaknesses:
+  - 'LM-01/LM-02: the hand-rolled hexToRgb/lerpColor interpolation reinvents continuous
+    color mapping; ECharts'' native visualMap component (continuous type, feeding
+    off `t.div`) is purpose-built for mapping a numeric field to color and would be
+    a more idiomatic, library-native approach than manual per-point itemStyle colors.'
+  - 'CQ-01: five small helper functions (lcg, hexToRgb, rgbToHex, lerpColor, colorForAnomaly)
+    add more structure than strictly necessary — a visualMap-based approach would
+    let most of this collapse directly into the option config.'
+  - 'SC-02: the spec asks for a ~3:1 wide-and-short aspect ratio, but the implementation
+    uses the default 3200×1800 (16:9) landscape canvas. This is the closer of the
+    two canvas sizes the ECharts harness allows (3200×1800 or 2400×2400 square) and
+    is not the implementation''s fault, but it still falls short of the spec''s stated
+    3:1 intent.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills both the title band and the area behind the stripes, consistent with the anyplot light theme surface.
+      Chrome: The title "heatmap-stripes-climate · javascript · echarts · anyplot.ai" sits centered in a ~90px band at the top, rendered in bold dark ink. No axes, ticks, gridlines, or legend are present, as the spec requires.
+      Data: 175 vertical stripes (one per year, 1850-2024) span the full canvas edge-to-edge with no gaps. Colors progress smoothly from muted steel-blue on the left (pre-industrial, cooler anomalies), through a pale off-white near-zero band around the middle, to increasingly saturated brick-red on the right (recent, warmer anomalies). First-series brand green is not applicable here (continuous diverging data, not categorical).
+      Legibility verdict: PASS - title text is clearly readable against the light background; no overlap or clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the title band and the area behind the stripes, consistent with the anyplot dark theme surface.
+      Chrome: The same title text is rendered in light/off-white ink, clearly legible against the dark band. No axes, ticks, gridlines, or legend, matching the light render's chrome layout.
+      Data: The same 175 stripes are present with visually identical colors to the light render (blue -> pale near-zero -> red progression). The pale near-zero band remains clearly visible against the dark surroundings because the implementation intentionally hardcodes a fixed off-white midpoint instead of using a theme-adaptive one that would otherwise blend into the near-black background.
+      Legibility verdict: PASS - no dark-on-dark failures; title and the pale near-zero stripes both stay clearly distinguishable from the #1A1A17 background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title clearly readable in both themes at an appropriate size; only
+          text element in the chart.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 175 stripes at ~18px each are clearly distinguishable individual
+          bands.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-red imprint_div diverging scale, CVD-optimized, not sole red-green
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no cutoff, no overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels by spec design; title matches the required format
+          exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses t.div[0]/t.div[2] endpoints (theme-invariant) with a deliberate
+          fixed midpoint so data colors match exactly between light and dark renders.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Faithful, restrained recreation of the iconic warming-stripes style.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No spines, no grid, no clutter - fully minimal by design.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color progression alone tells the warming story clearly and immediately.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming-stripes chart via edge-to-edge colored bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No axes/ticks/gridlines, equal-width no-gap bars, zero-centered symmetric
+          diverging scale all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year -> x position, anomaly -> color, matching the spec's pure-color-encoding
+          design.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend correctly omitted
+          for continuous data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full 1850-2024 range with trend + noise; simple quadratic trend but
+          plausible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, scientifically plausible global-mean-style anomaly series.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomaly range (-0.35 to +1.2C) matches real-world HadCRUT/GISS magnitudes.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Five small helper functions for color interpolation - more structure
+          than strictly needed given visualMap could replace most of it.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set.
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Valid bar+itemStyle approach, but ECharts' native visualMap continuous
+          mapping would be more idiomatic for this exact use case.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Per-point itemStyle + tooltip formatter is a modest use of ECharts-specific
+          capability; doesn't leverage visualMap or other distinctive components.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - custom-colormap
