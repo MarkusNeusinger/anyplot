@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-stripes-climate: Climate Warming Stripes
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 79/100 | Created: 2026-08-25
+// Quality: 85/100 | Created: 2026-08-25
 
 const t = window.ANYPLOT_TOKENS;
 
