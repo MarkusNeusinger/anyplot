@@ -1,0 +1,276 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-mandelbrot
+created: '2026-08-25T00:38:53Z'
+updated: '2026-08-25T00:49:57Z'
+generated_by: claude-sonnet
+workflow_run: 32793860048
+issue: 4431
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-mandelbrot/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - New feature callouts ('Cardioid', 'Period-2 bulb') resolve attempt 1's DE-03 weakness
+    — a Highcharts renderer 'callout' label shape with a leader line points precisely
+    at the cusp/bulb, adding real data storytelling on top of the visual.
+  - 'Clever, well-documented workaround for the core-bundle constraint: computes the
+    escape-time raster into an off-screen canvas and embeds it as a single renderer.image
+    instead of thousands of SVG rects, avoiding both the missing heatmap module and
+    a DOM-size/perf problem.'
+  - Smooth/continuous escape-time coloring (renormalized iteration count via log-log
+    formula) fully satisfies the spec's 'avoid discrete color banding' requirement
+    — no visible banding in either render.
+  - 'Shows the complete classic view: main cardioid, period-2 bulb, satellite bulbs,
+    and the negative-real spike/tendrils, matching the spec''s required features.'
+  - Custom-built colorbar (Fast/Slow/In-set) drawn with the Imprint sequential ramp
+    (t.seq[0] -> t.seq[1]), correctly distinguishing the continuous escape-time gradient
+    from the solid in-set color.
+  - Square 2400x2400 canvas achieved cleanly via symmetric margins that force plotWidth
+    === plotHeight, so the square complex-plane data maps onto the plot area with
+    no distortion.
+  - Data raster, colorbar, and callout content are visually identical between light
+    and dark renders — only chrome (background, title, axis, callout box fill/border)
+    flips, exactly as required.
+  weaknesses:
+  - 'Header block is missing the mandated ''// License:'' line — prompts/library/highcharts.md
+    explicitly requires ''Keep the // License: line in the header block ... so it
+    ships in every generated snippet.'' Add e.g. ''// License: Highcharts — commercial
+    license, free for non-commercial use (highcharts.com/license)'' after the Library
+    line.'
+  - The invisible zero-opacity scatter series used purely to force Cartesian axis
+    rendering is a clever but non-obvious trick; a one-line comment already explains
+    it, but consider whether a lighter-weight axis-forcing approach exists for future
+    maintainers.
+  - Several helper functions (hexToRgb, clearDrawn, drawAll, addCallout) push structure
+    beyond the simplest possible KISS shape — justified here by the raster + custom-colorbar
+    + callout requirements, but worth flagging since most highcharts snippets in this
+    catalog are flatter.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matching the required light chrome surface.
+      Chrome: Bold black title "heatmap-mandelbrot · javascript · highcharts · anyplot.ai" centered at top, gray subtitle "z(n+1) = z(n)² + c · max iterations = 100" below it, dark axis titles "Re(c)" / "Im(c)", gray tick labels on both axes, gray "Iterations" colorbar label with "Fast"/"Slow"/"In set" swatch labels on the right. Two new callout boxes (white fill, dark border, dark text) with leader lines: "Cardioid" pointing into the cusp of the main cardioid, and "Period-2 bulb" pointing into the circular bulb to its left. All text clearly legible against the light background.
+      Data: The full Mandelbrot set rendered as a dense raster — solid black cardioid and period-2 bulb (and smaller satellite bulbs) surrounded by a green (#009E73) field that blends toward blue (#4467A3) near the fractal boundary via smooth/continuous escape-time coloring. First/near-boundary color is Imprint green as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matching the required dark chrome surface.
+      Chrome: White title, light-gray subtitle, light axis titles and tick labels, light-gray colorbar labels — same layout and content as the light render. The two callout boxes now flip to a dark fill with a light border and light text, so they remain legible against the dark surface (no dark-on-dark).
+      Data: Identical raster to the light render — black in-set regions, same green-to-blue continuous gradient for escape-time coloring. Only chrome (background, text colors, axis line colors, callout box fill/border) flipped; no shift in data colors.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; all text, including the new callout labels, reads clearly against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, axis titles, tick labels, colorbar labels, and the
+          new callout labels are all clearly readable in both themes at appropriate
+          font sizes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions; the two new callout boxes and leader
+          lines are placed clear of the title, axes, and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Escape-time raster at 1400px resolution renders the fractal boundary
+          with fine detail; in-set vs. escaping regions are unambiguous.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential ramp plus solid near-black in-set color
+          gives strong, non-red-green contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 2400x2400 square canvas; symmetric margins keep the complex
+          plane undistorted; callout boxes stay within plot bounds; nothing clipped
+          or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Re(c) / Im(c) axis titles are descriptive; title follows the mandated
+          format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous colorbar built from imprint_seq (t.seq[0]->t.seq[1]);
+          backgrounds are theme-correct #FAF8F1 / #1A1A17; data colors identical across
+          themes.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom raster-to-image technique, hand-built continuous colorbar,
+          and now labeled feature callouts show real design intent beyond default
+          chart styling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid disabled appropriately for a raster heatmap, generous margins,
+          subtle axis lines; colorbar swatches remain functional but plain.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The fix commit added explicit 'Cardioid' and 'Period-2 bulb' callouts
+          with leader lines pointing at the exact features, resolving attempt 1's
+          gap and giving the plot a clear guided narrative on top of the colorbar-aided
+          focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Continuous-color raster heatmap of escape-time values — correct plot
+          type given the core-bundle constraint (no heatmap module available).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Smooth coloring, cardioid + period-2 bulb shown AND now explicitly
+          labeled, axes labeled with real/imaginary values, in-set points solid near-black.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correctly map Re(c)/Im(c); full requested extent shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; custom colorbar legend
+          labels (Fast/Slow/In set) accurately describe the data.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows cardioid, period-2 bulb, satellite bulbs, self-similar tendrils,
+          and the negative-real spike.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematically canonical framing of the Mandelbrot set; neutral,
+          non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: max_iterations=100 matches spec default; viewport framing is the
+          conventional full-set view.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (hexToRgb, clearDrawn, drawAll, addCallout)
+          are used, justified by the raster + custom-colorbar + callout requirements
+          but beyond the flattest possible structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic math, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global, as required for the core
+          bundle.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the raster + callout technique; no fake
+          UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: false
+        comment: Uses the mount-node contract correctly, but the header is missing
+          the mandated '// License:' line required by prompts/library/highcharts.md
+          for every Highcharts snippet.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic given the core-bundle constraint: renderer.image + chart
+          events (load/redraw) instead of an unavailable module.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Distinctive use of Highcharts' SVG renderer for raster embedding,
+          manual colorbar construction, an invisible anchor series to force axis rendering,
+          and the renderer's native 'callout' label shape with leader lines for feature
+          annotation.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap

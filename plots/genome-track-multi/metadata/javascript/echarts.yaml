@@ -1,0 +1,280 @@
+library: echarts
+language: javascript
+specification_id: genome-track-multi
+created: '2026-08-25T00:34:31Z'
+updated: '2026-08-25T00:49:46Z'
+generated_by: claude-sonnet
+workflow_run: 32793274319
+issue: 4422
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/genome-track-multi/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - All four tracks (Genes, Coverage, Variants, Regulatory) share a single pixel-accurate
+    x-mapping and are tied together with subtle vertical alignment guides, so a reader
+    can trace an exon straight down to its coverage bump and nearby variants/regulatory
+    elements — genuinely useful genome-browser storytelling.
+  - Gene track correctly distinguishes exons (blocks), introns (thin backbone line),
+    and strand direction (chevrons pointing + for GeneA, - for GeneB), matching the
+    spec's explicit encoding guidance.
+  - Coverage depth is generated with a realistic exon-associated bump (insideExon())
+    rather than pure noise, so the coverage track visually correlates with the gene
+    structure above it — thoughtful synthetic-data design.
+  - Variant track combines bar (lollipop stem) + scatter (lollipop head, symbolSize
+    scaled to quality score) to encode both position and quality/effect size, exactly
+    as the spec recommends.
+  - 'Imprint palette used correctly and consistently: palette[0] (#009E73) on the
+    primary GeneA series, canonical ordinal positions for GeneB/Coverage/SNP/Regulatory,
+    with the matte-red anchor (palette[4]) reserved for Indel (a defensible severity-flavored
+    use) — verified against prompts/default-style-guide.md.'
+  - 'Both renders pass the theme-readability check: warm off-white / near-black backgrounds,
+    all chrome text readable, and data colors identical between light and dark — verified
+    via pixel crops of tick labels, axis unit labels, and the tight Promoter/Enhancer
+    label pair (close but not overlapping).'
+  - 'Title format matches the required ''{spec-id} · {language} · {library} · anyplot.ai''
+    pattern exactly, and previous review feedback (missing top-level `color: t.palette`
+    and explicit itemStyle on the SNP/Indel bar series) was correctly fixed in this
+    attempt.'
+  - 'Deterministic LCG PRNG (no Math.random) satisfies the browser-harness reproducibility
+    requirement; mount-node contract followed correctly (no explicit width/height
+    or devicePixelRatio on echarts.init, animation: false set).'
+  weaknesses:
+  - The two rightmost Regulatory-track labels ('Promoter' and 'Enhancer' near chr7:140,718,500-140,719,900)
+    sit very close together with only a few pixels of gap — not an actual overlap
+    today, but there is little margin; consider nudging the second label right or
+    dropping the color-coded rect width slightly if the region is ever made denser.
+  - Alternating track-shading is only applied to the Genes and Regulatory bands (graphicEls
+    rect fills), not to Coverage/Variants — the spec's 'consider subtle background
+    shading to visually separate adjacent tracks' note is only partially followed;
+    adding a matching elevatedBg rect behind the Variants band would make the 4-track
+    separation fully consistent.
+  - Several small coordinate-mapping helpers (xPix, yPixGene, yPixReg, insideExon)
+    are necessary for this custom multi-track layout, but a plain array of gene/regulatory
+    pixel-rect objects built once (instead of recomputing yPixGene/yPixReg per element)
+    would trim a little repetition.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec — not pure white.
+      Chrome: Title "genome-track-multi · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend (SNP amber swatch, Indel red swatch) top-right, legible. Four bold track labels on the left ("Genes", "Coverage", "Variants", "Regulatory") in dark ink, all readable. Right-side y-axis tick numbers (50/25/0 for Depth, 60/30/0 for Qual) and small "Depth"/"Qual" unit labels are legible and do not collide (verified via pixel crop). Bottom x-axis shows genomic-position tick labels (140,700,000 … 140,720,000) plus the axis title "chr7 position (bp)", fully visible with margin below — not clipped at the canvas edge (verified via pixel crop of the bottom band).
+      Data: GeneA exons/backbone/strand-chevrons in Imprint green (#009E73, palette[0], correct first-series color); GeneB in palette[1] lavender; Coverage filled area in palette[2] blue; SNP lollipops in palette[3] ochre; Indel lollipops in palette[4] matte red; Promoter/Enhancer rectangles in palette[5]/palette[6] cyan/mauve. All colors trace back to the Imprint palette, no custom hexes. Vertical guide lines at each 5,000 bp tick run through all four tracks, visually linking gene/coverage/variant/regulatory alignment.
+      Legibility verdict: PASS — no light-on-light text, no clipped elements, no overlapping text found in close inspection (title, legend, track labels, axis labels/ticks, and the tightly-spaced "Promoter"/"Enhancer" label pair all checked at full resolution).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec — not pure black.
+      Chrome: Same title/legend/track-label/axis structure as the light render, all rendered in light ink tones (white/light-gray text) that are clearly readable against the dark background — no dark-on-dark failures observed anywhere (title, legend text, "Genes"/"Coverage"/"Variants"/"Regulatory" labels, Depth/Qual unit labels, x-axis position ticks and "chr7 position (bp)" label all confirmed legible).
+      Data: Identical hex values to the light render for every series (GeneA green, GeneB lavender, Coverage blue, SNP ochre, Indel red, Promoter cyan, Enhancer mauve) — only the chrome (background, text, grid guide lines) flipped to the dark-theme tokens, exactly as required.
+      Legibility verdict: PASS — all text and data elements read clearly against the near-black surface; no theme-adaptation failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized (12-22px), confirmed readable in both themes
+          via pixel-level crops of axis/unit labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No actual collisions, but the rightmost 'Promoter'/'Enhancer' regulatory
+          labels sit very close together with minimal gap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lollipop markers scaled to quality score, coverage area clearly visible,
+          exon blocks well-sized against sparse gene count.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint CVD-safe palette throughout; SNP/Indel distinguished by hue+position,
+          not red-green-only.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), title ~55% width, no overflow, all
+          four tracks proportionally stacked with clear margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''chr7 position (bp)'', ''Depth'', ''Qual'' all descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical ordinal palette positions elsewhere,
+          correct theme backgrounds both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom graphic-layer composition (exon blocks, chevrons, lollipops,
+          regulatory rects) well beyond a default chart type; intentional visual hierarchy
+          across 4 tracks.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chart-junk axis boxes, subtle grid/guide lines only, generous
+          whitespace between tracks.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Vertical alignment guides connect exon/coverage/variant/regulatory
+          positions across tracks, the core coordinated-view storytelling goal of
+          a genome browser; shading only partially reinforces this (Coverage/Variants
+          bands lack the alternating tint applied to Genes/Regulatory).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-track genome browser with shared coordinate axis.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Exons/introns/strand, coverage area, variant lollipops, regulatory
+          rects all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Shared REGION_START-REGION_END x-mapping reused by every track; full
+          data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; legend labels (SNP, Indel)
+          match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: chromosome, start/end, track, feature_type, value, strand, label
+          all represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible generic gene/variant/regulatory data, neutral (no real-gene
+          claims).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Depth 0-50x and quality 0-60 are realistic sequencing/variant-call
+          ranges.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small coordinate-mapping helper functions are used (justified
+          by the multi-track layout complexity) but add mild repetition vs. a precomputed
+          rect list.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG PRNG, no Math.random.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports/dependencies.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, complexity matches the plot's genuine difficulty.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract followed correctly; animation:false set.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-grid/multi-axis alignment plus graphic-elements overlay used
+          exactly as ECharts intends for custom composite charts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines bar+scatter for value-encoded lollipops, symbolSize function,
+          and a bespoke graphic layer — distinctive, though shading consistency across
+          all 4 tracks was left incomplete.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - custom-legend
+  - manual-ticks
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - grid-styling
