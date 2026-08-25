@@ -1,0 +1,244 @@
+library: chartjs
+language: javascript
+specification_id: energy-level-atomic
+created: '2026-08-24T23:46:42Z'
+updated: '2026-08-25T00:01:15Z'
+generated_by: claude-sonnet
+workflow_run: 32790246644
+issue: 4434
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses were addressed: an absorption (upward) transition
+    was added, the rotated transition labels were enlarged to 16px, and the dash pattern
+    now divides evenly with no stray fragment.'
+  - Custom nonlinear (power-law) energy axis spreads the converging high-n levels
+    apart while each line is directly labeled with its exact real eV value.
+  - Transition arrows are colored on the Imprint sequential colormap (t.seq, brand
+    green to blue) scaled by transition energy — a continuous physical quantity correctly
+    mapped with a continuous colormap.
+  - All energy level values and spectral line wavelengths are factually accurate hydrogen-atom
+    physics.
+  - Theme-adaptive chrome correctly threaded through; both renders stay fully legible
+    with identical data colors.
+  weaknesses:
+  - The energy axis still has no independent numeric tick scale (ticks fully hidden);
+    the per-line eV labels substitute for it, but a reader scanning the axis alone
+    has no scale reference outside the labeled lines. Minor, not a blocker.
+  - CQ-01 stays at 2/3 for the small set of drawing helper functions — reasonable
+    given the custom-diagram requirement, but worth noting for future KISS-structure
+    comparisons.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1
+      Chrome: bold dark-ink title "energy-level-atomic · javascript · chartjs · anyplot.ai" centered near top; rotated y-axis title "Energy (nonlinear scale, real eV labeled per line)" along left edge; six level labels (n=1..n=6 with eV values) and an "Ionization limit · 0.00 eV" label — all readable
+      Data: six horizontal energy-level lines in ink-soft gray; dashed ionization-limit line now terminates evenly (stray dash fragment from attempt 1 fixed); seven transition arrows (six downward emission + one upward absorption) colored on the imprint_seq green-to-blue gradient, anchored at brand green #009E73
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17
+      Chrome: same title, axis title, level labels, and transition labels now render in light ink; fully legible against dark surface; no dark-on-dark text anywhere
+      Data: transition arrow colors identical to light render (green-to-blue gradient, brand green #009E73 anchor); confirms only chrome flips between themes while data colors hold constant
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout; rotated transition labels bumped from
+          13px to 16px, fixing the prior mobile-legibility concern
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions, even with a 7th arrow added
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Level lines and arrows well-sized for this sparse dataset
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe sequential gradient, not relying on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Content spans a large, balanced portion of the canvas; nothing cut
+          off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis title, unit-bearing per-line eV labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq gradient anchored at brand green #009E73; theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuinely custom diagram (nonlinear axis, direct per-line labeling,
+          gradient-colored arrows), well above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Rescaled dash pattern terminates cleanly with no stray fragment;
+          generous whitespace, no grid/ticks clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color-by-energy gradient visually separates the Lyman/Balmer series;
+          per-line labels create a clear read-in-order hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct atomic energy-level diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Partial-width labeled levels, wavelength-colored arrows in both directions,
+          ionization line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y correctly encodes compressed energy; X is an intentional hidden
+          0-1 layout axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; direct labeling substitutes
+          correctly for a legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multiple levels, ionization limit, two spectral series, AND both
+          emission and absorption transitions now shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, textbook hydrogen-atom physics
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Energy values and spectral wavelengths match known physical constants
+          exactly
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions beyond pure imports/data/plot, justified
+          by the custom-diagram requirement
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond global Chart.js
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Line datasets as scaffolding plus the plugin system, the standard
+          Chart.js pattern for custom chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDraw custom plugin with direct canvas drawing leverages a feature
+          distinctive to Chart.js's architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
+  - minimal-chrome
