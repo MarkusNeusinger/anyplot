@@ -50,8 +50,12 @@ const padY = (yMax - yMin) * 0.05;
 const domain = { xMin: xMin - padX, xMax: xMax + padX, yMin: yMin - padY, yMax: yMax + padY };
 
 // --- Hexagonal binning (pointy-top axial grid, gridsize controls resolution) -
+// Binned and rendered entirely in PIXEL space (not data space): each point is
+// converted to its pixel position first, then assigned to an axial hex grid
+// with a fixed pixel radius. This keeps every hexagon geometrically regular
+// on screen regardless of the mismatch between the data x:y domain ratio and
+// the chart's actual pixel aspect ratio.
 const GRIDSIZE = 24;
-const hexSize = (domain.xMax - domain.xMin) / GRIDSIZE / Math.sqrt(3);
 
 function pointToHex(x, y, size) {
   const q = ((Math.sqrt(3) / 3) * x - y / 3) / size;
@@ -74,21 +78,6 @@ function hexToPoint(q, r, size) {
   return { x: size * Math.sqrt(3) * (q + r / 2), y: size * 1.5 * r };
 }
 
-const bins = new Map();
-for (const p of points) {
-  const { q, r } = pointToHex(p.x, p.y, hexSize);
-  const key = q + "," + r;
-  bins.set(key, (bins.get(key) || 0) + 1);
-}
-let maxCount = 0;
-const hexBins = [];
-for (const [key, count] of bins) {
-  const [q, r] = key.split(",").map(Number);
-  const center = hexToPoint(q, r, hexSize);
-  hexBins.push({ x: center.x, y: center.y, count });
-  if (count > maxCount) maxCount = count;
-}
-
 // --- Density color: imprint_seq (brand green -> blue), log-scaled -----------
 function hexToRgb(hex) {
   const n = parseInt(hex.slice(1), 16);
@@ -96,6 +85,7 @@ function hexToRgb(hex) {
 }
 const seqLow = hexToRgb(t.seq[0]);
 const seqHigh = hexToRgb(t.seq[1]);
+let maxCount = 0;
 function densityColor(count) {
   const ratio = Math.log1p(count) / Math.log1p(maxCount);
   const r = Math.round(seqLow.r + (seqHigh.r - seqLow.r) * ratio);
@@ -104,22 +94,42 @@ function densityColor(count) {
   return "rgb(" + r + "," + g + "," + b + ")";
 }
 
-// --- Plugin: draw the aggregated hexagons over the (empty) scatter axes -----
+// --- Plugin: bin points (in pixel space) and draw the aggregated hexagons ---
+// over the (empty) scatter axes. colorbarPlugin's afterDraw runs right after
+// this afterDatasetsDraw within the same draw pass, so it always sees the
+// maxCount computed here.
 const HEX_ANGLES = [0, 1, 2, 3, 4, 5].map((i) => (Math.PI / 180) * (60 * i - 30));
 const hexbinPlugin = {
   id: "hexbinPlugin",
   afterDatasetsDraw(chart) {
-    const { ctx, scales } = chart;
+    const { ctx, scales, chartArea } = chart;
+    const hexSizePx = (chartArea.right - chartArea.left) / GRIDSIZE / Math.sqrt(3);
+
+    const bins = new Map();
+    for (const p of points) {
+      const px = scales.x.getPixelForValue(p.x);
+      const py = scales.y.getPixelForValue(p.y);
+      const { q, r } = pointToHex(px, py, hexSizePx);
+      const key = q + "," + r;
+      bins.set(key, (bins.get(key) || 0) + 1);
+    }
+    maxCount = 0;
+    const hexBins = [];
+    for (const [key, count] of bins) {
+      const [q, r] = key.split(",").map(Number);
+      const center = hexToPoint(q, r, hexSizePx);
+      hexBins.push({ x: center.x, y: center.y, count });
+      if (count > maxCount) maxCount = count;
+    }
+
     ctx.save();
     for (const bin of hexBins) {
       ctx.beginPath();
       HEX_ANGLES.forEach((angle, i) => {
-        const vx = bin.x + hexSize * Math.cos(angle);
-        const vy = bin.y + hexSize * Math.sin(angle);
-        const px = scales.x.getPixelForValue(vx);
-        const py = scales.y.getPixelForValue(vy);
-        if (i === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
+        const vx = bin.x + hexSizePx * Math.cos(angle);
+        const vy = bin.y + hexSizePx * Math.sin(angle);
+        if (i === 0) ctx.moveTo(vx, vy);
+        else ctx.lineTo(vx, vy);
       });
       ctx.closePath();
       ctx.fillStyle = densityColor(bin.count);
