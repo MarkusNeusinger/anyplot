@@ -1,0 +1,266 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-rainflow
+created: '2026-08-25T01:05:42Z'
+updated: '2026-08-25T01:24:05Z'
+generated_by: claude-sonnet
+workflow_run: 32795766287
+issue: 4465
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-rainflow/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Implements a genuine ASTM-style four-point rainflow counting algorithm over a
+    synthetic variable-amplitude load signal instead of faking a plausible-looking
+    matrix distribution — the binned counts are real algorithm output.
+  - 'Clever core-bundle workaround: since no heatmap/colorAxis module is loaded, the
+    matrix is drawn cell-by-cell with chart.renderer primitives, then an invisible
+    matched-axis scatter series is overlaid so the chart still exposes a real native
+    Highcharts tooltip on hover.'
+  - 'Explicit ''Peak: 118 cycles'' callout with a collision-aware label placement
+    (searches for a clear neighborhood before placing the label) sharpens the visual
+    story and draws the eye to the fatigue-critical cluster.'
+  - 'Full theme adaptation: Imprint palette (imprint_seq) is identical between light
+    and dark renders, chrome (title, ticks, grid, peak-outline stroke) correctly flips
+    via ANYPLOT_TOKENS, and zero-count bins render transparent per the spec''s requirement.'
+  - Well-constructed log-scale sequential colorbar with sensible tick placement (powers
+    of ten plus the exact max) rather than a fixed linear scale, appropriate given
+    the strongly skewed cycle-count distribution.
+  weaknesses:
+  - Colorbar tick labels for counts 100 and 118 sit close together near the top of
+    the bar (max is close to a power of ten) — slightly cramped; consider dropping
+    the 100 tick when it lands within ~1 segment of the max tick.
+  - 'CQ-01 KISS structure: relies on more helper functions than a typical scored plot
+    (turningPoints, rainflowCycles, binIndex, countFill, drawAll, clearDrawn) — justified
+    by the genuine rainflow algorithm and hand-drawn heatmap workaround, but still
+    heavier than the baseline heuristic rewards.'
+  - DE-02 visual refinement is solid but not maximal — e.g. the peak-highlight outline
+    and callout line use a flat single weight throughout; a touch more hierarchy (e.g.
+    thinner callout line vs. thicker cell outline) would read even more polished.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white, not dark.
+      Chrome: Title "Suspension-Strut Rainflow Matrix · heatmap-rainflow · javascript · highcharts · anyplot.ai" in bold dark ink, comfortably filling the width without clipping. Subtitle in muted gray-brown gives cycle count and bin count context. Y-axis "Cycle amplitude, half-range (kN)" rotated and legible on the left; X-axis "Cycle mean load (kN)" legible below rotated tick labels. Tick labels (amplitude on the left, mean rotated -40° on the bottom) are dark/soft-ink and clearly readable against the light background.
+      Data: 20x20 binned matrix, cells colored on a green (#009E73) to blue (~#4467A3) sequential log scale — first/low-count color is brand green as required. A dense fully-populated bottom row (near-zero amplitude, high counts, deep blue) sits below a sparser vertical band of larger-amplitude cycles (green, low count) around mean ≈10-15 kN. Zero-count bins are transparent (background shows through), giving them visual distinction from populated bins. The peak cell (118 cycles) is outlined in dark ink with a callout line and "Peak: 118 cycles" label placed in clear whitespace, no overlap with any data or other text. Colorbar on the right uses the same green→blue scale with log-spaced tick labels (118, 100, 10, 1.0) plus a separate "0 cycles" swatch.
+      Legibility verdict: PASS — all text (title, subtitle, axis titles, tick labels, peak annotation, colorbar labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black, not light.
+      Chrome: Title and subtitle correctly flip to white/light-gray ink. Axis titles and tick labels flip to light ink, remaining fully legible against the dark background. Grid gaps between cells (achieved via 1px inset rects rather than an explicit stroke) render as subtle dark separators consistent with the theme.
+      Data: The data fill colors (green-to-blue sequential scale) are pixel-identical to the light render — only chrome (background, text, peak-outline/callout stroke, which switches from dark ink to light ink) has flipped, confirming correct theme-adaptive chrome vs. fixed data-color behavior. The peak cell outline and callout line switch to a light stroke so they remain visible against the near-black background; the "Peak: 118 cycles" label is rendered in light text, fully legible.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title/axis/tick/annotation/colorbar text is clearly visible against the near-black background, and the brand green data color remains distinguishable on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; colorbar ticks (100/118) slightly
+          cramped near the top of the bar.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or annotations in either render;
+          peak label placement actively searches for clear whitespace.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 20x20 cells at ~80px each are clearly distinguishable; log color
+          scale separates the skewed count distribution well.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential scale, no red-green sole signal, adequate
+          contrast on both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); title/margins well proportioned,
+          nothing clipped or overflowing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis titles include physical units (kN).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (t.seq[0]=#009E73 low, t.seq[1] high) used for the continuous
+          scale; backgrounds theme-correct in both renders; data colors identical
+          across themes.
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom log-scale color mapping, hand-rolled colorbar, and a deliberate
+          peak callout show above-average design thought.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean grid via inset gaps (no explicit gridlines), generous whitespace,
+          restrained typography; could push hierarchy a bit further.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak annotation with collision-aware placement creates a clear focal
+          point and guides the viewer to the fatigue-critical cluster.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 2D heatmap matrix, amplitude on y-axis, mean on x-axis as specified.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Log-scale sequential colormap, colorbar, unit-labeled axes, bin-edge
+          tick labels, and visually distinct (transparent) zero-count bins all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=mean, Y=amplitude correctly mapped; axes cover the full observed
+          data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · heatmap-rainflow · javascript
+          · highcharts · anyplot.ai'; colorbar serves as the legend and is correctly
+          labeled.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows the full binned matrix including zero bins and the peak; some
+          regions are sparse, which is realistic for rainflow output but slightly
+          limits visual density.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Suspension-strut load history in kN is plausible, domain-appropriate,
+          and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Amplitude/mean ranges and cycle counts (up to 118) are sensible for
+          the stated engineering domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses several helper functions, more than a typical scored plot, but
+          justified by the genuine rainflow algorithm and renderer-based heatmap workaround.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Self-contained, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the constraint; no fake UI; real interactivity
+          recovered via a matched invisible scatter overlay.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container via Highcharts.chart with animation disabled;
+          harness owns the screenshot/output.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Given the core bundle has no heatmap/colorAxis module, using chart.renderer
+          primitives plus a real Highcharts series for tooltip/event handling is the
+          correct, sanctioned workaround.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Renderer-drawn matrix, custom log-scale colorbar, and an invisible
+          scatter overlay recovering native hover tooltips demonstrate deep familiarity
+          with Highcharts internals.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
