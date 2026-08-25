@@ -1,0 +1,255 @@
+library: muix
+language: javascript
+specification_id: hexbin-map-geographic
+created: '2026-08-25T02:15:28Z'
+updated: '2026-08-25T02:29:53Z'
+generated_by: claude-sonnet
+workflow_run: 32799857551
+issue: 3767
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'The coastLonAt() fallback bug from Attempt 1 is fixed: latitudes outside the
+    traced vertex range now resolve to the nearest real endpoint (compare against
+    COASTLINE[0][1] vs. the last vertex), and the inland hexagon cluster near 34.5°N/117-118°W
+    is gone in both renders.'
+  - Explicit 'Longitude' and 'Latitude' axis-title text has been added alongside the
+    existing °W/°N tick formatting, with margin.left increased from 60 to 82 to give
+    the rotated Latitude label room without colliding with the y-axis tick labels.
+  - Real hex-binning math implemented from scratch in pixel space (axial coordinates
+    + cube-round nearest-hex snapping) gives genuinely regular, isotropic hexagons
+    rather than a square-grid approximation.
+  - 'Custom slots={{ scatter: HexMarks }} marker override plus useXScale/useYScale
+    hooks for the coastline/land overlay is idiomatic, advanced usage of MUI X''s
+    community extension points.'
+  - Hand-rolled SVG density legend correctly mirrors the imprint_seq two-stop gradient
+    passed to the chart's zAxis colorMap, compensating for the community package's
+    lack of a built-in colorbar.
+  - Deterministic mulberry32 PRNG, no network/CDN dependency, fully self-contained;
+    both renders are theme-adaptive with identical data colors across light and dark.
+  weaknesses:
+  - Hexagons packed along the densest coastal stretch (La Jolla/San Diego, bottom-right
+    of the plot) leave almost no gap between adjacent cells — acceptable at this density
+    but a touch more breathing room or contrast would help at mobile scale.
+  - Land tint is a flat single gray tone with a plain straight-line polygon boundary
+    at the top/bottom of the traced coastline range; a slightly more organic/textured
+    basemap treatment would raise the design polish.
+  - Only count aggregation is exercised (the spec's default, since no `value` field
+    is present in the synthetic data) — sum/mean aggregation modes mentioned in the
+    spec's Notes are not demonstrated, though this matches the data actually generated.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "hexbin-map-geographic · javascript · muix · anyplot.ai" is bold and dark, clearly readable. Subtitle "Southern California coast · gray whale & dolphin sighting reports, hex-binned by count" in softer gray, readable. Explicit "Longitude" (bottom, centered under the x-axis) and "Latitude" (left, rotated -90°) axis-title text is now present alongside the °W/°N-suffixed tick labels — this was the Attempt 1 VQ-06 gap and it is fixed. Legend "Sightings per hex cell" with a green-to-blue gradient bar and "1"/"45" endpoint labels sits bottom-left, fully within the canvas, not overlapping the axis title above it.
+      Data: Hexagonal cells trace the Southern California coastline from Point Conception to San Diego, colored on the imprint_seq green-to-blue gradient by sighting count, drawn over a light-gray land polygon with a thin coastline stroke. Denser (bluer) hexagons correctly cluster near the synthetic whale-watching hotspots (Santa Barbara Channel, Dana Point, La Jolla). No detached/inland hexagon cluster is visible near 34.5°N/117-118°W — the coastLonAt() fallback bug flagged in Attempt 1 is fixed.
+      Legibility verdict: PASS — no light-on-light text, no clipped or overlapping elements.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title/subtitle render in light ink and are clearly legible; the same "Longitude"/"Latitude" axis titles and °W/°N tick labels are legible in muted light gray; legend text and gradient bar are legible. No dark-on-dark failures — every text element threads theme tokens correctly.
+      Data: Colors are pixel-identical to the light render (green-to-blue imprint_seq scale) — only the land-tint fill, coastline stroke color, and chrome flip between themes, as required. Same fix confirmed: no stray inland hexagon cluster.
+      Legibility verdict: PASS — no dark-on-dark text, no clipped or overlapping elements.
+
+    Both renders confirm the two Attempt 1 REJECTED findings (inland-cluster data bug, missing axis titles) are resolved, with no new regressions introduced by the fix (margin.left increase to accommodate the rotated Latitude label does not cause any new overlap or clipping).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit axis titles now present
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Densest coastal stretch (La Jolla/San Diego) is tightly packed with
+          little gap between hex cells
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential scale is CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas, good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Explicit 'Longitude'/'Latitude' axis titles added, fixing the Attempt
+          1 gap
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq (green->blue) for continuous density; theme-correct backgrounds
+          in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hex marker slot, coastline overlay via scale hooks, hand-built
+          legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous margins, subtle grid; land fill is a flat single tone
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color intensity foregrounds hotspots well now that the inland-cluster
+          artifact is gone
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine hex binning (axial coords + cube-round), not a square-grid
+          stand-in
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Count aggregation (spec's default, no value field), sequential colormap
+          + legend, base map, transparency, hover tooltips
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All points now resolve to plausible offshore/coastal positions; fallback
+          bug fixed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Density, aggregation, basemap, coastline all shown; sum/mean modes
+          not exercised
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Inland/high-desert hexagon cluster is gone; all sightings now plausibly
+          offshore/coastal
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Counts of 1-45 per hex cell over a realistic geographic extent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are all necessary for hex geometry/React component
+          structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32 PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ScatterChart + scale hooks imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: coastLonAt() fallback bug fixed; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct harness contract, skipAnimation, ANYPLOT_SIZE sizing
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: zAxis continuous colorMap, custom scatter slot, scale hooks
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-rolled colorbar substitute for a feature the community package
+          lacks
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - gradient-fill
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
