@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: gantt-dependencies
 created: '2026-08-24T23:56:39Z'
-updated: '2026-08-25T00:02:10Z'
+updated: '2026-08-25T00:19:57Z'
 generated_by: claude-sonnet
 workflow_run: 32791062552
 issue: 3830
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dep
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/gantt-dependencies/javascript/d3/plot-dark.html
-quality_score: 79
+quality_score: 94
 review:
   strengths:
-  - Correct Imprint palette canonical order (green → lavender → blue → ochre → matte
-    red) used consistently across the 5 groups, identical between light and dark renders
-  - 'Group hierarchy is legible: bold, less-indented group headers above indented
-    task rows, with a translucent aggregate span bar per group showing earliest→latest
-    coverage'
-  - Finish-to-start scheduling is correctly enforced everywhere, including the two-predecessor
-    convergence into "Integration" (starts at max of Backend API's and Frontend Components'
-    end dates)
-  - Explicit font sizing and theme-token-driven chrome (ink/inkSoft/grid) keep title,
-    legend, row labels, and axis ticks legible in both themes
+  - Dependency arrows now route around every intervening task and group-aggregate
+    bar via a real lane-search collision-avoidance algorithm, fully resolving the
+    attempt-1 VQ-03/SC-02 finding
+  - Schedule now shows genuine slack/float (Database Schema, Unit Testing, Staging
+    Deployment each start a few days after their predecessor ends) alongside tight
+    back-to-back dependencies, resolving the attempt-1 DQ-01 finding
+  - Bars, row labels, and dependency arrows now use idiomatic selection.data(rows).join(...)
+    instead of forEach+append, resolving the attempt-1 LM-01 finding
+  - Correct Imprint palette canonical order (green -> lavender -> blue -> ochre ->
+    matte red) applied consistently, identical across light and dark renders
+  - Clear group/task hierarchy via bold group headers, indentation, translucent aggregate
+    span bars, and per-group coloring
+  - Explicit font sizing and theme-token-driven chrome keep all text legible in both
+    themes with no dark-on-dark or light-on-light failures
   - Title format and legend labels match the spec/style-guide requirements exactly
   weaknesses:
-  - Dependency arrows routinely cut straight across unrelated task bars and group
-    aggregate bars instead of skirting around them — e.g. the System Architecture→Database
-    Schema trunk slices through the middle of the UI/UX Design bar, and the Backend
-    API / Frontend Components / Auth Module trunks cut through the Testing group's
-    aggregate span bar and the Unit Testing bar. The spec explicitly says "Arrows
-    should avoid overlapping task bars where possible" — route the vertical trunk
-    segment into an x-lane that is empty across all intervening rows (e.g. offset
-    just outside the widest bar span among the rows it crosses), or curve the path
-    around the bars it would otherwise cross.
-  - Every dependency is back-to-back with zero float (successor starts exactly when
-    the predecessor ends), which makes the whole schedule read as one single critical
-    path with no slack. Give at least 2-3 dependent tasks a few days of buffer after
-    their predecessor's end so the chart demonstrates real scheduling constraints
-    rather than a uniformly tight chain.
+  - A few dependency trunks still take long detours around wide group-aggregate span
+    bars (e.g. Database Schema -> Backend API/Auth Module reroutes around the entire
+    Development group span) -- consider letting arrows cross the low-opacity decorative
+    aggregate bars (only avoid actual task bars) or use a bezier dip to shorten these
+    paths
+  - Title occupies only ~30-35% of canvas width, on the small side relative to the
+    style-guide's ~50-70% guidance -- a modest fontsize increase would strengthen
+    the visual hierarchy (not a hard violation, just a polish opportunity)
+  - No explicit visual emphasis distinguishes the critical path from slack paths --
+    all task bars carry equal visual weight within their group color, so the viewer
+    must trace arrows manually to find the critical chain
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like), not pure white.
-      Chrome: Bold centered title "gantt-dependencies · javascript · d3 · anyplot.ai" at top in dark ink; a 5-item swatch legend (Requirements/Design/Development/Testing/Deployment) below it; 16 rows of dark-ink (bold, group) and softer-ink (task) row labels on the left, indented to show hierarchy; thin vertical weekly gridlines; bottom x-axis with "Jan 04" ... "Mar 01" date ticks in dark text. All text is clearly readable against the light background.
-      Data: Task bars and translucent group-aggregate span bars colored by group using the Imprint palette in canonical order (green, lavender, blue, ochre, matte red — first series is #009E73). Dark charcoal elbow-routed connector lines with triangular arrowheads run from each predecessor's right edge to each successor's left edge. Several of these connector lines visibly cross through unrelated task bars and group span bars en route (e.g. through "UI/UX Design", through the Testing group's aggregate bar) rather than avoiding them.
-      Legibility verdict: PASS (all text readable; the arrow/bar crossings are a routing-clarity issue, not a text-legibility one).
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Bold centered title "gantt-dependencies · javascript · d3 · anyplot.ai" in dark ink at top; 5-item swatch legend (Requirements/Design/Development/Testing/Deployment) below it; 16 rows of dark-ink bold group labels and softer-ink task labels, right-aligned and indented to show hierarchy; thin vertical weekly gridlines; bottom x-axis with "Jan 04"..."Mar 08" date ticks. All text clearly readable against the light background.
+      Data: Task bars and translucent group-aggregate span bars colored by group using the Imprint palette in canonical order (green #009E73, lavender, blue, ochre, matte red). Dark elbow-routed connector lines with triangular arrowheads run from each predecessor's right edge to each successor's left edge, now routed around intervening bars instead of crossing them.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black.
-      Chrome: Same title, legend, and row-label layout as the light render but rendered in light ink (white/light-gray text) — all clearly legible, no dark-on-dark text found anywhere (title, legend, row labels, and tick labels all read cleanly against the dark background).
-      Data: Task bar and group-swatch colors are identical to the light render (same 5 Imprint hues, first series still #009E73); only the group aggregate span bars and gridlines shift to darker/muted tones appropriate for the dark surface, and the connector-arrow stroke lightens to a light gray so it stays visible against the dark background. The same arrow-crosses-bar routing issue observed in the light render is present here too (same paths, same theme-invariant geometry).
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures in either theme).
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title/legend/row-label layout, rendered in light ink -- all clearly legible, no dark-on-dark failures anywhere. Gridlines and connector strokes flip to lighter tones appropriate for the dark surface.
+      Data: Identical to light render -- same 5 Imprint hues, first series still #009E73; only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -63,75 +64,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (13/14/22px), readable in both themes, no overflow
+        comment: All font sizes explicit, readable in both themes, balanced proportions
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap found
+        comment: No text collisions anywhere
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Bars/markers themselves are well-sized, but dependency arrow trunks
-          cut across several unrelated task bars and group span bars, muddying which
-          line belongs to which dependency
+        passed: true
+        comment: 'Fixed: lane-search routing now avoids all intervening task/group
+          bars'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues, good contrast, not red-green reliant
+        comment: Good contrast, CVD-safe Imprint palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills the canvas well, balanced margins, legend near the plot,
-          nothing cut off
+        comment: Plot fills canvas well, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date-formatted x-axis ticks are self-descriptive; row labels serve
-          as the categorical axis
+        comment: Formatted dates on x-axis, descriptive row labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (#009E73 first), identical data colors across
-          themes, correct theme-adaptive backgrounds
+        comment: 'Canonical Imprint order, first series #009E73, theme-correct chrome'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color-by-group and translucent span bars, above pure defaults,
-          but arrow/bar crossings undercut the polish
+        passed: true
+        comment: Thoughtful color-by-group design with custom routing, though some
+          long detour paths remain
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid and minimal spines, but connector lines slicing through
-          bars reads as an unrefined detail
+        passed: true
+        comment: Subtle grid, minimal spines, generous whitespace; minor clutter from
+          detour routing
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: 'Default: data displayed via color-by-group but no critical-path
-          or slack emphasis'
+        passed: true
+        comment: Hierarchy and dependency chain are traceable, but no explicit critical-path
+          emphasis
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,50 +136,48 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Gantt-with-dependencies chart type
+        comment: Correct Gantt-with-dependencies chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Dependency arrows, groups, and aggregate span bars all present, but
-          arrows do not avoid overlapping task bars as the spec asks
+        passed: true
+        comment: 'Fixed: arrows now avoid overlapping bars per spec note'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, tasks on y, all data visible
+        comment: Time on X, task/group hierarchy on Y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches exactly; legend labels match group names
+        comment: Title format and legend labels correct
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows single- and multi-predecessor dependencies and grouping, but
-          every dependency has zero float so the schedule looks uniformly tight
+        passed: true
+        comment: 'Fixed: shows slack and zero-float dependencies, single- and multi-predecessor
+          tasks'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral software-project SDLC scenario
+        comment: Plausible software project scenario, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Task durations (3-14 workdays) and ~52-day total project span are
-          plausible
+        comment: Realistic task durations and project timeline
     code_quality:
       score: 10
       max: 10
@@ -192,55 +187,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat procedural script
+        comment: Flat top-to-bottom script, appropriate helper functions for the routing
+          algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data, no RNG
+        comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used, no unused imports
+        comment: Only the d3 global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the chart, no fake UI
+        comment: Clean, appropriate complexity for the dependency-routing requirement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts to #container at window.ANYPLOT_SIZE, current D3 v7 API,
-          no filesystem writes'
+        comment: 'Mounts to #container, no animation, harness-compliant'
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Good use of d3.scaleTime/axisBottom/d3.line, but bars and row labels
-          are built with forEach+append rather than data().join() patterns
+        passed: true
+        comment: 'Fixed: now uses selection.data().join() throughout'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Custom SVG marker arrowhead, elbow-path dependency routing, and manually
-          laid-out legend go beyond a generic bar chart
-  verdict: REJECTED
+        passed: true
+        comment: Custom lane-search collision-avoidance routing and marker defs are
+          distinctly D3-idiomatic
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
