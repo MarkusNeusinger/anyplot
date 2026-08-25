@@ -167,13 +167,14 @@ function hexIcon(color) {
   ctx.closePath();
   ctx.fillStyle = color;
   ctx.fill();
-  ctx.lineWidth = 1;
+  ctx.lineWidth = 1.75;
   ctx.strokeStyle = t.pageBg;
   ctx.stroke();
   return iconCanvas;
 }
 
 const hexPointStyles = hexBins.map((b) => hexIcon(seqColor(b.count / maxCount, 0.82)));
+const peakBin = hexBins.find((b) => b.count === maxCount);
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -212,6 +213,26 @@ const colorbarPlugin = {
     ctx.textAlign = "center";
     ctx.fillText("Sightings / hex", 0, 0);
     ctx.restore();
+    ctx.restore();
+  },
+};
+
+// --- Custom plugin: numeric callout on the single highest-density cell -----
+const peakLabelPlugin = {
+  id: "peakLabel",
+  afterDraw(chart) {
+    const { ctx, scales } = chart;
+    const px = scales.x.getPixelForValue(peakBin.x);
+    const py = scales.y.getPixelForValue(peakBin.y);
+
+    ctx.save();
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "bold 15px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+    ctx.shadowBlur = 3;
+    ctx.fillText(String(peakBin.count), px, py);
     ctx.restore();
   },
 };
@@ -293,20 +314,20 @@ new Chart(canvas, {
     },
     scales: {
       x: {
-        min: LON_MIN,
-        max: LON_MAX,
+        min: LON_MIN - HEX_SIZE,
+        max: LON_MAX + HEX_SIZE,
         title: { display: true, text: "Longitude (°W)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 }, callback: (v) => Math.abs(v).toFixed(1) },
         grid: { color: t.grid },
       },
       y: {
-        min: LAT_MIN,
-        max: LAT_MAX,
+        min: LAT_MIN - HEX_SIZE,
+        max: LAT_MAX + HEX_SIZE,
         title: { display: true, text: "Latitude (°N)", color: t.ink, font: { size: 16 } },
         ticks: { color: t.inkSoft, font: { size: 14 } },
         grid: { color: t.grid },
       },
     },
   },
-  plugins: [colorbarPlugin],
+  plugins: [colorbarPlugin, peakLabelPlugin],
 });
