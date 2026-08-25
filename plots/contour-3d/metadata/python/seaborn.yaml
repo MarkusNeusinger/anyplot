@@ -2,129 +2,144 @@ library: seaborn
 language: python
 specification_id: contour-3d
 created: '2026-05-16T12:42:07Z'
-updated: '2026-05-16T18:58:31Z'
-generated_by: claude-haiku
-workflow_run: 25962126037
+updated: '2026-08-25T06:33:29Z'
+generated_by: claude-sonnet
+workflow_run: 32816062609
 issue: 3230
-python_version: 3.13.13
+language_version: 3.13.15
 library_version: 0.13.2
 preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/seaborn/plot-light.png
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-3d/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - Correct title format matching spec requirement (contour-3d · seaborn · anyplot.ai)
-  - 'All three required visualization layers present: 3D surface, on-surface contour
-    lines, and projected base-plane contours'
-  - Theme-adaptive chrome correctly implemented with all tokens (INK, INK_SOFT, PAGE_BG,
-    ELEVATED_BG) flowing through to every non-data element
-  - Viridis colormap appropriate for continuous displacement data — CVD-safe and perceptually
-    uniform
-  - Peak annotation adds data storytelling by identifying the maximum displacement
-    point
-  - Physical context (vibration displacement on a plate) is realistic, neutral, and
-    properly unitized
-  - Font sizes explicitly set at all hierarchy levels (title 24, axis 20, tick 16,
-    colorbar 14/16) for the 4800×2700 canvas
-  - 3D pane fill removed for clean, minimal look
+  - Repair fixed the previous canvas imbalance — switching to a square 2400×2400 canvas
+    gives the 3D box a well-balanced, nearly-filled composition instead of the landscape
+    format's ~35-40% wasted left margin
+  - On-surface contour lines are now clearly visible (opaque INK color, linewidth
+    2.5, lifted a hair above the surface to avoid z-fighting) — directly satisfies
+    the spec's 'contour lines... on the surface' requirement, which was too faint
+    in the previous attempt
+  - 3D pane/grid lines were manually restyled via _axinfo['grid'] to the intended
+    ~15% alpha, replacing the previous bold high-contrast box edges — noticeably cleaner,
+    more refined chrome in both themes
+  - Diverging Imprint colormap (imprint_div, red↔neutral↔blue) built with sns.blend_palette
+    and centered via TwoSlopeNorm is the correct choice for signed displacement data
+    with a meaningful zero midpoint; colors are identical across light/dark renders
+  - Peak annotation creates a clear focal point / data-storytelling element without
+    simulating fake interactivity
+  - Base-plane contour projection (zdir='z', offset) satisfies the spec's 'project
+    contours onto the base plane as well as the surface' note
+  - Realistic, neutral physical-science scenario (plate vibration displacement, cm/μm
+    units) with plausible values and scale
+  - 'Clean KISS code: deterministic (no randomness needed for an analytic surface),
+    correct imports, correct plot-{theme}.png save call without bbox_inches=''tight'''
   weaknesses:
-  - On-surface contour lines use INK_SOFT with alpha=0.5, making them somewhat hard
-    to distinguish against the viridis-colored surface in the dark render — increasing
-    alpha or using a higher-contrast color would improve visibility
-  - Seaborn's native plotting API is not used for the visualization itself (only sns.set_theme
-    and sns.color_palette) — this is expected for 3D plots but limits library mastery
-    score
-  - Design excellence is functional but not exceptional — no subtitle, annotation
-    count is minimal, could benefit from more considered hierarchy between elements
+  - Near the surface's summit, the two highest-level on-surface contour rings collapse
+    into small blob-like dots rather than clean thin loops — the 2.5pt linewidth is
+    disproportionately thick for rings only a few grid cells wide at the sharp peak.
+    Thin the on-surface contour linewidth (e.g. ~1.5-1.8) or slightly reduce `levels`
+    so fewer rings crowd the summit.
+  - LM-02 (Distinctive Features) is generic — sns.blend_palette for the diverging
+    colormap is the only clearly seaborn-specific touch; the rest of the 3D rendering
+    is plain matplotlib mplot3d (expected, since seaborn has no native 3D API, but
+    there may be room for another seaborn-native touch, e.g. sns.despine-style spine
+    cleanup or a seaborn palette-derived accent).
+  - 'Minor: the vertical z-axis label (''Displacement (μm)'') duplicates the colorbar
+    label — consider whether both are necessary, though this is a design choice rather
+    than an error.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, matches spec
-      Chrome: Title "contour-3d · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "x Position (cm)", "y Position (cm)", "Displacement (μm)" in dark INK color with correct font size. Tick labels in softer dark (INK_SOFT), clearly legible. Colorbar label "Displacement (μm)" with tick values visible. 3D pane edges visible in soft gray.
-      Data: 3D surface rendered with viridis colormap (purple-teal-yellow gradient) showing the vibration displacement function. On-surface contour lines visible as darker lines on the surface. Projected contours in viridis colors visible as rings on the base plane. Peak annotation box "Peak: 6.9 μm" with warm off-white (#FFFDF6) background and dark text — clearly readable.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 exactly — not pure white, not dark.
+      Chrome: Title "contour-3d · python · seaborn · anyplot.ai" in dark ink, clearly visible at top-center, comfortably sized (~60% of canvas width). Axis labels "x Position (cm)", "y Position (cm)", "Displacement (μm)" and the colorbar label "Displacement (μm)" all render in dark/soft-dark ink, legible. Tick labels on all three 3D axes and the colorbar are legible soft-dark gray. The 3D box pane grid lines are now subtle (restyled via _axinfo), a clear improvement over the previous bold box edges — only the axis spines themselves remain a firmer soft-dark tone, which is expected chrome, not a grid line.
+      Data: Diverging red-white-blue (imprint_div) surface with a blue peak (~6.9 μm) and a red trough, a "Peak: 6.9 μm" annotation callout near the summit, matching red/blue contour rings projected onto the base plane, and on-surface contour lines now visible in solid ink color across the surface (though the top 1-2 rings near the very peak render as small blob-like dots rather than clean thin loops due to their tiny radius at that linewidth).
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct warm dark surface.
-      Chrome: Title in light (#F0EFE8) text — clearly visible against dark background. Axis labels in light INK color, readable. Tick labels in #B8B7B0 soft gray, visible against dark background. Colorbar label and ticks in light colors, readable. 3D pane edges in light gray (#B8B7B0), visible. No dark-on-dark failures detected.
-      Data: Same viridis colormap data colors as light render — yellows, teals, purples identical. Projected base contours visible as lighter rings on the dark floor. Peak annotation box uses ELEVATED_BG (#242420) with light INK (#F0EFE8) text — readable.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues.
+      Background: Warm near-black, matches #1A1A17 exactly — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all render in light ink (#F0EFE8) / soft light gray (#B8B7B0), clearly visible against the dark background. Pane grid lines are subtle light gray, matching the intended ~15% alpha — a clear improvement over the previous bold near-white box edges. The "Peak: 6.9 μm" callout box uses a dark elevated fill with light text/edge, reads clearly.
+      Data: Same diverging red-white-blue surface, base-plane contour projection, and on-surface contour lines as the light render — colors are identical (only chrome flipped), confirming the Imprint palette data colors are theme-independent. The same peak-summit blob artifact is visible here (as small white dots instead of black).
+      Legibility verdict: PASS — no dark-on-dark failures; all text is readable against the dark background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All text sizes explicitly set (title 24, axis 20, tick 16, colorbar
-          14/16). Readable in both themes.
+        comment: All title/axis/tick/colorbar text explicitly sized and readable in
+          both themes; title fits well within proportional bounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render.
+        comment: No collisions between text, annotation box, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Surface, projected contours, colorbar all clearly visible. On-surface
-          contour lines (INK_SOFT alpha=0.5) slightly subtle in dark render.
+        comment: On-surface contour lines are now clearly visible (fixed from previous
+          attempt); minor blob artifacts where the tightest rings converge at the
+          peak
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe. No red-green sole signal.
+        comment: Diverging red/blue (not red/green) with neutral midpoint is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 3D view angle, colorbar well placed, nothing cut off.
+        comment: Square 2400x2400 canvas fixes the previous whitespace imbalance;
+          good fill, minor residual corner whitespace inherent to a 3D perspective
+          box
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. All three axes labeled with units.
+        comment: Descriptive labels with units (cm, μm)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis used for continuous data (correct). Backgrounds #FAF8F1
-          (light) / #1A1A17 (dark) correct.'
+        comment: imprint_div correctly built and used for diverging displacement data;
+          theme-correct backgrounds and chrome in both renders
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Above default (4). Peak annotation, intentional pane styling (fill=False),
-          thoughtful view angle and physical context.
+        comment: Balanced square composition, diverging palette, and peak annotation
+          now read as thoughtful design, above the prior layout-imbalanced attempt
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Above default (2). Pane fill removed, clean annotation box styling,
-          subtle alpha on grid.
+        comment: Pane grid lines restyled to subtle alpha; clear improvement, though
+          panel edges remain a bit firm
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Above default (2). Peak annotation identifies maximum, projected
-          contours provide reference context, physical frame creates narrative.
+        comment: Peak annotation and diverging color create a clear focal point (above
+          vs. below equilibrium)
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +149,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 3D contour with surface + contour lines.
+        comment: Correct 3D surface + contour combination
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sequential colormap, contour lines, projected base contours, colorbar
-          — all present.
+        comment: On-surface contour lines now clearly visible alongside base-plane
+          projection, colorbar, and surface — all spec features satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y as position coordinates, Z as displacement, 40x40 grid within
-          spec range.
+        comment: X/Y grid and Z height correctly mapped; full 40x40 grid shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. No categorical legend needed.
+        comment: Title matches mandated format exactly; colorbar serves as the legend
     data_quality:
       score: 15
       max: 15
@@ -164,22 +178,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Surface geometry, on-surface contours, base-plane projected contours,
-          and colorbar all present.
+        comment: Surface, on-surface contours, base-plane contours, colorbar, and
+          peak annotation together cover all plot-type aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plate vibration displacement — plausible physical science context,
-          neutral.
+        comment: Plausible, neutral physical-science scenario (plate vibration displacement)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ±7 μm displacement over 5 cm plate — physically plausible for vibration
-          analysis.
+        comment: Sensible cm/μm ranges for the domain
     code_quality:
       score: 10
       max: 10
@@ -189,56 +201,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, flat script.
+        comment: No functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic mathematical formula, no randomness.
+        comment: Fully deterministic analytic surface, no randomness needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation documented with comment.
+        comment: Only used imports (os, sys, matplotlib.pyplot, numpy, seaborn, TwoSlopeNorm,
+          to_rgba)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code. No fake UI.
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly.
+        comment: Saves plot-{THEME}.png, no bbox_inches='tight', current API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: sns.set_theme() for theming is idiomatic. Core 3D visualization necessarily
-          uses matplotlib since seaborn has no 3D API.
+        comment: sns.set_theme + sns.blend_palette used for theme and colormap; remainder
+          is matplotlib's mplot3d, which is expected since seaborn has no native 3D
+          API
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: true
-        comment: sns.color_palette('viridis', as_cmap=True) is seaborn-specific colormap
-          access. Limited seaborn distinctiveness is inherent to the 3D plot type.
+        passed: false
+        comment: sns.blend_palette is the only distinctly seaborn touch; rest of the
+          plot is matplotlib 3D API
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - 3d-projection
   - colorbar
   - annotations
+  - 3d-projection
   patterns:
   - data-generation
   - matrix-construction
