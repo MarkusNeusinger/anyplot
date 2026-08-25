@@ -25,17 +25,31 @@ const MEAN_STEP = 10; // kN·m
 const ampCenters = Array.from({ length: N_AMP }, (_, i) => 5 + i * AMP_STEP); // 5..195 kN·m
 const meanCenters = Array.from({ length: N_MEAN }, (_, i) => -95 + i * MEAN_STEP); // -95..95 kN·m
 
+// Physical envelope constraint: a cycle's peak and valley (mean +/- amplitude)
+// are bounded by the blade root's overall load range, so |mean| <= ENV_LIMIT -
+// amplitude. This is what produces the classic tapering "diamond" shape of a
+// measured rainflow matrix — wide mean spread at low amplitude, narrowing to
+// zero mean spread at the highest amplitudes.
+const ENV_LIMIT = 150; // kN·m
+const AMP_DECAY = 70; // kN·m, controls how fast cycle counts fall off with amplitude
+const PEAK_COUNT = 4500;
+
 const cells = [];
 let maxCount = 0;
 for (let ai = 0; ai < N_AMP; ai++) {
   const amp = ampCenters[ai];
+  const meanLimit = ENV_LIMIT - amp;
+  const ampFactor = Math.exp(-amp / AMP_DECAY);
   for (let mi = 0; mi < N_MEAN; mi++) {
     const mean = meanCenters[mi];
-    // Radial falloff from the (low amplitude, zero mean) hot spot — the
-    // dominant load case for real-world variable-amplitude spectra.
-    const r = Math.sqrt(((amp - 5) / 24) ** 2 + (mean / 30) ** 2);
-    const jitter = 0.75 + 0.5 * lcg();
-    const count = Math.round(4500 * Math.exp(-r) * jitter);
+    let count = 0;
+    if (meanLimit > 0) {
+      // Parabolic falloff within the envelope: peaks at mean=0, reaches
+      // exactly 0 at the envelope edges +/- meanLimit.
+      const meanFactor = Math.max(0, 1 - (mean / meanLimit) ** 2);
+      const jitter = 0.75 + 0.5 * lcg();
+      count = Math.round(PEAK_COUNT * ampFactor * meanFactor * jitter);
+    }
     if (count > maxCount) maxCount = count;
     // Zero/near-zero bins are skipped entirely so they stay visually distinct
     // (transparent background) rather than rendered as a "dark zero" cell.
@@ -89,7 +103,7 @@ chart.setOption({
     nameGap: 90,
     nameTextStyle: { color: t.ink, fontSize: 18 },
     axisLabel: { color: t.inkSoft, fontSize: 13, interval: 1 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     splitArea: { show: false },
   },
