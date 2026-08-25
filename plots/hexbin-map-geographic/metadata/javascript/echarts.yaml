@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: hexbin-map-geographic
 created: '2026-08-25T02:08:35Z'
-updated: '2026-08-25T02:13:14Z'
+updated: '2026-08-25T02:25:18Z'
 generated_by: claude-sonnet
 workflow_run: 32799534867
 issue: 3767
@@ -12,49 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/echarts/plot-dark.html
-quality_score: 85
+quality_score: 94
 review:
   strengths:
-  - Genuine custom hexagonal binning engine implemented via ECharts' custom series
-    renderItem — a real (not faked) hexbin computed with axial hex-grid nearest-cell
-    assignment, since ECharts has no native hexbin chart type.
-  - Continuous imprint_seq color mapping (green to blue) correctly reflects pickup
-    density with a clear 'More pickups' / 'Fewer pickups' visualMap legend; data colors
-    are identical across light and dark renders.
+  - 'All three attempt-1 weaknesses were addressed concretely: hex fill opacity lowered
+    from 0.85 to 0.65 so the coastline reads through, an ocean tint (west of the coastline)
+    now unambiguously separates land from water, and a ''Total fares'' stat was added
+    to the tooltip so count, sum, and mean are all demonstrated.'
+  - Genuine custom hexagonal binning engine via ECharts' custom series renderItem
+    — real axial hex-grid nearest-cell assignment computed in pixel space, not a faked/pre-baked
+    hexbin, since ECharts has no native hexbin chart type.
+  - Continuous imprint_seq color mapping (green -> blue) correctly reflects pickup
+    density with a clear 'More pickups'/'Fewer pickups' visualMap legend; data colors
+    are pixel-identical across light and dark renders.
   - Realistic, neutral synthetic dataset — five named San Francisco neighborhoods
     as gaussian hotspots, plausible taxi fare values, deterministic fixed-seed LCG
     generation.
-  - Clean theme-adaptive chrome — title, axis names, tick labels, and legend text
-    all correctly use ink/inkSoft tokens; both renders pass the light/dark readability
-    check with no dark-on-dark or light-on-light issues.
-  - Tooltip formatter exposes count, mean fare, and cell-center coordinates, adding
-    real interactive value beyond the static PNG.
+  - Clean theme-adaptive chrome throughout — title, axis names, tick labels, legend
+    text, and even the coastline stroke correctly flip via ink/inkSoft tokens; both
+    renders pass the light/dark readability check with no dark-on-dark or light-on-light
+    issues.
   weaknesses:
-  - Hexagon fill opacity is 0.85 — quite opaque. The spec explicitly asks to 'apply
-    transparency to hexagons to allow base map features to show through', but at this
-    opacity the coastline curve is barely visible where hexagons overlap it. Reduce
-    fill opacity to roughly 0.6-0.7.
-  - 'Only count (color) and mean fare (tooltip) are demonstrated; the spec asks to
-    ''support aggregation methods: count (default), sum, and mean of values'' — add
-    a sum-of-fare stat to the tooltip so all three aggregations are represented.'
-  - Base map / geographic context is minimal — a single thin unlabeled coastline curve
-    with no land/water fill. A subtle water tint on the ocean side (west of the coastline)
-    would make the geographic framing much clearer at a glance.
-  - Title font is shrunk via the length-scaling formula and sits on the smaller end
-    of legible — still readable, but a shorter descriptive prefix would give it more
-    visual weight relative to the 3200px canvas.
+  - 'Title still renders on the light side — at fontSize 20 the 75-char title fills
+    only ~41% of the 3200px canvas width (measured), well under the ~50-70% comfortable
+    target. Still fully legible in both themes, so this is a polish note rather than
+    a legibility failure: consider raising the base fontSize slightly (e.g. 24-26
+    before the length-scaling divide) so the title carries more visual weight relative
+    to the canvas.'
+  - A handful of isolated single hexagons sit far from the main cluster (e.g. near
+    -122.35/-122.79 and the three lone cells around -122.55). This is a realistic
+    artifact of the gaussian-tail data generation rather than a bug, but visually
+    they read as slightly orphaned/noisy against the mostly-empty ocean backdrop —
+    a very light alpha reduction on singleton-count cells would make the density story
+    read even cleaner.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Dark-ink title "Bay Area Taxi Pickups · hexbin-map-geographic · javascript · echarts · anyplot.ai" centered at top, clearly readable. "Longitude" / "Latitude" axis names and lighter-gray tick labels (degree-formatted) along both axes, all legible against the light surface. Vertical color legend on the right labeled "More pickups" (top) / "Fewer pickups" (bottom).
-      Data: Dense field of small hexagons on a green (sparse) to blue (dense) sequential gradient (imprint_seq), with a clear blue/purple cluster over the Financial District / Mission area fading to green toward the periphery. A thin gray coastline curve runs through the northwest portion of the plot, mostly under the hexagon layer.
-      Legibility verdict: PASS — no light-on-light issues; all text stays dark and readable against the cream background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Dark-ink title "SF Taxi Pickups · hexbin-map-geographic · javascript · echarts · anyplot.ai" centered at top, clearly readable though relatively compact for the canvas width. "Longitude"/"Latitude" axis names and lighter-gray, degree-formatted tick labels (e.g. "-122.50°", "37.76°") along both axes, all legible against the light surface. Vertical color legend on the right labeled "More pickups" (top, blue) / "Fewer pickups" (bottom, green).
+      Data: Dense field of small regular hexagons using a green -> blue-violet sequential gradient (imprint_seq), clustered densely over the Financial District / Mission / Marina area and thinning to green toward the periphery. A light gray-blue ocean tint fills the water side (west) of a thin gray coastline curve running through the northwest/southwest portion of the plot, giving clear land/water geographic context. Hexagons are semi-transparent (opacity ~0.65) so the coastline and ocean tint show through where they overlap.
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same layout as the light render, with title, axis names, tick labels, and legend text all flipped to light ink tones (ink/inkSoft), clearly visible against the dark surface. The coastline stroke also flips to a lighter gray tone.
-      Data: The hexagon color gradient (green to blue) is visually identical to the light render — only the chrome flipped, confirming the Imprint data-color rule.
-      Legibility verdict: PASS — no dark-on-dark failures; every label (title, axis names, ticks, legend) remains clearly legible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout with title, axis names, tick labels, and legend text all flipped to light ink tones, clearly visible against the dark surface. The coastline stroke and ocean tint also flip to lighter/darker-navy tones appropriate for the dark theme, remaining a distinct region from the pure background.
+      Data: The hexagon color gradient (green -> blue-violet) is visually identical to the light render — only the chrome and the ocean-tint/coastline colors flipped, confirming the Imprint data-color rule holds across themes.
+      Legibility verdict: PASS — all text remains readable, no dark-on-dark failures detected; brand green reads well on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,73 +67,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title font is on the smaller side
-          due to length-scaling but still clear.
+        comment: All text readable in both themes; title font is on the light/small
+          side relative to canvas width (~41%) but not a legibility failure
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements.
+        comment: No collisions between text, hexagons, legend, or coastline
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Hex size (radius 30) is well-matched to the ~2600-point dataset and
-          geographic extent; density reads clearly.
+        comment: Hexagon opacity 0.65 keeps cells clearly visible while letting the
+          ocean tint/coastline show through
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: imprint_seq (green to blue) is CVD-safe and not a red-green encoding.
+        comment: Imprint sequential green->blue scale, adequate contrast, not red-green
+          dependent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions, nothing cut off.
+        comment: 3200x1800 canvas, no clipping, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude labeled with degree-formatted ticks.
+        comment: Longitude/Latitude labeled with degree-formatted ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Uses t.seq (imprint_seq) for the continuous encoding; backgrounds
-          correct in both themes; data colors identical across themes.
+        comment: imprint_seq used for density, backgrounds correct in both themes,
+          data colors identical across themes
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: A genuine custom hex-map renderer with a clear hotspot narrative
-          — well above generic defaults.
+        comment: Genuine custom hex-map renderer plus a second custom ocean-tint series;
+          clear hotspot narrative
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Clean map-style chrome and generous whitespace, but the 0.85 hex
-          opacity undercuts the intended base-map-showing-through effect.
+        passed: true
+        comment: Opacity fix (0.85->0.65) lets base-map context show through as intended;
+          grid/splitlines removed for a clean look
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: The density gradient tells a clear story, but the unlabeled coastline
-          curve is ambiguous and weakens the geographic framing.
+        passed: true
+        comment: Ocean tint resolves the prior ambiguous-coastline issue; density
+          gradient still creates a clear focal point over downtown SF
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,51 +142,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Genuine hexagonal binning built from scratch via a custom series,
-          not a heatmap substitute.
+        comment: Correct hexagonal-binning map
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Sum aggregation is never demonstrated (only count + mean); base map
-          context is a single unlabeled line rather than real geographic features;
-          hex transparency is high enough to mostly hide it anyway.
+        passed: true
+        comment: Count/sum/mean all demonstrated, transparency applied, base-map context
+          (coastline + ocean tint) now clear, hover tooltips with cell stats
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon/lat correctly mapped to X/Y; full extent shown on both axes.
+        comment: Lon/lat correctly mapped to x/y, full study area covered
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; visualMap legend clearly labeled with direction
-          of scale.
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          correct
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Count and mean are shown; sum-of-value aggregation is missing entirely.
+        passed: true
+        comment: Count (color), sum and mean fare (tooltip) all now present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral SF neighborhoods and plausible taxi fare values.
+        comment: Named SF neighborhoods, plausible fares, neutral topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 2600 points and hex radius are well-scaled to the geographic extent.
+        comment: 2600 points within the 1,000-100,000+ spec range, fare values realistic
     code_quality:
       score: 10
       max: 10
@@ -193,32 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Plain functions, no classes, flat top-to-bottom structure.
+        comment: Flat script; functions used only where the ECharts custom-series
+          API requires callbacks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic.
+        comment: Fixed-seed LCG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; echarts global only.
+        comment: No imports; only window globals per the mount-node contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Custom hex-binning complexity is justified since ECharts has no native
-          hexbin type; no fake UI.
+        comment: No fake UI/interactivity, appropriate complexity for a real hexbin
+          engine
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio.
+        comment: echarts.init(#container) with animation:false, no explicit size/devicePixelRatio
     library_mastery:
       score: 8
       max: 10
@@ -228,15 +230,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom series renderItem is the correct idiomatic path for shapes
-          ECharts doesn't natively support.
+        comment: Custom series renderItem is the correct idiomatic path since ECharts
+          has no native hexbin chart type
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of api.coord/api.style/api.visual and continuous visualMap
-          — genuinely distinctive ECharts capabilities, not generic usage.
+        comment: api.coord/api.style/api.visual, continuous visualMap, and a second
+          custom series for the ocean overlay
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -250,4 +252,3 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
-  - edge-highlighting
