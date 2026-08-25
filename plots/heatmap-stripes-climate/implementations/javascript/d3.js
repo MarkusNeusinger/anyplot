@@ -37,20 +37,62 @@ const stripeColor = d3
   .scaleSequential(d3.interpolateRgbBasis([t.div[2], t.div[1], t.div[0]]))
   .domain([-extent, extent]);
 
-// --- Stripes: equal-width bars, no gaps, edge-to-edge ---------------------------
+// --- Stripes: equal-width bands, no gaps, edge-to-edge --------------------------
+// Rendered as a single defs-based linearGradient (D3 data-join of <stop>
+// elements) rather than per-bar solid fills — a more SVG/D3-native way to
+// express a continuous, data-driven color transition.
 const x = d3.scaleBand().domain(years).range([0, width]).padding(0);
 const stripeTop = titleArea;
 const stripeHeight = height - titleArea;
 
+const stops = years.flatMap((year, i) => {
+  const color = stripeColor(anomalies[i]);
+  const startPct = (x(year) / width) * 100;
+  const endPct = ((x(year) + x.bandwidth()) / width) * 100;
+  return [
+    { offset: startPct, color },
+    { offset: endPct, color },
+  ];
+});
+
 svg
-  .selectAll("rect")
-  .data(years)
-  .join("rect")
-  .attr("x", (d) => x(d))
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", "stripe-gradient")
+  .attr("x1", "0%")
+  .attr("x2", "100%")
+  .attr("y1", "0%")
+  .attr("y2", "0%")
+  .selectAll("stop")
+  .data(stops)
+  .join("stop")
+  .attr("offset", (d) => `${d.offset}%`)
+  .attr("stop-color", (d) => d.color);
+
+svg
+  .append("rect")
+  .attr("x", 0)
   .attr("y", stripeTop)
-  .attr("width", x.bandwidth() + 0.5) // 0.5px overlap avoids antialiasing seams between bars
+  .attr("width", width)
   .attr("height", stripeHeight)
-  .attr("fill", (d, i) => stripeColor(anomalies[i]));
+  .attr("fill", "url(#stripe-gradient)");
+
+// --- Record-warmest emphasis: subtle chrome-only outline, no new data encoding -
+// Adds a light storytelling layer (the single hottest year on record) without
+// introducing axes, labels, or gridlines; the outline uses theme ink, so it
+// flips between light/dark like the rest of the chrome while the data fill
+// underneath stays pixel-identical across themes.
+const recordHotIndex = d3.maxIndex(anomalies);
+svg
+  .append("rect")
+  .attr("x", x(years[recordHotIndex]))
+  .attr("y", stripeTop)
+  .attr("width", x.bandwidth())
+  .attr("height", stripeHeight)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-opacity", 0.35)
+  .attr("stroke-width", 2);
 
 // --- Title ----------------------------------------------------------------------
 svg
