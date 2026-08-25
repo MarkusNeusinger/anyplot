@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: hexbin-basic
 created: '2026-08-25T01:39:11Z'
-updated: '2026-08-25T01:45:21Z'
+updated: '2026-08-25T01:54:06Z'
 generated_by: claude-sonnet
 workflow_run: 32797933708
 issue: 859
@@ -12,127 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-ba
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-basic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
   - Hand-built axial-hex binning with cube-coordinate rounding — a genuine from-scratch
-    D3 technique (no d3-hexbin plugin in the pinned bundle) that shows real library
-    mastery.
+    D3 technique since no d3-hexbin plugin is in the pinned bundle.
   - Correct Imprint sequential colormap (green→blue) with fully theme-correct chrome
-    in both light and dark renders — data colors identical, only background/text/grid
-    flip.
-  - Deterministic seeded LCG + Box-Muller data generator producing a realistic three-cluster-plus-diffuse-background
+    in both renders; data colors identical, only background/text/stroke flip.
+  - Direct on-chart 'Downtown core' annotation with a page-background halo now makes
+    the density story explicit, addressing the attempt-1 weakness.
+  - Sqrt-vs-log color-domain choice is now explained in a code comment that directly
+    engages the spec's log-scale suggestion.
+  - Title fontsize increased from 26px to 32px per attempt-1 feedback, improving visual
+    hierarchy without approaching overflow.
+  - Deterministic seeded LCG + Box-Muller generator producing a realistic three-cluster-plus-diffuse-background
     ride-share scenario.
-  - Elegant hairline hex borders (stroke = page background) that separate tiles cleanly
-    without a heavy grid.
-  - Descriptive, unit-bearing axis labels and a clear vertical colorbar with explicit
-    min/max value labels.
+  - Clean vertical colorbar with explicit min/max labels, hairline hex borders, and
+    descriptive unit-bearing axis labels.
   weaknesses:
-  - The three named clusters (downtown core, transit hub, stadium district) exist
-    only in a code comment — add a small direct-label annotation near the hottest
-    hexagon (e.g. "Downtown core") so the story is visible in the chart itself, not
-    just the source.
-  - Title occupies only ~35–40% of canvas width at 26px — well under the ~70–85% expected
-    for the mandated long title; growing it slightly would give the chart more visual
-    presence without risking overflow.
-  - Spec explicitly suggests a log scale for the color mapping when density varies
-    widely; a sqrt transform was used instead — reasonable, but a true log scale (or
-    a one-line comment justifying sqrt over log) would align more tightly with the
-    spec wording.
-  - Several small geometry helper functions (cubeRound, pixelToHex, hexCenter, hexPath)
-    are necessary for manual hex binning, but keep them tight and well-commented so
-    the KISS top-to-bottom flow stays easy to follow.
+  - Colorbar shows only the two endpoint labels (1 and 155) on a nonlinear (sqrt-transformed)
+    color scale; without an intermediate tick, a reader may assume the ramp is linear
+    — consider adding 1-2 intermediate value labels.
+  - Only the densest cluster ('Downtown core') is labeled on the chart; the 'transit
+    hub' and 'stadium district' clusters named in the data comments remain unlabeled,
+    so the full three-cluster story isn't fully conveyed visually.
+  - Title still occupies a modest share of canvas width (~38-40%) even after the fontsize
+    bump — acceptable given the short spec-id, but a touch more size would strengthen
+    the visual hierarchy further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Bold dark title "hexbin-basic · javascript · d3 · anyplot.ai" and a gray subtitle ("6,000 ride-share pickup requests, binned into 337 hexagons") are both clearly legible against the light background. Dark axis titles ("East–West distance from city center (km)", "North–South distance from city center (km)") and gray tick labels are all readable. The vertical colorbar ("Pickups per bin", with "155" at top and "1" at bottom) is fully visible, not clipped, with generous margin to the canvas edge.
-      Data: Hexagons form a continuous tiled grid from a sequential green→blue gradient (Imprint imprint_seq). Low-density hexes are green, the two hotspot regions (a "downtown core" cluster and a broader corridor) fade toward blue. Hexagon edges use a hairline stroke matching the page background, cleanly separating tiles.
-      Legibility verdict: PASS.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "hexbin-basic · javascript · d3 · anyplot.ai" and gray subtitle
+        ("6,000 ride-share pickup requests, binned into 337 hexagons") are both clearly legible.
+        Dark axis titles ("East–West distance from city center (km)", "North–South distance
+        from city center (km)") and gray tick labels are readable. The "Downtown core"
+        annotation sits above the hottest hexagon with a light halo stroke, fully readable.
+      Data: Hexagons tile the plot in a sequential Imprint green (#009E73) → blue (#4467A3)
+        ramp, with the densest cluster (155 pickups) reading clearly as the deepest blue
+        patch near (-3, 2). A vertical colorbar labeled "Pickups per bin" (155 top, 1 bottom)
+        sits fully within canvas bounds, right of the plot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black.
-      Chrome: Title and subtitle render in light/off-white text, fully legible against the dark background. Axis titles and tick labels are light-colored and readable; no dark-on-dark text was found anywhere, including the colorbar's "Pickups per bin" label and its "155"/"1" endpoints.
-      Data: The hexagon fill colors are identical to the light render (same green→blue Imprint sequential ramp) — only the chrome (background, text, hex stroke) flipped to the dark-theme tokens, confirming positions 1–8 data-color invariance is respected for continuous data.
-      Legibility verdict: PASS.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles, tick labels, and colorbar text all render in
+        light/off-white tokens and remain fully legible — no dark-on-dark failures found
+        anywhere. The "Downtown core" annotation now uses light text with a dark halo,
+        still fully readable against the blue hexagon behind it.
+      Data: Hexagon fill colors are pixel-identical to the light render (same green→blue
+        ramp) — only chrome (background, text, hex-border stroke) flipped to dark-theme
+        tokens, confirming the Imprint data-color rule is respected.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title is
-          conservatively sized (~35-40% width) rather than the 70-85% expected for
-          the mandated long title, but not clipped or hard to read
+        comment: All text (title, subtitle, axis titles, ticks, legend, annotation)
+          readable in both themes; explicit font sizes 14-32px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, subtitle, axis labels, ticks, or legend
+        comment: No collisions between text, hexagons, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 337 hexagons at gridsize=26 give clear, legible density variation;
-          a slightly larger gridsize could reveal a bit more structure
+        comment: Hexagon grid resolution (gridSize=26) and sqrt color transform keep
+          density gradient clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single continuous Imprint sequential ramp, CVD-safe by design
+        comment: Imprint sequential green-to-blue ramp, CVD-safe, no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Hex grid + colorbar use a large majority of the canvas with balanced
-          margins; legend sits close to the plot, nothing cut off
+        comment: 3200x1800 canvas confirmed, no clipping, generous margins, legend
+          fully inside bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive and carry units (km)
+        comment: Descriptive axis labels with units (km); title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_seq (green→blue) colormap for continuous density;
-          chrome theme-correct in both renders
+        comment: imprint_seq used exclusively for continuous data; theme-correct backgrounds
+          in both renders
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful sqrt-transformed color domain, informative subtitle, hairline
-          hex borders — clearly above a generic default, short of full publication
-          polish
+        comment: Custom sequential ramp, hairline hex borders, documented sqrt-transform
+          rationale, direct annotation — above default polish
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: 'No competing grid, generous margins, clean hex tiling; minor: axis
-          domain lines could be removed for an even cleaner minimal look'
+        comment: L-shaped spines only, no competing grid, generous margins, clean
+          tiling
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color hierarchy and subtitle context guide the eye to the hotspot,
-          but the named clusters (downtown core, transit hub, stadium district) are
-          never labeled directly on the chart
+        comment: Downtown-core label now makes the hotspot explicit; the other two
+          clusters remain unlabeled
     spec_compliance:
       score: 15
       max: 15
@@ -148,21 +155,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Colorbar present, gridsize-controlled bin resolution, density-scale
-          transform for wide-varying counts
+        comment: Colorbar present, gridsize-controlled resolution, sqrt-scaled color
+          mapping
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped, full data extent shown
+        comment: x/y correctly scaled with padding; axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; colorbar legend correctly
-          labeled with min/max
+        comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai';
+          legend labels match data
     data_quality:
       score: 14
       max: 15
@@ -172,22 +179,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows a dense hotspot, a moderate-density corridor, and diffuse low-density
-          background — good density-variation coverage
+        comment: Density, aggregation, and colorbar all shown; log-scale alternative
+          discussed but not implemented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ride-share pickup density across a metro area is a realistic, neutral
-          scenario
+        comment: Plausible, neutral ride-share pickup scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Point counts, cluster spreads, and per-bin max (155 of 6,000 points
-          across 337 bins) are all plausible
+        comment: Sensible km-scale coordinates and pickup counts (1-155)
     code_quality:
       score: 9
       max: 10
@@ -197,34 +202,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Top-level flow is linear (data → scales → bin → draw → axes → legend
-          → title); several small helper functions are needed for the hex-geometry
-          math since d3-hexbin isn't in the pinned bundle
+        comment: Small helper functions (cubeRound, pixelToHex, hexCenter, hexPath)
+          needed for manual hex binning
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the provided d3 global is used, no unused code
+        comment: Only the d3 global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a from-scratch hexbin implementation, no
-          fake functionality
+        comment: No fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, current d3 v7 join API
+        comment: 'Correct #container mount contract, no animation'
     library_mastery:
       score: 8
       max: 10
@@ -234,21 +237,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scale/axis/data-join usage; the manual geometry is necessary
-          rather than a showcase of d3's high-level API
+        comment: Standard scale/axis/join patterns used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hand-built cube-coordinate hex rounding and path-based hex marks
-          are a genuinely distinctive, D3-native technique not easily replicated in
-          a high-level charting library
-  verdict: REJECTED
+        comment: Hand-rolled cube-coordinate hex rounding is a genuinely distinctive,
+          D3-native technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
