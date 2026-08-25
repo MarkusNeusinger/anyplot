@@ -1,7 +1,7 @@
 // anyplot.ai
 // hexbin-basic: Basic Hexbin Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-25
+// Quality: 88/100 | Created: 2026-08-25
 //# anyplot-orientation: square
 // anyplot.ai
 // hexbin-basic: Basic Hexbin Plot
