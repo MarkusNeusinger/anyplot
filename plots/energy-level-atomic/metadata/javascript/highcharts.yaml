@@ -1,0 +1,264 @@
+library: highcharts
+language: javascript
+specification_id: energy-level-atomic
+created: '2026-08-24T23:55:27Z'
+updated: '2026-08-25T00:11:45Z'
+generated_by: claude-sonnet
+workflow_run: 32790809034
+issue: 4434
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/energy-level-atomic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Repair addressed all three Attempt-1 weaknesses: n=1''s yPos was raised from
+    -14.4 to -10.6 (shrinking the dead lower-left quadrant), the y-axis title now
+    reads "Energy (eV, increasing \u2191, non-linear scale)" with explicit units,
+    and the Ly-\u03b1 transition now gets a bold label and a larger marker (radius
+    12 vs 9) as a focal-point emphasis'
+  - 'Physics is factually correct: E_n = -13.6/n\u00b2 eV hydrogen levels and real
+    spectral wavelengths (Ly-\u03b1 121.6 nm, Ly-\u03b2 102.6 nm, H-\u03b1 656.3 nm,
+    H-\u03b2 486.1 nm, Paschen-\u03b1 1875 nm), including the absorption arrow correctly
+    reusing 102.6 nm in reverse'
+  - Correct Imprint palette in canonical order, brand green (#009E73) on the first
+    series (Lyman), perfect theme adaptation between light and dark renders
+  - Clean structural separation between chrome (ink-colored level lines, dashed ionization
+    line, not in legend) and data (colored transition arrows with dash style giving
+    emission/absorption a redundant encoding)
+  - Level lines correctly span only partial plot width (per spec) and are directly
+    labeled with quantum number + real energy value, so the reader gets exact numbers
+    without relying on axis ticks
+  weaknesses:
+  - 'Lower-left quadrant is still the largest gap on the axis: the n=2\u2192n=1 gap
+    (yPos -5.9 to -10.6) is roughly 1.8\u00d7 the next-largest gap (n=3\u2192n=2);
+    a further nudge of n=1 toward -9 to -9.5 would balance the vertical rhythm without
+    losing its "most isolated level" read'
+  - Transitions are still colored categorically by series (Lyman/Balmer/Paschen/Absorption)
+    rather than by a continuous wavelength-derived hue, so the "color by wavelength/frequency"
+    cue from the spec is implicit rather than explicit
+  - Rotated wavelength labels (13px) and legend text shrink close to the edge of legibility
+    at the ~400px mobile thumbnail size
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: title "energy-level-atomic · javascript · highcharts · anyplot.ai" bold dark ink, fully visible with margin above; subtitle explaining the schematic axis compression readable in inkSoft; y-axis title "Energy (eV, increasing ↑, non-linear scale)" now carries explicit units (fixed from Attempt 1). Six horizontal level lines (n=1..n=6) plus a dashed ionization-limit line, each labeled in bold dark ink with quantum number + real energy value (eV). Legend at the bottom lists the four transition families with theme-adaptive inkSoft text.
+      Data: level lines in neutral ink (structural chrome, not data). Transition arrows use Imprint colors — green #009E73 (Lyman, first series), lavender (Balmer), blue (Paschen), dashed ochre (absorption) — each with a rotated wavelength label; the Ly-α transition (121.6 nm) is now bolded and drawn with a larger marker (radius 12 vs 9) as a focal-point emphasis added in this repair.
+      Legibility verdict: PASS — no light-on-light issues, all text readable at full size; rotated wavelength labels and legend shrink toward the edge of comfortable legibility at ~400px mobile scale but remain readable.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: title, subtitle, axis title, level labels, and legend all correctly flip to light ink and remain fully readable — no dark-on-dark failures observed anywhere.
+      Data: transition arrow colors are pixel-identical to the light render (green, lavender, blue, ochre) — only chrome flipped, as required. Brand green #009E73 remains vivid against the dark surface.
+      Legibility verdict: PASS — theme adaptation is correct and complete; both renders pass the readability check.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicit and readable in both themes; y-axis title now
+          carries explicit (eV) units per Attempt-1 fix. Rotated wavelength/legend
+          labels get close to the edge of legibility at ~400px mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (6 levels, 6 transitions) with prominent lines and arrowhead
+          markers, well adapted to density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Dash style (solid vs. short-dash) gives emission/absorption a redundant,
+          non-color-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Improved from Attempt 1 (n=1 yPos raised from -14.4 to -10.6), but
+          the n=2\u2192n=1 gap is still the largest on the axis (~1.8x the next gap)
+          — minor remaining imbalance, not severe
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis title now descriptive with units: "Energy (eV, increasing
+          \u2191, non-linear scale)"'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order, brand green #009E73 first, backgrounds
+          and chrome theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Physics-informed schematic compression + direct level labeling clearly
+          exceeds a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chrome (no gridlines, no x-axis line), generous whitespace;
+          rotated labels feel slightly utilitarian
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Attempt-1 gap addressed: Ly-\u03b1 now bolded with an enlarged marker
+          as a clear focal point, on top of the existing color-coded series hierarchy
+          and solid/dashed emission/absorption encoding'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct energy-level diagram: horizontal level lines + vertical
+          transition arrows'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Partial-width labeled levels, emission (down) and absorption (up)
+          arrows, series coloring, non-linear compressed scale, and ionization reference
+          line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Energy correctly on the Y axis increasing upward; X used only for
+          schematic column layout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact including the "javascript" qualifier; legend labels
+          match the transition family data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Lyman/Balmer/Paschen emission plus one absorption transition across
+          6 levels; a second sub-level grouping wasn't needed for a single hydrogen
+          atom
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral hydrogen-atom physics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: E_n = -13.6/n\u00b2 eV and all quoted wavelengths are factually correct;
+          the schematic y-position compression is honestly documented in the subtitle/labels
+          rather than misrepresented as literal scale
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward top-to-bottom data \u2192 transform \u2192 chart-options
+          script, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only window.ANYPLOT_TOKENS and Highcharts global
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for a multi-series
+          schematic diagram
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          credits disabled, no explicit width/height
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic line series, per-point marker overrides, dataLabels formatter
+          reading custom point options
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Marker-as-arrowhead + null-separated multi-segment series per family
+          is a clean Highcharts-idiomatic technique, but conceptually replicable in
+          other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
