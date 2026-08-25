@@ -28,14 +28,20 @@ const MAX_ITERATIONS = 100;
 const ESCAPE_RADIUS_SQ = 4;
 
 // --- Imprint sequential colormap: seq[0] (brand green, fast escape) -> seq[1]
-// (blue, slow escape); points that never escape get a fixed, theme-adaptive
-// "ink" swatch — distinct from the whole escape-time gradient in both themes.
+// (blue, slow escape); points that never escape get a fixed near-black swatch
+// — a hard-coded data color (not the theme-adaptive `ink` chrome token) so it
+// stays identical between light and dark renders, distinct from the gradient.
 function hexRgb(hex: string): [number, number, number] {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
 }
 const SEQ_LOW = hexRgb(t.seq[0]);
 const SEQ_HIGH = hexRgb(t.seq[1]);
-const INTERIOR_RGB = hexRgb(t.ink);
+const INTERIOR_HEX = "#1A1A17";
+const INTERIOR_RGB = hexRgb(INTERIOR_HEX);
 
 function escapeColor(frac: number): [number, number, number] {
   return [
@@ -102,7 +108,8 @@ function MandelbrotCanvas() {
           // Smooth (renormalized) escape count — a continuous colour ramp with
           // no discrete banding between adjacent iteration counts.
           const magSq = zr * zr + zi * zi;
-          const smoothN = n + 1 - Math.log(Math.log(Math.sqrt(magSq))) / Math.LN2;
+          const smoothN =
+            n + 1 - Math.log(Math.log(Math.sqrt(magSq))) / Math.LN2;
           const frac = Math.max(0, Math.min(1, smoothN / MAX_ITERATIONS));
           const [r, g, b] = escapeColor(gammaFrac(frac));
           data[idx] = r;
@@ -117,7 +124,10 @@ function MandelbrotCanvas() {
 
   return (
     <foreignObject x={left} y={top} width={areaW} height={areaH}>
-      <canvas ref={canvasRef} style={{ width: "100%", height: "100%", display: "block" }} />
+      <canvas
+        ref={canvasRef}
+        style={{ width: "100%", height: "100%", display: "block" }}
+      />
     </foreignObject>
   );
 }
@@ -144,22 +154,72 @@ function Legend() {
         <linearGradient id="mandelbrotRamp" x1="0" y1="0" x2="1" y2="0">
           {[0, 0.25, 0.5, 0.75, 1].map((stop) => {
             const [r, g, b] = escapeColor(gammaFrac(stop));
-            return <stop key={stop} offset={`${stop * 100}%`} stopColor={`rgb(${r},${g},${b})`} />;
+            return (
+              <stop
+                key={stop}
+                offset={`${stop * 100}%`}
+                stopColor={`rgb(${r},${g},${b})`}
+              />
+            );
           })}
         </linearGradient>
       </defs>
-      <text x={barX + barW / 2} y={titleY} textAnchor="middle" fontSize={14} fill={t.ink}>
+      <text
+        x={barX + barW / 2}
+        y={titleY}
+        textAnchor="middle"
+        fontSize={14}
+        fill={t.ink}
+      >
         Escape-time colour scale (max {MAX_ITERATIONS} iterations)
       </text>
-      <rect x={barX} y={barY} width={barW} height={barH} fill="url(#mandelbrotRamp)" rx={4} />
-      <text x={barX} y={endLabelY} textAnchor="start" fontSize={13} fill={t.inkSoft}>
+      <rect
+        x={barX}
+        y={barY}
+        width={barW}
+        height={barH}
+        fill="url(#mandelbrotRamp)"
+        rx={4}
+      />
+      <text
+        x={barX}
+        y={endLabelY}
+        textAnchor="start"
+        fontSize={13}
+        fill={t.inkSoft}
+      >
         fast escape
       </text>
-      <text x={barX + barW} y={endLabelY} textAnchor="end" fontSize={13} fill={t.inkSoft}>
+      <text
+        x={barX + barW}
+        y={endLabelY}
+        textAnchor="end"
+        fontSize={13}
+        fill={t.inkSoft}
+      >
         slow escape
       </text>
-      <rect x={swatchX} y={swatchY} width={swatchSize} height={swatchSize} fill={t.ink} rx={4} />
-      <text x={swatchX - 12} y={swatchY + swatchSize / 2 + 5} textAnchor="end" fontSize={13} fill={t.inkSoft}>
+      {/* Fixed fill color happens to equal the dark theme's page background
+          (#1A1A17), so the swatch would vanish on dark without a border. The
+          stroke is chrome (theme-adaptive ink), not a data color, so it stays
+          within the "only chrome flips" rule while guaranteeing visibility. */}
+      <rect
+        x={swatchX}
+        y={swatchY}
+        width={swatchSize}
+        height={swatchSize}
+        fill={INTERIOR_HEX}
+        stroke={t.ink}
+        strokeWidth={1}
+        rx={4}
+      />
+      <text
+        x={swatchX - 12}
+        y={swatchY + swatchSize / 2 + 5}
+        textAnchor="end"
+        fontSize={13}
+        fill={t.inkSoft}
+      >
         bounded (never escapes) —
       </text>
     </>
@@ -170,10 +230,23 @@ function ChartTitle() {
   const { top } = useDrawingArea();
   return (
     <>
-      <text x={width / 2} y={top - 56} textAnchor="middle" fontSize={24} fontWeight={600} fill={t.ink}>
+      <text
+        x={width / 2}
+        y={top - 56}
+        textAnchor="middle"
+        fontSize={24}
+        fontWeight={600}
+        fill={t.ink}
+      >
         heatmap-mandelbrot · javascript · muix · anyplot.ai
       </text>
-      <text x={width / 2} y={top - 30} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
+      <text
+        x={width / 2}
+        y={top - 30}
+        textAnchor="middle"
+        fontSize={14}
+        fill={t.inkSoft}
+      >
         z(n+1) = z(n)² + c · escape-time coloured over the complex plane
       </text>
     </>
@@ -206,6 +279,14 @@ export default function Chart() {
           min: Y_MIN,
           max: Y_MAX,
           label: "Im(c)",
+          // ChartsYAxis positions the rotated axis label at a fixed offset of
+          // `tickFontSize + tickSize + 10` from the axis line — not the actual
+          // measured width of the tick text — so with the default tickFontSize
+          // (12) the label sat almost on top of wide tick labels like "-0.2".
+          // tickLabelStyle.fontSize below still controls the *rendered* tick
+          // font size; bumping this deprecated prop only pushes the label
+          // further left to clear the tick text.
+          tickFontSize: 40,
           tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
           labelStyle: { fontSize: 16, fill: t.ink },
         },
