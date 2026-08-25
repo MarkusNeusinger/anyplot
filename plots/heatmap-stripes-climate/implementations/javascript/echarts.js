@@ -57,8 +57,12 @@ function lerpColor(hexA, hexB, ratio) {
 
 // t.div = [matte-red, midpoint, blue] (imprint_div); reorder cold -> warm for temperature.
 const coldColor = t.div[2];
-const midColor = t.div[1];
 const warmColor = t.div[0];
+// Fixed pale-neutral midpoint (not t.div[1]): the bars fill the entire canvas
+// with no gaps, so a theme-adaptive midpoint would match the dark background
+// exactly and vanish. A constant off-white keeps the near-zero band visible
+// in both themes while staying identical across renders.
+const midColor = "#FAF8F1";
 
 function colorForAnomaly(anomaly) {
   const norm = Math.max(-1, Math.min(1, anomaly / maxAbsAnomaly));
