@@ -32,17 +32,15 @@ const anomalies = years.map((year) => {
 const maxAbsAnomaly = Math.max(...anomalies.map(Math.abs));
 
 // --- Diverging color scale (imprint_div, symmetric around zero) ------------
-function hexToRgb(hex) {
-  const value = parseInt(hex.slice(1), 16);
-  return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
-}
-function rgbToHex(rgb) {
-  return "#" + rgb.map((c) => Math.round(c).toString(16).padStart(2, "0")).join("");
-}
 function lerpColor(hexA, hexB, fraction) {
-  const a = hexToRgb(hexA);
-  const b = hexToRgb(hexB);
-  return rgbToHex(a.map((c, i) => c + (b[i] - c) * fraction));
+  const a = parseInt(hexA.slice(1), 16);
+  const b = parseInt(hexB.slice(1), 16);
+  const channel = (shift) => {
+    const ca = (a >> shift) & 255;
+    const cb = (b >> shift) & 255;
+    return Math.round(ca + (cb - ca) * fraction);
+  };
+  return `rgb(${channel(16)}, ${channel(8)}, ${channel(0)})`;
 }
 const [warmStop, midStop, coolStop] = t.div; // ["#AE3030", pageBg, "#4467A3"]
 function anomalyColor(anomaly) {
@@ -52,6 +50,27 @@ function anomalyColor(anomaly) {
     : lerpColor(midStop, coolStop, -fraction);
 }
 const stripeColors = anomalies.map(anomalyColor);
+
+// --- Stripes plugin: draws the stripes via a direct chartjs draw hook ------
+// Chart.js's plugin system — a registered object with lifecycle hooks (here
+// beforeDatasetsDraw) that gets direct 2D-context access to chart.ctx and
+// chart.chartArea — is a chartjs-distinctive extensibility mechanism, unlike
+// the generic bar-gap-removal trick any bar-capable library can replicate.
+const stripesPlugin = {
+  id: "stripes",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    const { left, right, top, bottom } = chartArea;
+    const stripeWidth = (right - left) / stripeColors.length;
+    ctx.save();
+    stripeColors.forEach((color, i) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(left + i * stripeWidth, top, stripeWidth + 1, bottom - top);
+    });
+    ctx.restore();
+  },
+};
+Chart.register(stripesPlugin);
 
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
@@ -65,7 +84,7 @@ new Chart(canvas, {
     datasets: [
       {
         data: years.map(() => 1),
-        backgroundColor: stripeColors,
+        backgroundColor: "rgba(0, 0, 0, 0)",
         borderWidth: 0,
         categoryPercentage: 1.0,
         barPercentage: 1.0,
