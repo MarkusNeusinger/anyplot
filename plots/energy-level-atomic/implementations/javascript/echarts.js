@@ -1,7 +1,7 @@
 // anyplot.ai
 // energy-level-atomic: Atomic Energy Level Diagram
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-24
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 91/100 | Updated: 2026-08-25
 
 const t = window.ANYPLOT_TOKENS;
 
