@@ -1,7 +1,7 @@
 // anyplot.ai
 // genome-track-multi: Genome Track Viewer
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-25
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-08-25
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME;
