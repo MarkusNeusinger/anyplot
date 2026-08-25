@@ -79,6 +79,8 @@ const colorPos = d3.scaleSqrt().domain([0, maxCount]).range([0, 1]).clamp(true);
 const cellColor = (count) => d3.interpolateRgbBasis(t.seq)(colorPos(count));
 
 // --- Matrix cells ---------------------------------------------------------
+// No per-cell stroke: at 20x20 resolution a uniform grid of strokes plus the
+// outer frame reads busy. The outer frame alone is enough to enclose the grid.
 g.selectAll("rect.cell")
   .data(cells)
   .join("rect")
@@ -87,9 +89,7 @@ g.selectAll("rect.cell")
   .attr("y", (d) => y(d.ampHi))
   .attr("width", (d) => x(d.meanHi) - x(d.meanLo))
   .attr("height", (d) => y(d.ampLo) - y(d.ampHi))
-  .attr("fill", (d) => (d.count > 0 ? cellColor(d.count) : t.pageBg))
-  .attr("stroke", t.grid)
-  .attr("stroke-width", 0.5);
+  .attr("fill", (d) => (d.count > 0 ? cellColor(d.count) : t.pageBg));
 
 g.append("rect")
   .attr("x", 0)
@@ -100,6 +100,40 @@ g.append("rect")
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 1);
 
+// --- Dominant-cluster callout -----------------------------------------------
+// Gives the highest-count bin an explicit focal point, directly supporting the
+// spec's "identifying dominant cycle combinations" fatigue-analysis use case.
+const peakCell = cells.reduce((best, d) => (d.count > best.count ? d : best), cells[0]);
+const peakX = x((peakCell.meanLo + peakCell.meanHi) / 2);
+const peakY = y((peakCell.ampLo + peakCell.ampHi) / 2);
+const calloutX = Math.min(peakX + 90, iw - 210);
+const calloutY = Math.max(peakY - 70, 28);
+
+g.append("circle")
+  .attr("cx", peakX)
+  .attr("cy", peakY)
+  .attr("r", 5)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+
+g.append("line")
+  .attr("x1", peakX)
+  .attr("y1", peakY)
+  .attr("x2", calloutX - 6)
+  .attr("y2", calloutY + 10)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1);
+
+g.append("text")
+  .attr("x", calloutX)
+  .attr("y", calloutY)
+  .attr("text-anchor", "start")
+  .attr("fill", t.ink)
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .text(`Dominant cluster · ${peakCell.count} cycles`);
+
 // --- Axes -----------------------------------------------------------------
 const xAxis = g
   .append("g")
@@ -107,7 +141,7 @@ const xAxis = g
   .call(d3.axisBottom(x).ticks(6));
 const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6));
 for (const axisG of [xAxis, yAxis]) {
-  axisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+  axisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
   axisG.selectAll("line").attr("stroke", t.grid);
   axisG.select(".domain").attr("stroke", t.inkSoft);
 }
@@ -160,7 +194,7 @@ const legendAxis = g
   .append("g")
   .attr("transform", `translate(${legendX + legendW},0)`)
   .call(d3.axisRight(legendScale).ticks(5).tickFormat(d3.format(",.0f")));
-legendAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
+legendAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
 legendAxis.selectAll("line").attr("stroke", t.grid);
 legendAxis.select(".domain").attr("stroke", t.inkSoft);
 
