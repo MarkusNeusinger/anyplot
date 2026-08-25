@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: heatmap-stripes-climate
+created: '2026-08-25T01:09:38Z'
+updated: '2026-08-25T01:25:37Z'
+generated_by: claude-sonnet
+workflow_run: 32796185366
+issue: 4423
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/d3/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - SVG defs-based linearGradient with a D3 data-join of <stop> elements — a genuinely
+    D3/SVG-native way to render the continuous color transition, directly addressing
+    the prior review's LM-02 feedback
+  - New record-warmest-year outline adds a real focal point/storytelling layer (theme-adaptive
+    ink stroke, 0.35 opacity) without introducing any axes, labels, or gridlines —
+    addresses the prior review's DE-03 feedback while staying inside the spec's zero-chrome
+    rule
+  - 'Correct temperature semantic exception: diverging stops reordered so cold anomalies
+    read blue and warm anomalies read red, exactly matching the style guide''s domain-convention
+    carve-out'
+  - Symmetric d3.scaleSequential domain ([-extent, extent]) genuinely centers the
+    colormap at zero per spec
+  - 'Pure minimalism preserved: no axes, ticks, gridlines, or labels; equal-width,
+    no-gap, edge-to-edge stripes'
+  - Deterministic, realistic warming curve (~-0.35°C to ~+1.2°C vs. 1961-1990 baseline)
+    matching real HadCRUT/GISS-style magnitudes
+  - Data colors are pixel-identical between light and dark renders; only chrome (title
+    bar, emphasis-outline stroke color) flips theme
+  - Clean, idiomatic D3 with a KISS structure, deterministic LCG seed, and no fake
+    interactivity
+  weaknesses:
+  - Spec targets an ~3:1 aspect ratio; the delivered 16:9 landscape canvas (the correct
+    choice of the two platform-gated sizes) still falls short of that target — not
+    actionable in code, purely a platform canvas-gate constraint
+  - The record-warmest-year emphasis outline is subtle (0.35 opacity, 2px stroke)
+    — a slightly stronger stroke or opacity could make the focal point read more immediately
+    without adding any forbidden chrome
+  - Library Mastery could go further — the gradient-stop data-join is a nice touch,
+    but the rest of the implementation (scaleBand, scaleSequential) remains fairly
+    generic D3 usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white title bar at top (~#FAF8F1), matching the Imprint light-theme surface.
+      Chrome: Centered, bold, dark-ink title "heatmap-stripes-climate · javascript · d3 · anyplot.ai" — fully readable, no overlap or clipping. No axes, ticks, labels, or gridlines anywhere, matching the spec's "pure data visualization" requirement.
+      Data: 175 equal-width vertical stripes (years 1850-2024) fill the rest of the canvas edge-to-edge with no gaps, running from a muted pale blue-gray on the left (coolest, earliest years) through a near-neutral middle to a saturated matte red on the right (warmest, most recent years), rendered as a single continuous SVG linearGradient. A thin, subtle ink-colored outline (stroke-opacity 0.35) highlights the single record-warmest stripe near the right edge, adding a focal point without any new data encoding.
+      Legibility verdict: PASS — title fully readable, no dark-on-dark or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black title bar (~#1A1A17), matching the Imprint dark-theme surface.
+      Chrome: Same title now renders in light ink and remains clearly legible — no dark-on-dark issue. The emphasis-outline stroke now renders in light ink (theme-adaptive), visible at the identical x-position as in the light render.
+      Data: Stripe colors are pixel-identical to the light render (same blue-to-red progression and relative saturation pattern, same record-warmest stripe highlighted) — only the chrome (title bar background/text color, outline stroke color) flips between themes, exactly as required.
+      Legibility verdict: PASS — title fully readable, no theme-adaptation failures found.
+
+    Cross-check: cropped both renders around the record-warmest stripe (pixels 2900-3200 of 3200 width) — the outline sits at the identical x-position in both themes, confirming the highlighted year is data-driven and theme-adaptive rather than accidental.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title font-size and weight explicitly set, fully readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Stripes clearly visible, smooth continuous gradient
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-red diverging encoding with good contrast, not red-green-only
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Stripes fill full canvas edge-to-edge, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A - spec forbids axis labels; correctly omitted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint div stops with temperature semantic exception (cold=blue,
+          warm=red); theme-correct backgrounds in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color reorder, smooth continuous gradient technique,
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean, no grid/spines needed; the new subtle emphasis outline shows
+          attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Record-warmest-year outline creates a genuine focal point and visual
+          hierarchy, guiding the viewer's eye to the extreme
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming-stripes chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No axes/labels/gridlines, equal-width no-gap bars, zero-centered
+          symmetric diverging scale all correct; 16:9 vs. spec's ~3:1 aspect target
+          is a platform canvas-gate constraint, not a code gap
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year to x, anomaly to color, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, no legend needed for single continuous encoding
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 1850-2024 range shows slow pre-industrial drift and sharp post-1980
+          rise
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible climate-science scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomaly magnitudes (~-0.35 to +1.2°C) match real HadCRUT/GISS-style
+          data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper D3 selection/data-join patterns, scaleBand, scaleSequential
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: defs-based linearGradient driven by a D3 data-join of <stop> elements
+          is a genuinely D3/SVG-native technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - minimal-chrome
