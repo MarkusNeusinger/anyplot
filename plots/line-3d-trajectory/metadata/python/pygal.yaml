@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: line-3d-trajectory
 created: '2026-05-16T08:58:18Z'
-updated: '2026-08-25T06:26:24Z'
+updated: '2026-08-25T06:33:34Z'
 generated_by: claude-sonnet
 workflow_run: 32816110793
 issue: 3182
@@ -12,63 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-3d-trajectory/python/pygal/plot-dark.html
-quality_score: 40
+quality_score: 86
 review:
   strengths:
-  - 'Title format is exactly correct: "line-3d-trajectory · python · pygal · anyplot.ai"'
+  - 'Fixed the attempt-1 SC-01 rejection: Z now genuinely feeds a true isometric projection
+    (45° azimuth / 35.264° elevation rotation matrices) instead of being dropped after
+    the ODE step, so the 2D (x_rot, y_iso) view actually encodes 3D shape -- consistent
+    with the same isometric-projection technique already used by the sibling bokeh
+    and altair implementations of this spec, establishing this as the accepted workaround
+    for a library with no native 3D chart type'
+  - 'Fixed the attempt-1 VQ-03 weakness: stroke_width reduced from 2.5 to 1.5 and
+    alpha=0.75 is now baked into every gradient rgba stop, thinning the previously
+    near-solid overplotted coil regions near both attractor foci'
   - 'First color is exactly Imprint brand green #009E73, and the 30-segment gradient
-    correctly interpolates imprint_seq (#009E73 → #4467A3) for the single-polarity
-    ''elapsed time'' variable — a legitimate, well-reasoned continuous-encoding choice'
-  - 'Theme-adaptive chrome is correctly threaded through the Style object in both
-    renders — light background #FAF8F1 with dark ink text, dark background #1A1A17
-    with light ink text, no dark-on-dark or light-on-light failures'
-  - Data is a real, deterministic Lorenz attractor (classic sigma=10, rho=28, beta=8/3
-    chaotic parameters, no randomness) — scientifically accurate and neutral, with
-    rich chaotic dynamics (two-lobe switching, spiraling) that exercise the trajectory
-    concept well
-  - Legend is correctly omitted (30 time-segments would clutter a legend) and the
-    code documents the specific pygal SerieConfig limitation that motivated the segmented-gradient
-    workaround
-  - Clean, flat KISS script structure (no functions/classes), fully reproducible,
-    only used imports, correct plot-light/plot-dark.png + .html outputs
+    correctly interpolates imprint_seq (#009E73 -> #4467A3) for the single-polarity
+    ''elapsed time'' variable'
+  - 'Theme-adaptive chrome correctly threaded through the Style object in both renders
+    -- light background #FAF8F1 with dark ink text, dark background #1A1A17 with light
+    ink text, no dark-on-dark or light-on-light failures'
+  - Data is a real, deterministic Lorenz attractor (classic sigma=10, rho=28, beta=8/3,
+    no randomness) -- scientifically accurate, neutral, and exercises rich chaotic
+    dynamics
+  - Title format is exactly correct, legend correctly omitted for a 30-segment single
+    trajectory, and code comments clearly document the WHY behind both the projection
+    math and the segmented-gradient workaround
+  - Clean flat KISS script structure, fully reproducible, only used imports, correct
+    plot-{theme}.png + .html outputs
   weaknesses:
-  - 'Core spec mismatch: the spec is explicitly a ''3D Line Plot for Trajectory Visualization''
-    in ''three-dimensional space'' where ''interactive rotation and zoom are critical
-    for understanding 3D spatial relationships'' — the implementation drops the Z
-    coordinate entirely from the visual encoding (only x_norm, y_norm are plotted;
-    z only feeds the ODE integration) and produces a plain 2D XY line chart. Color
-    is repurposed to encode time instead of any spatial depth cue. No projection,
-    isometric transform, or small-multiples of the XZ/YZ planes are attempted to preserve
-    the 3D structure — SC-01 scored 0 and caps the total at 40.'
-  - 'SC-02/SC-03: because Z is unmapped, two spec-required aspects are missing — no
-    visual representation of the 3rd spatial dimension, and no interactive-rotation
-    affordance (unsurprising since pygal.XY is a flat 2D chart, but the spec calls
-    this out as essential, not optional).'
-  - 'VQ-03: with stroke_width=2.5 and no alpha applied across 3000 points / 30 overlapping
-    series, the tightly-wound coil regions near both attractor foci become dense,
-    near-solid blobs of color where individual loops are hard to distinguish — the
-    data-density heuristic (>500 points -> smaller/alpha<1 lines) was not applied
-    to the line rendering.'
-  - 'LM-02: the segmented-series gradient is a clever workaround for a pygal-specific
-    API limitation, but it is a workaround for a constraint rather than a use of a
-    feature distinctive to pygal — scored as fairly generic library usage.'
+  - 'SC-02: true interactive rotation/zoom (which the spec calls essential for exploring
+    3D spatial structure) is still unattainable -- pygal has no 3D chart type at all,
+    so the isometric projection is the best available substitute rather than the spec''s
+    literal ask; this is an inherent library limitation shared with the other 2D-only
+    libraries for this spec, not a fixable code defect'
+  - 'VQ-03: even with alpha=0.75 and thinner strokes, the tightly-wound coil regions
+    near both attractor foci still show some overlapping strands that are hard to
+    fully separate visually -- could push alpha lower (e.g. 0.5-0.6) or thin the line
+    width further for the densest inner loops'
+  - 'LM-02: the segmented-series gradient remains a workaround for pygal''s per-add
+    color-kwarg limitation rather than a showcase of a feature distinctive to pygal
+    specifically -- still fairly generic technique that any 2D charting library could
+    replicate'
+  - 'DE-03: the isometric perspective and time-gradient create some visual hierarchy,
+    but there''s no explicit annotation or callout marking the two attractor foci/lobes
+    to help a first-time viewer immediately grasp the chaotic double-lobe structure'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the required light-theme surface — not pure white.
-      Chrome: Title "line-3d-trajectory · python · pygal · anyplot.ai" is dark ink, bold, centered at top, ~72% of plot width. Axis titles "X (2D trajectory projection)" (bottom) and "Y — color encodes elapsed time" (left, rotated) are dark ink and clearly readable. Tick labels on both axes are dark, evenly spaced, similarly sized, no overlap. A subtle dashed gridline grid and darker reference lines at x=0/y=0 are visible without competing with the data.
-      Data: A continuous curved trajectory forming the classic two-lobe Lorenz-attractor "butterfly" shape in the (x, y) plane. Color sweeps from brand green (#009E73) through teal/blue tones to blue (#4467A3) across 30 sequential time segments, with no markers (show_dots=False). The 3rd spatial coordinate (Z) is not represented in this view at all — only elapsed time is color-encoded.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface -- not pure white.
+      Chrome: Title "line-3d-trajectory · python · pygal · anyplot.ai" is dark ink, centered at top, comfortably within the plot width with no clipping. Axis titles "X — isometric projection of (x, y, z)" (bottom) and "Y — isometric projection; color encodes elapsed time" (left, rotated, wrapped to two lines) are dark ink and clearly readable. Tick labels on both axes (-4..5 on X, -3..2 on Y) are dark, evenly spaced, similarly sized, no overlap. A subtle dashed gridline grid plus darker x=0/y=0 reference lines are visible without competing with the data.
+      Data: A continuous curved trajectory forming an isometric-perspective view of the Lorenz-attractor "butterfly" -- one lobe reads as a tight, elongated spiral point extending to the right (~x=5, y=-1.5), the other as a rounder concentric coil on the left/center, connected by a diagonal streak toward the upper-left, which is the expected look of a true 3D projection (distinct from a flat top-down XY view). Color sweeps from brand green (#009E73) through teal/blue to blue (#4467A3) across 30 sequential time segments with alpha baked into the strokes, no markers (show_dots=False). The densest inner-coil regions near both foci show some overlapping strands but individual loops remain distinguishable.
+      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the required dark-theme surface — not pure black.
-      Chrome: Same title, axis titles, and tick labels, now rendered in light ink (near-white/light-gray) and fully legible against the dark background — no dark-on-dark failures found. Gridlines and the x=0/y=0 reference lines are visible but subtle, using the dark-theme muted tone.
-      Data: Identical trajectory shape and identical green→blue gradient colors as the light render — confirms the Imprint data colors are held constant across themes; only chrome (background/text/grid) flipped, as required.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark issues.
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface -- not pure black.
+      Chrome: Same title, axis titles, and tick labels, now rendered in light ink (near-white/light-gray) and fully legible against the dark background -- no dark-on-dark failures found. Gridlines and the x=0/y=0 reference lines are visible but subtle, using the dark-theme muted tone.
+      Data: Identical trajectory shape and identical green-to-blue gradient colors as the light render -- confirms the Imprint data colors are held constant across themes; only chrome (background/text/grid) flipped, as required.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background; no dark-on-dark issues.
 
-    Note: Both renders pass the theme-readability and canvas-dimension checks. The primary defect is not a legibility/theme problem but a spec-compliance one: the plot never visually encodes the Z axis that defines the "3D" trajectory the specification asks for (see Weaknesses / SC-01).
+    Note: Both renders pass the theme-readability check. No canvas-dimension gate file was present (/tmp/anyplot-canvas-gate.txt does not exist), so the gate passed. No AR-08 or AR-09 triggers found -- no fake interactivity, and no title/axis/tick text is clipped at the canvas border in either render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -77,8 +80,8 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set via Style; title, axis titles, and
-          ticks readable in both themes; title occupies ~72% of width, within expected
-          range for the mandated title string
+          ticks readable in both themes; title occupies a comfortable fraction of
+          width, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -87,18 +90,19 @@ review:
         comment: No text overlap in either render
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 3000 points / 30 overlapping series at stroke_width=2.5 with no alpha;
-          tightly-wound coil regions near both attractor foci become dense near-solid
-          blobs where individual loops blur together
+        comment: stroke_width reduced to 1.5 and alpha=0.75 now baked into every gradient
+          stop, thinning the previously near-solid overplotted coil regions from attempt
+          1 -- some overlap remains in the densest inner loops near both attractor
+          foci
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green->blue gradient is CVD-safe and provides good contrast
+        comment: Sequential green-to-blue gradient is CVD-safe and provides good contrast
           against both surfaces
       - id: VQ-05
         name: Layout & Canvas
@@ -106,14 +110,13 @@ review:
         max: 4
         passed: true
         comment: Plot fills the canvas well with balanced margins; nothing cut off;
-          canvas-dimension gate passed
+          no canvas-dimension gate failure
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles are descriptive of what each axis and the color encode,
-          appropriate for normalized/dimensionless trajectory coordinates
+        comment: Axis titles describe both the projection and the color-time encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -130,8 +133,8 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom hand-built per-segment gradient stroke is clearly above a
-          configured default, thoughtful color use
+        comment: Custom hand-built per-segment gradient plus a genuine isometric-projection
+          derivation are clearly above a configured default
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -143,36 +146,40 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Color gradient guides the eye through the chaotic time evolution
-          and lobe-switching, creating a clear visual hierarchy
+        comment: Isometric perspective plus the time-color gradient guide the eye
+          through the chaotic evolution and lobe-switching, creating visual hierarchy,
+          but no explicit callouts mark the two attractor foci
     spec_compliance:
-      score: 5
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: Spec requires a 3D trajectory in three-dimensional space with rotation/zoom
-          described as essential; implementation renders a plain 2D XY line chart
-          and drops the Z coordinate from the visual encoding entirely -- wrong chart
-          type for this spec. Caps total score at 40.
+        passed: true
+        comment: 'Fixed from attempt 1 (was 0): Z now genuinely feeds a true isometric
+          projection (rotation matrices, not a discarded ODE byproduct), matching
+          the isometric-projection technique already established by the sibling bokeh/altair
+          implementations of this same spec for libraries without native 3D -- correct
+          base approach, missing only true interactive rotation which pygal cannot
+          provide at all'
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 3
         max: 4
-        passed: false
-        comment: Sequential smooth-line connection and a time-progression color gradient
-          are present, but the 3D spatial encoding and interactive rotation the spec
-          calls essential are entirely absent
+        passed: true
+        comment: Sequential smooth-line connection, 3D spatial encoding via isometric
+          projection, and time-progression color gradient are all present; only the
+          spec's 'essential' interactive rotation/zoom is absent, an inherent pygal
+          limitation rather than an implementation defect
       - id: SC-03
         name: Data Mapping
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: X/Y mapping itself is correct and shows all data in 2D, but the Z
-          variable from the spec's data contract is never mapped to anything visual
+        passed: true
+        comment: x_rot/y_iso correctly mix all three original coordinates via the
+          rotation matrices; all data is shown
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -231,8 +238,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the gradient workaround, well-commented,
-          no fake UI
+        comment: Appropriate complexity for the projection + gradient workaround,
+          well-commented explaining WHY, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -255,13 +262,15 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: The segmented-gradient technique works around a pygal-specific limitation
-          rather than showcasing a feature distinctive to pygal
-  verdict: REJECTED
+        comment: The segmented-gradient technique and isometric projection work around
+          pygal-specific limitations rather than showcasing a feature distinctive
+          to pygal itself
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - 3d-projection
   patterns:
   - data-generation
   - matrix-construction
@@ -270,4 +279,5 @@ impl_tags:
   - normalization
   styling:
   - gradient-fill
+  - alpha-blending
   - custom-colormap

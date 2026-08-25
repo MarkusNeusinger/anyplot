@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-3d-trajectory: 3D Line Plot for Trajectory Visualization
 Library: pygal 3.1.3 | Python 3.13.15
-Quality: 40/100 | Updated: 2026-08-25
+Quality: 86/100 | Updated: 2026-08-25
 """
 
 import os
