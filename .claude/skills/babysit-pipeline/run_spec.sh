@@ -82,12 +82,15 @@ recent_generate_failures() {
 # stale, which makes meta_present understate progress — so retry, and say so in
 # the log when all three attempts lose, rather than silently polling a stale ref.
 fetch_main() {
-  local i
+  local i err
   for i in 1 2 3; do
-    git -C "$REPO" fetch origin main --quiet 2>/dev/null && return 0
+    # Keep stderr: a ref-lock collision and, say, an auth or network failure
+    # need different responses, and discarding the message hides which it was.
+    err=$(git -C "$REPO" fetch origin main --quiet 2>&1) && return 0
     sleep $(( i * 3 ))
   done
   echo "[warn] git fetch origin main failed 3x — origin/main may be stale this round" | tee -a "$LOG"
+  echo "[warn]   last error: ${err}" | tee -a "$LOG"
   return 1
 }
 

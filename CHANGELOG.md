@@ -189,7 +189,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   gotcha is replaced by its opposite: every category-level prediction made during the
   backfill was wrong — 17 of 20 parked pairs generated fine, and `bar-3d-categorical`
   succeeded in plotnine while `scatter-3d` did not — so a gap counts as real only after
-  three attempts under a fresh budget. Added: spec ids harvested from issue titles must be
+  three attempts under a fresh budget. Added: spec IDs harvested from issue titles must be
   intersected with the actual `plots/` directories (14 of 26 pointed at specs that no
   longer exist), and a `TIMEOUT` with zero recent failures means the failures aged out of
   the driver's window, not that nothing failed. `run_spec.sh` also retries its

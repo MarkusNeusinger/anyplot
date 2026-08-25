@@ -167,10 +167,17 @@ the reason, move on, sweep at the end.
 Check the run list before deferring, though: since #10627 the
 workflow spends its own three attempts per campaign, so a pair that
 comes back missing may already have failed three times, and the
-manual retry adds nothing. `gh run list --workflow=impl-generate.yml`
-filtered to the spec tells you which case you are in — three
-`Generate: <lib> for <spec>` failures minutes apart is a measured
-gap, one failure is a flake worth the retry. The same check covers
+manual retry adds nothing. There is no per-spec filter on the API, so
+filter the output by run title:
+
+```bash
+gh run list --workflow=impl-generate.yml --limit 40 \
+  --json conclusion,createdAt,displayTitle \
+  --jq '.[] | select(.displayTitle | test("<spec>")) | "\(.createdAt) \(.conclusion) \(.displayTitle)"'
+```
+
+Three `Generate: <lib> for <spec>` failures minutes apart is a measured
+gap; one failure is a flake worth the retry. The same check covers
 `RESULT=TIMEOUT` with `recent generate failures: 0`, which only means
 the failures fell outside the driver's 25-minute window, not that
 nothing failed.
@@ -214,7 +221,7 @@ nothing failed.
   when three attempts under a fresh campaign budget say so, never
   because the pairing sounds implausible.
 - **A spec id from an issue title may not exist.** `impl:*:failed`
-  labels outlive their specs: of 26 spec ids harvested that way, 14
+  labels outlive their specs: of 26 spec IDs harvested that way, 14
   had no `plots/<spec>/` on main at all, and a dispatch for one dies
   at `Validate specification exists` seconds in. Intersect any
   label-derived list with `git ls-tree -d origin/main plots/` before
