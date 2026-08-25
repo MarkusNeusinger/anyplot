@@ -45,6 +45,29 @@ for (const group of GROUPS) {
   }
 }
 
+// --- Critical path: the chain of tasks binding the project finish date -----
+// Walk back from the last-finishing task, at each step following whichever
+// predecessor finishes latest (the one actually constraining the successor's
+// start). Rendered with heavier emphasis so the driving chain stands out.
+const tasksByName = new Map(tasks.map((task) => [task.task, task]));
+const criticalEdges = new Set();
+{
+  let current = tasks.reduce((latest, task) => (task.end > latest.end ? task : latest), tasks[0]);
+  while (current.dependsOn.length) {
+    let predName = current.dependsOn[0];
+    let pred = tasksByName.get(predName);
+    for (const depName of current.dependsOn) {
+      const dep = tasksByName.get(depName);
+      if (dep.end > pred.end) {
+        pred = dep;
+        predName = depName;
+      }
+    }
+    criticalEdges.add(`${predName}=>${current.task}`);
+    current = pred;
+  }
+}
+
 const labels = rows.map((row) => row.label);
 const barData = rows.map((row) => [row.start, row.end]);
 const barBackground = rows.map((row) => (row.isHeader ? "transparent" : row.color));
@@ -60,38 +83,71 @@ function formatDay(offset) {
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// Find a day offset in [loX, hiX] for the elbow's vertical segment that
+// avoids passing through any of the given task bars (each a [start, end]
+// range), preferring the value closest to the midpoint.
+function freeElbowX(loX, hiX, blockingRanges) {
+  const mid = (loX + hiX) / 2;
+  const isBlocked = (x) => blockingRanges.some(([s, e]) => x > s && x < e);
+  if (!isBlocked(mid)) return mid;
+  const step = 0.1;
+  for (let d = step; d <= (hiX - loX) / 2 + step; d += step) {
+    const right = mid + d;
+    if (right <= hiX && !isBlocked(right)) return right;
+    const left = mid - d;
+    if (left >= loX && !isBlocked(left)) return left;
+  }
+  return mid;
+}
+
 // --- Dependency-arrow plugin (finish-to-start connectors) --------------------
 const dependencyArrows = {
   id: "dependencyArrows",
   afterDatasetsDraw(chart) {
     const { ctx, scales } = chart;
     ctx.save();
-    ctx.strokeStyle = t.inkSoft;
-    ctx.fillStyle = t.inkSoft;
-    ctx.lineWidth = 2;
+    const arrowSize = 11;
     for (const task of tasks) {
       if (!task.dependsOn.length) continue;
-      const toY = scales.y.getPixelForValue(taskRowIndex.get(task.task));
+      const toRow = taskRowIndex.get(task.task);
+      const toY = scales.y.getPixelForValue(toRow);
       const toX = scales.x.getPixelForValue(task.start);
       for (const depName of task.dependsOn) {
         const pred = tasks.find((candidate) => candidate.task === depName);
         if (!pred) continue;
-        const fromY = scales.y.getPixelForValue(taskRowIndex.get(pred.task));
+        const fromRow = taskRowIndex.get(pred.task);
+        const fromY = scales.y.getPixelForValue(fromRow);
         const fromX = scales.x.getPixelForValue(pred.end);
-        const midX = (fromX + toX) / 2;
+
+        // Route the elbow's vertical segment through a day offset not
+        // covered by any task bar strictly between the two rows, so the
+        // connector doesn't cut across unrelated tasks.
+        const rowLo = Math.min(fromRow, toRow);
+        const rowHi = Math.max(fromRow, toRow);
+        const blockingRanges = rows
+          .slice(rowLo + 1, rowHi)
+          .filter((row) => !row.isHeader)
+          .map((row) => [row.start, row.end]);
+        const midDay = freeElbowX(pred.end, task.start, blockingRanges);
+        const midX = scales.x.getPixelForValue(midDay);
+
+        const isCritical = criticalEdges.has(`${depName}=>${task.task}`);
+        ctx.strokeStyle = isCritical ? t.ink : t.inkSoft;
+        ctx.fillStyle = isCritical ? t.ink : t.inkSoft;
+        ctx.lineWidth = isCritical ? 3 : 2;
 
         ctx.beginPath();
         ctx.moveTo(fromX, fromY);
         ctx.lineTo(midX, fromY);
         ctx.lineTo(midX, toY);
-        ctx.lineTo(toX - 8, toY);
+        ctx.lineTo(toX - arrowSize, toY);
         ctx.stroke();
 
         // Arrowhead pointing into the successor bar's start edge.
         ctx.beginPath();
         ctx.moveTo(toX, toY);
-        ctx.lineTo(toX - 8, toY - 4);
-        ctx.lineTo(toX - 8, toY + 4);
+        ctx.lineTo(toX - arrowSize, toY - arrowSize / 2);
+        ctx.lineTo(toX - arrowSize, toY + arrowSize / 2);
         ctx.closePath();
         ctx.fill();
       }
@@ -139,15 +195,15 @@ new Chart(canvas, {
       x: {
         min: 0,
         max: 45,
-        title: { display: true, text: "Project Timeline (2026)", color: t.ink, font: { size: 15 } },
-        ticks: { color: t.inkSoft, font: { size: 13 }, stepSize: 5, callback: (value) => formatDay(value) },
+        title: { display: true, text: "Project Timeline (2026)", color: t.ink, font: { size: 16 } },
+        ticks: { color: t.inkSoft, font: { size: 15 }, stepSize: 5, callback: (value) => formatDay(value) },
         grid: { color: t.grid },
       },
       y: {
         reverse: false,
         ticks: {
           color: (ctx) => (rows[ctx.index] && rows[ctx.index].isHeader ? t.ink : t.inkSoft),
-          font: (ctx) => (rows[ctx.index] && rows[ctx.index].isHeader ? { size: 14, weight: "bold" } : { size: 13 }),
+          font: (ctx) => (rows[ctx.index] && rows[ctx.index].isHeader ? { size: 16, weight: "bold" } : { size: 15 }),
         },
         grid: { display: false },
       },
