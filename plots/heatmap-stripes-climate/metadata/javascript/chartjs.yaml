@@ -1,0 +1,252 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-stripes-climate
+created: '2026-08-25T01:07:48Z'
+updated: '2026-08-25T01:22:18Z'
+generated_by: claude-sonnet
+workflow_run: 32796011830
+issue: 4423
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-stripes-climate/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Faithfully recreates the Ed Hawkins warming-stripes genre: no axes, ticks, or
+    gridlines — pure color encoding fills the entire canvas'
+  - Diverging color scale is built directly from window.ANYPLOT_TOKENS.div (imprint_div),
+    with the midpoint correctly using the theme-adaptive page background — identical
+    data colors in both renders, only chrome flips
+  - 'Color scale is properly symmetric around zero: fraction = anomaly / maxAbsAnomaly
+    ensures equal-magnitude anomalies get equal visual intensity'
+  - Distinctive, idiomatic use of Chart.js's plugin lifecycle hooks (beforeDatasetsDraw
+    with direct ctx/chartArea access) to draw the stripes — a mechanism unique to
+    Chart.js's extensibility model, not a generic bar-gap trick
+  - Deterministic synthetic data (fixed-seed LCG) spans 1850-2024 (175 years) with
+    a realistic accelerating-warming shape and per-year noise, plausible in both range
+    and magnitude for a HadCRUT/GISS-style anomaly series
+  - Mandated title is legible and correctly formatted in both themes; animation disabled
+    per the mount-node contract
+  weaknesses:
+  - Canvas uses the default 3200x1800 landscape (16:9) format rather than the spec-suggested
+    ~3:1 wide-and-short aspect ratio; this is a minor, system-constrained deviation
+    (anyplot only offers 16:9 landscape or 1:1 square) rather than an implementation
+    error, but it's worth noting the stripes would read even more powerfully at a
+    wider ratio if a third canvas option is ever added
+  - Title occupies roughly a third of the canvas width rather than the ~70-85% typical
+    for the mandated title string at other libraries' default sizing — still fully
+    legible and well-centered in both themes, so no legibility deduction, but there
+    is unused horizontal headroom in the title band
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the thin title band at the top; the stripe area itself covers the entire remaining canvas edge-to-edge.
+      Chrome: Title "heatmap-stripes-climate · javascript · chartjs · anyplot.ai" renders in dark ink, bold, centered, fully legible against the light band. No axes, ticks, gridlines, or legend are present, matching the spec's "pure data visualization" requirement.
+      Data: 175 vertical stripes (1850-2024) run left to right. The left third is cool blue-grey, transitioning through a near-neutral cream band around the middle years, into progressively deeper reds on the right third, with visible year-to-year noise within the overall smooth trend. First-series/data colors are drawn from the imprint_div diverging scale (blue #4467A3 to red #AE3030) via the theme midpoint.
+      Legibility verdict: PASS — title text is crisp and high-contrast; no text sits on top of the stripes.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the title band; stripes fill the rest of the canvas.
+      Chrome: Same title text now renders in light/off-white ink, clearly legible against the dark band. No axes/ticks/gridlines, consistent with the light render.
+      Data: Same left-to-right blue-to-red progression as the light render — the blue and red stripe hues are visually identical to the light version; only the near-zero midpoint stripes shift from cream to near-black (the theme-adaptive imprint_div midpoint), which is the expected and correct chrome-only change.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; title contrast is strong.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title font size explicitly set (22px); fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; only element is the title
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 175 stripes at ~18px each are clearly distinct and fill the plot
+          area
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div is CVD-tested; luminance gradient reinforces the hue
+          gradient
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Stripes fill essentially the entire canvas; no wasted space, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A by spec design (no axes/labels permitted) — full credit; title
+          format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_div used via ANYPLOT_TOKENS.div with theme-adaptive midpoint;
+          correct theme chrome in both renders
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Faithful, well-executed recreation of the warming-stripes genre with
+          correct diverging gradient
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Total chrome minimalism (no spines/grid/ticks) is exactly the genre's
+          aesthetic goal
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Left-to-right blue-to-red progression is an immediate, unambiguous
+          visual narrative of warming
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct warming-stripes chart type via custom draw plugin
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: No axes/labels/gridlines, symmetric diverging scale, equal-width
+          no-gap bars all present; aspect ratio is 16:9 landscape rather than the
+          spec-suggested ~3:1 (system only offers 16:9/1:1)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Year on x-position, anomaly encoded via color — correct for this
+          plot type
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches mandate; legend correctly omitted (single
+          implicit series)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Full 1850-2024 range with both cool and warm periods and inter-annual
+          noise
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible climate-science scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Anomaly range (~-0.4C to ~+1.25C) matches real-world HadCRUT/GISS
+          magnitudes
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear script; small helper functions (lcg, lerpColor, anomalyColor)
+          are justified by the plugin/color-math needs
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows mount-node contract; animation:false set
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Registers a proper Chart.js plugin rather than fighting the API,
+          though repurposing a transparent bar dataset just to obtain a chartArea
+          is a mild workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: beforeDatasetsDraw hook with direct ctx/chartArea access is genuinely
+          distinctive to Chart.js's plugin architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-plugin
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - minimal-chrome
