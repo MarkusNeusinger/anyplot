@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: heatmap-mandelbrot
 created: '2026-08-25T00:37:39Z'
-updated: '2026-08-25T00:42:59Z'
+updated: '2026-08-25T00:52:56Z'
 generated_by: claude-sonnet
 workflow_run: 32793693089
 issue: 4431
@@ -15,22 +15,36 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-m
 quality_score: 82
 review:
   strengths:
-  - 'Efficient, idiomatic technique: renders the 480K-pixel escape-time raster once
+  - 'Efficient, idiomatic technique: renders the ~1.05M-pixel escape-time raster once
     on an offscreen canvas and drops it into ECharts via a custom series + api.coord,
     instead of a huge heatmap series data array'
   - Smooth (continuous) escape-iteration coloring with a gamma curve avoids the discrete
     banding the spec explicitly warns against
-  - Correct aspect-ratio preservation of the complex plane and full spec-default ranges/iteration
-    count
+  - Correct aspect-ratio preservation of the complex plane (letterboxed inside the
+    mount) and full spec-default ranges/iteration count
   - Correct mandated title format; all chrome text (title, subtitle, axis labels,
     ticks) is legible and theme-correct in both renders
+  - The insideRgb fix in the current source (hardcoded literal '#1A1A17' instead of
+    the theme-adaptive t.ink) is the structurally correct fix for the attempt-1 VQ-07
+    finding
   weaknesses:
-  - 'Interior ("never escapes") fill color is derived from t.ink (insideRgb = hexToRgb(t.ink)),
-    which is theme-adaptive chrome — it renders solid black in the light theme but
-    near-white/cream in the dark theme, so the plot''s dominant visual element (main
-    cardioid + bulbs, ~35-40% of the plot area) changes character between themes instead
-    of staying identical. Fix: use a single fixed color for the interior fill, independent
-    of window.ANYPLOT_THEME/t.ink.'
+  - 'SUSPECTED STALE RENDER (pipeline, not code): plot-dark.png''s interior fill measures
+    RGB(240,239,232), which is exactly automation/js-render/render.mjs''s t.ink for
+    the dark theme (''#F0EFE8''). plot-light.png''s interior measures RGB(26,26,23),
+    exactly t.ink for the light theme (''#1A1A17''). That is precisely the OLD pre-fix
+    behavior (insideRgb = hexToRgb(t.ink), removed in commit 5de22c11b). The CURRENT
+    source at plots/heatmap-mandelbrot/implementations/javascript/echarts.js:31 already
+    reads `const insideRgb = hexToRgb("#1A1A17");` — a fixed literal with no dependency
+    on t/theme — so a fresh render should show identical interior color (26,26,23)
+    in BOTH plot-light.png and plot-dark.png. The two renders reviewed here do not
+    match that source. Recommend regenerating plot-light.png/plot-dark.png from the
+    current commit before the next review rather than editing insideRgb again — the
+    line is already correct.'
+  - As currently rendered, the bounded ('never escapes') interior — the plot's dominant
+    visual element (main cardioid + bulbs, roughly a third of the plot area) — is
+    solid near-black in the light render but flips to near-white/cream in the dark
+    render, violating the 'data colors must be identical across light/dark, only chrome
+    flips' rule. This must not reproduce once fresh renders reflect the current source.
   - No color-scale legend/colorbar ties the gradient to numeric iteration counts (optional,
     would strengthen data storytelling)
   - Design excellence is close to style-guide defaults; nothing distinctively 'designed'
@@ -39,14 +53,14 @@ review:
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
       Chrome: Title "heatmap-mandelbrot · javascript · echarts · anyplot.ai" centered in dark ink; subtitle "Color: smooth escape-iteration count · Solid fill: bounded orbit (never escapes)" in softer gray; axis names "Real axis (Re)" / "Imaginary axis (Im)"; tick labels at 2 decimals. All readable.
-      Data: Escaping region is a smooth green-to-blue gradient (Imprint imprint_seq, first color #009E73-ish). Bounded interior (main cardioid, period-2 bulb, satellite bulbs) is solid black.
+      Data: Escaping region is a smooth green-to-blue gradient (Imprint imprint_seq, first stop #009E73-ish). Bounded interior (main cardioid, period-2 bulb, satellite bulbs) is solid near-black, RGB(26,26,23).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
       Chrome: Title, subtitle, axis names and tick labels all rendered in light cream text on the dark background — no dark-on-dark failures.
-      Data: Escaping-region gradient is identical to the light render (green-to-blue, same stops). BUT the bounded interior, which was solid black in the light render, is now near-white/cream — it is colored via the theme-adaptive t.ink token instead of a fixed value, so it flips from black to white/cream between themes. This is the plot's largest visual element and it does not stay identical across themes as required.
-      Legibility verdict: PASS (chrome text) / FAIL (data-color theme consistency — interior fill not identical to light render)
+      Data: Escaping-region gradient is byte-identical to the light render (verified via pixel histogram: same green-to-blue stops). BUT the bounded interior, which was solid near-black in the light render, is near-white/cream here — RGB(240,239,232), which exactly equals the dark-theme "ink" text-color token, not the fixed literal ("#1A1A17") that the current source hardcodes at line 31. This matches the pre-fix (theme-adaptive t.ink) behavior that attempt 1's review already flagged and the current source already removed — strong evidence this PNG is a stale render from before the fix commit rather than a live re-render of the current code.
+      Legibility verdict: PASS (chrome text) / FAIL (data-color theme consistency — interior fill not identical to light render, as rendered)
   criteria_checklist:
     visual_quality:
       score: 26
@@ -82,8 +96,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, plot occupies large well-centered share of canvas,
-          aspect ratio preserved
+        comment: Canvas gate passed (3200x1800), plot occupies a large well-centered
+          share of canvas, aspect ratio preserved
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -95,9 +109,10 @@ review:
         score: 0
         max: 2
         passed: false
-        comment: Interior fill uses theme-adaptive t.ink token, so it is black in
-          light mode and near-white in dark mode instead of an identical data color
-          across themes
+        comment: 'As rendered, interior fill is black in light / near-white in dark
+          instead of an identical data color across themes. Source already hardcodes
+          a fixed literal (line 31) that should prevent this — see weaknesses: likely
+          a stale/pre-fix render, not a current code defect.'
     design_excellence:
       score: 10
       max: 20
@@ -108,7 +123,7 @@ review:
         max: 8
         passed: false
         comment: Well-configured, spec-driven default; smooth gamma-corrected coloring
-          shows some technical care but no distinctive aesthetic treatment
+          shows technical care but no distinctive aesthetic treatment
       - id: DE-02
         name: Visual Refinement
         score: 3
@@ -234,10 +249,12 @@ review:
 impl_tags:
   dependencies: []
   techniques:
-  - canvas-rasterization
-  - custom-series-renderitem
+  - custom-render-item
+  - coordinate-transform
   patterns:
   - matrix-construction
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
+  - gradient-fill
