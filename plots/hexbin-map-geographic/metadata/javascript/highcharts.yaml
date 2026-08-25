@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: hexbin-map-geographic
+created: '2026-08-25T02:10:29Z'
+updated: '2026-08-25T02:35:16Z'
+generated_by: claude-sonnet
+workflow_run: 32799688738
+issue: 3767
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hexbin-map-geographic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - The Waterfront Promenade hex cluster now dips into the water polygon, finally
+    showing the alpha=0.85 fill blending with the base map underneath -- the single
+    biggest gap from attempt 1 is fixed.
+  - '"Downtown" and "Transit Hub" are now labeled directly above the chart, turning
+    the color-contrast story into a named, legible narrative (fixes the DE-03 weakness
+    from attempt 1).'
+  - A faint schematic street grid was added in the gaps between hex clusters, giving
+    the base map a bit more geographic texture beyond the single coastline curve.
+  - Hand-built axial hex binning (pixelToAxial/cubeRound) and a custom SVGRenderer
+    hexagon symbol remain a clean substitute for the missing heatmap/hexbin module
+    in the core Highcharts bundle.
+  - 'Both renders remain fully theme-correct: text, grid, tooltip, legend, and the
+    new hotspot labels are all readable in light and dark, with identical data colors
+    between themes.'
+  - Deterministic LCG-based PRNG and a realistic, neutral ride-hailing scenario are
+    unchanged and still strong.
+  weaknesses:
+  - Sum/mean aggregation is still exposed only in the tooltip -- cell color always
+    encodes count, so these required aggregation methods remain invisible in the static
+    PNG preview.
+  - The new street grid is very subtle (alpha=0.45, drawn behind the hex cells at
+    zIndex 0) -- it registers on close inspection but doesn't read as an obvious "base
+    map" element at a glance.
+  - Only 2 of the 4 named hotspots (Downtown, Transit Hub) are labeled on the chart;
+    Waterfront Promenade and North Residential are visually distinguishable but unnamed.
+  - Axis lines are still present (not removed/minimized), leaving some room for further
+    visual refinement (DE-02).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "hexbin-map-geographic · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle in softer gray-brown, axis titles "km east of downtown" / "km north of downtown" in dark ink, tick labels and subtle gridlines in soft gray, plus new bold "Downtown" / "Transit Hub" hotspot labels above the main cluster -- all clearly legible against the light background.
+      Data: Hexagonal cells tiled across two groups (a large merged cluster on the left, a smaller "Waterfront Promenade" cluster on the right) colored on a green-to-blue sequential scale (Imprint imprint_seq: #009E73 low -> #4467A3 high) matching a hand-drawn gradient legend ("Pickups per cell", range 1-477). The Waterfront cluster now visibly overlaps the pale blue-gray "Meridian Bay (water)" polygon, demonstrating the alpha=0.85 hex transparency over the base map. Faint dashed street-grid lines are visible in the gaps between clusters.
+      Legibility verdict: PASS -- all text is clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title/subtitle/axis titles/hotspot labels now rendered in light cream/off-white ink, tick labels and gridlines in a softer light gray, fully legible against the dark background. No dark-on-dark text observed.
+      Data: The hex cells, water polygon, and water-overlap effect show the identical green-to-blue color scale and identical Imprint blue water fill as the light render -- only the chrome (background, text, grid) flipped, confirming data-color consistency across themes.
+      Legibility verdict: PASS -- all text is clearly readable, brand green remains visible, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via ANYPLOT_TOKENS; readable in both
+          themes with no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, subtitle, hotspot labels, axes, legend,
+          water label, or hex cells
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Hex cell size well matched to bin density; color intensity clearly
+          distinguishes low vs. high count
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential ramp is CVD-safe, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800; plot area fills the large majority of
+          the canvas with balanced margins; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with km units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'imprint_seq gradient for continuous count data; water fill uses
+          Imprint blue #4467A3 (semantic exception); both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom SVG hex symbol, hand-drawn gradient legend, hotspot labels,
+          and schematic street grid all add up to well above default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and soft axis chrome, generous whitespace; spines/axis
+          lines still not removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Downtown and Transit Hub are now labeled directly on the chart, turning
+          color contrast into a named story; Waterfront Promenade and North Residential
+          remain unlabeled
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hexagonal binning map
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Waterfront cluster now overlaps the water polygon, demonstrating
+          hex transparency over the base map; street grid added for extra geographic
+          context; sum/mean aggregation still tooltip-only
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lat/lon correctly converted to km offsets and plotted on correct
+          axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match the count-based data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows density variation across four hotspots, water/land distinction,
+          and sum/mean on hover
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible ride-hailing pickup scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fare values, hex radius, and city-scale bounding box are all realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessarily uses several small helper functions for hex-grid math
+          since the browser has no binning library; well organized
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hand-rolled hex binning, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into #container per the mount-node contract, animation disabled'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of series options, tooltip formatter, and chart callback;
+          colorAxis unavailable so worked around by hand
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: SVGRenderer custom symbol registration, hand-drawn SVG gradient legend,
+          and hand-tiled street grid are all distinctive Highcharts techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
