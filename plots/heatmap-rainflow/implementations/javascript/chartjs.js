@@ -1,7 +1,7 @@
 // anyplot.ai
 // heatmap-rainflow: Rainflow Counting Matrix for Fatigue Analysis
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-25
+// Quality: 88/100 | Created: 2026-08-25
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
