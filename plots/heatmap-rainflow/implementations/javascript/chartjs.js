@@ -95,6 +95,16 @@ const meanLabels = Array.from({ length: N_BINS }, (_, i) =>
 
 const maxCount = Math.max(...matrix.flat());
 const maxLog = Math.log10(maxCount + 1);
+let maxAmpIdx = 0;
+let maxMeanIdx = 0;
+for (let ampIdx = 0; ampIdx < N_BINS; ampIdx++) {
+  for (let meanIdx = 0; meanIdx < N_BINS; meanIdx++) {
+    if (matrix[ampIdx][meanIdx] === maxCount) {
+      maxAmpIdx = ampIdx;
+      maxMeanIdx = meanIdx;
+    }
+  }
+}
 
 // --- Color helpers (Imprint imprint_seq, single-polarity) ------------------
 function hexToRgb(hex) {
@@ -140,6 +150,8 @@ const heatmapPlugin = {
     const cellW = xScale.getPixelForValue(1) - xScale.getPixelForValue(0);
     const cellH = yScale.getPixelForValue(1) - yScale.getPixelForValue(0);
 
+    const cellRadius = Math.min(4, Math.abs(cellH) / 4, cellW / 4);
+
     ctx.save();
     for (const { x: col, y: row, count } of cellData) {
       const cx = xScale.getPixelForValue(col);
@@ -148,25 +160,47 @@ const heatmapPlugin = {
         count > 0
           ? rgbToCss(sequentialRgb(Math.log10(count + 1) / maxLog))
           : t.pageBg;
-      ctx.fillRect(
+      ctx.beginPath();
+      ctx.roundRect(
         cx - cellW / 2,
         cy - Math.abs(cellH) / 2,
         cellW,
         Math.abs(cellH),
+        cellRadius,
       );
+      ctx.fill();
     }
     ctx.strokeStyle = t.pageBg;
     ctx.lineWidth = 1;
     for (const { x: col, y: row } of cellData) {
       const cx = xScale.getPixelForValue(col);
       const cy = yScale.getPixelForValue(row);
-      ctx.strokeRect(
+      ctx.beginPath();
+      ctx.roundRect(
         cx - cellW / 2,
         cy - Math.abs(cellH) / 2,
         cellW,
         Math.abs(cellH),
+        cellRadius,
       );
+      ctx.stroke();
     }
+
+    // Highlight the peak cell — the single most-populated amplitude-mean
+    // combination, i.e. the dominant fatigue-damage contributor.
+    const peakCx = xScale.getPixelForValue(maxMeanIdx);
+    const peakCy = yScale.getPixelForValue(maxAmpIdx);
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(
+      peakCx - cellW / 2 + 1,
+      peakCy - Math.abs(cellH) / 2 + 1,
+      cellW - 2,
+      Math.abs(cellH) - 2,
+      cellRadius,
+    );
+    ctx.stroke();
 
     // --- Colorbar (log-scaled cycle count) ----------------------------------
     const barW = 34;
@@ -179,13 +213,18 @@ const heatmapPlugin = {
     for (let s = 0; s <= STOPS; s++) {
       gradient.addColorStop(s / STOPS, rgbToCss(sequentialRgb(1 - s / STOPS)));
     }
+    const barRadius = 6;
     ctx.fillStyle = gradient;
-    ctx.fillRect(barX, barTop, barW, barBottom - barTop);
+    ctx.beginPath();
+    ctx.roundRect(barX, barTop, barW, barBottom - barTop, barRadius);
+    ctx.fill();
     ctx.strokeStyle = t.inkSoft;
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(barX, barTop, barW, barBottom - barTop);
+    ctx.beginPath();
+    ctx.roundRect(barX, barTop, barW, barBottom - barTop, barRadius);
+    ctx.stroke();
 
-    ctx.font = "14px sans-serif";
+    ctx.font = "16px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
@@ -196,10 +235,10 @@ const heatmapPlugin = {
     }
 
     ctx.save();
-    ctx.translate(barX + barW + 54, (barTop + barBottom) / 2);
+    ctx.translate(barX + barW + 58, (barTop + barBottom) / 2);
     ctx.rotate(-Math.PI / 2);
     ctx.textAlign = "center";
-    ctx.font = "16px sans-serif";
+    ctx.font = "18px sans-serif";
     ctx.fillStyle = t.ink;
     ctx.fillText("Cycle Count (log scale)", 0, 0);
     ctx.restore();
@@ -249,7 +288,7 @@ new Chart(canvas, {
         position: "bottom",
         grid: { display: false, drawTicks: false },
         border: { display: false },
-        ticks: { color: t.inkSoft, font: { size: 13 }, autoSkip: true, maxTicksLimit: 10 },
+        ticks: { color: t.inkSoft, font: { size: 14 }, autoSkip: true, maxTicksLimit: 10 },
         title: {
           display: true,
           text: "Cycle Mean (MPa)",
@@ -262,9 +301,10 @@ new Chart(canvas, {
         labels: ampLabels,
         bounds: "ticks",
         offset: true,
+        reverse: true,
         grid: { display: false, drawTicks: false },
         border: { display: false },
-        ticks: { color: t.inkSoft, font: { size: 13 }, autoSkip: true, maxTicksLimit: 10 },
+        ticks: { color: t.inkSoft, font: { size: 14 }, autoSkip: true, maxTicksLimit: 10 },
         title: {
           display: true,
           text: "Cycle Amplitude (MPa)",
