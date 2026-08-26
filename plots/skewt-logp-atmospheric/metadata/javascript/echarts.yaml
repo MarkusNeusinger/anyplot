@@ -1,0 +1,244 @@
+library: echarts
+language: javascript
+specification_id: skewt-logp-atmospheric
+created: '2026-08-26T11:58:02Z'
+updated: '2026-08-26T12:03:52Z'
+generated_by: claude-sonnet
+workflow_run: 32964945431
+issue: 3802
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/echarts/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - True skew-T log-P diagram built on ECharts custom series (no native support),
+    with a clearly documented, correct pixel-space 45° skew transform
+  - 'Physically grounded reference lines: dry adiabats via Poisson''s equation, moist
+    adiabats via pseudo-adiabatic ODE integration, mixing-ratio isopleths via inverted
+    Clausius-Clapeyron'
+  - Realistic synthetic sounding with a boundary-layer inversion near 850 hPa and
+    stratospheric warming above the tropopause
+  - Correct meteorological wind-barb convention (50kt pennants / 10kt full barbs /
+    5kt half barbs), theme-adaptive ink color
+  - Strict canonical Imprint palette ordering with identical data colors between themes;
+    no dark-on-dark/light-on-light chrome failures; zero clipping at any edge
+  weaknesses:
+  - Several standalone helper functions (thermodynamics, skew transform, wind-barb
+    builder) push past a flat 'no functions' script structure, though justified by
+    the physics involved
+  - No inline value labels on the dry adiabat, moist adiabat, or mixing-ratio isopleth
+    families (only the legend and color/style distinguish them)
+  - Chrome text sized for the native 3200x1800 canvas will be small at a ~400px thumbnail
+    scale (shared with the library's documented default fontSize, not unique to this
+    implementation)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "skewt-logp-atmospheric · javascript · echarts · anyplot.ai" dark and crisp; legend (Temperature/Dewpoint/Dry adiabat/Moist adiabat/Mixing ratio) fully readable; pressure axis labels (100-1000 hPa) and "Pressure (hPa)" rotated label dark and legible; "Temperature (°C)" x-axis label legible.
+      Data: Green (#009E73) solid temperature trace, lavender dashed dewpoint trace, blue dashed dry adiabats, ochre dotted moist adiabats, red dotted mixing-ratio isopleths, gray 45-degree-skewed isotherms; meteorological wind barbs along the right edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend text, pressure/temperature axis labels, and the rotated "Pressure (hPa)" label all rendered in light ink, fully readable against the dark surface. No dark-on-dark failures. Wind barbs flip to white ink to remain visible.
+      Data: Confirmed identical data colors to the light render (green temperature, lavender dewpoint, blue/ochre/red reference-line families) — only chrome (background, grid, ink) flipped as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text explicitly sized and readable in both themes; small
+          at thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights and dash styles well tuned across five reference-line
+          families plus two data traces
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant line-style encoding backs every color-coded series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no clipping or overflow anywhere
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Genuine thermodynamic modeling drives the reference-line geometry
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chrome and generous whitespace; five overlapping reference
+          families are inherently dense for this chart type
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear T/Td focal point; realistic boundary-layer and tropopause structure
+          guides the reader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine skew-T log-P via log-inverted pressure axis and manual 45-degree
+          pixel-space skew
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dry adiabats, moist adiabats, mixing-ratio lines, and wind barbs
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature/dewpoint vs pressure correctly mapped across full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; legend labels match plotted series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Pressure, temperature, dewpoint, wind speed and direction all used
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic sounding with realistic inversion and
+          tropopause
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible ranges for all quantities
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, justified by the physics and custom-series
+          approach
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; complexity matches the problem
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Matches mount-node contract exactly
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series with renderItem/api.coord is exactly the library's
+          prescribed approach for unsupported chart types
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Pixel-space coordinate transforms and custom shapes for reference
+          lines and wind barbs
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - publication-ready
+  - alpha-blending
+  - grid-styling
