@@ -1,0 +1,271 @@
+library: d3
+language: javascript
+specification_id: alluvial-opinion-flow
+created: '2026-08-26T17:50:41Z'
+updated: '2026-08-26T18:06:44Z'
+generated_by: claude-sonnet
+workflow_run: 32995688132
+issue: 4430
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correctly builds a custom Sankey/alluvial layout from data joins and manual cubic-bezier
+    ribbon paths since d3-sankey isn't in the pinned bundle -- the idiomatic choice
+    given the library's constraints
+  - 'Data integrity is verified-correct: each wave''s row-stochastic transition matrix
+    conserves the 1000-respondent total exactly, and the ''Strongly Agree + Strongly
+    Disagree: 25% -> 40%'' callout matches the visible node totals (150+100=250/1000=25%;
+    195+209=404/1000~=40%)'
+  - 'Directly addresses attempt-1 review feedback: mid-wave (Q2/Q3) nodes now carry
+    compact ''SA/A/N/D/SD'' category-abbreviation tags, and ribbons are z-ordered
+    (changed-category drawn first, stable drawn on top) to cut down the crossing clutter
+    around the Neutral band'
+  - Theme-correct chrome in both light and dark renders; Imprint palette used in canonical
+    order with brand green (#009E73) on the first category, and identical data colors
+    across themes
+  - Correct mandated title format, clean bottom-centered legend explaining the stable/changed
+    opacity encoding, no edge clipping in either render
+  weaknesses:
+  - 'Design Excellence is solid but not exceptional: typography relies on plain size/weight
+    variation without a more distinctive hierarchy, and the layout is functionally
+    correct rather than showing an extra layer of intentional polish (e.g. visually
+    emphasizing the extreme-category growth beyond the callout text)'
+  - Library Mastery usage is correct and idiomatic but fairly generic for D3 -- the
+    manual Sankey/ribbon construction is the necessary approach given no d3-sankey,
+    but doesn't showcase a more distinctive D3-only capability beyond basic selection/scale/path
+    idioms
+  - The dense crossing of low-opacity 'changed category' ribbons around the Neutral
+    band is improved by the new z-ordering but is still somewhat busy; consider slightly
+    reducing ribbon curvature or widening the column gap to further cut crossing density
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "alluvial-opinion-flow · javascript · d3 · anyplot.ai" in bold dark ink, clearly readable. "Q1 2025"..."Q4 2025" wave headers in bold dark ink above each column. Category name labels ("Strongly Agree" ... "Strongly Disagree") in medium-gray ink to the left of the Q1 column and right of the Q4 column. New compact "SA/A/N/D/SD" abbreviation tags sit above each interior (Q2, Q3) node, in the same soft-ink tone, so mid-wave nodes are no longer identifiable by color/position alone. A callout box ("Polarization trend / Strongly Agree + Strongly Disagree: 25% -> 40% of respondents") sits top-right with a subtle border and off-white-elevated fill, text fully legible. Bottom-center legend ("Stable (same category)" / "Changed category") with gray swatches at two opacity levels.
+      Data: Five stacked node blocks per wave column colored via the Imprint palette in canonical order (green Strongly Agree, purple Agree, blue Neutral, ochre Disagree, red Strongly Disagree). Ribbons connect same-category flows at high opacity (0.55) and cross-category flows at low opacity (0.2); changed-category ribbons are now drawn first so the stable ribbons layer cleanly on top, reducing crossing clutter versus the prior attempt. Near-white respondent-count labels sit centered on each node block, contrasting cleanly against the saturated fills. First categorical series renders as #009E73 green as required.
+      Legibility verdict: PASS -- all title, header, callout, legend, interior tag, and node-count text is clearly readable against the light background; no light-on-light issues observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, wave headers, category labels, and the new interior abbreviation tags flip to light-colored text (off-white / light gray), fully readable against the dark background. The callout box uses a dark-elevated fill with a subtle border, its heading and body text rendered in light tones. The bottom legend swatches and labels are also light-toned and legible.
+      Data: The five node colors and ribbon colors are visually identical to the light render (same green/purple/blue/ochre/red hues at the same opacity levels for stable vs. changed flows) -- only the chrome (background, text, legend/callout box fill) flips, as required. Node respondent-count labels use near-black fill against the saturated node colors in this theme, which still reads with good contrast since the node fills are medium-bright, not dark.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all chrome text is clearly visible against the near-black background, and node/callout text remains legible over the saturated data colors.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (22px title, 16px headers, 14px labels,
+          13px node text, 11px new interior tags); readable in both themes; title
+          fits well within canvas width without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data elements; new interior SA/A/N/D/SD
+          tags sit cleanly above their nodes without colliding with headers or ribbons
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ribbon thickness proportional to flow count; the new draw-order fix
+          (changed-category ribbons first, stable on top) meaningfully reduces the
+          moire-like crossing clutter flagged in the previous review
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Stability distinction uses opacity (not hue alone) which is CVD-safe;
+          node label text has adequate contrast against saturated node fills in both
+          themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, well-balanced portion of the 3200x1800 canvas;
+          nothing cut off; legend sits close to the plot; canvas dimension gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Wave headers and category labels are descriptive; a Sankey/alluvial
+          diagram has no conventional numeric axis, so this format is appropriate
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; remaining categories follow Imprint canonical
+          order; backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful callout card and consistent color application go beyond
+          a plain default, but doesn't reach a more custom typography/hierarchy treatment
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean whitespace and no grid; the new z-ordering measurably reduces
+          the busy low-opacity crossing zone noted previously, though a light crossing
+          pattern remains around the Neutral band
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The polarization callout and stable/changed opacity encoding create
+          real narrative value, but the insight still requires reading the callout
+          text rather than being immediately visually obvious
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/Sankey-style opinion-flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Flow width proportional to count, consistent category colors, per-wave
+          respondent totals as node labels, stable-vs-changed opacity distinction,
+          polarization callout, chronological wave headers, and now interior category
+          tags -- all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Source/target correctly mapped left-to-right; all wave totals visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the exact mandated format; legend labels correctly
+          describe the opacity encoding
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows stability, category switching, and a converging/polarizing
+          trend (shrinking Neutral, growing extremes) across all waves
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral quarterly opinion-survey scenario; deliberately
+          avoids naming a specific controversial topic, though this makes it slightly
+          generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Row-stochastic transition matrices conserve the 1000-respondent total
+          exactly across every wave; the displayed 25%->40% polarization figure is
+          arithmetically correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-level script; only a small ribbonPath helper, a standard
+          D3 idiom for path generators
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic -- fixed data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the pinned d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom Sankey layout; no fake UI or
+          interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Sizes the svg from window.ANYPLOT_SIZE, mounts to #container, no
+          animations/transitions'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly builds a manual Sankey/ribbon layout with data joins, ordinal
+          scales, and path generation since d3-sankey isn't in the pinned bundle --
+          the right idiomatic choice given the library constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom cubic-bezier ribbon paths and manual node-stacking are D3-appropriate,
+          but rely on fairly standard selection/scale/path techniques rather than
+          a more distinctive D3-only capability
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
