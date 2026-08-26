@@ -20,13 +20,13 @@ const IMPRINT_PALETTE = [
 # --- Data -------------------------------------------------------------------
 # Quarterly SaaS revenue split by product line ($M, illustrative).
 quarters      = ["Q1", "Q2", "Q3", "Q4"]
-product_lines = ["Subscriptions", "Services", "Hardware"]
+product_lines = ["Subscriptions", "Services", "Hardware", "Support"]
 
 revenue = [
-    5.2 2.1 1.4
-    5.8 2.3 1.3
-    6.5 2.6 1.5
-    7.3 3.0 1.6
+    5.2 2.1 0.9 0.5
+    5.8 2.3 0.8 0.5
+    6.5 2.6 0.9 0.6
+    7.3 3.0 0.9 0.7
 ]
 
 n_quarter = length(quarters)
@@ -84,16 +84,20 @@ barplot!(
 
 ax.xticks = (1:n_quarter, quarters)
 
-# --- Total labels: bold and larger than any other text, directly above the
-# tallest segment of each stack -----------------------------------------
+# --- Total labels: genuinely bold and larger than any other text, directly
+# above the tallest segment of each stack. `rich()` mixes weight/size within
+# one label -- the dollar figure is bold and oversized, the trailing "M"
+# unit is smaller and softer, echoing typographic hierarchy from financial
+# dashboards.
 for (i, total) in enumerate(totals)
     text!(
         ax, Point2f(i, total);
-        text     = "\$$(round(total, digits = 1))M",
-        offset   = (0, 8),
-        align    = (:center, :bottom),
-        fontsize = 19,
-        color    = INK,
+        text   = rich(
+            rich("\$$(round(total, digits = 1))"; font = :bold, fontsize = 19, color = INK),
+            rich("M"; fontsize = 14, color = INK_SOFT),
+        ),
+        offset = (0, 8),
+        align  = (:center, :bottom),
     )
 end
 
