@@ -1,0 +1,277 @@
+library: muix
+language: javascript
+specification_id: radar-innovation-timeline
+created: '2026-08-26T10:01:12Z'
+updated: '2026-08-26T10:35:04Z'
+generated_by: claude-sonnet
+workflow_run: 32954249840
+issue: 4301
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Canvas utilization is fixed: the domain is now set 1:1 with CSS px and margins
+    are zeroed, so the diagram fills ~89% of canvas width instead of a narrow centered
+    band from the previous attempt.'
+  - 'The spec''s "smart label placement / angular jitter / radial offset" requirement
+    is now genuinely exercised: multi-occupant (ring, sector) cells fan across the
+    angular span and stagger radius, instead of the previous exact 1-item-per-cell
+    grid where the technique was implemented but never triggered.'
+  - Item count grew from 16 to 25 with uneven per-cell density, producing a more organic,
+    realistic-looking radar snapshot.
+  - Full Imprint palette compliance with identical data colors and theme-correct chrome
+    across both renders; no overlap or edge clipping found in any checked region.
+  - Correctly reaches for MUI X's ChartContainer + scale-hook composition pattern
+    — the right escape valve since no built-in MUI X chart type covers a ThoughtWorks-style
+    rings-and-sectors radar.
+  - Deterministic, realistic, neutral technology data with sensible ring (time-horizon)
+    assignments.
+  weaknesses:
+  - Title occupies only ~36% of canvas width — legible and well-proportioned on its
+    own, but smaller than the ~70–85% typically expected for the mandated long title
+    format. Consider a slightly larger title fontsize given how much canvas width
+    the diagram itself now uses.
+  - 'Design Excellence is solid but not yet publication-grade: no highlighted/emphasized
+    standout item or additional visual-hierarchy device beyond the ring/sector color
+    grouping (DE-03).'
+  - Library Mastery still relies on hand-drawn SVG marks; consider wiring MUI X-specific
+    interactive elements (e.g. ChartsTooltip) into the HTML output to demonstrate
+    library-distinctive value beyond generic SVG composition.
+  - Per-cell item clustering tops out at 2 occupants; a couple of 3-item cells would
+    more clearly showcase the angular-jitter/radial-offset technique the code implements.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "radar-innovation-timeline · javascript · muix · anyplot.ai" is bold dark text, clearly legible, centered near the top. Four sector headers (AI & ML, Cloud Infra, Security, Green Tech) sit along the outer edge of the semicircle in bold dark text. Four ring-name labels (Now (0-6 mo), Near-Term (6-18 mo), Mid-Term (18-36 mo), Future (3+ yr)) are integrated at each ring's own boundary along the top spine. A compact 4-swatch sector legend sits below the baseline. All text is dark-on-light and fully readable; verified no overlaps or clipped characters in the densest clusters (Security/Green-Tech "Now" ring cluster, AI&ML/Cloud-Infra bottom cluster) and at the canvas edges.
+      Data: 25 labeled points across 4 rings x 4 sectors (uneven density, 1-2 items per cell), each drawn as a colored circle with a light-bg-colored stroke outline and an outward radial text label. Colors: AI & ML = brand green, Cloud Infra = lavender/violet, Security = blue, Green Tech = ochre/brown. First series (AI & ML) is #009E73 as required. Ring boundaries are concentric arcs with subtle alternating fill bands; thin spokes divide the four sectors; the outer ring boundary and baseline diameter are bolder than inner ring lines. The diagram now fills roughly 89% of canvas width and 77% of canvas height (fixed from the previous attempt's narrow centered band).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, sector headers, ring labels, and legend, now rendered in light text against the dark background. All text is clearly legible with no dark-on-dark elements — title, sector headers, ring labels, item labels, and legend text are all light-colored and readable.
+      Data: The same 25 points in the same positions with the same four colors (green / lavender / blue / ochre) as the light render — data colors are identical across themes, confirming only chrome (background, text, grid/ring lines) flipped. Ring boundary lines and sector spokes remain visible as subtle light strokes on the dark background; alternating ring fills are faint but visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout (title 22, sector headers 18, ring/legend/item
+          labels 13-14); readable in both themes, no overlap/clipping. Title spans
+          only ~36% of canvas width, smaller than typically expected for the mandated
+          long title, but stays fully legible with clean breathing room.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All 25 item labels, 4 sector headers, 4 ring labels, and legend text
+          are distinct and non-overlapping in both renders, including the densest
+          clusters.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 9px marker radius well suited to the sparse 25-point dataset; clearly
+          visible against both backgrounds.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue/ochre are mutually distinguishable without relying
+          on hue alone; also separated by distinct angular sectors.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed from the previous attempt: 1:1 CSS-px domain with zero ChartContainer
+          margin fills ~89% of canvas width and ~77% of height instead of a narrow
+          centered band.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Ring row and sector headers act as descriptive axes with explicit
+          time-horizon units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First sector uses brand green #009E73; remaining sectors follow
+          canonical Imprint order; identical data colors across themes; theme-correct
+          chrome and backgrounds in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built polar diagram with intentional ring/sector hierarchy,
+          clearly above a configured library default; not yet fully publication-grade
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle alternating ring fills, thin grid spokes, bolder outer ring/baseline;
+          the wide side margins that previously undercut the polish are now gone.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The concentric-ring structure communicates the near-to-far timeline
+          directly and color grouping by sector creates clear hierarchy, but there
+          is no additional emphasis/annotation on any single standout item.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct concentric-ring / angular-sector radar-timeline chart, half-circle
+          layout per the spec's Notes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed from the previous attempt: multi-occupant cells now fan across
+          the sector''s angular span with staggered radius, actually exercising the
+          spec''s jitter/offset requirement instead of leaving it dormant in an exact
+          1-per-cell grid.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Radius correctly encodes ring/time-horizon, angle correctly encodes
+          sector; all 25 items visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated '{spec-id} · javascript · muix · anyplot.ai'
+          format exactly; legend labels match sector names.
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Improved from the previous attempt: item count grew from 16 to 25
+          with uneven per-cell density (most cells hold 1, several hold 2), replacing
+          a perfectly uniform 4x4 grid. Max cluster size is 2, so the spread is still
+          fairly modest.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral technology-strategy scenario with recognizable,
+          real technology names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ring (time-horizon) assignments are factually reasonable (e.g. LLM
+          Fine-Tuning near-term, Fusion Energy Pilots far-future).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data arrays plus one diagram component and one chart component;
+          no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer, useXScale/useYScale, Box, Typography are imported
+          and all are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom polar diagram; no fake UI or
+          simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exported component, skipAnimation set, sized from window.ANYPLOT_SIZE
+          per the muix contract.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly reaches for the documented ChartContainer + useXScale/useYScale
+          custom-marks pattern since no native MUI X chart type covers a rings-and-sectors
+          radar.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses MUI X's scale-hook composition system (a genuine library-specific
+          mechanism), but the marks are generic hand-drawn SVG that doesn't showcase
+          built-in MUI X interactivity (e.g. ChartsTooltip).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
