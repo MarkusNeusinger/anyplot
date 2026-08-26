@@ -76,7 +76,7 @@ function ErrorBars() {
   if (!xScale || !yScale) return null;
 
   const bw = yScale.bandwidth();
-  const cap = bw * 0.22;
+  const cap = bw * 0.34;
 
   return (
     <g>
@@ -85,7 +85,7 @@ function ErrorBars() {
         const xLo = xScale(MEANS[i] - STDS[i]);
         const xHi = xScale(MEANS[i] + STDS[i]);
         return (
-          <g key={feature} stroke={t.ink} strokeWidth={2.5} strokeOpacity={0.65} strokeLinecap="round">
+          <g key={feature} stroke={t.ink} strokeWidth={3} strokeOpacity={0.8} strokeLinecap="round">
             <line x1={xLo} y1={cy} x2={xHi} y2={cy} />
             <line x1={xLo} y1={cy - cap} x2={xLo} y2={cy + cap} />
             <line x1={xHi} y1={cy - cap} x2={xHi} y2={cy + cap} />
@@ -145,6 +145,7 @@ export default function Chart() {
               label: "Mean Decrease in Accuracy",
               labelStyle: { fontSize: 16, fill: t.ink },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
+              tickInterval: [0, 0.04, 0.08, 0.12, 0.16, 0.2],
             },
           ]}
           yAxis={[
@@ -162,6 +163,7 @@ export default function Chart() {
           sx={{
             "& .MuiChartsAxis-line": { stroke: t.inkSoft },
             "& .MuiChartsGrid-line": { stroke: t.grid },
+            "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1.5 },
           }}
         >
           <ChartsGrid vertical />
