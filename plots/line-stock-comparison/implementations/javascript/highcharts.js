@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-stock-comparison: Stock Price Comparison Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-26
+// Quality: 90/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 
