@@ -1,0 +1,250 @@
+library: highcharts
+language: javascript
+specification_id: histogram-basic
+created: '2026-08-26T06:23:24Z'
+updated: '2026-08-26T06:34:45Z'
+generated_by: claude-sonnet
+workflow_run: 32937488248
+issue: 654
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/highcharts/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Manual column-based binning is the correct idiomatic workaround given the core-bundle
+    constraint (no histogram-bellcurve module) — pointRange/pointPadding/groupPadding
+    produce a true zero-gap histogram.
+  - Mean reference line (plotLines with a formatted $-value label) adds real analytical
+    value, directly supporting the spec's 'central tendency, spread, outliers' goal.
+  - Bar borders use t.pageBg so bins stay visually separated on both themes without
+    adding a competing outline color.
+  - Tooltip pointFormatter reports the actual bin range ($lo-$hi) and count — a nice
+    interactive touch that adds value in the HTML detail view without cluttering the
+    static PNG.
+  - Right-skewed Gamma-sum synthetic data (400 obs) is realistic and clearly reveals
+    distribution shape, matching the spec's data guidance.
+  - 'Both renders are fully theme-correct: identical green data color, correct warm-cream/warm-black
+    backgrounds, all chrome text legible in both themes.'
+  weaknesses:
+  - Design excellence is solid but still fairly close to Highcharts defaults — no
+    additional visual hierarchy beyond the mean line (e.g. no secondary annotation
+    for skew/outlier region, no subtle fill/opacity treatment to emphasize the mode).
+  - Bin count (24) is a reasonable but arbitrary choice with no comment on the tradeoff
+    — a brief justification (or Sturges/Freedman-Diaconis-informed choice) would strengthen
+    library-mastery/data-storytelling signal.
+  - Mean-line label font (13px) is noticeably smaller than the surrounding chrome
+    (14-16px) — consider bumping to 14px for visual consistency.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-range), not pure white.
+      Chrome: Title "histogram-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly readable. X-axis title "Transaction Amount ($)" and Y-axis title "Frequency" in medium-gray ink, readable. Tick labels ($25, $50, ... $450 on X; 0-65 on Y) readable. Subtle horizontal gridlines only. Black dashed vertical mean line with "Mean: $122" label, readable against the light background.
+      Data: All 24 bars are the brand green #009E73 with thin off-white borders (matching page background) separating adjacent bins — no gaps, clean bin edges as required by the spec. Right-skewed distribution clearly visible: sharp rise to a peak around $75-$100, then a long thinning tail out to ~$450.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-range), not pure black.
+      Chrome: Title, axis titles, and tick labels all rendered in light ink (near-white/soft-gray), fully readable against the dark background. Mean line is white-dashed with "Mean: $122" label rendered in light gray, clearly legible — no dark-on-dark issue. Gridlines are subtle and visible.
+      Data: Bars are the identical brand green #009E73 as the light render — only chrome (background, text, gridlines, mean-line color) flipped, confirming theme-adaptive tokens were threaded through correctly. Same right-skewed shape as the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; mean-line
+          label at 13px is slightly smaller than surrounding 14-16px chrome.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 bins at this density render as clearly visible bars with clean
+          borders; no overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series green vs. warm background/foreground gives strong contrast;
+          no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; nothing clipped; proportions balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units ($ on X, Frequency on Y).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73; backgrounds match #FAF8F1/#1A1A17;
+          identical data color across themes.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: $-formatted axis labels, dashed mean-reference
+          line, background-matched bin borders — but no further hierarchy beyond that.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Minimal single-axis grid, no legend clutter, clean bar edges; still
+          fairly close to Highcharts column defaults otherwise.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Mean line gives the viewer a concrete anchor for central tendency
+          vs. the visible right skew; no further emphasis (e.g. tail/outlier callout).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram via column-as-bins workaround (required given no
+          histogram-bellcurve module).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero-gap bins with visible thin borders, y-axis starts at 0, readable
+          frequency/value-range labels, reasonable bin count.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = bin midpoint (transaction amount), Y = frequency count; full
+          data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend correctly omitted for
+          single series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shape, spread, and skew are all clearly visible; mean line adds central-tendency
+          signal. No secondary stat (e.g. median) shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Retail transaction amounts are plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (~$10-$460, mean ~$122) are sensible for retail transactions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only the minimal helper functions needed for deterministic data generation;
+          no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42) yields deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses the provided globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) contract, animation disabled
+          both places, credits disabled, no explicit width/height.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: plotLines, formatter callbacks, and pointFormatter are idiomatic,
+          well-chosen Highcharts APIs for this constrained (core-bundle-only) histogram
+          approach.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses plotLines annotation and custom tooltip formatting, but these
+          are common Highcharts features rather than deeply distinctive ones.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
