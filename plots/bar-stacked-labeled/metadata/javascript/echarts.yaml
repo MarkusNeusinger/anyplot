@@ -1,0 +1,244 @@
+library: echarts
+language: javascript
+specification_id: bar-stacked-labeled
+created: '2026-08-26T19:07:25Z'
+updated: '2026-08-26T19:24:45Z'
+generated_by: claude-sonnet
+workflow_run: 33003048308
+issue: 3504
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Fixed the x/y axis tick label fontSize imbalance flagged in attempt 1 — both axes
+    now use fontSize 14
+  - Added a distinct highlighted total label on the most recent quarter (2024 Q2,
+    $545K), directly addressing the attempt-1 feedback to sharpen the data-storytelling
+    focal point
+  - Correct Imprint palette order (brand green, lavender, blue, ochre) with identical
+    data colors across light and dark renders
+  - Dynamic y-axis max headroom calculation (max(totals) * 1.15, rounded to 50) leaves
+    clean space for total labels above the tallest bar
+  - 'Idiomatic ECharts technique: an invisible zero-value ''Total'' series stacked
+    atop the real series hosts the bold total labels, explicitly excluded from legend.data
+    so no fake legend entry appears'
+  - Full theme-adaptive chrome via window.ANYPLOT_TOKENS, legible in both renders
+    with no overlap or clipping
+  - Deterministic, realistic cloud-spend dataset with totals that correctly sum their
+    displayed segments
+  weaknesses:
+  - The highlighted last-quarter total label uses t.palette[0] (brand green) — the
+    same color as the 'Compute' series in the legend — which creates ambiguous color
+    semantics; a viewer could misread the green $545K label as tied to the Compute
+    segment rather than as a distinct 'latest quarter' emphasis. Use t.amber (or another
+    non-series accent token) for the highlight instead.
+  - Title still occupies only ~40% of the plot width in both renders, below the 50-70%
+    ideal band, even after shortening the descriptive prefix from 'Cloud Spend by
+    Service' to 'Cloud Spend' — the length-based shrink formula (22 * min(1, 67/title.length))
+    still triggers at 69 characters and only marginally raises the effective fontsize
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "Cloud Spend · bar-stacked-labeled · javascript · echarts · anyplot.ai" in dark ink, centered top. Legend below with 4 swatches (Compute/Storage/Networking/Database) in dark ink text. Y-axis title "Spend ($K)", axis tick labels in soft ink, all clearly legible.
+      Data: Six stacked bars (2023 Q1 through 2024 Q2), each built from 4 segments in canonical Imprint order: Compute (brand green #009E73), Storage (lavender), Networking (blue), Database (ochre). Bold black total labels ($380K...$508K) sit directly above each stack with clear headroom, except the final bar (2024 Q2, $545K) whose total label is rendered larger and in the same brand-green as the Compute segment to emphasize the latest quarter.
+      Legibility verdict: PASS (all text readable against the light background; no light-on-light issues)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same title, legend, and axis labels rendered in light ink / soft-light-gray tones, all fully legible against the dark surface.
+      Data: Identical data colors to the light render (same green/lavender/blue/ochre stacking) — only chrome flipped. Bold white total labels read clearly against the near-black surface; the final bar's highlighted total label remains the same brand-green as in the light render.
+      Legibility verdict: PASS (no dark-on-dark failures; all text and data elements clearly distinguishable from the background)
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; x/y tick label fontSize now balanced
+          at 14/14
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, legend, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths and total labels clearly visible against both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Title still occupies only ~40% of plot width, below the 50-70% ideal
+          band
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Spend ($K)' with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, canonical Imprint order, correct theme
+          backgrounds'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Dynamic headroom calc and invisible-series total-label technique
+          are polished, but the highlighted label reuses the Compute series color,
+          creating semantic ambiguity
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle y-only grid, generous whitespace, now-balanced
+          tick fonts
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New highlighted latest-quarter total label creates a clear focal
+          point, directly addressing prior feedback
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Total labels above stacks with consistent $XK formatting
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x-axis, stacked components sum correctly to totals
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches convention with descriptive prefix; legend labels match
+          series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows categories, stacked components, legend, and totals
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral cloud-spend-by-service dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible $K values with realistic quarter-over-quarter growth
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-level script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the echarts global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set; correct mount-node contract
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic ECharts stacked bar + tokens usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Invisible helper-series total-label pattern with per-datapoint label
+          override is genuinely ECharts-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
