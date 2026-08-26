@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-projections
 created: '2026-08-26T08:15:08Z'
-updated: '2026-08-26T08:19:51Z'
+updated: '2026-08-26T08:32:45Z'
 generated_by: claude-sonnet
 workflow_run: 32945827658
 issue: 3771
@@ -12,129 +12,133 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-dark.html
-quality_score: 86
+quality_score: 77
 review:
   strengths:
-  - Sophisticated custom projection math (Mercator, Mollweide via Newton iteration,
-    Orthographic) implemented correctly from spherical trigonometry, matching real-world
-    distortion behavior
-  - 'Effective data storytelling: identical Tissot indicatrices become visibly distorted
-    differently in each panel (inflating near Mercator poles, elongating near Mollweide
-    edges, compressing into ellipses toward the Orthographic limb), directly demonstrating
-    each projection''s distortion character'
-  - Creative, well-documented use of MUI X's useXScale/useYScale hooks plus ChartContainer
-    as a coordinate-transform host for custom SVG geo paths, working around the community
-    package's lack of a native geo/basemap primitive
-  - 'Consistent theme handling: Imprint tokens used throughout, identical Tissot green
-    (#009E73) and neutral land fill across both themes, only chrome flips'
-  - Deterministic, fully in-memory data (hand-traced continent point lists, no fetch/network)
-    satisfying reproducibility requirements
+  - Three projections (Mercator, Mollweide, Orthographic) rendered side-by-side with
+    per-panel titles and one-line distortion descriptions, directly matching the spec's
+    suggested comparative layout.
+  - 'Tissot indicatrices at a 5x6 lat/lon grid convincingly demonstrate each projection''s
+    area/shape distortion: uniform near the Mercator equator but ballooning toward
+    the poles, stretched into ellipses at the Mollweide''s outer edge, and varying
+    with angular distance from the orthographic''s center.'
+  - 'Genuine spherical math: latitude-clipped Mercator, an iteratively-solved Mollweide
+    theta, a great-circle destination formula for the Tissot circles, and orthographic
+    far-side culling -- not faked.'
+  - Data colors are pixel-identical between light/dark renders; only chrome flips,
+    matching the Imprint theme contract.
+  - 'Fully deterministic and self-contained: hand-coded continent coordinates, no
+    RNG, no network/geo-library dependency.'
   weaknesses:
-  - 'Vertical whitespace: each panel''s map fills only roughly 40-50% of its allocated
-    vertical box, leaving large blank bands above and below the map within each panel
-    — a side effect of fitting a ~2:1-aspect world map into a much taller-than-wide
-    per-panel box while preserving equal-aspect scaling. Consider shrinking mapAreaH
-    (e.g. reduce PANEL_HEADER_H or the outer vertical allotment) so the panel box
-    aspect ratio sits closer to the projected map''s own aspect ratio, letting the
-    maps fill more of their panels.'
-  - Land masses are drawn as ~8 hand-traced continent silhouettes rather than the
-    individual country boundaries / country-level choropleth data called out in the
-    spec ('World country boundaries... ~200 countries', 'value (numeric, optional)
-    for choropleth coloring', 'clean coastlines and country borders'). This is a reasonable,
-    disclosed simplification given MUI X's lack of a geo primitive, but no per-country
-    distinction or choropleth use case is demonstrated.
-  - Smallest text (panel subtitle ~12.5px, caption ~13px in CSS space) is on the small
-    side for mobile/thumbnail (~400px) legibility — consider nudging these up 1-2px.
+  - 'Large dead space: the map row + headers occupy roughly the top half of the canvas,
+    leaving a big blank gap (~40%+ of total height) between the maps and the footer
+    caption. mapAreaH is capped by a 1.3 aspect ratio that is well below the available
+    panelsRowH, so the freed height just collects as an oversized empty band instead
+    of being used. Fix by growing the panels to consume more of the available vertical
+    space (e.g. relax the aspect cap, enlarge panelW/mapAreaH together, or reduce
+    OUTER_PAD/GAP) or by vertically centering the map row + caption as a group instead
+    of anchoring the row to the top.'
+  - Only continent-level outlines are shown -- no individual country borders -- even
+    though the spec's Data section explicitly lists 'country' as a field and the Notes
+    call for 'clean coastlines and country borders'. Reasonable given MUI X has no
+    geo primitives, but it under-delivers on that explicit ask.
+  - 'Low library mastery: ChartContainer/useXScale/useYScale are used purely as a
+    linear-scale utility to place custom SVG paths; none of @mui/x-charts''s built-in
+    series types, legends, or tooltips are exercised, so the community surface''s
+    richer capabilities go unused.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1, not pure white and not dark.
-      Chrome: Centered title "map-projections · javascript · muix · anyplot.ai" in dark ink at the top; three panel headers ("Mercator", "Mollweide", "Orthographic") in bold dark text with a muted-gray subtitle line under each explaining the projection's distortion trade-off; a muted-gray caption at the bottom explaining the Tissot indicatrices. All text is clearly readable against the light background — no light-on-light issues.
-      Data: Continents rendered as neutral muted-gray silhouettes with a subtle border in the same muted tone; a light graticule grid at 30-degree spacing; green (#009E73) semi-transparent Tissot indicatrix circles/ellipses overlaid at fixed lat/lon anchors — clearly the brand-green first-series color, consistent across all three panels.
+      Background: Warm off-white (~#FAF8F1) across the full canvas.
+      Chrome: Title "map-projections · javascript · muix · anyplot.ai" centered at top in dark ink; each of the three panels has a bold dark headline (Mercator/Mollweide/Orthographic) and a lighter gray subtitle line; footer caption in muted gray at the very bottom. All text is dark-on-light and clearly readable.
+      Data: Continents rendered as muted gray filled polygons with darker gray outlines; graticule lines are light gray and subtle; Tissot indicatrices are Imprint green (#009E73) semi-transparent circles/ellipses -- the first (and only) data series, correctly matching the mandated brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17, not pure black and not light.
-      Chrome: Same title, panel headers, subtitles and caption, now rendered in light ink/inkSoft tones against the dark background — all clearly legible, no dark-on-dark failures observed.
-      Data: Continent silhouettes, graticule, and Tissot circles use the identical colors and opacities as the light render (same muted gray land fill, same #009E73 green circles) — only the page/chrome flipped, confirming the palette-identity requirement.
+      Background: Warm near-black (~#1A1A17) across the full canvas.
+      Chrome: Same title/headline/subtitle/caption text, now light-on-dark (light gray/white ink) -- fully legible, no dark-on-dark failures anywhere.
+      Data: Continents still muted gray fills (lighter shade suited to the dark surface) with gray outlines; graticule lines are dim gray and subtle; Tissot circles remain the identical Imprint green (#009E73) as in the light render -- only chrome flipped, data color unchanged as required.
       Legibility verdict: PASS
+
+    Shared observation (both renders): the three map panels plus their headers occupy only the top ~55% of the canvas height; a large blank band separates them from the footer caption near the bottom edge. This is a layout issue, not a legibility one, and is scored under VQ-05/DE-02 below.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; smallest subtitle/caption text
-          (~12.5-13px CSS) is marginal at 400px thumbnail scale
+        comment: Title, panel headers/subtitles, and caption are all clearly legible
+          in both themes; no dark-on-dark or light-on-light failures.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, maps, or Tissot circles
+        comment: No text/element collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Land fill, graticule, and Tissot circles all clearly visible and
-          appropriately sized
+        comment: Continents, graticule, and Tissot circles are all visible; a few
+          Tissot ellipses cluster tightly near map centers but remain distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, single-hue signal, no red-green reliance
+        comment: Green Tissot fills/strokes read clearly against both cream and near-black
+          chrome; no color-only encoding risk.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 1
         max: 4
         passed: false
-        comment: Each map fills only ~40-50% of its panel's vertical box, leaving
-          large blank bands above/below within each panel
+        comment: Roughly 40%+ of the canvas height between the map row and the footer
+          caption is empty dead space -- mapAreaH is capped by a 1.3 aspect ratio
+          well below the available panelsRowH.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive panel titles + subtitles explain each projection's characteristic
-          distortion
+        comment: Per-panel titles + subtitles serve as descriptive labels; main title
+          matches the required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 identical across themes; correct light/dark
-          backgrounds'
+        comment: 'First/only data series uses Imprint green #009E73; page backgrounds
+          are theme-correct #FAF8F1/#1A1A17 in both renders.'
     design_excellence:
-      score: 15
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        passed: true
-        comment: Custom Imprint styling, intentional hierarchy (title/header/subtitle/caption);
-          layout proportion issue drags this slightly
+        passed: false
+        comment: Conceptually sophisticated (three projections + Tissot indicatrices)
+          but undercut by the layout imbalance.
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid/chrome are subtle and clean, but the large unbalanced blank
+          area below the maps reads as a layout defect rather than intentional whitespace.
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, no visible chart spines, but panel whitespace is imbalanced
-          rather than intentionally generous
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
-        max: 6
-        passed: true
-        comment: 'Strong focal point: identical reference circles visibly distort
-          differently per projection, directly illustrating the spec''s core educational
-          point'
+        comment: 'Clear narrative arc: title, then per-projection subtitle framing
+          the distortion type, Tissot circles as visual proof, caption tying it together.'
     spec_compliance:
       score: 14
       max: 15
@@ -144,28 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-projection world map comparison
+        comment: 'Correct plot type: comparative map-projection chart.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: true
-        comment: Multiple projections, 30-degree graticule, and Tissot indicatrices
-          present; land shown as continent silhouettes rather than country borders
+        passed: false
+        comment: Graticule and optional Tissot indicatrices both present; missing
+          country-level borders (only continent outlines) despite the spec calling
+          for them.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon/lat correctly projected per panel; equal-aspect scaling preserves
-          shape fidelity
+        comment: Lon/lat correctly projected to pixel space per-projection via ChartContainer's
+          own linear scale.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; caption explains the Tissot-circle
-          legend
+        comment: Title matches the required format exactly; no separate legend needed
+          given the single explained data series.
     data_quality:
       score: 13
       max: 15
@@ -174,22 +179,23 @@ review:
         name: Feature Coverage
         score: 4
         max: 6
-        passed: true
-        comment: Covers projection distortion well but only at continent granularity,
-          no country-level/choropleth demonstration
+        passed: false
+        comment: Covers multiple projections plus graticule and Tissot distortion
+          circles, but omits country-level subdivision entirely.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral continent shapes; no politically sensitive borders
-          drawn
+        comment: Real, neutral, non-controversial world geography and standard cartographic
+          parameters.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible graticule interval and Tissot radius (~670 km)
+        comment: Angular radius, clip latitudes, and graticule spacing all use realistic,
+          well-known cartographic conventions.
     code_quality:
       score: 9
       max: 10
@@ -199,59 +205,66 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Multiple helper functions/components, but justified by the inherent
-          complexity of custom spherical projection math
+        comment: Helper functions are all necessary for the spherical projection math
+          and multi-panel structure; no gratuitous abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data
+        comment: Fully deterministic -- hardcoded continent coordinates, no RNG, no
+          network calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer + hooks imported, all used
+        comment: Only ChartContainer plus the two scale hooks are imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the task, no fake functionality
+        comment: No fake interactivity; complexity is proportional to the geographic
+          math required.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Sized to window.ANYPLOT_SIZE, skipAnimation set on every ChartContainer
+        comment: Default-exports the component with skipAnimation; harness owns the
+          actual save.
     library_mastery:
-      score: 9
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Creative, documented use of useXScale/useYScale as a coordinate-transform
-          host, consistent with prior connection-lines/hexbin precedent
+        passed: false
+        comment: Uses ChartContainer + useXScale/useYScale idiomatically as a coordinate-transform
+          utility, but none of MUI X's built-in series/legend/tooltip components are
+          exercised.
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Custom multi-projection geo math with Tissot indicatrices is a distinctive,
-          non-generic implementation
-  verdict: APPROVED
+        passed: false
+        comment: The scale-hook-driven custom SVG overlay is a legitimate distinctive
+          technique already used by prior map specs, but nothing further pushes MUI
+          X's community surface.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
-  - map-projection
+  - faceting
+  - geographic-projection
+  - custom-svg-overlay
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
