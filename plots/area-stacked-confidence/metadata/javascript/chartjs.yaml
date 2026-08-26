@@ -1,0 +1,257 @@
+library: chartjs
+language: javascript
+specification_id: area-stacked-confidence
+created: '2026-08-26T17:50:01Z'
+updated: '2026-08-26T18:09:55Z'
+generated_by: claude-sonnet
+workflow_run: 32995807731
+issue: 3549
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Fixed the attempt-1 band-bleed issue: each series now renders as a solid slice
+    up to its own lower bound, topped by a translucent band from lower to upper, chained
+    off the previous series'' band top — confirmed via pixel sampling that the central
+    line sits exactly at the visual midpoint of its own band and the boundary to the
+    next series is sharp with no color bleed.'
+  - Added a vertical gradient (alpha 0.15→0.4) to each confidence band per the spec's
+    suggestion, giving the bands a tapering, more polished look versus the flat-alpha
+    fill from attempt 1.
+  - Added a dedicated "90% prediction interval" legend entry, so the legend now identifies
+    both each series and what the shaded bands represent, per spec.
+  - 'Correct Imprint palette in canonical order (#009E73 Hardware, #C475FD Software,
+    #4467A3 Services), identical data colors across both themes with fully theme-correct
+    chrome (title, subtitle, axis labels, ticks, grid) in both renders.'
+  - Deterministic LCG-seeded (seed 42) pseudo-random data generation — fully reproducible
+    without a native browser RNG.
+  - Widening bands toward the forecast horizon (2024→2028) plus the explanatory subtitle
+    communicate growing forecast uncertainty, a clear data-storytelling touch.
+  - 'Clean, KISS-structured code: explicit font sizing throughout, no unused imports,
+    sensible small helper functions (lcg, hexToRgba, bandGradient) justified by the
+    browser''s lack of a seeded RNG / gradient API.'
+  weaknesses:
+  - 'Tooltips are fully disabled (tooltip: { enabled: false }), which also disables
+    hover detail in the interactive plot-{theme}.html view — for a 3-series stacked
+    chart with confidence bands, a custom tooltip surfacing the central/lower/upper
+    values per hovered quarter would add real interactive value instead of losing
+    it entirely.'
+  - 'Central lines use pointRadius: 0 across all 20 quarters; per the sparse-data
+    heuristic (< 50 points → prominent markers), small markers on the central line
+    would improve readability at a glance and at thumbnail scale without cluttering
+    the dense stacked-area composition.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 (sampled ~(250,248,241)) - not pure white, not dark.
+      Chrome: Title "area-stacked-confidence · javascript · chartjs · anyplot.ai" in dark ink, subtitle "Shaded bands show the 90% prediction interval for each product line" in muted gray, both fully legible. Y-axis title "Cumulative Revenue ($M)" and X-axis title "Fiscal Quarter" are dark and readable, tick labels legible mid-gray, Y-axis grid subtle, X-axis grid off. Legend top-right shows correctly colored swatches for Hardware / Software / Services plus a dedicated gray "90% prediction interval" swatch, clear of the plotted area.
+      Data: Three stacked areas bottom-to-top: green (Hardware, #009E73), purple (Software, #C475FD), slate-blue (Services, #4467A3) — first series is the brand green as required. Each series shows a solid "confident" slice topped by a translucent vertical-gradient band (alpha 0.15→0.4) spanning its lower→upper 90% prediction bound; pixel-sampled at x=2000 confirms the central line sits exactly at the midpoint of its own band (y=718 vs band span 694-742) and the transition into the next series' solid region is a sharp, non-bleeding boundary. Bands visibly widen further into the forecast horizon.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Title, subtitle, axis titles, and tick labels all render in light/off-white ink — no dark-on-dark failures anywhere. Grid lines remain subtle but visible. Legend position, swatch colors, and the "90% prediction interval" entry match the light render exactly.
+      Data: Same green/purple/slate-blue data colors as the light render (only chrome flipped), same gradient bands and clean series boundaries, same widening-uncertainty pattern toward the forecast horizon.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text (title, subtitle, axis titles, ticks, legend) explicitly
+          sized and fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, or data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bands and lines clearly distinguishable; central lines use pointRadius
+          0 on 20 sparse points, missing the prominent-marker heuristic
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint hues, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas gate passed, no overflow/cutoff, good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ($M), Fiscal Quarter
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, brand green first, theme-correct backgrounds
+          both renders
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Gradient bands, subtitle, and legend note add real polish beyond
+          a default chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Band-bleed from attempt 1 fixed, clean series boundaries, subtle
+          Y-only grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Widening bands toward the forecast horizon plus subtitle create a
+          clear uncertainty narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked area chart with confidence bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct series/band colors, gradient fill, consistent stack order,
+          legend now identifies both series and band meaning
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = fiscal quarter, Y = cumulative revenue, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match series
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Stacking, symmetric confidence bands, gradient, legend note — all
+          plot-type aspects present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral quarterly revenue-by-product-line forecast
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values ($36M-$165M range) sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small helper functions justified by browser constraints
+          (no seeded RNG, need canvas gradient)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed/used beyond globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the manual stacked-band technique, no
+          fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Canvas mounted to #container per harness contract, animation:false
+          set, current Chart.js API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart.js's fill-between-datasets pattern, the idiomatic way
+          to build banded stacked areas without a native plugin
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Scriptable canvas-gradient backgroundColor and legend filter callback
+          are Chart.js-distinctive; fully disabling tooltips forgoes some interactive
+          value
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - gradient-fill
+  - alpha-blending

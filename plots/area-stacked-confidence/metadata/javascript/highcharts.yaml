@@ -1,0 +1,272 @@
+library: highcharts
+language: javascript
+specification_id: area-stacked-confidence
+created: '2026-08-26T18:02:14Z'
+updated: '2026-08-26T18:07:33Z'
+generated_by: claude-sonnet
+workflow_run: 32996428254
+issue: 3549
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Clever core-only workaround: since arearange lives in the forbidden highcharts-more
+    module, the implementation builds confidence bands from plain ''area'' series
+    with an invisible transparent base plus a colored width layer on an independent
+    per-series stack, correctly aligned to the cumulative stack position of its central
+    series.'
+  - Band opacity (0.28) and matching per-series hue via Highcharts.color(...).setOpacity()
+    satisfy the spec's 'matching lighter shades' and 'alpha 0.2-0.4' guidance precisely,
+    and the halfWidth is reused for both bounds so bands are symmetric as the spec
+    recommends.
+  - 'Data tells a real story: prediction-interval half-width grows with forecast horizon
+    (0.35 * i term), so the bands visibly widen further into the forecast — communicating
+    growing uncertainty, not just decoration.'
+  - 'Legend is fully honest about the band via a zero-data ''legendProxy'' series
+    showing ''90% prediction interval'', while the two real band/base helper series
+    are hidden from the legend (showInLegend: false) — no legend clutter.'
+  - 'Theme-adaptive chrome is complete and correct in both renders: warm off-white/near-black
+    backgrounds, ink/inkSoft text tokens throughout, first series is exactly the brand
+    green #009E73, and palette positions 2-3 (lavender, blue) are used in canonical
+    order.'
+  - Explicit CSS-px font sizing throughout (title 22px, subtitle/ticks 14px, axis
+    title 16px) with animation disabled on both chart and series per the harness contract.
+  weaknesses:
+  - At the boundary between adjacent stacked series, a band's translucent fill sits
+    partly over its own series and partly over the neighboring series (e.g. the Professional
+    Services band spans across the Professional Services / Hardware boundary), producing
+    a blended hue at that seam. It reads correctly once the viewer understands the
+    'band straddles the cumulative boundary' logic, but on first glance it can look
+    like a fourth color rather than an uncertainty band — a one-line callout or a
+    slightly lower band opacity near seams would sharpen this.
+  - Design relies entirely on the default Imprint categorical palette and default
+    subtitle/legend layout; there is no additional bespoke touch (custom annotation,
+    callout, or emphasis on the widening-uncertainty story) that would push this from
+    'strong, thoughtful default execution' into truly distinctive, publication-grade
+    territory.
+  - The stacked-band-via-hidden-base trick is a generic technique portable to any
+    library that supports stacked areas (D3, ECharts, matplotlib fill_between) rather
+    than something uniquely enabled by a Highcharts-specific API — Highcharts.color().setOpacity()
+    is a nice touch but is a minor helper, not a distinctive feature.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "area-stacked-confidence · javascript · highcharts · anyplot.ai" and gray subtitle "Quarterly revenue forecast by product line, shaded bands show the 90% prediction interval" both fully legible; y-axis title "Revenue ($M)" rotated on the left; x-axis shows monthly ticks Jan 2025 - Nov 2026; legend at bottom lists "Cloud Services", "Hardware", "Professional Services", "90% prediction interval" with matching color swatches; thin horizontal gridlines only, subtle gray.
+      Data: Three stacked areas from bottom to top: Professional Services (blue, #4467A3-family), Hardware (lavender/purple, #C475FD-family), Cloud Services (green, #009E73 — confirmed brand green, on top). Each series has a lighter, translucent confidence band straddling its own cumulative stack boundary, visibly widening toward the right (later forecast months), showing growing uncertainty over the horizon. Total stacked revenue rises from ~40M to ~105M across the 24-month span.
+      Legibility verdict: PASS — all title, subtitle, axis, tick, and legend text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title and axis/tick/legend text render in light gray/off-white tones, all clearly legible; subtitle in a slightly dimmer light gray, still readable; gridlines are faint light-gray horizontal lines, subtle but visible.
+      Data: Same three-series stacking and coloring as the light render — Cloud Services green, Hardware lavender, Professional Services blue — data hues are pixel-identical to the light render; only the chrome (background, text, grid) flips. Brand green #009E73 remains vivid and clearly visible against the dark surface. Confidence bands are visible as lighter/desaturated overlays, same widening pattern as light render.
+      Legibility verdict: PASS — no dark-on-dark text found; all title/axis/tick/legend elements are clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set in CSS px (title 22px, subtitle/ticks
+          14px, axis title 16px); fully readable in both themes with well-balanced
+          proportions.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or legend collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Areas and bands clearly visible; slight visual softness where a band
+          overlays two adjacent series at a stack boundary.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Base palette is CVD-safe, but the blended hue at band/series seams
+          could momentarily read as a fourth color for some viewers.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the canvas well, balanced margins, legend sits directly
+          under the plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has units ('Revenue ($M)'); x-axis is a self-explanatory date
+          axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is exactly #009E73, remaining series follow canonical
+          Imprint order, chrome is theme-correct in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful banding technique and subtitle context clearly above a
+          configured default, but relies on the stock Imprint palette without further
+          bespoke polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, no boxed spines, generous whitespace; minor
+          visual noise at band/series seams keeps this shy of perfect.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Widening bands toward later months clearly communicate growing forecast
+          uncertainty without needing annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked area chart with confidence bands.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct series colors with matching lighter band shades, alpha 0.28
+          within the 0.2-0.4 spec range, symmetric bands, consistent stack order,
+          legend explains the band.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time, Y = stacked revenue, full data range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match series
+          and band.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows composition, differing growth rates per product line, and widening
+          uncertainty over the forecast horizon.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic quarterly revenue forecast by product line, directly
+          matching the spec's example scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and growth trajectories are plausible for a scaling business.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom script, no classes; small helper functions only
+          where needed.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG makes data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided Highcharts global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for the stacking trick required; well commented,
+          no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no explicit width/height, animation
+          disabled everywhere.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic stacked-area configuration, shared tooltip, Highcharts.color()
+          manipulation, and a hidden legend-proxy series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Highcharts.color().setOpacity() and its stacking model well,
+          but the underlying band-via-hidden-base technique is portable to other stacking-capable
+          libraries, not uniquely Highcharts.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - stacked-area
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending

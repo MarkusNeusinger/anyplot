@@ -1,0 +1,269 @@
+library: echarts
+language: javascript
+specification_id: area-stacked-confidence
+created: '2026-08-26T17:57:11Z'
+updated: '2026-08-26T18:13:49Z'
+generated_by: claude-sonnet
+workflow_run: 32996213748
+issue: 3549
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Pixel-verified fix of the Attempt-1 z-ordering bug: sampling a vertical column
+    near the right edge of plot-light.png at x=3040 shows all three confidence bands
+    now render as distinct alpha blends over the next opaque layer down — Gas''s band
+    (199,208,219) over the page background, Wind''s band (104,107,187) over Gas''s
+    opaque fill (68,103,163), and Solar''s band (141,128,214) over Wind''s opaque
+    fill (196,117,253) — each matching the expected 0.28-alpha blend math exactly.'
+  - 'Pixel-verified fix of the Attempt-1 opacity-drift bug: opaque fills now sample
+    as exactly (0,158,115)=#009E73, (196,117,253)≈#C475FD, and (68,103,163)≈#4467A3
+    in both plot-light.png and plot-dark.png — byte-identical between themes, confirming
+    the areaStyle opacity:1 change removed the theme-dependent color blend.'
+  - The invisible-line + translucent-area-on-a-private-stack trick, combined with
+    correct z-ordering (bands z:2 above opaque areas z:1), is the canonical idiomatic
+    ECharts pattern for range/band charts and is well executed here.
+  - 'Realistic, neutral dataset: quarterly energy-mix TWh values with a plausible
+    historical-to-forecast transition where uncertainty widens only after the forecast
+    horizon begins (idx >= FORECAST_START).'
+  - Fully deterministic, in-memory data generation (closed-form formulas, no RNG).
+  - Title follows the mandated format with a self-scaling font-size formula (titleFontSize)
+    that keeps the long descriptive-prefixed title within canvas bounds in both renders.
+  - Subtitle explicitly states what the bands represent ("Shaded bands show measurement
+    uncertainty; the range widens across the forecast horizon"), satisfying the spec's
+    legend/labeling requirement even though it's not literally inside the legend widget.
+  weaknesses:
+  - Legend only lists the three series names (Solar/Wind/Natural Gas) and never visually
+    distinguishes the band swatch from the line swatch — the band explanation lives
+    entirely in the subtitle text rather than the legend itself, which is a slightly
+    weaker satisfaction of the spec's 'legend identifying each series and what the
+    bands represent'.
+  - There is a noticeably large empty gap between the subtitle and the legend, and
+    again between the legend and the top of the plot area (grid.top:190 vs legend.top:118)
+    — tightening this vertical rhythm would improve layout balance without sacrificing
+    whitespace.
+  - 'Design Excellence is still fairly close to solid-fill defaults: spec suggested
+    ''Consider using gradient fills from lower to upper bound for visual clarity'',
+    which was not explored; flat translucent bands work but a gradient could sharpen
+    the uncertainty-widening story further.'
+  - The `absoluteBand` helper computes lower/width per series — fine as written, but
+    note the width channel doubles as the private-stack payload, which is a slightly
+    indirect way to express 'draw a band from lower to upper' and could use a one-line
+    comment beyond what's already there for a first-time ECharts reader unfamiliar
+    with the private-stack trick.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: pixel-sampled at (10,10) = (250,248,241), exactly #FAF8F1 — warm off-white, not pure white.
+      Chrome: Title "Energy Mix by Source · area-stacked-confidence · javascript · echarts · anyplot.ai" is centered, dark ink, fully legible; softer-grey subtitle below it explains the bands; centered legend (Solar / Wind / Natural Gas) in dark ink. Y-axis title "Energy Consumption (TWh)" and all tick labels are clearly readable against the light background. Grid is a subtle horizontal-only line.
+      Data: Three stacked areas bottom-to-top — Solar exact #009E73 (0,158,115), Wind exact #C475FD-equivalent (196,117,253), Natural Gas exact #4467A3-equivalent (68,103,163). Column-sampling near the right edge (x=3040) confirms all three confidence bands are now visible as correctly alpha-blended lighter overlays above their respective opaque fills, widening toward the forecast horizon as intended.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: pixel-sampled at (10,10) = (26,26,23), exactly #1A1A17 — warm near-black, not pure black.
+      Chrome: All chrome (title, subtitle, legend, axis labels, tick labels) renders in light ink and is clearly readable — no dark-on-dark failures. Grid remains subtle.
+      Data: Opaque fills sample as (0,158,115), (196,117,252), (68,103,162) at matching data points — byte-identical to the light render (previously these drifted between themes due to opacity:0.82; now opacity:1 makes them theme-invariant). Bands are present at the same relative positions, blending into the dark background where they sit directly on it (expected alpha-blend behavior, not a defect) and into the opaque layers underneath elsewhere.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at appropriate size; self-scaling
+          title formula keeps the long mandated title within bounds.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Attempt-1 z-ordering bug fixed — pixel sampling confirms all three
+          confidence bands now render correctly (verified alpha-blend math at x=3040).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, no red-green-only encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions and nothing cut off, but noticeable dead space between
+          subtitle/legend/plot-area could be tightened.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled with units; x-axis quarters are self-explanatory.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exactly #009E73; opaque fill colors now byte-identical
+          across themes (opacity:1 fix verified).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Above generic defaults thanks to the working band device, but flat
+          fills rather than the spec-suggested gradient bands.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Axis lines and split-lines hidden appropriately; whitespace generous
+          but slightly uneven vertical rhythm.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Widening-uncertainty narrative now actually lands for all three series,
+          but no additional emphasis technique (e.g. forecast-start marker) reinforces
+          it.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked area chart.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All three series now have visible confidence bands with consistent
+          stack order; band meaning is explained via subtitle rather than an explicit
+          legend swatch.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct, all data represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match series names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Stacking, per-series confidence bands, and widening forecast uncertainty
+          are all demonstrated for every series.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral quarterly energy-mix scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: TWh values in a sensible regional-grid range.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One small helper (absoluteBand) used for repeated per-series math;
+          justified but a minor step beyond pure top-to-bottom code.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic closed-form data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses window.echarts / window.ANYPLOT_TOKENS.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: z-ordering architecture is now correct for a stacked chart; no fake
+          UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Canonical ECharts invisible-line + private-stack band idiom, now
+          correctly z-ordered.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Genuinely distinctive technique (per-series private-stack band overlay)
+          executed correctly, verified via pixel-level alpha-blend math.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
+  - minimal-chrome
