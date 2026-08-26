@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-hr-diagram: Hertzsprung-Russell Diagram
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-26
+// Quality: 90/100 | Created: 2026-08-26
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
