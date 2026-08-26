@@ -1,7 +1,7 @@
 // anyplot.ai
 // mohr-circle: Mohr's Circle for Stress Analysis
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-26
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-08-26
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
