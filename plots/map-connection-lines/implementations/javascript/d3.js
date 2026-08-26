@@ -80,11 +80,11 @@ const graticule = d3.geoGraticule10();
 const valueExtent = d3.extent(routes, (d) => d.value);
 const arcColor = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain(valueExtent);
 const arcWidth = d3.scaleLinear().domain(valueExtent).range([1.5, 5]);
-const arcOpacity = d3.scaleLinear().domain(valueExtent).range([0.4, 0.7]);
+const arcOpacity = d3.scaleLinear().domain(valueExtent).range([0.3, 0.6]);
 const nodeRadius = d3
   .scaleSqrt()
   .domain(d3.extent(Array.from(nodeTotals.values())))
-  .range([6, 15]);
+  .range([5, 12]);
 
 // --- SVG mount -----------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -114,11 +114,18 @@ mapG
 // Simplified continent silhouettes — abstract, non-self-intersecting blobs for
 // geographic context (not political borders). Built from a center plus radii
 // sampled at strictly increasing angles, which guarantees a simple polygon.
+// d3-geo's spherical winding rule is the opposite of planar-SVG intuition: a
+// ring built by increasing angle (counterclockwise in the standard lon/lat
+// plane) is interpreted as the *complement* — the whole sphere minus the
+// blob — so each "continent" ends up covering almost the entire globe
+// instead of a small patch. Reversing the ring flips it back to the small
+// enclosed area that was actually intended.
 function blobRing(clon, clat, radii) {
   const ring = radii.map(([angleDeg, rLon, rLat]) => {
     const rad = (angleDeg * Math.PI) / 180;
     return [clon + rLon * Math.cos(rad), clat + rLat * Math.sin(rad)];
   });
+  ring.reverse();
   ring.push(ring[0]);
   return ring;
 }
@@ -162,13 +169,18 @@ const continents = [
   },
 ];
 
+// Note: ANYPLOT_TOKENS has no `muted` key (only pageBg/elevatedBg/ink/inkSoft/
+// grid/palette/amber/seq/div) — using it here would leave `fill` unset, and the
+// SVG UA-default fill is solid black, which is what caused the map interior to
+// render as a near-black disc regardless of theme. `t.inkSoft` is the defined,
+// theme-adaptive token closest to the intended "muted neutral" role.
 mapG
   .selectAll("path.landmass")
   .data(continents)
   .join("path")
   .attr("class", "landmass")
   .attr("d", (d) => path({ type: "Polygon", coordinates: [d.coordinates] }))
-  .attr("fill", t.muted)
+  .attr("fill", t.inkSoft)
   .attr("fill-opacity", 0.3)
   .attr("stroke", "none");
 
