@@ -90,9 +90,12 @@ const violins = classGroups.map((group, i) => {
   const catX = i + 1;
   const sorted = [...group.values].sort((a, b) => a - b);
   const bandwidth = silvermanBandwidth(sorted);
-  const pad = bandwidth * 3;
-  const yMin = sorted[0] - pad;
-  const yMax = sorted[sorted.length - 1] + pad;
+  // Pad around the 1st/99th percentile (not the raw min/max) so a single
+  // far-outlier tail (e.g. Class C's right-skew) can't stretch the shared
+  // y-axis; the KDE still tapers smoothly toward the trimmed edges.
+  const pad = bandwidth * 1.5;
+  const yMin = quantile(sorted, 0.01) - pad;
+  const yMax = quantile(sorted, 0.99) + pad;
   const step = (yMax - yMin) / (gridSize - 1);
   const evalPoints = Array.from({ length: gridSize }, (_, j) => yMin + j * step);
   const density = gaussianKde(sorted, evalPoints, bandwidth);
@@ -174,8 +177,15 @@ violins.forEach((violin) => {
   });
 });
 
-const yAxisMin = Math.min(...violins.map((v) => v.yMin));
-const yAxisMax = Math.max(...violins.map((v) => v.yMax));
+// Round to clean tick bounds based on the actual (clamped) data range, not
+// the padded KDE eval range — keeps a single skewed group's tail from
+// dictating the shared axis extent (see per-group padding above).
+const rawValues = classGroups.flatMap((group) => group.values);
+const rawMin = Math.min(...rawValues);
+const rawMax = Math.max(...rawValues);
+const axisPad = (rawMax - rawMin) * 0.08;
+const yAxisMin = Math.floor((rawMin - axisPad) / 5) * 5;
+const yAxisMax = Math.ceil((rawMax + axisPad) / 5) * 5;
 
 // --- Chart -------------------------------------------------------------------
 new Chart(canvas, {
@@ -191,6 +201,13 @@ new Chart(canvas, {
         text: "violin-basic · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
+      },
+      subtitle: {
+        display: true,
+        text: "Solid line = median · Dashed lines = Q1 / Q3",
+        color: t.inkSoft,
+        font: { size: 14, style: "italic" },
+        padding: { bottom: 12 },
       },
       legend: { display: false },
     },
