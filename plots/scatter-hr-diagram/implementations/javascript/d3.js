@@ -33,6 +33,18 @@ const spectralRanges = [
   { type: "M", lo: 2400, hi: 3700, count: 52 },
 ];
 
+// Spectral type is always derived from actual temperature (never hardcoded per
+// region) so the conventional per-type color always matches the star's real temperature.
+function spectralTypeFromTemp(temp) {
+  if (temp >= 30000) return "O";
+  if (temp >= 10000) return "B";
+  if (temp >= 7500) return "A";
+  if (temp >= 6000) return "F";
+  if (temp >= 5200) return "G";
+  if (temp >= 3700) return "K";
+  return "M";
+}
+
 const stars = [];
 for (const range of spectralRanges) {
   for (let i = 0; i < range.count; i++) {
@@ -47,26 +59,29 @@ for (const range of spectralRanges) {
   }
 }
 for (let i = 0; i < 40; i++) {
+  const temperature = uniform(3400, 5000);
   stars.push({
-    temperature: uniform(3400, 5000),
+    temperature,
     luminosity: 10 ** uniform(1, 3.3),
-    spectralType: "K",
+    spectralType: spectralTypeFromTemp(temperature),
     region: "red giants",
   });
 }
 for (let i = 0; i < 25; i++) {
+  const temperature = logUniform(3000, 25000);
   stars.push({
-    temperature: logUniform(3000, 25000),
+    temperature,
     luminosity: 10 ** uniform(4.3, 6),
-    spectralType: "B",
+    spectralType: spectralTypeFromTemp(temperature),
     region: "supergiants",
   });
 }
 for (let i = 0; i < 35; i++) {
+  const temperature = uniform(8000, 40000);
   stars.push({
-    temperature: uniform(8000, 40000),
+    temperature,
     luminosity: 10 ** uniform(-4, -1.5),
-    spectralType: "B",
+    spectralType: spectralTypeFromTemp(temperature),
     region: "white dwarfs",
   });
 }
@@ -76,7 +91,13 @@ const sun = { temperature: 5772, luminosity: 1, spectralType: "G", region: "main
 // X reversed: hot/blue stars on the left, following astrophysical convention.
 const x = d3.scaleLog().domain([40000, 2000]).range([0, iw]).clamp(true);
 const y = d3.scaleLog().domain([0.00005, 1500000]).range([ih, 0]).clamp(true);
-const color = d3.scaleSequentialLog(d3.interpolateRgbBasis(t.div)).domain([2000, 40000]);
+// Semantic exception (per style guide "domain conventions"): spectral type has a
+// widely-recognized discrete color convention, so this uses an ordinal scale with
+// those conventional hues rather than a continuous Imprint colormap.
+const spectralColor = d3
+  .scaleOrdinal()
+  .domain(["O", "B", "A", "F", "G", "K", "M"])
+  .range(["#4467A3", "#4467A3", "#EDE8DC", "#F2C744", "#F2C744", "#E07B39", "#AE3030"]);
 
 // --- SVG mount ------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -174,18 +195,18 @@ g.selectAll(".star")
   .attr("class", "star")
   .attr("cx", (d) => x(d.temperature))
   .attr("cy", (d) => y(d.luminosity))
-  .attr("r", 6)
-  .attr("fill", (d) => color(d.temperature))
-  .attr("fill-opacity", 0.8)
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", 0.6);
+  .attr("r", 5)
+  .attr("fill", (d) => spectralColor(d.spectralType))
+  .attr("fill-opacity", 0.72)
+  .attr("stroke", (d) => (d.spectralType === "A" ? t.ink : t.pageBg))
+  .attr("stroke-width", (d) => (d.spectralType === "A" ? 1.1 : 0.6));
 
 // --- Sun marker (distinct reference point) ----------------------------------
 g.append("circle")
   .attr("cx", x(sun.temperature))
   .attr("cy", y(sun.luminosity))
   .attr("r", 11)
-  .attr("fill", color(sun.temperature))
+  .attr("fill", spectralColor(sun.spectralType))
   .attr("stroke", t.ink)
   .attr("stroke-width", 2.5);
 g.append("text")
@@ -196,40 +217,44 @@ g.append("text")
   .style("font-weight", "600")
   .text("Sun");
 
-// --- Temperature color legend (redundant encoding, explains hue mapping) ---
-const legendW = 150;
-const legendX = iw - legendW;
-const legendY = -108;
-const gradientId = "hr-temp-gradient";
-const defs = svg.append("defs");
-const gradient = defs
-  .append("linearGradient")
-  .attr("id", gradientId)
-  .attr("x1", "0%")
-  .attr("x2", "100%");
-d3.range(0, 1.001, 0.1).forEach((stop) => {
-  gradient
-    .append("stop")
-    .attr("offset", `${stop * 100}%`)
-    .attr("stop-color", color(2000 * Math.pow(40000 / 2000, stop)));
-});
-const legend = g.append("g").attr("transform", `translate(${legendX},${legendY})`);
-legend.append("rect").attr("width", legendW).attr("height", 12).attr("fill", `url(#${gradientId})`);
-legend
-  .append("text")
-  .attr("x", 0)
-  .attr("y", -8)
+// --- Spectral-type color legend (explains the conventional hue mapping) -----
+const legendItems = [
+  { type: "O", label: "O / B — blue" },
+  { type: "A", label: "A — white" },
+  { type: "F", label: "F / G — yellow" },
+  { type: "K", label: "K — orange" },
+  { type: "M", label: "M — red" },
+];
+const legendX = iw - 175;
+const legendY = -118;
+g.append("text")
+  .attr("x", legendX)
+  .attr("y", legendY - 12)
   .attr("fill", t.inkSoft)
   .style("font-size", "13px")
-  .text("Cool");
-legend
+  .style("font-weight", "600")
+  .text("Spectral type");
+const legendRows = g
+  .selectAll(".legend-item")
+  .data(legendItems)
+  .join("g")
+  .attr("class", "legend-item")
+  .attr("transform", (d, i) => `translate(${legendX},${legendY + i * 20})`);
+legendRows
+  .append("circle")
+  .attr("r", 6)
+  .attr("cx", 6)
+  .attr("cy", -4)
+  .attr("fill", (d) => spectralColor(d.type))
+  .attr("stroke", (d) => (d.type === "A" ? t.ink : "none"))
+  .attr("stroke-width", 1);
+legendRows
   .append("text")
-  .attr("x", legendW)
-  .attr("y", -8)
-  .attr("text-anchor", "end")
+  .attr("x", 18)
+  .attr("y", 0)
   .attr("fill", t.inkSoft)
   .style("font-size", "13px")
-  .text("Hot");
+  .text((d) => d.label);
 
 // --- Title ------------------------------------------------------------------
 svg
