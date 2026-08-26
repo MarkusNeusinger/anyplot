@@ -42,13 +42,45 @@ const buildPriceSeries = (startPrice, dailyDrift, dailyVolatility, seed) => {
   return prices;
 };
 
-const rebaseToHundred = (prices) => prices.map((price) => (price / prices[0]) * 100);
+const rebaseToHundred = (prices) =>
+  prices.map((price) => (price / prices[0]) * 100);
 
 const stocks = [
-  { symbol: "AAPL", name: "Apple", startPrice: 182, drift: 0.0009, volatility: 0.016, seed: 11 },
-  { symbol: "GOOGL", name: "Alphabet", startPrice: 141, drift: 0.0004, volatility: 0.019, seed: 22 },
-  { symbol: "MSFT", name: "Microsoft", startPrice: 378, drift: 0.0011, volatility: 0.014, seed: 33 },
-].map((stock) => ({ ...stock, rebased: rebaseToHundred(buildPriceSeries(stock.startPrice, stock.drift, stock.volatility, stock.seed)) }));
+  {
+    symbol: "AAPL",
+    name: "Apple",
+    startPrice: 182,
+    drift: 0.0009,
+    volatility: 0.016,
+    seed: 11,
+  },
+  {
+    symbol: "GOOGL",
+    name: "Alphabet",
+    startPrice: 141,
+    drift: 0.0004,
+    volatility: 0.019,
+    seed: 22,
+  },
+  {
+    symbol: "MSFT",
+    name: "Microsoft",
+    startPrice: 378,
+    drift: 0.0011,
+    volatility: 0.014,
+    seed: 33,
+  },
+].map((stock) => ({
+  ...stock,
+  rebased: rebaseToHundred(
+    buildPriceSeries(
+      stock.startPrice,
+      stock.drift,
+      stock.volatility,
+      stock.seed,
+    ),
+  ),
+}));
 
 const benchmark = {
   symbol: "SPY",
@@ -69,7 +101,8 @@ export default function Chart() {
   // that and gives predictable, collision-free spacing.
   const yLabelWidth = 32;
   const chartWidth = size.width - padding.left - padding.right - yLabelWidth;
-  const chartHeight = size.height - padding.top - padding.bottom - titleBlockHeight;
+  const chartHeight =
+    size.height - padding.top - padding.bottom - titleBlockHeight;
 
   return (
     <Box
@@ -82,11 +115,26 @@ export default function Chart() {
         flexDirection: "column",
       }}
     >
-      <Typography sx={{ fontSize: 22, fontWeight: 600, color: "text.primary", mb: "20px", lineHeight: 1 }}>
+      <Typography
+        sx={{
+          fontSize: 22,
+          fontWeight: 600,
+          color: "text.primary",
+          mb: "20px",
+          lineHeight: 1,
+        }}
+      >
         {TITLE}
       </Typography>
       <Box sx={{ display: "flex", flexDirection: "row", height: chartHeight }}>
-        <Box sx={{ width: yLabelWidth, display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <Box
+          sx={{
+            width: yLabelWidth,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <Typography
             sx={{
               fontSize: 16,
@@ -127,7 +175,11 @@ export default function Chart() {
               data: tradingDates,
               scaleType: "time",
               label: "Date",
-              valueFormatter: (date) => date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+              valueFormatter: (date) =>
+                date.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                }),
               tickLabelStyle: { fontSize: 14 },
               labelStyle: { fontSize: 16 },
             },
@@ -150,13 +202,20 @@ export default function Chart() {
           }}
           sx={{
             "& .MuiLineElement-root": { strokeWidth: 2.5 },
-            [`& .MuiLineElement-series-${benchmark.symbol}`]: { strokeWidth: 2, strokeDasharray: "8 5" },
-            "& .MuiChartsGrid-line": { strokeDasharray: "4 3" },
+            [`& .MuiLineElement-series-${benchmark.symbol}`]: {
+              strokeWidth: 2,
+              strokeDasharray: "8 5",
+            },
+            "& .MuiChartsGrid-line": { stroke: t.grid, strokeOpacity: 0.2 },
           }}
         >
           <ChartsReferenceLine
             y={100}
-            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "3 4", strokeOpacity: 0.6 }}
+            lineStyle={{
+              stroke: t.inkSoft,
+              strokeDasharray: "3 4",
+              strokeOpacity: 0.6,
+            }}
             label="Start (100)"
             labelStyle={{ fontSize: 12, fill: t.inkSoft }}
           />
