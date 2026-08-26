@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: map-projections
 created: '2026-08-26T08:07:05Z'
-updated: '2026-08-26T08:13:06Z'
+updated: '2026-08-26T08:30:29Z'
 generated_by: claude-sonnet
 workflow_run: 32945395681
 issue: 3771
@@ -12,47 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/echarts/plot-dark.html
-quality_score: 80
+quality_score: 81
 review:
-  strengths:
-  - Mathematically correct Mercator and Mollweide projection formulas (including a
-    converging Newton iteration for Mollweide's parametric latitude), which reproduce
-    real distortion behavior — e.g. Antarctica is hugely exaggerated in Mercator vs.
-    a compact band in Mollweide, matching the well-known real-world effect.
-  - Graticule drawn at exactly the 30-degree interval the specification calls for,
-    for both meridians and parallels, styled subtly and theme-adaptively.
-  - Per-panel subtitles ('conformal — shape-true, area-distorted' / 'equal-area —
-    area-true, shape-distorted') directly narrate the pedagogical point of a projection-comparison
-    plot — strong, on-spec data storytelling.
-  - Theme-adaptive chrome is threaded correctly through ink/inkSoft/grid/elevatedBg
-    tokens; both light and dark renders are fully legible with no dark-on-dark or
-    light-on-light failures.
-  - 'Palette compliant: land uses brand green #009E73 identically across both themes;
-    no unrelated colormap or hue introduced.'
-  weaknesses:
-  - 'No ECharts `series` is ever used — the entire map is drawn via the low-level
-    `graphic.elements` API (raw polygon/polyline/text primitives) instead of ECharts''
-    data-driven charting model. ECharts offers a `series: [{type: ''custom'', renderItem:
-    ...}]` mechanism precisely for hand-drawn shapes bound to a coordinate system
-    (or a `geo` component for real map data) — either would be the idiomatic path.
-    As written this reads as ''use ECharts as a canvas to draw a static illustration''
-    rather than as using its plotting engine, and it forfeits ECharts series features
-    (tooltip, geo roam/zoom, visualMap-driven choropleth) entirely. Repair should
-    move the projected polygons into a `custom` series (or a `geo` component) so the
-    implementation demonstrates genuine, idiomatic ECharts usage.'
-  - 'Missing per-country boundaries: the specification asks for ''country boundaries...
-    with appropriate styling'', but the implementation reduces the world to 7 continent-level
-    silhouettes with no internal country borders (understandable given no offline
-    GeoJSON is bundled with the pinned echarts build, but worth at least partially
-    mitigating, e.g. a few illustrative internal border lines on the largest landmass,
-    or an explicit code comment documenting the tradeoff).'
-  - A fairly large blank band separates the title from the two map panels (roughly
-    280px of the 1800px-tall canvas), pushing overall canvas utilization toward the
-    lower edge of the 50-80% target — tightening the top margin or growing PANEL_H
-    would use the canvas more effectively.
-  - No Tissot indicatrices or other explicit distortion overlay beyond the two side-by-side
-    panels (optional per spec, but would have strengthened feature coverage of the
-    projection-distortion story further).
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
