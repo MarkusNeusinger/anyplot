@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bar-stacked-labeled
 created: '2026-08-26T18:59:57Z'
-updated: '2026-08-26T19:23:04Z'
+updated: '2026-08-26T19:37:54Z'
 generated_by: claude-sonnet
 workflow_run: 33002350165
 issue: 3504
@@ -12,55 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 90
 review:
   strengths:
-  - Theme-adaptive chrome is threaded cleanly through Figure/Axis (background, title/axis/tick
-    colors, spines, grid opacity) with correct tokens in both renders
-  - Total labels use Makie's rich() to mix bold/oversized value text with a smaller,
-    softer unit suffix ($X.XM) — a genuinely library-distinctive touch that elevates
-    the spec's total-label requirement
-  - Realistic, plausible quarterly SaaS revenue scenario with a sensible growth trend
-    across Q1-Q4
-  - First categorical series is the mandated Imprint green (#009E73), canonical palette
-    order preserved for the series that do render, correct light/dark background tokens
-  - Y-axis headroom (ylims!) is deliberately set last so it survives any autolimits
-    reset triggered by the legend/text calls — a thoughtful defensive layout choice
+  - 'Pixel-verified: canvas is exactly 3200x1800, and data colors are identical between
+    light and dark renders — only chrome flips, as required'
+  - Total labels use genuine typographic hierarchy (rich() bold-oversized value +
+    smaller/softer unit) rather than uniform text, directly serving the spec's 'eliminate
+    mental arithmetic' goal
+  - Clean, idiomatic use of Makie's native stack= keyword on barplot! rather than
+    manually cumsum-ing segment heights
+  - ylims! is set last with explicit headroom (max(totals) * 1.16) specifically to
+    protect label space from being clobbered by autolimits
   weaknesses:
-  - 'CRITICAL data-rendering bug: product_lines declares 4 components (Subscriptions,
-    Services, Hardware, Support) and totals correctly sum all 4 ($8.7M/$9.4M/$10.6M/$11.9M
-    match), but the stacked bars only draw 3 visually distinct segments. Pixel-level
-    measurement on both renders confirms the ''Hardware'' (blue) segment''s height
-    equals Hardware+Support combined in every quarter (e.g. Q1 blue segment = $1.4M
-    = 0.9+0.5; Q4 blue segment = $1.6M = 0.9+0.7); the ochre #BD8233 reserved for
-    ''Support'' never appears anywhere in either PNG, and the Legend lists only 3
-    entries, omitting ''Support'' entirely. This silently misrepresents the data —
-    a reader comparing the blue segment to the ''Hardware'' legend swatch would think
-    it represents only Hardware''s value.'
-  - 'Likely root cause: color = colors passes a raw pre-computed per-element color
-    vector alongside stack=, instead of the library-documented pattern for multi-series
-    categorical color (color = stack, colormap = IMPRINT_PALETTE[1:n_product]) — prompts/library/makie.md
-    explicitly recommends the colormap-based approach for this exact case. Switch
-    to that pattern (or otherwise verify empirically that all 4 stack groups render
-    as 4 separate rectangles with 4 legend entries) before resubmitting.'
-  - Legend is incomplete as a direct symptom of the bug above — only 3 of 4 declared
-    product lines appear; re-verify the legend shows all 4 swatches once the stacking
-    bug is fixed
+  - 'Title is disproportionately small: measured at only ~30% of the plot/axis width
+    (849px / 2814px) against the style guide''s ~50-70% target for this canvas size.
+    Increase titlesize from 20 toward ~26-28 so the mandated title carries appropriate
+    visual weight on the 3200x1800 landscape canvas.'
+  - Y-axis has only two gridlines (5 and 10) across a 0-~13.8 range — slightly sparse
+    for reading intermediate values off the chart.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 — correct light-theme surface.
-      Chrome: title "bar-stacked-labeled · julia · makie · anyplot.ai" is bold, dark, and clearly legible; axis labels "Quarter" (x) and "Revenue ($M)" (y) are dark and readable; tick labels and legend text use a softer dark gray, all readable; subtle y-axis-only gridlines at 5/10.
-      Data: four quarterly stacked bars (Q1-Q4) in Imprint green (#009E73, Subscriptions), lavender (#C475FD, Services), and blue (#4467A3, Hardware), with bold "$X.XM" total labels above each stack (e.g. $8.7M, $9.4M, $10.6M, $11.9M). Legend lists only 3 entries (Subscriptions, Services, Hardware) despite the implementation defining a 4th component "Support" — pixel measurement confirms the blue segment's height equals Hardware+Support combined in every quarter, and the ochre color reserved for "Support" (#BD8233) never appears anywhere in the image. This is a data-representation bug, not a legibility issue.
-      Legibility verdict: PASS (all text readable; the data-mapping bug above is a correctness issue, not a theme-legibility issue)
+      Background: Warm off-white, matches #FAF8F1 target — not pure white, not dark.
+      Chrome: Title "bar-stacked-labeled · julia · makie · anyplot.ai" centered in dark ink, clearly readable but measured at only ~30% of the plot width (undersized relative to the ~50-70% target). Axis labels ("Quarter" / "Revenue ($M)") and tick labels are dark/soft-ink and legible. Legend at right (Subscriptions/Services/Hardware/Support) is frameless, blends with background, text legible. Total labels ($8.7M, $9.4M, $10.6M, $11.9M) bold and clearly visible above each stack.
+      Data: Four stacked segments per bar — Subscriptions #009E73 (bottom), Services #C475FD, Hardware #4467A3, Support #BD8233 (top). First series confirmed #009E73.
+      Legibility verdict: PASS (title is legible but proportionally small — flagged as a VQ-05 weakness, not a legibility failure)
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 — correct dark-theme surface.
-      Chrome: title, axis labels, and tick labels all render in light/white tones against the dark background — no dark-on-dark failures observed. Legend text and swatches are legible.
-      Data: colors identical to the light render (verified #009E73 / #C475FD / #4467A3 unchanged). Same bug as light render — only 3 stacked segments visible, "Support" silently merged into the Hardware segment with no distinguishing color and no legend entry (confirmed: 0 ochre-colored pixels found anywhere in this render).
-      Legibility verdict: PASS (theme chrome is correct; the missing 4th data series is a rendering/data-mapping bug that reproduces identically in both themes, independent of theme tokens)
+      Background: Warm near-black, matches #1A1A17 target — not pure black, not light.
+      Chrome: Title, axis labels, tick labels, legend text, and total labels all flip to light ink (#F0EFE8 / #B8B7B0) and are clearly visible against the dark background. No dark-on-dark failures observed anywhere.
+      Data: Same four segment colors as the light render, pixel-consistent — only chrome (background/text/grid/legend) changed between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -68,75 +53,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; title well-proportioned,
-          no overflow or clipping
+        comment: All chrome and total labels legible in both themes; title is legible
+          but noticeably undersized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No collisions between total labels, gridlines, legend, or bars
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Bars themselves are well-sized, but the 'Hardware' segment silently
-          merges with the invisible 'Support' segment — two logical data elements
-          collapse into one indistinguishable rectangle
+        passed: true
+        comment: Bar segments and colors clearly distinguishable at this data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast and CVD-safe distinction among the series that do render
+        comment: Imprint palette provides adequate hue separation, no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Balanced use of canvas, legend positioned near the plot, no cut-off
-          content
+        comment: Title spans only ~30% of plot width vs ~50-70% target; nothing clipped,
+          canvas exactly 3200x1800
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis labels with units: ''Revenue ($M)'''
+        comment: Revenue ($M) includes units, Quarter is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint #009E73; canonical order preserved for visible
-          series; correct theme-adaptive chrome in both renders'
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds,
+          identical data colors across themes'
     design_excellence:
-      score: 15
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Imprint palette, thoughtful typographic hierarchy via rich()
-          compound total labels — above a plain library default
+        comment: Typographic hierarchy in total labels via rich(), custom palette;
+          undercut by undersized title
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Subtle y-only grid, top/right spines removed, generous whitespace,
-          unframed legend
+        comment: Spines removed, y-only subtle grid, generous whitespace, frameless
+          legend
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold total labels above each stack create a clear focal point emphasizing
-          the Q1-Q4 growth trend
+        comment: Bold total labels create a clear focal point showing the quarter-over-quarter
+          growth trend
     spec_compliance:
-      score: 8
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -144,56 +128,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with total labels
+        comment: Correct stacked bar chart
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Total labels present and correct, but the multi-component stacking
-          feature is broken — one of 4 declared components never renders as its own
-          segment
+        passed: true
+        comment: Total labels above stacks, consistent format, adequate headroom via
+          ylims!
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: The 'Support' series' data is not visible anywhere on the chart —
-          its value is silently absorbed into the Hardware segment with no distinguishing
-          color
+        passed: true
+        comment: X=quarter, Y=stacked revenue by component, all data visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title format is exactly correct, but the legend is incomplete — it
-          omits the 'Support' entry that the underlying data and totals include
+        passed: true
+        comment: Title matches required format; legend labels match and are ordered
+          to match stack
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: 3 of 4 declared stacked components are correctly represented with
-          realistic variation; the 4th is invisible due to the rendering bug
+        passed: true
+        comment: Categories, stacked components, and computed totals all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible quarterly SaaS revenue-by-product-line scenario
+        comment: Quarterly SaaS revenue by product line, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic proportions — Subscriptions dominant, Hardware/Support
-          smaller, sensible quarter-over-quarter growth
+        comment: $0.5M-$7.3M segments, $8.7M-$11.9M totals with believable growth
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -201,7 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports -> theme -> data -> plot -> save, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -216,45 +195,44 @@ review:
         comment: Only CairoMakie and Colors, both used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Manually pre-computing a per-element color vector alongside stack=
-          deviates from the library's documented colormap-based multi-series pattern,
-          and is the likely source of the stacking bug
+        passed: true
+        comment: Appropriately concise, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2 as required
+        comment: Saves plot-$(THEME).png via current save API
     library_mastery:
-      score: 5
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
-        max: 5
-        passed: false
-        comment: Deviates from the documented barplot stack+colormap pattern (prompts/library/makie.md),
-          which is very likely the root cause of the missing 4th segment
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: rich() compound bold/soft text styling for total labels is a genuinely
-          Makie-distinctive technique
-  verdict: REJECTED
+        comment: Native barplot! stack=/color=/colormap= keywords, high-level Axis/Legend
+          grammar
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: rich() mixed-weight text is Makie-specific; no other distinctive
+          capability exercised
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - colors
+  dependencies: []
   techniques:
   - annotations
   - custom-legend
   patterns:
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
+  - publication-ready
