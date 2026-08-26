@@ -68,6 +68,7 @@ combined.forEach((x) => {
 });
 const f1AtKs = ecdfValue(goodScores, ksX);
 const f2AtKs = ecdfValue(badScores, ksX);
+const bandHalfWidth = (850 - 300) * 0.012;
 
 // Asymptotic two-sample K-S p-value (Kolmogorov distribution)
 const n1 = goodScores.length;
@@ -92,7 +93,7 @@ chart.setOption({
   title: {
     text: "ks-test-comparison · javascript · echarts · anyplot.ai",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 27, fontWeight: 500 },
   },
   legend: {
     data: ["Good customers (n=400)", "Bad customers (n=400)"],
@@ -154,6 +155,16 @@ chart.setOption({
         [ksX, f1AtKs],
         [ksX, f2AtKs],
       ],
+      markArea: {
+        silent: true,
+        itemStyle: { color: t.amber, opacity: 0.22 },
+        data: [
+          [
+            { xAxis: ksX - bandHalfWidth, yAxis: Math.min(f1AtKs, f2AtKs) },
+            { xAxis: ksX + bandHalfWidth, yAxis: Math.max(f1AtKs, f2AtKs) },
+          ],
+        ],
+      },
       markPoint: {
         symbol: "circle",
         symbolSize: 0,
@@ -165,6 +176,11 @@ chart.setOption({
           fontSize: 18,
           fontWeight: "bold",
           lineHeight: 24,
+          padding: [8, 12],
+          backgroundColor: t.elevatedBg,
+          borderColor: t.ink,
+          borderWidth: 1,
+          borderRadius: 6,
           formatter: `D = ${ksStat.toFixed(3)}\n${pLabel}`,
         },
         data: [{ coord: [ksX, Math.max(f1AtKs, f2AtKs) + 0.02] }],
