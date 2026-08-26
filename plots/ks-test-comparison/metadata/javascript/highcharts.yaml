@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: ks-test-comparison
 created: '2026-08-26T06:54:53Z'
-updated: '2026-08-26T07:00:51Z'
+updated: '2026-08-26T07:08:00Z'
 generated_by: claude-sonnet
 workflow_run: 32939783420
 issue: 4130
@@ -12,63 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Faithful coverage of every spec-required K-S plot feature: both ECDFs rendered
-    as step functions, D-statistic and p-value shown prominently in the subtitle,
-    the max-divergence point highlighted with a vertical dotted line plus markers,
-    and both distributions clearly labeled in the legend.'
-  - 'Correct Imprint palette use with a sensible semantic exception: brand green (#009E73)
-    stays the first series (Good Customers), matte red (#AE3030, palette slot 5) is
-    deliberately chosen for Bad Customers, matching the style guide''s bad/error semantic
-    mapping.'
+  - 'Both attempt-1 weaknesses fully addressed: dashStyle ShortDash on Bad Customers
+    fixes the red/green CVD-safety gap, and xAxis.gridLineWidth: 0 gives Y-axis-only
+    gridlines per the style guide'
+  - The max-divergence marker now carries a 'Score 602' data-label callout, adding
+    visual weight and directly answering attempt 1's DE-01 feedback
+  - 'Faithful coverage of every spec-required K-S plot feature: both ECDFs as step
+    functions, D-statistic and p-value in the subtitle, max-divergence point highlighted,
+    both distributions clearly labeled'
+  - Correct Imprint palette use with a sensible semantic exception (brand green for
+    Good, matte red slot-5 for Bad)
   - Deterministic, reproducible data pipeline (fixed-seed LCG + Box-Muller normal
-    sampler) with a realistic, neutral credit-scoring scenario (FICO-range 300-850
-    Good vs Bad customer distributions) that matches one of the spec's own suggested
-    applications.
-  - Theme-adaptive chrome is correctly threaded through title, subtitle, axis titles/labels,
-    legend, and grid tokens — both light and dark renders are fully legible with correctly
-    flipped chrome and identical data colors.
-  - 'Idiomatic, constraint-aware Highcharts usage: native `step` series type for the
-    ECDFs, animation and tooltip explicitly disabled per the mount-node contract,
-    and a clever plain-series workaround (dashed line + markers, `enableMouseTracking:
-    false`) to fake an annotation without the unavailable annotations module.'
+    sampler) with a realistic, neutral credit-scoring scenario
+  - Theme-adaptive chrome correctly threaded through every element - both renders
+    fully legible with correctly flipped chrome and identical data colors
   weaknesses:
-  - 'VQ-04: Good Customers (#009E73 green) vs Bad Customers (#AE3030 red) is the classic
-    red-green CVD confusion pair. Near x=375-425 and x=800-850 both ECDFs converge
-    close to 0 and 1 respectively, where color becomes the primary cue distinguishing
-    them. Add a redundant encoding for CVD safety, e.g. a distinct `dashStyle` (e.g.
-    "ShortDash") on the Bad Customers series.'
-  - 'DE-02: Grid lines are enabled on both the X and Y axes at equal weight. The style
-    guide recommends Y-axis-only grid for line charts; the vertical gridlines add
-    clutter without adding reading value here. Consider `xAxis.gridLineWidth: 0`.'
-  - 'DE-01: The implementation meets spec requirements but stays close to a well-configured
-    default rather than showing standout polish — e.g. the legend''s `elevatedBg`
-    box is barely distinguishable from the light-theme page background (#FFFDF6 vs
-    #FAF8F1), and the max-divergence marker is a plain black/white dot with no additional
-    visual weight (e.g. a small callout label with the score value) to make it the
-    chart''s clear focal point.'
-  - 'Canvas usage: the mandated title only fills roughly 35% of the canvas width at
-    22px, leaving generous unused whitespace at the top of the chart. Not a violation,
-    but growing the title slightly or adding a short descriptive prefix (e.g. "Credit
-    Score Distribution · ks-test-comparison · javascript · highcharts · anyplot.ai")
-    would put that space to better use.'
+  - 'DE-01: Still stops short of standout publication polish - the legend box and
+    divergence callout are functional but not yet visually distinctive'
+  - 'LM-02: The divergence-annotation technique is a plain-series workaround necessitated
+    by the missing annotations module rather than a genuinely distinctive Highcharts-only
+    feature'
+  - 'CQ-01: Helper functions (RNG, ECDF builder) push slightly past strict KISS, though
+    they''re necessary for the K-S computation itself'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "ks-test-comparison · javascript · highcharts · anyplot.ai" in bold dark ink at top center; subtitle "D = 0.540 at score 602 · p < 0.001" directly below in softer gray; axis titles "Credit Score" (x) and "Cumulative Proportion" (y) in medium-gray ink; tick labels in the same softer gray; legend (top right, subtle off-white box) lists "Good Customers (ECDF)", "Bad Customers (ECDF)", and "Max Divergence (D = 0.540)". Thin, subtle gridlines on both axes.
-      Data: Good Customers ECDF is a teal-green (#009E73) step line rising from the bottom-left; Bad Customers ECDF is a matte-red (#AE3030) step line rising earlier/faster; a black dotted vertical line with two black dot markers connects the two curves at credit score 602, marking the point of maximum divergence.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light text observed.
+      Background: Warm off-white (#FAF8F1), correctly warm-toned, not pure white.
+      Chrome: Bold dark title "ks-test-comparison · javascript · highcharts · anyplot.ai" and soft-gray subtitle "D = 0.540 at score 602 · p < 0.001" both readable. Axis titles "Credit Score" / "Cumulative Proportion" and tick labels in medium/soft gray ink, fully legible. Bordered legend box top-right (Good Customers, Bad Customers, Max Divergence) clearly separated from the plot area. Y-axis-only gridlines (no vertical gridlines) — horizontal lines subtle and unobtrusive.
+      Data: First series (Good Customers) is #009E73 brand green, solid step line. Second series (Bad Customers) is #AE3030 matte red, now dashed (ShortDash) — a redundant non-color encoding added in this attempt. Max-divergence marker is a black dotted vertical line with two dot markers and a bordered "Score 602" callout label.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title/subtitle text now rendered in light cream ink; axis titles and tick labels in light gray; legend box uses a slightly lighter dark panel, text in light gray, fully readable; gridlines are faint light lines, subtle but visible.
-      Data: Good Customers ECDF is the identical teal-green (#009E73); Bad Customers ECDF is the identical matte-red (#AE3030) — both colors match the light render exactly, confirming only chrome flipped. The max-divergence marker uses white dots and a white dotted line (correctly flipped from black to remain visible on the dark surface) at the same credit score 602 / D = 0.540 location.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, tick, and legend text is clearly visible against the near-black background.
+      Background: Warm near-black (#1A1A17), correctly warm-toned, not pure black.
+      Chrome: Title/subtitle render in light cream ink, axis titles/tick labels in light gray, legend box uses a lighter dark panel with a visible border - all fully readable. Y-axis-only gridlines carried over correctly.
+      Data: Good Customers remains #009E73 (identical to light), Bad Customers remains #AE3030 dashed (identical to light) - confirming only chrome flipped, not data colors. Max-divergence marker and "Score 602" callout correctly flip to white/near-white so they stay visible against the dark surface. No dark-on-dark failures observed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -76,76 +59,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle/ticks/legend
-          14px, axis titles 16px); fully readable in both themes, no overflow or clipping
+        comment: All font sizes explicit, readable in both themes, no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend sits clear of the data area; no text/data collisions in either
-          render
+        comment: Legend, subtitle, divergence callout all clear of data area in both
+          renders
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 2.5px step lines are clearly visible for 400-point ECDFs; divergence
-          marker sized appropriately
+        comment: Step lines and divergence marker sized well for 400-point ECDFs
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green/red (Good/Bad) pairing is the classic red-green CVD pair; mitigated
-          by curve position but both curves converge near the axis tails where color
-          becomes the primary cue
+        passed: true
+        comment: 'Fixed from attempt 1: Bad Customers now uses dashStyle ShortDash
+          for redundant encoding'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills most of the 3200x1800 canvas with balanced margins; legend
-          near the plot
+        comment: Chart fills most of the 3200x1800 canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Credit Score" and "Cumulative Proportion" are descriptive and self-explanatory
-          for this domain'
+        comment: Descriptive Credit Score / Cumulative Proportion
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Bad Customers uses semantic-exception matte
-          red #AE3030; backgrounds and chrome are theme-correct in both renders'
+        comment: 'First series #009E73, semantic-exception matte red #AE3030, theme-correct
+          chrome'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured, token-driven styling but stops short of standout
-          polish (subtle legend box, plain divergence marker)
+        passed: true
+        comment: 'Improved from attempt 1: bordered Score 602 callout adds visual
+          weight; still short of standout polish'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Grid enabled on both axes rather than y-only per style guide; otherwise
-          reasonably clean
+        passed: true
+        comment: 'Fixed from attempt 1: xAxis.gridLineWidth 0 gives Y-axis-only gridlines'
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Subtitle + annotated max-divergence line give the viewer an immediate
-          focal point and the key statistical insight
+        comment: Subtitle + annotated max-divergence line with score callout give
+          clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -161,22 +138,20 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Both ECDFs, D-statistic, max-divergence highlight, p-value, and legend
+        comment: Both ECDFs, D-statistic, max-divergence highlight, p-value, legend
           all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = credit score, Y = cumulative proportion 0-1, full data range
-          shown
+        comment: X = credit score, Y = cumulative proportion 0-1
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels match the
-          data series
+        comment: Title matches mandated format exactly, legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -186,21 +161,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full ECDF shapes, divergence point, D-stat and p-value all present
+        comment: Full ECDF shapes, divergence point, D-stat and p-value
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, real-world credit-scoring model-validation scenario, directly
-          matching a spec-listed application
+        comment: Neutral, real-world credit-scoring model-validation scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: FICO-plausible 300-850 clipped range with sensible Good/Bad mean
-          and spread separation
+        comment: FICO-plausible 300-850 clipped range, sensible Good/Bad separation
     code_quality:
       score: 9
       max: 10
@@ -210,34 +183,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small helper functions (RNG, ECDF builder) needed for the K-S
-          computation; not gratuitous but not flat script either
+        comment: A few small helper functions needed for the K-S computation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG makes the run fully deterministic
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the provided Highcharts/token globals
+        comment: No unused imports, only provided globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a two-sample K-S computation, no fake
-          UI
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct Highcharts.chart("container", ...) call, no explicit width/height,
-          current API
+        comment: Correct Highcharts.chart call, no explicit width/height
     library_mastery:
       score: 7
       max: 10
@@ -247,24 +217,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic use of the `step` series type, plotOptions, and
-          token-driven chrome mapping
+        comment: Idiomatic use of the step series type and token-driven chrome mapping
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
+        passed: false
         comment: Clever plain-series workaround for the divergence annotation given
-          the missing annotations module; step-line ECDF rendering
-  verdict: REJECTED
+          the missing annotations module
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - step-function
+  - manual-ticks
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - publication-ready
+  - grid-styling
