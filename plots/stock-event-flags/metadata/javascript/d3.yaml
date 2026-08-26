@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: stock-event-flags
 created: '2026-08-26T16:01:36Z'
-updated: '2026-08-26T16:27:21Z'
+updated: '2026-08-26T16:52:28Z'
 generated_by: claude-sonnet
 workflow_run: 32986351409
 issue: 3749
@@ -12,104 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/stock-eve
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/stock-event-flags/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - The flag pattern (dashed connector + price-level marker dot + fixed alternating
-    top/bottom lanes) precisely satisfies the spec's core requirement to annotate
-    events without obscuring the price line — the y-domain padding keeps both lanes
-    clear of the actual data range in both themes.
-  - Distinct icon glyphs (▲, $, ✂, ★) per event type give a redundant, colorblind-safe
-    encoding on top of color, addressing VQ-04 without extra chrome.
-  - Both renders are fully theme-adaptive (backgrounds, ink, grid, legend, flag box
-    fill all keyed off ANYPLOT_TOKENS) with byte-identical Imprint data colors between
-    light and dark, and no dark-on-dark / light-on-light failures.
-  - 'Idiomatic, current D3 usage: scaleTime + scaleLinear + curveMonotoneX for the
-    price line, the axisLeft(tickSize(-iw)) gridline trick, and .each() to build each
-    flag''s connector/marker/box/icon/label/date as one grouped unit.'
+  - Event flags use fixed alternating up/down lanes so they never obscure the price
+    line, with dashed connectors precisely tying each flag to its date/price on the
+    line
+  - Distinct icon glyphs (triangle, dollar sign, scissors, star) plus canonical Imprint
+    colors per event type give an at-a-glance event taxonomy that matches real trading-platform
+    conventions
+  - Full event label and date are always visible directly on the chart (not hidden
+    behind hover), which satisfies the spec's 'reveal full event details' intent even
+    more robustly than a hover-only approach
+  - 'Data tells a real story: price visibly jumps after ''Q4 Earnings Beat'' and ''Product
+    Launch'', dips after ''Q1 Earnings Miss'', and both beats and a miss are represented
+    for variety'
+  - Font sizes are explicitly set throughout (14/16/22px chrome, 13-16px inside flags)
+    and both themes stay fully legible with identical data colors, chrome correctly
+    flipping
   weaknesses:
-  - Flag annotation text is smaller than the rest of the chart's chrome (event label
-    12.5px, event date 11.5px) versus 14px tick labels and 16px axis labels — bump
-    both to ~13-14px minimum so they stay legible when the PNG is scaled down for
-    mobile widths.
-  - Event-type color mapping (earnings=palette[0] green, dividend=palette[2] blue,
-    split=palette[3] ochre, news=palette[6] rose) skips palette positions 2/5/6/8
-    rather than using canonical order 1→4, and the semantic justification (green="primary
-    corporate metric", rose="external news") is a stylistic choice rather than a widely-shared
-    real-world color convention per the style guide's semantic-exception bar — prefer
-    canonical palette[0..3] order for these abstract event categories, or drop earnings'
-    claim on the brand green since the price line already uses it.
-  - OHLC fields (open/high/low) are unused, so the chart can't show intraday range
-    or candlesticks — acceptable since the spec marks OHLC optional, but a candlestick
-    variant would add more feature coverage (DQ-01).
+  - Flag boxes redundantly repeat the same translate(x(d.date),0) transform on the
+    rect and each of the three text elements inside fg.each(...) instead of applying
+    it once on a per-datum <g> container — minor code duplication (CQ-04).
+  - No dedicated price-reaction emphasis (e.g. a highlighted band or delta label showing
+    the % move after each event) — flags mark events but don't visually foreground
+    their impact on price, which would push Data Storytelling (DE-03) further.
+  - 'LM-02: the flag/connector/legend construction is built from raw D3 primitives
+    (join + manual transforms), which is idiomatic but the same visual result is achievable
+    with annotation layers in other charting libraries — doesn''t lean on a feature
+    truly unique to D3 (e.g. force simulation, Voronoi, custom curve interpolators
+    beyond curveMonotoneX).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Tech Stock 2025 · stock-event-flags · javascript · d3 · anyplot.ai" in bold dark ink at top-center, fully visible and not clipped. A 4-item color-swatch legend (Earnings/green, Dividend/blue, Split/ochre, News/rose) sits below the title, all labels clearly readable in dark secondary ink. X-axis "Trading Date (2025)" and Y-axis "Closing Price (USD)" labels are dark and legible. Tick labels ($130-$170, monthly Feb-Sep) are readable in soft ink. Subtle horizontal-only gridlines are visible but do not compete with the data.
-      Data: Primary price line is Imprint brand green (#009E73), clearly distinguishable from the cream background. Ten event flags sit in fixed alternating top/bottom lanes, each a rounded box (near-white fill, colored border matching its event type) containing an icon glyph, a short label, and a date, connected to its exact price point by a dashed vertical line in the event's color and a small colored marker dot on the price line. All flag text and icons are clearly legible against the light background.
-      Legibility verdict: PASS — no light-on-light or illegible text found.
+      Background: Warm off-white (#FAF8F1-like), not pure white, not dark.
+      Chrome: Title "Tech Stock 2025 · stock-event-flags · javascript · d3 · anyplot.ai" in bold dark ink, centered at top, clearly readable. Legend below title with 4 swatches (Earnings/Dividend/Split/News) in dark-ink text. X-axis "Trading Date (2025)" and Y-axis "Closing Price (USD)" labels in dark ink, both clearly legible. Tick labels ($130-$170, Feb-Sep) dark and readable. Subtle horizontal-only gridlines, faint but visible.
+      Data: Green (#009E73) price line with monotone curve, visible daily volatility and clear up/down swings. 10 event flags in alternating top/bottom lanes, each a rounded box with colored border + icon (▲ earnings, $ dividend, ✂ split, ★ news) matching the legend colors, joined to a small circular marker on the price line by a dashed colored connector. First categorical color used is the brand green for the price line; the 3 additional event-type colors (lavender, blue, ochre) come from canonical Imprint palette positions 2-4.
+      Legibility verdict: PASS — all text is dark-on-light and fully readable, no overlap between flags, axis, or legend.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light ink (near-white/light-gray), clearly visible against the dark surface. Tick labels and gridlines are visible but subtle, matching the theme-adaptive token set.
-      Data: Price line and all four event-type colors (green, blue, ochre, rose) are pixel-identical to the light render — only the chrome (background, text, grid, flag-box fill) flipped to dark-theme tokens. Flag boxes now have a dark elevated-surface fill with the same colored borders/icons, and all text inside them (label, date) remains legible against the darker box fill.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick/flag text remains clearly readable.
+      Background: Warm near-black (#1A1A17-like), not pure black, not light.
+      Chrome: Title, legend text, axis labels, and tick labels all rendered in light/off-white ink, clearly legible against the dark background. Gridlines remain subtle (light, low-opacity) and visible without competing with data.
+      Data: Price line and all four event-flag colors (green, lavender, blue, ochre) are pixel-identical to the light render — only the chrome (background, text, grid, flag-box fill) flipped to dark-theme tokens. Flag box fills use the dark elevated-background token so the colored borders and icons still pop.
+      Legibility verdict: PASS — no dark-on-dark failures found; every title/label/tick/flag-text element is clearly legible, and the brand green remains vivid on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Title/axis/tick/legend text all readable in both themes; flag event-label
-          (12.5px) and date (11.5px) text run smaller than the 14px tick labels, risking
-          mobile legibility
+        comment: All font sizes explicitly set (14/16/22px chrome); readable in both
+          themes; title ~55% width, well within bounds; balanced axis label/tick sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Flags spaced across the timeline with no text/box/data collisions
-          in either render
+        comment: No collisions between flags, legend, axes, or price line in either
+          render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 3px price line and r=5 event markers are clearly visible at this
-          data density
+        comment: 3px line, r=5 markers, and flag boxes are well-sized for ~180 daily
+          points over 8 months
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Icon glyphs (triangle/$/scissors/star) give redundant non-color encoding;
-          no red-green pairing used
+        comment: Four visually distinct hues, good contrast against both surfaces,
+          no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no clipping, title/legend/flags well within
-          bounds
+        comment: Plot area fills most of the canvas with balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Closing Price (USD)" and "Trading Date (2025)" are descriptive
-          with units'
+        comment: '''Closing Price (USD)'' and ''Trading Date (2025)'' are descriptive
+          with units/context'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73; event-type colors skip canonical
-          order (palette[0,2,3,6]) with a stylistic rather than widely-shared semantic
-          justification; both backgrounds are theme-correct'
+        passed: true
+        comment: 'First series is #009E73; event types use canonical Imprint positions
+          2-4; theme-correct backgrounds in both renders'
     design_excellence:
       score: 15
       max: 20
@@ -119,22 +117,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Polished flag/connector/marker composition matches real trading-platform
-          conventions
+        comment: Custom flag/lane system with icon taxonomy is clearly above a plain
+          default line chart, though typography stays fairly standard
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Y-only subtle grid, generous margins, but axis domain lines and box
-          borders are fairly standard rather than especially refined
-      - id: DE-03
-        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Alternating lanes plus dashed connectors create a clear, uncluttered
-          narrative linking events to price action
+        comment: Subtle y-only grid, generous whitespace, rounded flag boxes; L-shaped
+          axis kept per style-guide default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Event flags create clear visual hierarchy tying price moves to causes,
+          though no explicit price-reaction emphasis (e.g. delta labels)
     spec_compliance:
       score: 15
       max: 15
@@ -144,53 +142,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stock line chart with flag-style event annotations
+        comment: Stock price line with flag-style event annotations, exactly as specified
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Flags avoid obscuring price data via lanes, distinct icons/colors
-          per type, dashed connector lines to exact price point
+        comment: Alternating placement, distinct icons/colors per type, dashed connector
+          lines, full event details always visible all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=close, full data range shown
+        comment: Date on X, closing price on Y; all 180 trading days and all 10 events
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          event types
+        comment: Title format correct with descriptive prefix; legend labels (Earnings/Dividend/Split/News)
+          match event types used
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All required fields covered (date, close, event_date/type/label);
-          optional OHLC unused
+        comment: 4 event types, both earnings beats and a miss, alternating lane placement
+          all demonstrated; OHLC correctly omitted as optional
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral tech-stock scenario with realistic earnings/dividend/split/news
-          events
+        comment: Neutral tech-stock scenario with plausible corporate events
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range and dividend amounts are sensible for the domain
+        comment: Price range ($140-$170), daily volatility, and dividend amounts ($0.24-0.28)
+          are all realistic for a mid-cap tech stock
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -198,56 +197,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no classes; per-datum .each() is idiomatic D3
+        comment: Linear script, no custom functions/classes beyond idiomatic D3 callbacks
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG for deterministic price generation
+        comment: Fixed-seed LCG (seed=42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used
+        comment: Only the global d3, no extraneous imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity
+        comment: Repeats the same translate transform on rect + 3 text nodes instead
+          of once on a per-datum group
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts into #container per contract, no animation, current D3 v7
-          API'
+        comment: 'Builds svg from ANYPLOT_SIZE into #container, current D3 v7 API,
+          no animation'
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: scaleTime/scaleLinear/curveMonotoneX, join pattern, axis gridline
-          trick all idiomatic
+        comment: Proper scales/axes, data-join pattern (.data().join()), d3.line with
+          curveMonotoneX, d3.timeFormat
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Per-datum grouped shape composition via .each(), dashed connector
-          + marker + box pattern goes beyond a basic chart
+        comment: Manual per-datum SVG composition for flags is D3-native but conceptually
+          replicable via annotation layers in other charting libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
