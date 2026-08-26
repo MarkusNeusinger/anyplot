@@ -76,6 +76,8 @@ const columnGap = (iw - nodeWidth) / (waveLabels.length - 1);
 const yScale = (ih - catPad * (categories.length - 1)) / 1000;
 
 const color = d3.scaleOrdinal().domain(d3.range(categories.length)).range(t.palette);
+const categoryAbbrev = categories.map((name) => name.split(" ").map((w) => w[0]).join(""));
+const isExtreme = (c) => c === 0 || c === categories.length - 1;
 
 // Nodes: one block per (wave, category), stacked top-to-bottom in scale order.
 const nodes = waveCategoryTotals.map((totals, w) => {
@@ -169,15 +171,28 @@ svg
   .text((d) => d.label);
 
 // --- Ribbons (flows) ----------------------------------------------------------
+// Draw "changed category" ribbons first so the higher-opacity "stable" ribbons
+// layer on top, cutting down the crossing clutter around the Neutral band.
+const sortedRibbons = ribbons
+  .slice()
+  .sort((a, b) => (a.sourceCat === a.targetCat ? 1 : 0) - (b.sourceCat === b.targetCat ? 1 : 0));
+
 svg
   .selectAll(".ribbon")
-  .data(ribbons)
+  .data(sortedRibbons)
   .join("path")
   .attr("class", "ribbon")
   .attr("d", ribbonPath)
   .attr("fill", (d) => color(d.sourceCat))
-  .attr("fill-opacity", (d) => (d.sourceCat === d.targetCat ? 0.55 : 0.2))
-  .attr("stroke", "none");
+  .attr("fill-opacity", (d) => {
+    const stable = d.sourceCat === d.targetCat;
+    const base = stable ? 0.55 : 0.2;
+    const thin = d.sy1 - d.sy0 < 10;
+    return thin ? base + 0.15 : base;
+  })
+  .attr("stroke", (d) => (d.sourceCat === d.targetCat && isExtreme(d.sourceCat) ? color(d.sourceCat) : "none"))
+  .attr("stroke-width", (d) => (d.sourceCat === d.targetCat && isExtreme(d.sourceCat) ? 1.5 : 0))
+  .attr("stroke-opacity", 0.9);
 
 // --- Nodes ----------------------------------------------------------------
 const nodeFlat = nodes.flat();
@@ -233,6 +248,23 @@ svg
   .attr("fill", t.inkSoft)
   .style("font-size", "14px")
   .text((d) => categories[d.cat]);
+
+// --- Category abbreviation tags (interior waves) -----------------------------
+// Q1/Q4 get full names beside the column; interior waves get a compact tag
+// above each node so color + vertical position aren't the only identity signal.
+const interiorNodes = nodes.slice(1, -1).flat();
+svg
+  .selectAll(".label-interior")
+  .data(interiorNodes)
+  .join("text")
+  .attr("class", "label-interior")
+  .attr("x", (d) => d.x0 + nodeWidth / 2)
+  .attr("y", (d) => d.y0 - 6)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "11px")
+  .style("font-weight", "600")
+  .text((d) => categoryAbbrev[d.cat]);
 
 // --- Stability legend (opacity encoding) --------------------------------------
 const legendY = height - 34;
