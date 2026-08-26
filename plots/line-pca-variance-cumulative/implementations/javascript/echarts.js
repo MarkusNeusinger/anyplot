@@ -1,7 +1,7 @@
 // anyplot.ai
 // line-pca-variance-cumulative: Cumulative Explained Variance for PCA Component Selection
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-08-26
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 
