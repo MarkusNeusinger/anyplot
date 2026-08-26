@@ -1,0 +1,263 @@
+library: echarts
+language: javascript
+specification_id: raincloud-basic
+created: '2026-08-26T10:36:01Z'
+updated: '2026-08-26T10:41:14Z'
+generated_by: claude-sonnet
+workflow_run: 32958045081
+issue: 1876
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/echarts/plot-dark.html
+quality_score: 96
+review:
+  strengths:
+  - 'Correct horizontal raincloud geometry: half-violin cloud rises above each category
+    baseline, boxplot sits centered on the baseline, and jittered rain falls below
+    it — matches the spec''s cloud/box/rain layout precisely'
+  - Half-violin is genuinely clipped to the upper half via a custom `renderItem` polygon
+    (not a full violin hidden with a mask), built from a hand-rolled Gaussian KDE
+  - Whisker caps, a contrasting page-background-colored median line, and careful z-ordering
+    (cloud z=2, box z=3, rain z=4) add real polish beyond a basic boxplot
+  - 'Full Imprint palette compliance: first series is #009E73, remaining 4 categories
+    follow canonical order 2-5, and chrome (background, text, grid) is theme-correct
+    in both renders'
+  - Deterministic seeded LCG data with a deliberate bimodal 'Medium Dose' mixture
+    that demonstrates exactly why raincloud plots exist (a boxplot alone would hide
+    that shape)
+  - 'Reaction-time dose-response curve is physiologically plausible (inverted-U: moderate
+    caffeine speeds reactions, very high dose slows them again via overstimulation)'
+  - 'No wasted legend: category identity is already carried by the y-axis labels and
+    color, so omitting a redundant legend is the right call'
+  - Uses ECharts' `custom` series + `renderItem`/`api.coord`, a technique that is
+    genuinely hard to replicate as cleanly in other JS charting libraries
+  weaknesses:
+  - Title occupies only ~30% of plot width at fontSize 22 — legible and correctly
+    formatted, but on the low end of the ~50-70% guideline for a non-mandated-prefix
+    title; could grow slightly for stronger hierarchy
+  - Rain points in the densest rows (Medium Dose, Placebo) show some marker clumping
+    in the middle of the jitter band — a touch more jitter width or slightly lower
+    opacity would separate them further
+  - The bimodal shape in Medium Dose (the key argument for using a raincloud plot
+    over a boxplot) is left for the viewer to notice unaided — no callout/annotation
+    highlights it
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "raincloud-basic · javascript · echarts · anyplot.ai" centered in dark ink text; x-axis title "Reaction Time (ms)" and tick labels (300-700) in soft dark gray; y-axis category labels (Placebo, Low Dose, Medium Dose, High Dose, Very High Dose) in soft dark gray. All fully readable against the light background. Subtle vertical grid lines only.
+      Data: Five rows, each with a half-violin cloud rising above its baseline, a boxplot with white median line centered on the baseline, and jittered rain points below. Colors follow the Imprint palette in canonical order: Placebo = #009E73 (brand green), Low Dose = lavender, Medium Dose = blue, High Dose = ochre, Very High Dose = matte red. Medium Dose's cloud is visibly two-humped (bimodal), and High Dose shows a similar double-peak shape.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title, axis title, tick labels, and category labels now rendered in light/off-white tones, fully legible against the dark background. No dark-on-dark text anywhere. Grid lines still subtle and visible.
+      Data: Colors are pixel-identical to the light render (same green/lavender/blue/ochre/red sequence) — only the chrome (background, text, grid) flipped. Cloud/box/rain layout and bimodal Medium Dose shape are unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis name 15, tick labels
+          14-15); readable in both themes with balanced X/Y sizing
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Cloud/box/rain bands are geometrically spaced with clear gaps between
+          adjacent categories; no text or data collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize=9 with opacity 0.6 is well matched to the 55-90 points
+          per category; rain, box, and cloud all clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; alpha layering keeps overlapping cloud/box/rain
+          elements distinguishable without relying on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area uses a large, balanced share of the canvas with even margins
+          on all sides; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled 'Reaction Time (ms)' with units; category axis is
+          self-descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, remaining series follow canonical Imprint
+          order; backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color use, contrasting median line, whisker caps — clearly
+          above library defaults, short of full publication-grade polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle vertical-only grid, L-shaped axis lines, generous whitespace;
+          small clumping in dense rain bands keeps it just under perfect
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bimodal Medium Dose shape and inverted-U dose curve are visually
+          apparent and directly demonstrate the raincloud plot's value over a boxplot,
+          though not explicitly annotated
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct raincloud (half-violin + box + jittered strip) composition
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal orientation, clipped half-violin, jitter 0.08, rain alpha
+          0.6, median/quartile markers all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on y-axis, value on x-axis as required; full data range
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; legend correctly omitted since
+          category identity is already on the y-axis
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows unimodal and bimodal distributions, varying spreads, and outliers
+          across the five categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Reaction time under increasing caffeine dosage is a real, neutral
+          psychology-experiment scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times (400-650ms) and an inverted-U dose-response curve
+          are physiologically plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> stats -> series -> option flow; helper functions are
+          necessary for KDE/quantile math, not over-abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) drives all randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided echarts/ANYPLOT_TOKENS globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportional to implementing violin+box+rain from scratch;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: echarts.init with no explicit size/devicePixelRatio, animation:false,
+          correct setOption usage
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly combines custom series (for shapes ECharts has no native
+          support for) with a native scatter series for rain — the idiomatic ECharts
+          approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom renderItem/api.coord geometry is a feature genuinely hard
+          to replicate as cleanly in other JS charting libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - edge-highlighting
