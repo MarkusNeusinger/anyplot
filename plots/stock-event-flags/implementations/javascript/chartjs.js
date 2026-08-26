@@ -1,7 +1,7 @@
 // anyplot.ai
 // stock-event-flags: Stock Chart with Event Flags
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-08-26
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
