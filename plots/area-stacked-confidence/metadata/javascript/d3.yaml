@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: area-stacked-confidence
 created: '2026-08-26T17:51:16Z'
-updated: '2026-08-26T17:56:33Z'
+updated: '2026-08-26T18:06:23Z'
 generated_by: claude-sonnet
 workflow_run: 32996012665
 issue: 3549
@@ -12,62 +12,62 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - First-class use of d3.stack() to derive both the stacked central areas and the
-    confidence bands from the same cumulative baseline, so stack order is guaranteed
-    consistent between values and bands as the spec requires
-  - Distinct Imprint palette colors (green/lavender/blue/ochre) are identical across
-    light and dark renders; only chrome (background, grid, ticks, legend text) flips
-    correctly
-  - Confidence bands visibly widen further into the forecast horizon, giving the reader
-    an immediate, honest read of growing uncertainty over time
-  - 'Clean theme-adaptive chrome throughout: y-axis-only subtle grid, L-shaped spines,
-    explicit font sizes on every text element, legend positioned close to the plot'
-  - Title fontsize is dynamically scaled down for the long mandated+descriptive-prefix
-    string so nothing clips or overflows the canvas
+  - 'Per-series confidence-band growth rates (bandGrowthFrac = [0.1, 0.2, 0.16, 0.3])
+    now directly address the attempt-1 weakness: Subscriptions visibly widens faster
+    than the mature Hardware line, giving an honest, differentiated read of forecast
+    uncertainty per product line'
+  - Vertical linear gradients per band (opacity peaking at the midpoint, tapering
+    to the edges) implement the spec's suggested 'gradient fill from lower to upper
+    bound' and read as a soft uncertainty cloud rather than a flat tint
+  - Title fontsize formula retuned off a 28px baseline (floored at 18px) so the descriptive-prefixed
+    title now fills ~55% of canvas width instead of the previous ~43% — fixes the
+    attempt-1 VQ-01 finding without overflowing
+  - Legend caption font size now matches the legend row labels (both 16px), resolving
+    the prior visual mismatch
+  - d3.stack() derives both the central stacked areas and the confidence-band offsets
+    from the same cumulative baseline, guaranteeing stack-order consistency between
+    values and bands as the spec requires
+  - Imprint palette in correct canonical order (green/lavender/blue/ochre), identical
+    between light and dark renders — only chrome flips
   weaknesses:
-  - Title only fills ~43% of the chart width despite using the mandated + descriptive-prefix
-    format (~81 chars) — the linear shrink formula (22 * 67/title.length) undershoots
-    for prefixed titles; tune the formula or its floor so long titles still read prominently
-    (~50-60% of width) without overflowing
-  - All four series share the exact same fractional confidence-band growth curve (0.04
-    + i/(n-1)*0.22) — only the absolute band width differs because central values
-    differ; vary the per-series growth rate (e.g. Subscriptions widening faster than
-    Hardware) so the chart demonstrates that some series are inherently more uncertain
-    than others
-  - Confidence bands use a flat 0.3-alpha fill; the spec explicitly suggests considering
-    a gradient fill from lower to upper bound for extra visual clarity — worth exploring
-    to push Design Excellence further
-  - 'Legend caption (''Shaded band: 90% prediction interval'') at 14px looks slightly
-    smaller/lighter than the 16px legend row labels directly above it — align sizing
-    or weight for a more polished legend block'
+  - Confidence-band gradients bleed slightly past their own series boundary into the
+    neighboring series' fill (by design, per the code comment), which is a nice touch
+    for showing overlap but could momentarily read as a rendering artifact rather
+    than an intentional signal to a first-time viewer — consider a brief legend note
+    or subtler bleed
+  - 'Visual Refinement (DE-02) is solid but not pushed further in this attempt: grid/spine
+    treatment is unchanged from attempt 1 — a subtler y-axis grid or refined tick
+    density could add more polish'
+  - Legend swatches are identical flat rectangles for all four series; differentiating
+    the swatch to hint at the gradient band (e.g. a small gradient sample) would reinforce
+    what the shaded regions represent
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Product Line Forecast · area-stacked-confidence · javascript · d3 · anyplot.ai" in bold dark ink at top-center; axis titles "Fiscal Quarter" (x) and "Stacked Revenue ($M)" (y, rotated) in dark ink; tick labels ($0M-$80M, 2024-2028) and legend text in a softer dark gray. Subtle horizontal gridlines only on the y-axis. All text is clearly readable against the light background.
-      Data: Four stacked areas from bottom to top — Hardware (brand green #009E73), Software (lavender), Services (blue), Subscriptions (ochre) — each with a translucent confidence band of the same hue layered above its solid central area, plus a crisp boundary line at the top of each layer. Bands visibly widen from left (2024) to right (2028), showing growing forecast uncertainty. Legend on the right lists all four series with color swatches plus a caption explaining the shaded band represents a 90% prediction interval.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title centered at top ("Product Line Forecast · area-stacked-confidence · javascript · d3 · anyplot.ai"), now spanning roughly 55% of canvas width (up from ~43% in attempt 1). Dark-ink axis titles ("Fiscal Quarter", "Stacked Revenue ($M)"), softer dark-gray tick labels on both axes, subtle horizontal-only gridlines. Legend on the right lists all four series plus a two-line caption ("Shaded band: 90% / prediction interval") at matching font size to the legend rows. All text is clearly readable against the light background.
+      Data: Four stacked areas from bottom to top — Hardware (#009E73 brand green), Software (lavender), Services (blue), Subscriptions (ochre) — each a solid central area topped with a crisp boundary line and a translucent vertical-gradient confidence band. Band widths visibly differ in growth rate: Subscriptions' band widens noticeably faster into 2028 than Hardware's, correctly reflecting the varied bandGrowthFrac per series.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, tick labels, and legend now rendered in light ink/off-white and soft light gray, fully legible against the dark background. No dark-on-dark text anywhere. Gridlines remain subtle.
-      Data: Identical four data colors (green/lavender/blue/ochre) to the light render — confirms the palette does not shift between themes. Only the background, text, and grid colors flip. The confidence bands and boundary lines read just as clearly as in the light render.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and legend now render in light ink/off-white and soft light gray — fully legible, no dark-on-dark text anywhere. Gridlines remain subtle but visible.
+      Data: Data colors (green/lavender/blue/ochre) are pixel-identical to the light render — only chrome (background, text, grid) flips, as required. Confidence-band gradients and boundary lines read just as clearly as in the light render; no washed-out or invisible elements.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit, readable in both themes; title fontsize-shrink
-          formula leaves it under 50% of canvas width for the descriptive-prefixed
-          case
+        comment: Title fontsize formula fixed — now ~55% of canvas width; all text
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -79,59 +79,58 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Area fills and boundary lines well sized for 20-quarter sparse time
-          series
+        comment: Central areas, boundary lines, and gradient bands all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 distinct Imprint hues, not red-green reliant, good contrast in
-          both themes
+        comment: Imprint palette provides adequate contrast and CVD-safe hue separation;
+          no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas, balanced margins, legend close to
-          plot
+        comment: 3200x1800 canvas gate passed; balanced margins, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ($M)
+        comment: Descriptive axis titles with units ($M); mandated title format followed
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, identical data colors across themes, correct
-          backgrounds'
+        comment: 'First series #009E73, canonical Imprint order (green/lavender/blue/ochre),
+          theme-correct backgrounds in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful layered translucent bands and boundary lines, above library
-          defaults, not yet publication-ready
+        comment: Layered central area + gradient band + boundary line, per-series
+          band gradients — clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle single-axis grid, L-shaped spines, generous whitespace
+        comment: Subtle single-axis grid, minimal spines, generous whitespace — unchanged
+          from attempt 1, room for further polish
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Widening bands over time create a genuine, immediately visible insight
-          into growing forecast uncertainty
+        comment: Differentiated per-series band-growth rates now tell a richer, more
+          honest uncertainty story than the identical-curve approach in attempt 1
     spec_compliance:
       score: 15
       max: 15
@@ -147,45 +146,45 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Distinct series colors, alpha 0.3 bands, consistent stack order,
-          legend explaining bands
+        comment: Distinct series colors with matching band shades, semi-transparent
+          bands, consistent stack order, gradient fills, legend explaining bands
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=time, Y=stacked revenue, full data range shown
+        comment: X = fiscal quarter (time), Y = stacked revenue, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match product lines
+        comment: Title format correct with descriptive prefix; legend labels match
+          series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows widening bands and differentiated growth rates, but all series
-          share the same fractional band-growth curve
+        comment: Per-series band-growth rates now demonstrate that some series are
+          inherently more uncertain than others, closing the attempt-1 gap
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue forecast by product line is a realistic, neutral
-          business scenario
+        comment: Quarterly revenue forecast by product line is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Base revenues and growth rates are plausible for hardware/software/services/subscriptions
-          lines
+        comment: Revenue values ($18-75M range) and growth rates are sensible for
+          the domain
     code_quality:
       score: 10
       max: 10
@@ -195,33 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports->data->plot structure, no unnecessary classes
+        comment: No functions/classes, flat script structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, deterministic
+        comment: Fixed-seed LCG for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used
+        comment: Only the d3 global used, no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI or over-engineering
+        comment: No fake interactivity, appropriate complexity for the technique
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly, no animation
+        comment: 'Builds svg into #container from window.ANYPLOT_SIZE; no animation'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -229,21 +228,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic use of d3.stack/d3.area/scales/axes
+        comment: Idiomatic d3.stack/d3.area/d3.scaleTime/d3.axisBottom usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Derives confidence bands from the same stack offsets used for central
-          areas, a d3-specific data-transform technique
-  verdict: REJECTED
+        comment: Per-series SVG linearGradient defs for the confidence bands is a
+          genuinely D3-specific technique beyond basic area charts
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
@@ -251,4 +249,5 @@ impl_tags:
   - cumulative-sum
   - time-series
   styling:
+  - gradient-fill
   - alpha-blending
