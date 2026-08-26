@@ -102,9 +102,13 @@ with evidence — never let the user ask "still running?".
 - **Defer, don't halt**: one stuck library must not stop a multi-spec
   queue — log it, cap ~90 min/spec, move on, and sweep leftovers at
   the end with targeted regens.
-- **Halt the whole queue** only on a failure CLUSTER (≥5 failed
-  `Generate:` runs in minutes = model daily quota exhausted; a
-  fallback model via `-f model=` can finish leftovers).
+- **Halt the whole queue** only on a failure CLUSTER: **≥3 distinct
+  (spec, library) pairs** failing within minutes of each other = model
+  daily quota exhausted; a fallback model via `-f model=` can finish
+  leftovers. The threshold is pairs, full stop — the raw run count
+  says nothing, because one impossible pair spends three runs on its
+  own auto-retries, so two bad pairs already produce six failures with
+  the pipeline entirely healthy (observed 2026-08-24).
 - Closing/merging pipeline PRs or issues yourself is out of bounds
   (CLAUDE.md external-write rule + mandatory workflow).
 
@@ -160,6 +164,24 @@ ggplot2/network-force-directed, all three of which had been read as
 capability gaps. Two failures on the same pair → `deferred.log` with
 the reason, move on, sweep at the end.
 
+Check the run list before deferring, though: since #10627 the
+workflow spends its own three attempts per campaign, so a pair that
+comes back missing may already have failed three times, and the
+manual retry adds nothing. There is no per-spec filter on the API, so
+filter the output by run title:
+
+```bash
+gh run list --workflow=impl-generate.yml --limit 40 \
+  --json conclusion,createdAt,displayTitle \
+  --jq '.[] | select(.displayTitle | test("<spec>")) | "\(.createdAt) \(.conclusion) \(.displayTitle)"'
+```
+
+Three `Generate: <lib> for <spec>` failures minutes apart is a measured
+gap; one failure is a flake worth the retry. The same check covers
+`RESULT=TIMEOUT` with `recent generate failures: 0`, which only means
+the failures fell outside the driver's 25-minute window, not that
+nothing failed.
+
 ## Gotchas
 
 - **`Marking <lib> as failed: N generation attempts` counts more than
@@ -185,12 +207,25 @@ the reason, move on, sweep at the end.
   failed 17:55, retried and succeeded 18:02, no human involved), so a
   single occurrence is noise — only a repeat on the same pair means
   anything.
-- **Static library + interactive/3D spec is the one gap that is
-  usually real.** plotnine, pygal, seaborn, matplotlib and ggplot2
-  against `*-interactive`, `*-drilldown`, `*-realtime`, `*-streaming`,
-  `slider-*`, `*-3d` specs make up most genuine dead ends; 18 of the
-  45 real gaps behind those labels were exactly this shape. Still
-  give them the one retry, then defer without further ceremony.
+- **Do not predict capability gaps — measure them.** The 2026-08-24
+  backfill guessed four times which pairs were genuinely impossible
+  (chartjs on treemap/sankey, plotnine on 3D, ggplot2 on wireframe,
+  "static library vs. interactive spec") and every category-level
+  guess was wrong: 17 of 20 parked pairs generated fine, pygal and
+  chartjs each succeeded on the very plot types they were written off
+  for, and `bar-3d-categorical` succeeded in plotnine while
+  `scatter-3d` did not. Only three pairs failed with a full budget —
+  plotnine on `scatter-3d`, `contour-3d`, `line-3d-trajectory`, all
+  needing a spatial projection plotnine does not have, while the
+  "3D" spec that is representable in 2D went through. A gap is real
+  when three attempts under a fresh campaign budget say so, never
+  because the pairing sounds implausible.
+- **A spec id from an issue title may not exist.** `impl:*:failed`
+  labels outlive their specs: of 26 spec IDs harvested that way, 14
+  had no `plots/<spec>/` on main at all, and a dispatch for one dies
+  at `Validate specification exists` seconds in. Intersect any
+  label-derived list with `git ls-tree -d origin/main plots/` before
+  queueing it.
 - **The scripts' library list is a copy** of `core/constants.py`'s
   registry (15 libs). When a library is added/removed, update
   `monitor_spec.sh`'s `ALL_LIBS` and `run_spec.sh`'s `lang_of` in the
