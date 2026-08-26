@@ -109,20 +109,20 @@ Highcharts.chart("container", {
       name: "Individual variance",
       data: individualRatio,
       yAxis: 0,
-      color: t.palette[1],
+      color: t.palette[0],
     },
     {
       type: "line",
       name: "Cumulative variance",
       data: cumulativeRatio.map((v, i) =>
         i === elbowIndex
-          ? { y: v, marker: { radius: 8, symbol: "diamond", fillColor: t.palette[0], lineColor: t.ink, lineWidth: 1.5 } }
+          ? { y: v, marker: { radius: 8, symbol: "diamond", fillColor: t.palette[1], lineColor: t.ink, lineWidth: 1.5 } }
           : v
       ),
       yAxis: 1,
-      color: t.palette[0],
+      color: t.palette[1],
       lineWidth: 2.5,
-      marker: { radius: 5, fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 1 },
+      marker: { radius: 5, fillColor: t.palette[1], lineColor: t.pageBg, lineWidth: 1 },
       dataLabels: {
         enabled: true,
         formatter() {
