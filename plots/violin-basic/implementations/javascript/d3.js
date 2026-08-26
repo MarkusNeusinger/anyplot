@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-basic: Basic Violin Plot
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-26
+// Quality: 89/100 | Created: 2026-08-26
 
 // --- Reproducible RNG (LCG + Box-Muller) ------------------------------------
 let seed = 20260826;
