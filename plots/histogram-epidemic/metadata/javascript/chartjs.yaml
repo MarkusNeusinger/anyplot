@@ -1,0 +1,263 @@
+library: chartjs
+language: javascript
+specification_id: histogram-epidemic
+created: '2026-08-26T06:15:17Z'
+updated: '2026-08-26T06:27:57Z'
+generated_by: claude-sonnet
+workflow_run: 32936948719
+issue: 4426
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Fixed the flagged Attempt 1 issue exactly as recommended: the cumulative-cases
+    line now uses the fixed Imprint palette color t.palette[3] instead of the chrome
+    token t.ink, so it renders identically (ochre/brown) in both light and dark themes
+    instead of flipping black/white.'
+  - 'Faithfully implements every spec requirement: case-type stacking (confirmed/probable/suspect),
+    two intervention annotation lines, and a secondary-axis cumulative overlay.'
+  - Intervention markers are implemented natively via a Chart.js afterDraw plugin
+    hook — no forbidden external annotation plugin, and labels never collide with
+    bars or each other.
+  - 'Both themes are fully legible: warm off-white/near-black backgrounds, all chrome
+    text readable, and the three categorical bar colors are pixel-identical across
+    light and dark.'
+  - Realistic, neutral epidemiological narrative — a sharp point-source peak followed
+    by a broader propagated wave, with lab-confirmation share rising over time — matches
+    the spec's outbreak-pattern intent.
+  - Deterministic, reproducible data generation via a tiny seeded LCG.
+  weaknesses:
+  - The zero-radius cumulative-cases line is an appropriate overlay choice but loses
+    a little visual weight against 70 dense stacked bars — a slightly thicker stroke
+    (e.g. borderWidth 3) would help it read at a glance.
+  - Tick label font sizes (14px) are a touch small relative to the large 3200x1800
+    canvas — not a legibility failure, but could be nudged up slightly for better
+    readability at a glance.
+  - A handful of small helper functions (nextRand, gaussian, interventionMarkerPlugin.afterDraw)
+    keep the script from being fully flat top-level code — acceptable given the plugin
+    requirement, but worth flattening where easy.
+  - 'The cumulative line''s ochre (t.palette[3], #BD8233) and the intervention markers''
+    amber (t.amber, #DDCC77) sit in the same warm gold/brown hue family; they remain
+    distinguishable via dashed-vs-solid line style, but a cooler palette color for
+    the cumulative series would sharpen the visual separation between annotation and
+    data.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-like), not pure white, not dark.
+      Chrome: Title "histogram-epidemic · javascript · chartjs · anyplot.ai" in dark bold text, centered and fully readable. Legend shows four entries with distinct swatches: Confirmed (brand green #009E73), Probable (lavender/magenta), Suspect (blue), Cumulative cases (ochre/brown). Axis titles "Symptom onset date", "New cases per day" (left), "Cumulative cases" (right) all present and legible. Two amber dashed vertical intervention lines ("Contaminated batch recalled", "Contact-tracing expanded") with dark, legible labels that don't collide with bars, legend, or each other. Horizontal gridlines are subtle.
+      Data: First series is #009E73 (brand green) as required. Stacked daily bars form a clear two-wave epi curve — a sharp point-source peak around Apr 13-15, a dip, then a broader propagated wave peaking mid-May — overlaid with an ochre/brown cumulative-cases line on the secondary right-hand y-axis.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-like), not pure black, not light.
+      Chrome: Title, legend text, axis titles, and tick labels all render in light/cream color and are clearly legible against the dark surface. Intervention dashed lines and their labels remain legible (light text, amber dashed lines readable on dark background).
+      Data: The three stacked bar colors (green, lavender, blue) and the ochre cumulative line are visually identical to the light render — confirmed correct per the style guide (data colors must not change with theme, only chrome flips). This directly verifies the fix applied since Attempt 1, where the cumulative line previously used the chrome token t.ink and flipped from black to white between themes; it is now a stable t.palette[3] color in both renders.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light text failures found; all chrome and data remain fully readable.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicit, readable in both themes; tick labels a touch
+          small relative to the large canvas but not a legibility failure.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Intervention labels, legend, bars, and cumulative line never collide.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Dense daily bars remain distinguishable; the zero-radius cumulative
+          line is an appropriate choice but loses a little visual weight against 70
+          stacked bars.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/blue triad is distinguishable, not a red-green-only
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Nothing clipped, balanced margins, title proportion appropriate for
+          canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units on both y-axes.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed since Attempt 1: cumulative line now uses fixed t.palette[3]
+          instead of the chrome token t.ink, so it stays identical across light and
+          dark themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom afterDraw annotation plugin and dual-axis composition show
+          real design effort beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid limited to horizontal-only, hidden x-grid, generous legend spacing;
+          solid but not exceptional.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Intervention annotations plus the cumulative overlay give the chart
+          genuine narrative value beyond a plain histogram.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked histogram/bar epi curve, exactly the spec's plot type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Case-type stacking, intervention markers, secondary-axis cumulative
+          overlay, daily bins all present per spec notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates on x, daily case counts on left y, cumulative on right y —
+          correct mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match dataset
+          names.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All spec-listed data dimensions represented (onset_date, case_count,
+          case_type, interventions, cumulative).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral foodborne-then-propagated outbreak narrative with
+          a sensible confirmed-share ramp.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily counts and cumulative totals sit in a realistic range for a
+          local outbreak.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (nextRand, gaussian, plugin afterDraw)
+          beyond flat top-level code; justified by the plugin/data-generation need.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies solely on the global Chart.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; plugin hook is a clean, real Chart.js mechanism.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, single canvas appended.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed bar+line dataset types, dual scales, and native plugin hook
+          are all idiomatic core Chart.js.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin for annotations is a genuinely distinctive
+          use of Chart.js's extensibility, done without reaching for an external annotation
+          plugin.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - publication-ready
