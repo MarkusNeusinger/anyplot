@@ -1,6 +1,7 @@
 // anyplot.ai
 // sequence-logo-basic: Sequence Logo for Motif Visualization
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 88/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
@@ -54,6 +55,14 @@ const LETTER_COLOR = {
 // rendered as scaled glyphs, stretched to fill their allocated height").
 let glyphs = [];
 
+// Very-low-information letters (e.g. minor bases at positions 9-10) would
+// otherwise scale down to a near-invisible sliver. Give every drawn letter a
+// minimum on-screen height, converted from px into bits via the y-axis
+// scale, so it still reads as a distinct glyph. The floor is applied to the
+// stacking cursor too (not just the render box), so heights stay additive
+// and no glyph overlaps its neighbor.
+const MIN_GLYPH_PX = 8;
+
 function drawLetters(chart) {
   glyphs.forEach((el) => el.destroy());
   glyphs = [];
@@ -62,6 +71,8 @@ function drawLetters(chart) {
   const yAxis = chart.yAxis[0];
   const bandWidth = xAxis.toPixels(1) - xAxis.toPixels(0);
   const letterWidth = bandWidth * 0.8;
+  const pxPerBit = yAxis.toPixels(0) - yAxis.toPixels(1);
+  const minBits = MIN_GLYPH_PX / pxPerBit;
 
   stacks.forEach((stack, i) => {
     const xCenter = xAxis.toPixels(i);
@@ -70,7 +81,8 @@ function drawLetters(chart) {
 
     stack.forEach(({ letter, height }) => {
       if (height > 0.01) {
-        const topBits = bottomBits + height;
+        const renderHeight = Math.max(height, minBits);
+        const topBits = bottomBits + renderHeight;
         const yTop = yAxis.toPixels(topBits);
         const yBottom = yAxis.toPixels(bottomBits);
         const boxHeight = yBottom - yTop;
@@ -91,8 +103,10 @@ function drawLetters(chart) {
           scaleY,
         });
         glyphs.push(glyph);
+        bottomBits += renderHeight;
+      } else {
+        bottomBits += height;
       }
-      bottomBits += height;
     });
   });
 }
@@ -117,6 +131,23 @@ Highcharts.chart("container", {
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Position", style: { color: t.inkSoft, fontSize: "16px" } },
+    // Subtle band calling out the highly-conserved TATA-box-like core
+    // (positions 2-6) so the motif's story reads at a glance, without
+    // competing with the letter glyphs drawn on top.
+    plotBands: [
+      {
+        from: 0.5,
+        to: 5.5,
+        color: `${t.amber}1f`,
+        label: {
+          text: "Conserved core",
+          align: "center",
+          verticalAlign: "top",
+          y: 14,
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   yAxis: {
     min: 0,
