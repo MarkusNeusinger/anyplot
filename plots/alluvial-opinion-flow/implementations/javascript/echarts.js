@@ -1,7 +1,7 @@
 // anyplot.ai
 // alluvial-opinion-flow: Opinion Flow Diagram
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-26
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 const MUTED = t.theme === "light" ? "#6B6A63" : "#A8A79F";
