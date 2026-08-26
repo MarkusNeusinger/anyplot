@@ -1,0 +1,247 @@
+library: d3
+language: javascript
+specification_id: mohr-circle
+created: '2026-08-26T08:59:51Z'
+updated: '2026-08-26T09:13:26Z'
+generated_by: claude-sonnet
+workflow_run: 32949971259
+issue: 4432
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Point markers (A, B, σ1, σ2, τmax) now use idiomatic D3 data joins (g.selectAll(null).data(array).join("g"))
+    instead of imperative g.append() loops, directly resolving the attempt-1 LM-01
+    finding
+  - 'Visual hierarchy is now sharp: secondary construction geometry (diameter line,
+    angle arc) is thin, dashed, and low-opacity, while the σ1/σ2/τmax focal markers
+    are drawn last, larger (r=11 vs r=8), and bolder — resolving the attempt-1 DE-02/DE-03
+    finding'
+  - 'Mathematically correct construction: center, radius, σ1, σ2, τmax, and 2θp are
+    all computed from the stress state, not hardcoded'
+  - Equal-aspect-ratio scales (iw === ih, symmetric domains) keep the circle a true
+    circle exactly as the spec requires
+  - 'Full spec feature coverage in one view: circle, center C, points A/B, σ1/σ2,
+    τmax at top and bottom, 2θp angle annotation, grid, and dashed reference lines
+    through the center'
+  - Correct Imprint palette usage in canonical order, with data colors identical across
+    both light and dark renders
+  - Both renders are fully theme-correct with no legibility failures; L-shaped spine
+    convention (left+bottom axes only) followed
+  weaknesses:
+  - The center-point label "C" (offset dx=20, dy=-24 from center) still sits fairly
+    close to the diagonal dashed diameter line running through A and B — a slightly
+    larger offset or a small leader tick would read cleaner
+  - Construction-point and focal-point marker radii (r=8 and r=11) are modest relative
+    to the large 2400x2400 canvas; a touch larger would read more prominently at full
+    resolution without hurting density
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the required light-theme surface.
+      Chrome: Bold dark title "Steel Plate in Combined Loading · mohr-circle · javascript · d3 · anyplot.ai" at top, ~62% of canvas width, fully legible. Axis titles "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" and all numeric tick labels render in dark ink, clearly readable. Grid lines and the dashed center reference lines are subtle gray, visible but not dominant. Only left and bottom axis spines are drawn (correct L-shaped default), no top/right spine.
+      Data: Mohr's circle stroked in Imprint brand green (#009E73, palette[0]) with a faint 8%-opacity green fill. Point A (lavender, palette[1]) and point B (blue, palette[2]) are construction points, r=8, drawn first. The σ1, σ2, and two τmax extreme points (ochre, palette[3]) are r=11, bolder text (font-weight 700), and drawn last so they sit visually on top as the clear focal point. The diameter line through A/B and the 2θp angle arc are thin, low-opacity, and clearly de-emphasized relative to the circle and the extreme markers — establishing a strong visual hierarchy. No text overlaps any other element.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black — matches the required dark-theme surface (the faint interior green cast is the intentional 8%-opacity circle fill, not a background error).
+      Chrome: Title, axis titles, and all tick labels flip to light/off-white ink and remain fully legible. Grid lines and reference lines stay subtle against the dark surface. Same L-shaped spine convention as the light render.
+      Data: Circle stroke/fill and all point marker colors (green, lavender, blue, ochre) are pixel-identical to the light render — only chrome flipped, as required. No dark-on-dark failures found; every label (including "C", "2θp ≈ 40.6°", and all four extreme-point labels) is readable against the near-black background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All titles/labels/ticks readable in both themes; title scales to
+          ~62% width via length-aware font-size formula
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, markers, or axis chrome in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers clearly distinguishable from background and each other; r=8/11
+          is a touch modest for the 2400x2400 canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues (green/lavender/blue/ochre), no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correct, equal aspect ratio confirmed (iw === ih),
+          nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (MPa), correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Circle uses palette[0]=#009E73; A/B/extremes use canonical palette
+          order; backgrounds theme-correct in both renders
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom palette, translucent circle fill, and now an intentional layered
+          hierarchy across marker tiers
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Secondary construction geometry (diameter line, angle arc) de-emphasized
+          via thin stroke + low opacity, resolving attempt-1 feedback; correct L-shaped
+          spines, subtle grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: σ1/σ2/τmax markers drawn last, larger, and bolder than A/B construction
+          points, giving the chart a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's circle construction
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Circle, C, A, B, σ1, σ2, τmax, 2θp angle, grid, and reference lines
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Center/radius/principal-stress math verified correct (center=55,
+          radius≈46.1, σ1≈101.1, σ2≈8.9, 2θp≈40.6°)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; inline labels
+          substitute for a legend appropriately
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All Mohr's-circle aspects shown in one view
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral combined-loading steel-plate scenario with nonzero
+          τxy
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stress values (90/20/30 MPa) are sensible for structural steel
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level code, one small geometry helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded stress state
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct #container mount contract, ANYPLOT_SIZE-driven svg sizing'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses g.selectAll(null).data(array).join("g") for both point groups,
+          resolving attempt-1 finding; idiomatic scales/axes/d3.path
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.path() arc construction with atan2-based polar geometry helper
+          is genuinely D3-specific
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
