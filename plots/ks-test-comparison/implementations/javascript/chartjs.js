@@ -1,7 +1,7 @@
 // anyplot.ai
 // ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-26
+// Quality: 89/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 

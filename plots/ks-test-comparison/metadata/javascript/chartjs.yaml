@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: ks-test-comparison
 created: '2026-08-26T06:46:36Z'
-updated: '2026-08-26T06:54:14Z'
+updated: '2026-08-26T07:01:34Z'
 generated_by: claude-sonnet
 workflow_run: 32939220914
 issue: 4130
@@ -12,100 +12,90 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
   - Correct two-sample K-S statistic and asymptotic p-value calculation (Kolmogorov
-    distribution series with the standard Marsaglia/Stephens correction term) — a
-    real statistical computation, not a faked/hardcoded number
-  - 'Proper ECDF step visualization for both distributions using Chart.js `stepped:
-    ''after''`, with clamped/sorted synthetic data'
+    distribution series with the standard correction term) — a real computation, not
+    a faked number
+  - 'Proper ECDF step visualization for both distributions using Chart.js stepped:
+    ''after'''
   - Maximum-divergence point highlighted with a dashed vertical line and end markers,
-    with D and p-value surfaced prominently in the subtitle
-  - 'Correct Imprint palette usage: first series is brand green `#009E73`, second
-    series uses the semantic red anchor for ''Bad customers'' (matches the good=green/bad=red
-    semantic-exception rule)'
-  - Theme-adaptive chrome is clean and consistent — both light and dark renders are
-    fully legible with identical data colors and correctly flipped backgrounds/text/grid
-  - 'Deliberate restraint: x-axis grid disabled (y-axis-only grid per style guide),
-    and the legend filter hides the redundant third (''Max distance'') entry since
-    that value is already in the subtitle'
+    with D and p-value surfaced in the subtitle
+  - 'Correct Imprint palette usage: brand green for the first series, semantic red
+    anchor for ''Bad customers'''
+  - Clean theme-adaptive chrome, fully legible and color-consistent across both renders
+  - Title font size bump (22px to 27px) from attempt-1 feedback fixed the visual-weight
+    issue; title now reads proportionately
+  - Custom tooltip callback added per attempt-1 feedback, improving the interactive
+    detail view
   weaknesses:
-  - Title occupies only ~31% of the canvas width at the standard 22px font size (shorter
-    title string than the catalog's typical ~67-char mandated title) — legible but
-    visually less prominent than the 'largest, first thing readers see' hierarchy
-    the style guide describes; a modest font-size bump for shorter titles like this
-    one would give it more visual weight
-  - The statistical computation needs several small helper functions (lcg, randNormal,
-    clamp, ecdfSteps, ecdfAt, ksPValue) — necessary for a correct K-S implementation,
-    but more structure than the KISS baseline ideally wants
-  - No chartjs-specific interactive/tooltip customization beyond the library defaults
-    — a custom tooltip formatter surfacing the exact ECDF values at a given credit
-    score would have shown more distinctive library mastery
+  - The K-S computation still needs several small helper functions — necessary for
+    correctness, so no further action required, but keep new helpers to a minimum
+    on future iterations
+  - Composition is clean but fairly standard (line chart + legend + subtitle); a bit
+    more visual distinction (e.g. a filled/shaded region between the two ECDF curves,
+    or annotation callouts) would raise Design Excellence further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with the required #FAF8F1 plot surface — not pure white.
-      Chrome: Title "ks-test-comparison · javascript · chartjs · anyplot.ai" in dark ink at top, subtitle "K-S statistic D = 0.525 · p-value = < 0.001" in a slightly softer gray below it. X-axis titled "Credit Score" (0-850 range, ticks every 50), Y-axis titled "Cumulative Proportion" (0 to 1, ticks every 0.1). Subtle horizontal gridlines on the y-axis only; x-axis has no gridlines. Bottom legend shows two circular swatches: green "Good customers (n=300)" and red "Bad customers (n=250)". All text is dark ink against the light background and is clearly readable.
-      Data: Two ECDF step curves — brand green (#009E73) for Good customers, matte red (#AE3030) for Bad customers, both rendered as clean step-after lines with no markers. A dashed amber vertical line with two small dot markers connects the two curves at the credit score where they diverge most (~630), visually anchoring the K-S statistic.
+      Background: Warm off-white (#FAF8F1), matching the required light-theme surface.
+      Chrome: Title "ks-test-comparison · javascript · chartjs · anyplot.ai" at 27px (bumped from 22px per attempt-1 feedback), subtitle "K-S statistic D = 0.525 · p-value = < 0.001" beneath it, X-axis title "Credit Score", Y-axis title "Cumulative Proportion", tick labels, and bottom legend all render in dark/soft ink and are clearly readable.
+      Data: Two ECDF step curves — brand green #009E73 for "Good customers (n=300)", matte red for "Bad customers (n=250)" — plus a dashed amber vertical connector with two dot markers at the max-divergence point (~630 credit score).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with the required #1A1A17 plot surface — not pure black.
-      Chrome: Same title and subtitle text, now rendered in white/light-gray ink; axis titles and tick labels in light gray; gridlines are faint light lines on the dark surface. Legend swatches and text render the same way, now in white/light gray.
-      Data: The green and red ECDF curves and the amber dashed highlight line are identical in hue/position to the light render — confirming only chrome (background, text, grid) flipped, not data colors.
-      Legibility verdict: PASS — no dark-on-dark issues; all title/axis/tick/legend text is clearly visible against the near-black background.
+      Background: Warm near-black (#1A1A17), matching the required dark-theme surface.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend all flip to white/light-gray ink; gridlines flip to a faint light tone. No dark-on-dark issues found — all text stands out clearly against the near-black background.
+      Data: Green and red ECDF curves plus amber highlight line/markers are pixel-identical in color and position to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; title is legible but occupies a
-          smaller-than-typical share of the canvas width for a title element
+        comment: Title font bumped 22px to 27px per attempt-1 feedback; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements in either render
+        comment: No collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Step lines and highlight markers are appropriately sized for the
-          ~300/250-point sample sizes
+        comment: Line width and markers appropriate for sample sizes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Only 2 categorical series (color alone is sufficient per palette
-          guidance); good/bad semantic mapping matches labeled legend text
+        comment: Green/red pairing with distinct legend labels avoids red-green-as-sole-signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (no drift file present); balanced axis label sizes,
-          no overflow or cutoff
+        comment: Canvas gate passed; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles (Credit Score, Cumulative Proportion)
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series brand green #009E73, semantic red anchor for ''Bad'',
-          correct theme-adaptive backgrounds in both renders'
+        comment: 'First series #009E73; correct theme backgrounds both renders'
     design_excellence:
       score: 13
       max: 20
@@ -114,20 +104,21 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Clean use of Imprint palette and a subtitle-based stat callout, but
-          layout stays close to a standard chart+legend composition
+        passed: true
+        comment: Clean palette use and subtitle stat callout, but fairly standard
+          composition
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Deliberate y-axis-only grid restraint, generous whitespace, no chart
-          borders
+        passed: true
+        comment: Y-axis-only grid, generous whitespace, no chart borders
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Dashed max-divergence line + subtitle stat creates a clear focal
-          point guiding the viewer to the K-S result
+        passed: true
+        comment: Dashed max-divergence line and subtitle stat give a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -137,27 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct K-S/ECDF step-function comparison plot
+        comment: Correct K-S/ECDF comparison plot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both ECDFs as step functions, max-divergence highlight, D statistic,
-          p-value, and legend all present
+        comment: ECDF steps, K-S statistic, max-divergence highlight, p-value, legend,
+          y-axis 0-1 all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Credit Score, Y = Cumulative Proportion (0-1), matches spec
+        comment: Correct axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches mandated pattern exactly; legend labels match
-          the two distributions with sample sizes
+        comment: Mandated title format; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -167,22 +157,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Covers every notes item: step ECDFs, max-distance highlight, D value,
-          p-value, legend'
+        comment: ECDF steps, K-S statistic, p-value, max-divergence all covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral credit-scoring scenario (Good vs Bad customer
-          score distributions), FICO-like range
+        comment: Plausible neutral credit-scoring good/bad customer scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Score range 300-850 with realistic means/SDs and clamping to valid
-          bounds
+        comment: Credit score range and sample sizes are realistic
     code_quality:
       score: 9
       max: 10
@@ -191,20 +178,21 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Several small helper functions (lcg, randNormal, clamp, ecdfSteps,
-          ecdfAt, ksPValue) — necessary for correctness but more structure than minimal
+        passed: true
+        comment: Several helper functions needed for genuine K-S computation, more
+          structure than KISS baseline
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG (seed=42)
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Chart.js; no unused code
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -216,35 +204,32 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          API
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic use of stepped line datasets, linear x-scale, and legend
-          label filtering
+        passed: true
+        comment: Correct stepped line usage and theme-token mapping
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        comment: Legend filter + overlay-dataset annotation trick is a reasonable
-          Chart.js-specific technique, but no deeper distinctive features (e.g. custom
-          tooltip formatting)
+        passed: true
+        comment: Custom tooltip callback added per attempt-1 feedback; reasonable
+          but not deeply distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
-  - edge-highlighting
-  - grid-styling
+  - publication-ready
