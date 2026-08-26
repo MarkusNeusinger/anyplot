@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-basic: Basic Histogram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-08-26
+// Quality: 85/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 
