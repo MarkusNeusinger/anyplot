@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-hr-diagram: Hertzsprung-Russell Diagram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-26
+// Quality: 92/100 | Created: 2026-08-26
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsText } from "@mui/x-charts/ChartsText";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
