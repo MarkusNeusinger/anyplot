@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-permutation-importance: Permutation Feature Importance Plot
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-26
+// Quality: 92/100 | Created: 2026-08-26
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-permutation-importance: Permutation Feature Importance Plot

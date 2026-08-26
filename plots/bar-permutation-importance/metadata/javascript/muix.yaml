@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-permutation-importance
 created: '2026-08-26T18:39:37Z'
-updated: '2026-08-26T18:44:47Z'
+updated: '2026-08-26T18:51:50Z'
 generated_by: claude-sonnet
 workflow_run: 33000351533
 issue: 2998
@@ -12,91 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Correct, complete feature set: sorted ranking, ±1 SD error bars, x=0 reference
-    line, and a sequential color gradient mapped to importance magnitude — directly
-    satisfying every spec requirement.'
-  - 'Advanced, idiomatic MUI X technique: composing ChartContainer with useXScale/useYScale
-    hooks to render a custom error-bar overlay that stays perfectly synced to the
-    bar geometry.'
-  - Both themes are fully readable with correctly threaded theme tokens; data colors
-    are identical across light/dark, only chrome flips.
-  - Realistic, well-scaled churn-prediction data showing the full importance range,
-    including a plausible near-zero/negative feature.
+  - 'Sequential Imprint gradient (#009E73 to #4467A3) is correctly min-max normalized
+    against importance_mean, so the top drivers (contract_type, tenure_months) read
+    as visually distinct from the long tail of low-importance features'
+  - Custom SVG error bars drawn via useXScale/useYScale hooks are pixel-aligned with
+    the underlying band/linear scales — an idiomatic, distinctive MUI X composition
+    (ChartContainer + hooks) pattern rather than a naive overlay
+  - Vertical zero-reference line cleanly separates positive from negative importance,
+    and the data honestly includes a negative bar (senior_citizen), showing the full
+    realistic range permutation importance can take
+  - 'Both renders are fully theme-correct: identical data colors between light/dark,
+    chrome (background, grid, ticks, error bar color) flips correctly, no legibility
+    issues in either theme'
+  - Realistic, neutral churn-prediction feature set with an importance ordering that
+    matches real-world domain intuition (contract length and tenure dominate telco
+    churn models)
   weaknesses:
-  - The auto-generated x-axis produces ~24 tick labels at 0.01 increments — a cleaner
-    explicit tick interval (e.g. every 0.02–0.04) would reduce visual density on the
-    value axis.
-  - 'Visual refinement stops at "good": grid appears only on the value axis, and bars/whiskers
-    have no additional edge or contrast treatment beyond the small border radius.'
-  - Error-bar caps (bw*0.22) are a little small relative to bar height, especially
-    on the narrower bars near the bottom of the ranking — slightly larger caps would
-    improve at-a-glance readability.
+  - 'The xAxis `tickInterval: [0, 0.04, 0.08, 0.12, 0.16, 0.2]` prop appears to have
+    no effect — the rendered chart shows dense ticks at every 0.01 instead of the
+    six specified values. Either wire this to the correct MUI X API for restricting
+    tick values or remove the prop to avoid dead/misleading code'
+  - No explicit y-axis title (e.g. "Feature") — the category labels are self-explanatory,
+    but adding one would fully satisfy the axis-labeling bar
+  - With 15 bars compressed into a narrow value range (only the top 2-3 features clearly
+    diverge), most bars render in similar green shades — consider stretching the gradient
+    domain or adding per-bar value labels to sharpen the visual ranking further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 (not pure white, not dark).
-      Chrome: Title "Churn Prediction Model · bar-permutation-importance · javascript · muix · anyplot.ai" and subtitle in dark ink, axis title "Mean Decrease in Accuracy" and feature-name tick labels clearly visible in dark/soft-dark ink, subtle vertical gridlines.
-      Data: 15 horizontal bars sorted descending by importance, colored on a blue-to-green sequential gradient (imprint_seq) keyed to each bar's importance value; dark ink ±1 SD error-bar whiskers; vertical zero-reference line.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Churn Prediction Model · bar-permutation-importance · javascript · muix · anyplot.ai" and subtitle in dark ink at the top, clearly legible; 15 feature-name y-axis labels in a slightly softer dark tone are all readable; x-axis "Mean Decrease in Accuracy" label and dense (~0.01-step) numeric tick labels are legible; subtle vertical gridlines are visible without dominating the plot.
+      Data: 15 horizontal bars sorted descending by mean importance (contract_type at top, senior_citizen at bottom, which dips slightly negative). Bar fill follows a sequential Imprint gradient from #009E73 (green, low end) to #4467A3 (blue, high end), with the top two bars (contract_type, tenure_months) reading distinctly blue-purple and the remainder in shades of teal-green. Dark horizontal ±1 SD error-bar whiskers with end caps overlay each bar. A vertical reference line marks x=0.
+      Legibility verdict: PASS — no light-on-light or unreadable text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 (not pure black, not light).
-      Chrome: Title, subtitle, axis title, and tick labels render in light ink / soft light gray, fully readable against the dark surface; gridlines faint and theme-adaptive; no dark-on-dark failures.
-      Data: Same 15 bars with identical blue-to-green gradient colors as the light render (only chrome flipped); error-bar whiskers switch to a light stroke, clearly visible; zero-reference line intact.
-      Legibility verdict: PASS
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis labels, and tick labels are rendered in light ink and clearly legible against the dark background; gridlines remain subtle; no dark-on-dark text was found anywhere (title, axis titles, tick labels, feature names all flipped to light color).
+      Data: Same 15 bars in identical colors to the light render (green-to-blue sequential gradient, same values/ordering) — confirms data colors are theme-invariant. Error-bar whiskers switch to a light stroke color for contrast against the dark background, and the x=0 reference line remains visible.
+      Legibility verdict: PASS — all chrome elements correctly flipped, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes, slightly
-          tight at 400px mobile width given 15 categories.
+        comment: All font sizes explicitly set (title dynamically sized, subtitle
+          14px, axis label 16px, ticks 14px); readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between any text, ticks, or data elements.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars prominently sized; error-bar caps a bit small relative to bar
-          height.
+        comment: 15 bars with error-bar whiskers are all clearly visible and well-proportioned
+          for the data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, no red/green-only signal, sequential gradient is CVD-aware.
+        comment: Green-to-blue sequential gradient is CVD-safe, no red-green dependency,
+          good contrast on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and margins; auto-generated x-axis has ~24 dense
-          tick labels at 0.01 increments.
+        comment: Chart fills a large, well-balanced portion of the canvas; margins
+          sized appropriately for the long y-axis labels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis title with implicit units; feature names self-explanatory.
+        comment: X-axis label is descriptive ("Mean Decrease in Accuracy"); y-axis
+          category labels are self-explanatory feature names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct imprint_seq gradient keyed to importance magnitude; theme-correct
-          chrome in both renders.
+        comment: 'Continuous imprint_seq (#009E73 -> #4467A3) correctly applied to
+          importance values; backgrounds theme-correct in both renders; data colors
+          identical across themes'
     design_excellence:
       score: 14
       max: 20
@@ -106,22 +115,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful magnitude-driven color gradient, dynamic title sizing,
-          clean typography; short of publication-grade polish.
+        comment: Thoughtful value-driven color mapping and computed title sizing clearly
+          go beyond a configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Rounded bars, theme-adaptive grid/axis colors, generous whitespace;
-          grid only on value axis, no extra edge treatment.
+        comment: Subtle vertical-only gridlines, no chart-box spines, generous whitespace,
+          but not maximally polished
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Descending sort + color gradient + zero-reference line creates a
-          clear ranking narrative.
+        comment: Descending sort plus the blue-vs-green gradient creates a clear visual
+          hierarchy pointing at the top drivers
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal permutation-importance bar chart with error bars.
+        comment: Correct horizontal bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sorted order, error bars, sequential gradient, zero reference line
-          all present.
+        comment: Sorted by importance, horizontal error bars, sequential color gradient,
+          and x=0 reference line all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on y, importance_mean on x, importance_std drives whiskers,
-          all 15 features visible.
+        comment: importance_mean on x, feature on y, all 15 features shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; single-series legend correctly omitted.
+        comment: Title matches the mandated format with a descriptive prefix; no legend
+          needed for a single series
     data_quality:
       score: 15
       max: 15
@@ -161,56 +170,57 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full spectrum from strong drivers to a near-zero/negative feature,
-          with varying error-bar widths.
+        comment: Full range from strong positive to slightly negative importance,
+          with std that scales sensibly with the mean
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible churn-prediction scenario referencing sklearn.inspection.permutation_importance.
+        comment: Neutral, realistic telco churn-modeling scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and ordering align with real-world ML/business intuition.
+        comment: Values and feature ordering align with real-world churn-model intuition
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Mostly linear; helper functions and ErrorBars component are justified
-          by MUI X's compositional model.
+        comment: Straightforward imports -> data -> helpers -> Chart component, appropriate
+          for a React/MUI X entry
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded arrays.
+        comment: Fully hard-coded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import is used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriately complex, no fake functionality.
+        comment: Clean overall, but the xAxis tickInterval prop appears to have no
+          visible effect on the rendered ticks
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, current ChartContainer/BarPlot API, harness contract
-          respected.
+        comment: Current @mui/x-charts composition API (ChartContainer/BarPlot/etc.),
+          harness owns output
     library_mastery:
       score: 9
       max: 10
@@ -220,22 +230,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses composable ChartContainer + sub-components with correct colorMap
-          and skipAnimation.
+        comment: Composable ChartContainer pattern with dedicated axis/grid/reference-line
+          subcomponents
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks drive a custom SVG error-bar overlay synced
-          to the chart's coordinate system.
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks to draw custom scale-aligned error bars
+          is a distinctive MUI X capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - error-bars
-  patterns:
-  - data-generation
-  dataprep: []
+  - reference-line
+  - manual-ticks
+  patterns: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
+  - edge-highlighting
