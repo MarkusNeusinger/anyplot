@@ -23,6 +23,10 @@ const arbitraryPoints = [z1, z2, zSum];
 
 const AXIS_LIMIT = 3;
 
+// Grid already sits at 15% alpha (the theme-token ceiling); shave it down a
+// touch further so it stays firmly behind the vectors and unit circle.
+const softGrid = t.grid.replace(/[\d.]+\)$/, "0.09)");
+
 // --- Formatting helpers ------------------------------------------------------
 function formatRectangular(p) {
   const sign = p.y >= 0 ? "+" : "−";
@@ -62,6 +66,28 @@ const argandFurniture = {
     ctx.arc(ox, oy, unitPx, 0, Math.PI * 2);
     ctx.stroke();
     ctx.restore();
+
+    // Parallelogram guide: dashed edges from z1 to z1+z2 and from z2 to
+    // z1+z2 (each edge is a translated copy of the *other* vector, since
+    // zSum - z1 = z2 and zSum - z2 = z1) — makes the addition law visible
+    // as a shape, not just three separate arrows.
+    const sumDataset = chart.data.datasets[1];
+    const sumMeta = chart.getDatasetMeta(1);
+    if (sumMeta && sumMeta.data.length === 3) {
+      const [pz1, pz2, pSum] = sumMeta.data;
+      ctx.save();
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = sumDataset.borderColor;
+      ctx.globalAlpha = 0.35;
+      ctx.beginPath();
+      ctx.moveTo(pz1.x, pz1.y);
+      ctx.lineTo(pSum.x, pSum.y);
+      ctx.moveTo(pz2.x, pz2.y);
+      ctx.lineTo(pSum.x, pSum.y);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Vectors from the origin to every point, arrowhead at the tip.
     chart.data.datasets.forEach((dataset, di) => {
@@ -218,7 +244,7 @@ new Chart(canvas, {
         min: -AXIS_LIMIT,
         max: AXIS_LIMIT,
         ticks: { stepSize: 1, includeBounds: false, color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        grid: { color: softGrid },
         border: { color: t.inkSoft, width: 1.5 },
       },
       y: {
@@ -226,8 +252,16 @@ new Chart(canvas, {
         position: { x: 0 },
         min: -AXIS_LIMIT,
         max: AXIS_LIMIT,
-        ticks: { stepSize: 1, includeBounds: false, color: t.inkSoft, font: { size: 14 } },
-        grid: { color: t.grid },
+        // The x-axis already renders the "0" tick at the origin; suppress
+        // the y-axis' own "0" so the two labels don't land on the same pixel.
+        ticks: {
+          stepSize: 1,
+          includeBounds: false,
+          color: t.inkSoft,
+          font: { size: 14 },
+          callback: (value) => (value === 0 ? "" : value),
+        },
+        grid: { color: softGrid },
         border: { color: t.inkSoft, width: 1.5 },
       },
     },
