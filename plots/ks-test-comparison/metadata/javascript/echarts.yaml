@@ -1,0 +1,255 @@
+library: echarts
+language: javascript
+specification_id: ks-test-comparison
+created: '2026-08-26T06:53:36Z'
+updated: '2026-08-26T07:07:46Z'
+generated_by: claude-sonnet
+workflow_run: 32939597447
+issue: 4130
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ks-test-comparison/javascript/echarts/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - 'Repair fully addressed all three attempt-1 weaknesses: added a shaded markArea
+    over the max-divergence band, upgraded the D/p-value label into a bordered callout
+    box, and increased the title font size from 22px to 27px.'
+  - The shaded divergence band plus dashed connector and callout box now create a
+    strong, immediate visual focal point on the K-S statistic — a clear improvement
+    in data storytelling over attempt 1.
+  - 'Correct two-sample K-S computation: binary-search ECDF evaluation and a proper
+    asymptotic Kolmogorov-distribution p-value series, not a hardcoded or fake statistic.'
+  - 'Thoughtful semantic color mapping: Good customers use brand green (#009E73),
+    Bad customers use the Imprint matte-red semantic anchor (#AE3030) — matching the
+    widely understood good/bad convention while staying inside the Imprint palette.'
+  - 'Implements every required spec feature: both ECDF step curves, K-S statistic
+    D and p-value displayed prominently, max-divergence point highlighted with a dashed
+    vertical line, dual markers, and a shaded band.'
+  - 'Both renders are fully theme-correct: background, text, grid, and callout-box
+    fill all flip correctly between light and dark while the two data series colors
+    stay pixel-identical.'
+  - Clean, deterministic data generation via a seeded LCG + Box-Muller normal sampler,
+    with realistic FICO-like credit-score domain clamping (300-850).
+  weaknesses:
+  - Title still fills only ~38-40% of the canvas width even after the 22px -> 27px
+    bump, noticeably under the ~50-70% guideline; a further increase (e.g. to ~30-32px)
+    would balance the composition better without risking overflow.
+  - The amber highlight band is semantically reserved for warning/caution in the style
+    guide; here it is used purely for visual emphasis of the divergence region. It
+    reads fine and isn't a violation, but a theme-adaptive neutral/muted fill would
+    be a more literal semantic fit if revisited.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "ks-test-comparison · javascript · echarts · anyplot.ai" is centered in dark ink and fully readable. Legend ("Good customers (n=400)" / "Bad customers (n=400)") sits below the title with hollow-circle line swatches. Axis titles ("Credit score", "Cumulative probability") and tick labels are dark/soft-dark and legible. Gridlines are thin, light grey, and subtle. A bordered callout box reading "D = 0.525 / p < 0.001" sits to the left of a black dashed vertical connector line with two hollow circle markers at the point of maximum divergence; a pale amber-tinted band shades the vertical divergence region behind the connector.
+      Data: Good customers ECDF is brand green (#009E73); Bad customers ECDF is Imprint matte red (#AE3030) — first series correctly matches the mandated brand green.
+      Legibility verdict: PASS — no light-on-light text observed anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, legend, axis titles, and tick labels all flip to light/off-white text, clearly visible against the dark surface. Gridlines remain subtle light lines on dark. The callout box now uses a dark elevated fill with light border/text, and the dashed connector flips to white. The amber-tinted divergence band renders as a translucent olive/tan overlay against the dark background (expected alpha-compositing behavior, not a defect).
+      Data: Good customers ECDF is the identical brand green (#009E73); Bad customers ECDF is the identical matte red (#AE3030) — confirmed pixel-identical to the light render; only chrome elements changed.
+      Legibility verdict: PASS — no dark-on-dark failures observed anywhere.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; title bumped
+          22px->27px per repair feedback but still fills only ~38-40% of canvas width,
+          under the 50-70% guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axes, callout box, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: showSymbol:false on the 400-point ECDF lines avoids clutter; markPoint
+          symbols and dashed connector are clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red pair is the Imprint CVD-optimized semantic anchor pair,
+          plus fully redundant spatial and legend-label encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a large majority of the canvas with balanced margins;
+          legend sits near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis titles: Credit score, Cumulative probability'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Bad customers uses matte-red semantic anchor
+          (#AE3030), a valid semantic exception; both renders theme-correct'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Repair added a shaded markArea band and a bordered callout box, moving
+          clearly above default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, rounded-corner callout box with theme-adaptive fill/border,
+          translucent divergence band; near-perfect polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Shaded band + dashed connector + callout box create an immediate,
+          unmistakable focal point on the K-S divergence
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct K-S / dual-ECDF step-function plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Both ECDFs, K-S statistic, p-value, max-divergence highlight, and
+          legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = credit score, Y = cumulative probability 0-1, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+          names with sample sizes
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two clearly separated distributions with a large, realistic K-S divergence
+          (D=0.525)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Credit-scoring good/bad customer scenario, neutral and directly matches
+          the spec's suggested application
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores clamped to a realistic FICO-like 300-850 range with plausible
+          mean/std per group
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are justified (LCG RNG, ECDF, binary search) since
+          JS has no numpy-equivalent; option construction is a single flat call
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the mount-node globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; appropriate complexity for a real K-S computation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set, no explicit size/devicePixelRatio passed to
+          echarts.init, current setOption API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of step line series, legend, grid, markArea, and markPoint
+          through the declarative option API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Repair added markArea shading tied to data coordinates alongside
+          a custom markPoint formatter/callout — a combination distinctive to ECharts'
+          declarative annotation system
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
