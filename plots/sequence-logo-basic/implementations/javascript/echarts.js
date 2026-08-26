@@ -38,6 +38,14 @@ const GLYPH_WIDTH_RATIO = { A: 0.722, C: 0.722, G: 0.778, T: 0.611 };
 const CAP_HEIGHT_RATIO = 0.718;
 const REFERENCE_FONT_SIZE = 100;
 
+// Below this rendered height, four stacked glyphs smear into an illegible
+// band — draw a thin color-coded sliver instead so the stack stays honest.
+const MIN_LETTER_HEIGHT = 8;
+// Below this, the letter is still drawn but gets an ink-color stroke: the
+// muted ochre/matte-red hues fall under the WCAG contrast floor and need the
+// extra edge right where the small scale already strains legibility.
+const MIN_STROKE_HEIGHT = 24;
+
 // Per position: Shannon-entropy information content (bits), letters stacked
 // bottom-to-top in ascending frequency order (so the most frequent letter is on top).
 const stackData = [];
@@ -73,15 +81,35 @@ function renderItem(params, api) {
 
   const targetHeight = bottomLeft[1] - topLeft[1];
   const targetWidth = bandWidth * 0.82;
-  if (targetHeight < 1 || targetWidth < 1) {
+  if (targetHeight < 0.5 || targetWidth < 1) {
     return { type: "text", style: { text: "" } };
   }
 
   const centerX = bottomLeft[0];
   const centerY = (bottomLeft[1] + topLeft[1]) / 2;
+
+  // Near-zero-information positions: four glyphs this small would overlap
+  // into a muddy smear, so show a plain color-coded sliver instead.
+  if (targetHeight < MIN_LETTER_HEIGHT) {
+    return {
+      type: "rect",
+      shape: {
+        x: centerX - targetWidth / 2,
+        y: topLeft[1],
+        width: targetWidth,
+        height: targetHeight,
+      },
+      style: { fill: LETTER_COLOR[letter] },
+    };
+  }
+
   const scaleX =
     targetWidth / (REFERENCE_FONT_SIZE * GLYPH_WIDTH_RATIO[letter]);
   const scaleY = targetHeight / (REFERENCE_FONT_SIZE * CAP_HEIGHT_RATIO);
+  // Stroke width is drawn in the pre-transform coordinate space, so
+  // compensate for the scaleY shrink to keep the rendered edge ~1px.
+  const needsStroke = targetHeight < MIN_STROKE_HEIGHT;
+  const strokeWidth = needsStroke ? 1 / scaleY : 0;
 
   return {
     type: "text",
@@ -95,6 +123,8 @@ function renderItem(params, api) {
       fontWeight: "bold",
       fontFamily: "Arial, Helvetica, sans-serif",
       fill: LETTER_COLOR[letter],
+      stroke: needsStroke ? t.ink : "none",
+      lineWidth: strokeWidth,
       textAlign: "center",
       textVerticalAlign: "middle",
     },
