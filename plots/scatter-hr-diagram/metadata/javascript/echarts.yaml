@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: scatter-hr-diagram
 created: '2026-08-26T11:15:43Z'
-updated: '2026-08-26T11:23:38Z'
+updated: '2026-08-26T11:34:23Z'
 generated_by: claude-sonnet
 workflow_run: 32960961433
 issue: 4558
@@ -12,40 +12,10 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/echarts/plot-dark.html
-quality_score: 80
+quality_score: 91
 review:
-  strengths:
-  - 'Correct astrophysics domain modeling: main sequence, red giants, supergiants,
-    and white dwarfs are generated as distinct, realistically shaped clusters in log-temperature/log-luminosity
-    space and all four are legibly labeled.'
-  - X-axis is a reversed log scale (hot/blue on the left) and the Y-axis is a log
-    scale, exactly per the spec's astrophysical convention.
-  - Conventional stellar colors (blue O/B, near-white A, yellow F/G, orange K, red
-    M) are used deliberately as a spec-mandated semantic exception to the canonical
-    Imprint palette order, and the Sun is marked with a distinct brand-green diamond
-    that stands out from every natural star hue on both themes.
-  - 'Deterministic LCG-based data generation (no browser Math.random dependence),
-    clean mount-node contract usage (no explicit size/devicePixelRatio, animation:
-    false), and a documented workaround for markPoint''s unreliability on a log-scaled
-    inverse axis.'
-  weaknesses:
-  - 'Secondary spectral-class axis (top) is mispositioned relative to the data it
-    labels: it''s an evenly spaced ECharts `category` axis, but real spectral-type
-    temperature boundaries are highly non-uniform on the log-scaled primary axis.
-    Pixel-verified: the ''A'' tick sits at ~38.6% of plot width, while the actual
-    A-type (gray) points cluster at ~53-62% width — the ''A'' tick visually points
-    into the B-type (cyan) cluster instead. Fix: either compute tick positions from
-    the real log-domain boundaries (e.g. a hidden value/log axis with axisLabel.formatter
-    mapping specific temperature thresholds to labels), or drop the category axis
-    and place the seven spectral-class labels with the same `regionLabelPos()` graphic-text
-    approach already used for the region captions.'
-  - F and G spectral types share the exact same color (`SPEC_COLOR.F = SPEC_COLOR.G
-    = t.amber`), so their legend swatches and data points are visually indistinguishable
-    from each other — reduce the confusability by using two distinct (but still yellow-family)
-    shades for F and G.
-  - The K/red-giant cluster (~90 overlapping orange points) is dense enough that individual
-    markers blend into each other more than the sparser regions; a slightly smaller
-    symbolSize or lower opacity there (or overall) would reduce overplotting.
+  strengths: []
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1), consistent with the required light-theme surface.
