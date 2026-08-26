@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: map-connection-lines
+created: '2026-08-26T07:54:23Z'
+updated: '2026-08-26T08:17:46Z'
+generated_by: claude-sonnet
+workflow_run: 32943936555
+issue: 3746
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Map-interior theme bug from Attempt 1 is fully fixed: the ocean/globe area now
+    correctly shows the theme-adaptive page background in both renders, with continents
+    lightly tinted via t.inkSoft at 0.3 opacity on top of it — the winding-rule fix
+    (ring.reverse()) and the t.muted -> t.inkSoft token correction both verified visually.'
+  - 'Idiomatic, distinctive d3-geo usage: geoNaturalEarth1 + fitExtent for the projection,
+    and d3.geoPath adaptively resampling simple 2-point LineStrings into genuine great-circle-curved
+    routes — a technique unique to D3 among the catalog''s charting libraries.'
+  - Dual encoding of passenger volume via arc color (imprint_seq green->blue) and
+    arc stroke-width, plus hub markers sized by total connected traffic — clear data
+    storytelling beyond the spec's minimum ask.
+  - Arc opacity (0.3-0.6) and hub marker radius (5-12px) now match the spec's suggested
+    ranges exactly, addressing the Attempt 1 feedback on overlap and opacity.
+  - Fully deterministic, hardcoded flight-route dataset with realistic hub airports
+    and plausible passenger volumes (260k-1200k), well within the spec's 10-100 connection
+    guidance (22 routes, 16 hubs).
+  - Real interactive hover tooltips on both arcs and hub markers for the HTML export,
+    with no faked interactivity in the static PNG.
+  - 'First categorical series is the correct brand green #009E73; continuous route-value
+    encoding correctly uses imprint_seq (green -> blue), not a foreign colormap.'
+  weaknesses:
+  - Hub markers still overlap slightly in the dense Europe cluster (LHR/CDG/FRA) —
+    the white stroke keeps them distinguishable, but a small additional offset or
+    radius trim would clean this up further.
+  - The abstract hand-drawn continent blobs (a reasonable workaround given D3's no-network/no-bundled-atlas
+    constraint) provide geographic context but not accurate coastlines/borders as
+    the spec's Notes section suggests — acceptable given the offline constraint, but
+    a lower-fidelity approximation than a real topojson atlas would give.
+  - The optional `label` field from the spec (route name/identifier) is unused; not
+    required, but tooltips could surface it for richer hover context.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — correct, not pure white, not dark.
+      Chrome: Title "map-connection-lines · javascript · d3 · anyplot.ai" and subtitle "International flight routes between major hub airports" render in dark ink and soft ink respectively, both clearly legible against the cream background. Right-side legend ("Passenger volume (000s/yr)" title, gradient bar, tick labels 400-1200, "Hub, sized by total traffic" note) is fully legible, positioned well inside the canvas with no clipping at the right edge. The Attempt-1 bug is fixed: the map interior (inside the Natural-Earth Sphere outline) now correctly shows the light page background instead of a near-solid dark fill; the abstract continent blobs read as a soft warm gray, clearly distinguishable from the ocean/background.
+      Data: Hub markers are brand green (#009E73) with cream strokes, sized by total connected traffic. Connection arcs use a green-to-blue sequential gradient (imprint_seq) with width and opacity scaled by passenger volume, alpha in the 0.3-0.6 range as the spec recommends — overlapping low-value routes stay unobtrusive while high-value routes (e.g. JFK-LHR) stand out as a thick blue arc.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — correct, not pure black, not light.
+      Chrome: Title and subtitle render in light ink / soft ink, clearly legible with no dark-on-dark issues. Legend text (title, tick labels, hub-size note) is light-colored and fully legible against the dark background. Map interior correctly resolves to the dark page background (verified distinct from the light render's fill, confirming true theme-adaptation rather than a fill that merely "looks OK because everything is dark"); continent blobs are visible as a subtly lighter gray tint.
+      Data: Hub marker color, arc color/width/opacity scale, and legend gradient are pixel-identical to the light render — only chrome (background, text, grid, continents) flipped, as required.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All titles/labels/ticks legible in both themes; explicit font sizes;
+          no dark-on-dark or light-on-light text.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text overlap; hub markers still overlap slightly in the dense
+          LHR/CDG/FRA Europe cluster, mitigated by white strokes.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arc width/opacity and hub radius scale with value; visible and appropriately
+          sized in both renders.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq green-to-blue is CVD-safe; no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Attempt-1 dark-fill bug fixed; canvas gate passed at exact 3200x1800;
+          legend and title well-proportioned, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title, subtitle, and legend units all present and descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Map interior now correctly theme-adapts (page background + t.inkSoft
+          continents); first series #009E73; imprint_seq used for continuous route
+          value; both renders theme-correct.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful geo composition, legend, and hierarchy now that the background
+          bug is fixed.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle graticule, correctly theme-adaptive continents, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual value encoding (color+width for arcs, size for hubs) gives clear
+          visual hierarchy and a focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connection-lines map with curved geodesic routes.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved lines, endpoint markers, value-encoded thickness/color, spec-matching
+          alpha, and a now-readable base map with geographic context all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat correctly projected via Natural Earth; all routes and hubs
+          mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec exactly; legend labels are clear and units
+          are present.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Value drives arc color, arc width, and hub size; optional label field
+          unused but not required.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real hub airports and plausible international routes, neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Passenger volumes (260k-1200k) are realistic for major international
+          routes.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One small blobRing geometry helper; otherwise a flat, linear script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 is the only dependency.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; real hover tooltips only in the HTML export.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation, current d3 API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geoNaturalEarth1/geoPath/fitExtent/scaleSequential/scaleSqrt
+          usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Great-circle-via-adaptive-resampling and a hand-built gradient legend
+          are distinctive D3 techniques, now fully visible with the background bug
+          fixed.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - hover-tooltips
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - gradient-fill
