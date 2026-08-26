@@ -62,7 +62,7 @@ chart.setOption({
     nameGap: 55,
     nameTextStyle: { color: t.ink, fontSize: 16 },
     min: 0,
-    max: 1.15,
+    max: 1.25,
     interval: 0.25,
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
@@ -75,6 +75,12 @@ chart.setOption({
       data: probabilities.map((p, i) => [p, giniImpurity[i]]),
       showSymbol: false,
       lineStyle: { width: 4, color: t.palette[0] },
+      areaStyle: {
+        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+          { offset: 0, color: t.palette[0] + "33" },
+          { offset: 1, color: t.palette[0] + "00" },
+        ]),
+      },
       markLine: {
         symbol: "none",
         silent: true,
@@ -115,7 +121,8 @@ chart.setOption({
           show: true,
           formatter: "p = 0.5 — max impurity",
           position: "top",
-          offset: [95, -4],
+          align: "center",
+          offset: [0, -8],
           color: t.inkSoft,
           fontSize: 14,
         },
