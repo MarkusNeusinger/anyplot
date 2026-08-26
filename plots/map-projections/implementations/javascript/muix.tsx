@@ -383,7 +383,7 @@ function ProjectionPanel({ config, width, mapAreaH, headerH }) {
     <div style={{ width, display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div style={{ height: headerH, textAlign: "center" }}>
         <div style={{ fontSize: 17, fontWeight: 600, color: t.ink }}>{config.name}</div>
-        <div style={{ fontSize: 12.5, color: t.inkSoft, marginTop: 2 }}>{config.subtitle}</div>
+        <div style={{ fontSize: 14, color: t.inkSoft, marginTop: 2 }}>{config.subtitle}</div>
       </div>
       <ChartContainer
         width={width}
@@ -412,7 +412,16 @@ export default function Chart() {
 
   const panelsRowH = H - TITLE_H - CAPTION_H;
   const panelW = (W - 2 * OUTER_PAD - 2 * GAP) / 3;
-  const mapAreaH = panelsRowH - PANEL_HEADER_H;
+  // World maps run wide (Mercator/Mollweide ~1.3-2:1, Orthographic ~1:1) — at
+  // the fixed per-panel width, none of them need anywhere near the full
+  // leftover row height, so sizing the box to panelsRowH left the map filling
+  // only ~40-50% of a much-taller-than-wide box (VQ-05). Size the box to the
+  // maps' own aspect instead, keep the row anchored right under the headers
+  // (so it doesn't float away from the title), and let the freed height
+  // collect as a single margin above the caption — ordinary footer breathing
+  // room rather than dead space split inside each panel.
+  const MAP_ASPECT = 1.3;
+  const mapAreaH = Math.min(panelsRowH - PANEL_HEADER_H, panelW / MAP_ASPECT);
 
   return (
     <div style={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
@@ -421,7 +430,7 @@ export default function Chart() {
       </div>
       <div
         style={{
-          height: panelsRowH,
+          height: PANEL_HEADER_H + mapAreaH,
           display: "flex",
           flexDirection: "row",
           justifyContent: "center",
@@ -440,8 +449,9 @@ export default function Chart() {
           />
         ))}
       </div>
+      <div style={{ flex: 1 }} />
       <div style={{ height: CAPTION_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontSize: 13, color: INK_MUTED }}>
+        <span style={{ fontSize: 14, color: INK_MUTED }}>
           Green circles are equal-size reference regions (Tissot indicatrices, ~670 km radius) — their changing
           shape and area reveal each projection&apos;s distortion.
         </span>
