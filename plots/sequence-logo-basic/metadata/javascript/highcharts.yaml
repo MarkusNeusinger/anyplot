@@ -1,0 +1,265 @@
+library: highcharts
+language: javascript
+specification_id: sequence-logo-basic
+created: '2026-08-26T11:29:26Z'
+updated: '2026-08-26T11:45:09Z'
+generated_by: claude-sonnet
+workflow_run: 32962589579
+issue: 4421
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Creative, correct solution to a chart type Highcharts has no native series for:
+    custom SVG glyph rendering via chart.renderer, scaled to fill each letter''s allocated
+    position/height box.'
+  - 'Full spec feature coverage: frequency-ordered stacking (most frequent on top),
+    information-content scaling (max 2 bits for DNA), standard DNA color convention
+    mapped as a deliberate semantic exception onto the Imprint palette, and a deliberately
+    included zero-information position (8).'
+  - 'New in this attempt: the semi-transparent ''Conserved core'' plotBand (positions
+    2-6) directly answers the attempt-1 design-excellence feedback, sharpening the
+    TATA-box storytelling without competing with the letter glyphs drawn on top.'
+  - Theme-adaptive chrome and identical cross-theme data colors are both correctly
+    implemented; both renders pass the readability check.
+  - Letter identity is redundantly encoded by shape AND color, which helps CVD accessibility.
+  weaknesses:
+  - The MIN_GLYPH_PX floor added in this repair (~0.017 bits) is smaller than most
+    of the previously-flagged low-height letters (e.g. the T at position 1 sits at
+    ~0.064 bits, well above the floor), so it barely changes their rendered shape.
+    Those letters remain compressed into near-flat bars because letterWidth stays
+    fixed at 0.8x the band width while boxHeight shrinks for low-information letters,
+    producing an extreme wide/flat aspect ratio rather than a recognizable letterform.
+    If iterating again, cap the letterWidth-to-boxHeight aspect ratio (not just the
+    absolute floor) so minor bases keep a legible letter silhouette.
+  - Overall aesthetic is still fairly minimal outside of the new conserved-core band;
+    no further polish (e.g. subtle divider ticks between position groups, or a small
+    legend/caption clarifying the DNA color convention for readers unfamiliar with
+    it).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: title "sequence-logo-basic · javascript · highcharts · anyplot.ai" in dark bold text at top, clearly legible; y-axis "Information content (bits)" runs 0-2 with subtle horizontal gridlines at 0.5 intervals; x-axis "Position" labeled 1-10. A pale amber "Conserved core" band highlights positions 2-6 with its label readable in soft gray.
+      Data: ten letter-stacks drawn as scaled glyphs. Position 1 shows a tall green "A" over a short cluster of minor-base slivers; positions 2-6 show a clear TATA-box-like pattern (T-A-T-A-A-A dominant letters) inside the conserved-core band; position 8 is empty (zero information content, the intended "flat position" demonstration); positions 7, 9-10 show small, low-information stacks. First series color is brand green #009E73 for A, matte red for T, blue for C, ochre for G.
+      Legibility verdict: PASS - all chrome text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: same title/axis labels/conserved-core label rendered in light gray/off-white, clearly legible - no dark-on-dark failures observed.
+      Data: letter-glyph colors (green A, blue C, ochre G, matte red T) are pixel-identical to the light render - confirms only chrome (background, text) flipped, data hues unchanged.
+      Legibility verdict: PASS - all chrome text is clearly readable against the dark background, no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title/axis/tick text fully legible in both themes. Low-height minor-base
+          letters (e.g. T at position 1, minor bases at 9-10) still compress into
+          near-flat bars - the repair's min-height floor is below most of these letters'
+          natural heights so it barely changes their legibility.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or glyph collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Main conserved-core letters are prominent and clear; the smallest
+          sliver letters at positions 7, 9-10 remain hard to see at full size.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Letter identity redundantly encoded by color AND shape, so CVD readers
+          can still distinguish bases.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed. No overflow or clipping observed at
+          either edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Position" and "Information content (bits)" match the spec''s required
+          label text exactly.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: A=brand green (palette[0]), correct semantic-exception mapping for
+          the DNA color convention the spec requests. Data colors identical across
+          themes; chrome theme-adaptive.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: The new semi-transparent 'Conserved core' plotBand adds a genuine
+          design touch requested in attempt 1, on top of the already-creative custom
+          SVG glyph rendering; overall composition remains fairly functional otherwise.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines, generous horizontal spacing between position stacks,
+          clean axis chrome; unchanged from attempt 1.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The conserved-core band plus the TATA-box pattern (tall T-A-T-A-A-A
+          core, flat position 8) now makes the biological story immediately and explicitly
+          legible.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct sequence-logo visualization: stacked, height-scaled letter
+          glyphs per position.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency-ordered stacking, information-content scaling (max 2 bits
+          DNA), standard DNA colors, scaled glyphs, zero-information position 8.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis = position (1-10), Y-axis = information content in bits (0-2),
+          matches spec exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the required pattern; no legend needed
+          - color meaning is self-evident from letters, standard for sequence logos.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Demonstrates conserved positions, variable flanks, and a deliberately
+          flat/zero-information position - a comprehensive textbook example.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: A plausible TATA-box-like transcription-factor binding motif; neutral,
+          realistic biological data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10 positions, 4 DNA letters, frequencies summing to 1 per position,
+          bits scale 0-2 - all sensible for the domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (drawLetters) is structurally necessary for the
+          chart.events.render hook driving the custom SVG glyphs - not gratuitous.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded frequency matrix.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a chart type Highcharts has no native
+          series for; no fake/simulated UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'No explicit chart width/height, animation: false on both chart and
+          plotOptions.series, credits disabled - correct harness contract.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: chart.renderer.text() + getBBox() + translateX/Y/scaleX/Y transforms
+          driven from chart.events.render is the correct, idiomatic way to extend
+          Highcharts for a genuinely custom mark type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Distinctive use of the low-level SVG renderer API, axis.toPixels()
+          coordinate mapping, and an invisible scatter series purely to reserve correct
+          axis extents/margins.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-glyph-rendering
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
