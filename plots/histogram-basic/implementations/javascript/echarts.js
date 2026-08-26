@@ -41,6 +41,12 @@ deliveryTimes.forEach((value) => {
 });
 const binLabels = binCounts.map((_, i) => Math.round(minValue + i * binWidth));
 
+const mean = deliveryTimes.reduce((sum, v) => sum + v, 0) / deliveryTimes.length;
+const meanBinIndex = Math.min(
+  Math.floor((mean - minValue) / binWidth),
+  binCount - 1,
+);
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -85,6 +91,18 @@ chart.setOption({
       data: binCounts,
       barCategoryGap: "0%",
       itemStyle: { color: t.palette[0], borderColor: t.pageBg, borderWidth: 1 },
+      markLine: {
+        symbol: "none",
+        silent: true,
+        lineStyle: { color: t.ink, type: "dashed", width: 2 },
+        label: {
+          formatter: `Mean: ${mean.toFixed(1)} min`,
+          color: t.ink,
+          fontSize: 13,
+          position: "insideEndTop",
+        },
+        data: [{ xAxis: meanBinIndex }],
+      },
     },
   ],
 });
