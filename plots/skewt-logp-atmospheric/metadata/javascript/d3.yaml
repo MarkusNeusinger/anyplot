@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: skewt-logp-atmospheric
 created: '2026-08-26T11:51:01Z'
-updated: '2026-08-26T12:00:40Z'
+updated: '2026-08-26T12:10:59Z'
 generated_by: claude-sonnet
 workflow_run: 32964722235
 issue: 3802
@@ -12,102 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Physically-based dry adiabats, numerically-integrated moist adiabats, and inverted-Bolton
-    mixing-ratio lines — genuine meteorological correctness rather than decorative
-    curves
-  - Correct 45-degree skew coordinate transform built from scratch, with a properly
-    logarithmic, inverted pressure axis
-  - 5-way legend uses color AND linestyle redundantly (solid/dotted/dashed) for CVD-safe
-    distinction at high series count
-  - Realistic convective sounding data (dry mid-level layer, tropopause isothermal
-    kink) that tells a genuine meteorological story
-  - Both renders are theme-correct with no legibility failures
+  - 'Clip-path bug from attempt 1 fully resolved: the clip rect now uses x=0,y=0 so
+    reference lines and mixing-ratio labels no longer bleed past the frame edges in
+    either render'
+  - 'Physically-correct thermodynamics: dry adiabats via Poisson''s equation, moist
+    adiabats via numerical integration of the saturated-adiabatic lapse rate (Bolton
+    1980), and mixing-ratio lines via the inverted Bolton formula — genuine meteorological
+    correctness rather than decorative curves'
+  - Reference-line palette now follows canonical Imprint slot order (dry adiabat=palette[3],
+    moist adiabat=palette[1], mixing ratio=palette[5]) instead of niche associative
+    colors from attempt 1
+  - Correct 45-degree skew coordinate transform and inverted logarithmic pressure
+    axis built from scratch with d3.scaleLog
+  - 5-way legend distinguishes series by color AND line style (solid/dashed/dotted)
+    for CVD-safe redundant encoding at high series count
+  - Realistic convective sounding (dry mid-level layer around 700 hPa, tropopause
+    isothermal kink near 200-250 hPa) tells a genuine meteorological story
+  - Both renders are theme-correct with no legibility failures; isobar/isotherm/mixing-ratio
+    tick-label sizing is now balanced at 13-14px, up from the uneven 14/12/11px in
+    attempt 1
   weaknesses:
-  - 'Clip-path coordinate bug: the plot-clip rect uses x=margin.left, y=margin.top
-    but is applied to the already-translated `clipped` group, double-offsetting the
-    clip window. This hides a ~150px strip of reference lines along the left edge
-    of the plot (visible as an empty bottom-left corner near the surface) and lets
-    mixing-ratio lines/labels (16, 24, 32 g/kg) bleed past the right frame border.
-    Fix: set the clip rect x/y to 0.'
-  - 'VQ-07: dry adiabat (ochre), moist adiabat (cyan), and mixing ratio (lime) skip
-    several canonical Imprint positions based on a niche technical association (''classic
-    mixing-ratio green'') rather than a widely-recognized real-world color cue — prefer
-    canonical order for abstract/technical reference categories.'
-  - 'Minor tick-label size imbalance: isobar labels are 14px while isotherm (12px)
-    and mixing-ratio (11px) labels are smaller — bump to 13-14px for better axis balance
-    and mobile legibility.'
+  - 'Minor residual tick-label imbalance: isobar labels are 14px while isotherm and
+    mixing-ratio labels are 13px — a 1px gap left over from the prior 14/12/11 spread;
+    unifying to a single size would perfect axis balance'
+  - 'CQ-01 (KISS): several helper functions (dryAdiabatPoints, moistAdiabatPoints,
+    mixingRatioT, saturationVaporPressure, toX/toY) are used — justified by the domain''s
+    thermodynamic formulas rather than premature abstraction, but it is a departure
+    from the ''no functions'' ideal for simple scripts'
+  - Wind barbs (optional per spec) are omitted — acceptable per spec, but adding them
+    would further differentiate LM-02 distinctive features in a future iteration
   image_description: |-
     Light render (plot-light.png):
       Background: warm off-white, matches #FAF8F1
-      Chrome: title, axis titles ("Temperature (°C)", "Pressure (hPa)"), isobar tick labels, isotherm tick labels, and legend text all dark ink, clearly readable
-      Data: brand green (#009E73) solid temperature line, blue dashed dewpoint line — bold and prominent against thin translucent ochre/cyan/lime reference lines
+      Chrome: title ("Radiosonde Sounding · skewt-logp-atmospheric · javascript · d3 · anyplot.ai"), axis titles ("Temperature (°C)", "Pressure (hPa)"), isobar tick labels (100-1000 hPa), isotherm tick labels (-40 to 40°C), mixing-ratio labels (1-16 g/kg), and legend text all render in dark ink, clearly readable against the light surface
+      Data: brand green (#009E73) solid temperature line and blue dashed dewpoint line are bold (4px) and prominent against thin, translucent ochre dry-adiabat, lavender moist-adiabat, and cyan mixing-ratio reference families; the clip-path bug from attempt 1 is fixed — no reference lines or labels bleed past the plot frame on any edge (verified via bottom-right, top, and left-edge crops)
       Legibility verdict: PASS
-      Defect (geometry, not color/theme): bottom-left corner of plot frame is empty (missing coldest isotherms near surface); mixing-ratio labels "24"/"32" bleed past the right frame border — caused by a clip-path coordinate bug in the code
 
     Dark render (plot-dark.png):
       Background: warm near-black, matches #1A1A17
-      Chrome: title, axis titles, tick labels, legend text all correctly flipped to light colors, no dark-on-dark failures
-      Data: identical colors to light render (brand green, blue, ochre, cyan, lime) — only chrome flipped, as required
+      Chrome: title, axis titles, tick labels, and legend text all correctly flip to light ink, no dark-on-dark failures anywhere
+      Data: identical colors to the light render (brand green, blue, ochre, lavender, cyan) — only chrome flipped, as required; same clean framing with no clipped or bleeding elements
       Legibility verdict: PASS
-      Same clip-path geometry defect present (theme-independent, confirmed via pixel crop comparison against the light render)
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set and readable in both themes; isotherm/mixing-ratio
-          labels slightly small relative to isobar labels
+        comment: All font sizes explicitly set and readable in both themes; isobar
+          labels (14px) are 1px larger than isotherm/mixing-ratio labels (13px), a
+          minor residual imbalance
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text overlap, but mixing-ratio labels float past the right
-          frame border due to the clip bug
+        comment: Clip-path bug from attempt 1 fixed — no text/line bleed past the
+          frame; legend box cleanly overlays grid without colliding with data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bold 4px data lines vs thin translucent reference grid, well-adapted
-          to sparse 20-point sounding
+        comment: Bold 4px temperature/dewpoint lines clearly stand out against thin
+          1-1.5px translucent reference-line families, well-adapted to a sparse 20-point
+          sounding
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Color + linestyle redundancy across 5-series legend, CVD-safe
+        comment: Redundant color+dash-pattern encoding across 5 series; no red-green-only
+          signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Clip-path bug hides reference-line content at the left edge and spills
-          content past the right frame border
+        passed: true
+        comment: Square 2400x2400 canvas gate passed; title comfortably sized, no
+          overflow, nothing cut off (verified via edge crops)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis titles carry units
+        comment: Temperature (°C) and Pressure (hPa) both descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correct #009E73 and theme chrome correct, but reference-line
-          color reassignment relies on a niche technical association rather than a
-          widely-recognized real-world cue'
+        passed: true
+        comment: 'First series is brand green #009E73; reference lines now use canonical
+          Imprint slot order (palette[1], [3], [5]) fixed from attempt 1''s niche
+          associative choices; backgrounds correct in both themes'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -115,24 +121,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Thoughtful hierarchy: bold data lines vs thin reference grid; physically-computed
-          adiabats rather than decorative curves'
+        comment: Professional polish with intentional opacity/dash coding per reference-line
+          family and physically-derived curves rather than decorative ones
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clip-path bug (blank corner + spillover past frame border) undercuts
-          an otherwise clean diagram
+        passed: true
+        comment: Subtle grid, appropriate full frame (correct convention for this
+          chart type, not a spine violation), generous whitespace outside the legend
+          box
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Visual hierarchy plus a realistic convective sounding with a visible
-          tropopause kink guides the eye
+        comment: Clear visual hierarchy (bold data lines vs. subtle reference grid)
+          and a genuine focal point in the dry mid-level layer / tropopause kink
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,53 +147,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Skew-T Log-P with logarithmic inverted pressure axis and
-          45-degree skewed isotherms
+        comment: Correct Skew-T Log-P diagram with skewed isotherms and inverted log
+          pressure axis
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All reference line types present, but a strip is invisible/misplaced
-          due to the clip bug; wind barbs (optional) reasonably omitted
+        comment: Dry adiabats, moist adiabats, and mixing-ratio lines all present;
+          wind barbs correctly treated as optional and omitted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Temperature/pressure correctly mapped through the skew transform
-          across the full 1000-100 hPa range
+        comment: Temperature on skewed X, pressure on inverted log Y; full surface-to-tropopause
+          range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          plotted series
+        comment: Title matches '{Descriptive Title} · {spec-id} · javascript · d3
+          · anyplot.ai'; legend labels match all 5 series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dry mid-level layer, moist near-surface layer, tropopause isothermal
-          kink shown; no explicit surface inversion
+        comment: Shows temperature, dewpoint, and all three reference-line families
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral meteorological scenario
+        comment: Plausible, neutral convective sounding with a realistic dry mid-level
+          layer and tropopause kink
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Physically realistic surface values, lapse rates, and tropopause
-          temperature
+        comment: 1000-100 hPa and -40 to 45°C ranges are sensible for surface-to-stratosphere
+          coverage
     code_quality:
       score: 9
       max: 10
@@ -196,34 +203,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: No classes; small helper functions are a reasonable decomposition
-          for the underlying physics
+        comment: Several helper functions used for thermodynamic formulas — justified
+          by domain complexity, not premature abstraction, but a departure from the
+          no-function ideal
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded data and closed-form/iterative physics
+        comment: Fully deterministic hardcoded sounding array, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the d3 global is used
+        comment: No extraneous imports; only the global d3
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, appropriately complex, no fake functionality
+        comment: Appropriate complexity for the domain, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly builds one svg into #container per the mount-node contract'
+        comment: 'Correctly builds one SVG onto #container sized from window.ANYPLOT_SIZE,
+          no animation'
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -231,15 +240,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of scaleLog/scaleLinear, d3.line, and selection.data().join()
+        comment: Idiomatic use of d3.scaleLog, d3.line, d3.range, and the selection.join
+          pattern
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Fully custom skewed coordinate transform driving d3.line() over physically-derived
-          data — a distinctive use of D3's low-level flexibility
-  verdict: REJECTED
+        comment: Custom skew transform, clipPath-based windowing, and hand-built thermodynamic
+          curve generators show real mastery beyond boilerplate
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -252,3 +262,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
