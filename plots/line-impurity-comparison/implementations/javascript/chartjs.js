@@ -69,7 +69,7 @@ new Chart(canvas, {
         data: entropyPoints,
         borderColor: t.palette[1],
         backgroundColor: t.palette[1],
-        borderWidth: 4,
+        borderWidth: 3,
         borderDash: [10, 6],
         pointRadius: 0,
         tension: 0,
@@ -101,7 +101,7 @@ new Chart(canvas, {
         max: 1,
         title: { display: true, text: "Probability of Positive Class (p)", color: t.ink, font: { size: 18 } },
         ticks: { color: t.inkSoft, font: { size: 14 }, stepSize: 0.1 },
-        grid: { color: t.grid },
+        grid: { display: false },
       },
       y: {
         min: 0,
