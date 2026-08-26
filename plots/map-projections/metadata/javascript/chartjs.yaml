@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: map-projections
+created: '2026-08-26T08:11:15Z'
+updated: '2026-08-26T08:27:13Z'
+generated_by: claude-sonnet
+workflow_run: 32944979981
+issue: 3771
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/chartjs/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Hand-rolled orthographic projection (spherical trig with horizon clipping) implemented
+    via Chart.js custom plugins, working around the library's lack of a native geo/GeoJSON
+    API
+  - Tissot indicatrices convincingly show projection distortion — ellipses grow visibly
+    more elongated and compressed radially toward the horizon edge, telling the core
+    cartographic story at a glance
+  - Theme-adaptive chrome and Imprint palette are correctly threaded through custom
+    canvas drawing (land fill, Tissot ellipses) as well as the standard Chart.js options,
+    and stay consistent between light and dark renders
+  - Dashed equator, subtle low-alpha graticule, and a clean hidden-axis composition
+    keep the globe uncluttered while remaining cartographically legible
+  weaknesses:
+  - Only continent-level silhouettes are modeled (Africa, Europe, Middle East/India,
+    a South America sliver) rather than the ~200 individual country boundaries the
+    specification's data model calls for — a real feature gap versus the spec, even
+    though it's a documented consequence of Chart.js shipping no geo plugin
+  - A few Tissot ellipses (e.g. over northern Africa / the Arabian peninsula) visually
+    bisect the coastline outline beneath them, creating minor clutter where the ellipse
+    edge crosses a coastline vertex
+  - No caption or annotation explains what the green ellipses represent — a viewer
+    unfamiliar with Tissot's indicatrix would see decorative circles rather than a
+    distortion metric
+  - The single orthographic view is a spec-sanctioned choice, but a small subtitle
+    naming the projection's headline distortion trade-off (e.g. 'preserves angles
+    near center, distorts area near the limb') would sharpen the storytelling further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Orthographic Projection · map-projections · javascript · chartjs · anyplot.ai" in bold dark ink at top-left, clearly readable. Globe outline, graticule (meridians/parallels every 30°), and dashed equator all render in dark/soft ink tones against the light background.
+      Data: Land masses (Africa, Europe, Middle East/India, a sliver of South America at the left edge) fill in a soft neutral gray, distinguishing them from the white ocean. Tissot indicatrix ellipses render in the brand green (#009E73) at low alpha, larger and near-circular close to the view center (over Africa/the equator) and progressively thinner/more elongated toward the horizon edge, visually demonstrating orthographic distortion.
+      Legibility verdict: PASS — all text and graphic elements are clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title now in light/off-white ink, fully legible. Globe outline and graticule switch to light-toned strokes against the dark background; the equator dash is now white.
+      Data: Land masses fill in a slightly lighter dark gray than the ocean background, keeping the same distinguishable contrast as the light render. Tissot ellipses remain the identical brand green (#009E73) as in the light render — only the chrome (background, text, grid, land-fill tone) flips; the data-color identity is preserved.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; title, graticule, and coastlines are all clearly visible.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font size on the title; readable and well-proportioned in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Tissot ellipses and coastlines all visible, though a few ellipses
+          visually bisect coastline strokes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Globe fills most of the square canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title; no cartesian axes needed for a globe map
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Tissot fill uses Imprint #009E73; backgrounds and chrome are theme-correct
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hand-rolled spherical projection math and custom plugins go well
+          beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle graticule, hidden axes, dashed equator; docked slightly for
+          Tissot ellipses crossing coastline strokes
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Tissot ellipse size/eccentricity visibly changes from center to edge,
+          clearly demonstrating orthographic distortion
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: world map projection with graticule and distortion indicatrices'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Graticule, neutral land color, and Tissot indicatrices present; per-country
+          boundaries reduced to continent silhouettes since Chart.js has no geo plugin
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat correctly projected to x/y; full visible hemisphere shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend correctly omitted
+          (no series to distinguish)
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Graticule, coastlines, equator, and distortion ellipses all shown;
+          no side-by-side projection comparison (optional per spec)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral geographic/cartographic scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Continent silhouettes are simplified freehand approximations, recognizable
+          but not geographically precise
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses several helper functions (project, densify, projectLine); justified
+          by the projection math but not a flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the Chart.js global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, no fake functionality, complexity matches the domain
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of Chart.js's plugin lifecycle hooks (beforeDatasetsDraw/afterDatasetsDraw)
+          and dataset types
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom canvas-drawing plugins exploit Chart.js's extensibility to
+          fake geo rendering — not a generic 'any library' usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - map-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
+  - minimal-chrome
