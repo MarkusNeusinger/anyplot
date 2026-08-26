@@ -1,0 +1,257 @@
+library: d3
+language: javascript
+specification_id: line-pca-variance-cumulative
+created: '2026-08-26T07:20:30Z'
+updated: '2026-08-26T07:25:10Z'
+generated_by: claude-sonnet
+workflow_run: 32941614956
+issue: 4131
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Complete feature coverage: cumulative % curve, 90%/95% dashed threshold lines
+    with inline crossing-count labels, ring-marker callouts at each crossing, an automatically
+    detected (Kneedle heuristic) elbow annotation, and an optional scree-bar overlay
+    for individual variance — every spec requirement plus the optional enhancement
+    is present.'
+  - Threshold labels are folded directly into the line text ("95% threshold (n=15)")
+    instead of a separate floating label or legend, which avoids clutter and collisions
+    near the closely spaced 90/95 lines.
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    grid, text, axis domain) flips, exactly per the theme-adaptive contract.
+  - 'Realistic, neutral data story: a 22-channel industrial sensor array with correlated
+    channel groups producing a textbook PCA decay/elbow shape, deterministic via a
+    fixed-seed LCG.'
+  - 'Idiomatic D3: proper data joins (`selectAll().data().join()`) for bars/points/circles,
+    d3-shape line generator, d3-array cumulative sum, and manual tick filtering to
+    avoid x-axis crowding at n=22.'
+  weaknesses:
+  - The gray scree bars (individual variance per component) have no legend or inline
+    label distinguishing them from the green cumulative line — a first-time viewer
+    has to infer what the secondary bars represent. Consider a small muted-color legend
+    entry or a short axis-adjacent caption.
+  - In the dark render, the scree bars (t.inkSoft at opacity 0.25) are noticeably
+    fainter than in the light render, especially for higher component counts where
+    bars are already tiny — bump opacity slightly (e.g. 0.3-0.35) for the dark theme
+    to keep the secondary encoding equally legible in both themes.
+  - Typography relies on the default sans-serif stack throughout; a touch more weight/size
+    differentiation between the elbow annotation and axis tick labels would sharpen
+    the tertiary-vs-secondary text hierarchy.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "Sensor Array PCA · line-pca-variance-cumulative · javascript · d3 · anyplot.ai" centered at top, clearly readable. X-axis "Number of Principal Components" and Y-axis "Cumulative Explained Variance (%)" labels in medium-gray ink, tick labels (1-22, 0%-100%) crisp against the light surface. Subtle horizontal-only gridlines. Amber dashed threshold lines at 90% and 95% each labeled with their crossing component count ("90% threshold (n=12)", "95% threshold (n=15)"). Italic tertiary annotation "elbow ≈ 9 components" near the curve's bend.
+      Data: Brand-green (#009E73) line with matching filled circular markers at all 22 discrete component counts — the primary cumulative-variance series. Muted light-gray bars behind it show the individual (per-component) variance on the same 0-100% scale. Two black-stroked open rings highlight the exact points where the curve crosses 90% (n=12) and 95% (n=15).
+      Legibility verdict: PASS — all text is dark-on-light and clearly legible; amber threshold labels have good contrast against the cream background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, now in near-white ink, still centered and fully legible. Axis labels and tick labels rendered in light gray, clearly visible against the dark surface. Gridlines and axis domain lines flipped to light, low-opacity strokes. Threshold and elbow annotation text unchanged in role, rendered in amber/muted-light tones, both readable.
+      Data: The cumulative-variance line and markers are the identical #009E73 green as the light render — confirmed unchanged. The 90%/95% dashed threshold lines are the same amber hex. The threshold-crossing ring markers are stroked in light ink (theme-adaptive) rather than black, appropriately flipped. No dark-on-dark or light-on-light failures detected anywhere; the muted scree bars are visible but noticeably fainter than in the light render (see weaknesses).
+      Legibility verdict: PASS — all text and data elements remain distinguishable from the near-black background; only the secondary scree-bar contrast is a soft weakness, not a legibility failure.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-22px CSS), readable in both themes;
+          title fontsize scales with title length via the mandated formula.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Threshold labels, elbow annotation, and ring callouts are all positioned
+          clear of the curve and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (r=6) prominent for 22 sparse points; scree bars are appropriately
+          muted but slightly under-contrast in the dark render.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green line, amber thresholds, and muted gray bars are distinguishable
+          without relying on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills a large, balanced share of the canvas; nothing clipped
+          or cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels are descriptive and the Y-axis carries units (%).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, amber semantic anchor used correctly for
+          thresholds, backgrounds match #FAF8F1/#1A1A17, chrome fully theme-correct
+          in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Layered encoding (line + scree bars + threshold lines + ring callouts)
+          goes well beyond a default line chart; typography still uses default stack.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle horizontal gridlines only, generous whitespace, clean L-shaped
+          axes; unlabeled scree bars keep it just short of perfect polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Threshold-crossing rings + labeled n-values + elbow annotation guide
+          the viewer straight to the component-selection decision; missing bar legend
+          is the only gap.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative-variance line chart with elbow shape.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative % y-axis, 90/95% threshold lines, elbow annotation, discrete
+          markers, x starting at 1, and the optional scree-bar overlay are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = component count (1-22), Y = cumulative explained variance (%);
+          all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed since threshold/series roles are self-labeled inline.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the full elbow shape, threshold crossings, and per-component
+          decay — all PCA-spectrum aspects represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible 22-channel industrial sensor array scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Decay rate and cumulative crossing points (n=12 at 90%, n=15 at 95%)
+          are consistent with a realistic correlated-sensor PCA spectrum.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG produces deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the layered visualization, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; sizes svg from ANYPLOT_SIZE.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper data joins, d3-shape line generator, d3-array sum/range, idiomatic
+          scale + axis usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines bars, line, threshold overlays, and ring callouts in one
+          custom SVG composition — the kind of bespoke layering d3's low-level control
+          makes straightforward.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
