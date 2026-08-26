@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: radar-innovation-timeline
+created: '2026-08-26T09:54:16Z'
+updated: '2026-08-26T09:59:59Z'
+generated_by: claude-sonnet
+workflow_run: 32954026947
+issue: 4301
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Hand-built radar chrome (concentric ring bands, boundary lines, sector dividers,
+    ring/sector labels) drawn via Highcharts' SVG renderer is a genuinely distinctive
+    and well-executed workaround for the missing highcharts-more polar module — geometry
+    stays in lockstep with the scatter series via shared per-axis pixel conversion.
+  - 'Correct Imprint palette usage: first series is brand green #009E73, canonical
+    palette order maintained across all 4 sectors, and data colors are identical between
+    light and dark renders — only chrome flips.'
+  - Distinct marker shapes per sector (circle/diamond/triangle/square) provide redundant
+    encoding beyond color alone — CVD-safe categorical grouping.
+  - Alternating subtle ring-band fills clearly separate time horizons without competing
+    with the data.
+  - Deterministic, clean, single-file implementation; animation correctly disabled
+    on both chart and series for the harness screenshot contract.
+  - Title matches the mandated format exactly; legend labels match sector names; no
+    edge clipping in either render.
+  weaknesses:
+  - Uses a near-full-circle (300°) layout with only a 60° top gap, rather than the
+    half-circle (180°) or three-quarter (270°) layout the spec explicitly recommends
+    'to leave room for a legend or title area' — the current layout does leave room
+    via the top gap and bottom legend, but doesn't follow either suggested option.
+    Consider a 270° layout for closer spec alignment.
+  - Individual data-point name labels (12px) are small relative to the 20-item density,
+    especially in the tightly-packed Cloud Infrastructure sector (5 items at close
+    radii) — at deep thumbnail/mobile scale these will be hard to read. Consider bumping
+    to ~13-14px.
+  - Noticeable empty whitespace between the outermost ring/last data labels and the
+    legend at the bottom-center of the canvas — could tighten vertical margins or
+    shift the chart center slightly to balance whitespace distribution.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent with spec — not pure white.
+      Chrome: Bold dark title "radar-innovation-timeline · javascript · highcharts · anyplot.ai" at top, clearly legible. Four bold dark-ink sector labels ("AI & ML", "Cloud Infrastructure", "Cybersecurity", "Sustainability") anchored at the outer edge of their sectors. Four gray ring labels ("Now", "Next 6 Months", "1-2 Years", "3+ Years") stacked along the vertical top gap. Subtle gray ring-boundary arcs and radial sector-divider lines. Alternating elevated-tone ring bands (rings 1 and 3 from center) provide subtle time-horizon separation. Legend at the bottom lists all four sectors with their marker shape and color.
+      Data: 20 labeled points, colored and shaped by sector — green circles (AI & ML), lavender diamonds (Cloud Infrastructure), blue triangles (Cybersecurity), ochre squares (Sustainability). First series is the mandated brand green #009E73. Points are spread radially by ring (time horizon) and angularly within their sector, with data-label text pushed outward from the point so it doesn't collide with markers.
+      Legibility verdict: PASS — all chrome text (title, ring labels, sector labels, legend) and per-point labels are clearly readable against the light background; no dark-on-dark or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), consistent with spec — not pure black.
+      Chrome: Same title now in light ink, fully legible. Sector labels in light bold text, ring labels in light gray. Ring-boundary arcs, sector dividers, and alternating ring-band fills use the dark-theme elevated tone, keeping the same subtle separation as the light render. Legend text renders in light ink against the dark background.
+      Data: Confirmed identical marker colors and shapes to the light render (green circles, lavender diamonds, blue triangles, ochre squares) — only chrome (background, text, grid, legend frame) flipped, as required. Point positions and data-label placement are unchanged.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, ring/sector labels, tick-equivalent chrome, and per-point labels read clearly against the dark background. Brand green remains highly visible on this surface.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All chrome and data labels readable in both themes; per-point name
+          labels (12px) are dense/small for 20 items and may strain at deep thumbnail
+          scale
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No collisions observed; a few labels in the Cloud Infrastructure
+          sector sit close together but remain distinct
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size (radius 9) with distinct shapes is clearly visible against
+          both backgrounds for 20 items
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Marker shape encodes sector redundantly with color — CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed; noticeable whitespace void between chart bottom
+          and legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Ring and sector labels serve as descriptive axis-equivalents; title
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, canonical order, correct theme backgrounds
+          in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hand-built radar chrome via SVG renderer, well beyond default
+          styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid/ring bands, generous whitespace, no clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Ring + sector + shape/color encoding clearly guides near-term-to-long-term
+          reading
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Radial chart with concentric time-horizon rings and thematic sectors,
+          matches spec
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All required features present; uses near-full-circle (300°) instead
+          of the spec-suggested half/three-quarter layout
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle=sector, radius=ring, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend matches sector names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 20 items across 4 rings and 4 sectors, within spec's 15-40 / 3-4
+          / 3-5 ranges
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral tech-trend names across AI, cloud, security, sustainability
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible distribution of items per ring/sector
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Functions are warranted by the custom radial geometry, not gratuitous
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the Highcharts global and window tokens
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented rationale, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on chart and series
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter + SVGRenderer usage given the missing polar module
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Hand-built radial chrome via SVGRenderer is a genuinely distinctive
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
