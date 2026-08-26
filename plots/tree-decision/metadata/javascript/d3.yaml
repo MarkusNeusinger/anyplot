@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: tree-decision
 created: '2026-08-26T17:05:47Z'
-updated: '2026-08-26T17:19:03Z'
+updated: '2026-08-26T17:39:10Z'
 generated_by: claude-sonnet
 workflow_run: 32991311380
 issue: 4569
@@ -12,104 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-deci
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
   - EMV rollback math is verified correct at every node (C3=8.7, D1=8.7, C1=4.42,
-    C2=2.5, D0=4.42) — rare level of domain rigor
-  - Node-type shape encoding (square=decision, circle=chance, right triangle=terminal)
-    matches the spec exactly, with an ink stroke on chance nodes for extra contrast
-  - Pruned branches are marked with BOTH a dashed stroke and reduced opacity AND an
-    explicit cross mark, exceeding the spec's 'double-strike or cross mark' minimum
-  - 'Idiomatic D3: d3.hierarchy + d3.tree with a tuned separation function, d3.linkHorizontal
-    for branch curves, proper selection.data().join() pattern throughout'
-  - 'Smart semantic-exception use of the Imprint palette: the negative terminal payoff
-    (-$2.00M) is rendered in matte red (#AE3030) instead of the default ink color,
-    signalling loss immediately'
-  - Correct canonical Imprint palette order (green→lavender→blue) for decision/chance/terminal,
-    identical across both themes
-  - Title format and 4-item legend (Decision/Chance/Terminal/Pruned branch) fully
-    match spec requirements
+    C2=2.5, D0=4.42)
+  - Canvas utilization is now well balanced — pruned terminals are stretched to the
+    same right edge as the deepest live branch, fixing the empty bottom-right quadrant
+    from the previous attempt
+  - EMV labels bumped to 16px so the highest-value numbers still read at the 400px
+    mobile thumbnail scale
+  - Node-type shape encoding (square/circle/triangle) matches the spec exactly, with
+    an ink stroke on chance nodes for contrast
+  - Pruned branches marked with dashed stroke, reduced opacity, AND a cross mark —
+    exceeds the spec's minimum
+  - 'Idiomatic D3: d3.hierarchy + d3.tree with a tuned separation function, d3.linkHorizontal,
+    proper data joins throughout'
+  - Correct canonical Imprint palette order, identical data colors across both themes,
+    correct semantic-exception red for the negative payoff
+  - Title format and 4-item legend fully match spec requirements
   weaknesses:
-  - Branch-label text overlaps the link curve itself at several branches (e.g. 'License',
-    'Do Nothing', 'High Demand (p=0.60)', 'Low Demand (p=0.40)', 'Expand') — the fixed
-    -12px vertical offset from the link midpoint isn't enough clearance where the
-    curve bows steeply; offset further perpendicular to the local curve tangent, or
-    nudge labels along the link's control point.
-  - Numeric labels (EMV, payoff, probability text) become illegible at the 400px mobile
-    thumbnail — the diagram's ~20 small text elements at 13-14px don't survive the
-    scale-down; consider slightly larger font sizes on the most important labels (EMV,
-    payoff) or trimming secondary label text for mobile legibility.
-  - 'Canvas utilization is unbalanced: the pruned lower subtree (License/Do Nothing)
-    is much shorter than the Invest branch, leaving roughly the entire bottom-right
-    quadrant of the canvas empty; rebalance vertical separation or shift the tree
-    to better center content and reduce the dead zone.'
+  - 'The paint-order stroke halo added in the repair only masks the link curve behind
+    individual glyphs, not the whitespace between words — several branch labels ("License",
+    "Do Nothing", "Low Demand", "No Entry (p=0.70)") still show the dashed/solid link
+    line poking through the gap between words or through a digit, reading like a stray
+    comma or strikethrough (e.g. "Low,Demand", ".Do·Nothing"). Root cause unchanged
+    from attempt 1: the label sits at the link''s own midpoint with only a small offset,
+    so the curve still passes near or under the text row.'
+  - Probability/branch-label text (13px) is still hard to make out at the 400px mobile
+    thumbnail, even though the more important EMV numbers were bumped and now read
+    fine
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "Product Launch Decision · tree-decision · javascript · d3 · anyplot.ai" in bold dark ink, centered, ~42% canvas width, fully visible with no clipping. Node title labels ("Launch Decision", "Market Demand", "Expand Capacity?", "Competitor Response") and EMV labels in dark ink/soft-ink, all readable. Legend at bottom-left with 4 entries (Decision/Chance/Terminal/Pruned branch), readable.
-      Data: Decision nodes are brand green (#009E73) squares, chance nodes are lavender (#C475FD) circles with an ink stroke, terminal nodes are blue (#4467A3) triangles. Negative payoff (-$2.00M) is rendered in matte red. Pruned branches are dashed, reduced-opacity, and cross-marked.
-      Legibility verdict: PASS at full resolution — all text is readable against the light background. Some branch-label text (e.g. "License", "High Demand (p=0.60)") visually crosses the link curve underneath it, which is a minor overlap but does not make the text unreadable. At the 400px mobile thumbnail, secondary numeric labels (EMV, payoff, probability) become too small to read clearly.
+      Background: warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "Product Launch Decision · tree-decision · javascript · d3 · anyplot.ai" is bold dark ink, centered, fully visible with no clipping at any edge (verified top/bottom/left/right margins). Node-type labels ("Launch Decision", "Market Demand", "Expand Capacity?", "Competitor Response"), EMV labels, payoff labels, and the bottom legend are all dark ink, clearly readable.
+      Data: Decision nodes are brand-green (#009E73) squares, chance nodes are lavender (#C475FD) circles with an ink stroke, terminal nodes are blue (#4467A3) right-pointing triangles — matches the required first-series green and canonical Imprint order. The negative terminal payoff (-$2.00M) is rendered in matte red as a deliberate semantic exception. Pruned branches (License, Do Nothing, Hold) are dashed, faded to ~0.4-0.45 opacity, and cross-marked; the live optimal path (Invest → High Demand → Expand → outcomes) is solid, full-opacity green, giving an immediate visual read of the optimal decision route.
+      Defect found: several branch labels are crossed by the link curve/dashes running beneath them at the gap between words or through a digit — visible on "License" (line clips the "L"), "Low Demand (p=0.40)" (renders as "Low,Demand"), "Do Nothing" (renders as "Do·Nothing"), and "No Entry (p=0.70)" (line crosses the ".7"). Confirmed via pixel crops. Text remains decipherable but this is a genuine, reproducible overlap artifact, not a false alarm.
+      Legibility verdict: PASS overall (all text decipherable) with a noted VQ-02 overlap defect.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title, node titles, EMV labels, and legend all rendered in light ink tones (#F0EFE8 / #B8B7B0), clearly legible against the dark background. No dark-on-dark failures observed.
-      Data: Same green/lavender/blue/red colors as the light render — confirmed identical data-color values, only chrome (text, stroke) flipped to light tones as expected.
-      Legibility verdict: PASS — all text is readable against the dark background with no dark-on-dark issues. Same branch-label/curve overlap and mobile-scale legibility concerns as the light render apply identically here.
+      Background: warm near-black, matches #1A1A17 — not pure black.
+      Chrome: All chrome correctly flips to light ink tones — title, node-type labels, EMV/payoff/probability labels, and legend are all light and readable against the dark background. No dark-on-dark failures.
+      Data: Data colors are confirmed identical to the light render (green squares, lavender/violet circles, blue triangles, red negative payoff) — only chrome flipped as expected. The pruned "License" chance-node circle appears a deeper purple than its light-render counterpart; this is expected alpha-compositing behavior (same 0.45-opacity fill color composited over a dark vs. light background), not a palette violation — the underlying fill token is identical in both themes.
+      Defect found: the same link-curve-through-label artifact reproduces identically on "License" and the other branch labels listed above (verified via pixel crop of the License region).
+      Legibility verdict: PASS overall (all text decipherable) with the same VQ-02 overlap defect as the light render.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, all readable at full resolution in
-          both themes, but numeric labels become illegible at the 400px mobile thumbnail
-          due to information density
+        comment: Explicit sizes throughout; EMV labels bumped to 16px and now read
+          at the 400px mobile thumbnail, but the smaller 13px probability/branch labels
+          remain hard to make out at that scale
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
-        passed: true
-        comment: Several branch labels (License, Do Nothing, High/Low Demand, Expand)
-          visually overlap the link curve beneath them; readable but sloppy
+        passed: false
+        comment: Halo added in the repair masks the link curve only behind individual
+          glyphs, not word gaps — 'License', 'Do Nothing', 'Low Demand', and 'No Entry
+          (p=0.70)' still show the curve poking through the text, readable but a real
+          defect
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Node shapes (30-32px half-size) are prominent and well-suited to
-          the sparse (12-node) dataset
+        comment: Node shapes (30-32px) are prominent and well-sized for the ~15-node
+          sparse diagram
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, ink stroke on chance nodes, CVD-safe Imprint hues
+        comment: Good contrast; ink stroke on chance nodes; distinct hues, not reliant
+          on red-green alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Bottom-right quadrant of the canvas is left almost entirely empty
-          because the pruned lower subtree is much shorter than the main branch
+        comment: Pruned terminals now stretched to the same right edge as the deepest
+          live branch — fixes the empty bottom-right quadrant flagged in attempt 1;
+          balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Not applicable in the traditional axis sense; title is descriptive
-          and correctly formatted
+        comment: Title descriptive and correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue), correct semantic-exception
-          use of matte red for a loss, theme-correct chrome in both renders
+        comment: 'Canonical Imprint order, first series #009E73, identical data colors
+          across themes, correct semantic-exception red for the loss payoff, theme-correct
+          chrome in both renders'
     design_excellence:
       score: 15
       max: 20
@@ -118,18 +122,21 @@ review:
         name: Aesthetic Sophistication
         score: 6
         max: 8
-        comment: Custom shape geometry per node type plus a deliberate semantic color
-          choice for the loss payoff — clearly above a configured default
+        passed: true
+        comment: Custom shape geometry per node type, deliberate semantic color for
+          the loss payoff, clean typography hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Clean typography hierarchy and thoughtful pruned-branch styling,
-          held back by the label/curve overlap
+        passed: true
+        comment: Clean pruned-branch styling and generous whitespace, held back from
+          a higher score by the persistent label/curve overlap
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
+        passed: true
         comment: Solid/full-opacity optimal path vs. dashed/faded pruned paths gives
           an immediate visual read of the optimal decision route
     spec_compliance:
@@ -140,25 +147,29 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct decision-tree structure with square/circle/triangle node
-          types, left-to-right layout
+        passed: true
+        comment: 'Correct decision-tree diagram: squares/circles/triangles, left-to-right
+          layout'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: EMV rollback, chance probabilities, pruned-branch marking, decision-vs-probability
-          branch labels all present
+        passed: true
+        comment: Probabilities on chance branches, EMV at every non-terminal node,
+          pruned-branch marking, distinct node-type colors
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Hierarchy correctly mapped left-to-right; all nodes and values visible
+        passed: true
+        comment: Full tree correctly laid out left-to-right, all nodes shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exactly matches convention; legend covers all four visual
-          encodings used
+        passed: true
+        comment: Title matches required format; legend labels (Decision/Chance/Terminal/Pruned
+          branch) correct
     data_quality:
       score: 15
       max: 15
@@ -167,17 +178,20 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
-        comment: Nested decision-within-chance structure, multiple probability branches,
-          a negative payoff, and pruning all present
+        passed: true
+        comment: Nested decision-within-chance structure, negative payoff, pruning,
+          and rollback all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, plausible product-launch business scenario
+        passed: true
+        comment: Neutral, plausible product-launch investment scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Probabilities sum to 1.0 at every chance node; EMV rollback values
           are all arithmetically correct
     code_quality:
@@ -188,28 +202,32 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Flat data -> layout -> render script, no functions/classes
+        passed: true
+        comment: Imports/tokens → data → layout → render, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hardcoded tree data
+        passed: true
+        comment: Fully hardcoded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only the d3 global is used, nothing unused
+        passed: true
+        comment: Only the provided d3 global; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for a hierarchical tree layout, no fake functionality
+        passed: true
+        comment: Appropriate complexity for a hierarchical diagram, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: Follows the mount-node contract correctly, no animation, no deprecated
-          API
+        passed: true
+        comment: Correct mount-node contract, current D3 7.9 API
     library_mastery:
       score: 9
       max: 10
@@ -218,25 +236,26 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
-        comment: d3.hierarchy + d3.tree + d3.linkHorizontal + data joins is textbook
-          idiomatic D3
+        passed: true
+        comment: d3.hierarchy + d3.tree + d3.linkHorizontal + proper data joins throughout
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Custom separation function tuning the tree layout algorithm is a
-          genuinely D3-specific feature, hard to replicate in another library
-  verdict: REJECTED
+        passed: true
+        comment: Custom tree-layout separation function and hierarchy-driven geometry
+          are genuinely D3-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - bezier-curves
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - publication-ready
   - alpha-blending
   - edge-highlighting
