@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: raincloud-basic
 created: '2026-08-26T10:26:28Z'
-updated: '2026-08-26T10:31:00Z'
+updated: '2026-08-26T10:40:23Z'
 generated_by: claude-sonnet
 workflow_run: 32957617001
 issue: 1876
@@ -12,50 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
   - 'Correct raincloud semantics: half-violin cloud rises above the category baseline,
     the quartile box + whiskers sit centered on the baseline, and jittered rain falls
     below it — matches the spec''s cloud/box/rain relationship exactly in both renders.'
   - 'Statistically sound construction: per-category KDE with a Silverman bandwidth,
-    Tukey 1.5*IQR whisker fencing, and deterministic LCG-seeded Box-Muller normal
+    Tukey 1.5×IQR whisker fencing, and deterministic LCG-seeded Box-Muller normal
     sampling (seed=42).'
-  - Correct Imprint palette usage — brand green first, canonical hue order (green/lavender/blue/ochre)
-    — and consistent theme-adaptive chrome (ink, grid, page background) across both
-    light and dark renders.
-  - 'Clean, legible layout: explicit font sizes on every text element, generous whitespace,
-    y-axis grid disabled to reduce clutter, no clipping or cross-row overlap.'
-  - 'Idiomatic Chart.js workaround for a plot type the library has no native support
-    for: a floating horizontal bar dataset for the IQR box plus an `afterDatasetsDraw`
-    custom plugin for the cloud/rain/whiskers — exactly the ''no external library
-    shortcuts'' approach the library rules call for.'
+  - Correct Imprint palette usage (brand green first, canonical lavender/blue/ochre
+    order) and consistent theme-adaptive chrome across both renders — no dark-on-dark
+    or light-on-light failures.
+  - Rain-point markers are now a legible 4px radius with 0.6 alpha, appropriately
+    sized for the ~110-130 points per category without excessive overplotting.
+  - The standout category (Texting, highest median reaction time) now gets a bold
+    ink-colored y-axis label, giving the chart a clear focal point without touching
+    the Imprint data colors.
+  - Idiomatic Chart.js workaround for a plot type the library has no native support
+    for — floating horizontal bar for the IQR box plus a custom afterDatasetsDraw
+    plugin for the cloud/rain/whiskers.
   weaknesses:
-  - Rain-point marker radius (3.2px) is on the small side; slightly larger markers
-    would improve legibility when the preview is scaled down (e.g. the ~400px mobile
-    thumbnail).
-  - No visual emphasis or annotation calls out the standout finding (Texting's markedly
-    wider, right-shifted distribution) — a subtle highlight would strengthen the data
-    storytelling.
-  - Row spacing between the Texting and Passenger Talk bands is comparatively tight
-    (small gap between Texting's rain and Passenger Talk's cloud) — not currently
-    overlapping, but leaves little margin for a future repair pass that increases
-    marker size or font size.
+  - The 'Texting' category's KDE tail runs close to the right axis boundary (x=780)
+    without fully tapering to zero before the chart edge, unlike the other three categories
+    — widen evalMax's margin or clamp/taper the tail so it visibly returns to baseline
+    before the axis limit.
+  - 'Design Excellence is still mostly default: no custom typography, minimal color
+    treatment beyond the required palette, and DE-01/DE-02 remain in the mid-range
+    — further polish (e.g. subtle background banding per row, refined spine/frame
+    treatment) would push this toward top-tier.'
+  - Helper functions (lcg, randNormal, quantile, stdDev, kde) deviate from the strict
+    KISS 'no functions' ideal — acceptable here since the raincloud's KDE/quantile
+    math has no built-in equivalent in Chart.js, but keep an eye on further growth
+    in the plugin's complexity.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "raincloud-basic · javascript · chartjs · anyplot.ai" is bold, dark, and clearly visible at top. X-axis title "Reaction Time (ms)" and y-axis title "Distraction Condition" are dark and legible. X tick labels (220-780) and y category labels (No Distraction, Phone Call, Texting, Passenger Talk) are all clearly readable in dark ink against the light background. Subtle vertical gridlines only on the x-axis.
-      Data: Four rows, each showing a half-violin "cloud" rising above the category baseline, a colored IQR box with whiskers and a light median line centered on the baseline, and jittered "rain" points falling below the baseline. First category (No Distraction) uses brand green #009E73; subsequent categories use lavender, blue, and ochre in canonical Imprint order. All rain points and cloud shapes render at visibly consistent alpha, clearly distinguishable from the background and from each other.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "raincloud-basic · javascript · chartjs · anyplot.ai" at top; dark x-axis title "Reaction Time (ms)" and y-axis title "Distraction Condition"; dark x tick labels (220-780) and y category labels (No Distraction, Phone Call, Texting, Passenger Talk) — all clearly legible. "Texting" label is bold/ink-colored to flag it as the standout (highest-median) category.
+      Data: Four rows, each showing a half-violin "cloud" rising above the category baseline, a colored IQR box with whiskers and a light median line centered on the baseline, and jittered "rain" points (4px, alpha 0.6) falling below the baseline. First category (No Distraction) uses brand green #009E73; the rest follow canonical Imprint order — lavender (Phone Call), blue (Texting), ochre (Passenger Talk).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels have all flipped to light/white text and remain clearly legible against the dark background. No dark-on-dark text observed anywhere (title, axis titles, tick labels, category labels all pass).
-      Data: Same four rows in the same layout; cloud, box, and rain colors are visually identical to the light render (brand green, lavender, blue, ochre) — only the chrome (background, ink, grid) has flipped. The median line inside each box remains visible as a dark line against the lighter box fill.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels have all flipped to light/white text and remain clearly legible — no dark-on-dark failures observed anywhere. "Texting" label remains bold/highlighted.
+      Data: Cloud/box/rain colors are identical to the light render (brand green, lavender, blue, ochre) — only chrome (background, ink, grid) flipped, confirming data-color consistency across themes. The median line inside each box remains visible as a dark line against the lighter box fill, mirroring the light render's white-on-color convention.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,47 +67,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit; readable in both themes.
+        comment: All text readable in both themes; explicit font sizes on every element
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, data, or adjacent category rows.
+        comment: No collisions between cloud/box/rain bands or with chrome
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Rain markers slightly small (3.2px) for the point count; still clearly
-          visible.
+        comment: Rain markers now 4px radius at alpha 0.6 — legible for ~110-130 pts/category,
+          even scaled down
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe canonical Imprint order, no red-green sole signal.
+        comment: Imprint palette is CVD-safe by construction; no red-green as sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct canvas size, good proportions, nothing cut off.
+        comment: Title ~55% width, no clipping of text/chrome; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (ms).
+        comment: Descriptive axis titles with units (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green first series, canonical order, correct theme backgrounds
-          both renders.
+        comment: First series brand green, canonical lavender/blue/ochre order, theme-correct
+          backgrounds
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -111,21 +116,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom half-violin/box/rain composition built via canvas plugin;
-          intentional layered hierarchy.
+        comment: Custom half-violin/box/rain composition via canvas plugin, intentional
+          layered hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-grid removed, subtle x-grid, generous whitespace, rounded box corners.
+        comment: Y-grid removed, subtle x-grid, generous whitespace, rounded box corners
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Clear per-category comparison but no emphasis/annotation on the standout
-          group.
+        comment: Standout category (Texting) now bolded on the y-axis, giving the
+          chart a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -135,27 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct raincloud: cloud above, box on, rain below the baseline.'
+        comment: 'Correct raincloud: cloud + box + rain'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half-violin clip, jitter, alpha transparency, median/quartile markers
-          all present.
+        comment: Half-violin clipped to one side, moderate jitter, alpha transparency,
+          median/quartile markers all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct horizontal orientation, categories on y, values on x.
+        comment: Horizontal orientation, categories on y, values on x, as required
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec; legend correctly omitted since color-per-category
-          is already labeled on the y-axis.
+        comment: Title matches required format; no legend needed since categories
+          are y-axis labeled
     data_quality:
       score: 15
       max: 15
@@ -165,21 +170,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows distribution shape, summary stats, and individual points simultaneously.
+        comment: All raincloud aspects shown for all four categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Driving-simulator reaction times by distraction condition — plausible
-          and neutral.
+        comment: Driving-simulator reaction time by distraction condition — plausible,
+          neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times, sample sizes, and spread are all realistic for the
-          domain.
+        comment: Reaction times 200-780ms with realistic per-condition means/spreads
     code_quality:
       score: 10
       max: 10
@@ -189,32 +193,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions are minimal and necessary for KDE/quantile math;
-          no classes.
+        comment: Helper functions (kde, quantile, stdDev, LCG) are necessary since
+          Chart.js has no built-in equivalents
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic.
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals only.
+        comment: No unused imports; Chart is the only external global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI.
+        comment: Appropriate complexity for the plot type, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false set.
+        comment: 'Mounts canvas to #container correctly, animation:false set'
     library_mastery:
       score: 8
       max: 10
@@ -225,14 +229,14 @@ review:
         max: 5
         passed: true
         comment: Floating-bar dataset + custom plugin is the idiomatic Chart.js workaround
-          for an unsupported chart type.
+          for an unsupported chart type
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Non-trivial use of afterDatasetsDraw plugin hook and canvas drawing
-          API.
+        comment: Non-trivial use of the afterDatasetsDraw plugin hook and raw canvas
+          drawing
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -245,4 +249,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
