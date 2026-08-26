@@ -1,0 +1,250 @@
+library: d3
+language: javascript
+specification_id: radar-innovation-timeline
+created: '2026-08-26T10:09:22Z'
+updated: '2026-08-26T10:27:30Z'
+generated_by: claude-sonnet
+workflow_run: 32953581443
+issue: 4301
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Ring time-horizon names now render directly on the rings (along the flat diameter,
+    radially positioned per ring) in addition to the below-chart key -- fully satisfies
+    the spec's "label each ring with its time-horizon name" requirement flagged in
+    Attempt 1
+  - Radius and color mapping now use idiomatic d3.scaleLinear (frac to radius) and
+    d3.scaleOrdinal (sector to Imprint palette) instead of manual math -- directly
+    addresses the Attempt 1 LM-01 feedback
+  - 'Genuinely bespoke radial layout: d3.arc ring bands and boundaries, d3.symbol
+    markers with 4 distinct shapes, and a real-browser getBBox-based iterative collision-avoidance
+    loop resolve 24 densely packed labels with zero visible overlap in either theme'
+  - Correct Imprint palette in canonical order (green/lavender/blue/ochre) with distinct
+    marker shapes per sector for redundant CVD-safe encoding; data colors identical
+    across light and dark renders
+  - Full theme-adaptive chrome -- both renders cleanly legible, backgrounds match
+    spec tokens, no dark-on-dark or light-on-light failures
+  - 'Comprehensive, factually plausible dataset: every sector has items spread across
+    all 4 time-horizon rings (24 items, within the spec''s 15-40 range), with sensible
+    near-to-far placements (e.g. LLM Copilots at Now, AGI at Future)'
+  weaknesses:
+  - No focal emphasis on 1-2 standout items -- visual hierarchy still relies entirely
+    on radial position, color, and shape rather than an explicit point of emphasis
+    (e.g. a highlighted or annotated item)
+  - Ring dividers and item-label typography remain functional rather than maximally
+    refined -- more contrast between sector-header and item-label typographic weight,
+    or softer ring boundaries, would raise polish further
+  - Several small arrow-function helpers (polar, labelPos, boxesOverlap, nudge, centerRow)
+    push the script slightly past pure KISS Imports->Data->Plot->Save structure, though
+    the added structure is justified by the genuine collision-avoidance requirement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Bold dark title centered at top ("radar-innovation-timeline · javascript · d3 · anyplot.ai"). Four sector headers (AI & ML, Infrastructure, Sustainability, Biotech) in bold dark text along the outer edge of the half-circle dome. Ring time-horizon names ("Now", "Near-Term", "Mid-Term", "Future") now appear directly on the rings along the flat diameter, in addition to a below-chart ring key and sector legend. Concentric ring boundaries and sector dividers are subtle gray with faint alternating ring-band shading. All text -- title, sector headers, on-ring labels, item labels, legends -- is clearly readable against the light background.
+      Data: 24 items rendered as colored/shaped markers -- green circles (AI & ML), lavender squares (Infrastructure), blue triangles (Sustainability), ochre diamonds (Biotech) -- matching Imprint palette positions 1-4 in canonical order. First series (AI & ML) is #009E73 as required. Each marker has a halo-stroked text label with zero visible overlap across the 24 densely packed items.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: The same title, sector headers, on-ring labels, ring key, and legend correctly flip to light-colored text, all fully legible against the dark background. No dark-on-dark failures observed anywhere (ring labels, item labels, and legend text all use light ink tokens with visible contrast).
+      Data: Marker colors (green/lavender/blue/ochre) are pixel-identical to the light render -- only the chrome (background, text, grid, dividers) flipped, as required. Brand green #009E73 remains clearly visible on the dark surface.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (12/13/15/17/22px); readable in both
+          themes; no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Real-browser getBBox collision-avoidance loop resolves all 24 labels
+          with zero overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Symbol markers well-sized for 24 sparse points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Marker shape + color redundant encoding, white halo strokes for contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced dome + legend layout, plot and legends well within canvas
+          bounds
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Ring and sector labels descriptive; title matches mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order via d3.scaleOrdinal, first series #009E73,
+          theme-correct chrome both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom radial layout with alternating ring bands and distinct marker/color
+          pairing, clearly above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Generous whitespace, subtle bands, halo-stroked labels; dividers/typography
+          remain functional rather than maximally refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Radial position + color/shape give clear visual hierarchy, but no
+          explicit focal emphasis on standout items
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct half-circle radar with time-horizon rings and thematic sectors
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Ring names now labeled directly on the rings (fixed from Attempt
+          1) in addition to the below-chart key
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Angle maps to sector, radius maps to ring/frac correctly via d3.scaleLinear
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match sector/ring data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 4 sectors populated across all 4 rings, 24 items total
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral technology/science/sustainability trends
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible near-to-far time-horizon placements per item
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small arrow-function helpers beyond pure Imports->Data->Plot->Save,
+          justified by genuine collision-avoidance need
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a genuinely complex spec, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animations, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses d3.scaleLinear and d3.scaleOrdinal for radius/color instead
+          of manual math (fixed from Attempt 1)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.arc bands, d3.symbol multi-shape markers, real-browser getBBox
+          collision-avoidance loop are distinctive to D3
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
