@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-complex-plane
 created: '2026-08-26T10:56:38Z'
-updated: '2026-08-26T11:00:44Z'
+updated: '2026-08-26T11:07:12Z'
 generated_by: claude-sonnet
 workflow_run: 32960102351
 issue: 4427
@@ -15,39 +15,46 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 quality_score: 88
 review:
   strengths:
-  - 'Correct equal-aspect Argand diagram: origin-crossing Re/Im axes, dashed unit
-    circle, and per-category arrow vectors, exactly matching the spec''s core requirements.'
-  - Every point is annotated with BOTH rectangular (a+bi) and polar (r ∠ θ°) forms,
-    with hand-tuned per-point label offsets that avoid any overlap in either theme.
-  - 'Palette and theme handling are correct: first category (roots of unity) uses
-    brand green #009E73, second category (arbitrary points) uses the next Imprint
-    color, data colors are identical between light/dark, and chrome (background, grid,
-    ticks, legend) correctly flips to FAF8F1/1A1A17.'
-  - Deterministic, mathematically meaningful data (cube roots of unity + contrasting
-    arbitrary points) with clean imports and a correctly-followed harness contract
-    (skipAnimation, sizing from window.ANYPLOT_SIZE, square orientation directive,
-    both PNG+HTML outputs present).
+  - 'Correct Argand-diagram fundamentals: real/imaginary axes through the origin with
+    labeled ticks, dashed unit-circle reference, and arrows from the origin to every
+    point'
+  - Equal aspect ratio genuinely enforced (square canvas, identical x/y domains) so
+    the unit circle renders as a true circle, not an ellipse
+  - Rich per-point annotations combining both rectangular (a+bi) and polar (r ∠ θ°)
+    forms, with hand-tuned label offsets that keep every label clear of vectors, axes,
+    and each other
+  - 'Correct Imprint palette assignment (brand green #009E73 for the primary ''Cube
+    roots of unity'' category, lavender #C475FD for ''Arbitrary points''), with identical
+    data colors and fully theme-correct chrome across both renders'
+  - Deterministic, clean data (verified cube roots of unity) and a legitimate MUI
+    X composition technique (ChartContainer + useXScale/useYScale) to draw the custom
+    overlay
   weaknesses:
-  - series=[] is passed to ChartContainer and every visual element (axes, ticks, legend,
-    markers) is hand-drawn raw SVG driven only by useXScale/useYScale — understandable
-    given the origin-crossing-axis requirement, but the implementation doesn't exercise
-    any of MUI X's actual series/axis/legend components, which limits how much idiomatic
-    MUI X usage it demonstrates.
-  - Design is polished but fairly conventional for a reference-diagram layout; a stronger
-    focal-point technique (e.g. visually emphasizing that the roots of unity sit exactly
-    on the unit circle) would lift Design Excellence further.
+  - 'LM-01: The implementation never populates ChartContainer''s `series` prop (series=[])
+    — it uses the library purely for scale computation and draws every mark (vectors,
+    markers, ticks, legend) as raw SVG. This is a legitimate MUI X pattern for custom
+    overlays, but it forgoes the library''s native scatter/line series, built-in legend,
+    and tooltip machinery, so it reads as a lower-level approach rather than idiomatic
+    high-level API usage.'
+  - 'DE-01/DE-02: Solid, functional design but stops short of exceptional editorial
+    polish — e.g. the arrowheads and unit circle are correct but plain; a subtle shadow/depth
+    cue or varied line weight between primary/secondary vectors could push the hierarchy
+    further.'
+  - 'DQ-01: The six points cover two clear categories (roots of unity vs. arbitrary
+    points) but a 4th/5th root or a point placed exactly on an axis would round out
+    the geometric variety even further.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "scatter-complex-plane · javascript · muix · anyplot.ai" is centered at top in bold dark ink. Re/Im axis labels sit at the axis ends, tick labels (-2, -1, 1, 2, 2i, 1i, -1i, -2i, 0) are dark gray and clearly legible. Legend (top-left) shows "Cube roots of unity" (green swatch) and "Arbitrary points" (purple swatch). Grid lines are subtle light-gray verticals/horizontals at integer positions.
-      Data: Green vectors/markers for z1=1+0i, z2=-0.5+0.87i, z3=-0.5-0.87i (the three cube roots, sitting exactly on the dashed unit circle); purple vectors/markers for w1, w2, w3 (arbitrary points outside the circle). Each point has a two-line annotation: rectangular form in bold dark ink, polar form in lighter gray beneath it. First series color is #009E73 brand green as required.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlaps between labels, vectors, or the unit circle.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "scatter-complex-plane · javascript · muix · anyplot.ai" in bold dark ink at top; black "Re"/"Im" axis lines crossing at the origin with tick marks at -2,-1,1,2 (real) and -1i,-2i,1i,2i (imaginary); subtle gray gridlines at unit spacing; dashed gray unit circle centered at the origin; top-left legend with green "Cube roots of unity" and purple "Arbitrary points" swatches. All chrome text renders in dark ink and is clearly legible against the cream background.
+      Data: Three green vectors/markers (z1=1+0i, z2=-0.5+0.87i, z3=-0.5-0.87i — the cube roots of unity, symmetric on the unit circle) and three purple vectors/markers (w1=1.7+1.0i, w2=-1.4+1.8i, w3=0.9-1.9i — arbitrary points outside the circle). Each point is annotated with both its rectangular and polar form in dark text. First series color is #009E73 (brand green) as required.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title, axis labels, and legend as the light render, now rendered in light/white ink against the dark background — fully legible, no dark-on-dark issues. Grid lines are subtle light-gray, still visible but unobtrusive.
-      Data: Green and purple vector/marker colors are pixel-identical to the light render (only chrome flipped), confirming the Imprint data palette is theme-invariant as required.
-      Legibility verdict: PASS — all text, ticks, and legend entries are clearly readable against the dark background; no dark-on-dark or light-on-light failures observed.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Identical composition to the light render — title, axis lines, tick marks, gridlines, dashed unit circle, and legend — all rendered in light cream/white ink. No dark-on-dark issues: every text element (title, tick labels, axis labels, annotations, legend) is clearly legible against the dark background.
+      Data: Same green (#009E73) and purple (#C475FD) vectors/markers/annotations as the light render — data colors are pixel-identical between the two themes, confirming only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,47 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes on every element; fully readable in both themes
+        comment: All font sizes explicitly set (fontSize props throughout); readable
+          in both themes and at reasonable proportions
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Hand-tuned per-point label offsets avoid all overlap with vectors,
+        comment: Hand-tuned per-point label offsets keep annotations clear of vectors,
           axes, and each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data (6 points) with prominent 12px markers and 2.5px vector
-          lines
+        comment: Sparse data (6 points) rendered with prominent 12px markers and 2.5px
+          vectors — appropriately sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/purple pairing is CVD-safe, good contrast on both backgrounds
+        comment: Green/purple pairing is CVD-safe with white/pageBg marker strokes
+          for definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct square canvas, true equal aspect ratio (unit circle renders
-          circular), nothing clipped
+        comment: Square canvas well-utilized, balanced margins, legend near the plot,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re/Im labels present, mandated title format followed exactly
+        comment: Re/Im are the standard, semantically correct Argand-diagram axis
+          labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint second color, correct FAF8F1/1A1A17
-          backgrounds, data colors identical across themes'
+        comment: 'First series #009E73, second #C475FD, backgrounds theme-correct
+          in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -108,22 +118,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom two-category palette and deliberate annotation layout beyond
-          generic defaults
+        comment: Thoughtful color use and typography, clearly above library defaults,
+          but not top-tier editorial polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle unit-spaced grid, custom origin-crossing axes instead of default
-          box spines, generous whitespace
+        comment: Subtle grid, dashed reference circle, custom arrowheads, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Unit circle visually proves the roots-of-unity property; color separates
-          the two conceptual categories clearly
+        comment: Two-category color split plus dual rectangular/polar annotations
+          create visual hierarchy and guide the reader
     spec_compliance:
       score: 15
       max: 15
@@ -133,49 +143,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Argand diagram / complex-plane scatter
+        comment: Correct Argand diagram / complex-plane scatter with vectors
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Origin axes, dashed unit circle, vectors, equal aspect, rect+polar
-          annotations, category colors — all present
+        comment: Axes through origin with ticks, dashed unit circle, vectors, equal
+          aspect ratio, dual annotations, distinct categories — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Real part on x, imaginary on y, all points within visible domain
+        comment: Real on x, imaginary on y, all points visible within domain
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match categories
+        comment: Title format correct; legend labels match the two point categories
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Roots of unity + arbitrary points + vectors + dual-form annotations
-          + unit circle, comprehensive
+        comment: Covers symmetric unity roots and asymmetric arbitrary points across
+          multiple quadrants and magnitudes
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mathematically legitimate, neutral content
+        comment: Neutral, comprehensible math/education scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values and domain sized sensibly for a complex-plane teaching example
+        comment: Cube roots of unity are mathematically correct (-0.5 ± 0.866i); magnitudes
+          and angles all check out
     code_quality:
       score: 10
       max: 10
@@ -185,34 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helper functions are necessary for the React component structure,
-          not gratuitous
+        comment: Small, focused helper functions appropriate for a React component
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic, hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, hooks, Box, Typography — all used
+        comment: Only ChartContainer, scale hooks, Box, and Typography — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the custom diagram
+        comment: No fake UI, clean use of scale hooks to compose a custom SVG overlay
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Harness contract followed; current MUI X community API
+        comment: Correct default-exported component, skipAnimation set, harness contract
+          respected
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -220,15 +231,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Valid useXScale/useYScale pattern, but bypasses MUI X's series/axis/legend
-          components entirely
+        comment: series=[] is never populated — bypasses MUI X's native series/marks
+          entirely in favor of a fully custom SVG overlay
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Scale-hook-driven custom overlay is a genuine MUI X-specific technique,
-          though underused elsewhere
+        comment: useXScale/useYScale composition to drive a custom vector-diagram
+          overlay is a genuinely MUI-X-specific technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -241,5 +252,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending
