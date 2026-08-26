@@ -1,0 +1,256 @@
+library: chartjs
+language: javascript
+specification_id: violin-basic
+created: '2026-08-26T17:05:22Z'
+updated: '2026-08-26T17:33:46Z'
+generated_by: claude-sonnet
+workflow_run: 32991215013
+issue: 722
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/chartjs/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - Hand-rolled Gaussian KDE (Silverman bandwidth) mirrored into left/right fill datasets
+    correctly builds a true violin silhouette using Chart.js's line/fill trick, since
+    Chart.js has no native violin chart type.
+  - The four class groups show genuinely distinct distribution shapes (roughly normal,
+    bimodal, right-skewed, and tight/narrow) which satisfies the spec's 'distinct
+    distribution shapes' requirement rather than four look-alike groups.
+  - Deterministic seeded LCG (seed=42) makes the data fully reproducible with no external
+    RNG dependency in the browser.
+  - 'Theme-adaptive chrome is threaded correctly: median/quartile marker colors use
+    t.ink / t.inkSoft tokens and flip properly between light and dark renders; Imprint
+    palette order (green / lavender / blue / ochre) is followed exactly with the brand
+    green first.'
+  - The 'Solid line = median · Dashed lines = Q1/Q3' subtitle substitutes cleanly
+    for a legend, avoiding a redundant color-swatch legend since categories are already
+    labeled on the x-axis.
+  - Clean grid usage (y-axis only, subtle rgba grid) and no extraneous chart chrome.
+  weaknesses:
+  - Class C's KDE tail rises visibly above the 100% domain cap (peaking around ~103
+    on the y-axis) even though test scores are physically bounded at 100 — the eval
+    grid (quantile(sorted, 0.99) + pad) is not clamped to the real-world max. Clip
+    yMax (and yMin) to the domain bounds, e.g. Math.min(yMax, 100), so the violin
+    never implies impossible scores.
+  - Q1/Q3 dashed marker spans become quite short/thin in the narrow 'waist' regions
+    of some violins (e.g. Class C's Q3 marker sits right at the density neck) — consider
+    a slightly larger minimum span or a touch more dash weight so they stay legible
+    at a scaled-down mobile width.
+  - The mirrored-line-fill construction is a workaround that's replicable in most
+    charting libraries with an area/fill primitive, not something distinctly Chart.js-only
+    — solid execution, but leans generic for Library Mastery.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top, italic subtitle "Solid line = median · Dashed lines = Q1 / Q3" beneath it in a softer gray. X-axis title "Class Group" and y-axis title "Test Score (%)" in dark ink; tick labels ("Class A"-"Class D", 50-105) in a lighter secondary gray. Subtle horizontal gridlines only.
+      Data: Four mirrored violin silhouettes, one per class group, outlined and fill-tinted in Imprint palette order — Class A green (#009E73), Class B lavender (#C475FD), Class C blue (#4467A3), Class D ochre (#BD8233). Each violin carries a solid black median line and two dashed black Q1/Q3 lines. Shapes are clearly differentiated: Class A roughly symmetric/normal, Class B visibly bimodal (double bulge), Class C right-skewed with a tall narrow peak reaching toward the top of the axis, Class D narrow/tight and shifted high.
+      Legibility verdict: PASS — all text (title, subtitle, axis titles, tick labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/axis-title/tick-label layout, now rendered in off-white and light-gray tones (theme-flipped). Median/quartile marker lines flip from black to white/light-gray, remaining clearly visible against the dark violin fills. Gridlines are faint light lines instead of dark ones.
+      Data: Data colors are pixel-identical to the light render — same green/lavender/blue/ochre violins in the same order and shapes; only the chrome (background, text, grid, median/quartile marker strokes) flipped.
+      Legibility verdict: PASS — all text and marker lines are clearly visible against the near-black background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, subtitle 14, ticks 14, axis
+          titles 16), readable in both themes, title not overflowing
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Violin outlines and marker lines clearly visible; Q1/Q3 dashes get
+          quite short in narrow violin necks (e.g. Class C)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues (green/purple/blue/ochre), CVD-safe, no red-green as
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot area uses a healthy share of the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units on Y (Test Score (%))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order for series 2-4, correct
+          theme-adaptive chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built violin from scratch via KDE + mirrored fills, thoughtful
+          subtitle-as-legend, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, no extraneous chrome, generous whitespace;
+          not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Distinct violin shapes across groups create visual hierarchy without
+          explicit annotation callouts
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct violin plot via mirrored KDE
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Mirrored density, quartile markers, and median line all present per
+          spec Notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = class group, Y = test score, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; legend intentionally omitted in
+          favor of subtitle + x-axis category labels
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four genuinely distinct distribution shapes (normal, bimodal, right-skewed,
+          tight normal)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Test scores across class groups is a real, neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 2
+        max: 4
+        passed: false
+        comment: Class C's unclamped KDE eval range lets the violin tail imply scores
+          above the 100% domain max (~103)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessarily uses helper functions for a from-scratch KDE/LCG (no
+          stats library in-browser), otherwise linear top-to-bottom flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, self-contained
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a from-scratch violin, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single canvas to #container, animation: false set correctly'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of linear scale + afterBuildTicks + fill-between datasets,
+          idiomatic for the workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Mirrored-fill violin trick is clever but replicable in most fill-capable
+          charting libraries, not Chart.js-unique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
