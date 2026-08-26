@@ -93,6 +93,9 @@ function MohrAnnotations() {
 
   return (
     <g>
+      {/* Principal-stress axis — a bold neutral segment between sigma2/sigma1
+          makes the headline result the diagram's clear focal point. */}
+      <line x1={pointS2.x} y1={pointS2.y} x2={pointS1.x} y2={pointS1.y} stroke={landmarkColor} strokeWidth={5} strokeLinecap="round" />
       <line
         x1={pointA.x}
         y1={pointA.y}
@@ -104,61 +107,63 @@ function MohrAnnotations() {
       />
       <path d={arcPath} fill="none" stroke={t.inkSoft} strokeWidth={1.5} />
 
-      <circle cx={c.x} cy={c.y} r={5} fill={landmarkColor} />
+      <circle cx={c.x} cy={c.y} r={6} fill={landmarkColor} />
       {[pointS1, pointS2, pointTauMax, pointTauMin].map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={8} fill={landmarkColor} stroke={t.pageBg} strokeWidth={2} />
+        <circle key={i} cx={p.x} cy={p.y} r={11} fill={landmarkColor} stroke={t.pageBg} strokeWidth={2.5} />
       ))}
       {[pointA, pointB].map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r={9} fill={stateColor} stroke={t.pageBg} strokeWidth={2} />
+        <circle key={i} cx={p.x} cy={p.y} r={11} fill={stateColor} stroke={t.pageBg} strokeWidth={2.5} />
       ))}
 
       <ChartsText
-        x={pointA.x + 20}
-        y={pointA.y - 16}
+        x={pointA.x + 22}
+        y={pointA.y - 18}
         text={`A(${sigmaX}, ${tauXY})`}
-        style={{ fontSize: 16, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 17, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointB.x - 20}
-        y={pointB.y + 18}
+        x={pointB.x - 22}
+        y={pointB.y + 20}
         text={`B(${sigmaY}, ${-tauXY})`}
-        style={{ fontSize: 16, fill: t.ink, textAnchor: "end", dominantBaseline: "central" }}
+        style={{ fontSize: 17, fill: t.ink, textAnchor: "end", dominantBaseline: "central" }}
       />
+      {/* Principal-stress / shear results — bolder and larger than the
+          supporting geometry labels so they read as the headline numbers. */}
       <ChartsText
-        x={pointS1.x + 12}
-        y={pointS1.y + 26}
+        x={pointS1.x + 14}
+        y={pointS1.y + 30}
         text={`σ₁ = ${sigma1.toFixed(1)} MPa`}
-        style={{ fontSize: 15, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointS2.x - 12}
-        y={pointS2.y + 26}
+        x={pointS2.x - 14}
+        y={pointS2.y + 30}
         text={`σ₂ = ${sigma2.toFixed(1)} MPa`}
-        style={{ fontSize: 15, fill: t.ink, textAnchor: "end", dominantBaseline: "central" }}
+        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, textAnchor: "end", dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointTauMax.x + 14}
-        y={pointTauMax.y - 10}
+        x={pointTauMax.x + 16}
+        y={pointTauMax.y - 12}
         text={`τ_max = ${tauMax.toFixed(1)} MPa`}
-        style={{ fontSize: 15, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={pointTauMin.x + 14}
-        y={pointTauMin.y + 10}
+        x={pointTauMin.x + 16}
+        y={pointTauMin.y + 12}
         text={`τ_min = ${(-tauMax).toFixed(1)} MPa`}
-        style={{ fontSize: 15, fill: t.ink, dominantBaseline: "central" }}
+        style={{ fontSize: 19, fontWeight: 700, fill: t.ink, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={c.x + 10}
-        y={c.y - 16}
+        x={c.x + 14}
+        y={c.y - 20}
         text="C"
-        style={{ fontSize: 14, fill: t.inkSoft, dominantBaseline: "central" }}
+        style={{ fontSize: 16, fill: t.inkSoft, dominantBaseline: "central" }}
       />
       <ChartsText
-        x={angleLabelPos.x}
-        y={angleLabelPos.y}
+        x={angleLabelPos.x + 10}
+        y={angleLabelPos.y - 8}
         text={`2θp = ${twoThetaPDeg.toFixed(0)}°`}
-        style={{ fontSize: 15, fill: t.inkSoft, dominantBaseline: "central" }}
+        style={{ fontSize: 16, fill: t.inkSoft, dominantBaseline: "central" }}
       />
     </g>
   );
@@ -197,7 +202,7 @@ export default function Chart() {
         yAxis={[{ scaleType: "linear", min: Y_MIN, max: Y_MAX }]}
         series={[{ type: "line", data: circleY, color: t.palette[0], curve: "linear", showMark: false }]}
       >
-        <ChartsGrid horizontal vertical />
+        <ChartsGrid horizontal />
         <ChartsReferenceLine y={0} lineStyle={{ stroke: t.grid, strokeWidth: 2 }} />
         <ChartsReferenceLine x={center} lineStyle={{ stroke: t.grid, strokeWidth: 2 }} />
         <LinePlot />
