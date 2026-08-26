@@ -1,0 +1,271 @@
+library: highcharts
+language: javascript
+specification_id: line-stock-comparison
+created: '2026-08-26T07:34:18Z'
+updated: '2026-08-26T07:50:04Z'
+generated_by: claude-sonnet
+workflow_run: 32943019001
+issue: 3748
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'The repair directly resolved every attempt-1 weakness: a data-driven xAxis.plotBands
+    annotation now highlights the peak SOLR/WNDF divergence window (computed from
+    the series, not hardcoded), giving the chart a genuine focal point and data story
+    that was previously missing.'
+  - Connector-style end-of-line dataLabels (SOLR, WNDF, HYDR, XCEI) let the final
+    ranking read at a glance without cross-referencing the legend below the plot —
+    a distinctive, well-executed Highcharts core-API touch (plotBands + custom dataLabels,
+    no add-on modules needed).
+  - All chrome (title, axis labels, ticks, legend, grid, plotLines/plotBands) correctly
+    threads ANYPLOT_TOKENS through both themes; data colors are pixel-identical between
+    light and dark renders while chrome cleanly flips (#FAF8F1/#1A1A17 backgrounds,
+    ink/inkSoft text) with zero dark-on-dark or light-on-light failures.
+  - Imprint palette used in strict canonical order with brand green first; the benchmark
+    index (XCEI) is further distinguished via dashed line style and a lower zIndex
+    so it recedes behind the individual stocks, reducing visual competition at small
+    (mobile-preview) sizes.
+  - Deterministic, seeded LCG-based random walk per series with distinct drift/volatility
+    parameters produces realistic, clearly-differentiated trajectories; the 'Start
+    (100)' plotLine directly implements the spec's suggested reference line.
+  weaknesses:
+  - 'Design Excellence is still closer to a well-configured default than a bespoke
+    design: beyond the divergence band and connector end-labels, there is no additional
+    refinement (e.g. no subtle area fill under the benchmark, no refined typography
+    hierarchy beyond the mandated tokens) — a further deliberate touch would push
+    DE-01/DE-02 higher.'
+  - Library Mastery uses solid core-API features (plotBands, plotLines, connector
+    dataLabels) but nothing further beyond that set (e.g. no custom tooltip formatter,
+    no responsive rules) to fully justify a top Library Mastery score.
+  - 'The implementation file''s header comment block is missing the ''// License:
+    Highcharts — commercial license, free for non-commercial use (highcharts.com/license)''
+    line that was present in the original commit (0ec55cea7) — it appears the automated
+    quality-score header rewrite dropped it when updating ''Quality: pending'' to
+    ''Quality: 87/100''. This looks like a pipeline header-rewrite issue rather than
+    an authoring mistake, but flagging so it can be restored and the rewrite step
+    fixed to preserve the License line going forward.'
+  - At the 400px mobile-preview thumbnail, the four criss-crossing lines in the choppy
+    Apr–Sep middle third remain visually dense even after the benchmark's zIndex/dash
+    treatment — acceptable but still the weakest legibility moment in either render.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-stock-comparison · javascript · highcharts · anyplot.ai" is bold dark text, fully visible at the top with no clipping. X-axis title "Trading Date (2024)" and Y-axis title "Rebased Price (Start = 100)" render in soft-ink and are clearly readable. Month tick labels and Y-axis price ticks are legible dark-gray text. Horizontal gridlines are subtle light-gray. A dashed horizontal plotLine at Y=100 carries a small "Start (100)" label, fully legible and clear of other elements. A shaded plotBand (translucent amber) in the December region carries the label "Peak SOLR / WNDF divergence" in dark ink, positioned above the lines with no overlap with the title, gridlines, or the four end-of-line ticker badges (SOLR, XCEI, WNDF, HYDR) that sit just outside the plot area to the right. Legend below the plot lists all four series with matching line-style swatches (3 solid, 1 dashed), text dark and readable.
+      Data: Four series — Solaris Power (SOLR) in brand green #009E73 (solid), Windfield Energy (WNDF) in lavender/purple (solid), HydroGen Corp (HYDR) in blue (solid), Clean Energy Index (XCEI) in ochre (dashed, benchmark, drawn behind the others via lower zIndex). All four rebase to 100 at the start of January and diverge over the year, crossing the 100 reference line multiple times; the shaded band correctly brackets the point of maximum SOLR/WNDF separation late in the year.
+      Legibility verdict: PASS — no light-on-light text found, all chrome and annotation elements clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title renders in white text, fully visible and uncut. Axis titles and tick labels render in light gray/soft-white, clearly legible. Gridlines are faint light-gray horizontal lines, subtle but visible. The "Start (100)" plotLine and its label render in light gray/white. The plotBand shading and its "Peak SOLR / WNDF divergence" label remain legible on the dark surface, with the same spacing/no-overlap behavior as the light render. The four end-of-line ticker badges use a dark elevated-surface background with light text, fully readable. Legend text at the bottom is light-colored and fully readable.
+      Data: Confirmed pixel-identical hues to the light render — brand green, lavender, blue, and dashed ochre — only the chrome (background, text, grid, badge fills) flips to the dark theme; the four categorical data colors and the annotation geometry are unchanged between renders.
+      Legibility verdict: PASS — no dark-on-dark failures; all text (title, axis labels, ticks, legend, plotLine/plotBand labels, end-of-line badges) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set via tokens, readable in both themes
+          at full size; slightly dense at the 400px mobile thumbnail during the criss-crossing
+          Apr-Sep window
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/label collisions; end-of-line badges, Start(100) label, and
+          plotBand annotation label are all well spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths (2-2.75px) appropriate for ~252-point medium-density
+          series; benchmark's dash style + lower zIndex keeps it from dominating
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette plus dashed benchmark line gives redundant encoding
+          beyond hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift file present); marginRight reserves
+          clean space for end-of-line badges, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units/context (Trading Date (2024),
+          Rebased Price (Start = 100))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order thereafter, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Data-driven divergence-band annotation and connector end-labels show
+          real design intent beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, clean spines, dashed reference/benchmark lines; no further
+          refinement (e.g. fills, typographic hierarchy) beyond tokens
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Divergence band creates a clear focal point and the connector labels
+          create an at-a-glance ranking; guides the viewer well
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line rebased comparison chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rebasing to 100, distinct colors + legend, rebased y-axis, Start(100)
+          reference line, and the optional event-highlight are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=trading date, y=rebased price across all 252 trading days per series,
+          no gaps
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match stock
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Normalization, multi-series comparison, benchmark index, and event
+          highlight all demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible fictional clean-energy stocks plus a sector index; neutral,
+          non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Starting prices and drift/volatility parameters produce a sensible,
+          realistic-looking rebased range (78-112)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (tradingDays, makeLcg, priceWalk) are
+          justified for deterministic data generation and kept minimal
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom seeded LCG per series, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser globals used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No explicit width/height, animation disabled at chart and series
+          level, mount-node contract respected
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Highcharts.chart config with axis/plotLines/plotBands,
+          tokens-driven colors, credits disabled
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotBands with label, connector-style dataLabels on the last point,
+          and plotLines annotation are distinctive core-only Highcharts features,
+          though no further library-specific capability is used
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - time-series
+  styling:
+  - alpha-blending
