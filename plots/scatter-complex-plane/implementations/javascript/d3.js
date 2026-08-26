@@ -32,7 +32,7 @@ const arbitraryPoints = [
 const points = [...rootsOfUnity, ...arbitraryPoints];
 
 const categories = ["5th roots of unity", "Arbitrary points"];
-const color = d3.scaleOrdinal().domain(categories).range([t.palette[0], t.palette[2]]);
+const color = d3.scaleOrdinal().domain(categories).range([t.palette[0], t.palette[1]]);
 const shapeOf = { "5th roots of unity": "circle", "Arbitrary points": "square" };
 
 // --- Layout: force a true square plot area so the unit circle stays circular
@@ -210,7 +210,10 @@ points.forEach((d) => {
   const rectForm = `${d.label}  ${d.re.toFixed(2)}${sign}${Math.abs(d.im).toFixed(2)}i`;
   const polarForm = `r=${r.toFixed(2)}, θ=${thetaDeg.toFixed(0)}°`;
   const anchor = ux >= 0 ? "start" : "end";
-  const goesDown = uy >= 0;
+  // Near-horizontal vectors (point sits close to the real axis) always go up:
+  // the x-axis tick labels live in the band just below the axis, so a
+  // downward annotation would crowd them (e.g. z0 lands on the "2.0" tick).
+  const goesDown = Math.abs(uy) < 0.15 ? false : uy >= 0;
 
   const label = g
     .append("g")
@@ -229,6 +232,7 @@ points.forEach((d) => {
     .attr("dy", goesDown ? "1.75em" : "-0.4em")
     .attr("fill", t.inkSoft)
     .style("font-size", "13px")
+    .style("font-style", "italic")
     .text(polarForm);
 });
 
