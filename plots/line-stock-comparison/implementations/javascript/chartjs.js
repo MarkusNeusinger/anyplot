@@ -48,7 +48,8 @@ const series = STOCKS.map(({ symbol, start, drift, vol }) => {
 });
 
 // Thin dashed line at the common rebase point, drawn with Chart.js's native
-// per-chart plugin hook (no external annotation plugin).
+// per-chart plugin hook (no external annotation plugin). Font matches the
+// axis tick font (14px, Chart.js default family) instead of a hardcoded value.
 const baselinePlugin = {
   id: "baselineMarker",
   afterDraw(chart) {
@@ -65,10 +66,38 @@ const baselinePlugin = {
 
     ctx.setLineDash([]);
     ctx.fillStyle = t.inkSoft;
-    ctx.font = "13px sans-serif";
+    ctx.font = `14px ${Chart.defaults.font.family}`;
     ctx.textAlign = "right";
     ctx.textBaseline = "bottom";
     ctx.fillText("Start = 100", chartArea.right - 6, y - 4);
+    ctx.restore();
+  },
+};
+
+// End-of-series callout: labels the year's best and worst performer directly
+// at their final data point, sharpening the takeaway beyond the legend alone.
+const bestIdx = series.reduce((best, s, i) => (s.rebased.at(-1) > series[best].rebased.at(-1) ? i : best), 0);
+const worstIdx = series.reduce((worst, s, i) => (s.rebased.at(-1) < series[worst].rebased.at(-1) ? i : worst), 0);
+
+const performanceLabelsPlugin = {
+  id: "performanceLabels",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    ctx.save();
+    ctx.font = `600 14px ${Chart.defaults.font.family}`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    [bestIdx, worstIdx].forEach((i) => {
+      const finalValue = series[i].rebased.at(-1);
+      const change = finalValue - 100;
+      const sign = change >= 0 ? "+" : "";
+      ctx.fillStyle = t.palette[i];
+      ctx.fillText(
+        `${series[i].symbol} ${sign}${change.toFixed(1)}%`,
+        chartArea.right + 8,
+        scales.y.getPixelForValue(finalValue),
+      );
+    });
     ctx.restore();
   },
 };
@@ -87,19 +116,19 @@ new Chart(canvas, {
       data: s.rebased,
       borderColor: t.palette[i],
       backgroundColor: t.palette[i],
-      borderWidth: 2.5,
+      borderWidth: 3.5,
       pointRadius: 0,
       pointHoverRadius: 4,
       tension: 0,
     })),
   },
-  plugins: [baselinePlugin],
+  plugins: [baselinePlugin, performanceLabelsPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
     interaction: { intersect: false, mode: "index" },
-    layout: { padding: { top: 8, right: 24, bottom: 4, left: 4 } },
+    layout: { padding: { top: 8, right: 130, bottom: 4, left: 4 } },
     plugins: {
       title: {
         display: true,
