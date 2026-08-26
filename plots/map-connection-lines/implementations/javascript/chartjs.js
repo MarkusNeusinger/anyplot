@@ -30,13 +30,13 @@ const airports = [
 const airportByCode = Object.fromEntries(airports.map((a) => [a.code, a]));
 
 const routes = [
-  { from: "JFK", to: "LHR", passengers: 620 },
+  { from: "JFK", to: "LHR", passengers: 780 },
   { from: "LAX", to: "HND", passengers: 480 },
   { from: "LHR", to: "DXB", passengers: 550 },
   { from: "CDG", to: "JFK", passengers: 410 },
   { from: "DXB", to: "SIN", passengers: 500 },
   { from: "HND", to: "SYD", passengers: 300 },
-  { from: "GRU", to: "CDG", passengers: 280 },
+  { from: "GRU", to: "CDG", passengers: 150 },
   { from: "JNB", to: "LHR", passengers: 350 },
   { from: "SIN", to: "SYD", passengers: 320 },
   { from: "PEK", to: "LAX", passengers: 390 },
@@ -136,6 +136,26 @@ const worldMapPlugin = {
   },
 };
 
+const arcStyle = (route) => {
+  const ratio = (route.passengers - minPassengers) / (maxPassengers - minPassengers);
+  return { lineWidth: 1.5 + ratio * 4.5, strokeStyle: hexToRgba(t.palette[0], 0.3 + ratio * 0.3) };
+};
+
+const drawArc = (ctx, p0, p1, style) => {
+  const dx = p1.x - p0.x;
+  const dy = p1.y - p0.y;
+  const dist = Math.hypot(dx, dy) || 1;
+  const bulge = dist * 0.15;
+  const cx = (p0.x + p1.x) / 2 - (dy / dist) * bulge;
+  const cy = (p0.y + p1.y) / 2 + (dx / dist) * bulge;
+  ctx.lineWidth = style.lineWidth;
+  ctx.strokeStyle = style.strokeStyle;
+  ctx.beginPath();
+  ctx.moveTo(p0.x, p0.y);
+  ctx.quadraticCurveTo(cx, cy, p1.x, p1.y);
+  ctx.stroke();
+};
+
 const connectionArcsPlugin = {
   id: "connectionArcs",
   beforeDatasetsDraw(chart) {
@@ -145,21 +165,64 @@ const connectionArcsPlugin = {
     routes.forEach((route) => {
       const origin = airportByCode[route.from];
       const dest = airportByCode[route.to];
-      const p0 = project(chart, origin.lon, origin.lat);
-      const p1 = project(chart, dest.lon, dest.lat);
-      const dx = p1.x - p0.x;
-      const dy = p1.y - p0.y;
-      const dist = Math.hypot(dx, dy);
-      const bulge = dist * 0.15;
-      const cx = (p0.x + p1.x) / 2 - (dy / dist) * bulge;
-      const cy = (p0.y + p1.y) / 2 + (dx / dist) * bulge;
-      const ratio = (route.passengers - minPassengers) / (maxPassengers - minPassengers);
-      ctx.lineWidth = 1.5 + ratio * 4.5;
-      ctx.strokeStyle = hexToRgba(t.palette[0], 0.3 + ratio * 0.3);
+      const style = arcStyle(route);
+      const lonDelta = dest.lon - origin.lon;
+      if (Math.abs(lonDelta) > 180) {
+        // Antimeridian wraparound (e.g. LAX-HND, PEK-LAX, LAX-SYD): a direct
+        // pixel chord would sweep the "long way" through Europe/Africa. Split
+        // the arc in two at the +/-180 boundary so each half bulges toward the
+        // true geodesic (Pacific) side instead.
+        const originEdgeLon = lonDelta > 0 ? -180 : 180;
+        const destEdgeLon = -originEdgeLon;
+        const unwrappedDestLon = lonDelta > 0 ? dest.lon - 360 : dest.lon + 360;
+        const frac = (originEdgeLon - origin.lon) / (unwrappedDestLon - origin.lon);
+        const crossingLat = origin.lat + frac * (dest.lat - origin.lat);
+        const p0 = project(chart, origin.lon, origin.lat);
+        const pOriginEdge = project(chart, originEdgeLon, crossingLat);
+        const pDestEdge = project(chart, destEdgeLon, crossingLat);
+        const p1 = project(chart, dest.lon, dest.lat);
+        drawArc(ctx, p0, pOriginEdge, style);
+        drawArc(ctx, pDestEdge, p1, style);
+      } else {
+        const p0 = project(chart, origin.lon, origin.lat);
+        const p1 = project(chart, dest.lon, dest.lat);
+        drawArc(ctx, p0, p1, style);
+      }
+    });
+    ctx.restore();
+  },
+};
+
+// Small legend translating arc thickness/opacity back into passenger counts;
+// placed in the empty south-Pacific corner of the map so it doesn't collide
+// with any airport marker or route.
+const legendStops = [0, 0.5, 1].map((ratio) => ({
+  ratio,
+  label: `${Math.round(minPassengers + ratio * (maxPassengers - minPassengers))}`,
+}));
+
+const arcLegendPlugin = {
+  id: "arcLegend",
+  afterDatasetsDraw(chart) {
+    const { ctx, chartArea } = chart;
+    ctx.save();
+    ctx.textBaseline = "middle";
+    ctx.font = "12px sans-serif";
+    const x0 = chartArea.left + 20;
+    let y = chartArea.bottom - 76;
+    ctx.fillStyle = t.inkSoft;
+    ctx.fillText("Passengers / route", x0, y - 16);
+    legendStops.forEach((stop) => {
+      ctx.lineCap = "round";
+      ctx.lineWidth = 1.5 + stop.ratio * 4.5;
+      ctx.strokeStyle = hexToRgba(t.palette[0], 0.3 + stop.ratio * 0.3);
       ctx.beginPath();
-      ctx.moveTo(p0.x, p0.y);
-      ctx.quadraticCurveTo(cx, cy, p1.x, p1.y);
+      ctx.moveTo(x0, y);
+      ctx.lineTo(x0 + 28, y);
       ctx.stroke();
+      ctx.fillStyle = t.inkSoft;
+      ctx.fillText(stop.label, x0 + 36, y);
+      y += 18;
     });
     ctx.restore();
   },
@@ -189,7 +252,7 @@ new Chart(canvas, {
       },
     ],
   },
-  plugins: [worldMapPlugin, connectionArcsPlugin],
+  plugins: [worldMapPlugin, connectionArcsPlugin, arcLegendPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
