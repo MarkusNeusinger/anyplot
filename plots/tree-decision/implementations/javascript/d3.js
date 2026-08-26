@@ -79,6 +79,13 @@ for (const d of root.descendants()) {
   d.px = margin.left + d.y;
   d.py = margin.top + d.x;
 }
+// Pruned branches that terminate early (License -> High/Low Demand, Do Nothing) stop
+// 1-3 levels short of the deepest live path (Invest -> Expand -> Competitor Response),
+// leaving the lower-right quadrant of the canvas empty. Stretch those terminals to the
+// same right edge as the deepest branch so pruned and live paths both use the full width.
+for (const d of root.descendants()) {
+  if (d.data.type === "terminal" && d.data.pruned) d.px = margin.left + iw;
+}
 
 // --- Shape geometry -------------------------------------------------------
 const SQ = 30; // decision square half-side
@@ -106,7 +113,9 @@ linkLayer
   .attr("stroke-dasharray", (l) => (l.target.data.pruned ? "6,5" : null))
   .attr("opacity", (l) => (l.target.data.pruned ? 0.4 : 0.9));
 
-// Branch labels (option name for decision branches, probability for chance branches)
+// Branch labels (option name for decision branches, probability for chance branches).
+// A page-bg halo keeps the label legible where the link curve bows steeply near the
+// midpoint — a fixed vertical offset alone isn't enough clearance on those branches.
 linkLayer
   .selectAll("text.branch-label")
   .data(root.links())
@@ -115,6 +124,10 @@ linkLayer
   .attr("x", (l) => (l.source.px + l.target.px) / 2)
   .attr("y", (l) => (l.source.py + l.target.py) / 2 - 12)
   .attr("text-anchor", "middle")
+  .attr("paint-order", "stroke")
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 5)
+  .attr("stroke-linejoin", "round")
   .style("font-size", "13px")
   .style("font-weight", "500")
   .attr("fill", t.inkSoft)
@@ -188,14 +201,16 @@ node
   .attr("fill", t.ink)
   .text((d) => d.data.label);
 
-// EMV adjacent below decision/chance nodes (spec: "inside or adjacent")
+// EMV adjacent below decision/chance nodes (spec: "inside or adjacent").
+// Sized up from 13px so the rollback value — the single most information-dense
+// label in the diagram — still reads at the 400px mobile thumbnail scale.
 node
   .filter((d) => d.data.type !== "terminal")
   .append("text")
   .attr("x", (d) => d.px)
   .attr("y", (d) => d.py + CR + 20)
   .attr("text-anchor", "middle")
-  .style("font-size", "13px")
+  .style("font-size", "16px")
   .style("font-weight", "700")
   .attr("fill", t.inkSoft)
   .text((d) => `EMV ${fmt(d.data.emv)}`);
@@ -207,7 +222,7 @@ node
   .attr("x", (d) => d.px + 36)
   .attr("y", (d) => d.py)
   .attr("dominant-baseline", "middle")
-  .style("font-size", "14px")
+  .style("font-size", "17px")
   .style("font-weight", "700")
   .attr("fill", (d) => (d.data.payoff < 0 ? t.palette[4] : t.ink))
   .text((d) => fmt(d.data.payoff));
