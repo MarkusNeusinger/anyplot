@@ -55,12 +55,12 @@ const events = [
   side: i % 2 === 0 ? "up" : "down",
 }));
 
-// Event-type -> Imprint categorical color (semantic where it fits)
+// Event-type -> Imprint categorical color, canonical palette order (0-3)
 const EVENT_COLOR = {
-  earnings: t.palette[0], // brand green — primary corporate metric
-  dividend: t.palette[2], // blue — income event
-  split: t.palette[3], // ochre — structural/corporate action
-  news: t.palette[6], // rose — external news/analyst events
+  earnings: t.palette[0],
+  dividend: t.palette[1],
+  split: t.palette[2],
+  news: t.palette[3],
 };
 const EVENT_SYMBOL = {
   earnings: "▲", // triangle — reporting event
@@ -134,7 +134,7 @@ g.append("path")
 // Flags sit in two fixed lanes at the top/bottom of the plot area (alternating
 // by event index) so they never obscure the price line; a dashed connector
 // ties each flag to its exact date/price on the line.
-const FLAG_W = 128;
+const FLAG_W = 140;
 const FLAG_H = 46;
 const LANE_UP_TOP = 6;
 const LANE_DOWN_TOP = ih - FLAG_H - 6;
@@ -197,7 +197,7 @@ flagGroups.each(function (d) {
     .attr("x", -FLAG_W / 2 + 30)
     .attr("y", boxY + 19)
     .attr("fill", t.ink)
-    .style("font-size", "12.5px")
+    .style("font-size", "14px")
     .style("font-weight", "600")
     .text(d.label)
     .attr("transform", `translate(${x(d.date)},0)`);
@@ -206,7 +206,7 @@ flagGroups.each(function (d) {
     .attr("x", -FLAG_W / 2 + 12)
     .attr("y", boxY + 36)
     .attr("fill", inkMuted)
-    .style("font-size", "11.5px")
+    .style("font-size", "13px")
     .text(d3.timeFormat("%b %-d")(d.date))
     .attr("transform", `translate(${x(d.date)},0)`);
 });
