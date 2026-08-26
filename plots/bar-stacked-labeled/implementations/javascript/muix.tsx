@@ -69,7 +69,13 @@ export default function Chart() {
         }}
       >
         <Typography
-          sx={{ color: t.ink, fontSize: "22px", fontWeight: 600, lineHeight: 1 }}
+          sx={{
+            color: t.ink,
+            fontSize: "22px",
+            fontWeight: 600,
+            letterSpacing: "0.02em",
+            lineHeight: 1,
+          }}
         >
           {TITLE}
         </Typography>
@@ -80,6 +86,7 @@ export default function Chart() {
         height={height - TITLE_H}
         colors={t.palette}
         skipAnimation
+        borderRadius={4}
         grid={{ horizontal: true }}
         xAxis={[
           {
@@ -105,9 +112,10 @@ export default function Chart() {
         margin={{ top: 30, right: 32, bottom: 90, left: 90 }}
         sx={{
           "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
-          "& .MuiChartsAxis-label": { fontSize: "16px" },
+          "& .MuiChartsAxis-label": { fontSize: "16px", fontWeight: 600 },
           "& .MuiChartsLegend-label": { fontSize: "15px" },
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
+          "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1.5 },
         }}
         slotProps={{
           legend: { position: { vertical: "bottom", horizontal: "middle" } },
