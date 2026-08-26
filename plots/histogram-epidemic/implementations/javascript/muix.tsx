@@ -143,23 +143,32 @@ export default function Chart() {
         margin={{ top: 70, right: 120, bottom: 80, left: 120 }}
         skipAnimation
       >
-        <ChartsGrid horizontal />
+        <ChartsGrid horizontal sx={{ "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 } }} />
         <BarPlot />
         <LinePlot />
         <ChartsXAxis
           axisId="onset"
           tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
           labelStyle={{ fontSize: 16, fill: t.ink }}
+          sx={{ "& .MuiChartsAxis-line": { stroke: t.inkSoft } }}
         />
         <ChartsYAxis
           axisId="daily"
           tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
           labelStyle={{ fontSize: 16, fill: t.ink }}
+          sx={{ "& .MuiChartsAxis-line": { stroke: t.inkSoft } }}
         />
         <ChartsYAxis
           axisId="cumulative"
           tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
           labelStyle={{ fontSize: 16, fill: t.ink }}
+          // Right-axis label sits well clear of the tick-number column: MUI X's
+          // default label offset is a fixed heuristic based on `tickFontSize`
+          // (12px default), not the actual rendered tick text width, so with our
+          // larger 14px 3-digit ticks ("700") the stock offset lands the rotated
+          // "Cumulative cases" label directly on top of them.
+          slotProps={{ axisLabel: { x: 62 } }}
+          sx={{ "& .MuiChartsAxis-line": { stroke: t.inkSoft } }}
         />
         <ChartsReferenceLine
           x={onsetDates[LOCKDOWN_DAY]}
