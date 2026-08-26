@@ -1,0 +1,250 @@
+library: chartjs
+language: javascript
+specification_id: line-impurity-comparison
+created: '2026-08-26T06:50:51Z'
+updated: '2026-08-26T07:03:14Z'
+generated_by: claude-sonnet
+workflow_run: 32939461907
+issue: 4133
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct Imprint palette: Gini in brand green #009E73 (palette[0]) and Entropy
+    in lavender #C475FD (palette[1]), canonical order, identical hex across light
+    and dark renders.'
+  - Custom Chart.js plugin (afterDatasetsDraw) draws a theme-adaptive dashed vertical
+    line and label at p=0.5, directly satisfying the spec's 'annotate maximum impurity
+    point' requirement — a genuinely idiomatic use of the plugin API rather than a
+    hacky workaround.
+  - Dashed vs. solid line style gives redundant (non-color) encoding between the two
+    series, which is good CVD-safe practice per the style guide.
+  - Entropy edge cases at p=0 and p=1 are handled explicitly (0 * log2(0) convention)
+    matching the spec's data notes exactly.
+  - Theme-adaptive chrome is threaded correctly through title, axis labels, ticks,
+    legend, and the custom annotation plugin — both renders are fully legible with
+    no dark-on-dark or light-on-light issues.
+  - 'Legend labels embed the actual formulas (''Gini Impurity: 2p(1-p)'', ''Entropy:
+    -p·log2(p) - (1-p)·log2(1-p)''), satisfying the spec''s request to explain both
+    metrics in the legend.'
+  weaknesses:
+  - 'Design excellence is solid but not exceptional: styling relies on default palette
+    + line-width/dash differentiation without additional polish (e.g., a subtle fill
+    under the curves, or annotating the exact (0.5, 1.0) and (0.5, 0.5) peak values)
+    that would lift it from ''clean'' to ''distinctive''.'
+  - Legend uses the stock usePointStyle circles rather than any custom construction
+    — fine, but no distinctive Chart.js feature (custom tooltip callbacks, interaction
+    mode tuning) is exercised for the interactive HTML view beyond the static PNG.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "line-impurity-comparison · javascript · chartjs · anyplot.ai" in bold dark ink at top-center; X-axis title "Probability of Positive Class (p)" and Y-axis title "Impurity Measure" in dark ink; tick labels (0.0-1.0 on both axes) in a slightly softer dark gray; subtle horizontal gridlines only (x-axis gridlines disabled); bottom legend with two entries showing colored point swatches and formula text; a dashed vertical rule at p=0.5 with the label "Max impurity at p = 0.5" in dark ink above it. All chrome elements are clearly legible against the light background.
+      Data: Gini Impurity curve (2p(1-p)) rendered as a thick solid brand-green (#009E73) parabola peaking at 0.5; Entropy curve rendered as a thinner dashed lavender (#C475FD) parabola peaking at 1.0. Both curves start and end at 0 at p=0 and p=1 (edge cases handled). Colors match the Imprint palette positions 1 and 2.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, legend, and dashed vertical annotation line, all recolored to light ink (off-white/light gray) for contrast against the dark background. The vertical p=0.5 rule and its label are now a light gray/white instead of dark, correctly flipping chrome color.
+      Data: Same brand-green solid Gini curve and lavender dashed Entropy curve, pixel-identical hues to the light render — confirms only chrome flipped, not data colors.
+      Legibility verdict: PASS — no dark-on-dark issues observed; all text and gridlines are clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text (title, axis titles, ticks, legend, annotation) legible
+          in both themes at explicit font sizes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, legend, annotation, and curves.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Solid vs dashed lines with appropriate widths (4/3) clearly distinguish
+          the two smooth curves; no markers needed for 100-point continuous curves.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender pairing plus dash-pattern redundancy is CVD-safe;
+          no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800; generous margins; nothing cut off; balanced
+          axis label sizes.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles ('Probability of Positive Class (p)', 'Impurity
+          Measure').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series palette[1]; identical across
+          themes; correct FAF8F1/1A1A17 backgrounds.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, professional look with a custom annotation plugin, but relies
+          mostly on default palette/line styling without extra polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, usePointStyle legend, generous title padding;
+          solid but standard refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The p=0.5 max-impurity callout gives a clear focal point that directly
+          reinforces the spec's key insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line chart, correct for a functional comparison.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinguishable curves, legend with formulas, p=0.5 annotation, edge-case
+          handling, and a light grid are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = probability p [0,1], Y = impurity measure [0,1], full range shown
+          on both axes.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'line-impurity-comparison · javascript · chartjs
+          · anyplot.ai'; legend labels match the formulas.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full [0,1] probability range with 100 points for smooth curves, matching
+          spec exactly.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Purely mathematical/theoretical comparison as the spec intends; neutral,
+          non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Both curves correctly bounded to [0,1], with peaks at their theoretically
+          correct values (0.5 for Gini, 1.0 for entropy).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat, procedural script; the plugin object is the idiomatic Chart.js
+          extension mechanism, not gratuitous abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided globals per the mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for the task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no filesystem calls.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses linear scale with explicit min/max, parsing:false for known-array
+          perf, standard high-level Chart config.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom registered plugin (afterDatasetsDraw hook) for the annotation
+          is a genuinely distinctive Chart.js technique beyond basic line-chart usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
