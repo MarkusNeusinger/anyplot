@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-complex-plane
 created: '2026-08-26T10:53:08Z'
-updated: '2026-08-26T10:57:51Z'
+updated: '2026-08-26T11:07:55Z'
 generated_by: claude-sonnet
 workflow_run: 32959892270
 issue: 4427
@@ -12,63 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
+  - 'Repair loop directly addressed all three visual weaknesses from Review 1: the
+    unit disk now has a subtle 7% opacity fill (drawCircleFill) giving it a genuine
+    focal treatment, the two vector categories are differentiated with solid vs. ShortDash
+    line styles, and the previously edge-crowded ''2.40 + 1.20i'' label now flips
+    its anchor (align/verticalAlign) away from the canvas border via the new EDGE_MARGIN
+    logic.'
+  - Scatter markers were shrunk to radius 3 with lineWidth 0, removing the prior redundancy
+    with the custom-drawn arrowhead triangles while still anchoring the data label
+    to a real point.
   - Correctly enforces equal aspect ratio dynamically by comparing plotWidth/plotHeight
     scale factors and calling setExtremes, so the unit circle renders as a true circle
     in both light and dark renders.
   - Custom SVG arrowhead rendering via chart.renderer.path (using axis.toPixels for
     exact pixel mapping) compensates for Highcharts core having no vector/quiver series,
-    delivering genuine directional vectors from the origin.
+    delivering genuine directional vectors from the origin — a technique specific
+    to this library.
   - Rich per-point annotations combine rectangular (a+bi) and polar (r, theta) forms
     for the roots of unity, directly supporting the spec's Euler's-formula / rectangular-vs-polar
     teaching goal.
-  - Clear categorical distinction (Imprint color + legend + marker shape) between
-    the 5th-roots-of-unity series and the arbitrary-points series.
-  - 'Imprint palette applied correctly (brand green #009E73 first, lavender second),
-    identical across both themes; background, text, and grid chrome are theme-correct
+  - 'Imprint palette applied correctly (brand green #009E73 first, lavender #C475FD
+    second), identical across both themes; background, text, and grid chrome are theme-correct
     in both renders with no dark-on-dark or light-on-light issues.'
   weaknesses:
-  - 'Design Excellence stays close to a well-configured default: the overall visual
-    hierarchy and typography are competent but plain — consider a stronger focal treatment
-    (e.g. subtle unit-circle fill/shading, or a bolder line-style distinction between
-    the two vector categories) to move beyond ''library default'' territory.'
-  - The '2.40 + 1.20i' data-label sits close to the top-right canvas edge in both
-    renders — give it a bit more margin or nudge its offset so it doesn't crowd the
-    border (not clipped, but tight).
-  - The circular scatter markers (radius 7) are visually redundant with the custom-drawn
-    arrowhead triangles at the same points/colors — consider disabling or shrinking
-    the underlying scatter marker since the arrowhead tip alone already marks the
-    point, or differentiate them intentionally.
-  - Several small helper functions (formatRect, labelPosition, vectorSegments, drawArrowhead)
-    are all functionally necessary for the vector-drawing approach, but for KISS structure
-    consider inlining the trivial ones (e.g. labelPosition) to keep the script closer
-    to a flat data-then-chart script.
+  - Several small helper functions (pointLabelConfig, vectorSegments, drawCircleFill,
+    drawArrowhead) remain — all are functionally necessary for the custom vector-drawing
+    approach, but for strict KISS structure the trivial ones could still be inlined;
+    minor, low-priority.
+  - The unit-disk fill is very subtle (opacity 0.07) — a slightly stronger fill or
+    a faint stroke-only alternative could push Design Excellence further without risking
+    overpowering the vectors.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
       Chrome: Title "scatter-complex-plane · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. "Real" and "Imaginary" axis titles and tick labels (-3..3) in a softer dark gray, all legible against the light background. Thin dark lines cross through the origin marking the real/imaginary axes; subtle light-gray gridlines run both horizontally and vertically. Legend at the bottom shows an upward green triangle for "5th roots of unity" and a downward purple triangle for "Arbitrary points," both readable.
-      Data: A dashed dark-gray unit circle is centered at the origin. Five green (#009E73) vectors with arrowheads radiate from the origin to points evenly spaced on the unit circle, each labeled with its rectangular (a+bi) and polar (r, θ) form in a light callout box. Three purple/lavender (#C475FD) vectors point to arbitrary points outside the circle, each labeled with only its rectangular form. All text is fully readable against the light background — no light-on-light issues.
+      Data: A dashed dark-gray unit circle is centered at the origin, now with a subtle light-gray fill (opacity ~0.07) shading the unit disk as a reference region. Five green (#009E73) solid-line vectors with arrowheads radiate from the origin to points evenly spaced on the unit circle, each labeled with its rectangular (a+bi) and polar (r, θ) form in a light callout box. Three purple/lavender (#C475FD) short-dashed vectors point to arbitrary points outside the circle, each labeled with only its rectangular form. The '2.40 + 1.20i' label (closest to the canvas edge) now anchors to the left of its arrow tip with visible margin from the border — no longer crowding the edge. All text is fully readable against the light background — no light-on-light issues, no clipping at any edge.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
       Chrome: Same title, now rendered in light/near-white ink, clearly readable. Axis titles and tick labels are in a light gray tone, fully legible against the dark background. Origin crossing lines are a lighter gray, gridlines subtle but visible. Legend text is light-colored and readable, with the same green/purple triangle markers.
-      Data: Same green (#009E73) vectors and roots-of-unity annotations, same purple (#C475FD) vectors and arbitrary-point annotations — colors are pixel-identical to the light render, confirming only chrome flipped. Callout label boxes use a dark elevated background with light text, readable, no dark-on-dark failures observed anywhere (title, axis labels, ticks, legend, and data-label boxes are all clearly visible).
+      Data: Same green (#009E73) solid vectors and roots-of-unity annotations, same purple (#C475FD) dashed vectors and arbitrary-point annotations — colors are pixel-identical to the light render, confirming only chrome flipped. The unit-disk fill is now a subtly darker shade against the dark background, giving the same reference-region treatment. Callout label boxes use a dark elevated background with light text, readable, no dark-on-dark failures observed anywhere (title, axis labels, ticks, legend, and data-label boxes are all clearly visible). The '2.40 + 1.20i' label sits with the same improved margin from the top-right canvas edge as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; minor tightness
-          on one label near the canvas edge
+        comment: All font sizes explicitly set; fully readable in both themes; the
+          previously tight '2.40 + 1.20i' label now has proper margin from the edge
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -80,7 +80,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Vectors and markers well-sized for 8 sparse points
+        comment: Vectors and markers well-sized for 8 sparse points; scatter markers
+          shrunk so they no longer duplicate the arrowhead tips
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -89,17 +90,18 @@ review:
         comment: Green/purple pairing is CVD-safe and high-contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization; '2.40 + 1.20i' label sits close to the top-right
-          edge
+        comment: Good, balanced canvas utilization; edge-crowding issue from Review
+          1 fixed via EDGE_MARGIN anchor logic
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Real' / 'Imaginary' axis titles
+        comment: Descriptive 'Real' / 'Imaginary' axis titles (no units applicable
+          for a complex plane)
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -108,30 +110,30 @@ review:
         comment: Brand green first series, correct canonical order, theme-correct
           chrome in both renders
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful vector + dual-form annotation design elevates it above
-          generic scatter, but overall polish stays close to a configured default
+        passed: true
+        comment: New unit-disk fill and solid-vs-dashed vector distinction move this
+          clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, no boxed spines, decent whitespace; legend and typography
-          are standard
+        passed: true
+        comment: Subtle grid, no boxed spines, generous whitespace, plus the added
+          circle-fill detail
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Vectors plus rect/polar labels create a clear visual hierarchy distinguishing
-          on-circle roots from arbitrary points
+        passed: true
+        comment: Fill on the unit disk plus solid/dashed vector styling gives immediate
+          visual hierarchy between on-circle roots and arbitrary points
     spec_compliance:
       score: 15
       max: 15
@@ -193,7 +195,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small helper functions are used, all necessary for the vector-drawing
+        comment: A few small helper functions remain, all necessary for the vector-drawing
           approach
       - id: CQ-02
         name: Reproducibility
@@ -236,8 +238,9 @@ review:
         max: 5
         passed: true
         comment: Uses chart.renderer.path and axis.toPixels directly to draw custom
-          SVG arrowheads — a Highcharts-specific technique not easily replicated elsewhere
-  verdict: REJECTED
+          SVG arrowheads and disk fill — a Highcharts-specific technique not easily
+          replicated elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -249,3 +252,4 @@ impl_tags:
   dataprep: []
   styling:
   - publication-ready
+  - alpha-blending
