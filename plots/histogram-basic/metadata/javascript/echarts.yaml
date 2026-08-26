@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-basic
 created: '2026-08-26T06:19:51Z'
-updated: '2026-08-26T06:23:37Z'
+updated: '2026-08-26T06:31:57Z'
 generated_by: claude-sonnet
 workflow_run: 32937303148
 issue: 654
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
   - Correct, realistic right-skewed delivery-time dataset with a clean deterministic
@@ -21,27 +21,31 @@ review:
     0) are all implemented correctly
   - Theme-adaptive chrome and Imprint palette are correctly threaded through in both
     light and dark renders — no legibility failures in either theme
+  - 'The added mean markLine directly addresses the prior review''s storytelling and
+    library-mastery gaps: it highlights the mean (25.0 min) against the visible right-skew,
+    and the dashed line + rotated label both use theme-adaptive ink so it reads correctly
+    in both themes'
   - Explicit font sizing throughout produces a well-proportioned, uncluttered layout
   weaknesses:
-  - 'The chart is visually a well-configured default: a single flat-green fill with
-    no design device beyond the mandated palette (DE-01/DE-02 low)'
-  - No storytelling emphasis on the distribution's own key features (peak/mode, mean/median,
-    skew) — consider adding a markLine at the mean or median delivery time, or a subtle
-    annotation calling out the mode bin
-  - No ECharts-distinctive feature is used (LM-02) — a markLine/markArea for summary
-    statistics, or a visualMap gradient tied to bar height, would both raise storytelling
-    and library-mastery scores simultaneously
+  - Still a single flat-green fill beyond the new mean line — no gradient, no secondary
+    visual device to lift DE-01 aesthetic sophistication further
+  - The mean markLine is a good first storytelling device but doesn't call out the
+    mode/peak bin (~19 min) — combining both would give a stronger 'here's the shape'
+    narrative
+  - markLine is a solid ECharts-specific feature, but a visualMap gradient tied to
+    bar height or a markArea band would push Library Mastery further into distinctive
+    territory
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "histogram-basic · javascript · echarts · anyplot.ai" centered at top, dark axis titles ("Delivery Time (minutes)", "Frequency"), dark tick labels, subtle horizontal gridlines only. All clearly visible against the light background.
-      Data: Single-series green (#009E73) bars, 22 contiguous bins with thin off-white borders separating them, right-skewed distribution peaking around the 19-minute bin (~56 count) tailing off toward 62 minutes.
+      Chrome: Bold dark title "histogram-basic · javascript · echarts · anyplot.ai" centered at top, dark axis titles ("Delivery Time (minutes)", "Frequency"), dark tick labels, subtle horizontal gridlines only. A dashed dark-ink vertical markLine sits at the mean bin with a rotated "Mean: 25.0 min" label above it. All text clearly visible against the light background.
+      Data: Single-series green (#009E73) bars, 22 contiguous bins with thin off-white borders separating them, right-skewed distribution peaking around the 19-minute bin (~56 count) tailing off toward 62 minutes. The mean line sits visibly right of the peak, correctly illustrating the right-skew pulling the mean above the mode.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title/axis titles/tick labels now rendered in light/white text, subtle light-gray gridlines. All clearly readable against the dark background — no dark-on-dark failures found.
-      Data: Bars are the identical #009E73 green as the light render — only chrome (background, text, gridlines) flipped between themes, data colors unchanged.
+      Chrome: Same title/axis titles/tick labels rendered in light/white text, subtle light-gray gridlines. The mean markLine and its label correctly flip to light-ink/white (theme-adaptive `t.ink`), fully legible against the dark background — no dark-on-dark failures found.
+      Data: Bars are the identical #009E73 green as the light render — only chrome (background, text, gridlines, markLine ink) flipped between themes, data colors unchanged.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,13 +58,13 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22px, axis names 16px, ticks
-          14px); well-proportioned, readable in both themes
+          14px, mean label 13px); well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions
+        comment: No text/data collisions; mean label sits clear of the title and gridlines
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -94,7 +98,7 @@ review:
         comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; both
           renders theme-correct'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -102,22 +106,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default; flat single-hue fill with no additional
-          design device
+        comment: Well-configured default; the added mean line is functional rather
+          than a stylistic device
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Some refinement (hidden y-axis line, horizontal-only gridlines, bar
-          edge separation) but otherwise standard defaults
+        comment: Hidden y-axis line, horizontal-only gridlines, bar edge separation,
+          plus a consistently-styled dashed reference line — more polish than a bare
+          default
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Right-skewed shape is visible from data choice alone; nothing actively
-          interprets it (no mean/median markLine or peak annotation)
+        passed: true
+        comment: Mean markLine now actively interprets the distribution, visually
+          connecting the right-skew to where the mean lands relative to the peak
     spec_compliance:
       score: 15
       max: 15
@@ -202,7 +207,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI/interactivity
+        comment: Clean, no fake UI/interactivity; markLine addition is minimal and
+          well-integrated
       - id: CQ-05
         name: Output & API
         score: 1
@@ -211,7 +217,7 @@ review:
         comment: Correct mount-node contract, no explicit size/dPR, animation:false
           set
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -219,19 +225,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level setOption with category/value axes and bar series;
-          idiomatic but unremarkable
+        comment: Correct high-level setOption with category/value axes, bar series,
+          and markLine; idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage; no markLine/visualMap or other ECharts-specific feature
-          used
-  verdict: REJECTED
+        passed: true
+        comment: Now uses ECharts' markLine for a themed mean-reference annotation
+          — a real library-specific feature, though a visualMap gradient or markArea
+          would push this further
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
