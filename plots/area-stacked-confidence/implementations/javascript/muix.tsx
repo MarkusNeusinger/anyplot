@@ -133,7 +133,7 @@ const bandSx = seriesData.reduce((acc, s) => {
   acc[`& .MuiLineElement-series-${s.id}-band-width`] = { stroke: "none" };
   acc[`& .MuiAreaElement-series-${s.id}-band-width`] = {
     fill: t.palette[s.paletteIndex],
-    fillOpacity: 0.25,
+    fillOpacity: 0.32,
   };
   return acc;
 }, {});
@@ -245,6 +245,7 @@ export default function Chart() {
           ]}
           series={[...mainSeries, ...bandSeries]}
           margin={{ top: 20, right: 40, bottom: 70, left: 65 }}
+          slotProps={{ legend: { hidden: true } }}
           sx={{
             "& .MuiAreaElement-root": { fillOpacity: 0.85 },
             "& .MuiLineElement-root": { strokeWidth: 2 },
