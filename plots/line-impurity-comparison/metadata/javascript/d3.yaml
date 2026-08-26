@@ -1,0 +1,259 @@
+library: d3
+language: javascript
+specification_id: line-impurity-comparison
+created: '2026-08-26T06:52:32Z'
+updated: '2026-08-26T07:06:49Z'
+generated_by: claude-sonnet
+workflow_run: 32939650470
+issue: 4133
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/d3/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Track band (d3.area() with y0/y1 between the two curves) directly visualizes the
+    spec's core insight — how closely Gini and Entropy track each other across the
+    whole [0,1] range, not just at their shared maximum — resolving the prior review's
+    DE-03 weakness.
+  - Two-tier typography (bold metric name + lighter-weight formula/caption) in both
+    the legend and the p=0.5 annotation gives clear visual hierarchy and a distinctive
+    compositional touch, resolving the prior DE-01 weakness.
+  - d3.area() for the track band is a genuinely D3-distinctive technique (paired y0/y1
+    accessors) beyond the generic scaleLinear/axisBottom/line-generator primitives
+    flagged in the prior LM-02 weakness.
+  - Correct math for both curves (Gini = 2p(1-p), log2-normalized entropy) with p=0/p=1
+    edge cases explicitly handled (entropy defined as 0 rather than NaN).
+  - 'Correct Imprint palette usage: brand green (#009E73) first series, canonical
+    lavender (#C475FD) second, redundant solid-vs-dashed stroke encoding; data colors
+    pixel-identical between light and dark renders, with all chrome (title, axes,
+    legend, grid) theme-correct in both.'
+  - Explicit font sizing throughout (14px ticks, 15-16px axis/legend labels, 22px
+    title with letter-spacing) and a subtle y-axis-only grid per the style guide;
+    legible down to ~400px mobile width.
+  weaknesses:
+  - 'LM-02: the area-fill-between-curves technique, while genuinely D3-specific in
+    its implementation (paired y0/y1 accessors), is a pattern other charting libraries
+    also expose (e.g. area-range series); an even more D3-unique flourish (custom
+    curve interpolation, path morphing) would push this further.'
+  - 'VQ-01: text sizing is explicit and well-proportioned but still uses standard
+    sans-serif throughout the body copy; only the title and two-tier legend/annotation
+    get typographic treatment.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold centered title "line-impurity-comparison · javascript · d3 · anyplot.ai" in dark ink with subtle letter-spacing; "Probability p" (x-axis) and "Impurity Measure" (y-axis, rotated) labels in dark ink; tick labels (0.0-1.0 on both axes) in a softer dark gray; a two-row legend top-left with color swatches, bold metric names ("Gini impurity", "Entropy") and lighter-weight formulas beneath each; subtle horizontal (y-axis-only) gridlines.
+      Data: First series (Gini impurity) is a solid brand-green (#009E73) curve rising from (0,0) to a rounded peak of 0.5 at p=0.5 and back down to (1,0). Second series (Entropy) is a dashed lavender (#C475FD, canonical Imprint slot 2) curve rising steeply near the edges to a flat peak of 1.0 at p=0.5. A light muted-gray "track band" fills the area between the two curves across the whole domain, visually emphasizing how closely they track each other. A dashed vertical guide line at p=0.5 connects two solid dots marking each curve's maximum, with a two-tier "p = 0.5 / shared maximum" label placed in the open gap between the curves, clear of both lines.
+      Legibility verdict: PASS — all title, axis, tick, legend, and annotation text is clearly readable against the light background; readable down to ~400px mobile width.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis/legend/annotation layout, now rendered in light ink (title/axis labels near-white, tick/legend text a softer light gray); gridlines are a subtle light-on-dark tone.
+      Data: Both curves and the track band are pixel-identical in color and shape to the light render — brand-green solid Gini curve, lavender dashed Entropy curve, same guide line, markers, band fill, and annotation text, confirming only chrome (not data color) flips between themes.
+      Legibility verdict: PASS — no dark-on-dark text; all title, axis, tick, legend, and annotation text is clearly readable against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14/15/16/22px), readable at full size
+          and at ~400px mobile in both themes, no overflow/clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, axis labels, tick labels, track band, and the p=0.5 annotation
+          all sit clear of the curves and each other.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 4px line strokes and solid/dashed styles are clearly visible and
+          appropriate for two smooth 100-point curves; 7px marker dots and the low-opacity
+          track band read well without competing with the lines.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. lavender with a redundant dash pattern; not red-green,
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area uses a large majority of the canvas, balanced margins,
+          nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Probability p" and "Impurity Measure" are descriptive; both quantities
+          are dimensionless so units are not applicable.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second is canonical Imprint slot 2 (#C475FD);
+          backgrounds and chrome are theme-correct in both renders; data colors identical
+          across themes.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Two-tier typography (bold name + light formula/caption) in legend
+          and annotation, plus title letter-spacing, lift this clearly above a well-configured
+          default — resolves the prior review's DE-01 weakness.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, minimal spines, generous whitespace, and
+          the low-opacity track band add a layered but still restrained composition.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: The track band visually reinforces the spec's core insight (how closely
+          the two curves track across the whole domain), combined with the shared-maximum
+          annotation — a clear, immediately legible story.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct line-comparison chart.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Legend with formulas, p=0.5 annotation, edge-case handling, light
+          grid — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = probability p [0,1], Y = impurity measure [0,1], both curves
+          fully shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; legend labels match the
+          two series with correct formulas.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full [0,1] range for both curves, edge cases and shared maximum all
+          shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, textbook-accurate ML/statistics concept.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values are mathematically exact per the standard formulas.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom flow; gini/entropy are trivial one-line pure
+          functions, not over-structured.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, formula-based data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds a single SVG into #container per the mount-node contract;
+          current D3 v7 API; no animation.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic use of scales/axes/line and area generators.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.area() with paired y0/y1 accessors for the track band is a genuine
+          D3-specific technique, resolving the prior review's LM-02 weakness; still
+          a fairly common pattern across chart libraries, so short of the top score.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - grid-styling
+  - alpha-blending
