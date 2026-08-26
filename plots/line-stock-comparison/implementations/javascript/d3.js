@@ -108,7 +108,7 @@ const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6));
 for (const axis of [xAxis, yAxis]) {
   axis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
   axis.selectAll("line").attr("stroke", t.inkSoft);
-  axis.select(".domain").attr("stroke", t.inkSoft);
+  axis.select(".domain").remove();
 }
 
 // --- Lines ------------------------------------------------------------------
@@ -145,6 +145,41 @@ endpoints
   .style("font-weight", "600")
   .text((d) => d.symbol);
 
+// --- Peak annotation (computed extremum via d3.greatest) -------------------
+const flatPoints = series.flatMap((s) => s.values.map((d) => ({ ...d, symbol: s.symbol })));
+const peak = d3.greatest(flatPoints, (d) => d.rebased);
+const peakX = x(peak.date);
+const peakY = y(peak.rebased);
+const peakLabelAbove = peakY > 60;
+const peakLabelY = peakLabelAbove ? peakY - 30 : peakY + 40;
+const peakLabelAnchor = peakX > iw * 0.8 ? "end" : "start";
+const peakLabelX = peakX + (peakLabelAnchor === "end" ? -16 : 16);
+
+g.append("circle")
+  .attr("cx", peakX)
+  .attr("cy", peakY)
+  .attr("r", 7)
+  .attr("fill", "none")
+  .attr("stroke", color(peak.symbol))
+  .attr("stroke-width", 2);
+
+g.append("line")
+  .attr("x1", peakX)
+  .attr("y1", peakY)
+  .attr("x2", peakLabelX)
+  .attr("y2", peakLabelY + (peakLabelAbove ? 6 : -6))
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1);
+
+g.append("text")
+  .attr("x", peakLabelX)
+  .attr("y", peakLabelY)
+  .attr("text-anchor", peakLabelAnchor)
+  .attr("fill", t.ink)
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .text(`${peak.symbol} peak: ${peak.rebased.toFixed(0)}`);
+
 // --- Axis labels --------------------------------------------------------------
 g.append("text")
   .attr("x", iw / 2)
@@ -173,31 +208,22 @@ const legendRows = legend
   .data(series)
   .join("g")
   .attr("class", "legend-row")
-  .attr("transform", (d, i) => `translate(0,${i * 46})`);
+  .attr("transform", (d, i) => `translate(0,${i * 32})`);
 
 legendRows
   .append("rect")
-  .attr("width", 18)
-  .attr("height", 18)
+  .attr("width", 16)
+  .attr("height", 16)
   .attr("rx", 3)
   .attr("fill", (d) => color(d.symbol));
 
 legendRows
   .append("text")
-  .attr("x", 28)
-  .attr("y", 9)
+  .attr("x", 24)
+  .attr("y", 8)
   .attr("dy", "0.35em")
   .attr("fill", t.ink)
-  .style("font-size", "16px")
-  .style("font-weight", "600")
-  .text((d) => d.symbol);
-
-legendRows
-  .append("text")
-  .attr("x", 28)
-  .attr("y", 30)
-  .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "15px")
   .text((d) => d.name);
 
 // --- Title ------------------------------------------------------------------
