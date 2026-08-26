@@ -1,7 +1,7 @@
 // anyplot.ai
 // radar-innovation-timeline: Innovation Radar with Time-Horizon Rings
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-26
+// Quality: 93/100 | Created: 2026-08-26
 
 //# anyplot-orientation: square
 
