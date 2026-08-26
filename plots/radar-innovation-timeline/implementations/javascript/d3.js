@@ -32,6 +32,12 @@ const sectors = [
 ];
 sectors.forEach((s) => (s.mid = (s.start + s.end) / 2));
 
+// Sector -> palette color, via d3's ordinal scale (idiomatic categorical mapping).
+const colorScale = d3.scaleOrdinal(
+  sectors.map((s) => s.name),
+  sectors.map((_, i) => t.palette[i]),
+);
+
 // --- Data: innovations placed by sector + ring, jittered within the cell ---
 // Every item within a sector gets a distinct angular offset (see OFFSETS
 // below) even across different rings — reusing an offset would put two items
@@ -78,7 +84,7 @@ const polar = (deg, r) => [cx + r * Math.sin(toRad(deg)), cy - r * Math.cos(toRa
 items.forEach((d) => {
   const ring = rings[d.ring];
   d.angle = sectors[d.sector].mid + d.offset;
-  d.radius = ring.inner + d.frac * (ring.outer - ring.inner);
+  d.radius = d3.scaleLinear().domain([0, 1]).range([ring.inner, ring.outer])(d.frac);
   [d.x, d.y] = polar(d.angle, d.radius);
   // Nudges applied by the collision-avoidance pass below: labelPush moves the
   // label further from center along its ray; labelAngleAdj additionally
@@ -145,9 +151,27 @@ chart
   .attr("stroke", t.grid)
   .attr("stroke-width", 1.5);
 
-// Ring names are keyed below the dome (see "Time-horizon key" near the
-// legend) — every radius inside the dome is claimed by some item's jitter
-// range, so no inline position stays collision-free across all four rings.
+// --- Ring-name labels directly on the rings, sitting on the flat diameter --
+// Every ring's items leave the -90deg edge clear except "Now" (whose AI & ML
+// item sits at -85.5deg); "Now" uses the +90deg edge instead, where the
+// nearest item (Biotech, ring "Now") is 40deg+ away. The other three rings
+// all keep 18deg+ of clearance at -90deg, so they share that side.
+chart
+  .selectAll("text.ring-label")
+  .data(rings)
+  .join("text")
+  .attr("class", "ring-label")
+  .attr("x", (d, i) => polar(i === 0 ? 90 : -90, (d.inner + d.outer) / 2)[0])
+  .attr("y", (d, i) => polar(i === 0 ? 90 : -90, (d.inner + d.outer) / 2)[1])
+  .attr("text-anchor", "middle")
+  .attr("dy", "0.35em")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .style("font-weight", "600")
+  .style("paint-order", "stroke")
+  .style("stroke", t.pageBg)
+  .style("stroke-width", "4px")
+  .text((d) => d.name);
 
 // --- Sector header labels along the outer edge --------------------------------
 chart
@@ -172,7 +196,7 @@ chart
   .attr("class", "marker")
   .attr("transform", (d) => `translate(${d.x},${d.y})`)
   .attr("d", (d) => symbolGen.type(sectors[d.sector].symbol)())
-  .attr("fill", (d) => t.palette[d.sector])
+  .attr("fill", (d) => colorScale(sectors[d.sector].name))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2);
 
@@ -279,7 +303,7 @@ const legendItems = legend
 legendItems
   .append("path")
   .attr("d", (d) => d3.symbol().type(d.symbol).size(220)())
-  .attr("fill", (d, i) => t.palette[i])
+  .attr("fill", (d) => colorScale(d.name))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
 
