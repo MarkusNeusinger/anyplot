@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-stacked-labeled: Stacked Bar Chart with Total Labels
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-08-26
+// Quality: 88/100 | Created: 2026-08-26
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
