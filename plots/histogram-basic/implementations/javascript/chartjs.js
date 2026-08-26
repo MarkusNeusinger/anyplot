@@ -23,9 +23,9 @@ function normal(rand, mean, stdDev) {
 const rand = makeLcg(42);
 const examScores = [];
 for (let i = 0; i < 400; i++) {
-  // Most students cluster near a strong score; a smaller group struggles,
-  // producing the left-skewed tail typical of exam-score distributions.
-  const score = rand() < 0.85 ? normal(rand, 78, 9) : normal(rand, 48, 12);
+  // Most students cluster near a strong score; a clearly separated,
+  // sizeable group struggles, producing a legible second mode near 40.
+  const score = rand() < 0.8 ? normal(rand, 78, 8) : normal(rand, 40, 10);
   examScores.push(Math.max(0, Math.min(100, score)));
 }
 
@@ -41,9 +41,45 @@ examScores.forEach((score) => {
 });
 const labels = counts.map((_, i) => Math.round(minScore + i * binWidth));
 
+// The tallest bin gets a two-tone accent to call out the most common range;
+// the mean-score bin gets a dashed reference line (custom plugin below).
+const modalIndex = counts.indexOf(Math.max(...counts));
+const meanScore = examScores.reduce((sum, v) => sum + v, 0) / examScores.length;
+const meanBinIndex = Math.min(
+  binCount - 1,
+  Math.floor((meanScore - minScore) / binWidth)
+);
+const barColors = counts.map((_, i) => (i === modalIndex ? t.palette[2] : t.palette[0]));
+
 // --- Mount -----------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// --- Custom plugin: dashed mean-score reference line ------------------------
+const meanLinePlugin = {
+  id: "meanLine",
+  afterDatasetsDraw(chart) {
+    const bar = chart.getDatasetMeta(0).data[meanBinIndex];
+    if (!bar) return;
+    const { ctx, chartArea } = chart;
+    const x = Math.min(Math.max(bar.x, chartArea.left + 45), chartArea.right - 45);
+    ctx.save();
+    ctx.strokeStyle = t.ink;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x, chartArea.top);
+    ctx.lineTo(x, chartArea.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = t.ink;
+    ctx.font = "bold 14px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`Mean: ${meanScore.toFixed(1)}`, x, chartArea.top - 8);
+    ctx.restore();
+  },
+};
 
 // --- Chart -----------------------------------------------------------------
 new Chart(canvas, {
@@ -54,7 +90,7 @@ new Chart(canvas, {
       {
         label: "Frequency",
         data: counts,
-        backgroundColor: t.palette[0],
+        backgroundColor: barColors,
         borderColor: t.pageBg,
         borderWidth: 1,
         categoryPercentage: 1.0,
@@ -66,6 +102,9 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    layout: {
+      padding: { top: 28 },
+    },
     plugins: {
       title: {
         display: true,
@@ -97,11 +136,12 @@ new Chart(canvas, {
         grid: { color: t.grid },
         title: {
           display: true,
-          text: "Frequency",
+          text: "Frequency (Students)",
           color: t.ink,
           font: { size: 16 },
         },
       },
     },
   },
+  plugins: [meanLinePlugin],
 });
