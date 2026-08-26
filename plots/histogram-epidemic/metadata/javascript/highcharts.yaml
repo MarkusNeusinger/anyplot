@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: histogram-epidemic
 created: '2026-08-26T06:22:37Z'
-updated: '2026-08-26T06:26:58Z'
+updated: '2026-08-26T06:34:12Z'
 generated_by: claude-sonnet
 workflow_run: 32937494140
 issue: 4426
@@ -12,70 +12,68 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
+  - 'Both attempt-1 weaknesses addressed directly: annotation labels bumped from 13px
+    to 14px, and a plotBand now shades the Lockdown-to-Vaccination window to reinforce
+    the intervention narrative'
   - Correct dual-wave epidemic shape (sharp point-source peak followed by a broader
     propagated wave) matching the spec's outbreak-pattern guidance
   - Canonical Imprint stacking order (Confirmed=#009E73, Probable=lavender, Suspect=blue)
     with a clean matching legend
-  - Intervention event lines (Lockdown Start, Vaccination Campaign) placed and labeled
-    without overlapping the data
   - Secondary-axis cumulative-cases overlay with gridlines correctly suppressed on
     that axis to avoid double-grid clutter
   - Deterministic LCG-based synthetic data, clean theme-adaptive chrome, both renders
     fully legible
   weaknesses:
-  - Annotation label font (13px) is a touch smaller than the rest of the chrome (14-16px)
-    - bump to ~14px for consistent hierarchy
-  - Design composition leans on Highcharts' standard chart layout; a shaded plotBand
-    between the two intervention lines would reinforce the 'during-intervention' period
-    and lift Design Excellence further
-  - Library Mastery features used (dual-axis, plotLines) are idiomatic but common;
-    no standout Highcharts-specific technique beyond that
+  - Design composition is more distinctive now but still reads as a well-executed
+    standard Highcharts combo-chart layout rather than a fully bespoke composition
+  - No further standout Highcharts-specific feature beyond dual-axis + plotLines +
+    plotBands (still solid, common idioms)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title, subtitle, axis titles ("Onset Date", "New Cases", "Cumulative Cases"), tick labels, and legend are all dark ink and clearly readable. Event-line labels ("Lockdown Start", "Vaccination Campaign") are readable and don't overlap bars.
-      Data: Stacked columns — Confirmed (#009E73 brand green, first series), Probable (lavender), Suspect (blue) — canonical Imprint order. Amber dashed vertical lines mark intervention events. A black cumulative-cases line rides the secondary right y-axis.
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title, subtitle, axis titles ("Onset Date", "New Cases", "Cumulative Cases"), and tick labels are dark ink and clearly readable. Two dashed amber plotLines mark "Lockdown Start" and "Vaccination Campaign" with 14px labels; a new subtle grey plotBand shades the region between them.
+      Data: Stacked columns — Confirmed (#009E73, first series), Probable (lavender #C475FD), Suspect (blue #4467A3) — plus a black cumulative-cases line on the secondary right y-axis.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, subtitle, axis titles, tick labels, and legend all switched to light ink and remain fully legible. No dark-on-dark failures. Event-line labels remain readable against the dark surface.
-      Data: Confirmed/Probable/Suspect bar colors identical to the light render (only chrome changed). Cumulative line switched from black to a light/white tone to stay visible against the dark background — correct theme-adaptive behavior for a semantic "neutral" line.
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title, subtitle, axis titles, and tick labels flip to light ink and remain fully readable; the plotBand reads as a lighter charcoal panel; the cumulative line switches to white to stay visible against the dark background.
+      Data: Bar colors and amber event lines are pixel-identical to the light render — only chrome (background, text, grid) flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome sized per style guide and legible in both themes; annotation
-          labels slightly smaller at 13px
+        comment: All font sizes explicit; annotation labels bumped to 14px, fixing
+          attempt-1 inconsistency
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, bars, legend, or cumulative line
+        comment: No collisions between labels, plotBand, bars, or cumulative line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 90 daily bars stay distinguishable; cumulative line correctly markerless
-          given density
+        comment: 90 daily bars distinguishable; cumulative line has no markers, appropriate
+          for dense series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: No red-green-only encoding; amber event lines visually distinct from
+        comment: No red-green-only encoding; amber lines and grey band distinct from
           categorical palette
       - id: VQ-05
         name: Layout & Canvas
@@ -88,38 +86,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive axis titles: Onset Date, New Cases, Cumulative Cases'
+        comment: Descriptive axis titles
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
-          both renders'
+        comment: Confirmed=#009E73 first series, canonical Imprint order, theme-correct
+          backgrounds
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Subtitle, secondary-axis gridline suppression, semantic use of ink
-          for cumulative line
+        comment: Subtitle, semantic amber lines, intervention-period shading show
+          above-default design
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid and soft axis lines, but standard Highcharts chrome layout
+        comment: New plotBand plus subtle grid/whitespace shows real refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two-wave shape plus event markers plus cumulative overlay tells a
-          coherent narrative
+        comment: Two-wave shape, event markers, shaded intervention window, cumulative
+          overlay guide the viewer
     spec_compliance:
       score: 15
       max: 15
@@ -129,13 +127,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked-column epi curve
+        comment: Stacked-column epi curve, correct chart family
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacking, event lines, cumulative overlay, daily bins all present
+        comment: Stacking, event lines, secondary-axis cumulative overlay, daily bins
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -147,7 +146,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match series
+        comment: Title format correct; legend labels match series names
     data_quality:
       score: 15
       max: 15
@@ -164,13 +163,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Plausible COVID-style outbreak magnitudes, neutral framing
+        comment: Plausible COVID-style local-outbreak magnitudes, neutral framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily peak ~48, cumulative ~1480 over 90 days
+        comment: Sensible peak and cumulative totals for the domain
     code_quality:
       score: 10
       max: 10
@@ -186,13 +185,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG
+        comment: Fixed-seed LCG, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: No imports needed beyond provided globals
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -204,9 +203,9 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation false at both levels
+        comment: Correct mount-node contract, animation disabled, no explicit width/height
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,13 +213,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct stacking, dual yAxis, shared tooltip, plotLines with labels
+        comment: Correct stacking, dual yAxis, shared tooltip, plotLines with inline
+          labels
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Common dual-axis + plotLines pattern, no standout distinctive feature
+        passed: true
+        comment: plotBands + plotLines combo now reinforces the intervention period
+          visually
   verdict: APPROVED
 impl_tags:
   dependencies: []
