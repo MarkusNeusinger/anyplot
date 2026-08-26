@@ -78,6 +78,14 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Onset Date", style: { color: t.inkSoft, fontSize: "16px" } },
+    plotBands: [
+      {
+        from: lockdownDate,
+        to: vaccinationDate,
+        color: t.grid,
+        zIndex: 0,
+      },
+    ],
     plotLines: [
       {
         value: lockdownDate,
@@ -90,7 +98,7 @@ Highcharts.chart("container", {
           rotation: 0,
           y: 20,
           x: 4,
-          style: { color: t.ink, fontSize: "13px" },
+          style: { color: t.ink, fontSize: "14px" },
         },
       },
       {
@@ -104,7 +112,7 @@ Highcharts.chart("container", {
           rotation: 0,
           y: 40,
           x: 4,
-          style: { color: t.ink, fontSize: "13px" },
+          style: { color: t.ink, fontSize: "14px" },
         },
       },
     ],
