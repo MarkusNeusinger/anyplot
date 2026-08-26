@@ -72,7 +72,9 @@ bars
   .attr("y", (d) => y(d.feature))
   .attr("width", (d) => Math.abs(x(d.mean) - x(0)))
   .attr("height", y.bandwidth())
-  .attr("fill", (d) => color(d.mean));
+  .attr("fill", (d) => color(d.mean))
+  .attr("stroke", (d, i) => (i === 0 ? t.ink : "none"))
+  .attr("stroke-width", (d, i) => (i === 0 ? 2 : 0));
 
 // --- Error bars (horizontal, showing shuffle variability) -----------------------
 const capHalf = Math.min(10, y.bandwidth() * 0.35);
@@ -110,6 +112,13 @@ xAxis.select(".domain").attr("stroke", t.inkSoft);
 yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px").attr("dx", "-4px");
 yAxis.select(".domain").remove();
 
+// Emphasize the top-ranked feature (the story: which feature matters most)
+yAxis
+  .selectAll("text")
+  .filter((d, i) => i === 0)
+  .attr("fill", t.ink)
+  .style("font-weight", "700");
+
 g.append("text")
   .attr("x", iw / 2)
   .attr("y", ih + 60)
@@ -120,7 +129,7 @@ g.append("text")
 
 // --- Title ---------------------------------------------------------------------
 const title = "Customer Churn Model · bar-permutation-importance · javascript · d3 · anyplot.ai";
-const titleSize = Math.round(22 * (title.length > 67 ? 67 / title.length : 1));
+const titleSize = title.length > 67 ? Math.max(20, Math.round((22 * 67) / title.length)) : 22;
 svg
   .append("text")
   .attr("x", width / 2)
