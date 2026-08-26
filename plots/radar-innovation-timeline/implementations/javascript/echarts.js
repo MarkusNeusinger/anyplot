@@ -44,7 +44,14 @@ const ITEMS = [
   { name: "Passwordless Auth", sector: "Security", ring: "Trial" },
   { name: "Post-Quantum Crypto", sector: "Security", ring: "Assess" },
   { name: "AI Threat Detection", sector: "Security", ring: "Assess" },
+  { name: "Homomorphic Encryption", sector: "Security", ring: "Hold" },
 ];
+
+// A couple of items get a small visual accent (bigger halo-bordered marker +
+// bold label) so the chart points toward a specific insight beyond the base
+// ring/sector position encoding: the fastest-advancing item, and one facing
+// a looming regulatory deadline.
+const HIGHLIGHTS = new Set(["AI Agents", "Post-Quantum Crypto"]);
 
 // --- Angular layout: three-quarter circle, the remaining 90° carries the ---
 // --- legend + ring labels instead of a sector, per the spec's guidance -----
@@ -109,7 +116,7 @@ function edgeSafeAlign(angleValue) {
 
 // --- Subtle per-ring background, fading from the near-term core outward ----
 const inkRgb = t.theme === "light" ? "26,26,23" : "240,239,232";
-const ringFills = [0.06, 0.045, 0.03, 0.015].map((a) => `rgba(${inkRgb},${a})`);
+const ringFills = [0.16, 0.115, 0.07, 0.035].map((a) => `rgba(${inkRgb},${a})`);
 
 // --- Sector header + ring labels, placed via graphic elements so they can --
 // --- sit beyond the axis's own radius domain and read outward -------------
@@ -159,15 +166,26 @@ const series = SECTORS.map((sector, i) => ({
     show: true,
     formatter: (p) => p.data.name,
     distance: 9,
-    fontSize: 13,
+    fontSize: 14,
     color: t.inkSoft,
   },
   labelLayout: { hideOverlap: true },
-  data: ITEMS.filter((item) => item.sector === sector).map((item) => ({
-    name: item.name,
-    value: [item.radius, item.angle],
-    label: { position: outwardLabelPosition(item.angle) },
-  })),
+  data: ITEMS.filter((item) => item.sector === sector).map((item) => {
+    const highlighted = HIGHLIGHTS.has(item.name);
+    return {
+      name: item.name,
+      value: [item.radius, item.angle],
+      symbolSize: highlighted ? 32 : 24,
+      itemStyle: highlighted
+        ? { borderWidth: 3, shadowBlur: 14, shadowColor: t.palette[i] }
+        : undefined,
+      label: {
+        position: outwardLabelPosition(item.angle),
+        fontWeight: highlighted ? 700 : 400,
+        fontSize: highlighted ? 15 : 14,
+      },
+    };
+  }),
 }));
 
 // --- Init --------------------------------------------------------------------
@@ -215,7 +233,7 @@ chart.setOption({
     min: 0,
     max: 4,
     interval: 1,
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     axisTick: { show: false },
     axisLabel: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
