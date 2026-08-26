@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-stacked-labeled: Stacked Bar Chart with Total Labels
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-26
+// Quality: 92/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 
