@@ -50,6 +50,12 @@ const yPadding = valueRange * 0.12;
 const yMin = Math.floor((Math.min(...allValues) - yPadding) / 5) * 5;
 const yMax = Math.ceil((Math.max(...allValues) + yPadding) / 5) * 5;
 
+// Identify the winner/laggard so the chart can tell that story directly
+// instead of leaving it to be read off the legend.
+const finalValues = stockSeries.map((s) => s.points[s.points.length - 1][1]);
+const bestIndex = finalValues.indexOf(Math.max(...finalValues));
+const worstIndex = finalValues.indexOf(Math.min(...finalValues));
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -70,9 +76,13 @@ chart.setOption({
     textStyle: { color: t.inkSoft, fontSize: 14 },
   },
   tooltip: { trigger: "axis" },
-  grid: { left: 110, right: 60, top: 140, bottom: 70 },
+  grid: { left: 110, right: 130, top: 140, bottom: 80 },
   xAxis: {
     type: "time",
+    name: "Date",
+    nameLocation: "middle",
+    nameGap: 32,
+    nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { show: false },
@@ -90,22 +100,36 @@ chart.setOption({
     axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  series: stockSeries.map((s, i) => ({
-    name: s.symbol,
-    type: "line",
-    data: s.points,
-    showSymbol: false,
-    lineStyle: { width: 3 },
-    ...(i === 0
-      ? {
-          markLine: {
-            symbol: "none",
-            silent: true,
-            lineStyle: { color: t.ink, type: "dashed", width: 1.5 },
-            label: { show: false },
-            data: [{ yAxis: 100 }],
-          },
-        }
-      : {}),
-  })),
+  series: stockSeries.map((s, i) => {
+    const isEmphasis = i === bestIndex || i === worstIndex;
+    const pctChange = s.points[s.points.length - 1][1] - 100;
+    const sign = pctChange >= 0 ? "+" : "";
+    return {
+      name: s.symbol,
+      type: "line",
+      data: s.points,
+      showSymbol: false,
+      z: isEmphasis ? 3 : 2,
+      lineStyle: { width: isEmphasis ? 3.5 : 2.5, opacity: 0.88 },
+      endLabel: {
+        show: isEmphasis,
+        formatter: () => `${s.symbol} ${sign}${pctChange.toFixed(0)}%`,
+        color: t.palette[i % t.palette.length],
+        fontSize: 13,
+        fontWeight: 600,
+        distance: 10,
+      },
+      ...(i === 0
+        ? {
+            markLine: {
+              symbol: "none",
+              silent: true,
+              lineStyle: { color: t.ink, type: "dashed", width: 1.5 },
+              label: { show: false },
+              data: [{ yAxis: 100 }],
+            },
+          }
+        : {}),
+    };
+  }),
 });
