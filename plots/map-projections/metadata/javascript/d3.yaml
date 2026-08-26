@@ -1,0 +1,250 @@
+library: d3
+language: javascript
+specification_id: map-projections
+created: '2026-08-26T08:08:31Z'
+updated: '2026-08-26T08:26:50Z'
+generated_by: claude-sonnet
+workflow_run: 32945188535
+issue: 3771
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/d3/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Three side-by-side projections (Mercator, Orthographic, Equal Earth), each with
+    a caption naming its distortion trade-off
+  - Tissot indicatrices correctly implemented via d3.geoCircle — equal angular-radius
+    circles visibly change shape/size per projection to demonstrate distortion
+  - Antarctica is rendered with per-projection-appropriate geometry (huge, inflated
+    band in Mercator vs. a thin true-size fringe in Equal Earth) — a genuinely instructive
+    detail about polar-area distortion rather than a generic reused shape
+  - 'Clean theme handling: Tissot green is pixel-identical across light/dark, backgrounds
+    match #FAF8F1/#1A1A17, and a subtle three-tier tonal hierarchy (page bg / ocean
+    elevatedBg / land) is used consistently across all three panels'
+  - Fully deterministic, hand-authored coastline data with antimeridian-safe ring
+    winding via a signed-geoArea check, avoiding the classic d3-geo "inverted polygon"
+    bug
+  weaknesses:
+  - 'No country-level boundaries: the spec''s Data section calls for ~200 countries
+    with a `country` identifier, but this implementation renders only continent-level
+    silhouettes — there are no interior country borders anywhere'
+  - Mercator panel's Antarctica polygon occupies roughly 40% of the panel height,
+    visually dominating and unbalancing that panel compared to the cleaner Orthographic
+    and Equal Earth panels, even though it correctly illustrates Mercator's polar-area
+    inflation
+  - Panel caption italic subtext (~12px at 3200px canvas width) is on the small side
+    — double check legibility once the preview is scaled down to the ~400px thumbnail
+    size
+  - No optional choropleth/value-based coloring is demonstrated (spec lists this as
+    optional; land uses a flat neutral fill only)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white. Each of the three map panels sits on a slightly distinct "ocean" tone (elevatedBg) with a thin soft-ink border, giving a subtle page/ocean/land tonal hierarchy.
+      Chrome: Bold dark title "World Map Projections Compared · map-projections · javascript · d3 · anyplot.ai" at top, dynamically shrunk to avoid overflow; italic gray subtitle below it explaining the Tissot-indicatrix concept. Each panel has a bold caption (Mercator / Orthographic / Equal Earth) and an italic note describing that projection's distortion trade-off. All text renders as dark ink on the light background — clearly legible.
+      Data: Landmasses fill in a neutral muted gray-brown (not a data-driven color, matches spec's "neutral color scheme" requirement). Tissot indicatrix circles are brand green (#009E73) at partial opacity, forming a 7×5 lon/lat grid of equal-angular-radius circles that visibly change size and shape per projection — small near the panel center, large/stretched near panel edges and poles (most dramatic in Mercator, where the ~-63° to -82° Antarctica band is inflated to nearly 40% of the panel). Graticule lines (30° grid) are thin and subtle in gray, visible under the land without competing with it.
+      Legibility verdict: PASS — no light-on-light text found anywhere; all titles, captions, and notes are clearly readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black. Same three-tier tonal hierarchy as light mode, chrome flipped to dark tones.
+      Chrome: Title and panel captions render in light/white text against the dark background; subtitle and italic notes render in a softer light-gray ink. Graticule lines remain thin and subtle, visible against the dark land fill without disappearing.
+      Data: Tissot circles are the identical brand green (#009E73) as the light render — confirmed pixel-consistent placement, size, and hue. Land fill uses a lighter muted gray-brown tuned for the dark background (theme-adaptive chrome color, not a data series, so this is expected and consistent with the spec's "neutral, non-data" land treatment).
+      Legibility verdict: PASS — no dark-on-dark failures; every title, caption, and tick-equivalent label is clearly readable against the near-black background, and the green Tissot markers remain vivid on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All titles/captions/notes readable in both themes; panel note italic
+          text is small (~12px at 3200px width) — verify legibility at the ~400px
+          thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either panel or theme
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tissot circles sized appropriately, clearly distinguishable from
+          land and background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast in both themes; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed, nothing clipped; Mercator's Antarctica band dominates
+          ~40% of that panel, visually unbalancing it against the other two panels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; panel captions are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Tissot marks use Imprint #009E73 identically across themes; backgrounds
+          match #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Three-tier tonal hierarchy (page/ocean/land), per-panel distortion
+          captions, intentional Antarctica handling per projection
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle panel borders and graticule, generous whitespace between panels
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Antarctica's dramatically different footprint across panels visually
+          narrates projection distortion — a clear, deliberate focal point
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: multi-projection world map comparison'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Graticule and Tissot indicatrices present; no country-level borders
+          (spec's Data section calls for ~200 countries with a `country` identifier)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All landmasses consistently mapped across all three projections
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; subtitle substitutes for a legend explaining
+          the Tissot marks
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Missing per-country subdivision (spec explicitly lists country-level
+          data); no optional choropleth value dimension shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world plausible, neutral geographic data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible degree-based coordinate scale throughout
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded coordinate data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for hand-rolled geo data, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current d3 v7 geo API, no animation
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic d3-geo usage: fitExtent, clipExtent, geoPath, geoGraticule,
+          geoCircle'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Tissot indicatrices, per-projection Antarctica handling, multi-projection
+          panel comparison go well beyond a generic single map
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - map-projection
+  - tissot-indicatrix
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
