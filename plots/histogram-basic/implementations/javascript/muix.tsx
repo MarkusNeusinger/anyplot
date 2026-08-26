@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-basic: Basic Histogram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-08-26
+// Quality: pending | Created: 2026-08-26
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
@@ -52,6 +52,11 @@ ages.forEach((age) => {
   counts[idx] += 1;
 });
 
+// Call out the modal bin so the shape of the distribution reads at a glance,
+// not just from bar heights alone.
+const peakIndex = counts.indexOf(Math.max(...counts));
+const PEAK_LABEL_COLOR = "#1A1A17"; // fixed (not theme-adaptive): stays legible on the brand-green bar in both themes
+
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
@@ -64,7 +69,7 @@ export default function Chart() {
           height: TITLE_HEIGHT,
           lineHeight: `${TITLE_HEIGHT}px`,
           textAlign: "center",
-          fontSize: 22,
+          fontSize: 27,
           fontWeight: 500,
           color: t.ink,
         }}
@@ -75,6 +80,7 @@ export default function Chart() {
         width={width}
         height={chartHeight}
         skipAnimation
+        barLabel={(item) => (item.dataIndex === peakIndex ? "Peak" : undefined)}
         series={[
           {
             data: counts,
@@ -108,6 +114,11 @@ export default function Chart() {
         slotProps={{ legend: { hidden: true } }}
         sx={{
           "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1.5 },
+          "& .MuiBarLabel-root": {
+            fill: PEAK_LABEL_COLOR,
+            fontWeight: 700,
+            fontSize: "15px",
+          },
           "& .MuiChartsAxis-tickLabel": { fontSize: "13px" },
         }}
       />
