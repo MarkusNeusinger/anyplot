@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: area-stacked-confidence
+created: '2026-08-26T18:04:30Z'
+updated: '2026-08-26T18:17:57Z'
+generated_by: claude-sonnet
+workflow_run: 32996653003
+issue: 3549
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'The stacked-band trick correctly preserves stack order between central values
+    and their confidence bands, exactly as the spec requires — verified visually:
+    bands track their own series boundary consistently across all 20 quarters.'
+  - Canonical Imprint palette order (green → lavender → blue), pixel-identical data
+    colors between light and dark renders.
+  - Custom legend explicitly labels what the gray swatch represents ("90% prediction
+    interval (per line)"), satisfying the spec's "include legend identifying each
+    series and what the bands represent."
+  - Both renders are fully readable with zero overlap or edge clipping; the documented
+    y-axis-label workaround (hand-rolled column instead of MUI X's built-in offset)
+    is a genuinely useful fix for a known layout bug.
+  - 'Deterministic, realistic data: revenue grows with quarterly seasonality and uncertainty
+    widens with forecast horizon (the "fan out" pattern real forecasts show).'
+  weaknesses:
+  - No explicit visual emphasis (annotation, callout, or secondary encoding) highlights
+    a specific insight — e.g. the growing uncertainty in later quarters, or the crossover
+    where Software overtakes Hardware — the chart tells the story implicitly but doesn't
+    guide the viewer to it.
+  - The spec's "Consider using gradient fills from lower to upper bound for visual
+    clarity" note wasn't explored — flat semi-transparent fills work but leave a suggested
+    refinement on the table.
+  - With all 20 quarterly ticks always shown, label density is already tight at this
+    canvas size — fine today, but leaves no margin if this pattern is reused for a
+    longer time series.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 target — not pure white, not dark.
+      Chrome: Bold dark title ("Quarterly Revenue Forecast · area-stacked-confidence · javascript · muix · anyplot.ai") spans ~40% of canvas width. Custom horizontal legend below the title lists Hardware/Software/Services color swatches plus a gray "90% prediction interval (per line)" swatch. Y-axis "Revenue ($M)" rotated label and $0-$100 ticks; x-axis "Quarter" label with all 20 quarterly tick labels (Q1 2024 - Q4 2028), tightly spaced but non-overlapping. Subtle horizontal grid lines visible. All chrome text is dark and clearly legible against the light background.
+      Data: Three stacked areas bottom-to-top: Hardware (brand green #009E73), Software (lavender), Services (blue) — canonical Imprint palette order. Each series wrapped in a lighter, semi-transparent confidence band of the same hue that visibly widens toward later quarters (uncertainty fan-out). No overlap between text and data, no clipping at any edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 target — not pure black, not light.
+      Chrome: Same title, legend, and axis labels as light render, all rendered in light-colored text against the dark background. Tick labels, axis titles, and legend text are all clearly readable — no dark-on-dark failures observed. Grid lines remain subtle but visible.
+      Data: Colors are pixel-identical to the light render (green, lavender, blue for the three series; confidence bands read as a translucent lightening of each hue) — only chrome flipped between themes, exactly as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; 20 quarterly
+          tick labels tightly packed but not overlapping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, legend, axis labels, and data never collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bands visible without obscuring central series; overlap zones slightly
+          busy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three distinct hues, CVD-safe Imprint palette, no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Title ~40% width, balanced margins, nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Revenue ($M) and Quarter are descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Hand-solved y-axis-label overlap, title auto-shrink, custom legend
+          with band-meaning swatch
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chrome, subtle grid, generous whitespace; band overlay slightly
+          muddies edges
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Fan-out uncertainty is an implicit story but no explicit emphasis/annotation
+          guides the viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked area chart with confidence bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Matching lighter-shade bands, alpha 0.32, consistent stack order,
+          symmetric bands, legend explains bands
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = time, y = stacked revenue, axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated pattern with descriptive prefix; legend labels
+          match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 3 series, stacking, per-series bands, widening uncertainty over horizon
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly revenue forecast by product line is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values sensible for a company forecast
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data -> derived series -> chart component, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Double-stack band trick is real, working, and clearly commented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Sizes to ANYPLOT_SIZE, skipAnimation set, default-exported component
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of LineChart area/stack/sx slot styling, theme tokens
+          threaded through
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of MUI X stacking to synthesize confidence bands, a
+          chart type the library doesn't support natively
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - alpha-blending
+  - publication-ready
