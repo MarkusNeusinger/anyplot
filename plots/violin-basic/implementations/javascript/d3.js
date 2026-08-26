@@ -95,7 +95,9 @@ for (const grp of groups) {
   const fill = color(cat);
   const center = x(cat) + halfWidth;
 
-  const bandwidth = 1.06 * d3.deviation(values) * Math.pow(values.length, -0.2);
+  // 1.35x the Silverman rule-of-thumb factor: smooths sparse-tail bumpiness
+  // (e.g. ProSeries) without over-flattening the bimodal Workstation shape.
+  const bandwidth = 1.35 * d3.deviation(values) * Math.pow(values.length, -0.2);
   const kernel = kernelEpanechnikov(bandwidth);
   const kde = kernelDensityEstimator(kernel, thresholds);
   const density = kde(values).filter((d) => d[0] >= values[0] && d[0] <= values[values.length - 1]);
@@ -144,12 +146,39 @@ for (const grp of groups) {
     .attr("stroke-width", 3.5);
 }
 
+// --- Focal-point annotation: call out the bimodal Workstation shape -------------
+// Storytelling touch: a violin's advantage over a box plot is revealing shapes
+// like this waisted, two-cluster distribution — worth a direct callout.
+{
+  const wsCenter = x("Workstation") + halfWidth;
+  const waistValue = 7.25; // midpoint between the two generating means (5 and 9.5)
+  const labelValue = 17; // clear of the violin's peak (~12h) and off the 15/20 gridlines
+
+  g.append("line")
+    .attr("x1", wsCenter)
+    .attr("x2", wsCenter)
+    .attr("y1", y(labelValue) + 10)
+    .attr("y2", y(waistValue))
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "2,3");
+
+  g.append("text")
+    .attr("x", wsCenter)
+    .attr("y", y(labelValue))
+    .attr("text-anchor", "middle")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "12px")
+    .style("font-style", "italic")
+    .text("bimodal — two usage clusters");
+}
+
 // --- Axes -----------------------------------------------------------------------
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).tickSize(0));
 const yAxis = g.append("g").call(d3.axisLeft(y));
 
 for (const ax of [xAxis, yAxis]) {
-  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
+  ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
   ax.selectAll("line").attr("stroke", t.grid);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
@@ -159,7 +188,7 @@ g.append("text")
   .attr("transform", `translate(${-margin.left + 34},${ih / 2}) rotate(-90)`)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "18px")
+  .style("font-size", "15px")
   .text("Battery Life (hours)");
 
 // --- Title ------------------------------------------------------------------
