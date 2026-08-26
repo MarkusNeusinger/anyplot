@@ -1,0 +1,242 @@
+library: echarts
+language: javascript
+specification_id: line-pca-variance-cumulative
+created: '2026-08-26T07:21:57Z'
+updated: '2026-08-26T07:35:41Z'
+generated_by: claude-sonnet
+workflow_run: 32941814160
+issue: 4131
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'All three Attempt 1 weaknesses addressed: threshold-line label fontSize bumped
+    13→15 for mobile legibility, a subtle brand-green areaStyle fill was added under
+    the cumulative curve, and the elbow markPoint is now offset [16,-16] px from the
+    data marker so it no longer sits directly on top of it'
+  - 'Comprehensive feature coverage: cumulative line, individual-variance bar overlay,
+    90%/95% dashed threshold lines, and an algorithmically-detected elbow marker —
+    hits every spec requirement including the optional bar overlay'
+  - 'Idiomatic ECharts composition: line+bar dual series sharing one category axis,
+    markLine for thresholds, markPoint with custom ring styling (borderColor/borderWidth)
+    for the elbow annotation'
+  - 'Clean theme-adaptive chrome: hidden y-axis line, hidden x-axis ticks/splitLine,
+    subtle horizontal-only gridlines, Imprint green #009E73 identical across both
+    renders'
+  - Deterministic, realistic synthetic data (15-sensor industrial monitoring PCA spectrum)
+    that sums to 100% and produces a plausible elbow at n=6
+  weaknesses:
+  - Individual-variance bars for components ~11-15 still shrink to near-invisible
+    slivers on the shared 0-100% axis — this is inherent to the geometric decay of
+    the data on a linear axis and wasn't targeted by this repair pass; a minimum-visibility
+    floor or secondary scale would help but isn't required
+  - Y-axis name 'Explained Variance' has no explicit unit suffix (e.g. '(%)') — the
+    percentage is only conveyed via the tick-label formatter, not the axis title itself
+  - markLine/markPoint combo for thresholds and elbow annotation is genuinely ECharts-idiomatic
+    but still a fairly common pattern rather than a truly distinctive library feature
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "line-pca-variance-cumulative · javascript · echarts · anyplot.ai" centered at top; legend below it with "Cumulative variance" (line+marker swatch) and "Individual variance" (bar swatch); dark-ink axis names "Number of Components" (x) and "Explained Variance" (y); softer gray-brown tick labels. All chrome text is clearly readable against the light background.
+      Data: Cumulative-variance line in Imprint green (#009E73) with circular markers at all 15 components, rising from ~23% to 100%, with a subtle light-green area fill beneath the curve. A hollow ring "Elbow (n=6)" markPoint sits offset above-right of the actual data marker (no more double-circle overlap). Two dashed "90% threshold" / "95% threshold" reference lines with labels near the top. Muted semi-transparent gray bars for individual variance sit beneath the line, shrinking toward the right as later components explain less variance.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title/legend/axis structure, rendered in white/light-gray ink; tick labels in light gray. All text clearly readable against the dark background — no dark-on-dark failures.
+      Data: Cumulative-variance line, markers, area fill, and elbow-ring styling are pixel-identical in hue to the light render (#009E73 green) — only chrome (background, text, grid, bar tone) flips as required. Threshold dashed lines and labels remain legible in light gray. Individual-variance bars are mid-gray, clearly distinguishable from the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; threshold-label fontSize bumped 13→15
+          since Attempt 1, readable in both themes, title well within proportion
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; elbow markPoint now offset away from the data marker
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Line/markers well-adapted to sparse data; bars for components ~11-15
+          shrink to thin slivers but remain visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions, canvas gate passed, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names; percentage conveyed via tick formatter
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 identical across themes, correct theme-adaptive
+          backgrounds and chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Area-fill under the curve and refined offset elbow-ring styling added
+          since Attempt 1 — clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hidden axis lines/ticks, subtle single-axis gridlines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Elbow annotation and threshold lines create a clear focal point;
+          offset fix improves readability of the callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct cumulative line chart with the spec's optional bar overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative axis, % formatting, 90%/95% thresholds, elbow marker,
+          per-component markers, x-axis starts at 1
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct x/y mapping, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Matches mandated title format; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Individual + cumulative variance, thresholds, elbow all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic sensor-array PCA spectrum
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic geometric-decay eigenvalue curve summing to 100%
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data → init → option structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no devicePixelRatio
+          override
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Dual-series composition, markLine, markPoint used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: markLine/markPoint combo is ECharts-specific but a fairly common
+          pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting

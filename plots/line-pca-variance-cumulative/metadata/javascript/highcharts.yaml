@@ -1,0 +1,259 @@
+library: highcharts
+language: javascript
+specification_id: line-pca-variance-cumulative
+created: '2026-08-26T07:23:32Z'
+updated: '2026-08-26T07:35:49Z'
+generated_by: claude-sonnet
+workflow_run: 32942019317
+issue: 4131
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Palette compliance fixed: the first-declared series ("Individual variance" columns)
+    now correctly renders in brand green #009E73 (t.palette[0]), with the cumulative
+    line correctly using t.palette[1] — resolves the sole VQ-07 issue from attempt
+    1'
+  - Dual y-axis combo chart (bar + line) with left (0-55%) and right (0-110%) axis
+    gridlines mathematically aligned so a single set of horizontal grid rows serves
+    both scales — a meticulous, non-default detail
+  - Automatic elbow-point detection (max perpendicular distance from the chord connecting
+    first/last cumulative points) correctly identifies component 6 and marks it with
+    a distinct diamond marker plus an 'Elbow' data label
+  - 90%/95% threshold reference lines rendered as dashed plotLines in semantic amber
+    (#DDCC77, the style guide's warning/caution anchor) with inline labels, directly
+    satisfying the spec's guidance requirement
+  - Individual variance bars included as the spec's suggested optional enhancement,
+    rendered at reduced opacity (0.55) so they read as secondary to the cumulative
+    line without competing for attention
+  - Right cumulative axis extends to 110% (headroom above the 100% max data point)
+    so the final marker and its elbow label never crowd the canvas edge
+  - Theme-adaptive chrome correctly threaded through ANYPLOT_TOKENS; data colors are
+    identical between light and dark renders, only chrome flips
+  - Clean, deterministic in-memory data generation grounded in a plausible 15-sensor
+    manufacturing QC scenario
+  weaknesses:
+  - 'Design excellence is solid but not maximal: the combo-chart layout is a fairly
+    standard dual-axis pattern (bar + line) without an additional visual flourish
+    (e.g. a shaded band between the 90%/95% thresholds, or emphasis styling on the
+    pre-elbow vs. post-elbow segments) that would push the storytelling further'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "line-pca-variance-cumulative · javascript · highcharts · anyplot.ai" is clearly readable. Left y-axis "Individual Variance Ratio" (0-55%) and right y-axis "Cumulative Explained Variance" (0-110%) titles/tick labels are legible in soft dark-gray text; gridlines from both axes align to the same horizontal rows. X-axis "Number of Components" runs 1-15. Two amber dashed threshold lines ("90%", "95%") are readable and positioned clear of the data. Legend at the bottom ("Individual variance", "Cumulative variance") is legible.
+      Data: Brand-green bars (individual variance, #009E73 at reduced opacity) descend from ~30% to ~1%; a lavender line (cumulative variance, #C475FD) with circular markers rises from ~15% to 100%, crossing both thresholds around components 9-11. A diamond marker + "Elbow" label highlights component 6. First-declared series (columns) is correctly brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: White bold title, light-gray axis titles/tick labels, amber threshold lines — all clearly legible, no dark-on-dark failures anywhere.
+      Data: Green bars and lavender cumulative line with diamond elbow marker are pixel-identical in hue to the light render — only chrome (background, text, grid) flipped, as required.
+      Legibility verdict: PASS
+
+    Both renders pass the theme-readability check. The VQ-07 palette-order issue flagged in attempt 1 (first series was lavender instead of brand green) has been fixed: series colors are now swapped so the first-declared series (columns) renders in #009E73.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes at explicit CSS-px sizes (title
+          22px, axis titles 16px, ticks/legend 14px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axes, threshold labels, elbow label,
+          or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and line width sized appropriately for 15-point sparse series;
+          elbow marker enlarged for emphasis
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/lavender/amber are distinguishable and CVD-safe; no red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape canvas, no clipping, generous headroom on both
+          axes
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with implicit percentage units via tick formatter
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: first-declared series now uses #009E73; identical
+          data colors across light/dark'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Meticulously aligned dual-axis gridlines, computed elbow annotation,
+          semantic amber thresholds show real design intent, no longer undercut by
+          a palette slip
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, theme-token chrome throughout, generous whitespace,
+          muted bars via alpha
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on the cumulative curve; threshold guides + elbow
+          annotation direct the reader, but no further emphasis technique (e.g. shaded
+          threshold band) is used
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Line chart of cumulative variance, correct type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cumulative on y-axis, percentage formatting, 90%/95% dashed thresholds,
+          elbow annotation, discrete markers, x-axis starts at 1, optional bar overlay
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = component count 1-15, cumulative and individual ratios correctly
+          mapped to their own axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Individual + cumulative variance, thresholds, elbow all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral 15-sensor manufacturing QC scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Eigenvalue decay and resulting variance ratios are realistic for
+          PCA on correlated sensor data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic eigenvalues, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the global Highcharts/tokens are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise elbow-detection math, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart("container", …) with animation disabled everywhere;
+          harness owns file output
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Dual yAxis combo chart, plotLines with labels, per-point marker override,
+          dataLabels formatter
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Aligned twin-axis gridlines and computed elbow annotation are genuinely
+          distinctive, beyond boilerplate combo-chart usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - publication-ready
