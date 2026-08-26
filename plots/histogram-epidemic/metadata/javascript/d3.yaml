@@ -1,0 +1,249 @@
+library: d3
+language: javascript
+specification_id: histogram-epidemic
+created: '2026-08-26T06:17:28Z'
+updated: '2026-08-26T06:22:16Z'
+generated_by: claude-sonnet
+workflow_run: 32937127082
+issue: 4426
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Correct Imprint palette usage: Confirmed=#009E73, Probable and Suspect follow
+    canonical order 2/3, and the cumulative line correctly uses the theme-adaptive
+    neutral ink anchor (a totals/baseline series, per the style guide) rather than
+    a categorical color'
+  - 'Both renders are theme-correct: backgrounds match #FAF8F1/#1A1A17, all text (title,
+    ticks, axis labels, legend, annotation) stays legible with no dark-on-dark or
+    light-on-light failures, and data colors are identical across themes'
+  - 'Faithfully implements the spec''s suggested secondary-axis feature: a genuine
+    dual-axis combo (stacked daily bars + cumulative case line) with correctly labeled
+    left/right axes'
+  - Intervention annotation (lockdown line + label) is cleanly separated from the
+    bars with no overlap, using the amber semantic anchor appropriately for a 'warning/event'
+    marker
+  - Deterministic seeded LCG data generation produces a realistic, single-wave outbreak
+    curve with plausible confirmed/probable/suspect proportions
+  - Explicit font sizing throughout (14-22px), canvas is exactly 3200x1800 with no
+    clipping, and the plot remains readable even scaled down to ~400px mobile width
+  - 'Clean, idiomatic D3: d3.stack for the stacked series, d3.scaleBand/scaleLinear,
+    curveMonotoneX for the cumulative line, no fake interactivity, no unused imports'
+  weaknesses:
+  - 'Design Excellence is solid but not maximal: only horizontal gridlines and subtle
+    axis domain lines are used for refinement; a peak-value callout or subtler grid
+    could push the storytelling further'
+  - Library Mastery is good but generic relative to D3's full toolkit — the same visual
+    could be approximated in a higher-level charting library; nothing uses a feature
+    that is uniquely D3 (e.g. custom interpolation, voronoi, or force layout) beyond
+    d3.stack
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "COVID-19 Outbreak by Symptom Onset · histogram-epidemic · javascript · d3 · anyplot.ai" in bold dark text, clearly readable. Left y-axis "Daily New Cases" and right y-axis "Cumulative Cases" both rotated and readable. X-axis date ticks (Mar 01 ... Apr 26) at weekly intervals, dark-gray tick labels, all legible. Legend (Confirmed / Probable / Suspect / Cumulative cases) sits directly below the title, no overlap with data. Amber dashed "Lockdown announced" annotation line and label sit clearly above the tallest bars with a visible gap — no overlap.
+      Data: Stacked bars — green (Confirmed, #009E73), lavender (Probable), blue (Suspect) — rising to a peak around Mar 17-19 then declining after the lockdown line, consistent with a controlled point-source outbreak. Solid near-black cumulative-case line (theme-adaptive neutral ink) climbs smoothly on the right-hand scale to ~1,800.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and all axis labels/ticks render in light/white text, fully readable against the dark background. Legend text is light-colored and legible. The amber "Lockdown announced" line and label remain visible and legible on the dark surface — no dark-on-dark issues found anywhere (title, ticks, axis titles, legend, annotation all checked).
+      Data: Confirmed/Probable/Suspect bar colors are pixel-identical to the light render (green/lavender/blue), confirming the categorical data palette does not flip with theme. The cumulative line flips from near-black to near-white (the theme-adaptive neutral anchor, not a categorical color), correctly implementing chrome-only flipping for this baseline/total series.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-22px), readable in both themes
+          and at ~400px mobile scale, title fits mandated format without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between annotation label, legend, axes, and bars
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and 3px cumulative line clearly visible and well-sized for 60
+          daily bins
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe hues, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, balanced margins, legend near plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive axis titles: Daily New Cases / Cumulative Cases'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Imprint order, correct backgrounds, theme-correct chrome,
+          correct neutral-anchor use for cumulative line
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Dual-axis combo with intervention annotation, clearly above a configured
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only gridlines, thin domain lines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Rise-peak-intervention-decline narrative reinforced by the cumulative
+          overlay and lockdown annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked epi-curve histogram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily bins, stacked case-type colors, intervention annotation, secondary
+          cumulative axis all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, case count on left Y, cumulative on right Y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match data series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows rise, peak, decline, three case-type proportions, and cumulative
+          burden
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic COVID-19 outbreak scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible daily counts (0-75) and cumulative total (~1,800) for a
+          60-day localized outbreak
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/plot/save structure, single small RNG helper
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no animation
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic d3.stack, scales, and axes
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: d3.stack + dual scale + curveMonotoneX combination goes beyond generic
+          bar-chart usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - publication-ready
