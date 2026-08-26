@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-epidemic
 created: '2026-08-26T06:20:10Z'
-updated: '2026-08-26T06:24:29Z'
+updated: '2026-08-26T06:34:59Z'
 generated_by: claude-sonnet
 workflow_run: 32937308976
 issue: 4426
@@ -12,52 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correct stacked-bar epi curve with case-type classification (Confirmed/Probable/Suspect),
-    matching the spec's core plot-type requirement.
-  - Dual y-axis with a cumulative-case line overlay exactly as suggested in the spec
-    notes, using the theme-neutral ink token (not a categorical color) for the totals
-    line — a good semantic choice.
-  - markLine annotation marks the public-health advisory intervention, matching the
-    'mark key intervention events' requirement.
-  - 'Both renders are fully theme-adaptive: data colors are identical between light
-    and dark, chrome (title, ticks, grid, axis lines) flips correctly, no dark-on-dark
-    or light-on-light failures.'
-  - 'Clean, idiomatic single-option echarts config; deterministic LCG-seeded data
-    generation; no imports; correct mount-node contract (no explicit size/devicePixelRatio,
-    animation: false).'
+  - 'Attempt-1 palette-order violation is fully fixed: Probable and Suspect bars now
+    use t.palette[1] and t.palette[2] (canonical order) instead of the previously
+    skipped-ahead t.palette[3]/[5], with Confirmed correctly on t.palette[0] (#009E73).'
+  - 'The ''Advisory issued'' markLine label no longer collides with the cumulative
+    line: the new cumulativeMax headroom (1.2x final total, rounded to 50) plus the
+    added label distance:6 keeps the annotation clear of the line''s inflection point
+    in both renders.'
+  - The post-intervention tail now tapers its noise term to zero over ~25 days (noiseScale),
+    so the resolved outbreak reads as genuinely over instead of showing sporadic near-zero
+    background noise indefinitely.
+  - 'Implements every spec-notes feature at once: daily bins for a <3-month outbreak,
+    case-type stacking (confirmed/probable/suspect) in distinct colors, an annotated
+    intervention markLine, appropriate x-axis tick spacing, and a secondary-axis cumulative-case
+    line overlay.'
+  - 'Both renders are fully theme-adaptive: data colors are pixel-identical between
+    light and dark, chrome (title, legend, ticks, grid, axis lines) flips correctly,
+    and the ink-toned cumulative line correctly turns white in dark mode as a semantic
+    (non-categorical) token.'
+  - 'Clean, idiomatic single-option echarts config: deterministic LCG-seeded data,
+    no imports, correct mount-node contract (no explicit size/devicePixelRatio, animation:
+    false).'
   weaknesses:
-  - 'Palette order violation (VQ-07): Probable and Suspect series use t.palette[3]
-    (ochre) and t.palette[5] (cyan) instead of the canonical t.palette[1] (lavender)
-    and t.palette[2] (blue). Case-type categories (confirmed/probable/suspect) don''t
-    carry a strong universal color convention that would justify the semantic exception
-    — switch to t.palette[1] and t.palette[2] to follow the ''use positions 1→N in
-    canonical order'' hard rule.'
-  - The 'Advisory issued' markLine label overlaps the dashed vertical line and touches
-    the cumulative line's inflection point in both themes, slightly hurting legibility
-    — reposition the label (e.g. move it above the plot area with an offset, or shorten/relocate
-    it) so it doesn't visually merge with the line strokes.
-  - The long sporadic tail of near-zero case reports from ~4/1 through 4/29 reads
-    slightly unrealistic for a resolved point-source foodborne outbreak — consider
-    tapering fully to zero a few days after the intervention, or note the noise as
-    unrelated background surveillance.
+  - 'Minor tick-label size inconsistency: x-axis ticks are fontSize 13 while y-axis
+    ticks are fontSize 14 — barely perceptible but not perfectly balanced.'
+  - Design is solid but stops short of a fully 'publication-ready' treatment — e.g.
+    no subtle shading to visually group the pre-/post-intervention periods, which
+    would sharpen the story beyond the single dashed marker line.
+  - The scenario shows a single clean point-source wave; DQ-01 feature coverage would
+    be even stronger with a secondary smaller wave or plateau segment to demonstrate
+    more of the epi-curve pattern vocabulary described in the spec (point-source vs.
+    propagated vs. continuous), though this is not a required feature.
+  - 'LM-02: markLine + dual-axis are used correctly but are fairly standard echarts
+    patterns — a more distinctive touch (e.g. a custom tooltip formatter, graphic/markArea
+    shading for the intervention window) would better showcase echarts-specific strengths.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — not pure white, not dark. Matches the required light surface.
-      Chrome: Title "histogram-epidemic · javascript · echarts · anyplot.ai" is centered, dark ink text, fully legible. Legend below the title (Confirmed / Probable / Suspect / Cumulative cases swatches) is dark text, readable. Left y-axis "New cases" and right y-axis "Cumulative cases" labels are dark/soft-ink, legible and not clipped at either edge. X-axis "Symptom onset date" label and rotated date tick labels (3/1 … 4/29) are legible. Horizontal gridlines are subtle, non-competing. Vertical dashed amber markLine with rotated "Advisory issued" label is readable, though it visually overlaps the cumulative line's inflection point.
-      Data: Stacked bars — Confirmed = brand green #009E73 (first series, correct), Probable = ochre, Suspect = cyan, all clearly distinguishable from the warm background and from each other. Solid black cumulative line (ink-neutral token, not a categorical color) rises then plateaus, correctly plotted on the secondary axis.
-      Legibility verdict: PASS (all title/axis/tick/legend text reads clearly against the light background; no light-on-light).
+      Background: Warm off-white, matches #FAF8F1 (verified by pixel sample) - not pure white, not dark.
+      Chrome: Title "histogram-epidemic · javascript · echarts · anyplot.ai" is centered, dark ink text, fully legible. Legend (Confirmed / Probable / Suspect / Cumulative cases swatches) sits directly below the title in dark text. Left y-axis "New cases" and right y-axis "Cumulative cases" labels are dark/soft-ink and fully legible, not clipped at either edge. X-axis "Symptom onset date" label and date tick labels (3/1 ... 4/25) are legible and evenly spaced with no overlap. Horizontal gridlines are subtle. The dashed amber "Advisory issued" markLine with its rotated label sits clear of the cumulative line's inflection point (verified via close crop) — no overlap.
+      Data: Stacked bars - Confirmed = brand green #009E73 (first series, correct), Probable = lavender (palette[1]), Suspect = blue (palette[2]) - canonical Imprint order, all clearly distinguishable from the warm background and each other. Cumulative line renders in dark ink (theme-neutral, correct semantic choice for a non-categorical series).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — not pure black, not light. Matches the required dark surface.
-      Chrome: Title, legend, and both y-axis titles/tick labels flip to light ink and are fully legible against the dark background. Grid lines remain subtle. The amber dashed markLine and "Advisory issued" label remain visible and legible (same overlap issue as in light, not a legibility failure).
-      Data: Confirmed/Probable/Suspect bar colors are pixel-identical to the light render (green/ochre/cyan) — only chrome flipped, as required. The cumulative line switches from black to off-white (ink token), correctly theme-adaptive, and remains clearly visible against the dark background.
-      Legibility verdict: PASS (no dark-on-dark text; all chrome elements readable; brand green #009E73 reads well on the dark surface).
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Title, legend, axis names, and tick labels all render in light/soft-white text, fully legible against the dark surface. No dark-on-dark failures anywhere. Gridlines remain subtle. The dashed amber markLine and "Advisory issued" label are legible and, as in light mode, do not overlap the cumulative line's inflection point.
+      Data: Confirmed/Probable/Suspect bar colors are pixel-identical to the light render (green/lavender/blue) - only chrome flipped as required. The cumulative line correctly switches from dark ink to white/light ink (a theme-adaptive chrome token, not a data color, so this is expected and correct).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -65,72 +71,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; annotation label is small but legible.
+        comment: All font sizes explicit, readable in both themes; minor x/y tick
+          fontsize mismatch (13 vs 14)
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: '''Advisory issued'' label overlaps the dashed markLine and touches
-          the cumulative line''s inflection point in both renders.'
+        comment: markLine label no longer overlaps cumulative line after the headroom
+          fix; no other overlaps
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 60 daily bins with no overplotting; cumulative line has appropriate
-          weight and no markers.
+        comment: Bar widths and line stroke well suited to 60 daily bins
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues used are CVD-distinguishable; no red-green-only signal.
+        comment: Green/lavender/blue + amber + ink line, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); generous margins, nothing cut off.
+        comment: Balanced margins, nothing cut off, good canvas utilization
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units ('New cases', 'Cumulative cases',
-          'Symptom onset date').
+        comment: Descriptive axis names (New cases, Cumulative cases, Symptom onset
+          date)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: First series is brand green (correct) but Probable/Suspect use palette[3]/palette[5]
-          instead of canonical palette[1]/palette[2] without a semantic justification.
+        passed: true
+        comment: 'Fixed: canonical palette[0..2] order, theme-correct chrome in both
+          renders'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom color choice (though non-canonical order), dual-axis composition,
-          styled annotation — above generic defaults.
+        comment: Thoughtful axis headroom tuning and annotation placement, clearly
+          above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axis lines hidden, subtle single-axis gridlines, no tick marks, generous
-          margins.
+        comment: Subtle horizontal gridlines only, y-axis lines removed; x-axis line
+          still present
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear focal point (outbreak peak), intervention marker, and cumulative
-          overlay guide the viewer through the outbreak narrative.
+        comment: Intervention marker plus cumulative overlay create clear hierarchy
+          and context
     spec_compliance:
       score: 15
       max: 15
@@ -140,52 +146,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Stacked-bar epi curve, correct chart type.
+        comment: Correct stacked-bar epi curve
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Case-type stacking, intervention markLine, secondary cumulative axis,
-          daily bins — all present.
+        comment: Daily bins, stacked case types, intervention line, secondary cumulative
+          axis all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = onset date, Y1 = new cases (stacked), Y2 = cumulative cases (line)
-          — correct.
+        comment: Date on x, case counts on primary y, cumulative on secondary y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match series names.
+        comment: Title format exact match; legend labels match series
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Case classification, cumulative context, and intervention marker
-          together cover all spec-notes aspects.
+        comment: Clean point-source wave with intervention effect and resolved tail;
+          a second wave/plateau would show more pattern vocabulary
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral foodborne-outbreak framing.
+        comment: Neutral, plausible foodborne-outbreak scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Peak (~44/day) and cumulative (~600) totals are plausible, but the
-          sporadic near-zero tail through day 60 looks slightly unrealistic for a
-          resolved point-source outbreak.
+        comment: Peak ~44 cases/day, ~580 cumulative over 60 days - plausible magnitudes
+          and case-type ratios
     code_quality:
       score: 10
       max: 10
@@ -195,32 +199,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, only a minimal LCG helper function.
+        comment: Linear imports/data/init/option structure, only the required LCG
+          helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed = 42), fully deterministic.
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses the provided echarts global only.
+        comment: No imports needed or present
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or UI.
+        comment: No over-engineering, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract: no explicit size/devicePixelRatio,
-          animation: false.'
+        comment: 'Correct mount-node contract, animation: false'
     library_mastery:
       score: 7
       max: 10
@@ -230,15 +234,13 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic stacked bar + dual yAxis + markLine via the high-level
-          option API.
+        comment: Solid high-level option API usage (stack, dual yAxis, markLine)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: markLine annotation and yAxisIndex dual-axis are genuine echarts-specific
-          features beyond a basic bar chart.
+        comment: markLine + dual-axis are echarts-specific but fairly standard patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -247,8 +249,8 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - cumulative-sum
   dataprep:
   - cumulative-sum
+  - time-series
   styling:
-  - minimal-chrome
+  - grid-styling
