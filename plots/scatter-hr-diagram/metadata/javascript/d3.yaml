@@ -1,0 +1,269 @@
+library: d3
+language: javascript
+specification_id: scatter-hr-diagram
+created: '2026-08-26T11:06:03Z'
+updated: '2026-08-26T11:23:08Z'
+generated_by: claude-sonnet
+workflow_run: 32960751973
+issue: 4558
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correctly reverses the X-axis (hot/blue on left, cool/red on right) and uses clamped
+    log scales on both axes, exactly following the astrophysical convention the spec
+    requires
+  - All four HR-diagram regions (main sequence, red giants, supergiants, white dwarfs)
+    are clearly italic-labeled directly on the plot without overlapping data or each
+    other
+  - Now uses discrete conventional spectral-type colors (blue for O/B, near-white
+    for A, yellow for F/G, orange for K, red for M) exactly as the spec requests,
+    replacing attempt 1's continuous temperature gradient, and the legend now explains
+    this spectral-type-to-color mapping instead of a generic Cool/Hot gradient bar
+  - Spectral type is now derived from actual temperature via spectralTypeFromTemp()
+    rather than hardcoded per region, so a star's color always matches its real temperature
+    -- a genuine correctness fix over attempt 1, which hardcoded 'K'/'B' for giants/supergiants/white
+    dwarfs regardless of their actual generated temperature
+  - Distinctive secondary top axis maps temperature bands to spectral classes (O,
+    B, A, F, G, K, M) via d3.axisTop with a custom tickFormat -- a clean implementation
+    of the spec's optional feature
+  - Sun is marked as a visually distinct reference point (larger radius, ink-colored
+    stroke, direct label)
+  - 'Clean, idiomatic D3: proper data-join pattern, deterministic seeded PRNG, no
+    fake interactivity, explicit font sizes throughout, no unused code'
+  weaknesses:
+  - 'VQ-07 Palette violation: the new spectralColor ordinal scale introduces hex values
+    that are NOT in the Imprint palette or its 3 semantic anchors -- #EDE8DC (''A''/white),
+    #F2C744 (''F''/''G''/yellow), and #E07B39 (''K''/orange) are all custom, arbitrary
+    hexes. Only O/B (#4467A3) and M (#AE3030) happen to coincide with existing Imprint
+    palette members (positions 3 and 5). The style guide''s semantic-exception clause
+    allows *reassigning existing palette members* to match real-world color associations
+    (e.g. sky/blue), but does not permit inventing brand-new hex values -- ''pick
+    the closest palette member,'' not a new one. Fix: remap each spectral type to
+    the closest EXISTING Imprint palette member or one of the 3 semantic anchors (amber
+    #DDCC77, adaptive neutral, adaptive muted) instead of custom hexes -- e.g. keep
+    O/B on #4467A3, use amber #DDCC77 or ochre #BD8233 in place of the custom yellow/orange
+    hexes for F/G and K, and consider the adaptive `neutral` token or amber for the
+    pale ''A'' stars instead of #EDE8DC. Document in a comment if a perfect conventional-color
+    match isn''t achievable purely within the 8-hue palette.'
+  - 'VQ-03/VQ-04: in the densest clusters (the K/M red-giant clump, and the tight
+    main-sequence F/G/K band around the Sun) overlapping markers still reduce individual-star
+    visibility, and the adjacent F/G yellow vs K orange hues are close enough to be
+    a mild CVD-confusion risk on their own (mitigated somewhat by the stars'' spatial
+    separation along the main sequence). Radius was already trimmed 6->5 and opacity
+    0.8->0.72 in this attempt; a further nudge (radius ~4 in the densest clumps, or
+    slightly lower opacity) would help.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "scatter-hr-diagram · javascript · d3 · anyplot.ai" is bold dark text, centered, ~55% of canvas width, fully legible. X-axis "Surface Temperature (K)" and Y-axis "Luminosity (L / L_sun)" labels are dark ink and clearly readable, similarly sized. Tick labels (temperature: 40,000...3,000, reversed; luminosity: 0.0001...1,000,000, log scale) are soft dark gray, all legible, no overlap or clipping at either canvas edge. Secondary top axis shows spectral classes O, B, A, F, G, K, M in bold, aligned with their representative temperature bands. Region labels ("Main sequence", "Red giants", "Supergiants", "White dwarfs") sit in italic soft-gray text in open space, none overlapping data points or other text. Gridlines (both axes) are faint and unobtrusive.
+      Data: ~288 stars rendered as circles colored by a discrete spectral-type scale (blue for O/B, near-white/cream for A, yellow for F/G, orange for K, red for M), each with a subtle stroke (ink-colored for the pale 'A' stars for contrast, page-background-colored otherwise) for separation; the Sun is a larger yellow-orange circle with a dark ink stroke and a bold "Sun" label sitting on the main sequence. A "Spectral type" legend (5 rows: O/B-blue, A-white, F/G-yellow, K-orange, M-red) sits top-right and matches the rendered colors exactly.
+      Legibility verdict: PASS -- all text is dark-on-light and clearly readable; no dark-on-dark or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light (near-white/soft-gray) text, fully legible against the dark background. Secondary top axis (O-M) and region labels (italic soft-light gray) are legible and correctly flipped to light-on-dark. Gridlines are faint light lines, appropriately subtle. No dark-on-dark text found anywhere.
+      Data: Same five spectral-type colors and marker styling as the light render -- confirmed data colors are identical between themes (only chrome flipped: background, text, grid, legend). The Sun marker keeps its identical fill color; only its stroke and the surrounding chrome adapt to the dark theme.
+      Legibility verdict: PASS -- all text is clearly readable against the dark surface; data colors are unchanged between themes as required.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes, no clipping,
+          title comfortably fits at ~55% width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions found in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker radius/opacity trimmed this attempt (6->5, 0.8->0.72), but
+          the densest red-giant/main-sequence clumps still show some overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Adjacent F/G yellow vs K orange hues are a mild CVD-confusion risk,
+          though spatial separation along the main sequence helps
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills most of the canvas with balanced margins, nothing cut
+          off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Spectral-type colors #EDE8DC, #F2C744, #E07B39 are arbitrary custom
+          hexes outside the Imprint palette and its 3 semantic anchors; only O/B (#4467A3)
+          and M (#AE3030) coincide with existing palette members'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful secondary axis, discrete legend, styled region labels
+          -- clearly above defaults, but undercut by the off-brand custom hexes
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, spines removed, generous whitespace, polished details
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Sun as focal point, region labels and spectral-class axis guide the
+          reader clearly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct HR-diagram scatter with reversed log-X and log-Y
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Now includes the spec's discrete conventional spectral-type colors,
+          all four labeled regions, marked Sun, and the optional secondary spectral-class
+          axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=temperature (reversed), Y=luminosity (log), correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend now matches the spectral-type color
+          mapping the spec calls for
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All four regions plus the full spectral range are represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real astrophysics scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sun at 5772K/1 Lsun, main-sequence slope and giant/supergiant/white-dwarf
+          ranges all physically plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only small, purpose-built helper functions (PRNG, spectralTypeFromTemp);
+          no classes or over-abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG PRNG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused code
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract correctly, current D3 API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper data-join pattern, scales, and axes usage throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Secondary d3.axisTop with custom tickFormat mapping temperature to
+          spectral class is a distinctive, non-trivial D3 feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
