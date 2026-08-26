@@ -1,0 +1,245 @@
+library: muix
+language: javascript
+specification_id: histogram-basic
+created: '2026-08-26T06:25:50Z'
+updated: '2026-08-26T06:39:44Z'
+generated_by: claude-sonnet
+workflow_run: 32937673878
+issue: 654
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Modal-bin callout ("Peak" bar label on the 25–30 bin) gives the chart a clear
+    focal point instead of relying purely on bar heights — directly addresses the
+    prior review's data-storytelling weakness, and the fixed dark-ink label color
+    stays legible on the brand-green bar in both themes
+  - 'Idiomatic histogram construction: categoryGapRatio: 0 makes bins contiguous like
+    a real histogram (MUI X''s BarChart normally has gaps), with a thin theme-matched
+    stroke (sx MuiBarElement-root) separating bins cleanly in both themes'
+  - 'Realistic log-normal age distribution (young-skewed with a long tail toward older
+    loyal subscribers) gives the histogram genuine shape to read: a clear mode around
+    25-30 and a visible right skew'
+  - 'Theme-adaptive chrome works correctly in both renders: warm off-white/near-black
+    backgrounds, readable ink-colored text, and the same brand-green (#009E73) bars
+    in both themes with only chrome flipping'
+  - Deterministic data generation via a small seeded LCG plus Box-Muller transform,
+    appropriate for a browser environment with no seeded Math.random()
+  weaknesses:
+  - Title still occupies only ~34% of the plot width at fontsize 27px — narrower than
+    the 50-70% guideline, though it neither overflows nor looks squeezed, so this
+    is a soft note rather than a hard violation
+  - 'Design excellence is still fairly plain beyond the peak callout: no color emphasis
+    or secondary annotation calls out the right-skew shape or the near-empty tail
+    bins (65-90)'
+  - 'Beyond categoryGapRatio: 0 (bin-edge stroke) and the new conditional barLabel
+    peak callout, no further MUI X-distinctive features (e.g. reference line, custom
+    tooltip formatting shown via HTML) are used'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-basic · javascript · muix · anyplot.ai" centered at top in dark ink at fontsize 27px, clearly legible. X-axis label "Subscriber Age (years)" and y-axis label "Number of Subscribers" both dark ink, readable. Tick labels (bin ranges "15–20" through "85–90" on x; 0–130 by 10s on y) all dark and legible. Subtle horizontal gridlines visible but not dominant.
+      Data: Single-series histogram in brand green (#009E73), bars contiguous (no gaps between bins) with a thin light stroke separating each bar. A bold "Peak" label sits inside the 25–30 bin (the modal bin, ~124 count) in fixed dark-ink text, clearly readable against the green fill. Distribution rises sharply from the 15-20 bin, peaks at 25-30, then decays with a long right tail out to 85-90 — a realistic young-skewed age distribution with outliers.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and all tick labels rendered in light ink, clearly visible against the dark background. No dark-on-dark text anywhere. Gridlines are subtle light-gray, visible but unobtrusive.
+      Data: Same brand-green (#009E73) bars, identical heights/shape to the light render, now separated by a thin dark stroke instead of light — confirms only chrome (stroke color, background, text) flips between themes, data color is identical. The "Peak" label uses the same fixed dark-ink color as the light render (by design, per the code comment) and still reads clearly against the green bar even on the dark page background, since the label sits entirely inside the green fill.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title fontsize
+          bumped from 22px to 27px this attempt
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new Peak
+          label
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible, appropriately sized for the bin count
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single series, high contrast green against both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Nothing cut off, no overflow; title is on the narrow side (~34% width)
+          but has generous breathing room, not squeezed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (years, count)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, both theme backgrounds correct, data color
+          identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bar-edge stroke plus the new conditional Peak bar-label lift this
+          above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Horizontal-only grid, generous whitespace; unchanged from prior attempt
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: New Peak annotation on the modal bin creates a clear focal point;
+          the right-skew/tail shape is still conveyed only by bar heights
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram via contiguous BarChart bins
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No gaps between bins, thin bin-edge lines, y-axis starts at zero,
+          readable frequency/value labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = age bins, Y = count, full observed range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend correctly hidden for
+          single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full distribution shown including sparse tail bins
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Subscriber age distribution, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ages 16-85, counts up to ~124, both sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only small necessary helpers (LCG, gaussian sample, peakIndex lookup)
+          plus the component
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only BarChart imported
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly sized to ANYPLOT_SIZE, skipAnimation set, harness owns
+          saving
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of band scale, categoryGapRatio, grid, tickLabelStyle/slotProps
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'categoryGapRatio: 0 + bar-edge stroke + the new conditional barLabel
+          (peak-only via dataIndex check) are genuine MUI X-specific techniques'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
