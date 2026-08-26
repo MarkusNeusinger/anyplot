@@ -1,0 +1,251 @@
+library: chartjs
+language: javascript
+specification_id: map-connection-lines
+created: '2026-08-26T07:45:04Z'
+updated: '2026-08-26T08:01:33Z'
+generated_by: claude-sonnet
+workflow_run: 32943732078
+issue: 3746
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Antimeridian wraparound bug from attempt 1 is properly fixed — trans-Pacific routes
+    (LAX-HND, PEK-LAX, LAX-SYD) now split at the ±180° boundary and bulge toward the
+    true geodesic (Pacific) side instead of sweeping through Europe/Africa.
+  - New arc-thickness/opacity legend ('Passengers / route' with 150/465/780 samples)
+    clearly explains the value encoding, directly addressing the prior review's Design
+    Excellence feedback.
+  - Passenger-volume range widened from 280-620 to 150-780, giving clearer visual
+    contrast between major hub routes and minor single routes.
+  - Custom canvas-plugin world map (beforeDatasetsDraw continents, quadratic-bezier
+    connection arcs) remains a genuinely distinctive technique given Chart.js has
+    no native geo chart type — not a generic scatter chart in disguise.
+  - 'Theme-adaptive chrome and identical #009E73 data colors across light/dark renders
+    are correctly threaded through every custom-drawn element, not just the native
+    dataset.'
+  weaknesses:
+  - The LHR/CDG/FRA marker cluster in Europe still renders as nearly overlapping circles
+    — the prior review's suggestion of a small radial offset was not applied.
+  - Antimeridian-crossing arcs now terminate abruptly at the +-170 deg map edge with
+    no wraparound visual cue; correct geographically, but the hard line-ending can
+    read as a rendering artifact to a viewer unfamiliar with the antimeridian-split
+    technique.
+  - Title font (19px, auto-scaled down for the ~79-char title) is only marginally
+    larger than the axis titles (16px), understating the title's visual hierarchy
+    versus a typical publication-ready map.
+  - Custom legend text is hardcoded at a fixed 12px regardless of canvas size — legible
+    but noticeably smaller than the tick labels (14px), slightly undercutting its
+    own prominence.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Global Flight Routes · map-connection-lines · javascript · chartjs · anyplot.ai" and "Longitude"/"Latitude" axis titles render in dark ink, fully legible. Degree-suffixed tick labels (-170° … 78°) are readable secondary gray. Subtle graticule grid and faint stylized continent silhouettes provide geographic context without competing with the data. Bottom-left legend ("Passengers / route" with 150/465/780 stroke samples) sits cleanly over open ocean with no overlap.
+      Data: Connection arcs and airport markers render in brand green #009E73, arc thickness/opacity scaling with passenger volume (150-780), marker size scaling with hub degree (route count). Trans-Pacific routes (LAX-HND, PEK-LAX, LAX-SYD) now correctly bulge across the Pacific/edges rather than through Europe/Africa.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and axis titles render in light/off-white text, tick labels in a lighter secondary gray — all clearly legible, no dark-on-dark failures. Grid and continent silhouettes flip to light-on-dark equivalents. Legend text and swatches remain legible against the dark background.
+      Data: Connection arcs and markers are the identical #009E73 green as the light render — only chrome flipped, confirming palette consistency. Antimeridian-split arcs match the light render's geometry exactly.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes at full size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; legend cleanly placed over open ocean
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: LHR/CDG/FRA cluster markers still nearly overlap (unaddressed from
+          attempt 1)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue green with alpha variation, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), good proportions, no text overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive Longitude/Latitude labels with degree units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct light/dark backgrounds, identical
+          data colors'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom map plus new value legend lift it above attempt 1, still
+          short of maximal publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle graticule and generous padding, but overlapping cluster markers
+          and abrupt edge-terminated arcs cap refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Line weight/opacity plus marker size create a clear hub-and-spoke
+          hierarchy, now self-explained by the legend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Connection-lines map with curved arcs, correct type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved geodesic-style arcs, location markers, alpha 0.3-0.6, base
+          map, value legend — all present; antimeridian handling fixed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Longitude, Y=Latitude, all routes/airports shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive} · spec-id · language · library · anyplot.ai'
+          format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Hub vs single-route airports shown, passenger range widened to 150-780
+          for clearer contrast
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real named airports, plausible passenger volumes, neutral content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Trans-Pacific routes now geographically correct after antimeridian
+          fix
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes; plugin objects are the required Chart.js
+          pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on window.Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; real Chart.js dataset plus documented custom
+          plugins
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container, animation:false, current Chart.js API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct linear-scale-as-projection + plugin pattern given Chart.js
+          has no native geo chart
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: beforeDatasetsDraw canvas plugins for map, weighted bezier arcs,
+          and antimeridian splitting go beyond generic usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling
