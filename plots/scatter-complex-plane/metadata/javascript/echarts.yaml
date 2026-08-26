@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: scatter-complex-plane
+created: '2026-08-26T10:53:49Z'
+updated: '2026-08-26T11:08:31Z'
+generated_by: claude-sonnet
+workflow_run: 32959679436
+issue: 4427
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Both Attempt-1 weaknesses are cleanly fixed: the 0+1i/0-1i labels no longer collide
+    with the vertical axis line, and the dead subtitle object was replaced with correctly-wired
+    title.subtext.'
+  - 'Correct, idiomatic use of ECharts'' lines series with symbol: ["none","arrow"]
+    to draw true origin-to-point vectors.'
+  - Equal aspect ratio correctly enforced via matching axis min/max (-2.5 to 2.5)
+    on a square canvas, so the unit circle renders as a true circle.
+  - 'Theme-adaptive chrome is fully correct: identical data colors between light and
+    dark renders, correct page backgrounds, all text uses ink/inkSoft tokens.'
+  - Dataset broadened from 7 to 9 points (3 to 5 arbitrary points), giving a more
+    balanced composition across all four quadrants.
+  weaknesses:
+  - Legend uses a uniform circle icon for both series even though "Arbitrary points"
+    renders as diamonds on the plot — a minor visual-fidelity mismatch between legend
+    and data markers.
+  - Still doesn't include a labeled "sum" or transformation point (e.g. the sum of
+    two arbitrary points, or a rotated/scaled point) to concretely demonstrate a complex-number
+    operation, as suggested by the spec's example data description.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "scatter-complex-plane · javascript · echarts · anyplot.ai" in dark ink at top, with descriptive subtitle "4th Roots of Unity and Arbitrary Points in the Argand Plane" beneath it (now correctly rendered via title.subtext — the dead subtitle object from Attempt 1 is gone). Legend below shows green circle "Roots of unity" and purple circle "Arbitrary points". Real/imaginary axes drawn as solid dark lines crossing the origin, with a dashed gray unit circle labeled "|z| = 1".
+      Data: Four green circular markers (1+0i, 0+1i, -1+0i, 0-1i) on the unit circle, each with a green origin vector. Five purple diamond markers (1.8+1.2i, -1.5+0.9i, 0.7-1.9i, -0.9-2.2i, 2.1-0.4i) outside the circle, each with a purple origin vector and rectangular-form label. First series #009E73 (brand green), second series canonical Imprint purple.
+      Legibility verdict: PASS. The Attempt-1 defect (0+1i / 0-1i labels bisected by the vertical axis line) is fixed — both labels are now offset right of the axis with no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical layout to the light render; all chrome text (title, subtitle, legend, axis names, tick labels, "|z| = 1" label) flips to light ink and reads clearly against the dark background. No dark-on-dark failures observed.
+      Data: Same green/purple markers, vectors, and labels as the light render, in identical colors and positions — confirms only chrome flips between themes, not data colors.
+      Legibility verdict: PASS. The axis-line-through-label fix holds identically in dark mode.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; title/subtitle/legend/axis text well-proportioned
+          and readable at full size and mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: The 0+1i/0-1i axis-line-through-label defect from Attempt 1 is fixed
+          (right-offset + left-align for on-axis points); no other collisions in either
+          render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizes (20-22px) and vector-arrow widths are prominent and
+          well-suited to the sparse 9-point dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. purple plus circle vs. diamond marker shape gives redundant,
+          CVD-safe encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas gate passed; balanced margins; nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Real (Re) / Imaginary (Im) are descriptive and appropriate; dimensionless
+          quantities so no units expected.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second series canonical Imprint purple, identical
+          across themes; correct FAF8F1/1A1A17 backgrounds and theme-correct chrome
+          in both renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Purpose-built vector arrows, unit-circle reference, dual marker shapes,
+          and a more balanced 9-point composition filling all four quadrants.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'No box frame/spines, subtle grid, generous whitespace, theme-adaptive
+          marker borders. Minor nit: legend swatches use a uniform circle icon even
+          for the diamond-marker series.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Vectors + unit circle clearly communicate magnitude and phase; two
+          categories create legible contrast.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Argand-diagram / complex-plane scatter with vectors.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Origin-crossing axes, dashed unit circle, origin-to-point vectors,
+          equal aspect ratio, rectangular-form annotations, and distinct color/marker
+          categories all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=real, y=imaginary correctly mapped; axis range (±2.5) comfortably
+          contains all 9 points.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly, with the descriptive line
+          now correctly wired through title.subtext; legend labels match series names.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Now 9 points (up from 7): roots of unity plus 5 arbitrary points
+          spread across all quadrants; still doesn''t visually demonstrate an operation
+          like vector addition.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard, neutral mathematical teaching scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and axis range are sensible for a complex-plane teaching example.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small, purpose-specific helper functions only.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the echarts global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The dead subtitle object from Attempt 1 is gone; descriptive text
+          now correctly wired through title.subtext.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mount-node contract respected, animation: false set, no explicit
+          width/height/devicePixelRatio passed to echarts.init.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: The subtitle API mistake from Attempt 1 is fixed (subtext correctly
+          belongs on title, not a separate top-level component); mostly correct declarative
+          option usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative, library-specific use of the lines series for vector arrows
+          with arrow-symbol endpoints, plus an invisible-scatter trick for placing
+          the |z| = 1 circle label.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
