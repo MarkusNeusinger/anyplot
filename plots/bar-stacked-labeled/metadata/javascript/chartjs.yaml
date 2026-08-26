@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: bar-stacked-labeled
 created: '2026-08-26T19:02:09Z'
-updated: '2026-08-26T19:06:20Z'
+updated: '2026-08-26T19:17:13Z'
 generated_by: claude-sonnet
 workflow_run: 33002582341
 issue: 3504
@@ -12,50 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 93
 review:
   strengths:
+  - 'Repair directly addressed all four attempt-1 weaknesses: added a data-storytelling
+    cue (fastest-growing segment flagged in the legend via a customized generateLabels),
+    introduced genuine segment-level variation (Hardware dips slightly in Q3, Services
+    plateaus/dips in Q4), and layered in additional Chart.js-specific polish (rounded
+    top-segment corners, pill-style total labels with border/background, hover-border
+    styling)'
   - 'Correct Imprint palette in canonical order (Hardware = #009E73 brand green, Software
     = #C475FD lavender, Services = #4467A3 blue), identical data colors across both
-    themes'
-  - Theme chrome is fully correct in both renders — warm off-white/near-black backgrounds,
-    readable ink-colored text, subtle horizontal-only gridlines, no dark-on-dark or
-    light-on-light failures
-  - Total labels above each stack (the spec's headline feature) are implemented via
-    the documented Chart.js afterDatasetsDraw hook — a clean, idiomatic technique
-    rather than a third-party plugin or fake UI
-  - Clean KISS code structure with deterministic hardcoded data, correct mandated
-    title format, and matching legend labels
-  - No overlap or edge-clipping issues; generous margins and good canvas utilization
-    on both landscape renders
+    themes, theme-correct chrome (backgrounds, ink text, dashed horizontal-only gridlines)
+    in both renders'
+  - Total labels above each stack — the spec's headline feature — remain implemented
+    via the documented afterDatasetsDraw hook, now wrapped in an elevated pill background
+    that visually separates them from the plot area without looking like fake UI
+  - Clean KISS code structure, deterministic hardcoded data, mandated title format,
+    matching legend labels, no overlap or edge-clipping on either render
+  - Custom legend generateLabels is a second genuinely Chart.js-specific technique
+    alongside the total-label plugin, directly responding to the prior review's ask
+    for another distinctive touch
   weaknesses:
-  - 'Design Excellence is still close to a well-configured default: consider more
-    deliberate typographic hierarchy (e.g. lighter-weight axis titles vs. bolder tick
-    emphasis) and a touch more grid/spacing refinement to lift it past ''competent''
-    into ''polished'''
-  - Data storytelling relies only on the required total labels — all three segments
-    grow in lockstep every quarter with no differentiation; consider emphasizing the
-    fastest-growing segment (e.g. via a subtle color/weight cue) to add a clearer
-    point of view
-  - Segment values increase monotonically in near-identical proportion across all
-    four quarters for every component — introduce a bit more natural variation (a
-    segment plateauing or dipping in one quarter) so the example demonstrates richer
-    feature coverage of a stacked bar chart
-  - Library Mastery leans on one distinctive Chart.js technique (the total-label draw
-    hook); consider layering in another distinctive touch (e.g. custom legend interaction
-    styling or hover-state tuning documented for the HTML detail view) to strengthen
-    this further
+  - The fastest-growing-segment cue is text-only (a small legend annotation) rather
+    than a true visual emphasis technique (color contrast, size, or focal point on
+    the bars themselves) — data storytelling would read more clearly with an actual
+    visual differentiator on the Software segment
+  - The new segment-level variation (Hardware Q2->Q3 dip of $0.1M, Services Q3->Q4
+    dip of $0.1M) is real in the data but too subtle to read visually in the rendered
+    stack — the dips are ~2% of segment height and essentially invisible at a glance;
+    a bolder dip/plateau would better demonstrate stacked-bar feature coverage
+  - Design Excellence, while improved (rounded corners, pill-style total labels, dashed
+    grid), is still closer to 'strong default' than 'publication-ready' — no distinctive
+    typographic hierarchy (e.g., differentiated weight/size between axis titles and
+    tick emphasis) beyond what's already present
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bar-stacked-labeled · javascript · chartjs · anyplot.ai" in bold dark ink, clearly readable. Legend (Hardware/Software/Services) top-right with color swatches, readable dark text. Y-axis "Revenue ($M)" and X-axis "Quarter" titles both dark and legible. Tick labels ($0M–$16M, Q1–Q4) in a softer dark gray, all readable. Horizontal gridlines are subtle and don't compete with the data.
-      Data: Four stacked bars (Q1–Q4), each split into Hardware (bottom, brand green #009E73), Software (middle, lavender #C475FD), Services (top, blue #4467A3) — matches Imprint canonical order 1→3. Bold total-value labels ($9.1M, $10.2M, $11.4M, $13.5M) sit directly above each stack with clear vertical spacing from the bar top and from the $14M/$16M gridlines above.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-stacked-labeled · javascript · chartjs · anyplot.ai" in bold dark ink at top, clearly readable. Legend (Hardware/Software "▲ fastest-growing"/Services) top-right with color swatches, readable dark text. Y-axis title "Revenue ($M)" and X-axis title "Quarter" both dark and legible. Tick labels ($0M-$16M, Q1-Q4) in a softer dark gray, all readable. Horizontal dashed gridlines are subtle and don't compete with the data; no vertical gridlines.
+      Data: Four stacked bars (Q1-Q4), each split into Hardware (bottom, brand green #009E73), Software (middle, lavender #C475FD), Services (top, blue #4467A3) — matches Imprint canonical order 1->3. Only the topmost segment of each stack has rounded corners, giving a polished finish without breaking the seam between segments. Bold total-value labels ($9.1M, $10.4M, $11.4M, $12.8M) sit in light pill-shaped badges with a thin border directly above each stack, with clear vertical spacing from the bar top and the gridlines above. All text is dark-on-light and fully readable.
       Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis titles now rendered in light/white ink, fully legible against the dark background. Tick labels are a lighter soft-gray, clearly visible. Gridlines remain subtle.
-      Data: Identical segment colors to the light render (green/lavender/blue) and identical total labels, confirming the data palette itself does not change between themes — only chrome flips as expected.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, legend, and axis titles now rendered in light/white ink, fully legible against the dark background. Tick labels are a lighter soft-gray, clearly visible. Dashed gridlines remain subtle. Total-label pill badges use the dark elevated background token with a matching border, so they read as a distinct surface rather than blending into the plot background.
+      Data: Identical segment colors to the light render (green/lavender/blue) and identical total labels ($9.1M/$10.4M/$11.4M/$12.8M), confirming the data palette itself does not change between themes — only chrome flips as expected.
       Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick label, legend entry, and total-value annotation is clearly readable against the near-black surface.
   criteria_checklist:
     visual_quality:
@@ -67,41 +68,43 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; well-proportioned title, balanced
-          axis/tick labels, readable in both themes
+        comment: All font sizes explicitly set (title 22px, legend 15px, ticks 14px,
+          axis titles 15px, total labels 17px bold); well-proportioned, readable in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between title, legend, axis labels, ticks, or total labels
+        comment: No overlap between title, legend, axis labels, ticks, or total-label
+          pills
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4 wide bar stacks, clearly visible segments and total labels appropriate
-          for the data density
+        comment: 4 wide bar stacks with categoryPercentage/barPercentage tuned; clearly
+          visible segments and total labels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue segments are distinguishable without relying
-          on hue alone; good contrast
+        comment: Green/lavender/blue segments distinguishable without relying on hue
+          alone; good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large, balanced portion of the canvas; nothing cut off;
-          legend sits near the plot
+        comment: Plot fills a large, balanced portion of the canvas; headroom above
+          bars is intentional for total-label pills; legend sits near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis "Revenue ($M)" has units; X-axis "Quarter" is descriptive
+        comment: Y-axis 'Revenue ($M)' has units; X-axis 'Quarter' is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -110,30 +113,32 @@ review:
         comment: 'First series is #009E73, palette in canonical order, theme-correct
           chrome in both renders'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Looks like a well-configured library default; correct palette but
-          no distinctive typographic or color-harmony choices beyond it
+        passed: true
+        comment: 'Clearly above defaults: rounded top-segment corners, pill-style
+          total labels with border/background, custom legend annotation for fastest-growing
+          segment'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only subtle gridlines, generous whitespace, but otherwise
-          default chart chrome
+        comment: Dashed, y-axis-only gridlines, no axis border clutter, generous whitespace,
+          rounded bar tops — some remaining headroom for further typographic hierarchy
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bold total labels above each stack create a clear growth narrative
-          across quarters, but no further emphasis technique is used
+        comment: Bold total labels plus a fastest-growing legend callout create a
+          growth narrative, but the emphasis is text-only rather than a true visual
+          (color/size) differentiator on the bars
     spec_compliance:
       score: 15
       max: 15
@@ -163,18 +168,19 @@ review:
         max: 3
         passed: true
         comment: Title matches mandated format exactly; legend labels match dataset
-          names
+          names (Software carries an additive fastest-growing cue, not a mismatch)
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Shows composition and totals across 4 quarters, but all three segments
-          grow in near-identical lockstep with no variation (no plateau/decline)
+        comment: Now shows genuine segment variation (Hardware dips in Q3, Services
+          plateaus/dips in Q4) rather than pure lockstep growth, though the dips are
+          subtle at ~2% of segment height
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -187,7 +193,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Values ($9-13.5M quarterly, $M-scale segments) are plausible for
+        comment: Values ($9.1-12.8M quarterly, $M-scale segments) are plausible for
           a mid-size company
     code_quality:
       score: 10
@@ -198,8 +204,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data -> plugin -> chart, no unnecessary abstraction; plugin object
-          is the documented pattern needed for the required total labels
+        comment: Data -> plugin -> chart, no unnecessary abstraction; helper function
+          is a small, justified drawing utility
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -225,28 +231,29 @@ review:
         passed: true
         comment: 'Mounts canvas into #container, animation:false set correctly'
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
         comment: Correct high-level Chart.js dataset/stack API usage with the documented
-          afterDatasetsDraw hook pattern
+          afterDatasetsDraw hook and generateLabels customization patterns
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: The custom total-label draw hook is a genuinely Chart.js-specific
-          technique, but it's the only distinctive touch
-  verdict: REJECTED
+        comment: 'Two genuinely Chart.js-specific techniques now: the custom total-label
+          draw hook and the customized legend generateLabels callout'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep: []
