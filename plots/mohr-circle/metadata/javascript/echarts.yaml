@@ -1,0 +1,251 @@
+library: echarts
+language: javascript
+specification_id: mohr-circle
+created: '2026-08-26T09:08:09Z'
+updated: '2026-08-26T09:27:15Z'
+generated_by: claude-sonnet
+workflow_run: 32950188544
+issue: 4432
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Canonical Imprint palette order is now correctly applied (green geometry, lavender
+    A/B stress points, blue derived quantities) — the attempt-1 semantic-red misassignment
+    (palette[4] on non-error data) is fully fixed
+  - 'All three attempt-1 label-crowding issues are resolved: the σ1 callout box no
+    longer touches its marker, the σ2 label no longer crowds its marker, and the "C
+    (20, 0)" label no longer sits on the diameter line'
+  - 'Complete, accurate feature set: σ1/σ2, ±τ_max, points A/B, center C, and the
+    2θp principal-plane angle arc are all present, correctly computed, and individually
+    labeled'
+  - True-circle geometry via a forced-square grid box and equal σ/τ padding — verified
+    round in both renders
+  - Deterministic, realistic engineering scenario (bridge girder under combined bending
+    + shear) with a stress state that straddles zero, showing both tension and compression
+  - Both renders are theme-correct with no dark-on-dark/light-on-light failures; data
+    colors confirmed identical between themes
+  weaknesses:
+  - 'New overlap regression: the dashed vertical center-reference line (markLine at
+    xAxis: center) now visibly cuts through the middle of the "τ_max = 46.1 MPa" and
+    "−τ_max = −46.1 MPa" labels in both themes. Offset these two labels horizontally
+    away from x=center (or nudge the markLine below the label z-layer) so the dashed
+    line doesn''t cross the text.'
+  - 'Minor: the "2θp = 40.6°" label sits on top of the vertical split-gridline near
+    x≈60 — much fainter than the τ_max issue above, but worth a small horizontal nudge
+    for full polish.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "mohr-circle · javascript · echarts · anyplot.ai" in dark ink, centered, clearly readable. Axis names "Normal Stress σ (MPa)" / "Shear Stress τ (MPa)" and numeric tick labels are dark/soft-ink and fully legible. Grid lines are thin and subtle; a solid horizontal reference line and a dashed vertical reference line pass through the circle center.
+      Data: Circle outline and center point C are brand green (#009E73, first series, correct). Stress points A(55,30) and B(-15,-30) are lavender (palette[1]) with a light-page-colored border ring, connected by a dashed lavender diameter line. Principal stresses σ1/σ2 and ±τ_max are blue (palette[2]) diamond markers, with σ1 emphasized via a larger marker and a bordered callout box.
+      Legibility verdict: PASS overall, with one defect — the dashed vertical center-reference line visibly cuts through the middle of the "τ_max = 46.1 MPa" and "−τ_max = −46.1 MPa" labels. All text remains individually legible (no full occlusion), and no clipping or dark-on-light failures were observed elsewhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis names, and tick labels flip to light ink/soft-white and remain clearly readable against the dark surface. Grid lines and the solid/dashed center reference lines are visible but subtle.
+      Data: Circle, center C, and angle-arc label remain the identical brand green #009E73. Stress points A/B remain the identical lavender, principal-stress/τ_max markers remain the identical blue — confirmed identical to the light render, only chrome flipped as required.
+      Legibility verdict: PASS overall, with the same geometry-driven τ_max/−τ_max label-vs-reference-line overlap reproducing identically. No dark-on-dark failures — every text element has sufficient contrast against #1A1A17.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; τ_max labels
+          legible but visually degraded by the crossing reference line
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Minor overlap: dashed vertical center-reference line cuts through
+          the τ_max/−τ_max labels in both themes; main content still readable'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers well sized (16-24px) for a sparse, single-stress-state precision
+          plot
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Every colored element also carries a text label, so red/green co-occurrence
+          never relies on hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square grid box fills a large majority of the 2400x2400 canvas, balanced
+          margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names with units (MPa)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order now correctly applied: palette[0] green
+          (geometry), palette[1] lavender (input), palette[2] blue (derived) — attempt-1
+          semantic-red misassignment fixed'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful marker-shape semantics (circle=input/geometry, diamond=derived),
+          callout box for σ1, now paired with correct canonical palette assignment
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, dashed low-opacity lines; held
+          back by the new label/reference-line overlap
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: σ1 visually emphasized as the key result, input
+          vs. derived quantities distinguished by shape and color'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Mohr's circle construction with a true equal-aspect circle
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Principal stresses, ±τ_max, points A/B, 2θp angle arc, center/reference
+          lines all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: σ on x-axis, τ on y-axis, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend needed since every element is directly
+          labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Stress state straddles zero (tension and compression), non-trivial
+          shear, showing the full circle geometry
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bridge girder under combined bending + shear — real, neutral engineering
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 55/-15/30 MPa are plausible structural stress magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded stress state
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the provided globals are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is appropriate for the circle/arc geometry required; no
+          fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract exactly: no explicit size, no devicePixelRatio,
+          animation: false'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine, z-layering, labeled scatter series used correctly; label-distance
+          tuning around the vertical markLine still needs work
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: markLine reference lines and richly styled label callout (backgroundColor/border/padding)
+          are distinctly ECharts features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
