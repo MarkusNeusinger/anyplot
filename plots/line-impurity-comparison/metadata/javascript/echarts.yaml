@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: line-impurity-comparison
 created: '2026-08-26T06:57:25Z'
-updated: '2026-08-26T07:01:45Z'
+updated: '2026-08-26T07:11:15Z'
 generated_by: claude-sonnet
 workflow_run: 32939838040
 issue: 4133
@@ -12,120 +12,137 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-impu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-impurity-comparison/javascript/echarts/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Correctly implements Gini and entropy with proper edge-case handling at p=0/1
-    (0*log(0):=0 convention)
-  - First series uses Imprint brand green (#009E73), second uses palette[1] lavender,
-    identical across light/dark themes
-  - Dashed vertical markLine plus circular markPoint markers on both curves highlight
-    the shared p=0.5 maximum-impurity point, with a clear annotation label
+  - 'Fixed the attempt-1 weakness: y-axis now uses max=1.25 with interval=0.25, producing
+    five perfectly even tick gaps instead of the previous uneven 1.0-to-1.15 final
+    gap'
+  - New gradient area fill (echarts.graphic.LinearGradient) under the Gini curve adds
+    visual depth and creates an asymmetric hierarchy against the unfilled Entropy
+    curve, directly answering the attempt-1 request for an extra design refinement
+  - Both maxima at p=0.5 are marked with matching-color circle markers plus a shared
+    dashed vertical markLine, with a text annotation pinpointing the shared max-impurity
+    insight the spec explicitly asks for
   - Legend labels embed the actual formulas (Gini = 2p(1-p), Entropy = -p*log2 p -
     (1-p)*log2(1-p)), directly satisfying the spec's legend requirement
-  - Y-axis-only grid (splitLine off on x-axis) matches the style guide's line-chart
-    grid guidance
-  - Clean, dependency-free code; deterministic data generation; correct mount-node/animation:false
+  - Correct edge-case handling for entropy at p=0 and p=1 via the 0*log(0):=0 convention
+  - First series is Imprint brand green (#009E73), second is canonical-order lavender
+    (#C475FD), identical across light/dark renders; theme chrome (backgrounds, text,
+    grid) is correctly adaptive in both
+  - Y-axis-only grid (x splitLine disabled) matches the style guide's line-chart grid
+    guidance
+  - Clean, dependency-free, deterministic code with correct mount-node/animation:false
     contract
   weaknesses:
-  - Y-axis max=1.15 with interval=0.25 produces an uneven final tick gap (1.0 to 1.15
-    is 0.15 vs the uniform 0.25 elsewhere) - use max=1.25 or reserve annotation space
-    differently
-  - Design excellence is only moderately elevated above baseline - consider an extra
-    refinement (e.g. subtle area fill under one curve, more deliberate typographic
-    weight contrast) to lift polish further
-  - Library-distinctive-feature usage is fairly basic (markLine + markPoint) - could
-    showcase more idiomatic echarts capabilities to raise Library Mastery
-  - The max-impurity annotation label uses a hardcoded pixel offset ([95, -4]) rather
-    than a data-relative anchor; works at the current canvas size but is not robust
-    to layout changes
+  - The 'p = 0.5 — max impurity' annotation label sits directly on top of the dashed
+    vertical markLine at p=0.5 in both renders — the line visibly crosses through
+    the text; nudge the label's x-offset or increase the y-offset so the dashed line
+    doesn't intersect the label glyphs
+  - 'Design excellence is strong but not yet top-tier: the area fill is a nice touch,
+    but typographic weight/hierarchy is otherwise standard (title/legend/axis all
+    similar visual treatment) — consider a stronger size or weight contrast between
+    primary and secondary text'
+  - Library-distinctive-feature usage is still fairly basic beyond the new gradient
+    fill (markLine + markPoint + LinearGradient) — could showcase further idiomatic
+    echarts capabilities (e.g. rich-text label formatting, emphasis focus states)
+    to raise Library Mastery further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-like), not pure white.
-      Chrome: Title "line-impurity-comparison · javascript · echarts · anyplot.ai" in bold dark ink, centered top. Legend below title with two entries showing full formulas, dark ink text. Axis labels "Probability p" (x) and "Impurity" (y) in dark ink. Tick labels in a slightly softer dark gray. Horizontal grid lines subtle light gray, no vertical grid lines. Dashed vertical reference line at p=0.5 in soft ink color.
-      Data: First series (Gini) in Imprint brand green (#009E73), second series (Entropy) in Imprint lavender (#C475FD). Both are smooth line curves peaking near p=0.5, with matching-color circular markers at the peak and a text annotation "p = 0.5 - max impurity" near the entropy peak.
-      Legibility verdict: PASS - all text (title, legend, axis labels, tick labels, annotation) is clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1-like), not pure white, not dark.
+      Chrome: Title "line-impurity-comparison · javascript · echarts · anyplot.ai" in bold dark ink, centered top, ~45% of canvas width (well within the expected range for a short custom-length title). Legend directly below the title with two entries showing the full Gini/Entropy formulas, dark ink text. Axis labels "Probability p" (x, bottom) and "Impurity" (y, left, rotated) in dark ink. Tick labels in a slightly softer ink-soft gray, evenly spaced (x: 0-1 by 0.1; y: 0-1.25 by 0.25 — five even intervals, the uneven-gap issue from the prior review is fixed). Horizontal-only grid lines, subtle light gray. Dashed vertical reference line at p=0.5 in soft ink color running from bottom to top of the plot area.
+      Data: First series (Gini) in Imprint brand green (#009E73) with a soft green-to-transparent gradient area fill beneath it; second series (Entropy) in Imprint lavender (#C475FD), unfilled line. Both are smooth curves peaking near p=0.5, each with a matching-color circular marker at their respective peak (Gini at 0.5, Entropy at 1.0), and a text annotation "p = 0.5 — max impurity" positioned above the Entropy peak. Minor issue: the dashed vertical line visibly passes through the annotation text.
+      Legibility verdict: PASS — all text (title, legend, axis labels, tick labels, annotation) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-like), not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light/off-white ink, tick labels in a lighter soft gray. Grid lines subtle light-on-dark. Dashed vertical reference line still visible in soft light gray.
-      Data: Data colors are identical to the light render - same green (#009E73) and lavender (#C475FD) hues, confirming only chrome flips between themes.
-      Legibility verdict: PASS - no dark-on-dark issues; all title, legend, axis, tick, and annotation text is clearly visible against the near-black background.
+      Background: Warm near-black (#1A1A17-like), not pure black, not light.
+      Chrome: Same title, legend, and axis labels now rendered in light/off-white ink; tick labels in a lighter soft gray. Grid lines subtle light-on-dark. Dashed vertical reference line still visible in soft light gray, same crossing-through-annotation issue as the light render.
+      Data: Data colors are pixel-identical to the light render — same brand green (#009E73) and lavender (#C475FD) hues and the same green gradient fill under Gini, confirming only chrome flips between themes.
+      Legibility verdict: PASS — no dark-on-dark issues; all title, legend, axis, tick, and annotation text is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes (22/16/14px), fully readable in both themes
+        comment: Explicit font sizes (title 22px, legend/axis-name 16px, ticks/annotation
+          14px); fully readable in both themes, well-proportioned, no overflow
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No collisions between title, legend, curves, or annotation
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line width 4 is prominent for a 2-series comparison; symbols hidden
-          except at the highlighted max point
+        comment: Dashed markLine at p=0.5 visibly crosses through the 'p = 0.5 — max
+          impurity' annotation text in both renders; otherwise no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 4px line width prominent for a 2-series comparison; symbols hidden
+          except at highlighted max points; gradient fill differentiates curves without
+          clutter
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender pairing is CVD-safe per Imprint design
+        comment: Green/lavender pairing is CVD-safe; area fill adds a redundant shape
+          cue beyond hue alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins and no clipping, but y-axis max=1.15 with interval=0.25
-          creates an uneven final tick gap
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          y-axis max=1.25/interval=0.25 now gives five even tick gaps, fixing the
+          prior uneven-gap issue
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive 'Probability p' / 'Impurity' labels
+        comment: Descriptive 'Probability p' / 'Impurity' labels; units not applicable
+          to dimensionless probability/impurity values
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series brand green, second matches canonical palette order,
-          correct theme backgrounds both renders
+        comment: First series brand green (#009E73), second matches canonical Imprint
+          order (#C475FD); correct theme-adaptive backgrounds and text in both renders
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Dashed reference line, marked max-impurity point, formula-bearing
-          legend show intentional polish beyond generic defaults
+        comment: Gradient area fill, dashed reference line, marked shared maxima,
+          and a formula-bearing legend show thoughtful design clearly above library
+          defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Clean spines/grid, generous whitespace, but no further refinement
-          beyond the basics
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal point at p=0.5 with annotation guiding the viewer to
-          the key comparison
+        comment: L-shaped implicit spines, subtle horizontal-only grid, generous whitespace,
+          new gradient fill; the annotation/markLine overlap is the one un-polished
+          detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dashed line + matching-color markers + annotation immediately draw
+          the eye to the shared p=0.5 maximum; the asymmetric area fill under Gini
+          adds an extra layer of visual hierarchy between the two curves
     spec_compliance:
       score: 15
       max: 15
@@ -141,20 +158,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Legend with formulas, max-impurity annotation, edge-case handling,
-          light grid all present
+        comment: Legend with formulas, max-impurity annotation at p=0.5 for both curves,
+          edge-case handling, light grid all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=probability [0,1], Y=impurity [0,1], full range shown
+        comment: X=probability p in [0,1], Y=impurity, full range shown for both curves
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match the formulas
+        comment: Title matches the mandated format; legend labels match the plotted
+          formulas
     data_quality:
       score: 15
       max: 15
@@ -164,20 +182,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full [0,1] range, both endpoints, shared max highlighted
+        comment: Full [0,1] range with 101 points, both endpoints handled, shared
+          maximum highlighted
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Theoretical comparison as the spec explicitly requests; neutral and
-          plausible
+        comment: Theoretical ML-education comparison exactly as the spec requests;
+          neutral, non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Normalized [0,1] values are correct for the domain
+        comment: Gini correctly peaks at 0.5, entropy correctly peaks at 1.0 — factually
+          correct values for the domain
     code_quality:
       score: 10
       max: 10
@@ -187,13 +207,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes, only a tiny inline helper
+        comment: No classes, only a tiny inline arrow-function helper
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Fully deterministic, no RNG needed
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -205,13 +225,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, no explicit size/DPR
+        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
+          passed
     library_mastery:
       score: 7
       max: 10
@@ -221,15 +242,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Value-type axes for continuous data, correct [p,value] pairs, proper
-          markLine/markPoint usage
+        comment: Value-type axes for continuous data, correct [p, value] pairs, proper
+          markLine/markPoint and LinearGradient usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: markLine + markPoint combo is a reasonable but fairly basic showcase
-          of echarts-specific features
+        comment: markLine + markPoint + gradient areaStyle is a reasonable echarts-specific
+          combo, addressing the prior 'fairly basic' feedback, but still leaves room
+          for more distinctive features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -240,3 +262,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - gradient-fill
