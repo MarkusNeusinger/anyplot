@@ -67,8 +67,9 @@ const US_OUTLINE_LONLAT = [
   [-93.8, 29.7], [-89.4, 29.2], [-85.0, 29.7], [-82.7, 27.8], [-81.8, 25.8],
   [-80.2, 25.8], [-80.0, 26.7], [-81.5, 30.3], [-79.9, 32.8], [-77.9, 34.2],
   [-76.5, 34.7], [-75.7, 35.2], [-76.0, 36.9], [-75.5, 38.3], [-74.0, 40.6],
-  [-71.0, 41.5], [-70.0, 42.0], [-70.2, 43.7], [-67.0, 44.8], [-69.2, 47.5],
-  [-71.5, 45.0], [-79.2, 43.3], [-83.1, 42.3], [-84.5, 46.5], [-88.0, 48.0],
+  [-71.0, 41.5], [-70.0, 42.0], [-70.2, 43.7], [-68.5, 44.3], [-67.0, 44.9],
+  [-68.3, 46.4], [-69.8, 47.3], [-71.0, 45.3], [-73.3, 45.0], [-76.0, 44.2],
+  [-79.2, 43.3], [-83.1, 42.3], [-84.5, 46.5], [-88.0, 48.0],
   [-95.2, 49.0], [-104.0, 49.0], [-110.0, 49.0], [-116.0, 49.0], [-122.8, 49.0],
   [-124.7, 48.4],
 ];
@@ -123,6 +124,10 @@ chart.setOption({
   grid: { left: 50, right: 50, top: 150, bottom: 60 },
   xAxis: { type: 'value', min: xMin, max: xMax, show: false },
   yAxis: { type: 'value', min: yMin, max: yMax, show: false },
+  // Interactive zoom/pan (scroll to zoom, drag to pan) — invisible in the static
+  // PNG but wired up for the exported HTML detail view, per the spec's request
+  // for interactive libraries to support exploring the map at different scales.
+  dataZoom: [{ type: 'inside', xAxisIndex: 0, yAxisIndex: 0, filterMode: 'none' }],
   graphic: {
     elements: [
       {
@@ -155,10 +160,13 @@ chart.setOption({
             height: Math.abs(p1[1] - p0[1]),
           },
           style: {
-            fill: isLand ? t.elevatedBg : 'transparent',
+            // Semantic land/water tint (ochre for land, blue for water) instead of a
+            // near-invisible elevatedBg-vs-transparent pairing, so the schematic
+            // basemap reads as terrain rather than an empty grid.
+            fill: isLand ? t.palette[3] : t.palette[2],
             stroke: t.grid,
             lineWidth: 1,
-            opacity: isLand ? 1 : 0.5,
+            opacity: isLand ? 0.16 : 0.22,
           },
         };
       },
