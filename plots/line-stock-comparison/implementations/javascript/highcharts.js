@@ -44,21 +44,69 @@ function priceWalk(seed, start, drift, volatility, n) {
 const dates = tradingDays(2024, 252);
 
 const stocks = [
-  { name: "Solaris Power (SOLR)", seed: 11, start: 42, drift: 0.0009, vol: 0.018 },
-  { name: "Windfield Energy (WNDF)", seed: 23, start: 58, drift: 0.0004, vol: 0.022 },
-  { name: "HydroGen Corp (HYDR)", seed: 37, start: 76, drift: -0.0003, vol: 0.02 },
-  { name: "Clean Energy Index (XCEI)", seed: 51, start: 100, drift: 0.0003, vol: 0.009 },
+  { name: "Solaris Power (SOLR)", ticker: "SOLR", seed: 11, start: 42, drift: 0.0009, vol: 0.018 },
+  { name: "Windfield Energy (WNDF)", ticker: "WNDF", seed: 23, start: 58, drift: 0.0004, vol: 0.022 },
+  { name: "HydroGen Corp (HYDR)", ticker: "HYDR", seed: 37, start: 76, drift: -0.0003, vol: 0.02 },
+  { name: "Clean Energy Index (XCEI)", ticker: "XCEI", seed: 51, start: 100, drift: 0.0003, vol: 0.009 },
 ];
 
-const series = stocks.map((s, i) => {
+const rebasedPrices = stocks.map((s) => {
   const prices = priceWalk(s.seed, s.start, s.drift, s.vol, dates.length);
   const basePrice = prices[0];
+  return prices.map((p) => (p / basePrice) * 100);
+});
+
+// Storytelling: locate the trading day where SOLR and WNDF diverge the most
+// and shade that window via core-Highcharts xAxis.plotBands (no annotations
+// module needed) — computed from the data, not hardcoded, so the highlight
+// stays correct if the walk parameters above change.
+let peakIdx = 0;
+let peakGap = -Infinity;
+for (let i = 0; i < dates.length; i++) {
+  const gap = Math.abs(rebasedPrices[0][i] - rebasedPrices[1][i]);
+  if (gap > peakGap) {
+    peakGap = gap;
+    peakIdx = i;
+  }
+}
+const divergenceBand = {
+  from: dates[Math.max(0, peakIdx - 6)],
+  to: dates[Math.min(dates.length - 1, peakIdx + 6)],
+};
+
+const series = stocks.map((s, i) => {
+  const values = rebasedPrices[i];
   const isBenchmark = i === stocks.length - 1;
+  const data = values.map((y, idx) => {
+    if (idx !== values.length - 1) return [dates[idx], y];
+    // Connector-style end label so each line's final ranking reads at a
+    // glance without cross-referencing the legend below the plot.
+    return {
+      x: dates[idx],
+      y,
+      dataLabels: {
+        enabled: true,
+        format: s.ticker,
+        align: "left",
+        x: 8,
+        verticalAlign: "middle",
+        crop: false,
+        overflow: "allow",
+        style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+        backgroundColor: t.elevatedBg,
+        borderRadius: 3,
+        padding: 3,
+      },
+    };
+  });
   return {
     name: s.name,
-    data: prices.map((p, idx) => [dates[idx], (p / basePrice) * 100]),
+    data,
     lineWidth: isBenchmark ? 2 : 2.75,
     dashStyle: isBenchmark ? "Dash" : "Solid",
+    // Benchmark recedes behind the individual stocks so the dashed line
+    // doesn't compete for attention at small (mobile-preview) sizes.
+    zIndex: isBenchmark ? 1 : 2,
   };
 });
 
@@ -68,6 +116,7 @@ Highcharts.chart("container", {
     type: "line",
     backgroundColor: "transparent",
     animation: false,
+    marginRight: 130,
     style: { fontFamily: "inherit" },
   },
   credits: { enabled: false },
@@ -83,6 +132,20 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
     title: { text: "Trading Date (2024)", style: { color: t.inkSoft, fontSize: "16px" } },
+    plotBands: [
+      {
+        from: divergenceBand.from,
+        to: divergenceBand.to,
+        color: Highcharts.color(t.amber).setOpacity(0.12).get("rgba"),
+        label: {
+          text: "Peak SOLR / WNDF divergence",
+          align: "center",
+          verticalAlign: "top",
+          y: 14,
+          style: { color: t.inkSoft, fontSize: "12px" },
+        },
+      },
+    ],
   },
   yAxis: {
     title: { text: "Rebased Price (Start = 100)", style: { color: t.inkSoft, fontSize: "16px" } },
