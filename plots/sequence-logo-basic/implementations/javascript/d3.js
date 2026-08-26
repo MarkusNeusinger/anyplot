@@ -3,10 +3,6 @@
 // Library: d3 7.9.0 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-08-26
 //# anyplot-orientation: landscape
-// anyplot.ai
-// sequence-logo-basic: Sequence Logo for Motif Visualization
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
@@ -41,12 +37,20 @@ const stacks = motif.map((d) => {
   const letters = Object.entries(d.freqs)
     .sort((a, b) => a[1] - b[1]) // ascending: least-frequent letter drawn first (bottom), most-frequent lands on top
     .map(([letter, freq]) => ({ letter, height: freq * infoBits }));
-  return { position: d.position, letters };
+  return { position: d.position, infoBits, letters };
 });
+
+// Most-conserved position (highest information content) — storytelling focal point.
+const peak = stacks.reduce((max, s) => (s.infoBits > max.infoBits ? s : max));
 
 // Standard nucleotide color convention (A green / C blue / G ochre / T red),
 // mapped onto the closest Imprint hues — a domain-convention semantic exception.
 const LETTER_COLOR = { A: t.palette[0], C: t.palette[2], G: t.palette[3], T: t.palette[4] };
+
+// Distinctive typeface pairing: serif display face for the title, workhorse
+// sans-serif for chrome/glyphs.
+const TITLE_FONT = "Georgia, 'Times New Roman', serif";
+const CHROME_FONT = "-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif";
 
 // --- Scales ------------------------------------------------------------
 const x = d3
@@ -88,7 +92,7 @@ for (const stack of stacks) {
       .append("text")
       .attr("x", 0)
       .attr("y", 0)
-      .style("font-family", "sans-serif")
+      .style("font-family", CHROME_FONT)
       .style("font-weight", "900")
       .style("fill", LETTER_COLOR[item.letter])
       .text(item.letter);
@@ -107,11 +111,11 @@ const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
   .call(d3.axisBottom(x).tickSize(0).tickPadding(12));
-xAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
+xAxis.selectAll("text").attr("fill", t.inkSoft).style("font-family", CHROME_FONT).style("font-size", "16px");
 xAxis.select(".domain").attr("stroke", t.inkSoft);
 
 const yAxis = g.append("g").call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(12));
-yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
+yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-family", CHROME_FONT).style("font-size", "16px");
 yAxis.select(".domain").attr("stroke", t.inkSoft);
 
 // --- Axis labels -------------------------------------------------------
@@ -120,6 +124,7 @@ g.append("text")
   .attr("y", ih + 70)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
+  .style("font-family", CHROME_FONT)
   .style("font-size", "18px")
   .text("Position");
 
@@ -129,8 +134,32 @@ g.append("text")
   .attr("y", -85)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
+  .style("font-family", CHROME_FONT)
   .style("font-size", "18px")
   .text("Information content (bits)");
+
+// --- Storytelling callout: flag the single most-conserved position ---------
+const peakX = x(peak.position) + colWidth / 2;
+const peakTopY = y(peak.infoBits);
+
+g.append("line")
+  .attr("x1", peakX)
+  .attr("x2", peakX)
+  .attr("y1", peakTopY - 34)
+  .attr("y2", peakTopY - 6)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "3,3");
+
+g.append("text")
+  .attr("x", peakX)
+  .attr("y", peakTopY - 42)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-family", CHROME_FONT)
+  .style("font-style", "italic")
+  .style("font-size", "14px")
+  .text("Most conserved position");
 
 // --- Title ---------------------------------------------------------------
 svg
@@ -139,6 +168,7 @@ svg
   .attr("y", 44)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
+  .style("font-family", TITLE_FONT)
   .style("font-size", "22px")
-  .style("font-weight", "600")
+  .style("font-weight", "700")
   .text("sequence-logo-basic · javascript · d3 · anyplot.ai");
