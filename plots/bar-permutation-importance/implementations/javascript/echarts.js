@@ -97,7 +97,7 @@ chart.setOption({
     text: ["High\nimportance", "Low /\nnoise"],
     textGap: 14,
     textStyle: { color: t.inkSoft, fontSize: 13 },
-    inRange: { color: t.div },
+    inRange: { color: t.seq },
   },
   series: [
     {
