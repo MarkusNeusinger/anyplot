@@ -1,0 +1,250 @@
+library: muix
+language: javascript
+specification_id: histogram-epidemic
+created: '2026-08-26T06:26:28Z'
+updated: '2026-08-26T06:42:05Z'
+generated_by: claude-sonnet
+workflow_run: 32937679812
+issue: 4426
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-epidemic/javascript/muix/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - Uses the ChartContainer composition API (BarPlot + LinePlot + dual ChartsYAxis)
+    to cleanly combine stacked daily bars with a secondary cumulative-cases axis,
+    exactly matching the spec's Notes section
+  - Two overlapping Gaussian waves plus per-day noise produce a realistic propagated-transmission
+    epi curve shape, with the case-type split (confirmed/probable/suspect) always
+    summing back to the daily total
+  - ChartsReferenceLine annotations mark the lockdown and vaccination-campaign events
+    with dashed amber lines and readable labels in both themes
+  - Grid lines, axis lines, and tick/label colors are correctly threaded from window.ANYPLOT_TOKENS
+    (t.grid, t.inkSoft, t.ink) so chrome flips properly between light and dark
+  - A documented, deliberate slotProps.axisLabel offset fix prevents the rotated 'Cumulative
+    cases' label from colliding with the 3-digit right-axis tick numbers
+  - Deterministic fixed-seed LCG data generation with no external dependencies
+  weaknesses:
+  - Reference-line annotation text ('Lockdown start', 'Vaccination campaign') and
+    axis tick labels become quite small once the chart is scaled to the ~400px mobile
+    preview — a slightly bolder weight would help legibility at that size
+  - Data colors are pulled directly from the Imprint token order with no additional
+    custom accents beyond the reference-line amber, so the palette work is competent
+    but not distinctive
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "histogram-epidemic · javascript · muix · anyplot.ai" is centered, fully visible, dark ink text. A top-center legend lists Confirmed (green), Probable (violet), Suspect (blue-gray), Cumulative cases (black swatch matching the line). Left y-axis "Daily new cases" (0-50) and right y-axis "Cumulative cases" (0-1,200) both render in dark ink with visible tick marks; x-axis "Onset date" shows weekly-interval date labels (Jan 1, Jan 8, ... Feb 26). Horizontal grid lines are thin and subtle. Two dashed amber vertical reference lines are labeled "Lockdown start" and "Vaccination campaign" in dark text, positioned clear of the bars behind them.
+      Data: Stacked bars (green/violet/blue-gray) show two overlapping epidemic waves peaking around Jan 15 and Feb 11-13; a smooth black cumulative-cases line rises steeply through the outbreak and plateaus after the vaccination campaign marker, reaching ~1,190 total.
+      Legibility verdict: PASS — all title, axis, legend, and reference-line text is clearly readable against the light background; no overlap between reference-line labels, bars, or the cumulative line was found on close inspection.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Same title, legend, and axis layout as the light render, now rendered in light/off-white ink. The "Cumulative cases" legend swatch and the cumulative line itself flip from black to off-white, correctly following the ink token rather than staying a fixed color. Reference-line labels ("Lockdown start", "Vaccination campaign") render in light text and remain fully readable, with no dark-on-dark failures anywhere (title, axis ticks, axis titles, legend text, reference-line labels all confirmed legible).
+      Data: Bar colors (green/violet/blue-gray) are pixel-identical to the light render — only the line/legend chrome color changed as expected. Wave shape and cumulative curve match the light render exactly.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light issues found in either render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized (14/16/22px) and readable in both themes;
+          gets small at ~400px mobile scale but stays legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Checked reference-line labels, dual y-axis labels, legend, title
+          — no collisions found on pixel inspection
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: '63 daily bars sized appropriately for the density; cumulative line
+          uses showMark: false to avoid clutter'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/violet/blue-gray are distinct hues with good contrast on both
+          backgrounds; not a red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas, no clipping at any edge, generous margins on both
+          y-axes
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Onset date'', ''Daily new cases'', ''Cumulative cases'' are descriptive
+          and unit-clear'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds #FAF8F1/#1A1A17 correct; data
+          colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Composition-API dual-axis layout with styled reference lines shows
+          deliberate design beyond a default chart wrapper
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Horizontal-only subtle grid, themed axis lines, generous whitespace;
+          no default MUI chrome left in place
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Two-wave shape plus annotated intervention lines and cumulative overlay
+          clearly narrate the outbreak's progression and response
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Stacked histogram-over-time (epi curve) as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily bins, case-type stacking, intervention reference lines, cumulative
+          secondary axis all present per the spec Notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=onset date, Y=daily case count, secondary Y=cumulative — all data
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels (Confirmed/Probable/Suspect/Cumulative
+          cases) match the series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers daily bins, stacked classification, event annotation, and
+          cumulative overlay
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Generic, neutral disease-outbreak scenario, plausible two-wave shape
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak ~46 daily cases, ~1,190 cumulative over 63 days — sensible magnitudes
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level data prep plus a single component function, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Every import is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportional to the dual-axis/reference-line requirements;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export contract, sized from window.ANYPLOT_SIZE,
+          skipAnimation set
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the ChartContainer composition API rather than the simple chart
+          wrapper, which is the idiomatic choice for dual-axis + reference-line charts
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Twin y-axis, ChartsReferenceLine annotations, custom tickLabelInterval,
+          ChartsTooltip
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - twin-axes
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  - time-series
+  styling:
+  - grid-styling
