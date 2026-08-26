@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: radar-innovation-timeline
 created: '2026-08-26T09:50:08Z'
-updated: '2026-08-26T09:55:17Z'
+updated: '2026-08-26T10:13:38Z'
 generated_by: claude-sonnet
 workflow_run: 32953352353
 issue: 4301
@@ -12,96 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-inn
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Correct, creative use of the Chart.js Plugin API to natively render a chart type
-    with no built-in equivalent, instead of faking it or reaching for another library.
-  - Well-engineered label-placement algorithm (radius-weighted angular lanes + diagonal
-    offset) that keeps all 16 item labels legible with zero overlap in both themes.
-  - 'Full palette and theme compliance: canonical Imprint order, identical data colors
-    across themes, correct light/dark chrome backgrounds.'
-  - Fully deterministic, clean, single-file implementation with no fake interactivity.
+  - 'Directly acted on the previous review''s feedback: item label font bumped from
+    11px to 12px, and the dataset now genuinely exercises shared-cell crowding (Cloud
+    & Infrastructure Near-Term, Cybersecurity Mid-Term, and a 3-item Sustainability
+    Tech Future cluster) instead of a contrived one-item-per-cell layout.'
+  - The radius-weighted angular-lane placement plus tangential label staggering keeps
+    all 20 items legible with no overlap in either theme, including inside the newly-added
+    crowded cells.
+  - Correct, creative use of the Chart.js core Plugin API (afterDraw) to natively
+    render a chart type with no built-in Chart.js equivalent, per the library's own
+    no-workaround guidance.
+  - 'Full palette and theme compliance: canonical Imprint order (green/lavender/blue/ochre),
+    first series #009E73, identical data colors across themes, correct light/dark
+    chrome backgrounds.'
+  - Fully deterministic, single-file implementation with no fake interactivity and
+    no external dependencies.
   weaknesses:
-  - Item label font (11px) is noticeably small relative to the 22px title; likely
-    to become hard to read at thumbnail (~400px) scale.
-  - Dataset places exactly one item per (sector, ring) cell, so the spec's called-out
-    overlap-avoidance-within-a-shared-cell scenario is never actually exercised.
-  - '"Cybersecurity" sector header (blue) has visibly lower contrast against the dark-theme
-    background than the other three sector colors — still legible, but the weakest
-    link.'
-  - Visual refinement and storytelling are solid but fairly flat/grid-like; a slight
-    visual hierarchy would elevate it further.
+  - Visual refinement is still fairly flat/minimal beyond the alternating ring-fill
+    bands — no gradient, shadow, or other refinement touches beyond the alpha bands.
+  - The layout is technically correct and now crowds realistically, but still reads
+    mostly as a tidy grid rather than one with a single emphasized focal point or
+    lead insight.
+  - The 'Cybersecurity' sector header (blue, palette position 3) remains the lowest-contrast
+    label against the near-black dark background of the four sector colors — still
+    legible, not a defect, but the weakest link.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title, ring labels (Now/Near-Term/Mid-Term/Future), sector headers (AI & ML,
-        Cloud & Infrastructure, Cybersecurity, Sustainability Tech), item labels, and legend
-        all render in dark ink and are clearly legible against the light background.
-      Data: First series (AI & ML) uses #009E73 brand green; remaining three sectors use
-        Imprint palette positions 2-4 (lavender, blue, ochre) in canonical order. Distinct
-        marker shapes per sector (circle/triangle/rotated-square/square).
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "radar-innovation-timeline · javascript · chartjs · anyplot.ai" in dark ink at top, clearly legible. Four ring labels ("Now", "Near-Term", "Mid-Term", "Future") stacked in the top 90-degree gap in soft gray ink. Four sector headers ("AI & ML", "Cloud & Infrastructure", "Cybersecurity", "Sustainability Tech") along the outer edge, each colored to match its sector's marker color. Legend at the bottom maps sector name to color/marker shape. Subtle alternating gray ring-fill bands separate the horizons; ring boundary circles and sector divider spokes are thin and unobtrusive.
+      Data: 20 items across 4 rings x 4 sectors, plotted as distinct-shaped markers (circle/triangle/rotated-square/square per sector) in the Imprint palette's first four canonical colors (green #009E73, lavender, blue, ochre), each with a 12px diagonal-offset text label. Several cells now genuinely hold 2-3 items (e.g. Cloud & Infrastructure Near-Term: Edge Computing + 5G Network Slicing; Cybersecurity Mid-Term: Post-Quantum Crypto + Confidential Computing; Sustainability Tech Future: Direct Air Capture + Fusion Energy Pilots + Circular Electronics Recycling) and the tangential-stagger label placement keeps every label clear of its neighbors and of the ring/spoke lines.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, ring labels, item labels render in light ink and are clearly readable.
-        Sector headers keep their brand colors; "Cybersecurity" (blue) is legible but the
-        lowest-contrast element in the piece — not a dark-on-dark failure, just the weakest
-        link. Grid rings/spokes are subtle lighter-gray strokes, visible without dominating.
-      Data: Marker colors verified pixel-identical to the light render — only chrome flips.
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, ring labels, and item labels render in light ink (verified: not dark-on-dark) and are clearly readable. Sector headers keep their brand colors; the "Cybersecurity" blue header is legible but is the lowest-contrast of the four sector colors against the near-black background — still passes, not a dark-on-dark failure. Grid rings/spokes render as subtle lighter-gray strokes, visible without dominating. Legend text and swatches read clearly at the bottom.
+      Data: Marker and label colors are pixel-identical to the light render (green #009E73 for AI & ML, lavender for Cloud & Infrastructure, blue for Cybersecurity, ochre for Sustainability Tech) — only chrome flipped between themes, as required.
       Legibility verdict: PASS
+
+    Both renders pass the theme-readability checklist. No auto-reject conditions (AR-08/AR-09) triggered: no simulated interactivity, and no title/label/legend text was found clipped at any canvas edge. No /tmp/anyplot-canvas-gate.txt file present, so the canvas-dimension gate passed (2400x2400 square, correct for this radar chart type).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Readable in both themes at full size, but 11px item labels risk illegibility
-          at ~400px thumbnail scale
+        comment: Item label font bumped from 11px to 12px per prior feedback; all
+          sizes explicitly set (title 22px, sector headers 15px, ring labels 13px,
+          item labels 12px, legend 16px). Readable in both themes; with 20 items now
+          packed into a 2400x2400 canvas, the smallest labels will still be the first
+          to soften at ~400px mobile scale, so short of full marks.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Weighted-lane + diagonal-offset placement keeps all 16 labels clear;
-          verified via pixel crops
+        comment: 'Verified across both renders: the weighted-lane + tangential-stagger
+          placement keeps all 20 item labels clear of markers, rings, spokes, and
+          each other, including inside the newly-added 2-3 item crowded cells.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse data given prominent 9px markers with distinct per-sector
-          shapes
+        comment: Sparse (20-point) data given prominent 9px markers with distinct
+          per-sector shapes; good redundant color+shape encoding, still appropriately
+          sized after adding 4 more items.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Shape + color double-encoding is CVD-safe
+        comment: Shape + color double-encoding is CVD-safe. No red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (2400x2400); no overflow/clipping
+        comment: Canvas dimension gate passed (2400x2400 square). No overflow/clipping
+          at any edge. Balanced proportions.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Ring/sector labels serve the descriptive role; title format correct
+        comment: No cartesian axes (radial chart); ring/sector labels serve the equivalent
+          descriptive role. Title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, correct theme backgrounds, identical data
-          colors across themes
+        comment: 'First series #009E73 (AI & ML); remaining three sectors use canonical
+          palette positions 2-4 (lavender, blue, ochre). Backgrounds correctly #FAF8F1/#1A1A17.
+          Data colors identical across themes.'
     design_excellence:
       score: 14
       max: 20
@@ -111,22 +121,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Native Plugin API drawing with thoughtful weighted angular-lane math
+        comment: No native Chart.js type fits this spec; correctly used the core Plugin
+          API (afterDraw) to draw a genuinely custom radial face. Weighted angular-lane
+          math (1/sqrt(radius)) is a thoughtful, non-generic touch.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle ring fills, hidden cartesian scales, but fairly flat/minimal
-          overall
+        comment: Subtle alternating ring-fill bands, no chart junk, hidden cartesian
+          scales, generous whitespace. Still fairly minimal/flat overall - no gradient
+          or shadow refinement beyond the alpha bands.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Grid gives at-a-glance read but no single focal point or emphasis
+        comment: Ring/sector grid plus realistic per-cell crowding gives an at-a-glance
+          read of maturity-by-theme and shows where innovation activity clusters,
+          but there's still no single emphasized focal point or lead insight - reads
+          as a well-organized grid rather than a guided story.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -134,49 +150,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct rings-x-sectors innovation radar
+        comment: Correct rings-x-sectors innovation radar.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All structural features present, but shared-cell overlap-avoidance
-          never exercised
+        comment: Rings with boundary lines + labels, sector headers along outer edge,
+          distinct marker shapes/colors per sector, subtle per-ring background fill,
+          legend, and now genuine shared-cell crowding that exercises the spec's jittering/radial-offset
+          requirement.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Ring/sector assignment correctly mapped to angular lane and radius
+        comment: Ring/sector assignment per item correctly mapped to angular lane
+          and radius.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend matches plotted markers
+        comment: Title format exact. Legend labels + shapes match the plotted sector
+          markers.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Covers all rings x sectors but contrived one-item-per-cell layout
-          sidesteps crowding
+        comment: Now covers all 4 rings x 4 sectors AND realistic crowding within
+          cells (2-3 items sharing a ring/sector in 3 places), matching the classic
+          ThoughtWorks-style crowded-quadrant pattern the spec references.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral, real technology/trend names
+        comment: Plausible, neutral, real technology/trend names (LLM Assistants,
+          Zero Trust Networks, Post-Quantum Crypto, Direct Air Capture, etc.).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 items within spec's 15-40 range
+        comment: 20 items is comfortably within the spec's 15-40 range.
     code_quality:
       score: 10
       max: 10
@@ -186,31 +208,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes, flat structure
+        comment: No classes; flat, readable structure despite necessary geometric
+          complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data
+        comment: Fully deterministic hardcoded data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond provided globals
+        comment: No imports beyond the provided globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; real canvas drawing via documented Plugin API
+        comment: No fake UI/interactivity; real canvas drawing via the documented
+          Plugin API.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false set
+        comment: 'Correct mount-node contract, animation: false set, no savefig-style
+          calls.'
     library_mastery:
       score: 10
       max: 10
@@ -220,24 +245,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses Chart.js core Plugin API exactly as intended for chart types
-          outside the built-ins
+        comment: Uses Chart.js's core Plugin API (afterDraw) exactly as intended for
+          chart types outside the eight built-ins - the documented native escape hatch,
+          not a hack.
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Invisible dataset points driving usePointStyle legend swatches mirroring
-          plugin-drawn shapes
+        comment: Real dataset objects reduced to invisible points purely to drive
+          usePointStyle legend swatches that mirror the plugin-drawn shapes - genuinely
+          distinctive use of Chart.js internals.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - custom-legend
   - patches
-  - annotations
-  patterns: []
+  patterns:
+  - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - edge-highlighting
