@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: map-tile-background
 created: '2026-08-26T08:35:38Z'
-updated: '2026-08-26T08:41:12Z'
+updated: '2026-08-26T08:52:37Z'
 generated_by: claude-sonnet
 workflow_run: 32947605635
 issue: 3756
@@ -12,74 +12,80 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - Custom fit-bounds equirectangular projection auto-fits the marker extent and reports
-    a computed zoom level, mirroring how a real tile map's fitBounds() would behave.
+  - 'All three attempt-1 weaknesses are demonstrably fixed: d3.zoom() is now wired
+    to a capture rect and drives the zoom-layer transform (drag to pan, scroll to
+    zoom, scaleExtent [1,4]); the tile-provider legend rows have click handlers that
+    call setProvider() and re-tint bgRect + block fills; and the basemap land/park/water
+    tones are now derived via d3.interpolateRgb(t.pageBg, hex) blends of Imprint tokens
+    (t.inkSoft, t.palette[2], t.palette[7]) instead of raw custom hex values.'
+  - Explicit manual label offsets for the 7 stations in the dense city-center cluster
+    (Placa Catalunya, Passeig de Gracia, Rambla Catalunya, El Born, Gotic, Sant Antoni
+    Market, Poble Sec) resolve the tight-label weakness flagged in attempt 1 -- no
+    overlapping text in either render.
+  - Fit-bounds equirectangular projection auto-computes the padded data extent and
+    a reported zoom level, mirroring a real tile map's fitBounds() call.
   - Deterministic procedural street-grid basemap (fixed-hash pseudo-noise, no Math.random)
-    gives a plausible tile-map texture while respecting the offline/no-fetch runtime
-    constraint.
-  - imprint_seq sequential scale (green -> blue) correctly encodes daily rides, with
-    identical marker hues between the light and dark renders.
-  - Label collision handling combines a generic radial push with explicit manual offsets
-    for the four stations that would otherwise stack in the dense central cluster.
+    is reproducible while respecting the offline/no-fetch runtime constraint, and
+    is honestly disclosed via the footnote rather than presented as a real tile provider.
   - Theme-adaptive chrome is threaded consistently through title, subtitle, legend,
-    footnotes, and marker strokes using t.ink / t.inkSoft / t.elevatedBg tokens.
+    footnotes, and marker strokes; the imprint_seq sequential scale encoding daily
+    rides is identical between light and dark renders and is CVD-safe.
   weaknesses:
-  - 'No zoom/pan interactivity: the spec explicitly requires ''enable zoom and pan''
-    for interactive libraries, but no d3.zoom() behavior is wired to the map group
-    anywhere in the script.'
-  - The tile-provider legend draws 'Terrain'/'Satellite' as unchecked checkboxes next
-    to the active 'Streets' entry, but no click handler exists anywhere in the code
-    -- clicking them in the exported HTML does nothing, making the control decorative
-    rather than functional.
-  - 'Basemap land/park/water fills (#F1ECDD, #E7DFC9, #D9E5C9, #CDE0EC and their dark
-    equivalents) are custom hex values outside the Imprint palette and the three semantic
-    anchors.'
-  - The dense central cluster (Passeig de Gracia / Rambla Catalunya / Placa Catalunya
-    / El Born / Gotic) has labels packed tightly together -- legible at full resolution
-    but at risk of compressing further when the PNG scales down to ~400px mobile width.
+  - Station markers are a uniform radius (r=14) for all 14 stations -- daily rides
+    is only encoded via color, not also via size, so the busiest station (Placa Catalunya)
+    doesn't stand out through scale as well as it could.
+  - The attribution footnote discloses the basemap is synthetic ('anyplot synthetic
+    street tiles (offline render)') but doesn't include real tile-provider attribution
+    text -- acceptable given the offline/no-fetch runtime constraint, but worth noting
+    as a spec-note gap.
+  - No explicit annotation or callout highlights the single busiest station -- data
+    storytelling relies only on color contrast, not a direct focal-point label.
+  - The procedural basemap texture is a repeating grid pattern rather than a richer
+    organic tile look; a real OSM/CartoDB raster would read more convincingly, though
+    this is an inherent tradeoff of the offline runtime rather than an implementation
+    flaw.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), matches the required light-theme plot background; the map viewport inside the rounded frame uses a separate synthetic basemap palette (cream land blocks, pale green parks, pale blue water) that is distinct from the page background.
-      Chrome: Title "Barcelona Bicing Network · map-tile-background · javascript · d3 · anyplot.ai" and subtitle are dark and fully readable; station labels use dark ink text on light halo boxes and are all legible; legend title "Daily Rides", value labels (1450/420), and provider list (Streets/Terrain/Satellite) are dark and readable; footnotes ("Auto-fit to data bounds...", "Basemap: anyplot synthetic street tiles...") are legible in muted gray.
-      Data: First/only data channel (daily rides) is color-encoded via the sequential Imprint scale (#009E73 green at low values through blue at high values, matching t.seq); 14 station markers with dark ink strokes for contrast against the basemap tiles.
+      Background: Warm off-white (~#FAF8F1), matches the required light-theme plot background. The rounded map viewport inside the frame uses a distinct synthetic basemap palette (cream/tan land blocks, pale lime-green parks, pale blue water) derived from Imprint tokens blended toward the page background.
+      Chrome: Title "Barcelona Bicing Network · map-tile-background · javascript · d3 · anyplot.ai" and subtitle are dark and fully readable; the 14 station labels use dark ink text on light halo boxes and are all legible, including the previously-tight central cluster (Placa Catalunya, Passeig de Gracia, Rambla Catalunya, El Born, Gotic) which now has visible spacing between label boxes; legend title "Daily Rides", value labels (1450/420), and the provider list (Streets checked with a filled green swatch, Terrain/Satellite shown as empty checkboxes) are dark and readable; footnotes ("Auto-fit to data bounds...", "Basemap: anyplot synthetic street tiles...") are legible in muted gray.
+      Data: Daily rides is color-encoded via the sequential Imprint scale (#009E73 green at low values through blue at high values, matching t.seq); all 14 station markers have dark ink strokes for contrast against the basemap tiles.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), matches the required dark-theme plot background; basemap tiles inside the map viewport switch to dark equivalents (dark olive/brown land, dark green parks, dark navy water).
+      Background: Warm near-black (~#1A1A17), matches the required dark-theme plot background; basemap tiles inside the map viewport switch to dark equivalents (dark olive/gray land, dark green parks, dark navy water) via the same token-blend logic.
       Chrome: Title, subtitle, station labels, legend text, and footnotes all render in light ink tones (t.ink / t.inkSoft) and are clearly readable against the dark basemap and page background -- no dark-on-dark failures observed.
       Data: Marker colors are identical to the light render (same green-to-blue sequential scale values) -- only the chrome and basemap tones flipped, as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (px) and readable in both themes; the
-          central station cluster (Passeig de Gracia/Rambla Catalunya/Placa Catalunya/El
-          Born/Gotic) is packed tightly and risks compressing further at mobile scale.
+        comment: All font sizes explicit (px) and readable in both themes; manual
+          label offsets fixed the previously-tight central cluster.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data; the same dense cluster has minimal
-          but non-zero spacing between label halos.
+        comment: No text overlaps other text or data in either render; the dense cluster
+          now has clear spacing after the manual offsets fix.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: 14 sparse stations rendered with r=14 circles and ink strokes --
-          good visibility, slightly larger would suit the very sparse dataset even
-          better.
+          good visibility, slightly larger markers or a size encoding for rides would
+          suit the very sparse dataset even better.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -93,7 +99,8 @@ review:
         max: 4
         passed: true
         comment: Map viewport fills the large majority of the canvas with balanced
-          margins; legend sits inside/near the map, nothing is cut off.
+          margins; legend sits inside/near the map, nothing is cut off; canvas dimension
+          gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,12 +110,13 @@ review:
           fully descriptive with units (rides).
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Continuous data correctly uses imprint_seq and chrome is theme-correct
-          in both renders, but the basemap land/park/water fills are custom hexes
-          outside the Imprint palette and semantic anchors.
+        passed: true
+        comment: Continuous data correctly uses imprint_seq; basemap land/park/water
+          fills are now derived via d3.interpolateRgb blends of Imprint tokens (t.inkSoft,
+          t.palette[2], t.palette[7]) toward pageBg instead of custom hex values,
+          fixing the attempt-1 weakness. Chrome is theme-correct in both renders.
     design_excellence:
       score: 15
       max: 20
@@ -118,9 +126,10 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful custom basemap tones, typography hierarchy, and footnote
-          captions -- clearly above library defaults, though a real tile texture would
-          read richer than the repeating procedural blocks.
+        comment: Thoughtful custom basemap tones, typography hierarchy, rounded clip-path
+          viewport, and footnote captions -- clearly above library defaults, though
+          the repeating procedural grid reads less rich than an actual tile texture
+          would.
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -133,11 +142,11 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: Color and marker prominence create a clear focal point around the
-          high-traffic Placa Catalunya / Passeig de Gracia cluster, guiding the reader
-          without explicit annotations.
+        comment: Color encoding creates a clear focal point around the high-traffic
+          Placa Catalunya / Passeig de Gracia cluster, but uniform marker size and
+          no explicit callout limit the storytelling ceiling.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,12 +158,13 @@ review:
           markers.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing zoom/pan interactivity required for interactive libraries;
-          the tile-provider selector is present visually but not wired to any click
-          handler.
+        passed: true
+        comment: 'Fixed from attempt 1: d3.zoom() now drives real pan/zoom on the
+          map group, and the tile-provider selector (Streets/Terrain/Satellite) is
+          now wired to click handlers that re-tint the basemap. Auto-fit-to-bounds
+          zoom level and marker contrast/outline both present.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -195,7 +205,7 @@ review:
         comment: Daily ride counts and relative station popularity (city-center plazas
           busiest, outer parks quietest) are factually plausible.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -204,8 +214,8 @@ review:
         max: 3
         passed: true
         comment: Mostly flat data -> layout -> draw script, but adds a few small helper
-          functions (blockHash, footnote) beyond the strictest KISS reading -- justified
-          by the procedural tile texture and repeated footnote drawing.
+          functions (blockHash, footnote, setProvider) beyond the strictest KISS reading
+          -- justified by the procedural tile texture and now-functional interactivity.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,21 +231,20 @@ review:
         comment: Only the global d3 is used, no unused imports.
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Provider legend draws checkbox-styled controls with no click handling
-          anywhere in the script -- decorative UI that implies functionality the exported
-          HTML doesn't actually provide.
+        passed: true
+        comment: 'Fixed from attempt 1: the provider legend''s click handlers now
+          actually re-tint the basemap, so the UI is no longer decorative-only.'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts into #container per the harness contract; no deprecated
-          API usage.'
+        comment: 'Correctly mounts into #container per the harness contract; animations
+          not used, no deprecated API usage.'
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -244,16 +253,17 @@ review:
         max: 5
         passed: true
         comment: Idiomatic data joins (selection.data().join()), scales, clipPath
-          viewport, and scaleSequential usage.
+          viewport, scaleSequential, and d3.zoom() usage.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Custom fit-bounds equirectangular projection plus procedural hash-based
-          tile generation is genuinely D3-specific -- not easily replicated in a high-level
-          charting library.
-  verdict: REJECTED
+        comment: Custom fit-bounds equirectangular projection, procedural hash-based
+          tile generation, genuine d3.zoom() pan/zoom, and click-driven provider re-tinting
+          together form a distinctly D3-specific feature set not easily replicated
+          in a high-level charting library.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
