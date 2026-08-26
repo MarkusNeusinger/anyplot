@@ -1,0 +1,269 @@
+library: echarts
+language: javascript
+specification_id: map-connection-lines
+created: '2026-08-26T07:52:56Z'
+updated: '2026-08-26T08:06:57Z'
+generated_by: claude-sonnet
+workflow_run: 32944144901
+issue: 3746
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Landmass base map (hand-simplified continent silhouettes rendered via a custom
+    ECharts series) now gives genuine geographic context, directly addressing attempt
+    1's biggest gap versus the spec's 'show a base map with country borders or coastlines'
+    requirement
+  - FRA label repositioned to 'bottom' resolves the LHR/FRA label crowding flagged
+    in the prior review; the two node labels no longer overlap
+  - Overlapping node markers near LHR/FRA stay individually distinguishable thanks
+    to the theme-adaptive borderColor (matches page background), so hub-cluster density
+    doesn't collapse marker identity
+  - Dense-cluster routes (DXB/DEL/HKG/SIN) get extra curveness and thinned line width
+    via the denseCluster set, visibly reducing arc congestion versus attempt 1
+  - Line width AND opacity both scale with passenger volume (1.2-6.2px, opacity 0.28-0.60),
+    squarely inside the spec's recommended 0.3-0.6 transparency band; node marker
+    size scales with total hub traffic
+  - 'Clean theme-adaptive chrome: identical brand-green data color and landmass tint
+    in both renders, correct #FAF8F1/#1A1A17 backgrounds, all text readable in both
+    themes'
+  weaknesses:
+  - Landmass silhouettes are hand-simplified low-vertex approximations rather than
+    true coastline/country-border data - recognizable as continents but visually rough
+    (Europe/Asia render as one merged blob, Africa's outline is angular); acceptable
+    given the offline no-GeoJSON constraint but keeps SC-01 short of full marks
+  - LHR and FRA node markers still visually overlap (circles intersect roughly 30%)
+    even though their labels no longer collide - consider a small positional offset
+    for close hub pairs
+  - No legend distinguishing 'line = route' vs 'circle = airport' - low severity given
+    the single-hue palette and now-present basemap, but still an easy add to remove
+    residual ambiguity
+  - The DXB/DEL/HKG/SIN cluster remains the visually busiest part of the plot; despite
+    the curveness/width tweaks, several arcs still cross closely together there
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
+      Chrome: Title "Global Flight Routes · map-connection-lines · javascript · echarts · anyplot.ai" centered at top in dark ink, subtitle below in softer gray explaining the width/opacity/size encoding. X-axis "Longitude" and Y-axis "Latitude" with degree-formatted tick labels (e.g. "150°W", "30°N"). Light, subtle gridlines every 30 degrees. All chrome text is dark-on-light and clearly legible.
+      Basemap: New in this attempt - simplified light-gray continent silhouettes (North America, South America, Europe/Asia as one merged landmass, Africa, Australia) fill the graticule as a soft polygon layer beneath the routes, giving genuine geographic framing that was missing in attempt 1.
+      Data: 12 airport nodes (JFK, LAX, GRU, LHR, FRA, JNB, DXB, DEL, SIN, HKG, HND, SYD) rendered as brand-green (#009E73) filled circles sized by hub traffic, connected by brand-green curved arcs whose width and opacity scale with route passenger volume. Directional arrowheads mark the destination end of each route. LHR and FRA markers overlap slightly but each retains a page-background-colored border ring, keeping them visually distinct. The FRA label now sits below its marker (repositioned from attempt 1) so it no longer collides with the LHR label above.
+      Legibility verdict: PASS - all title, subtitle, axis, and tick text is clearly readable against the light background; no light-on-light text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
+      Chrome: Same title/subtitle layout, now rendered in light ink (#F0EFE8) and soft gray subtext, both clearly visible against the dark background. Axis labels and tick labels are light gray and legible. Gridlines are subtle and visible without competing with the data.
+      Basemap: Continent silhouettes render as a slightly darker gray-on-black fill with a soft stroke, still clearly legible as landmasses without overpowering the route data.
+      Data: Data colors are identical to the light render - same brand-green (#009E73) nodes and arcs, same width/opacity/size encoding, same arrow markers. Confirms the Imprint rule that only chrome flips between themes, not data color.
+      Legibility verdict: PASS - no dark-on-dark failures; all text (title, subtitle, axis names, tick labels, airport code labels) is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set throughout (titleFontSize, subtextStyle,
+          axisLabel, nameTextStyle); title scales with length and fits without clipping
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: FRA label now positioned below its marker, resolving the LHR/FRA
+          label collision from attempt 1; no text overlaps text or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers/lines well adapted to the sparse dataset; LHR/FRA circles
+          overlap slightly but page-bg borders keep them distinguishable; DXB/DEL/HKG/SIN
+          cluster still visually dense
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue brand green with opacity/size encoding, no red-green reliance,
+          good contrast on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills a reasonable share of canvas with balanced margins; some
+          unused whitespace given the world-spanning axis range vs. actual data extent
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude axis names with degree-unit tick formatting (e.g.
+          150°W, 30°N)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, identical across light/dark; backgrounds
+          correct #FAF8F1/#1A1A17; chrome theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Landmass basemap plus the existing width/opacity/size encoding now
+          reads much closer to a real map rather than a generic Cartesian chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle continent fill with soft stroke, subtle gridlines, no boxed
+          frame, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size and width/opacity encoding create clear visual hierarchy - major
+          hubs and high-traffic routes immediately stand out
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Curved origin-destination arcs, endpoint markers, and a landmass
+          basemap now present; the base map is a hand-simplified silhouette rather
+          than true coastline/border data, keeping this just short of full marks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved lines, value-scaled thickness/opacity, endpoint markers, 0.28-0.60
+          transparency, and a base map with landmass shading for geographic context
+          are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on X, latitude on Y, correct origin/destination arc mapping,
+          all 12 airports and 18 routes visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed for single-hue series, subtitle clarifies encoding
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 18 routes across 12 global hubs show a wide range of traffic volumes
+          and both high-degree hubs and low-degree spokes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real major airports, plausible flight-route network, neutral business/aviation
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinates are geographically accurate; passenger-volume magnitudes
+          are in a realistic order relative to real-world hub traffic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/init/option structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the global echarts and ANYPLOT_TOKENS, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Concise, no fake UI or interactivity, clean derived-data computation
+          including the new landmass renderItem
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false, no explicit width/height/devicePixelRatio
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level lines + scatter + custom series usage in cartesian2d
+          coordinate system, a reasonable idiomatic choice given the offline, no-GeoJSON
+          constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines the lines series (curveness, per-line style overrides, directional
+          arrow symbols) with a custom renderItem series to draw the landmass basemap
+          - not trivially replicated in a generic charting API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - hover-tooltips
+  - patches
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending

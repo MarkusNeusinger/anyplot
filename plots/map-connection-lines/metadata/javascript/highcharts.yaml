@@ -1,0 +1,262 @@
+library: highcharts
+language: javascript
+specification_id: map-connection-lines
+created: '2026-08-26T07:58:05Z'
+updated: '2026-08-26T08:08:39Z'
+generated_by: claude-sonnet
+workflow_run: 32944356518
+issue: 3746
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/highcharts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'First categorical series is the correct brand green #009E73, and every chrome
+    element (background, title, axis labels, ticks, grid, legend text) flips correctly
+    between the #FAF8F1 light surface and #1A1A17 dark surface with no dark-on-dark
+    or light-on-light failures.'
+  - 'Genuinely creative workaround for the highcharts core bundle''s missing maps
+    module: a hand-drawn stylized coastline built from real lon/lat coordinates keeps
+    the axes geographically meaningful instead of faking a real basemap.'
+  - Route line width is proportionally encoded by cargo volume (1.5-6.5px) with alpha
+    0.45 to manage the 16 overlapping arcs, and a custom hand-drawn width legend (via
+    chart.renderer) explains the encoding clearly.
+  - 'Strong data storytelling: Nordhaven and Tidemark are labeled as hubs and rendered
+    with larger markers (radius scales with connection degree), so the hub-and-spoke
+    structure of the shipping network is immediately visible.'
+  - 'Idiomatic and distinctive Highcharts usage: correct series-type composition (area
+    for coastlines, line for arcs, scatter for ports) plus direct chart.renderer text/path
+    calls in the onLoad callback for custom annotations.'
+  - Clean, deterministic, dependency-free code with animation disabled on both chart
+    and series, credits removed, and no explicit width/height passed to Highcharts.chart.
+  weaknesses:
+  - The 16 crossing arcs create a fairly dense web near Nordhaven/Tidemark; the hub-and-spoke
+    story reads clearly once the viewer notices the labeled hubs and larger markers,
+    but a first glance is busier than it needs to be — thinning the lowest-volume
+    routes' opacity slightly further would sharpen the focal point.
+  - The stylized land fill (a flat neutral-gray tint above/below the coastline curve)
+    reads as generic shading rather than a convincing landmass; a subtle secondary
+    texture or slightly stronger contrast against the water tint would sell the map
+    metaphor better within the library's constraints.
+  - MARGIN_BOTTOM (195px, ~22% of mount height) is dedicated to the custom width legend
+    — functional and not isolated from the plot, but leaves the bottom area feeling
+    a bit heavy compared to the tighter top/side margins.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "map-connection-lines · javascript · highcharts · anyplot.ai" in bold dark ink, fully readable; subtitle in medium-gray, readable; "Longitude (°)" / "Latitude (°)" axis titles and numeric tick labels in soft dark gray, all clearly legible against the cream background; subtle light-gray gridlines visible but not competing with data; custom "Route width ∝ annual cargo volume" legend text and hub labels ("Nordhaven", "Tidemark", "Open ocean") all readable dark text.
+      Data: Route arcs and port markers render in the correct brand green #009E73 (translucent for arcs, solid for ports); land bands above/below the coastline are a soft neutral-gray tint; the plot area carries a faint blue (Imprint palette position 3, water semantic exception) tint standing in for open ocean.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, subtitle, axis titles, tick labels, hub labels, and the custom width-legend text all render in light/soft-light tones, fully readable against the dark surface — no dark-on-dark text anywhere; gridlines are still subtle but visible.
+      Data: Route arcs and port markers are the identical #009E73 green as the light render (confirmed unchanged); land tint and water tint are still present, appropriately adjusted for the dark surface but not altering the data color.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22px, axis titles 16px, ticks/labels
+          14px); readable in both themes; title occupies ~35% of width, well within
+          bounds; no clipping or overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Route widths (1.5-6.5px) and alpha 0.45 handle the 16-route density
+          well; ports scale by connection degree; slightly busy near the two hubs.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue encoding with width/alpha redundancy, not color-alone;
+          good contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area ~62% of canvas, balanced margins, custom legend sits directly
+          below the plot (not isolated).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Longitude (°)" / "Latitude (°)" — descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes; backgrounds correctly
+          #FAF8F1/#1A1A17; water tint uses palette[2] blue as a legitimate semantic
+          exception.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom stylized basemap, semantic water tint, and hand-drawn legend
+          show clear design intent beyond library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, polished custom overlays; land
+          fill could use more visual interest.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Labeled, larger hub markers (Nordhaven, Tidemark) make the hub-and-spoke
+          network structure the clear focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct connection-lines (origin-destination arc) map.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved arcs, endpoint markers, value-encoded thickness, alpha transparency,
+          and base-map context all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=longitude, Y=latitude, all connections visible within axis bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; custom legend labels correctly describe
+          the width encoding.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows varying route volumes, hub vs. spoke degree, bidirectional
+          pairs, and endpoint markers — full feature set for the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Fictional but neutral, comprehensible shipping-network scenario with
+          plausible port names and cargo units; not a real-world scenario so short
+          of full marks.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Lat/lon values within valid geographic ranges; cargo volumes (45-310k
+          TEU/yr) plausible for regional ports.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom script with no classes, but a fair number of
+          helper functions (justified by arc/coastline geometry).
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Highcharts object.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity matches the geometry
+          the plot requires.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart("container", ...) mount-node contract, animation
+          disabled, credits removed.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct series-type composition (area/line/scatter) plus renderer-based
+          custom overlays via the onLoad callback.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Direct chart.renderer.text/path calls for custom legend and annotations
+          — a Highcharts-specific low-level SVG technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
