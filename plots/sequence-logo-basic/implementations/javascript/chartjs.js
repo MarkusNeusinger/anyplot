@@ -1,7 +1,7 @@
 // anyplot.ai
 // sequence-logo-basic: Sequence Logo for Motif Visualization
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-26
+// Quality: 94/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 
