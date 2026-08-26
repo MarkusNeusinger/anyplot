@@ -20,6 +20,8 @@ const arbitraryPoints = [
   { re: 1.8, im: 1.2 },
   { re: -1.5, im: 0.9 },
   { re: 0.7, im: -1.9 },
+  { re: -0.9, im: -2.2 },
+  { re: 2.1, im: -0.4 },
 ];
 
 function fmtNum(n) {
@@ -41,17 +43,25 @@ function toVectorData(points) {
 }
 
 function toPointData(points) {
-  return points.map((p) => ({
-    value: [p.re, p.im],
-    label: {
-      show: true,
-      position: p.im >= 0 ? "top" : "bottom",
-      formatter: () => formatComplex(p.re, p.im),
-      color: t.ink,
-      fontSize: 15,
-      fontWeight: 500,
-    },
-  }));
+  return points.map((p) => {
+    // Points sitting exactly on the imaginary axis (re === 0) would have their
+    // label centered at x=0, so the vertical axis line cuts through the text;
+    // nudge those labels sideways and left-align them clear of the line.
+    const onImaginaryAxis = p.re === 0;
+    return {
+      value: [p.re, p.im],
+      label: {
+        show: true,
+        position: p.im >= 0 ? "top" : "bottom",
+        align: onImaginaryAxis ? "left" : "center",
+        offset: onImaginaryAxis ? [10, 0] : [0, 0],
+        formatter: () => formatComplex(p.re, p.im),
+        color: t.ink,
+        fontSize: 15,
+        fontWeight: 500,
+      },
+    };
+  });
 }
 
 // Unit circle reference (dashed), 144 segments
@@ -138,15 +148,12 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "scatter-complex-plane · javascript · echarts · anyplot.ai",
+    subtext: "4th Roots of Unity and Arbitrary Points in the Argand Plane",
     left: "center",
     top: 24,
+    itemGap: 10,
     textStyle: { color: t.ink, fontSize: 22, fontWeight: "500" },
-  },
-  subtitle: {
-    text: "4th Roots of Unity and Arbitrary Points in the Argand Plane",
-    left: "center",
-    top: 58,
-    textStyle: { color: t.inkSoft, fontSize: 16 },
+    subtextStyle: { color: t.inkSoft, fontSize: 16 },
   },
   legend: {
     top: 96,
