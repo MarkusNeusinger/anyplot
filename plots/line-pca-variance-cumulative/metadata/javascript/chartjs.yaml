@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: line-pca-variance-cumulative
 created: '2026-08-26T07:16:39Z'
-updated: '2026-08-26T07:21:00Z'
+updated: '2026-08-26T07:31:47Z'
 generated_by: claude-sonnet
 workflow_run: 32941411390
 issue: 4131
@@ -12,35 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-pca-variance-cumulative/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
   - Real kneedle-style elbow-detection algorithm (perpendicular distance from the
     chord) rather than a hardcoded guess
-  - 'Deliberate visual hierarchy: brand green for the hero cumulative curve, muted
-    alpha-blended lavender bars for the secondary overlay'
+  - New elbow callout (speech-bubble annotation reading "5 components · 83.1%") directly
+    resolves the prior review's main feedback — the recommendation is now self-explanatory
+    on the chart itself
+  - 'Deliberate visual hierarchy: brand green reserved for the hero cumulative curve,
+    muted alpha-blended lavender bars for the secondary overlay'
   - Distinct dash patterns differentiate the 90% vs. 95% threshold lines
-  - Fully theme-adaptive; Imprint data colors identical between light and dark renders
-  - Idiomatic Chart.js mixed-chart construction using per-dataset type and order for
-    z-index control
+  - Fully theme-adaptive; Imprint data colors and the new callout box both flip correctly
+    between light and dark
+  - Idiomatic Chart.js mixed-chart construction with a custom plugin hook for the
+    annotation
   weaknesses:
-  - Two small utility functions (lcg, findElbowIndex) push slightly past minimal KISS
-    structure, though justified by the elbow-detection requirement
+  - Legend swatches for the dashed/dotted threshold lines still render as hollow bordered
+    boxes rather than visible dash strokes — a Chart.js default legend-rendering quirk,
+    not a code defect
   - No optional 99% threshold line included (spec listed it as optional, so not a
     compliance miss)
-  - Legend swatches for dashed/dotted threshold lines render as hollow bordered boxes
-    rather than visible dash strokes (Chart.js default legend-rendering quirk)
+  - Three small helper functions/plugin push slightly past minimal KISS structure
+    — acceptable given they directly implement required spec features (elbow detection
+    + annotation)
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1
-      Chrome: title, axis titles, tick labels, legend all in dark ink/soft-grey — all readable
-      Data: cumulative-variance line is brand green #009E73, individual-variance bars are lavender (palette[1]) with alpha blending, elbow marker and threshold lines in ink (black)
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title, both axis titles, tick labels, and legend all render in dark ink / soft grey; all clearly readable against the light background. New elbow callout box (dark fill, light text) sits cleanly above the elbow marker without overlapping the 90%/95% threshold lines.
+      Data: First series (cumulative variance line) is #009E73 brand green with white-ringed markers; secondary series (individual variance bars) is palette[1] lavender with alpha blending. 90%/95% threshold lines and elbow marker in ink (black in light theme).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17
-      Chrome: title, axis titles, tick labels, legend all in light ink/soft light-grey — all readable, no dark-on-dark issues
-      Data: confirmed identical brand green and lavender bar colors to light render; only chrome (backgrounds, text, marker rings, threshold-line color) flips
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Title, axis titles, tick labels, and legend all render in light ink / soft light-grey; all clearly legible against the dark background. No dark-on-dark failures. Callout box flips to light fill with dark text, elbow marker flips to near-white with a green ring, threshold lines flip to white dashes.
+      Data: Cumulative line remains identical #009E73 green; bars remain identical lavender purple — confirming Imprint data colors are unchanged between themes, only chrome flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,19 +58,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicit-sized and readable in both themes
+        comment: All text explicitly sized and readable in both themes; muted right-axis
+          title is intentional
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: New elbow callout does not collide with threshold lines or other
+          elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Prominent markers for sparse 13-point series
+        comment: Sparse 13-point series with prominent, density-appropriate markers
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -76,41 +84,45 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed, no overflow
+        comment: Canvas gate passed, balanced layout, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: Both axis titles descriptive with units (%)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green on hero series, identical colors across themes
+        comment: Brand green first series, Imprint palette secondary, theme-correct
+          backgrounds
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Deliberate hero/secondary color hierarchy, distinct dash styles
+        comment: Hero/secondary hierarchy, dash-differentiated thresholds, hand-built
+          speech-bubble annotation
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only grid, generous padding, muted secondary axis title
+        comment: Subtle grid, generous padding, polished callout; legend swatches
+          for dashed lines are a minor Chart.js default quirk
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Elbow point and thresholds create a clear focal point
+        comment: Elbow callout makes the recommendation immediately obvious without
+          the legend
     spec_compliance:
       score: 15
       max: 15
@@ -120,25 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line hero with bar overlay enhancement
+        comment: Correct mixed line+bar chart, cumulative line is hero encoding
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cumulative curve, thresholds, elbow, markers, x starts at 1
+        comment: Cumulative curve, %-scale axis, 90/95 thresholds, elbow detection
+          + annotation, markers, x starts at 1
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 components shown on both axes
+        comment: x = component count, dual y-axes correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format, matching legend labels
+        comment: Title format exact, legend labels descriptive and correct
     data_quality:
       score: 15
       max: 15
@@ -148,19 +161,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Individual, cumulative, thresholds, elbow all present
+        comment: Individual + cumulative variance, both thresholds, elbow all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Wine-cultivar PCA is plausible and neutral
+        comment: Wine-cultivar PCA is a classic, neutral, real-world example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic geometric decay summing to 100%
+        comment: Realistic geometrically decaying scree pattern summing to 100%
     code_quality:
       score: 9
       max: 10
@@ -170,56 +183,60 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions, justified by elbow detection
+        comment: Three small helpers, each justified by required elbow-detection/annotation
+          feature
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, deterministic
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports, only harness globals used
+        comment: No imports; only harness globals used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount pattern, animation disabled
+        comment: Correct mount-node pattern, animation disabled
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed-chart per-dataset type, order for z-index, afterDatasetsDraw
+          plugin hook
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Mixed-chart pattern with order for z-index control
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Twin axes and multi-dataset overlay
+        comment: Custom canvas plugin reading point pixel coords via getDatasetMeta/getProps
+          for the annotation
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - twin-axes
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
+  - edge-highlighting
