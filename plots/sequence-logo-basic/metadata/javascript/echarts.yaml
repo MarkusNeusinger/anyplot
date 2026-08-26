@@ -1,0 +1,266 @@
+library: echarts
+language: javascript
+specification_id: sequence-logo-basic
+created: '2026-08-26T11:31:45Z'
+updated: '2026-08-26T11:47:33Z'
+generated_by: claude-sonnet
+workflow_run: 32962372685
+issue: 4421
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/echarts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Fixes both weaknesses flagged in Attempt 1: raised the minimum-renderable-height
+    threshold (MIN_LETTER_HEIGHT=8) so near-zero-information positions now render
+    as clean, honest color-coded slivers instead of an overlapping illegible smear,
+    and added a MIN_STROKE_HEIGHT=24 ink-color stroke on small glyphs to shore up
+    contrast on the ochre/red letters exactly where legibility was previously stressed.'
+  - Correctly implements true scaled-glyph rendering via a custom ECharts renderItem
+    (stretches each letter to fill its exact stack cell using approximated Helvetica-Bold
+    glyph metrics — GLYPH_WIDTH_RATIO / CAP_HEIGHT_RATIO), not plain fixed-size text
+    — the hardest and most distinctive requirement of this spec.
+  - Correct information-content math (bits = 2 minus Shannon entropy per position)
+    and frequency-ascending stack order so the most frequent letter lands on top,
+    matching the spec exactly.
+  - Semantic DNA color convention (A=green, C=blue, G=ochre, T=matte red) mapped cleanly
+    onto Imprint palette members, with color + letter-shape redundant encoding that
+    is inherently colorblind-safe.
+  - Realistic, recognizable biological motif (CACGTG E-box core flanked by degenerate
+    positions) — the conserved core visually dominates without needing any extra annotation.
+  - Idiomatic, correct use of ECharts custom series (no built-in chart type exists
+    for sequence logos, so custom rendering via api.coord/api.size is the right and
+    only approach).
+  - Theme-adaptive chrome correctly threaded through title/axis/grid tokens; data
+    colors are pixel-identical between light and dark renders, only chrome flips.
+  weaknesses:
+  - No explicit color-to-letter legend/key is shown; readers unfamiliar with the A/C/G/T
+    convention rely entirely on the letter shapes for disambiguation. This is a minor,
+    defensible omission (letters are self-labeled, so color is redundant, not load-bearing)
+    rather than a functional gap.
+  - Data storytelling relies solely on the information-content height scaling to draw
+    the eye to the conserved CACGTG core; no supplementary annotation (e.g. a subtle
+    bracket or label calling out the core region) is used to reinforce the focal point.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white and not dark.
+      Chrome: Title "sequence-logo-basic · javascript · echarts · anyplot.ai" is centered, bold, dark ink, fully readable. X-axis "Position" (1-12) and y-axis "Information content (bits)" (0-2, 0.5 gridline steps) are both clearly labeled in dark/soft-dark ink, with subtle horizontal gridlines that don't compete with the data.
+      Data: Stacked, scaled letter glyphs colored by the semantic DNA convention — A=green (#009E73), C=blue (#4467A3), G=ochre (#BD8233), T=matte red (#AE3030). Positions 4-9 form a tall, dominant CACGTG core (E-box motif); positions 1-3 and 10-12 are short, reflecting genuinely low information content, and now render as clean thin color-coded slivers (fixed from Attempt 1's illegible letter smear) rather than overlapping glyphs. First categorical/semantic color choices come straight from the Imprint palette.
+      Legibility verdict: PASS — no light-on-light text anywhere; all title/axis/tick text is crisp against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black and not light.
+      Chrome: Same title, now in light ink, fully readable. Axis and tick labels are in light/soft-light tones, gridlines subtle but visible.
+      Data: Letter colors are pixel-identical to the light render (A=green, C=blue, G=ochre, T=matte red) — confirming only chrome flipped between themes. Brand green reads clearly on the dark surface (e.g. position 5 "A"). Same CACGTG dominance and same clean small-position slivers, with the stroke fix on smaller glyphs holding up against the dark surface too.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text is clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis, and tick labels are explicitly sized and fully readable
+          in both themes; core-motif letters are crisp; still legible when scaled
+          to ~400px mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed from Attempt 1: raised MIN_LETTER_HEIGHT threshold means the
+          tiniest stacks now render as non-overlapping color slivers instead of smeared,
+          overlapping glyphs.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed from Attempt 1: near-zero-information positions (1, 2, 3,
+          10, 11, 12) now render as clean, honest color-coded slivers rather than
+          an illegible smear.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Color + letter-shape redundant encoding is inherently CVD-safe; small
+          glyphs below MIN_STROKE_HEIGHT get an ink stroke for extra contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas (no canvas-gate failure file present), no
+          overflow or clipping, generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Position" and "Information content (bits)" match the spec exactly,
+          with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct semantic DNA colors mapped from Imprint palette members;
+          correct theme backgrounds; identical data colors across themes.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom glyph-stretching render with approximated Helvetica-Bold font
+          metrics, now with an added stroke pass for small-glyph contrast — real design/engineering
+          effort beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines minimized, subtle single-axis grid, generous whitespace; sliver
+          fallback keeps low-information positions visually honest instead of muddy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Conserved E-box core visually dominates purely via information-content
+          height scaling; no supplementary annotation reinforces the focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sequence logo implementation via custom stacked, scaled glyphs.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequency-ordered stacking (most frequent on top), information-content
+          height scaling, and true stretched glyphs are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position (1-12), Y=information content (bits, 0-2 for DNA) — correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; no legend needed since
+          letters are self-labeled.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows the full range from a strongly conserved core to near-uniform
+          degenerate flanks.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Biologically plausible E-box (CACGTG) transcription-factor motif,
+          neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 positions, frequencies sum to 1 per position, sensible 0-2 bit
+          range for a 4-letter DNA alphabet.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: renderItem is the required ECharts custom-series callback, not incidental
+          complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports; only mount-node globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear entropy/stack computation with well-commented threshold constants;
+          no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, no devicePixelRatio
+          override.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series via api.coord/api.size is the correct, only way to
+          build this chart type in ECharts.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Advanced use of custom renderItem with glyph-metric scaling and a
+          density-adaptive render floor; distinctive but a general technique rather
+          than something unique to ECharts internals.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - entropy-calculation
+  styling:
+  - edge-highlighting
