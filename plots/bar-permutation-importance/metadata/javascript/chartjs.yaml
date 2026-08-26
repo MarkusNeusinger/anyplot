@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: bar-permutation-importance
+created: '2026-08-26T18:30:03Z'
+updated: '2026-08-26T18:35:38Z'
+generated_by: claude-sonnet
+workflow_run: 32999437445
+issue: 2998
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Bars sorted descending by mean importance so the most predictive feature (Departure
+    delay) sits at top, matching the spec's readability requirement
+  - 'Sequential Imprint gradient (#009E73 → #4467A3) is mapped continuously to importance_mean
+    via a custom lerp, correctly treating importance as continuous data rather than
+    forcing the categorical palette onto it'
+  - Custom errorBars plugin renders whisker caps with theme-adaptive ink color, clearly
+    showing importance_std variability for every feature in both themes
+  - Dashed zero-reference line (custom zeroLine plugin) cleanly separates features
+    with genuine positive importance from the two noise features with slightly negative
+    importance (Passenger count, Ticket price)
+  - 'Both renders are fully theme-correct: #FAF8F1/#1A1A17 backgrounds, ink/inkSoft
+    text, and grid all flip correctly while the green→blue data gradient stays pixel-identical'
+  - Realistic, neutral flight-delay classifier scenario with plausible ROC-AUC decrease
+    magnitudes and sensible relative feature ranking
+  - No clipping at any canvas edge — verified all four borders (title, feature labels,
+    x-axis ticks including the -0.03 and 0.22 extremes) at full resolution
+  weaknesses:
+  - Design excellence is solid but stops short of exceptional — no direct value labels
+    or colorbar legend clarifying what the gradient encodes; a numeric label on the
+    top 1-2 bars would sharpen the storytelling further
+  - Two helper functions (hexToRgb, lerpColor) plus two plugin objects add more structure
+    than a minimal top-to-bottom script; justified by Chart.js lacking native error-bar/reference-line
+    support, but it is a step up in complexity from the KISS ideal
+  - Y-axis title 'Feature' is somewhat redundant since the tick labels already spell
+    out each feature name in full — could be dropped without losing information
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "bar-permutation-importance · javascript · chartjs · anyplot.ai" in dark ink, comfortably sized (~55-60% of canvas width, not overflowing). X-axis title "Mean decrease in ROC-AUC (permutation importance)" and y-axis title "Feature" both in dark ink. Tick labels (feature names, x-axis numeric ticks) in a slightly softer dark grey. Subtle vertical gridlines at major x ticks only; y-axis has no grid. All chrome fully readable against the light background.
+      Data: 13 horizontal bars sorted descending by mean importance. First two bars (Departure delay, Distance) render in brand green (#009E73); color fades continuously toward blue (#4467A3) as importance decreases, correctly implementing the Imprint sequential colormap on the continuous importance_mean value. Black error-bar whiskers with caps show importance_std for every bar. A black dashed vertical line at x=0 separates the two slightly-negative bars (Passenger count, Ticket price) from the rest.
+      Legibility verdict: PASS — no dark-on-light or overlap issues; verified via edge crops that no title/label/tick is clipped at any canvas border.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title and axis titles now in light ink, tick labels in a lighter soft grey — all clearly legible against the dark background. Gridlines subtle and still visible. No dark-on-dark text anywhere.
+      Data: Bar colors are pixel-identical to the light render (green→blue gradient unchanged) — only chrome flipped, confirming Imprint palette invariance across themes. Error-bar whiskers switch to a light/white stroke for contrast against the dark background, and the zero-reference line renders as a light dashed line.
+      Legibility verdict: PASS — all text and data elements remain distinguishable; brand green still reads clearly on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis titles 16, ticks 14);
+          readable and well-proportioned in both themes with no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and error-bar caps clearly visible and appropriately sized for
+          13 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-blue gradient is CVD-safe; error-bar stroke color
+          adapts per theme for contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area uses most of the canvas with balanced margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis descriptive with metric name; y-axis label present though
+          slightly redundant with tick labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct use of imprint_seq (#009E73 → #4467A3) for continuous importance
+          value; theme-correct backgrounds and chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Sequential gradient, custom error bars, and dashed zero-reference
+          line are clearly above Chart.js defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle value-axis-only gridlines, generous whitespace, clean L-shaped
+          frame; no standout extra polish beyond that
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Sort order plus color gradient plus zero-line together create clear
+          visual hierarchy without needing annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted bars, error bars, sequential color gradient, and zero reference
+          line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Feature names on y, importance_mean (with std padding) on x; all
+          data visible including negative values
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; legend correctly omitted since
+          color encodes a continuous value, not discrete series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows a wide range of importance magnitudes including two near-zero/negative
+          noise features and varying std bands
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible flight-delay classifier scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: ROC-AUC decrease values and relative feature ranking are realistic
+          for this domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two helper functions and two plugin objects add structure beyond
+          a minimal script, though justified by Chart.js's lack of native error-bar/reference-line
+          support
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded, deterministic data array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the provided globals are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering; complexity matches the visualization's
+          needs
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses core bar type with indexAxis: ''y'' and the recommended Plugin
+          API (afterDatasetsDraw) for custom drawing'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Chart.js's low-level Plugin API for hand-rolled error bars and a
+          reference line is a genuinely distinctive extensibility feature of this
+          library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - error-bars
+  - reference-line
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
