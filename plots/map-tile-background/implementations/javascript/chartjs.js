@@ -77,13 +77,17 @@ const tileBasemapPlugin = {
     const { ctx, chartArea, scales } = chart;
     const tileSize = chartArea.width / TILE_COLUMNS;
     const rows = Math.ceil(chartArea.height / tileSize);
-    const landFill = window.ANYPLOT_THEME === "light" ? "rgba(107, 106, 99, 0.16)" : "rgba(168, 167, 159, 0.16)";
-    const landFillAlt = window.ANYPLOT_THEME === "light" ? "rgba(107, 106, 99, 0.22)" : "rgba(168, 167, 159, 0.22)";
-    const seaFill = window.ANYPLOT_THEME === "light" ? "rgba(68, 103, 163, 0.08)" : "rgba(68, 103, 163, 0.12)";
-    const seaFillAlt = window.ANYPLOT_THEME === "light" ? "rgba(68, 103, 163, 0.13)" : "rgba(68, 103, 163, 0.18)";
+    // Tile shading kept close in tone (checker vs. alt) and seams drawn at low
+    // alpha so the tile grid reads as a subtle backdrop, not a hard checkerboard.
+    const landFill = window.ANYPLOT_THEME === "light" ? "rgba(107, 106, 99, 0.14)" : "rgba(168, 167, 159, 0.14)";
+    const landFillAlt = window.ANYPLOT_THEME === "light" ? "rgba(107, 106, 99, 0.17)" : "rgba(168, 167, 159, 0.17)";
+    const seaFill = window.ANYPLOT_THEME === "light" ? "rgba(68, 103, 163, 0.07)" : "rgba(68, 103, 163, 0.10)";
+    const seaFillAlt = window.ANYPLOT_THEME === "light" ? "rgba(68, 103, 163, 0.09)" : "rgba(68, 103, 163, 0.13)";
+    const tileSeam = window.ANYPLOT_THEME === "light" ? "rgba(26, 26, 23, 0.05)" : "rgba(250, 248, 241, 0.05)";
+    const coastlineStroke = window.ANYPLOT_THEME === "light" ? "rgba(26, 26, 23, 0.28)" : "rgba(250, 248, 241, 0.28)";
 
     ctx.save();
-    ctx.strokeStyle = t.grid;
+    ctx.strokeStyle = tileSeam;
     ctx.lineWidth = 1;
     for (let row = 0; row < rows; row += 1) {
       for (let col = 0; col < TILE_COLUMNS; col += 1) {
@@ -101,6 +105,22 @@ const tileBasemapPlugin = {
         ctx.strokeRect(x, y, w, h);
       }
     }
+
+    // A crisp coastline stroke on top of the soft tiles gives the map real
+    // geographic definition without relying on the checker pattern alone.
+    ctx.strokeStyle = coastlineStroke;
+    ctx.lineWidth = 1.5;
+    [EUROPE_COASTLINE, BRITISH_ISLES].forEach((polygon) => {
+      ctx.beginPath();
+      polygon.forEach(([lon, lat], idx) => {
+        const px = scales.x.getPixelForValue(lon);
+        const py = scales.y.getPixelForValue(lat);
+        if (idx === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.closePath();
+      ctx.stroke();
+    });
     ctx.restore();
   },
 };
@@ -112,7 +132,7 @@ const basemapCaptionPlugin = {
   afterDraw(chart) {
     const { ctx, chartArea } = chart;
     ctx.save();
-    ctx.font = "12px sans-serif";
+    ctx.font = "14px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textAlign = "left";
     ctx.textBaseline = "bottom";
@@ -148,7 +168,7 @@ const title = "European Landmark Visitors · map-tile-background · javascript �
 const titleFontSize = Math.max(15, Math.round(22 * Math.min(1, 67 / title.length)));
 
 // --- Chart -------------------------------------------------------------------
-new Chart(canvas, {
+const chart = new Chart(canvas, {
   type: "bubble",
   data: {
     datasets: [
@@ -204,3 +224,53 @@ new Chart(canvas, {
     },
   },
 });
+
+// --- Zoom & pan (native wheel/drag, no external plugin) ---------------------
+// The spec asks interactive libraries to let users explore the map at
+// different scales; chartjs-plugin-zoom isn't installed in this runtime, so
+// wheel-to-zoom and drag-to-pan are wired directly onto the linear scales.
+canvas.style.cursor = "grab";
+let isPanning = false;
+let lastX = 0;
+let lastY = 0;
+canvas.addEventListener("mousedown", (evt) => {
+  isPanning = true;
+  lastX = evt.offsetX;
+  lastY = evt.offsetY;
+  canvas.style.cursor = "grabbing";
+});
+canvas.addEventListener("mousemove", (evt) => {
+  if (!isPanning) return;
+  const { x: xScale, y: yScale } = chart.scales;
+  const dLon = xScale.getValueForPixel(lastX) - xScale.getValueForPixel(evt.offsetX);
+  const dLat = yScale.getValueForPixel(lastY) - yScale.getValueForPixel(evt.offsetY);
+  xScale.options.min += dLon;
+  xScale.options.max += dLon;
+  yScale.options.min += dLat;
+  yScale.options.max += dLat;
+  lastX = evt.offsetX;
+  lastY = evt.offsetY;
+  chart.update("none");
+});
+["mouseup", "mouseleave"].forEach((evtName) =>
+  canvas.addEventListener(evtName, () => {
+    isPanning = false;
+    canvas.style.cursor = "grab";
+  }),
+);
+canvas.addEventListener(
+  "wheel",
+  (evt) => {
+    evt.preventDefault();
+    const { x: xScale, y: yScale } = chart.scales;
+    const zoomFactor = evt.deltaY < 0 ? 0.9 : 1.1;
+    const cursorLon = xScale.getValueForPixel(evt.offsetX);
+    const cursorLat = yScale.getValueForPixel(evt.offsetY);
+    xScale.options.min = cursorLon + (xScale.min - cursorLon) * zoomFactor;
+    xScale.options.max = cursorLon + (xScale.max - cursorLon) * zoomFactor;
+    yScale.options.min = cursorLat + (yScale.min - cursorLat) * zoomFactor;
+    yScale.options.max = cursorLat + (yScale.max - cursorLat) * zoomFactor;
+    chart.update("none");
+  },
+  { passive: false },
+);
