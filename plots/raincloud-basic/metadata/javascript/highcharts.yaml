@@ -1,0 +1,252 @@
+library: highcharts
+language: javascript
+specification_id: raincloud-basic
+created: '2026-08-26T10:36:58Z'
+updated: '2026-08-26T10:50:53Z'
+generated_by: claude-sonnet
+workflow_run: 32958260919
+issue: 1876
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correctly implements the cloud-above / box-on-baseline / rain-below visual metaphor
+    exactly as specified, with clean visible gaps between the three layers
+  - 'Creative workaround for Highcharts'' missing boxplot/violin modules: draws a
+    bespoke half-violin (KDE via an area series) and a fully custom box plot via chart.renderer
+    tied to axis.toPixels(), rather than faking or skipping the feature'
+  - 'Rich, realistic data: a bimodal High Dose distribution (non-responder mixture)
+    and reaction-time outliers in the Placebo group accurately represent real experimental
+    phenomena'
+  - 'Palette and theme chrome are fully compliant: first series is brand green, canonical
+    Imprint ordering across categories, identical data colors between light/dark,
+    correct backgrounds, and legible theme-adaptive text throughout'
+  - Title, axis titles, and category labels are explicit, appropriately sized, and
+    free of overlap or clipping in both renders
+  weaknesses:
+  - Rain-point markers (radius 2.5) are on the small side for ~140 points per category;
+    slightly larger (e.g. ~3.5) would improve visibility, especially at mobile scale,
+    without introducing overplotting
+  - Several helper functions (quantile, gaussianKde, drawBoxPlots) push the code past
+    a strict KISS/no-functions structure -- understandable given the statistical requirements
+    of a raincloud plot, but the code could be flattened somewhat
+  - The manual box-plot drawing via chart.renderer + toPixels(), while a solid workaround
+    for the missing boxplot module, is a fairly generic SVG-drawing pattern that's
+    replicable in other libraries -- it doesn't showcase something uniquely tied to
+    Highcharts beyond the renderer API itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Title "raincloud-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. X-axis title "Reaction Time (ms)" and tick labels (100-650) in soft dark gray, all legible. Y-axis shows four category labels (High Dose, Medium Dose, Low Dose, Placebo, top to bottom) in soft dark gray, fully readable with no overlap. No grid lines visible; axis lines and tick marks are subtle soft-ink strokes.
+      Data: Four rows, each with a half-violin "cloud" rising above the category baseline, a box (with median line and whiskers) centered on the baseline, and jittered "rain" scatter points below the baseline. Colors follow Imprint canonical order: Placebo (bottom) = brand green #009E73, Low Dose = lavender, Medium Dose = blue, High Dose (top) = ochre. High Dose shows a visibly bimodal cloud (secondary bump) and Placebo shows scattered outlier points beyond the whiskers -- both intentional, realistic features.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Title, axis title, and tick labels render in light ink (near-white/light-gray) against the dark background -- fully readable, no dark-on-dark issues. Category labels on the y-axis are equally legible in light gray. Whisker/cap lines use the theme-adaptive ink-soft token, appearing light gray against the dark background so they remain visible.
+      Data: Confirmed identical to the light render -- brand green for Placebo, lavender for Low Dose, blue for Medium Dose, ochre for High Dose. Only the chrome (background, text, axis/tick colors) flipped; the box outlines, median lines, cloud fills, and rain point colors are unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/labels
+          14px); readable in both themes with no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; clean gap between box and rain layers
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Rain markers (radius 2.5) are visible but on the small side for ~140
+          points/category
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Four rows fill the canvas with balanced margins; no cut-off elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has units (ms); category names on y-axis are self-descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Placebo) is #009E73, canonical order for the rest,
+          identical data colors across themes, correct theme backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom half-violin + hand-drawn box plot go well beyond a configured
+          default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid, minimal chrome, generous whitespace between category rows
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Ordering by dose plus the visible bimodal High-Dose cloud communicates
+          the dose-response story clearly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct raincloud plot: half-violin + box + jittered strip'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Horizontal orientation, cloud above/rain below baseline, jitter 0.08,
+          rain alpha 0.5, median+quartiles in box -- all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, values on x-axis as required
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend correctly omitted since y-axis labels
+          already identify each category/color
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows outliers (Placebo), bimodality (High Dose), and varying spread
+          across all four groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible clinical dose-response reaction-time scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times and dose-dependent mean shifts are physiologically
+          plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions (quantile, gaussianKde, drawBoxPlots) needed
+          for the statistics, beyond a strictly flat structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No external dependencies, only the Highcharts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Renderer-based box plot is an appropriate, non-fake workaround for
+          the missing boxplot module
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; no explicit width/height; animation
+          disabled
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct idiomatic use of area/scatter series plus the load event
+          hook, appropriate given the missing boxplot module
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: chart.renderer + toPixels() is a real Highcharts capability but the
+          resulting pattern (manual SVG paths tied to axis scales) is generic and
+          easily replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - quantile-statistics
+  styling:
+  - alpha-blending
+  - minimal-chrome
