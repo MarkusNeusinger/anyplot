@@ -108,6 +108,29 @@ const CONTINENTS = [
   },
 ];
 
+// A few well-known, non-disputed border lines (not a full country layer --
+// @mui/x-charts has no geo primitive and hand-tracing all ~200 country
+// borders accurately/neutrally is out of scope) to partially answer the
+// spec's "country borders" ask without risking disputed-boundary inaccuracy.
+const COUNTRY_BORDERS = [
+  {
+    // US-Canada: Pacific coast along the 49th parallel, then the Great
+    // Lakes / St. Lawrence corridor to the Atlantic.
+    points: [
+      [-123, 49], [-110, 49], [-95, 49], [-95, 49.4], [-94.8, 48.8], [-89.5, 48],
+      [-84.5, 46.5], [-83.5, 46], [-82.5, 45.3], [-79.2, 43.3], [-76.5, 44.2],
+      [-75.3, 45], [-71.5, 45], [-70.3, 45.9], [-67.8, 47.1], [-67, 45.1],
+    ],
+  },
+  {
+    // US-Mexico: Pacific coast to the Gulf of Mexico, roughly the Rio Grande.
+    points: [
+      [-117, 32.5], [-114.8, 32.5], [-111, 31.3], [-108.2, 31.3], [-106.5, 31.8],
+      [-104.5, 29.5], [-102.3, 29.9], [-99.5, 27.5], [-97.5, 26],
+    ],
+  },
+];
+
 const MERIDIANS = [-150, -120, -90, -60, -30, 0, 30, 60, 90, 120, 150];
 const PARALLELS = [-60, -30, 0, 30, 60];
 const TISSOT_LATS = [-60, -30, 0, 30, 60];
@@ -286,7 +309,24 @@ function buildProjectionData(config) {
     });
   });
 
-  return { boundary, continents, graticule, tissots };
+  const borders = COUNTRY_BORDERS.map((b) => toRuns(b.points, projFn));
+
+  return { boundary, continents, graticule, tissots, borders };
+}
+
+function bboxOf(points) {
+  const xs = points.map((p) => p[0]);
+  const ys = points.map((p) => p[1]);
+  return { minX: Math.min(...xs), maxX: Math.max(...xs), minY: Math.min(...ys), maxY: Math.max(...ys) };
+}
+
+// Natural width:height ratio of a projection's own outline (e.g. Mercator's
+// clipped rectangle, Mollweide's wide ellipse, Orthographic's circle) --
+// used to size each panel to its projection instead of forcing every panel
+// into one shared box aspect.
+function boundaryAspect(config) {
+  const { minX, maxX, minY, maxY } = bboxOf(boundaryFor(config));
+  return (maxX - minX) / (maxY - minY);
 }
 
 // Fit a data range into a pixel box, expanding the shorter axis so a true
@@ -358,6 +398,18 @@ function GeoOverlay({ data }) {
           strokeWidth={1.1}
         />
       ))}
+      {data.borders.map((runs, i) => (
+        <path
+          // eslint-disable-next-line react/no-array-index-key
+          key={`border-${i}`}
+          d={pathFromRuns(runs.map((run) => run.map(toPx)), false)}
+          fill="none"
+          stroke={t.ink}
+          strokeOpacity={0.6}
+          strokeWidth={1}
+          strokeDasharray="4 3"
+        />
+      ))}
       {data.tissots.map((run, i) => (
         <path
           // eslint-disable-next-line react/no-array-index-key
@@ -375,9 +427,8 @@ function GeoOverlay({ data }) {
 
 function ProjectionPanel({ config, width, mapAreaH, headerH }) {
   const data = buildProjectionData(config);
-  const xs = data.boundary.map((p) => p[0]);
-  const ys = data.boundary.map((p) => p[1]);
-  const domain = fitDomain(Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys), width, mapAreaH, 0.06);
+  const { minX, maxX, minY, maxY } = bboxOf(data.boundary);
+  const domain = fitDomain(minX, maxX, minY, maxY, width, mapAreaH, 0.06);
 
   return (
     <div style={{ width, display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -409,47 +460,56 @@ export default function Chart() {
   const OUTER_PAD = 24;
   const GAP = 22;
   const PANEL_HEADER_H = 54;
+  const MIN_PANEL_W = 460; // keeps the longest one-line subtitle from wrapping
 
+  // A single 3-across row starves every panel of height: world maps are wide
+  // (~1.3-2:1), so at a third of the canvas width none of them come close to
+  // needing the full leftover row height, leaving 40%+ of the canvas as a
+  // dead band below the maps (VQ-05). Two rows (2 + 1) roughly double the
+  // width each panel gets, which is exactly what wide-format maps need to
+  // grow into the available height instead of leaving it blank.
+  const ROWS = [PROJECTIONS.slice(0, 2), PROJECTIONS.slice(2)];
   const panelsRowH = H - TITLE_H - CAPTION_H;
-  const panelW = (W - 2 * OUTER_PAD - 2 * GAP) / 3;
-  // World maps run wide (Mercator/Mollweide ~1.3-2:1, Orthographic ~1:1) — at
-  // the fixed per-panel width, none of them need anywhere near the full
-  // leftover row height, so sizing the box to panelsRowH left the map filling
-  // only ~40-50% of a much-taller-than-wide box (VQ-05). Size the box to the
-  // maps' own aspect instead, keep the row anchored right under the headers
-  // (so it doesn't float away from the title), and let the freed height
-  // collect as a single margin above the caption — ordinary footer breathing
-  // room rather than dead space split inside each panel.
-  const MAP_ASPECT = 1.3;
-  const mapAreaH = Math.min(panelsRowH - PANEL_HEADER_H, panelW / MAP_ASPECT);
+  const rowGap = GAP;
+  const mapAreaH = (panelsRowH - (ROWS.length - 1) * rowGap - ROWS.length * PANEL_HEADER_H) / ROWS.length;
+
+  // Size each panel to its own projection's natural aspect (rather than one
+  // shared box) so the wide Mollweide ellipse and the near-square
+  // Orthographic globe both fill their frame without internal letterboxing.
+  const panelWidth = (config) => Math.max(MIN_PANEL_W, mapAreaH * boundaryAspect(config));
+  const availableW = W - 2 * OUTER_PAD;
+  const maxRowW = Math.max(...ROWS.map((row) => row.reduce((sum, c) => sum + panelWidth(c), 0) + (row.length - 1) * GAP));
+  const widthScale = maxRowW > availableW ? availableW / maxRowW : 1;
 
   return (
     <div style={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
       <div style={{ height: TITLE_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: 22, fontWeight: 500, color: t.ink }}>{TITLE}</span>
       </div>
-      <div
-        style={{
-          height: PANEL_HEADER_H + mapAreaH,
-          display: "flex",
-          flexDirection: "row",
-          justifyContent: "center",
-          gap: GAP,
-          paddingLeft: OUTER_PAD,
-          paddingRight: OUTER_PAD,
-        }}
-      >
-        {PROJECTIONS.map((config) => (
-          <ProjectionPanel
-            key={config.key}
-            config={config}
-            width={panelW}
-            mapAreaH={mapAreaH}
-            headerH={PANEL_HEADER_H}
-          />
+      <div style={{ height: panelsRowH, display: "flex", flexDirection: "column", gap: rowGap }}>
+        {ROWS.map((row) => (
+          <div
+            key={row.map((c) => c.key).join("-")}
+            style={{
+              height: PANEL_HEADER_H + mapAreaH,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: GAP,
+            }}
+          >
+            {row.map((config) => (
+              <ProjectionPanel
+                key={config.key}
+                config={config}
+                width={panelWidth(config) * widthScale}
+                mapAreaH={mapAreaH}
+                headerH={PANEL_HEADER_H}
+              />
+            ))}
+          </div>
         ))}
       </div>
-      <div style={{ flex: 1 }} />
       <div style={{ height: CAPTION_H, display: "flex", alignItems: "center", justifyContent: "center" }}>
         <span style={{ fontSize: 14, color: INK_MUTED }}>
           Green circles are equal-size reference regions (Tissot indicatrices, ~670 km radius) — their changing
