@@ -1,0 +1,248 @@
+library: highcharts
+language: javascript
+specification_id: map-projections
+created: '2026-08-26T08:12:44Z'
+updated: '2026-08-26T08:30:09Z'
+generated_by: claude-sonnet
+workflow_run: 32945613579
+issue: 3771
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Added the third Orthographic panel requested in attempt-1 feedback, giving conformal
+    (Mercator), equal-area (Mollweide), and perspective/limb-distortion (Orthographic)
+    coverage in one comparison
+  - Landmass fill now uses a subtle top-to-bottom gradient instead of flat gray, adding
+    visual refinement without breaking the neutral-color requirement
+  - Tissot indicatrices remain mathematically correct and visually compelling in all
+    three panels, directly delivering the spec's core educational goal of showing
+    projection distortion
+  - Canvas is now used more fully — legend sits close to the bottom edge, reducing
+    the empty whitespace flagged in attempt 1
+  - Theme-adaptive chrome and Imprint palette remain correct and identical across
+    light/dark renders
+  weaknesses:
+  - Landmasses are still only 6 simplified continent silhouettes rather than country-level
+    boundaries, so Spec Compliance / Feature Coverage remain slightly capped
+  - Implementation remains raw SVGRenderer path-drawing rather than Highcharts' high-level
+    chart/series API — a legitimate workaround given the missing highmaps module,
+    but it still limits Library Mastery (LM-01/LM-02)
+  - Orthographic panel sits alone in the second row with unused space to its left
+    and right; a short caption or a fourth panel could balance the layout further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "map-projections · javascript · highcharts · anyplot.ai" at top, gray-brown subtitle beneath, three dark-gray bold panel labels ("Mercator (conformal)", "Mollweide (equal-area)", "Orthographic (true at center)"), and a two-item legend at the bottom (landmass swatch + Tissot indicatrix circle). All text is dark-on-light and clearly readable, no clipping at any canvas edge.
+      Data: Top row shows Mercator (square grid, continents growing visually taller toward the poles) and Mollweide (curved-graticule ellipse, same continents); bottom row (centered) shows Orthographic (a globe disk showing only the visible hemisphere, curved graticule, limb distortion). Continents use a subtle gray gradient fill with a thin ink-soft outline. Tissot indicatrices are #009E73 green circles/ellipses at graticule intersections in all three panels — small and uniform in Mercator/Mollweide's low latitudes, growing near the poles/edges (Mercator, Mollweide) or near the limb (Orthographic), correctly visualizing each projection's distortion pattern.
+      Legibility verdict: PASS — no overlapping or clipped text, all labels legible against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, all three panel labels, and legend text switch to light gray/white and remain clearly legible; no dark-on-dark text anywhere. Landmass fill switches to a lighter translucent gray gradient appropriate for the dark theme, and graticule/boundary strokes brighten accordingly.
+      Data: Same three-panel layout (Mercator, Mollweide, Orthographic) with identical continent geometry and identical Tissot indicatrix placement/sizing as the light render. The Tissot circles remain the same #009E73 green in both themes — data colors are identical, only chrome (background, text, grid, land fill) flipped as required.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all chrome elements are clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, all text readable in both themes, no clipping
+          at canvas edges
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between panel titles, legend, or map elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tissot circles and continents clearly visible and sized appropriately
+          for the sparse density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe; no red-green as sole signal, green Tissot circles read
+          against neutral gray land and background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Third panel added, canvas better utilized, legend sits close to bottom
+          edge with minimal wasted whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Panel titles + legend serve this role well for a projection-comparison
+          map plot
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 consistent across themes; correct light/dark
+          backgrounds'
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Three custom-computed projections with gradient landmass fill shows
+          real design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle strokes, clean unboxed legend, generous whitespace, minor
+          row-2 side imbalance
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Three contrasting distortion behaviors (conformal, equal-area, perspective)
+          make the projection story immediately clear
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-projection comparison
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Graticule, neutral land color, and Tissot indicatrices present across
+          3 projections; landmasses remain simplified continents, not country-level
+          boundaries
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct per-panel projection math (Mercator, Mollweide, Orthographic)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Now 3 of the suggested projections shown (up from 2), still no country-level
+          detail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral cartography/education context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Projection math and panel aspect ratios are factually correct
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions rather than a flat script, justified by
+          custom-geometry needs
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity proportionate to the custom-projection requirement, no
+          fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Legitimate SVGRenderer public-API workaround given no highmaps module,
+          but bypasses Highcharts' standard chart/series patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Direct renderer/path drawing is generic manual SVG work rather than
+          a feature unique to Highcharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - gradient-fill
+  - alpha-blending

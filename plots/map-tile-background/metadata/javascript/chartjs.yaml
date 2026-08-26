@@ -1,0 +1,259 @@
+library: chartjs
+language: javascript
+specification_id: map-tile-background
+created: '2026-08-26T08:32:25Z'
+updated: '2026-08-26T08:45:32Z'
+generated_by: claude-sonnet
+workflow_run: 32947590493
+issue: 3756
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/chartjs/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Honest, well-crafted workaround for Chart.js''s lack of native tile/raster support:
+    a custom beforeDatasetsDraw plugin draws a stylized land/sea tile grid with checkerboard
+    shading plus a coastline overlay, giving real geographic context instead of faking
+    a live tile fetch.'
+  - Bubble radius correctly encodes visitor volume, with prominent 10-32px radii appropriate
+    for the sparse 12-point dataset.
+  - Native wheel-zoom and drag-pan are wired directly onto the linear scales without
+    an uninstalled plugin, satisfying the spec's zoom/pan requirement for interactive
+    libraries.
+  - Theme-adaptive tile shading and coastline stroke read cleanly in both light and
+    dark renders with correct contrast.
+  - Landmark name labels are drawn via a dedicated afterDatasetsDraw plugin offset
+    from each bubble, avoiding collisions with the basemap grid and coastline.
+  weaknesses:
+  - layout.padding.right is fixed at 120px to reserve legend space, but the legend
+    is disabled (single series) — this leaves an oversized empty margin on the right
+    edge of both renders; either shrink the right padding to ~40px or use the freed
+    width for a bubble-size legend.
+  - No bubble-size legend/key is drawn, so a reader cannot tell what a given circle
+    size corresponds to in visitor count beyond the tooltip (interactive-only); a
+    small size-key would strengthen data storytelling (DE-03).
+  - 'Axis min/max (x: -12..32, y: 35..58) are hardcoded rather than computed from
+    the actual landmark lat/lon extents — they happen to fit the current 12 landmarks,
+    but the spec''s ''auto-fit to data bounds'' requirement would be more robust if
+    derived from Math.min/max over the dataset.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "European Landmark Visitors · map-tile-background · javascript · chartjs · anyplot.ai" in dark ink at top, fully visible, not clipped. Longitude/Latitude axis titles and degree-suffixed tick labels in dark/soft-gray ink, all legible. Stylized tile grid shows tan/beige "land" tiles and pale blue-gray "sea" tiles in a checkerboard, with a gray coastline stroke tracing Western/Central Europe and the British Isles. A small caption "Basemap: stylized tile grid (offline render, no live tile provider)" sits in the bottom-left empty area, legible.
+      Data: 12 green (#009E73) bubbles sized by visitor count (Colosseum and Eiffel Tower largest, Anne Frank House smallest), each with a white outline for contrast against the tiles, labeled with landmark names in dark text offset to the right of each bubble. No text/data overlaps observed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title, axis titles, and tick labels all render in light/off-white ink, clearly readable against the dark background — no dark-on-dark failures. Tile grid switches to dark olive "land" and dark navy "sea" tones with a light-gray coastline stroke, still clearly legible. Caption text remains legible in light gray.
+      Data: Same 12 green (#009E73) bubbles, identical size/position/color to the light render — only chrome (tile shading, coastline, text) flipped for the theme, as required. White bubble outlines still read cleanly against the dark tiles.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title scaled to length, 16px axis titles, 14px
+          ticks, 13px point labels); all readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/data collisions observed; landmark labels offset cleanly
+          from bubbles.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bubble radii (10-32px) prominent and well-scaled for the 12-point
+          sparse dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single green series, high contrast on both surfaces, no red-green
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; unused 120px right padding reserved
+          for a legend that isn't shown.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Longitude'/'Latitude' axis titles with degree-suffixed
+          ticks.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match theme tokens exactly;
+          chrome flips correctly between renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom tile-basemap plugin with land/sea shading and coastline overlay
+          is a genuinely intentional, non-generic solution to Chart.js's missing tile
+          layer.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle tile seams and grid, generous whitespace; no traditional spines
+          to remove on this scale-based scatter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Bubble size encodes magnitude and labels aid identification, but
+          no bubble-size legend/key to anchor the encoding.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Bubble-on-basemap matches the spec's map-with-tile-background intent
+          within Chart.js's real constraints (no native raster/tile layer).
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Zoom/pan implemented natively; only a single stylized basemap style
+          offered rather than multiple selectable tile providers, and axis bounds
+          are hardcoded rather than data-driven.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon/lat correctly mapped to x/y; visitor count correctly mapped to
+          bubble radius.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format with descriptive prefix; legend appropriately
+          omitted for the single series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: lat, lon, value (visitorsM), and label all present and used; no marker-clustering
+          demo but dataset is small enough not to need it.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, well-known European landmarks with plausible annual visitor
+          figures, neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 points within spec's 10-500 range; visitor values span a realistic
+          1.2M-7.6M.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small arrow-function helpers only, proportionate to the
+          custom-plugin drawing needed.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the provided Chart.js/token globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; canvas plugins are appropriately
+          scoped.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container correctly, animation: false set, current
+          Chart.js v4 bubble-type API.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of Chart.js custom plugin lifecycle hooks (beforeDatasetsDraw,
+          afterDatasetsDraw, afterDraw) and linear scales.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom-drawn basemap plugin and native scale-based wheel-zoom/drag-pan
+          are distinctive, library-appropriate solutions given no installed zoom plugin.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
