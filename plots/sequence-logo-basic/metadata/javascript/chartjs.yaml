@@ -1,0 +1,262 @@
+library: chartjs
+language: javascript
+specification_id: sequence-logo-basic
+created: '2026-08-26T11:18:52Z'
+updated: '2026-08-26T11:34:56Z'
+generated_by: claude-sonnet
+workflow_run: 32961935599
+issue: 4421
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Repair correctly addressed prior review feedback: flanking positions (1, 2, 3,
+    11, 12) now use weakly-preferred (non-uniform) frequency distributions instead
+    of near-uniform ones, so their information-content stacks are visibly present
+    instead of near-invisible hairlines.'
+  - New shadow-based separation technique (ctx.shadowColor = t.pageBg, ctx.shadowBlur)
+    gives crisp, undistorted edges between stacked letters without being affected
+    by the non-uniform glyph scale -- a genuine polish improvement over attempt 1.
+  - 'Creative, technically sound solution to Chart.js lacking a native sequence-logo
+    type: invisible stacked bars supply the layout math while a custom afterDatasetsDraw
+    plugin scales and draws the letter glyphs into each segment''s rectangle.'
+  - Correct, well-reasoned nucleotide color mapping (A=green/brand, C=blue, G=ochre,
+    T=red) via the Imprint palette's semantic-exception rule, accurate Shannon-entropy
+    information content, and correct stack order (most frequent letter on top, exactly
+    per spec).
+  - 'Realistic domain data: the conserved core spells the canonical E-box motif CACGTG,
+    every position''s frequencies sum exactly to 1.0, and both renders are theme-correct
+    with pixel-identical data colors between light and dark.'
+  weaknesses:
+  - No small caption or legend maps letter to color for readers unfamiliar with nucleotide
+    conventions; the letters double as their own legend, but an explicit key would
+    make the chart more accessible to non-specialists.
+  - Design chrome remains fairly plain beyond the glyph rendering itself (default
+    gridlines, no extra flourish); nearly all of the visual sophistication rides on
+    the custom letter-stacking technique.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "sequence-logo-basic · javascript · chartjs · anyplot.ai" in bold dark ink, clearly visible. X-axis title "Position" and y-axis title "Information content (bits)" both dark and legible. Tick labels (1-12 on x, 0-2.0 in 0.2 steps on y) in soft dark gray, readable. Subtle horizontal gridlines only, no vertical gridlines or spines.
+      Data: Twelve x-axis positions, each a vertical stack of colored letter glyphs (A=green #009E73, C=blue, G=ochre, T=red) whose total height is scaled by per-position information content in bits and whose stacking order runs least-to-most frequent bottom-to-top. The conserved core at positions 5-10 spells "CACGTG" (the canonical E-box motif) with tall, prominent letters. Flanking positions 1-4 and 11-12 are compressed but now clearly visible (e.g. position 1 shows a legible "A" over thin "C"/"T"/"G" bands) rather than collapsing to hairlines, confirming the attempt-1 fix landed. Letters are stretched glyphs with a subtle background-colored shadow separating adjacent letters in the same stack, not plain text.
+      Legibility verdict: PASS -- all title/axis/tick text is clearly readable against the light background; no light-on-light issues; letter glyphs at every position are distinguishable by shape and color.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title, axis titles, and tick labels all rendered in light/white ink, clearly visible against the dark background. Gridlines are subtle but present.
+      Data: Identical letter colors, identical stack heights, and identical stack order to the light render -- only chrome (background, text, grid) flipped, confirming palette compliance. Same CACGTG core motif and same now-visible flanking positions.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; all text and letter glyphs read clearly against the near-black background; the letter-separating shadow correctly uses the dark-theme page background so it still reads as a clean edge rather than a light halo.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis titles, and ticks are explicitly sized and readable in
+          both themes; flanking-position letter glyphs are now legible after the attempt-1
+          fix, not near-invisible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between letters, axis text, or title; the new shadow-based
+          separation keeps adjacent stacked letters visually distinct.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Letter glyph sizing is appropriate for the 12-position, 4-letter
+          density; flanking stacks are compact but no longer near-invisible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four distinct Imprint hues with adequate CVD-safe contrast; letter
+          shape carries identity independent of color, not red-green-as-sole-signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (no gate file present); title, axis-label
+          proportions, and no overflow/clipping observed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ('Position', 'Information content
+          (bits)').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'A=brand green #009E73; C/G/T map to the closest Imprint hues via
+          the documented semantic-exception rule; backgrounds theme-correct in both
+          renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom canvas plugin renders scaled, shadow-separated letter glyphs
+          -- a real technical and design solution well beyond generic chart defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: The attempt-1 fix added a crisp shadow-based separation edge and
+          tighter segment margins, directly addressing the prior 'no extra refinement'
+          finding.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point at the conserved CACGTG core; flanking positions
+          now read as weakly-preferred rather than visually empty, improving overall
+          balance.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implements a sequence logo via stacked invisible bars plus
+          custom glyph drawing.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stack order by frequency, height scaled by information content, standard
+          nucleotide colors, letters as scaled glyphs -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position, Y=information content in bits, stack composition=letter
+          frequencies -- all correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the required format exactly; letters double as their
+          own color legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Flanking positions now show varied, non-uniform stack composition
+          instead of near-degenerate uniformity, so feature variety is visible across
+          the full x-axis.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Canonical E-box (CACGTG) transcription-factor motif with plausible
+          weakly-preferred flanks -- realistic and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All 12 frequency rows sum exactly to 1.0; entropy/information-content
+          values fall in the correct 0-2 bit range for DNA.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script; the one plugin object is necessary for the
+          custom draw hook, not incidental complexity.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded frequency matrix, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Chart.js API.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a chart type Chart.js doesn't natively
+          support; no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract followed correctly; animation disabled; correct
+          canvas size achieved.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses stacked bar layout plus the plugin system idiomatically to extend
+          Chart.js beyond its built-in chart types.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: afterDatasetsDraw hook with direct canvas transform/scale plus shadow-based
+          glyph separation demonstrates real depth beyond default config usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-plugin
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - shannon-entropy
+  styling:
+  - minimal-chrome
