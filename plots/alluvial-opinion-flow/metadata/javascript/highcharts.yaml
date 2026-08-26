@@ -1,0 +1,247 @@
+library: highcharts
+language: javascript
+specification_id: alluvial-opinion-flow
+created: '2026-08-26T17:58:57Z'
+updated: '2026-08-26T18:15:05Z'
+generated_by: claude-sonnet
+workflow_run: 32996102933
+issue: 4430
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Fixed the theme-inconsistent "Neutral" color — now anchored to t.palette[2] blue,
+    pixel-identical hex in both light and dark renders.
+  - 'Explicit "Net drift Q1 → Q4: extremes +Npp · Neutral Mpp" callout now names the
+    polarization trend directly, satisfying SC-02 and lifting DE-03.'
+  - Cross-category ("changer") flow opacity raised 0.32→0.42 plus a thin same-color
+    stroke, making the thinnest ribbons distinguishable from the busy crisscrossing
+    field in both themes.
+  - Hand-built alluvial/Sankey via Highcharts' native chart.renderer is the documented,
+    correct workaround since the core bundle has no sankey module.
+  - Deterministic Gaussian-kernel transition model with exact respondent-total reconciliation
+    (all waves sum to 1,000).
+  - Category legend dynamically measured and centered via getBBox() rather than hard-coded
+    offsets.
+  weaknesses:
+  - 'In-block "n = ###" labels at 13px are on the smaller side relative to the chart''s
+    overall scale — could be nudged up slightly for mobile-width legibility.'
+  - LM-02 remains moderate — the manual SVG-renderer technique, while a legitimate
+    and well-executed workaround, doesn't showcase a feature unique to Highcharts
+    beyond what any SVG-capable library could replicate.
+  - Helper functions (gaussian, buildTransition, subdivide, luminance/contrastText)
+    keep CQ-01 below max — justified by the manual-alluvial math but still adds structural
+    complexity beyond a "no functions" ideal.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: bold dark title "alluvial-opinion-flow · javascript · highcharts · anyplot.ai", soft-gray subtitle, italic net-drift callout ("Net drift Q1 → Q4: extremes +20pp · Neutral -13pp"), bold column headers (Q1 2026–Q4 2026) — all clearly readable dark-on-light.
+      Data: 5 category node blocks (green #009E73 "Very Satisfied", lavender "Satisfied", blue #4467A3 "Neutral", ochre "Dissatisfied", red "Very Dissatisfied") connected by proportionally-sized curved ribbons; stable-respondent ribbons at higher opacity than cross-category "changer" ribbons (which now also carry a thin same-color stroke). Each node has a white "n = ###" label, legible against every block color. First series confirmed #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: title, subtitle, net-drift callout, and column headers all render light-on-dark and are fully legible — no dark-on-dark failures.
+      Data: all 5 category colors (including "Neutral," fixed to #4467A3) are pixel-identical to the light render — the attempt-1 theme-consistency defect is resolved. Node n= labels remain legible on every block.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; in-block n= labels at 13px are
+          on the small side
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: changer-flow opacity 0.32→0.42 plus a thin stroke keeps thin
+          ribbons visible in both themes'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic green/red anchors, legend labels present, canonical Imprint
+          order for the rest
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no clipping; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Column headers act as axis labels; descriptive title/subtitle
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: Neutral now uses fixed t.palette[2] instead of theme-adaptive
+          t.inkSoft; identical across themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom hand-drawn alluvial diagram, luminance-aware label contrast,
+          measured/centered legend
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean chrome, generous whitespace, opacity tiering plus new stroke
+          on changer flows
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: explicit net-drift callout now names the polarization insight
+          directly'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/opinion-flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed: net-flow/polarization highlight is now an explicit named
+          callout'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Waves flow left-to-right chronologically, values reconcile exactly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match category names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows waves, flows, node totals, stability distinction, net-drift
+          highlight
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly product-satisfaction survey — plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Every wave's node totals sum exactly to 1,000 respondents
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, justified by manual alluvial-layout math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct fallback to core chart.renderer since sankey isn't vendored,
+          but low-level vs. high-level series API
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Genuine Highcharts renderer technique for an unsupported chart type,
+          but not uniquely Highcharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - minimal-chrome
