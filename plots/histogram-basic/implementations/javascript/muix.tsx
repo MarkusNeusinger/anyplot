@@ -1,7 +1,7 @@
 // anyplot.ai
 // histogram-basic: Basic Histogram
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-26
+// Quality: 89/100 | Created: 2026-08-26
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
