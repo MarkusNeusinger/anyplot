@@ -1,0 +1,269 @@
+library: muix
+language: javascript
+specification_id: map-projections
+created: '2026-08-26T08:15:08Z'
+updated: '2026-08-26T08:46:22Z'
+generated_by: claude-sonnet
+workflow_run: 32945827658
+issue: 3771
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/javascript/muix/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - Three genuinely distinct hand-rolled projections (Mercator, Mollweide, Orthographic)
+    implemented as real spherical math, not a single equirectangular map re-skinned
+    three times
+  - Tissot indicatrices (great-circle destination-point formula) give a real, self-explaining
+    distortion story — the same reference circles visibly change area/shape across
+    panels, which is exactly the spec's educational goal
+  - Each panel is sized to its own projection's natural aspect ratio (fitDomain +
+    boundaryAspect) instead of forcing a shared box, so the Mollweide ellipse and
+    Orthographic globe both fill their frame without internal letterboxing
+  - 'Clean theme handling: land fill, graticule, borders, and Tissot green are all
+    pulled from window.ANYPLOT_TOKENS and read identically correct in both renders'
+  - Honest scope-limiting comments (e.g. only two non-disputed country borders, 'not
+    survey-accurate' outline) show deliberate avoidance of disputed-boundary and factual-accuracy
+    pitfalls rather than silently faking precision
+  weaknesses:
+  - Row 2 (Orthographic) is centered under a two-panel row of the same height, so
+    the globe's row uses only ~20% of the canvas width — leaving large equal-height
+    empty margins left and right of the globe. Consider giving the Orthographic panel
+    more visual weight (scale it up to use more of the leftover row height/width,
+    or rebalance the two rows so the single panel isn't dwarfed by side whitespace)
+    — VQ-05 deduction.
+  - Only 2 of ~200 real country borders are drawn (US-Canada, US-Mexico); the spec
+    asks for 'clean coastlines and country borders with appropriate styling' — the
+    continent-level fill is a reasonable proxy but the border layer barely registers
+    at this scale (minor SC-02 deduction).
+  - 'LM-02: the implementation uses MUI X purely as a linear-scale/theme provider
+    (useXScale/useYScale) for a custom SVG overlay — no native MUI X chart feature
+    (tooltips, legend, animation, multi-series) is exercised, so the library''s own
+    distinctive capabilities aren''t showcased beyond plumbing.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "map-projections · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. Each of the three panels (Mercator, Mollweide, Orthographic) has a bold dark headline and a lighter gray descriptive subtitle beneath it, both fully readable. Bottom caption text (explaining the Tissot indicatrices) is smaller but still legible against the light background.
+      Data: Continents rendered as flat muted-gray silhouettes with a thin gray outline; two dashed country-border lines (US-Canada, US-Mexico) are visible in dark ink; graticule lines are faint gray; Tissot indicatrix circles are brand green (#009E73) with translucent fill — clearly the first/only data series and correctly colored.
+      Legibility verdict: PASS — no text is light-on-light, all titles/subtitles/caption readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and panel headlines render in light off-white text, panel subtitles in a softer light gray — both clearly visible against the dark background. Caption text at the bottom is a muted light gray, still readable. Graticule lines are faint light-gray, consistent with theme-adaptive grid treatment.
+      Data: Continents are a mid-gray fill (theme-adaptive INK_MUTED) distinguishable from the near-black background; Tissot circles remain the identical brand green (#009E73) as the light render, confirming data colors are held constant across themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements (title, headlines, subtitles, caption, tick-free graticule) are clearly visible.
+
+    Both renders show identical geometry and identical Tissot/land colors; only background, text, and grid colors flip between themes as expected.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, panel headers 17px, subtitles/caption
+          14px); readable in both themes, still legible at 400px mobile thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Tissot indicatrices, graticule, and land fill all clearly visible
+          and appropriately sized for the panel scale
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green Tissot circles have translucent fill + solid stroke against
+          neutral land/background, good contrast, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Row 2's single Orthographic panel is centered under a row the same
+          height as the 2-panel row above it, leaving large equal-height empty margins
+          left/right of the globe — imbalanced canvas utilization in the bottom half
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Panel headlines + descriptive subtitles substitute for axis labels
+          on a map and are fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Tissot circles use Imprint palette[0] (#009E73), identical across
+          themes; backgrounds are theme-correct #FAF8F1/#1A1A17; chrome is theme-adaptive
+          throughout'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom per-panel headers/subtitles, projection-native aspect ratios,
+          and a coherent visual system clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No chart chrome/spines at all (fully custom SVG), subtle graticule
+          and border styling; docked a bit for the row-2 whitespace imbalance
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The Tissot indicatrices are a genuine focal device — their changing
+          shape/area across panels IS the story the spec asks to tell
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Three distinct named projections (Mercator, Mollweide, Orthographic)
+          explicitly listed as examples in the spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Graticule at regular intervals, neutral land fill, Tissot indicatrices,
+          and a limited-but-present country-border layer are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat correctly projected per panel via each projection's own math
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; caption clearly explains the single Tissot
+          data series in lieu of a formal legend
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows conformal, equal-area, and perspective projection families
+          side by side with distortion made visible via Tissot circles
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: World geography is inherently neutral; disputed-boundary lines deliberately
+          avoided per code comments
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Continents are recognizable and correctly positioned but hand-traced/simplified
+          (~200 vertices, not survey-accurate) rather than a real boundary dataset
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Many small helper functions, but each is a necessary, purpose-built
+          piece of a from-scratch projection engine (no geo primitive exists in MUI
+          X)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded coordinate data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ChartContainer/useXScale/useYScale imported, all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; complexity is justified by the projection-math
+          requirement
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation, disableAxisListener,
+          sized from window.ANYPLOT_SIZE'
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, intentional use of ChartContainer + useXScale/useYScale
+          as a linear coordinate-system provider for a custom overlay — a documented
+          anyplot pattern for libraries with no geo primitive
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No native MUI X chart feature (tooltip, legend, series animation)
+          is exercised — the library is used only for its scale plumbing, which could
+          be replicated with any linear-scale utility
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - layer-composition
+  - map-projection
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - coordinate-projection
+  styling:
+  - minimal-chrome
+  - alpha-blending
