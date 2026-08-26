@@ -31,7 +31,10 @@ for (let day = 0; day < DAYS; day++) {
   const decayBoost = day > LOCKDOWN_DAY ? Math.exp(-(day - LOCKDOWN_DAY) / 6) : 1;
   const base = Math.max(0, preIntervention * decayBoost);
 
-  const total = Math.round(base + (lcg() - 0.5) * 6);
+  // Taper the post-intervention noise to zero so the resolved outbreak's tail
+  // reads as genuinely over, instead of a sporadic near-zero background rate.
+  const noiseScale = day > LOCKDOWN_DAY ? Math.max(0, 1 - (day - LOCKDOWN_DAY) / 25) : 1;
+  const total = Math.round(base + (lcg() - 0.5) * 6 * noiseScale);
   const c = Math.max(0, Math.round(total * (0.55 + lcg() * 0.1)));
   const p = Math.max(0, Math.round(total * (0.25 + lcg() * 0.1)));
   const s = Math.max(0, total - c - p);
@@ -47,6 +50,9 @@ for (let day = 0; day < DAYS; day++) {
   running += confirmed[day] + probable[day] + suspect[day];
   cumulative.push(running);
 }
+// Headroom on the secondary axis keeps the intervention markLine label clear
+// of the cumulative line's own inflection point near the top of the chart.
+const cumulativeMax = Math.ceil((cumulative[cumulative.length - 1] * 1.2) / 50) * 50;
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -54,7 +60,7 @@ const chart = echarts.init(document.getElementById("container"));
 // --- Option ---------------------------------------------------------------
 chart.setOption({
   animation: false,
-  color: [t.palette[0], t.palette[3], t.palette[5]],
+  color: [t.palette[0], t.palette[1], t.palette[2]],
   backgroundColor: "transparent",
   title: {
     text: "histogram-epidemic · javascript · echarts · anyplot.ai",
@@ -96,6 +102,7 @@ chart.setOption({
       name: "Cumulative cases",
       nameLocation: "middle",
       nameGap: 70,
+      max: cumulativeMax,
       nameTextStyle: { color: t.ink, fontSize: 16 },
       axisLabel: { color: t.inkSoft, fontSize: 14 },
       axisLine: { show: false },
@@ -117,14 +124,14 @@ chart.setOption({
       type: "bar",
       stack: "cases",
       data: probable,
-      itemStyle: { color: t.palette[3] },
+      itemStyle: { color: t.palette[1] },
     },
     {
       name: "Suspect",
       type: "bar",
       stack: "cases",
       data: suspect,
-      itemStyle: { color: t.palette[5] },
+      itemStyle: { color: t.palette[2] },
       markLine: {
         symbol: "none",
         silent: true,
@@ -133,6 +140,7 @@ chart.setOption({
           color: t.inkSoft,
           fontSize: 13,
           position: "insideEndTop",
+          distance: 6,
         },
         lineStyle: { color: t.amber, type: "dashed", width: 2 },
         data: [{ xAxis: LOCKDOWN_DAY }],
