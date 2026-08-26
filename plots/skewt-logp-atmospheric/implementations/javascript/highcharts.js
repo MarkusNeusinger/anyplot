@@ -64,10 +64,13 @@ function moistAdiabatCurve(startTempC, pressures) {
 // --- Sounding data (synthetic radiosonde profile) ---------------------------
 const pressureLevels = [1000, 975, 950, 925, 900, 850, 800, 750, 700, 650,
   600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100];
-const temperatureC = [26, 24.4, 22.6, 20.8, 19, 15, 12, 8, 4, -0.5,
-  -5, -10, -16, -22.5, -30, -38.5, -46, -52, -56, -58, -62];
-const dewpointC = [22, 20, 18, 15, 10, 5, -2, -8, -14, -20,
-  -25, -30, -35, -40, -45, -50, -55, -60, -65, -68, -70];
+// Includes a shallow surface-based inversion (1000-950 hPa warms before
+// cooling resumes) and a near-saturated layer around 700 hPa (dewpoint
+// depression narrows to 0.5 degC) to showcase more of the diagram's range.
+const temperatureC = [16, 17.5, 18.5, 17, 14.5, 10, 6, 2, -2.5, -7.5,
+  -13, -18.5, -24.5, -30.5, -37, -44, -50, -55, -58.5, -59.5, -61];
+const dewpointC = [13, 13.5, 13, 12, 9, 5, 1, 0, -3, -9,
+  -16, -23, -30, -37, -44, -51, -58, -64, -68, -70, -72];
 
 const temperaturePoints = pressureLevels.map((p, i) => [skewX(temperatureC[i], p), p]);
 const dewpointPoints = pressureLevels.map((p, i) => [skewX(dewpointC[i], p), p]);
@@ -133,7 +136,7 @@ for (const mixingRatioGkg of [1, 2, 4, 7, 10, 16]) {
     color: t.muted,
     dashStyle: "Dot",
     lineWidth: 1,
-    opacity: 0.55,
+    opacity: 0.4,
     showInLegend: mixingRatioGkg === 1,
     marker: { enabled: false },
     enableMouseTracking: false,
@@ -156,7 +159,7 @@ Highcharts.chart("container", {
     gridLineWidth: 0,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
-    title: { text: "Temperature at surface (°C, skewed)",
+    title: { text: "Temperature (°C)",
              style: { color: t.inkSoft, fontSize: "16px" } },
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
   },
@@ -193,6 +196,13 @@ Highcharts.chart("container", {
       color: t.palette[1],
       dashStyle: "Dash",
       lineWidth: 3,
+      // Zones color-segment the 650-750 hPa band amber: dewpoint depression
+      // narrows to ~0.5 degC there, i.e. a near-saturated (likely cloudy) layer.
+      zoneAxis: "y",
+      zones: [
+        { value: 650, color: t.palette[1], dashStyle: "Dash" },
+        { value: 750, color: t.amber, dashStyle: "Dash", lineWidth: 5 },
+      ],
       marker: { enabled: true, symbol: "circle", radius: 4, fillColor: t.palette[1] },
     },
     {
@@ -201,6 +211,11 @@ Highcharts.chart("container", {
       data: temperaturePoints,
       color: t.palette[0],
       lineWidth: 3,
+      // Zones dash the tropopause-and-above segment (<=200 hPa), where the
+      // lapse rate flattens toward isothermal — a genuine per-segment
+      // Highcharts feature rather than a second flat-colored line series.
+      zoneAxis: "y",
+      zones: [{ value: 200, color: t.palette[0], dashStyle: "Dash" }],
       marker: { enabled: true, symbol: "circle", radius: 4, fillColor: t.palette[0] },
     },
   ],
