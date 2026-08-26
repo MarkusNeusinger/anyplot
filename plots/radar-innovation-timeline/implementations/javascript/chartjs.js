@@ -15,9 +15,11 @@ const RING_BOUNDS = [0, 0.28, 0.54, 0.78, 1.0]; // radius fractions, inner -> ou
 const SECTORS = ["AI & ML", "Cloud & Infrastructure", "Cybersecurity", "Sustainability Tech"];
 const SECTOR_SHAPES = ["circle", "triangle", "rectRot", "rect"];
 
-// Exactly one item per (sector, ring) cell — 4 sectors x 4 rings — so every
-// item gets the full angular lane to itself and labels never fight a same-cell
-// neighbour for space.
+// Most cells hold exactly one item, but a few (the ones with the roomiest
+// angular lanes — Near-Term/Mid-Term/Future, where ring radius is larger)
+// deliberately host 2-3 items to exercise the shared-cell crowding-avoidance
+// logic below (lane subdivision + radial stagger), matching the spec's Notes
+// on jittering/offsetting labels within a ring.
 const ITEMS = [
   { name: "LLM Assistants", sector: "AI & ML", ring: "Now" },
   { name: "Multimodal Models", sector: "AI & ML", ring: "Near-Term" },
@@ -26,18 +28,22 @@ const ITEMS = [
 
   { name: "Kubernetes Ops", sector: "Cloud & Infrastructure", ring: "Now" },
   { name: "Edge Computing", sector: "Cloud & Infrastructure", ring: "Near-Term" },
+  { name: "5G Network Slicing", sector: "Cloud & Infrastructure", ring: "Near-Term" },
   { name: "WebAssembly Runtimes", sector: "Cloud & Infrastructure", ring: "Mid-Term" },
   { name: "Quantum Cloud APIs", sector: "Cloud & Infrastructure", ring: "Future" },
 
   { name: "Zero Trust Networks", sector: "Cybersecurity", ring: "Now" },
   { name: "AI Threat Detection", sector: "Cybersecurity", ring: "Near-Term" },
   { name: "Post-Quantum Crypto", sector: "Cybersecurity", ring: "Mid-Term" },
+  { name: "Confidential Computing", sector: "Cybersecurity", ring: "Mid-Term" },
   { name: "Homomorphic Encryption", sector: "Cybersecurity", ring: "Future" },
 
   { name: "Carbon Accounting Tools", sector: "Sustainability Tech", ring: "Now" },
   { name: "Green Cloud Regions", sector: "Sustainability Tech", ring: "Near-Term" },
   { name: "Solid-State Batteries", sector: "Sustainability Tech", ring: "Mid-Term" },
   { name: "Direct Air Capture", sector: "Sustainability Tech", ring: "Future" },
+  { name: "Fusion Energy Pilots", sector: "Sustainability Tech", ring: "Future" },
+  { name: "Circular Electronics Recycling", sector: "Sustainability Tech", ring: "Future" },
 ];
 
 // --- Angular layout: three-quarter circle, 90deg gap at top for ring labels -
@@ -58,6 +64,18 @@ const RING_WEIGHT_SUM = RING_WEIGHT.reduce((a, b) => a + b, 0);
 const RING_CUM = [0];
 RING_WEIGHT.forEach((w) => RING_CUM.push(RING_CUM[RING_CUM.length - 1] + w / RING_WEIGHT_SUM));
 
+// Cells that hold more than one item split their angular lane into equal
+// sub-slots (one per item) and additionally stagger those items' radii
+// slightly within the ring band. The combined diagonal jitter keeps
+// same-cell markers — and their labels — from colliding.
+const CELL_COUNTS = new Map();
+ITEMS.forEach((item) => {
+  const key = `${item.sector}|${item.ring}`;
+  CELL_COUNTS.set(key, (CELL_COUNTS.get(key) || 0) + 1);
+});
+const CELL_SEEN = new Map();
+const RADIAL_STAGGER = 0.035; // fraction of R, per step away from the cell's mean radius
+
 const PLACED = ITEMS.map((item, i) => {
   const sectorIdx = SECTORS.indexOf(item.sector);
   const ringIdx = RINGS.indexOf(item.ring);
@@ -66,9 +84,18 @@ const PLACED = ITEMS.map((item, i) => {
   const sectorSpan = sectorTo - sectorFrom;
   const laneFrom = sectorFrom + RING_CUM[ringIdx] * sectorSpan + RING_PAD_DEG;
   const laneTo = sectorFrom + RING_CUM[ringIdx + 1] * sectorSpan - RING_PAD_DEG;
-  const angleDeg = (laneFrom + laneTo) / 2;
-  const radiusFrac = (RING_BOUNDS[ringIdx] + RING_BOUNDS[ringIdx + 1]) / 2;
-  return { ...item, sectorIdx, ringIdx, angleDeg, radiusFrac, order: i };
+
+  const cellKey = `${item.sector}|${item.ring}`;
+  const cellCount = CELL_COUNTS.get(cellKey);
+  const cellIdx = CELL_SEEN.get(cellKey) || 0;
+  CELL_SEEN.set(cellKey, cellIdx + 1);
+
+  const slotWidth = (laneTo - laneFrom) / cellCount;
+  const angleDeg = laneFrom + slotWidth * (cellIdx + 0.5);
+  const radialJitter = cellCount > 1 ? (cellIdx - (cellCount - 1) / 2) * RADIAL_STAGGER : 0;
+  const radiusFrac = (RING_BOUNDS[ringIdx] + RING_BOUNDS[ringIdx + 1]) / 2 + radialJitter;
+
+  return { ...item, sectorIdx, ringIdx, angleDeg, radiusFrac, cellIdx, cellCount, order: i };
 });
 
 // --- Mount -------------------------------------------------------------------
@@ -204,13 +231,27 @@ const innovationRadar = {
       // Label: short diagonal offset, decoupled from the radial direction so
       // labels from neighbouring rings on near-horizontal sectors don't stack.
       // The horizontal gap clears the marker itself so the glyph never sits
-      // on top of its own label.
+      // on top of its own label. Same-cell neighbours (cellCount > 1) already
+      // sit spread along the ring's tangent (the lane-subdivision direction);
+      // pushing each label further along that *same* signed tangent vector
+      // (rather than a fixed screen-axis guess) always reinforces that spread
+      // instead of risking cancelling it out on sectors where the tangent
+      // points the "wrong" way on screen.
       const dx = Math.cos(toRad(d.angleDeg));
       const labelGap = mr + 9;
-      const lx = p.x + (dx >= 0 ? labelGap : -labelGap);
-      const ly = p.y + (d.order % 2 === 0 ? -11 : 11);
+      let lx = p.x + (dx >= 0 ? labelGap : -labelGap);
+      let ly = p.y + (d.order % 2 === 0 ? -11 : 11);
+      if (d.cellCount > 1) {
+        const stackRank = d.cellIdx - (d.cellCount - 1) / 2;
+        const rad = toRad(d.angleDeg);
+        const tangentX = -Math.sin(rad);
+        const tangentY = Math.cos(rad);
+        const push = stackRank * 20;
+        lx = p.x + (dx >= 0 ? labelGap : -labelGap) + tangentX * push;
+        ly = p.y + tangentY * push;
+      }
       ctx.save();
-      ctx.font = `11px ${FONT}`;
+      ctx.font = `12px ${FONT}`;
       ctx.fillStyle = t.ink;
       ctx.textAlign = dx >= 0 ? "left" : "right";
       ctx.textBaseline = "middle";
