@@ -1,0 +1,264 @@
+library: echarts
+language: javascript
+specification_id: line-stock-comparison
+created: '2026-08-26T07:32:55Z'
+updated: '2026-08-26T07:48:01Z'
+generated_by: claude-sonnet
+workflow_run: 32942811538
+issue: 3748
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/echarts/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - End-of-line callouts ("GOOGL +28%", "AAPL -6%") now state the winner/loser directly
+    on the chart in matching series colors — the story is legible without reading
+    the legend, directly fixing the prior DE-03 weakness
+  - Best/worst series get thicker lines (3.5px vs 2.5px) and higher z-order, while
+    all lines carry 0.88 opacity — this measurably improves individual traceability
+    through the dense Feb-Apr and Jun-Aug crossing zones without hurting the non-emphasized
+    series
+  - 'Added explicit "Date" x-axis name (nameLocation: middle) closing out the prior
+    VQ-06 nit, alongside the already-descriptive "Rebased Price (Start = 100)" y-axis
+    label'
+  - Grid right margin widened (60px -> 130px) to give the new end-labels breathing
+    room — confirmed no clipping at any canvas edge in either theme
+  - 'Correct Imprint palette usage — first series (AAPL) renders as #009E73, remaining
+    series follow canonical order (lavender, blue, ochre); data colors identical between
+    light and dark renders'
+  - Theme-adaptive chrome is fully correct in both renders — warm off-white/near-black
+    backgrounds, readable ink-toned text, subtle horizontal-only grid, and a markLine
+    reference at y=100 that correctly flips from black-dashed (light) to white-dashed
+    (dark)
+  - 'Rebase-to-100 logic is correct (rebased = price / first_price * 100), and the
+    deterministic LCG-seeded random walk produces a realistic, varied story: a clear
+    winner (GOOGL), a clear laggard (AAPL), and a relatively flat benchmark (SPY)'
+  weaknesses:
+  - 'DE-01: Still reads closer to a well-configured default than a bespoke design
+    beyond the emphasis lines and end-labels — no additional polish layer (e.g. subtle
+    area shading behind the 100-reference band, or a callout box around the two end-labels)
+    that would push this into publication-ready territory'
+  - 'DE-02: Legend and end-labels use plain text with no supporting visual grouping
+    (e.g. a light divider or subtle background chip) — functional but minimal refinement
+    beyond the mandated defaults'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "line-stock-comparison · javascript · echarts · anyplot.ai" is dark, centered, fully readable (occupies ~33% of canvas width, well within bounds, no clipping). Legend (AAPL, GOOGL, MSFT, SPY) sits below the title in soft dark text with matching-color line/circle swatches. Y-axis tick labels (85-140) and the rotated axis title "Rebased Price (Start = 100)" are dark and legible with no clipping at the left edge. X-axis month ticks (Feb-Dec) plus an explicit "Date" axis name are dark and legible with no clipping at the bottom edge. Horizontal-only grid lines are subtle light-gray. A black dashed reference line marks y=100.
+      Data: Four lines in Imprint palette order — AAPL brand green (#009E73), GOOGL lavender, MSFT blue, SPY ochre — all clearly distinguishable from the background and from each other, including through the dense Feb-Apr and Jun-Aug crossing zones (opacity 0.88 plus differentiated line widths keep the winner/loser traceable). Two end-of-line callout labels, "GOOGL +28%" (lavender) and "AAPL -6%" (green), sit in the right margin without overlapping the grid, axis, or each other, and are not clipped by the canvas edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title is light/near-white, centered, fully readable against the dark background. Legend labels are light-gray, readable. Y-axis and X-axis tick labels, plus the "Date" and "Rebased Price (Start = 100)" axis names, are light-gray/soft-white, clearly legible — no dark-on-dark failures observed anywhere. Grid lines are subtle light-gray at low opacity. The y=100 reference line is a white-dashed line, correctly flipped for the dark surface.
+      Data: Same four line colors as the light render (brand green, lavender, blue, ochre) — confirmed identical, only chrome (background, text, grid, reference-line color) flips between themes. The two end-labels ("GOOGL +28%", "AAPL -6%") render in the same matching series colors and are equally legible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, legend/axis/endLabel 13-14px),
+          fully readable in both themes, no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap anywhere, including the new end-labels vs. axis/grid/each
+          other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 0.88 opacity plus differentiated line widths (3.5px emphasis / 2.5px
+          base) keep all four series individually traceable through the dense crossing
+          zones
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe, good contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the large majority of the canvas, balanced margins, widened
+          right margin (130px) cleanly fits the new end-labels with no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis descriptively labeled with rebasing convention; x-axis now
+          has an explicit "Date" name in addition to time ticks
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for remaining series, theme-correct
+          chrome (including the flipped markLine color) in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional hierarchy now present via emphasis line-width/z-order
+          and color-matched end-labels — clearly above a generic configured default,
+          though not yet a fully bespoke polish layer
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, hidden y-axis line, generous whitespace,
+          widened margins for the new labels — clear refinement beyond raw defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: End-of-line labels spell out the winner (GOOGL +28%) and laggard
+          (AAPL -6%) directly on the chart — viewer immediately sees the insight without
+          consulting the legend
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line comparison chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rebasing to 100, distinct colors, legend, reference line at 100,
+          grid lines all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=rebased price, correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches mandated pattern; legend labels match
+          ticker symbols
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows outperformance (GOOGL), underperformance (AAPL), a mid-range
+          peak-then-decline (MSFT), and a relatively flat benchmark (SPY)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral business scenario — tech stocks vs. S&P 500 benchmark
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Annual return magnitudes (-6% to +28%) are plausible for individual
+          equities over one year
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Straightforward top-to-bottom flow; the tiny LCG helper is the library-recommended
+          deterministic-RNG pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on the provided echarts/ANYPLOT_TOKENS
+          globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: echarts.init with no explicit size/devicePixelRatio,
+          animation:false'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Time-typed x-axis, markLine annotation, axis-trigger tooltip, per-series
+          endLabel — leverages ECharts' high-level API well
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-series endLabel callouts combined with z-order/width emphasis
+          are genuinely ECharts-idiomatic conveniences that would take meaningfully
+          more manual work in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - time-series
+  styling:
+  - minimal-chrome
+  - alpha-blending
