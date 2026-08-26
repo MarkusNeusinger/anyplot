@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: histogram-basic
 created: '2026-08-26T06:15:44Z'
-updated: '2026-08-26T06:19:53Z'
+updated: '2026-08-26T06:31:46Z'
 generated_by: claude-sonnet
 workflow_run: 32937121008
 issue: 654
@@ -12,54 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 92
 review:
   strengths:
-  - Idiomatic use of d3.bin() + scaleLinear() + axisBottom/axisLeft with a proper
-    data-join (.data(bins).join("rect")) — satisfies AR-05 cleanly
-  - 'First (and only) series is exactly Imprint #009E73, byte-identical between plot-light.png
-    and plot-dark.png; only chrome (background, text, grid) flips between themes'
+  - Idiomatic d3.bin() + scaleLinear() + axisBottom/axisLeft with a proper .data(bins).join("rect")
+    data-join
+  - 'First series is exactly Imprint #009E73, identical between light and dark renders;
+    over-torque tail correctly uses the amber semantic anchor (#DDCC77) rather than
+    an arbitrary color'
+  - New dashed threshold reference line plus a manually built legend ("Over-torque
+    risk (>895 N)") gives the chart a clear focal point and directly addresses the
+    prior review's storytelling feedback
   - Bin edges are contiguous with thin pageBg-colored strokes between bars (no gaps),
-    matching the spec's 'thin visible edges between bins' requirement
-  - Y-axis starts at zero via scaleLinear().domain([0, max]).nice() as required by
-    the spec
-  - Realistic, neutral QC scenario (bolt shear-strength measurements) with a deliberate
-    right-skew bump for over-torqued fasteners, giving the distribution real shape
-    instead of a plain symmetric bell
-  - Deterministic reproducibility via a fixed-seed LCG + Box-Muller gaussian() — no
-    external RNG dependency needed in the browser runtime
-  - 'Clean theme-adaptive chrome: axis text/lines use t.inkSoft, y-axis-only gridlines
-    use t.grid, minimal L-shaped frame (tick marks removed, only domain line kept)'
+    per spec; y-axis starts at zero
+  - Realistic, neutral QC scenario (bolt shear-strength measurements) with a deliberate,
+    data-derived right-skew tail (threshold computed from mean + 1.5*stddev, not hard-coded)
+  - Deterministic reproducibility via a fixed-seed LCG + Box-Muller gaussian()
+  - Hover tooltips built with d3.pointer/getBBox for dynamic sizing add genuine, library-distinctive
+    interactivity that is invisible-but-harmless in the static PNG
+  - 'Clean theme-adaptive chrome: y-axis-only gridlines, minimal L-shaped frame, all
+    text legible in both themes'
   weaknesses:
-  - 'Design Excellence reads as a well-configured default rather than a distinctive
-    piece: no visual emphasis calls out the over-torqued tail bump the data/comments
-    describe, no reference line (e.g. mean or spec threshold), and typography weight/size
-    hierarchy is minimal beyond bold title vs regular axis text — add a deliberate
-    focal point or refined detail to lift DE-01/DE-02/DE-03 above ''default''.'
-  - Library Mastery is generic idiomatic d3.bin() usage that could be replicated with
-    near-identical code in most binning-capable libraries — lean into a more distinctive
-    D3 capability (e.g. hover tooltips via mouse events since d3 is an interactive
-    library and tooltips aren't penalized in the static PNG, or a data-driven bin-width
-    rule instead of a fixed thresholds(24)) to demonstrate d3-specific strength.
-  - Two small helper functions (lcg, gaussian) break strict KISS linear flow (Imports
-    → Data → Plot → Save) — acceptable since the browser has no built-in normal-distribution
-    RNG, but keep an eye on this in future d3 implementations that don't need a Gaussian.
-  - Title occupies only ~29% of canvas width at the current 22px size — well under
-    the 50-70% guideline for a mandated title this short; not a hard violation (no
-    clipping/overflow), but a touch more size or weight would improve visual balance
-    against the wide 3200px canvas.
+  - Title occupies only ~29% of canvas width (short spec-id + language combination)
+    — not a violation given no clipping and full readability, but a touch more size/weight
+    would improve visual balance
+  - Two small helper functions (lcg, gaussian) slightly break strict KISS linear flow
+    — acceptable given the browser has no built-in normal-distribution RNG
+  - Distribution shows a right skew with one secondary bump near the peak rather than
+    a clearly multimodal shape — adequate for the spec's 'slight skew' requirement
+    but not maximal feature coverage
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "histogram-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. X-axis label "Shear Strength (N)" and rotated Y-axis label "Number of Fasteners" both in dark ink, legible. Tick labels (700-950 on X, 0-40 on Y) in a slightly softer dark gray, all readable. Subtle horizontal gridlines at each Y tick, faint but visible. Only bottom + left axis domain lines are drawn (L-shaped frame); tick marks themselves are removed.
-      Data: A single series of ~29 vertical bars in brand green (#009E73) with thin off-white strokes separating adjacent bins (no gaps). Distribution rises from near zero at the left (~680N), builds through the 750-800N range, has a broad plateau around 800-840N, spikes to a clear peak (~41 count) near 845N, then decays with a longer right tail out past 950N — visibly right-skewed as intended.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no overlap, no clipping.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "histogram-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. X-axis label "Shear Strength (N)" and rotated Y-axis label "Number of Fasteners" in dark ink, legible; tick labels (700-950 on X, 0-40 on Y) in softer gray, all readable. Subtle horizontal gridlines at each Y tick. Only bottom+left axis lines drawn (L-shaped frame), tick marks removed. A small legend swatch top-right reads "Over-torque risk (>895 N)" in soft ink next to an amber square.
+      Data: A single distribution of green (#009E73) bars rising from near zero at ~680N, plateauing/bumping 800-840N, peaking (~41) near 845N, then decaying into a right tail. Bins beyond ~895N (mean + 1.5 std) are recolored amber (#DDCC77), the Imprint warning anchor, with a dashed vertical reference line marking the threshold exactly at the color transition. Thin off-white strokes separate every bar (no gaps between bins).
+      Legibility verdict: PASS — all text, including the new legend and threshold annotation, is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels have all flipped to light ink tones and remain clearly legible against the dark background. Gridlines are faint light horizontal lines at each Y tick, still subtle but visible. Same L-shaped axis frame as the light render.
-      Data: Bars are the identical brand green (#009E73) as the light render — confirmed same hue, same shape, same bin boundaries and stroke separators. No dark-on-dark or light-on-light failures anywhere.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark issues found.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels, tick labels, gridlines, legend text, and the dashed reference line have all flipped to light/soft tones and remain clearly legible. Same L-shaped axis frame and legend layout as the light render.
+      Data: Identical bar shape, bin boundaries, and colors as the light render — green (#009E73) for the main distribution, amber (#DDCC77) for the over-torque tail, both unchanged from light. Only chrome (background, text, grid, dashed line color) adapted to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; amber and green both remain clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -70,75 +63,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (22px title, 16px axis labels, 14px ticks), readable
-          in both themes, no clipping; title fills only ~29% of width so slightly
-          under-proportioned relative to the 50-70% guideline
+        comment: Explicit font sizes, readable in both themes; title fills only ~29%
+          of width (short title text), under the 50-70% guideline but not clipped
+          or squeezed
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or bar collisions in either render
+        comment: No collisions; new legend sits clear of the tallest bar
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 24 bins over 420 points with thin stroke separators — bars are well-sized
-          and clearly distinguishable
+        comment: 24 bins over 420 points, well-sized with clear pageBg separators
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, no red-green dependency, good contrast against both
-          surfaces
+        comment: Green/amber combination has strong contrast against both surfaces,
+          not a red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart area (1440x710 of 1600x900 mount) uses the canvas well, balanced
-          margins, nothing cut off
+        comment: Chart area uses the canvas well, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Shear Strength (N)'' includes units, ''Number of Fasteners'' is
-          descriptive'
+        comment: Units on X (N), descriptive Y
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is exactly #009E73, identical across themes; backgrounds
-          are theme-correct FAF8F1/1A1A17'
+        comment: 'First series exactly #009E73, identical across themes; amber tail
+          is the correct semantic-warning anchor, not an arbitrary hex; theme-correct
+          chrome in both renders'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured style-guide default: clean but no custom hierarchy
-          or distinctive visual treatment beyond the standard palette/spacing'
+        passed: true
+        comment: Deliberate amber/green contrast and a threshold line read as thoughtful
+          design, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Good refinement — spines minimized to L-shape, tick marks removed,
-          subtle y-only grid, edge-highlighted bars — but not maximally polished
+        passed: true
+        comment: L-shaped spines, minimal ticks, subtle grid, edge-highlighted bars,
+          generous margins
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data itself has an intentional skew/bump but nothing in the visual
-          (color, annotation, emphasis) calls it out to the viewer
+        passed: true
+        comment: Amber tail + dashed reference line + labeled threshold value give
+          the chart a clear focal point and immediate insight (over-torque risk zone)
     spec_compliance:
       score: 15
       max: 15
@@ -148,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct binned histogram of a continuous variable
+        comment: Correct histogram with binned bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: No gaps between bins, thin visible bin edges, readable frequency/value
-          axes, y-axis starts at zero, reasonable bin count (24)
+        comment: No gaps, thin bin edges, y-axis starts at zero, reasonable bin count
+          (24 for 420 obs)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = shear strength bin ranges, Y = count; full data range shown
+        comment: X = value range, Y = frequency, correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'histogram-basic · javascript · d3 · anyplot.ai';
-          no legend needed for a single series
+        comment: Title matches mandated format exactly; new legend label matches the
+          amber semantic
     data_quality:
       score: 14
       max: 15
@@ -178,22 +169,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows unimodal shape with a real right skew/secondary bump; not extreme
-          multimodality but a legitimate distribution feature
+        comment: Real right skew with a secondary bump near the peak, not extreme
+          multimodality
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bolt shear-strength QC sampling is a real, neutral, comprehensible
-          engineering scenario
+        comment: Bolt shear-strength QC sampling, neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 680-960N shear strength range with a sample of 420 fasteners is a
-          plausible QC batch size and value range
+        comment: Shear-strength values and data-derived threshold are physically plausible
     code_quality:
       score: 9
       max: 10
@@ -203,60 +192,62 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly linear Imports->Data->Plot flow, but two small helper functions
-          (lcg, gaussian) are defined for the RNG
+        comment: Two small RNG helper functions (lcg, gaussian) slightly break strict
+          linear flow, but unavoidable without a seeded PRNG in-browser
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the d3 global, as required for this runtime
+        comment: Only the d3 global, no extraneous packages
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering, appropriate complexity for a histogram
+        comment: Clean, no fake UI; hover tooltip is real interactivity gated behind
+          mouse events, not simulated
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly mounts a single <svg> into #container sized from ANYPLOT_SIZE;
-          no animation, current d3 7.9 API'
+        comment: Mount-node contract respected; modern .data().join() API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.bin(), scale/axis generators, data-join, d3.pointer/getBBox —
+          expert idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic use of d3.bin(), scale/axis generators, and the
-          data-join pattern
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses d3.bin() but otherwise fairly generic; no interactivity, custom
-          bin-width rule, or other d3-distinctive technique
-  verdict: REJECTED
+        comment: Hover tooltips built from live getBBox measurement + d3.pointer are
+          genuinely d3-distinctive DOM-level techniques, not just declarative chart
+          config
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - binning
   styling:
   - edge-highlighting
-  - grid-styling
-  - minimal-chrome
