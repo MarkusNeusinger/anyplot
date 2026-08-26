@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: violin-basic
+created: '2026-08-26T17:04:28Z'
+updated: '2026-08-26T17:36:57Z'
+generated_by: claude-sonnet
+workflow_run: 32991466994
+issue: 722
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-basic/javascript/d3/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - ProSeries tail is now smooth after the bandwidth increase (1.06 → 1.35× Silverman)
+    — the earlier bumpy KDE artifact is gone, and the wider bimodal Workstation dip
+    is still preserved.
+  - New dashed-leader annotation ('bimodal — two usage clusters') on the Workstation
+    violin gives the plot a genuine focal point and directly demonstrates a violin's
+    advantage over a box plot.
+  - 'Typographic hierarchy sharpened: y-axis title dropped 18px→15px and tick labels
+    16px→14px, now clearly subordinate to the 22px chart title.'
+  - Quartile and median lines are drawn at the violin's local width at that quantile
+    rather than a fixed-width overlay — more correct and more polished than most violin
+    implementations.
+  - 'Genuinely diverse, story-driven synthetic data: tight normal (UltraLight), wide
+    normal (ProSeries), a deliberately bimodal mixture (Workstation), a right-skewed
+    exponential-like shape (Budget), and a clipped/skewed normal (Gaming).'
+  - Correct Imprint palette in canonical order (positions 1–5), identical data colors
+    across themes, correct theme-adaptive backgrounds/chrome in both renders.
+  - Deterministic seeded LCG RNG, clean minimal chrome, legend correctly omitted since
+    categories already label the x-axis.
+  weaknesses:
+  - The 'bimodal — two usage clusters' annotation is set at 12px CSS — at the 400px
+    mobile thumbnail it shrinks to an illegible smudge; bump it a point or two, or
+    accept it's a secondary/tertiary element (primary title/axis/tick text all stay
+    legible at mobile scale).
+  - Design Excellence is strong but still short of publication/FiveThirtyEight-level
+    polish — spines are only partially removed (x-domain gone, y-domain kept) and
+    the grid/whitespace treatment is functional rather than deliberately refined.
+  - A handful of small helper functions (kernel, KDE estimator, RNG) deviate from
+    strict KISS/no-functions structure — acceptable here since they're the standard,
+    necessary idiom for a KDE-based violin plot, not over-engineering.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white, not dark.
+      Chrome: Bold dark title "Laptop Battery Life · violin-basic · javascript · d3 · anyplot.ai" centered at top; rotated y-axis title "Battery Life (hours)" on the left; x-axis category labels (UltraLight, ProSeries, Workstation, Budget, Gaming) below each violin; subtle horizontal gridlines every ~5 units; a dashed leader line + italic annotation ("bimodal — two usage clusters") pointing into the Workstation violin. All chrome text is dark ink on the cream background — clearly readable.
+      Data: Five mirrored violins in canonical Imprint order — #009E73 green (UltraLight), #C475FD lavender (ProSeries), #4467A3 blue (Workstation), #BD8233 ochre (Budget), #AE3030 red (Gaming) — each with a dark quartile-line pair and a thicker dark median line sized to the violin's local width at that quantile.
+      Legibility verdict: PASS (title/axis/tick text all legible at full size and at the 400px mobile thumbnail; the 12px annotation is the one element that gets hard to read at 400px, but it's a secondary/tertiary callout, not primary chart text).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black, not light.
+      Chrome: Same title/labels now rendered in light ink/inkSoft tones, clearly legible against the dark surface — no dark-on-dark failures anywhere. Gridlines are faint light lines at the same intervals. Quartile/median lines flip to a light stroke, still clearly visible against each violin's fill.
+      Data: The five violin fill colors are pixel-identical to the light render — only chrome (background, text, gridlines, quartile/median stroke color) flips via theme tokens, confirming Imprint palette compliance.
+      Legibility verdict: PASS (same legibility profile as the light render, including the same minor mobile-scale annotation caveat).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit sizes throughout (22/15/14/12px), well-proportioned, readable
+          in both themes; the 12px annotation gets hard to read at the 400px mobile
+          thumbnail, primary text stays legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, violins, or the new annotation/leader
+          line
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Violins, quartile lines, and median lines all clearly visible and
+          appropriately sized for n=160 points/category
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 5 hue-distinct categorical colors, good contrast in both themes,
+          no red-green-only signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No canvas-gate flag; balanced plot area, nothing cut off or clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Battery Life (hours)' with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (#009E73, #C475FD, #4467A3, #BD8233, #AE3030),
+          identical data colors across themes, correct theme-adaptive chrome/backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette use and local-width quartile/median lines are
+          above default, but not yet FiveThirtyEight-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis gridlines, generous whitespace, x-domain spine
+          removed; y-domain spine still present
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: New explicit annotation makes the bimodal Workstation insight immediately
+          obvious, on top of the already story-driven distribution choices
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct mirrored-density violin plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quartile markers (Q1/Q3), mirrored density both sides, median line
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, all data represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · violin-basic · javascript ·
+          d3 · anyplot.ai'; legend correctly omitted (categories self-label on x-axis)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Tight, wide, bimodal, right-skewed, and clipped-skewed distribution
+          shapes all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Laptop battery life by product line — real, neutral, business/tech
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Battery-life ranges (1.5–20.5h) are plausible across the product
+          tiers depicted
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few small helper functions (RNG, kernel, KDE estimator) — standard/necessary
+          for KDE, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container per the harness contract; no animation/transitions'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scales, area generator with curveBasis, d3-array (deviation/quantileSorted/mean),
+          and data joins for gridlines are all idiomatic D3
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hand-built Epanechnikov-kernel KDE + mirrored d3.area is a technique
+          that plays directly to D3's build-from-primitives strength
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
