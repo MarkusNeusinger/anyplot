@@ -168,6 +168,23 @@ function CloudRainBox() {
   );
 }
 
+// Subtle vertical gridlines (15%-opacity ink, per style guide) aligned with
+// the x-axis ticks, so exact reaction-time values are easier to compare
+// across the four category rows.
+function Gridlines() {
+  const xScale = useXScale("value");
+  const { top, height } = useDrawingArea();
+  const ticks = xScale.ticks ? xScale.ticks(8) : [];
+
+  return (
+    <g>
+      {ticks.map((tick) => (
+        <line key={tick} x1={xScale(tick)} x2={xScale(tick)} y1={top} y2={top + height} stroke={t.grid} strokeWidth={1} />
+      ))}
+    </g>
+  );
+}
+
 function ChartTitle({ text, fontSize }) {
   const { left, top, width: drawW } = useDrawingArea();
   return (
@@ -213,6 +230,7 @@ export default function Chart() {
       margin={{ top: 110, right: 70, bottom: 90, left: 190 }}
     >
       <ChartTitle text={title} fontSize={titleSize} />
+      <Gridlines />
       <CloudRainBox />
       <ChartsXAxis axisId="value" position="bottom" />
       <ChartsYAxis axisId="category" position="left" disableTicks disableLine />
