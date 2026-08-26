@@ -1,0 +1,259 @@
+library: muix
+language: javascript
+specification_id: line-stock-comparison
+created: '2026-08-26T07:36:20Z'
+updated: '2026-08-26T07:47:23Z'
+generated_by: claude-sonnet
+workflow_run: 32943231570
+issue: 3748
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Grid-line fix applied correctly: ''.MuiChartsGrid-line'' now renders solid subtle
+    strokes (stroke: t.grid, strokeOpacity: 0.2) instead of the previous dashed grid,
+    matching the style guide''s Grid Guidelines and freeing dashed strokes for the
+    reference line and benchmark series only.'
+  - Smart semantic use of the theme-adaptive 'neutral' ink token (t.ink) for the S&P
+    500 benchmark line, matching the style guide's semantic-anchor role of 'totals
+    / baseline / outline / reference line' rather than burning a categorical palette
+    slot — reinforced with a dashed stroke for redundant encoding.
+  - 'Careful workaround for a real MUI X y-axis label collision: a hand-rotated Typography
+    label in its own flex column avoids the library''s hardcoded tick-width offset
+    colliding with 3-digit tick labels.'
+  - Reference line at 100 with a subtle dashed style and 'Start (100)' label directly
+    satisfies the spec's optional note about a horizontal reference line at the starting
+    point.
+  - Deterministic seeded LCG data generation for four series with plausible drift/volatility
+    per stock, correctly rebased to 100 at the first session.
+  - Distinctive per-series stroke styling (thicker solid lines for stocks, thinner
+    dashed line for the benchmark) creates clear visual hierarchy.
+  weaknesses:
+  - Data storytelling stays at a competent baseline but doesn't add further emphasis
+    (e.g. end-of-series value callouts or a subtle end-label showing final rebased
+    value) that would push it from good to distinctive.
+  - Text legibility relies on explicit but modest font sizes (14-16px axis, 22px title)
+    — fine at full resolution but leaves little margin at ~400px mobile scaling; a
+    touch larger tick/legend text would be safer.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "line-stock-comparison · javascript · muix · anyplot.ai" top-left; row-layout legend with 4 swatches below it; rotated y-axis label "Rebased price (start = 100)" in its own column; x-axis label "Date"; solid, subtle horizontal grid lines (fixed from the previous dashed grid); dark tick labels on both axes, all clearly legible against the light background.
+      Data: AAPL renders in Imprint brand green (#009E73), GOOGL in lavender (palette position 2), MSFT in blue (palette position 3), each as solid ~2.5px lines. The SPY benchmark renders as a near-black dashed line using the theme-adaptive "ink"/neutral token. A dashed reference line at y=100 with a "Start (100)" label sits mid-chart, not colliding with any series.
+      Legibility verdict: PASS — no light-on-light issues, no overlap between text and data/legend.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, tick labels, and grid all flip to light/off-white tones and remain fully legible; grid lines stay solid and subtle (same fix verified in this theme).
+      Data: AAPL/GOOGL/MSFT colors are pixel-identical to the light render (confirmed data-color consistency across themes). The SPY benchmark line flips from near-black to near-white dashed — intended behavior of the theme-adaptive "neutral" semantic anchor for a baseline/reference series, not a defect.
+      Legibility verdict: PASS — no dark-on-dark text anywhere; brand green remains highly visible on the dark surface.
+
+    Grid-line verification: cropped and zoomed a region of plot-light.png (y-axis 108-110 gridlines) to confirm the strokes are solid, thin, and subtle (no dash pattern) — the attempt-1 weakness (dashed grid contradicting the style guide) is resolved.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis ticks 14px, axis
+          labels 16px, legend 13px); readable in both themes, but modest sizing leaves
+          little margin at ~400px mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, legend, axis labels, ticks, or the 'Start
+          (100)' reference-line label and data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line widths (2.5px stocks, 2px dashed benchmark) well-suited to ~252-point
+          dense daily series
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe palette, benchmark distinguished by both
+          color and dash pattern (redundant encoding)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well, balanced margins, nothing clipped or
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Rebased price (start = 100)'' and ''Date'' are descriptive with
+          units/context'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series AAPL = #009E73; GOOGL/MSFT follow canonical Imprint
+          order; benchmark correctly uses theme-adaptive neutral ink token instead
+          of a palette slot; backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom y-label workaround, semantic ink use for benchmark, styled
+          reference line — above default but not fully publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid switched to solid subtle strokes (fixed from attempt 1's dashed
+          grid), generous whitespace; axis spines still present at default weight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Benchmark-as-baseline treatment and reference line give hierarchy,
+          but no further emphasis such as end-of-series callouts
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line comparison chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rebasing to 100, distinct colors, legend, reference line at 100,
+          grid all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, rebased price on y, all series fully visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match symbol · company name
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows outperformance (AAPL/MSFT rallying), underperformance (GOOGL
+          decline), and benchmark tracking
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, comprehensible finance scenario (AAPL/GOOGL/MSFT vs
+          SPY)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily drift/volatility values and one-year trading-day count are
+          realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> component, no unnecessary classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG per series
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart, ChartsReferenceLine, Box, Typography — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness contract respected (default export, skipAnimation, sized
+          to ANYPLOT_SIZE)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of series/xAxis/yAxis/grid/slotProps API, though the
+          y-label is a manual workaround rather than a native prop
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsReferenceLine and per-series sx selector styling are library-distinctive
+          touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  - time-series
+  styling:
+  - publication-ready
+  - grid-styling
