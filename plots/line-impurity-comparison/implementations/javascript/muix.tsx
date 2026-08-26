@@ -11,7 +11,9 @@ import Typography from "@mui/material/Typography";
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (theoretical splitting-criterion curves over p in [0, 1]) --------
-const POINT_COUNT = 100;
+// 101 points (step 0.01) so p=0.5 lands exactly on a sample — needed to mark
+// the shared peak on both curves, not just at the reference line.
+const POINT_COUNT = 101;
 const probabilities = Array.from({ length: POINT_COUNT }, (_, i) => i / (POINT_COUNT - 1));
 
 // Gini impurity: 2p(1-p) peaks at 0.5 (p=0.5). Scaled x2 so it shares the
@@ -60,16 +62,20 @@ export default function Chart() {
         colors={[t.palette[0], t.palette[1]]}
         series={[
           {
+            id: "gini",
             data: giniScaled,
             label: "Gini impurity ×2 — 4p(1−p)",
-            showMark: false,
+            showMark: (params) => params.position === 0.5,
             curve: "natural",
+            area: true,
           },
           {
+            id: "entropy",
             data: entropy,
             label: "Entropy — −p·log₂p − (1−p)·log₂(1−p)",
-            showMark: false,
+            showMark: (params) => params.position === 0.5,
             curve: "natural",
+            area: true,
           },
         ]}
         xAxis={[
@@ -97,6 +103,13 @@ export default function Chart() {
           "& .MuiChartsAxis-label": { fontSize: "16px" },
           "& .MuiChartsLegend-label": { fontSize: "14px" },
           "& .MuiLineElement-root": { strokeWidth: 3.5 },
+          // Two low-opacity area fills, gini drawn under entropy: where they
+          // overlap (0..gini(p)) the fills blend, while the uncovered band
+          // above (gini(p)..entropy(p)) reads as a single lavender wash —
+          // visually calling out where the two criteria diverge most.
+          "& .MuiAreaElement-series-gini": { fillOpacity: 0.22 },
+          "& .MuiAreaElement-series-entropy": { fillOpacity: 0.16 },
+          "& .MuiMarkElement-root": { strokeWidth: 2.5 },
         }}
       >
         <ChartsReferenceLine
