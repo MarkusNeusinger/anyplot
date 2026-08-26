@@ -13,7 +13,6 @@ import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
-import { ChartsText } from "@mui/x-charts/ChartsText";
 import { useXScale, useYScale, useDrawingArea } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
@@ -85,18 +84,75 @@ const LON_MAX = Math.max(...lons) + 14;
 const LAT_MIN = Math.min(...lats) - 8;
 const LAT_MAX = Math.max(...lats) + 8;
 
+// Simplified world coastlines (lon/lat vertices, hand-traced low-poly
+// continent outlines) so the chart reads as a map rather than a bare
+// lon/lat grid. Rendered via the same xScale/yScale hooks as the route
+// arcs and clipped to the drawing area, so out-of-range vertices (e.g. the
+// Canadian arctic) simply fall outside the visible plot.
+const CONTINENTS = [
+  [
+    [-165, 65], [-140, 60], [-125, 49], [-124, 40], [-117, 32], [-105, 22], [-97, 16],
+    [-90, 14], [-88, 21], [-81, 25], [-80, 32], [-75, 40], [-70, 44], [-65, 47],
+    [-75, 55], [-95, 62], [-110, 68], [-140, 68], [-165, 65],
+  ], // North America
+  [
+    [-77, 8], [-80, 0], [-81, -6], [-71, -18], [-70, -33], [-68, -45], [-68, -54],
+    [-65, -52], [-58, -38], [-48, -25], [-40, -13], [-35, -6], [-50, 0], [-60, 8],
+    [-72, 10], [-77, 8],
+  ], // South America
+  [
+    [-9, 43], [-9, 37], [3, 36], [10, 44], [15, 38], [20, 40], [28, 41], [30, 46],
+    [38, 55], [30, 60], [10, 58], [5, 51], [-1, 51], [-5, 55], [-9, 43],
+  ], // Europe
+  [
+    [-17, 21], [-17, 14], [-10, 6], [3, 6], [9, 4], [13, -6], [18, -34], [26, -33],
+    [35, -20], [40, -3], [45, 11], [43, 12], [38, 15], [32, 31], [10, 37], [-6, 35],
+    [-17, 21],
+  ], // Africa
+  [
+    [27, 41], [35, 30], [42, 13], [56, 25], [61, 25], [72, 19], [77, 8], [80, 13],
+    [88, 22], [96, 16], [100, 13], [104, 10], [109, 21], [121, 25], [122, 31],
+    [130, 38], [140, 36], [142, 43], [135, 50], [100, 55], [60, 55], [48, 42],
+    [35, 45], [27, 41],
+  ], // Asia
+  [
+    [113, -22], [115, -32], [131, -12], [142, -11], [145, -17], [153, -28],
+    [151, -34], [140, -38], [135, -35], [113, -22],
+  ], // Australia
+];
+
 // --- Overlay: title drawn in the reserved top margin -------------------------
+// Plain SVG <text>, not ChartsText: ChartsText applies its own measured-width
+// anchor offset on top of the native SVG text-anchor, which for a long
+// middle-anchored string like this double-shifts it off-center.
 function MapTitle() {
+  const { width } = window.ANYPLOT_SIZE;
+  return (
+    <text x={width / 2} y={40} textAnchor="middle" dominantBaseline="hanging" fontSize={22} fontWeight={500} fill={t.ink}>
+      {TITLE}
+    </text>
+  );
+}
+
+// --- Overlay: simplified land masses behind the connection arcs -------------
+function WorldOutline() {
+  const xScale = useXScale();
+  const yScale = useYScale();
   const drawingArea = useDrawingArea();
   return (
-    <ChartsText
-      x={drawingArea.left + drawingArea.width / 2}
-      y={40}
-      text={TITLE}
-      textAnchor="middle"
-      dominantBaseline="hanging"
-      style={{ fontSize: 22, fontWeight: 500, fill: t.ink }}
-    />
+    <g>
+      <defs>
+        <clipPath id="worldClip">
+          <rect x={drawingArea.left} y={drawingArea.top} width={drawingArea.width} height={drawingArea.height} />
+        </clipPath>
+      </defs>
+      <g clipPath="url(#worldClip)">
+        {CONTINENTS.map((points, i) => {
+          const d = points.map(([lon, lat], j) => `${j === 0 ? "M" : "L"} ${xScale(lon)},${yScale(lat)}`).join(" ") + " Z";
+          return <path key={i} d={d} fill={t.grid} fillOpacity={0.6} stroke={t.inkSoft} strokeWidth={1} strokeOpacity={0.5} />;
+        })}
+      </g>
+    </g>
   );
 }
 
@@ -130,7 +186,7 @@ function ConnectionOverlay() {
         const ratio =
           (route.passengers - minPassengers) / (maxPassengers - minPassengers || 1);
         const strokeWidth = 2.5 + ratio * 6;
-        const strokeOpacity = 0.35 + ratio * 0.35;
+        const strokeOpacity = 0.3 + ratio * 0.3;
 
         return (
           <path
@@ -159,14 +215,9 @@ function ConnectionOverlay() {
               stroke={t.pageBg}
               strokeWidth={2}
             />
-            <ChartsText
-              x={cx + nudge.dx}
-              y={cy + nudge.dy}
-              text={code}
-              textAnchor="middle"
-              dominantBaseline="auto"
-              style={{ fontSize: 14, fontWeight: 500, fill: t.ink }}
-            />
+            <text x={cx + nudge.dx} y={cy + nudge.dy} textAnchor="middle" fontSize={14} fontWeight={500} fill={t.ink}>
+              {code}
+            </text>
           </g>
         );
       })}
@@ -178,14 +229,17 @@ function ConnectionOverlay() {
 function Caption() {
   const drawingArea = useDrawingArea();
   return (
-    <ChartsText
+    <text
       x={drawingArea.left}
       y={drawingArea.top + drawingArea.height + 74}
-      text="Line thickness and opacity encode annual passenger volume (thousands)."
       textAnchor="start"
       dominantBaseline="hanging"
-      style={{ fontSize: 14, fontWeight: 400, fill: t.inkSoft }}
-    />
+      fontSize={14}
+      fontWeight={400}
+      fill={t.inkSoft}
+    >
+      Line thickness and opacity encode annual passenger volume (thousands).
+    </text>
   );
 }
 
@@ -223,6 +277,7 @@ export default function Chart() {
       ]}
     >
       <ChartsGrid horizontal vertical />
+      <WorldOutline />
       <ChartsReferenceLine
         y={0}
         label="Equator"
