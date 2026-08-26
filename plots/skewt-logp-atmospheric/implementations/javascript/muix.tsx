@@ -155,7 +155,9 @@ function SkewTOverlay() {
 
   const tempPath = pathFor(PRESSURE_LEVELS, (_p, i) => soundingTempC[i]);
   const dewpointPath = pathFor(PRESSURE_LEVELS, (_p, i) => soundingDewpointC[i]);
-  const markerLevels = PRESSURE_LEVELS.map((p, i) => ({ p, i })).filter((_, i) => i % 4 === 0);
+  const markerLevels = PRESSURE_LEVELS.map((p, i) => ({ p, i })).filter(
+    (_, i) => i % 4 === 0 && i !== PRESSURE_LEVELS.length - 1,
+  );
 
   const clipId = "skewt-plot-clip";
   const legendX = drawingArea.left + 18;
@@ -287,6 +289,7 @@ export default function Chart() {
         height={chartHeight}
         margin={{ top: 20, right: 32, bottom: 64, left: 88 }}
         series={[]}
+        skipAnimation
         xAxis={[
           {
             id: "temperature",
