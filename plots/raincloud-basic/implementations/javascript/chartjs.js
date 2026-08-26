@@ -94,6 +94,14 @@ const pad = (dataMax - dataMin) * 0.1;
 const xMin = Math.floor((dataMin - pad) / 20) * 20;
 const xMax = Math.ceil((dataMax + pad) / 20) * 20;
 
+// Standout category (most notable right-shift) — the highest median gets a
+// bold, ink-colored y-axis label so the story stands out without touching
+// the Imprint data colors.
+const standoutIndex = categories.reduce(
+  (best, cat, idx) => (cat.median > categories[best].median ? idx : best),
+  0
+);
+
 // --- Custom plugin: half-violin cloud, jittered rain, whiskers, median -----
 const raincloudExtras = {
   id: "raincloudExtras",
@@ -107,8 +115,8 @@ const raincloudExtras = {
       categories.length > 1
         ? Math.abs(meta.data[1].y - meta.data[0].y)
         : chart.chartArea.height * 0.7;
-    const cloudMaxHeight = rowHeight * 0.42;
-    const rainBandHeight = rowHeight * 0.3;
+    const cloudMaxHeight = rowHeight * 0.36;
+    const rainBandHeight = rowHeight * 0.24;
 
     categories.forEach((cat, i) => {
       const bar = meta.data[i];
@@ -146,7 +154,7 @@ const raincloudExtras = {
         const x = xScale.getPixelForValue(value);
         const y = centerY + rainStart + lcg() * rainBandHeight;
         ctx.beginPath();
-        ctx.arc(x, y, 3.2, 0, Math.PI * 2);
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
         ctx.fill();
       });
       ctx.globalAlpha = 1;
@@ -241,7 +249,13 @@ new Chart(canvas, {
           color: t.ink,
           font: { size: 16 },
         },
-        ticks: { color: t.inkSoft, font: { size: 14 } },
+        ticks: {
+          color: (ctx) => (ctx.index === standoutIndex ? t.ink : t.inkSoft),
+          font: (ctx) => ({
+            size: 14,
+            weight: ctx.index === standoutIndex ? "bold" : "normal",
+          }),
+        },
         grid: { display: false },
       },
     },
