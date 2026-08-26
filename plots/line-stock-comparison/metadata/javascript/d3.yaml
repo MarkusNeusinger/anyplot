@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: line-stock-comparison
+created: '2026-08-26T07:30:10Z'
+updated: '2026-08-26T07:44:22Z'
+generated_by: claude-sonnet
+workflow_run: 32942606090
+issue: 3748
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Fixed from the prior attempt: axis domain/spine lines are now fully removed,
+    pushing Visual Refinement (DE-02) to the perfect tier'
+  - New computed-extremum peak annotation (d3.greatest) gives the chart a genuine
+    focal point and a distinctive D3-specific technique, addressing both DE-03 and
+    LM-02 feedback
+  - Slimmed legend now shows only the full company name (ticker already shown at the
+    line endpoint) instead of duplicating both - reduces the prior redundancy between
+    legend and endpoint labels
+  - Correct Imprint palette in canonical order with FSLR (#009E73) as the first series,
+    identical between light and dark renders
+  - Both renders are fully theme-correct with all text, gridlines, and the new annotation
+    legible in both themes
+  - Realistic, neutral clean-energy dataset with genuinely differentiated drift/volatility
+    showing winners, laggards, and a benchmark
+  weaknesses:
+  - Endpoint ticker labels (NEE, FSLR, ENPH, ICLN) and the legend (company names)
+    still describe the same four series from two different anchors on the right side
+    of the canvas; now that the legend only carries the name, this is a lighter duplication
+    than before but could be tightened further
+  - No secondary annotation for a second notable moment (e.g., ENPH's sharp Q4 decline)
+    - a single peak callout is a good start but data storytelling could go further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "line-stock-comparison · javascript · d3 · anyplot.ai" centered at top in bold dark text, subtitle "Clean-energy sector: relative performance vs. sector ETF benchmark" beneath it in lighter gray, both fully readable. X-axis "Trading Date (2025)" and rotated Y-axis "Rebased Price (Start = 100)" labels are dark and legible. Horizontal gridlines are subtle gray, y-axis only. Axis spines/domain lines are fully removed. Dashed baseline at y=100 with "start = 100" label in soft ink. New computed-extremum annotation "FSLR peak: 128" with leader line to the actual peak point.
+      Data: Four lines - FSLR (green #009E73), ENPH (lavender), NEE (blue), ICLN (ochre) - all clearly distinguishable, 3.5px stroke width appropriate for ~252-point daily series. Endpoint dot markers with inline ticker labels sit at the right edge of each line (verified no overlap between NEE/FSLR or ENPH/ICLN pairs); a legend with color swatch + full company name sits further right. No text overlaps data or other text.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Title, subtitle, axis labels, tick labels, legend text, and the new peak annotation all rendered in white/light-gray, fully readable against the dark background. Gridlines remain subtle. Dashed baseline and "start = 100" label render in light ink, clearly visible - no dark-on-dark issues found anywhere.
+      Data: Line colors are identical to the light render (green, lavender, blue, ochre) - only the chrome (background, text, grid, spines) flipped, as required. Endpoint labels and legend text remain legible in their respective series colors.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (14-22px), readable in both themes,
+          no overflow or clipping, X/Y axis labels balanced
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Verified endpoint labels (NEE/FSLR, ENPH/ICLN), legend, peak annotation,
+          and axes are all cleanly separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 3.5px line stroke and endpoint markers well-suited to ~252-point
+          daily series across 4 lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Four hues well separated, no red-green-only pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, legend near the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with explicit units (Rebased Price, Start
+          = 100)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, FSLR=#009E73, theme-correct chrome in both
+          renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful palette, subtitle hierarchy, direct end-of-line labeling;
+          clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Fixed: axis domain/spine lines fully removed, subtle single-axis
+          grid, generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: New computed-extremum peak annotation gives a clear focal point beyond
+          endpoint labels and baseline
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line time series comparison
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Rebasing, distinct colors + legend, rebased y-axis, baseline reference,
+          peak annotation all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=rebased price, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; legend labels match tickers shown at
+          endpoints
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows winners and laggards with differentiated volatility, though
+          no extreme gap event
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral clean-energy sector tickers and ETF benchmark
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible starting prices, drift, and volatility per stock
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> scales -> draw, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, sized from ANYPLOT_SIZE
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper data joins, scales, axis generators, curveMonotoneX interpolation
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: d3.greatest-driven computed peak annotation with a leader line is
+          a genuinely D3-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  - time-series
+  styling:
+  - grid-styling
+  - minimal-chrome
