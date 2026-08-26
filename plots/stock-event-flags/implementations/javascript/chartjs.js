@@ -68,8 +68,17 @@ document.getElementById("container").appendChild(canvas);
 const minPrice = Math.min(...roundedPrices);
 const maxPrice = Math.max(...roundedPrices);
 const priceRange = maxPrice - minPrice;
-const yMin = minPrice - priceRange * 0.45;
-const yMax = maxPrice + priceRange * 0.45;
+const yMin = minPrice - priceRange * 0.3;
+const yMax = maxPrice + priceRange * 0.3;
+
+// Sparse series carrying only the event points, at their exact price — an
+// invisible dataset so the native Chart.js tooltip can surface event details
+// on hover in the interactive HTML view (spec: "hover ... should reveal full
+// event details"). Static PNG is unaffected since nothing is hovered mid-render.
+const eventPoints = new Array(TRADING_DAYS).fill(null);
+events.forEach((event) => {
+  eventPoints[event.index] = roundedPrices[event.index];
+});
 
 function drawRoundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
@@ -161,6 +170,16 @@ new Chart(canvas, {
         tension: 0.15,
         fill: false,
       },
+      {
+        label: "Event Detail",
+        data: eventPoints,
+        showLine: false,
+        pointRadius: 0,
+        pointHoverRadius: 9,
+        pointHitRadius: 18,
+        pointBackgroundColor: "transparent",
+        pointBorderColor: "transparent",
+      },
     ],
   },
   plugins: [eventFlagsPlugin],
@@ -175,6 +194,17 @@ new Chart(canvas, {
         text: "stock-event-flags · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
+      },
+      tooltip: {
+        callbacks: {
+          label: (context) => {
+            if (context.dataset.label === "Event Detail") {
+              const event = events.find((e) => e.index === context.dataIndex);
+              return event ? `${EVENT_TYPES[event.type].label}: ${event.label}` : "";
+            }
+            return `Close: $${context.parsed.y.toFixed(2)}`;
+          },
+        },
       },
       legend: {
         display: true,
