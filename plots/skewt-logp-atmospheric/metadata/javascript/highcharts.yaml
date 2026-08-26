@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: skewt-logp-atmospheric
 created: '2026-08-26T11:59:57Z'
-updated: '2026-08-26T12:05:35Z'
+updated: '2026-08-26T12:17:59Z'
 generated_by: claude-sonnet
 workflow_run: 32965167857
 issue: 3802
@@ -12,50 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
+  - 'All three weaknesses from Attempt 1 were directly and correctly addressed: X-axis
+    relabeled to the conventional ''Temperature (°C)'', the sounding now includes
+    both a shallow low-level inversion (1000-950 hPa) and a near-saturated layer (~0.5°C
+    depression at 700 hPa), and Highcharts series.zones now color-segment both data
+    lines for a genuine library-distinctive touch'
   - Scientifically accurate reference-line families computed from real thermodynamic
-    formulas (dry/moist adiabat, saturation mixing ratio) rather than approximated
-    or hard-coded curves
-  - Correct log-inverted pressure axis and correctly-skewed 45° isotherms
-  - Clean theme-adaptive chrome throughout; first data series is brand green, all
-    colors sourced from ANYPLOT_TOKENS
-  - 'Thoughtful visual hierarchy: bold solid/dashed data curves clearly separated
-    from muted background reference lines'
+    formulas (dry/moist adiabat integration, saturation mixing ratio via Clausius-Clapeyron-style
+    approximation) rather than approximated or hard-coded curves
+  - 'series.zones is used twice with real diagnostic meaning: the dewpoint line switches
+    to a thicker amber dashed segment exactly across the 650-750 hPa near-saturated
+    band, and the temperature line switches to a dashed style above 200 hPa marking
+    the tropopause lapse-rate flattening — verified pixel-accurate against the code''s
+    zone boundaries'
+  - Correct log-inverted pressure axis and correctly-skewed 45-degree isotherms; clean
+    theme-adaptive chrome throughout with identical data colors between light and
+    dark renders
   - Legend correctly de-duplicates each reference-line family to a single entry via
-    showInLegend
-  - Mixing-ratio lines sensibly restricted to the lower/mid troposphere (≥400 hPa),
-    avoiding clutter at altitude where they're not meteorologically meaningful
+    showInLegend, and zones do not introduce spurious extra legend entries
+  - Mixing-ratio lines sensibly restricted to the lower/mid troposphere (>=400 hPa),
+    avoiding clutter at altitude where they are not meteorologically meaningful
   weaknesses:
   - The four overlapping reference-line families (isotherms, dry adiabats, moist adiabats,
-    mixing ratio) create moderate visual density where they intersect near the plot
-    center - consider slightly lower opacity or thinner strokes on the mixing-ratio
-    family to reduce competition with the data curves at small/mobile scale
-  - X-axis title 'Temperature at surface (°C, skewed)' is only literally accurate
-    at the 1000 hPa row; conventional Skew-T charts (e.g. MetPy) simply label this
-    axis 'Temperature (°C)' and explain the skew via subtitle/caption - consider the
-    more standard label to avoid confusing readers unfamiliar with the skew transform
-  - The sounding profile shows a clean monotonic cooling trend with a realistic tropopause
-    deceleration, but doesn't include an additional edge-case feature (e.g. a low-level
-    temperature inversion or a saturated layer where temperature and dewpoint nearly
-    converge mid-profile) that would more fully showcase the diagram's diagnostic
-    range
-  - Library Mastery is generic core-API usage (line series + log axis + tooltip formatter);
-    a Highcharts-distinctive touch - e.g. series.zones to color-segment the temperature
-    line by stability, or a shaded arearange between temperature/dewpoint to represent
-    moisture - would raise LM-02 meaningfully
+    mixing ratio) still create moderate visual density where they intersect near the
+    plot center, slightly stressing legibility of individual line identities at mobile
+    scale.
+  - The amber near-saturation highlight on the dewpoint line is a nice diagnostic
+    touch but is not called out with any label/annotation, so a first-time reader
+    may notice the color change without understanding it marks a near-saturated (likely
+    cloudy) layer.
+  - Code still relies on several helper functions (skewX, saturation/mixing-ratio/adiabat
+    formulas, moistAdiabatCurve) rather than a flat imports-to-plot script; justified
+    by the underlying thermodynamics but a minor KISS-structure deviation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "skewt-logp-atmospheric · javascript · highcharts · anyplot.ai" and subtitle in dark ink, axis titles ("Pressure (hPa)", "Temperature at surface (°C, skewed)") and tick labels in soft dark ink, all clearly readable. 6-item legend at bottom (Isotherms, Dry adiabats, Moist adiabats, Mixing ratio, Dewpoint, Temperature) fully legible, no overlap.
-      Data: Temperature = solid green (#009E73, palette[0]) with circular markers; Dewpoint = dashed purple/lavender (#C475FD, palette[1]) with circular markers. Reference lines: gray isotherms, tan dashed dry adiabats (palette[3]), blue dotted moist adiabats (palette[2]), faint gray dotted mixing-ratio lines — all subdued relative to the two bold data curves.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "skewt-logp-atmospheric · javascript · highcharts · anyplot.ai" and subtitle "Synthetic radiosonde sounding — temperature skewed 45° against log-pressure" render in dark ink, clearly legible. Y-axis "Pressure (hPa)" is logarithmic and inverted (100 hPa at top, 1000 hPa at bottom). X-axis is now labeled simply "Temperature (°C)" (fixed from Attempt 1's confusing "Temperature at surface (°C, skewed)"). Tick labels and the 6-item bottom legend (Isotherms, Dry adiabats, Moist adiabats, Mixing ratio, Dewpoint, Temperature) are all dark, readable text.
+      Data: Four families of reference lines fan diagonally across the plot at reduced opacity — solid gray isotherms, tan dashed dry adiabats, blue dotted moist adiabats, faint dotted mixing-ratio lines. Two bold data curves stand out: a solid green Temperature line (#009E73) with circular markers, and a dashed lavender Dewpoint line (#C475FD, palette[1]) with circular markers. Verified via pixel-level crops: the Temperature line switches from solid to a dashed zone above 200 hPa (tropopause marker), and the Dewpoint line switches to a thicker amber-dashed zone between 650-750 hPa (near-saturated/cloudy-layer marker) before returning to lavender dash toward the surface. Near the surface (1000-950 hPa) the Temperature line visibly bulges warmer before cooling with height, correctly depicting the new low-level inversion feature.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, subtitle, axis titles, tick labels, and legend text all flip to light tones (near-white for primary text, soft light gray for secondary), all clearly readable against the dark background. No dark-on-dark failures observed anywhere (title, axes, ticks, legend all confirmed legible).
-      Data: Temperature (green #009E73) and Dewpoint (purple #C475FD) colors are pixel-identical to the light render — only chrome flipped, exactly as required. Reference-line colors also unchanged, correctly rendering as the theme-independent categorical/token colors.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout and text content as the light render; title/axis titles/tick labels/legend all flip to light tones (near-white ink for primary text, soft light gray for secondary text), grid lines flip to a faint light rgba. No dark-on-dark text found — every label is legible against the near-black surface.
+      Data: Temperature (green #009E73) and Dewpoint (lavender #C475FD) lines, plus the amber near-saturation zone and dashed tropopause zone, are pixel-identical in hue/pattern to the light render — only chrome (background, text, grid) flipped, exactly as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,49 +69,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; slight density
-          concern at mobile scale from overlapping reference-line families
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14px), fully readable in both themes. Docked 1 pt for moderate density where
+          four reference-line families cross, which slightly stresses legibility at
+          mobile scale.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap of text, ticks, or legend in either render
+        comment: Tick labels, markers, and the 6-entry legend are cleanly spaced with
+          no collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Data curves well distinguished from muted reference lines; moderate
-          density where 4 reference families cross
+        comment: Data curves (lineWidth 3, marker radius 4, amber zone lineWidth 5)
+          are prominent and well distinguished from the muted (opacity 0.3-0.6) reference
+          lines; docked slightly for moderate visual density near plot center.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Redundant color+dash-style encoding throughout
+        comment: 'Data lines use redundant encoding (color + dash style: solid vs
+          dashed); reference families differentiated by both color and dash pattern,
+          not hue alone.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas gate passed; balanced margins, legend anchored
-          to plot
+        comment: Square 2400x2400 canvas gate passed; plot area fills the large majority
+          of the canvas with balanced margins and a legend anchored beneath the plot.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units
+        comment: X-axis relabeled to the conventional 'Temperature (°C)' (fixed from
+          Attempt 1); Y-axis 'Pressure (hPa)' — both descriptive with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, theme-correct backgrounds and chrome in both
-          renders'
+        comment: 'Temperature (primary series) is #009E73, Dewpoint is #C475FD (palette[1]);
+          amber zone uses the semantic amber anchor correctly; backgrounds theme-correct
+          #FAF8F1/#1A1A17; all chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -117,21 +127,26 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Real thermodynamic reference-line computation, clearly above a configured
-          default
+        comment: 'Genuine domain sophistication: real dry/moist-adiabat thermodynamics
+          and mixing-ratio curves computed from first principles, not a styled default
+          line chart.'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle reference-line opacity, L-shaped frame, generous whitespace
+        comment: Subtle reference-line opacity, L-shaped axis frame, generous whitespace,
+          single-row legend; grid limited to horizontal pressure lines.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Visual hierarchy present via bold data vs muted chrome, but no explicit
-          insight annotation
+        passed: true
+        comment: 'Improved from Attempt 1: series.zones now create explicit visual
+          emphasis on two diagnostically meaningful segments (amber near-saturated
+          layer, dashed tropopause) rather than relying only on the base color contrast
+          between curves. Not full marks since neither zone is explicitly labeled/annotated
+          for a first-time reader.'
     spec_compliance:
       score: 15
       max: 15
@@ -141,49 +156,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Skew-T Log-P diagram
+        comment: 'Correct Skew-T Log-P: logarithmic inverted pressure axis, 45-degree-skewed
+          isotherms.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Isotherms, dry/moist adiabats, mixing ratio, solid temp, dashed dewpoint
-          all present
+        comment: Isotherms, dry adiabats, moist adiabats, mixing-ratio lines, solid
+          temperature, dashed dewpoint all present; wind barbs correctly omitted as
+          optional.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=skewed temp, Y=pressure, full range shown
+        comment: X = skewed temperature, Y = pressure; full 1000-100 hPa range shown
+          on both curves.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; legend labels correct and de-duplicated
+        comment: Title exactly matches 'skewt-logp-atmospheric · javascript · highcharts
+          · anyplot.ai'; legend labels correct and de-duplicated per reference-line
+          family.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full-depth sounding with realistic tropopause kink; missing an edge-case
-          layer (inversion/saturation)
+        comment: 'Fixed from Attempt 1: sounding now includes a shallow low-level
+          inversion (1000-950 hPa) plus a near-saturated layer (~0.5 degC depression
+          at 700 hPa) in addition to the tropopause deceleration — showcases the diagram''s
+          full diagnostic range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible synthetic radiosonde sounding
+        comment: Neutral, plausible synthetic radiosonde sounding; no controversial
+          content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Lapse rates and dewpoint depression physically consistent
+        comment: Lapse rates, dewpoint depression growth with altitude, the low-level
+          inversion, the near-saturated layer, and the tropopause deceleration are
+          all physically consistent with real-world atmospheric profiles.
     code_quality:
       score: 9
       max: 10
@@ -193,34 +218,36 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Linear structure but several helper functions, justified by the underlying
-          thermodynamics
+        comment: Linear top-to-bottom structure, but several helper functions (skewX,
+          saturation/mixing-ratio/adiabat formulas) are used; justified by the underlying
+          thermodynamics rather than over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded data
+        comment: Fully deterministic, hard-coded sounding arrays.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports, nothing unused
+        comment: No imports at all; nothing unused.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex, no fake UI
+        comment: Clean, appropriately complex for the physics involved, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled everywhere
+        comment: 'Correct mount-node contract, animation: false set on both chart
+          and plotOptions.series, no explicit width/height.'
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -228,26 +255,30 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct core-bundle usage; diagonal reference lines correctly modeled
-          as series rather than plotLines
+        comment: 'Correct core-bundle-only usage: multiple line series, logarithmic
+          reversed axis, custom tooltip formatter, dedup''d legend via showInLegend.
+          Diagonal reference lines correctly modeled as series (not plotLines, which
+          can''t slant).'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Generic multi-line-series usage, no Highcharts-distinctive feature
-          such as zones or arearange shading
-  verdict: REJECTED
+        passed: true
+        comment: 'Fixed from Attempt 1: series.zones (zoneAxis: ''y'') now color-segments
+          both the temperature and dewpoint lines by pressure range for genuine diagnostic
+          purposes (tropopause dash, near-saturated amber band) — a feature distinctive
+          to Highcharts that would require manually splitting into multiple series
+          in most other libraries.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
-  - manual-ticks
+  - zone-coloring
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - interpolation
+  - numerical-integration
   styling:
-  - alpha-blending
   - publication-ready
+  - alpha-blending

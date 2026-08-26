@@ -1,7 +1,7 @@
 // anyplot.ai
 // skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-08-26
+// Quality: 91/100 | Created: 2026-08-26
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
