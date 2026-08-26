@@ -78,41 +78,75 @@ const cumulativeUpper = productLines.map((_, i) =>
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Datasets: stacked central areas first (bottom to top), then their
-// confidence bands layered on top as translucent ribbons -------------------
-const centralDatasets = productLines.map((line, i) => ({
-  label: line.name,
-  data: cumulativeCentral[i],
-  borderColor: t.palette[i],
-  backgroundColor: hexToRgba(t.palette[i], 0.65),
-  borderWidth: 2.5,
-  pointRadius: 0,
-  tension: 0,
-  fill: i === 0 ? "origin" : i - 1,
-  isBand: false,
-}));
+// A vertical gradient (per spec: "gradient fills from lower to upper bound")
+// so each band tapers instead of reading as one flat alpha.
+function bandGradient(hex) {
+  return (ctx) => {
+    const { chartArea, ctx: canvasCtx } = ctx.chart;
+    if (!chartArea) return hexToRgba(hex, 0.3);
+    const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+    gradient.addColorStop(0, hexToRgba(hex, 0.15));
+    gradient.addColorStop(1, hexToRgba(hex, 0.4));
+    return gradient;
+  };
+}
 
-const bandDatasets = [];
+// --- Datasets: each series is a solid "confident" slice from the previous
+// series' band top up to this series' own lower bound, topped by a translucent
+// band from lower to upper bound. Because the solid slice stops exactly where
+// the band starts (and the next series' solid slice starts exactly where this
+// band ends), the bands never bleed into a neighboring series' stacked region.
+// The central value is kept as a plain border line on top for the visible
+// stack boundary. ------------------------------------------------------------
+const datasets = [];
+let prevBandTop = "origin";
+
 productLines.forEach((line, i) => {
-  const upperIndex = centralDatasets.length + bandDatasets.length;
-  bandDatasets.push({
-    label: `${line.name} interval upper`,
-    data: cumulativeUpper[i],
+  const solidIndex = datasets.length;
+  datasets.push({
+    label: line.name,
+    data: cumulativeLower[i],
     borderWidth: 0,
     pointRadius: 0,
+    backgroundColor: hexToRgba(t.palette[i], 0.85),
+    fill: prevBandTop,
+    isBand: false,
+  });
+
+  datasets.push({
+    label: `${line.name} central`,
+    data: cumulativeCentral[i],
+    borderColor: t.palette[i],
+    borderWidth: 2.5,
+    pointRadius: 0,
+    tension: 0,
     fill: false,
     isBand: true,
   });
-  bandDatasets.push({
-    label: `${line.name} interval lower`,
-    data: cumulativeLower[i],
-    borderColor: "transparent",
-    backgroundColor: hexToRgba(t.palette[i], 0.3),
+
+  const bandTopIndex = datasets.length;
+  datasets.push({
+    label: `${line.name} interval`,
+    data: cumulativeUpper[i],
     borderWidth: 0,
     pointRadius: 0,
-    fill: upperIndex,
+    backgroundColor: bandGradient(t.palette[i]),
+    fill: solidIndex,
     isBand: true,
   });
+
+  prevBandTop = bandTopIndex;
+});
+
+// Legend-only entry so the bands' meaning doesn't rely solely on the subtitle.
+datasets.push({
+  label: "90% prediction interval",
+  data: [],
+  borderWidth: 0,
+  pointRadius: 0,
+  backgroundColor: hexToRgba(t.inkSoft, 0.35),
+  fill: false,
+  isBand: false,
 });
 
 // --- Chart -------------------------------------------------------------
@@ -120,7 +154,7 @@ new Chart(canvas, {
   type: "line",
   data: {
     labels,
-    datasets: [...centralDatasets, ...bandDatasets],
+    datasets,
   },
   options: {
     responsive: true,
