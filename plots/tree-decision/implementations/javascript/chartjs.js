@@ -1,7 +1,7 @@
 // anyplot.ai
 // tree-decision: Decision Tree Visualization with Probabilities
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-08-26
+// Quality: 94/100 | Created: 2026-08-26
 
 //# anyplot-orientation: landscape
 
