@@ -23,11 +23,11 @@ const WAVE_LABELS = ["Q1 2026", "Q2 2026", "Q3 2026", "Q4 2026"];
 const CATEGORIES = ["Very Satisfied", "Satisfied", "Neutral", "Dissatisfied", "Very Dissatisfied"];
 const N_WAVES = WAVE_LABELS.length;
 const N_CAT = CATEGORIES.length;
-// First and last categories anchor to the semantic green/red pair, "Neutral"
-// maps to the muted secondary-text token; the two mild categories take the
-// next canonical Imprint slots (see prompts/default-style-guide.md "Semantic
-// exception").
-const COLORS = [t.palette[0], t.palette[1], t.inkSoft, t.palette[3], t.palette[4]];
+// First and last categories anchor to the semantic green/red pair; the three
+// middle categories take the next canonical Imprint slots in order (see
+// prompts/default-style-guide.md "Categorical Palette"). All 5 hexes are
+// fixed across themes so each category keeps its identity in both renders.
+const COLORS = [t.palette[0], t.palette[1], t.palette[2], t.palette[3], t.palette[4]];
 
 function gaussian(distance, sigma) {
   return Math.exp(-(distance * distance) / (2 * sigma * sigma));
@@ -66,6 +66,16 @@ for (let w = 0; w < N_WAVES - 1; w++) {
   waveTotals.push(nextTotals);
 }
 const RESPONDENTS = waveTotals[0].reduce((a, b) => a + b, 0);
+
+// Net-flow summary (Q1 -> Q4): how many percentage points shifted into the
+// two extreme categories versus out of Neutral, to make the polarization
+// trend an explicit, named callout rather than an implicit visual pattern.
+const firstWave = waveTotals[0];
+const lastWave = waveTotals[N_WAVES - 1];
+const extremesPct = Math.round(
+  ((lastWave[0] + lastWave[N_CAT - 1] - (firstWave[0] + firstWave[N_CAT - 1])) / RESPONDENTS) * 100,
+);
+const neutralPct = Math.round(((lastWave[2] - firstWave[2]) / RESPONDENTS) * 100);
 
 // --- Layout ------------------------------------------------------------
 const marginX = 140;
@@ -131,6 +141,17 @@ const chart = Highcharts.chart("container", {
   series: [],
 });
 
+// --- Net-flow callout (explicit polarization-trend highlight, SC-02) -----
+chart.renderer
+  .text(
+    `Net drift Q1 → Q4: extremes +${extremesPct}pp · Neutral ${neutralPct}pp`,
+    size.width / 2,
+    plotTop - 62,
+  )
+  .attr({ align: "center" })
+  .css({ color: t.ink, fontSize: "13px", fontWeight: "600", fontStyle: "italic" })
+  .add();
+
 // --- Column headers ------------------------------------------------------
 WAVE_LABELS.forEach((label, w) => {
   chart.renderer
@@ -168,7 +189,13 @@ for (let w = 0; w < N_WAVES - 1; w++) {
       ];
       chart.renderer
         .path(path)
-        .attr({ fill: COLORS[i], opacity: stable ? 0.6 : 0.32 })
+        .attr({
+          fill: COLORS[i],
+          opacity: stable ? 0.6 : 0.42,
+          stroke: COLORS[i],
+          "stroke-width": 0.5,
+          "stroke-opacity": stable ? 0.6 : 0.55,
+        })
         .add();
     }
   }
