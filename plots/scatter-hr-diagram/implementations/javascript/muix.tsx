@@ -52,7 +52,15 @@ const whiteDwarfs = Array.from({ length: 35 }, (_, i) => ({
   id: `wd-${i}`,
 }));
 
-const sun = [{ x: 5778, y: 1, id: "sun" }];
+const sun = { x: 5778, y: 1, id: "sun" };
+
+// A few real, named stars (approximate literature temperature/luminosity)
+// give the spec's `star_name` field a payoff beyond the Sun.
+const NOTABLE_STARS = [
+  { name: "Sirius A", x: 9940, y: 25.4 },
+  { name: "Rigel", x: 12100, y: 120000 },
+  { name: "Betelgeuse", x: 3500, y: 126000 },
+];
 
 // Spectral-class boundary temperatures (K), hottest -> coolest, driving the
 // secondary top axis (the spec's optional spectral-class labels).
@@ -66,6 +74,49 @@ const SPECTRAL_LABELS: Record<number, string> = {
   4450: "K",
   3200: "M",
 };
+const SPECTRAL_ORDER = ["O", "B", "A", "F", "G", "K", "M"];
+
+// Buckets a temperature into its spectral letter using the same boundaries
+// that drive the secondary top axis, so marker color and axis position always
+// agree on which class a star belongs to.
+function classifySpectralType(temperature: number): string {
+  for (const boundary of SPECTRAL_TICKS) {
+    if (temperature >= boundary) return SPECTRAL_LABELS[boundary];
+  }
+  return "M";
+}
+
+// The Imprint palette has no literal white or orange, so these are the
+// closest fixed hues standing in for the spec's conventional star colors
+// (blue/white/yellow/orange/red) — same hex in both themes, per palette rules.
+const SPECTRAL_COLORS: Record<string, string> = {
+  O: t.palette[2], // blue
+  B: t.palette[5], // cyan (blue-white)
+  A: t.palette[1], // lavender — palest available hue, stands in for white
+  F: t.amber, // pale gold
+  G: t.palette[3], // ochre — deeper gold, Sun-like
+  K: t.palette[6], // rose — warm red-orange
+  M: t.palette[4], // matte red
+};
+
+function withAlpha(hex: string, alpha: number) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// Every generated star, grouped by spectral type (computed from temperature)
+// rather than by the population that generated it — this is what drives
+// point color, while the region labels below stay purely spatial annotations.
+const allStars = [...mainSequence, ...redGiants, ...supergiants, ...whiteDwarfs];
+const starsByType: Record<string, { x: number; y: number; id: string }[]> = Object.fromEntries(
+  SPECTRAL_ORDER.map((type) => [type, []]),
+);
+for (const star of allStars) {
+  starsByType[classifySpectralType(star.x)].push(star);
+}
+
 const TEMPERATURE_DOMAIN: [number, number] = [1900, 41000];
 const LUMINOSITY_DOMAIN: [number, number] = [0.0001, 1000000];
 // Only the decade boundaries get a tick — d3's default log ticks (1/2/3/5/7 per
@@ -177,13 +228,24 @@ function ChartAnnotations() {
         />
       ))}
       <LabelWithBackdrop
-        x={xScale(5778)}
-        y={yScale(1) - 32}
+        x={xScale(sun.x)}
+        y={yScale(sun.y) - 32}
         text="Sun"
         fill={t.ink}
         fontSize={15}
         fontWeight={700}
       />
+      {NOTABLE_STARS.map((star) => (
+        <LabelWithBackdrop
+          key={star.name}
+          x={xScale(star.x)}
+          y={yScale(star.y) - 28}
+          text={star.name}
+          fill={t.inkSoft}
+          fontSize={13}
+          fontWeight={600}
+        />
+      ))}
     </g>
   );
 }
@@ -195,10 +257,27 @@ export default function Chart() {
 
   return (
     <Box sx={{ width, height, bgcolor: t.pageBg, display: "flex", flexDirection: "column" }}>
-      <Box sx={{ height: TITLE_H, display: "flex", alignItems: "center", px: "40px", pt: "10px" }}>
+      <Box
+        sx={{
+          height: TITLE_H,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: "40px",
+          pt: "10px",
+        }}
+      >
         <Typography sx={{ color: t.ink, fontSize: "24px", fontWeight: 600, lineHeight: 1 }}>
           {TITLE}
         </Typography>
+        <Box sx={{ display: "flex", alignItems: "center", gap: "14px" }}>
+          {SPECTRAL_ORDER.map((type) => (
+            <Box key={type} sx={{ display: "flex", alignItems: "center", gap: "5px" }}>
+              <Box sx={{ width: 14, height: 14, borderRadius: "50%", bgcolor: SPECTRAL_COLORS[type] }} />
+              <Typography sx={{ color: t.inkSoft, fontSize: "14px", fontWeight: 600 }}>{type}</Typography>
+            </Box>
+          ))}
+        </Box>
       </Box>
 
       <ScatterChart
@@ -256,51 +335,37 @@ export default function Chart() {
         topAxis="spectral"
         leftAxis="luminosity"
         series={[
-          {
-            id: "main-sequence",
+          ...SPECTRAL_ORDER.map((type) => ({
+            id: `spectral-${type}`,
             xAxisId: "temperature",
-            data: mainSequence,
-            label: "Main Sequence",
-            color: t.palette[0],
-            markerSize: 5,
-            valueFormatter: (v) => `${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
-          },
-          {
-            id: "red-giants",
-            xAxisId: "temperature",
-            data: redGiants,
-            label: "Red Giants",
-            color: t.palette[1],
-            markerSize: 8,
-            valueFormatter: (v) => `${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
-          },
-          {
-            id: "supergiants",
-            xAxisId: "temperature",
-            data: supergiants,
-            label: "Supergiants",
-            color: t.palette[2],
-            markerSize: 10,
-            valueFormatter: (v) => `${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
-          },
-          {
-            id: "white-dwarfs",
-            xAxisId: "temperature",
-            data: whiteDwarfs,
-            label: "White Dwarfs",
-            color: t.palette[3],
+            data: starsByType[type],
+            label: `Spectral Type ${type}`,
+            // Alpha softens overplotting in the densest bands (hot main-sequence
+            // stars, and the red-giant cluster) without changing marker size.
+            color: withAlpha(SPECTRAL_COLORS[type], 0.78),
             markerSize: 7,
-            valueFormatter: (v) => `${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
-          },
+            valueFormatter: (v: { x: number; y: number }) =>
+              `Type ${type} · ${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
+          })),
           {
             id: "sun",
             xAxisId: "temperature",
-            data: sun,
+            data: [sun],
             label: "Sun (reference)",
             color: t.ink,
             markerSize: 16,
             valueFormatter: (v) => `${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
           },
+          ...NOTABLE_STARS.map((star) => ({
+            id: `notable-${star.name.toLowerCase().replace(/\s+/g, "-")}`,
+            xAxisId: "temperature",
+            data: [{ x: star.x, y: star.y, id: star.name }],
+            label: star.name,
+            color: SPECTRAL_COLORS[classifySpectralType(star.x)],
+            markerSize: 12,
+            valueFormatter: (v: { x: number; y: number }) =>
+              `${star.name} · ${Math.round(v.x).toLocaleString()} K · ${formatLuminosity(v.y)} L☉`,
+          })),
         ]}
         margin={{ top: 100, right: 60, bottom: 90, left: 100 }}
         sx={{
