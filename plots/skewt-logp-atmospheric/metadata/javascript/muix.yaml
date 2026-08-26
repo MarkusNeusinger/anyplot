@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: skewt-logp-atmospheric
+created: '2026-08-26T16:06:59Z'
+updated: '2026-08-26T16:52:39Z'
+generated_by: claude-sonnet
+workflow_run: 32986259524
+issue: 3802
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Mathematically exact 45-degree skew implemented via a pixel-space transform (skewOffsetC
+    using yScale/xScale), so isotherms stay true diagonals regardless of the margins
+    MUI X computes for axis labels
+  - Full suite of reference-line families (dry adiabats, moist adiabats, mixing-ratio
+    lines) all clipped correctly to the plot area via ChartsClipPath, matching every
+    item in the spec's Notes section
+  - 'Physically realistic sounding: correct standard lapse rate, a visible tropopause
+    kink in the temperature profile, and an embedded moist layer bump in the dewpoint
+    profile'
+  - Correct Imprint palette use with a defensible semantic exception (dewpoint assigned
+    blue for water/moisture) and theme-correct chrome in both light and dark renders
+  - Idiomatic advanced MUI X composition (useXScale/useYScale/useDrawingArea + ChartsClipPath)
+    to build a custom overlay coordinate system — a technique distinctive to MUI X's
+    hook-based API surface
+  weaknesses:
+  - 'The file has a duplicated header comment block at the top (two full anyplot.ai
+    header blocks, lines 1-10, including a stale ''Quality: 87/100'' leftover from
+    a prior state) — clean up so only one current header remains per prompts/library/muix.md''s
+    header style'
+  - Axis and tick label font sizes rely on MUI X's ChartsXAxis/ChartsYAxis defaults
+    rather than explicit slotProps/tickLabelStyle sizing — legible in both renders,
+    but misses full VQ-01 credit since sizes aren't explicitly set
+  - Title occupies only ~45% of the canvas width — could grow slightly to make better
+    use of the generous top whitespace, though this is not currently a legibility
+    problem
+  - Individual dry-adiabat and mixing-ratio reference lines aren't labeled with their
+    values (potential temperature / g kg-1), unlike many professional Skew-T charts
+    — optional polish, not a spec requirement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "skewt-logp-atmospheric · javascript · muix · anyplot.ai" in bold dark text top-left; "Pressure (hPa)" y-axis label (rotated) and "Temperature (°C, at surface)" x-axis label both dark and fully readable; tick labels (100-1000 hPa, -40 to 40 degC) legible; thin gray isotherm/adiabat/mixing-ratio reference lines visible but subtle; legend box (rounded, off-white fill, thin border) top-left inside the plot area lists Temperature, Dewpoint, Dry adiabat, Moist adiabat, Mixing ratio with matching line-style swatches.
+      Data: Temperature profile is a solid brand-green (#009E73) line with circular markers; Dewpoint is a dashed blue line with circular markers; the 0 degC isotherm is highlighted in amber, distinguishing it from the other gray isotherms.
+      Legibility verdict: PASS - all title, axis, tick, and legend text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light/off-white text, fully readable; grid and reference lines rendered as subtle light-gray translucent strokes; legend box uses a dark elevated fill with a lighter border and light text.
+      Data: Temperature line remains the identical brand-green (#009E73), Dewpoint remains the identical blue, and the amber 0 degC isotherm is identical to the light render — confirming data colors are unchanged and only chrome flipped.
+      Legibility verdict: PASS - no dark-on-dark failures; all text (title, axis labels, ticks, legend) reads clearly against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title and legend text sizes are explicitly set and readable in both
+          themes; axis/tick labels rely on MUI X defaults rather than explicit sizing,
+          but remain fully legible
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, legend, and data elements in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and lines well sized for the ~37-level sounding; every 4th
+          level marked to avoid clutter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs blue with white marker strokes gives strong CVD-safe contrast,
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas well utilized, chart fills nearly the full
+          frame with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axis labels include units (hPa, degC)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; dewpoint uses a defensible water/blue semantic
+          exception; theme-correct chrome and backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Full reference-line family set with intentional hierarchy (bold profile
+          lines, muted background context lines, amber freezing-level highlight)
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle alpha-blended reference lines, refined rounded legend box,
+          clean L-shaped axis chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast and the amber 0 degC highlight create a clear focal
+          point (freezing level), though no explicit annotation labels it
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Skew-T Log-P diagram with exact pixel-space 45-degree skew
+          and inverted log pressure axis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dry adiabats, moist adiabats, mixing-ratio lines, solid temp / dashed
+          dewpoint all present per spec Notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature (skewed) on x, pressure (log, inverted) on y; full 1000-100
+          hPa range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          plotted series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows tropopause kink, embedded moist layer, and dry upper troposphere
+          - multiple realistic sounding features
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard neutral meteorological sounding scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct lapse rate, tropopause height, and surface conditions consistent
+          with real atmospheric physics
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are necessary for the thermodynamic domain math
+          and the React component pattern; no over-structuring
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic closed-form functions, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (ChartContainer, axes, ChartsClipPath, hooks, Box, Typography)
+          are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean custom-overlay implementation appropriate for a chart type
+          MUI X doesn't natively support; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, harness-managed output, current MUI X hook API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ChartContainer composition plus useXScale/useYScale/useDrawingArea,
+          MUI X's recommended pattern for custom overlays
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: The scale-hook-driven custom SVG overlay clipped via ChartsClipPath
+          is a technique distinctive to MUI X's composable API
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
