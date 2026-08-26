@@ -1,3 +1,7 @@
+// anyplot.ai
+// skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-08-26
 //# anyplot-orientation: square
 // anyplot.ai
 // skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
