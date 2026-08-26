@@ -34,45 +34,19 @@ const sampleSize = 180;
 
 const courses = ["Intro Stats", "Data Structures", "Algorithms", "Capstone"];
 
-function rightSkewedScores() {
+function generateScores(centerFn, noiseStd) {
   const scores = [];
   for (let i = 0; i < sampleSize; i++) {
-    const base = 55 + 45 * Math.pow(rng(), 2.3);
-    scores.push(clip(base + randNormal(rng) * 2, 50, 100));
-  }
-  return scores;
-}
-
-function bimodalScores() {
-  const scores = [];
-  for (let i = 0; i < sampleSize; i++) {
-    const center = rng() < 0.52 ? 65 : 89;
-    scores.push(clip(center + randNormal(rng) * 3.2, 50, 100));
-  }
-  return scores;
-}
-
-function moderateSpreadScores() {
-  const scores = [];
-  for (let i = 0; i < sampleSize; i++) {
-    scores.push(clip(78 + randNormal(rng) * 8, 50, 100));
-  }
-  return scores;
-}
-
-function narrowClusterScores() {
-  const scores = [];
-  for (let i = 0; i < sampleSize; i++) {
-    scores.push(clip(90 + randNormal(rng) * 3, 50, 100));
+    scores.push(clip(centerFn() + randNormal(rng) * noiseStd, 50, 100));
   }
   return scores;
 }
 
 const scoresByCourse = [
-  rightSkewedScores(),
-  bimodalScores(),
-  moderateSpreadScores(),
-  narrowClusterScores(),
+  generateScores(() => 55 + 45 * Math.pow(rng(), 2.3), 2), // right-skewed
+  generateScores(() => (rng() < 0.52 ? 65 : 89), 3.2), // bimodal
+  generateScores(() => 78, 8), // moderate spread
+  generateScores(() => 90, 3), // narrow cluster
 ];
 
 // --- Stats + kernel density estimation --------------------------------------
@@ -119,18 +93,22 @@ function gaussianKDE(values, grid, bandwidth) {
 }
 
 const gridN = 120;
-const gridMin = 45;
-const gridMax = 100;
-const yGrid = Array.from(
-  { length: gridN },
-  (_, j) => gridMin + (j * (gridMax - gridMin)) / (gridN - 1),
-);
 
 const boxStats = scoresByCourse.map(computeStats);
 const violinProfiles = scoresByCourse.map((values, i) => {
-  const bandwidth = silvermanBandwidth(values, boxStats[i]);
-  const density = gaussianKDE(values, yGrid, bandwidth);
-  return { density, maxDensity: Math.max(...density) };
+  const stats = boxStats[i];
+  const bandwidth = silvermanBandwidth(values, stats);
+  // Scope the grid to this category's own data range (padded by 3 bandwidths)
+  // instead of a shared fixed range, so tight distributions taper to zero
+  // within their real extent rather than streaking to the axis floor.
+  const gridMin = Math.max(50, stats.min - 3 * bandwidth);
+  const gridMax = Math.min(100, stats.max + 3 * bandwidth);
+  const grid = Array.from(
+    { length: gridN },
+    (_, j) => gridMin + (j * (gridMax - gridMin)) / (gridN - 1),
+  );
+  const density = gaussianKDE(values, grid, bandwidth);
+  return { grid, density, maxDensity: Math.max(...density) };
 });
 
 // --- Layout constants ---------------------------------------------------
@@ -143,13 +121,13 @@ function renderViolin(params, api) {
   const idx = params.dataIndex;
   const profile = violinProfiles[idx];
   const points = [];
-  for (let j = 0; j < yGrid.length; j++) {
+  for (let j = 0; j < profile.grid.length; j++) {
     const w = violinHalfWidth * (profile.density[j] / profile.maxDensity);
-    points.push(api.coord([idx - w, yGrid[j]]));
+    points.push(api.coord([idx - w, profile.grid[j]]));
   }
-  for (let j = yGrid.length - 1; j >= 0; j--) {
+  for (let j = profile.grid.length - 1; j >= 0; j--) {
     const w = violinHalfWidth * (profile.density[j] / profile.maxDensity);
-    points.push(api.coord([idx + w, yGrid[j]]));
+    points.push(api.coord([idx + w, profile.grid[j]]));
   }
   return {
     type: "polygon",
