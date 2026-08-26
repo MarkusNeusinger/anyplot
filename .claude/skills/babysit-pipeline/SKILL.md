@@ -102,13 +102,13 @@ with evidence — never let the user ask "still running?".
 - **Defer, don't halt**: one stuck library must not stop a multi-spec
   queue — log it, cap ~90 min/spec, move on, and sweep leftovers at
   the end with targeted regens.
-- **Halt the whole queue** only on a failure CLUSTER — ≥5 failed
-  `Generate:` runs in minutes across **≥3 distinct (spec, library)
-  pairs** = model daily quota exhausted; a fallback model via
-  `-f model=` can finish leftovers. Count pairs, not runs: one
-  genuinely impossible pair burns three runs on its own retries, so
-  two bad pairs alone trip a raw run count (observed 2026-08-24 —
-  6 failures, 2 pairs, pipeline entirely healthy).
+- **Halt the whole queue** only on a failure CLUSTER: **≥3 distinct
+  (spec, library) pairs** failing within minutes of each other = model
+  daily quota exhausted; a fallback model via `-f model=` can finish
+  leftovers. The threshold is pairs, full stop — the raw run count
+  says nothing, because one impossible pair spends three runs on its
+  own auto-retries, so two bad pairs already produce six failures with
+  the pipeline entirely healthy (observed 2026-08-24).
 - Closing/merging pipeline PRs or issues yourself is out of bounds
   (CLAUDE.md external-write rule + mandatory workflow).
 
