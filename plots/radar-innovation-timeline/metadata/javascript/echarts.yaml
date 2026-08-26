@@ -1,0 +1,262 @@
+library: echarts
+language: javascript
+specification_id: radar-innovation-timeline
+created: '2026-08-26T09:47:42Z'
+updated: '2026-08-26T10:03:57Z'
+generated_by: claude-sonnet
+workflow_run: 32953805041
+issue: 4301
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/radar-innovation-timeline/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three weaknesses from attempt 1 were directly addressed: per-ring splitArea
+    alpha raised to 0.16/0.115/0.07/0.035 (time-horizon banding is now clearly visible
+    in both renders), radiusAxis.axisLine set to show:false (the stray unlabeled radial
+    line into the empty quarter is gone), and a two-item HIGHLIGHTS accent (larger
+    marker, halo shadowBlur, bold label) now gives the chart a clear focal point beyond
+    the base ring/sector encoding'
+  - 'Data coverage was completed: Security now has an item in the outer Hold ring
+    (Homomorphic Encryption), so all 4 sectors span all 4 rings'
+  - 'First categorical series (AI & ML) uses brand green #009E73, remaining three
+    sectors follow the canonical Imprint order (lavender/blue/ochre), identical across
+    both themes'
+  - 270-degree sweep with the empty quarter dedicated to ring labels correctly implements
+    the spec's three-quarter-circle suggestion, and edge-safe label anchoring keeps
+    24 point labels plus 4 sector headers plus 4 ring labels legible with no clipping
+    at the canvas border
+  - Deterministic LCG jitter (seed=42) keeps intra-ring/sector point spread reproducible
+  - Distinct marker shapes per sector (circle/diamond/triangle/roundRect) add redundant
+    shape+color encoding on top of the legend
+  weaknesses:
+  - In the Cloud Infrastructure cluster, the 'Kubernetes Autoscaling' point label
+    starts almost flush against the neighboring triangle marker (near-zero gap, though
+    every letter stays fully visible) — nudge the label distance or angular jitter
+    slightly in that crowded Adopt/Trial band
+  - 24 simultaneously-visible point labels at 14px compress heavily once the PNG is
+    scaled to a ~400px mobile thumbnail — this is an inherent density tradeoff of
+    a 24-item radar rather than a bug, but still worth a mention for the catalog thumbnail
+    view
+  - The two HIGHLIGHTS accents (AI Agents, Post-Quantum Crypto) draw the eye via halo+bold
+    styling but the chart itself gives no textual cue for why those two items are
+    singled out — a one-line caption or tooltip-independent label would complete the
+    storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1, not pure white.
+      Chrome: Dark-ink title "radar-innovation-timeline · javascript · echarts · anyplot.ai" centered at top; horizontal 4-item legend below it (AI & ML circle, Data Platforms diamond, Cloud Infrastructure triangle, Security square). Bold colored sector headers sit just outside the outer ring in their matching series color. Italic gray ring labels (Adopt, Trial, Assess, Hold — innermost to outermost) sit in the empty top-left quarter. Per-ring background shading (now at visible alpha 0.16/0.115/0.07/0.035) clearly bands the four time-horizon rings from near-term (darker) to long-term (lighter). No stray default radiusAxis line is visible in the empty quarter (fixed from attempt 1).
+      Data: 24 labeled points spread across 4 sectors x 4 rings, each sector using a distinct marker shape (circle/diamond/triangle/roundRect) in the matching legend color. First series (AI & ML) is Imprint brand green #009E73; the other three sectors follow the canonical Imprint order (lavender, blue, ochre). Two items (AI Agents, Post-Quantum Crypto) carry a halo/glow accent and bold label as a visual focal point.
+      Legibility verdict: PASS — all title, legend, sector-header, ring-label, and point-label text is clearly readable against the light background at native resolution. One point label ("Kubernetes Autoscaling") sits very close to its neighboring marker but no letters are obscured.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title, legend, sector headers, and ring labels switch to light ink with no dark-on-dark failures anywhere. Ring shading bands remain visible using a lighter ink-based rgba tint. Marker borders switch from white-ish to the dark page-background color, consistent with the light render's page-background-colored border technique.
+      Data: Marker fill colors for all four sectors are pixel-identical to the light render — only chrome (background, text, ring shading, marker border) flips theme, as required.
+      Legibility verdict: PASS — every text element (title, legend, sector headers, ring labels, all 24 point labels) is clearly visible against the dark background; no dark-on-dark instances found.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Label font bumped 13px->14px per attempt-1 feedback; fully readable
+          at native resolution in both themes; dense at ~400px mobile thumbnail (inherent
+          to 24-item density, not a defect)
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: hideOverlap prevents true collisions; 'Kubernetes Autoscaling' label
+          sits very close to its marker but no letters are obscured
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: symbolSize 24 (32 for highlights) with distinct shapes per sector,
+          clearly visible for this density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant color+shape encoding across 4 sectors, good contrast both
+          themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Ring labels (time horizon) and sector headers (theme) serve as descriptive
+          axis-equivalents
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series brand green #009E73, remaining sectors follow canonical
+          Imprint order, correct theme backgrounds in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom 270° layout, typography hierarchy via bold colored sector
+          headers and italic ring labels, halo-accented highlight markers — clearly
+          above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Both attempt-1 issues fixed: ring-shading alpha raised to a clearly
+          visible level, and the stray default radiusAxis line is now hidden'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: HIGHLIGHTS accent (halo + bold label) on 2 standout items now creates
+          a visual focal point beyond raw position encoding, though the chart gives
+          no textual cue for why those 2 items are singled out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct radial time-horizon/sector radar matching the ThoughtWorks-style
+          spec
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Concentric rings with labels, labeled sector headers, distinct markers/colors,
+          legend, 270° layout, and now-visible per-ring fill all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Radius maps correctly to ring band, angle maps correctly to sector
+          + intra-sector spread
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match sector names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 items now span all 4 rings within all 4 sectors (Security's missing
+          outer-Hold item from attempt 1 was fixed with Homomorphic Encryption)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible, current technology-strategy scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Ring assignments align with real-world technology maturity assessments
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are proportionate to the polar-geometry/label-anchoring
+          complexity this spec requires
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed=42) for deterministic jitter
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set, current API, mount-node contract respected
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Polar coordinateSystem + scatter is the correct idiomatic ECharts
+          approach for this chart type, not the multi-axis radar component
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: graphic component text overlays, splitArea ring shading, labelLayout.hideOverlap,
+          and shadowBlur halo accents are fairly distinctive ECharts features among
+          the JS libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
