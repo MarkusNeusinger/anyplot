@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-complex-plane
 created: '2026-08-26T10:48:24Z'
-updated: '2026-08-26T10:53:57Z'
+updated: '2026-08-26T11:00:51Z'
 generated_by: claude-sonnet
 workflow_run: 32959256274
 issue: 4427
@@ -12,58 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
   - 'Faithfully implements every requirement in the spec''s Notes: real/imaginary
     axes through the origin with labeled ticks, a dashed unit circle, arrowed vectors
     from the origin to each point, and dual rectangular + polar annotations per point.'
+  - 'Directly resolved all three fixable weaknesses from the attempt-1 review: the
+    duplicate origin ''0'' tick label is now suppressed via a ticks.callback on the
+    y-axis, the grid alpha was pushed down further (softGrid at 0.09), and a new dashed
+    parallelogram-law guide (z1→sum, z2→sum) now visually connects the addition relationship
+    instead of leaving it as three separate vectors.'
   - Actively enforces equal aspect ratio with a two-pass afterRender re-scaling routine
-    (pxPerUnitX vs pxPerUnitY reconciliation) so the unit circle renders as a true
-    circle instead of an ellipse — a real Chart.js-specific challenge handled correctly.
-  - 'Data is mathematically correct and verifiable: cube roots of unity (1, ω, ω²)
-    computed via cos/sin of 120° increments, and z1+z2 sum displayed matches the arithmetic
-    exactly.'
+    so the unit circle renders as a true circle instead of an ellipse in both renders
+    — a real Chart.js-specific challenge handled correctly.
   - Correct, idiomatic use of Chart.js's plugin lifecycle (beforeDatasetsDraw / afterDatasetsDraw
-    / afterRender) to extend the library for Argand-diagram furniture — the right
-    approach given the library's 'no workarounds/plugins' constraint, since chartjs
-    ships no annotation/arrow plugin.
+    / afterRender) to extend the library for Argand-diagram furniture, the right approach
+    given the library's 'no workarounds/plugins' constraint since chartjs ships no
+    annotation/arrow plugin.
   - 'Theme-adaptive chrome is clean in both renders: Imprint palette in correct canonical
     order (green then lavender), backgrounds and text correctly flip light/dark with
     no dark-on-dark or light-on-light failures, and data colors are pixel-identical
     between themes.'
   weaknesses:
-  - 'The x-scale and y-scale each independently render a ''0'' tick label at the origin,
-    and because both axes are centered (position: {x:0}/{y:0}), the two ''0'' labels
-    land on/overlapping the same pixel — suppress one of them (e.g. a ticks.callback
-    on one axis that returns '''' for value 0, since the origin is already implied
-    by the axis crossing).'
-  - Grid lines read a bit more prominent than the style guide's 'subtle, 15-25% opacity'
-    target, especially in the light render — consider lowering grid alpha slightly
-    so it recedes further behind the vectors and unit circle.
-  - 'Design Excellence is solid but not yet publication-ready: the parallelogram-law
-    relationship between z1, z2, and z1+z2 is only conveyed through separate vectors
-    — a subtle dashed guide connecting z1 to z1+z2 (completing the parallelogram)
-    would sharpen the storytelling without adding clutter.'
   - Only one arbitrary-vector transformation (addition) is demonstrated; the spec's
     Applications section also calls out rotation/scaling by multiplication as a core
     teaching use case for this plot type — not required by the Notes checklist, but
     an easy way to broaden feature coverage in a future pass.
+  - The per-point annotation text (rectangular + polar form, three lines per point)
+    becomes quite small and dense at mobile-width scaling (~400px) — consider slightly
+    larger annotation fontsize or fewer decimal places if mobile legibility of the
+    detail text becomes a priority.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "scatter-complex-plane · javascript · chartjs · anyplot.ai" in dark ink, clearly visible at top. "Real" and "Imaginary" axis-end labels in bold dark ink, both readable. Tick labels (-3..3 on both axes) in muted gray, legible. Legend at bottom ("Cube roots of unity" green circle, "Arbitrary points & sum" purple diamond) fully readable. Grid lines subtle but slightly more visible than ideal.
-      Data: First series (cube roots of unity: 1, ω, ω²) rendered in brand green #009E73 as circles with arrows from the origin; second series (z1, z2, z1+z2) rendered in lavender/purple (#C475FD, Imprint position 2) as rotated-square diamonds with arrows. Each point is annotated with its rectangular form (e.g. "1.80 + 1.20i") and polar form (e.g. "r=2.16, θ=34°"). A dashed unit circle centered at the origin is visible and reads as a true circle (equal aspect ratio confirmed).
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable; only minor issue is the x-axis and y-axis "0" tick labels coincide at the origin (see weaknesses), which is an overlap concern, not a legibility failure.
+      Chrome: Title "scatter-complex-plane · javascript · chartjs · anyplot.ai" in dark ink, clearly visible at top. "Real" and "Imaginary" axis-end labels in bold dark ink, both readable. Tick labels (-3..3 on both axes) in muted gray, legible, and the origin now shows only a single "0" (the y-axis duplicate is suppressed). Legend at bottom ("Cube roots of unity" green circle, "Arbitrary points & sum" purple diamond) fully readable. Grid lines are now very subtle, receding behind the vectors and unit circle.
+      Data: First series (cube roots of unity: 1, ω, ω²) rendered in brand green #009E73 as circles with arrows from the origin; second series (z1, z2, z1+z2) rendered in lavender/purple (#C475FD, Imprint position 2) as rotated-square diamonds with arrows. Each point is annotated with its rectangular form (e.g. "1.80 + 1.20i") and polar form (e.g. "r=2.16, θ=34°"). A dashed unit circle centered at the origin reads as a true circle (equal aspect ratio confirmed), and a new dashed parallelogram guide connects z1→(z1+z2) and z2→(z1+z2), visually completing the addition-law parallelogram.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no overlap or clipping observed.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, "Real"/"Imaginary" labels, and tick labels all render in light ink (off-white/light-gray), clearly visible against the dark background — no dark-on-dark failures found. Legend text is light-colored and readable. Grid lines are faint but visible white-ish lines.
-      Data: Data colors are pixel-identical to the light render — brand green #009E73 for the roots-of-unity series and lavender #C475FD for the arbitrary-points series — confirming only chrome flipped between themes, not data colors. Unit circle, vectors, and annotations all remain clearly legible against the dark surface.
+      Chrome: Title, "Real"/"Imaginary" labels, and tick labels all render in light ink (off-white/light-gray), clearly visible against the dark background — no dark-on-dark failures found. Legend text is light-colored and readable. Grid lines are faint but visible.
+      Data: Data colors are pixel-identical to the light render — brand green #009E73 for the roots-of-unity series and lavender #C475FD for the arbitrary-points series — confirming only chrome flipped between themes, not data colors. Unit circle, vectors, parallelogram guide, and annotations all remain clearly legible against the dark surface.
       Legibility verdict: PASS — all text and data elements are clearly readable in the dark theme; brand green and lavender both read well against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -72,16 +66,16 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (title 22px, legend 16px, ticks 14px,
-          point/annotation labels 16px/14px); readable in both themes with no overflow
-          or clipping.
+          point/annotation labels 16px/14px); readable in both themes. Dense 3-line
+          per-point annotations get small at 400px mobile scaling.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Point/annotation text is well-spaced with no overlap, but the x-axis
-          and y-axis '0' tick labels coincide at the origin since both axes are centered
-          there.
+        comment: 'Fixed since attempt 1: the y-axis ''0'' tick is now suppressed via
+          ticks.callback, so the origin no longer shows two overlapping ''0'' labels.
+          No other text/data collisions.'
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -118,32 +112,32 @@ review:
         comment: 'First series is #009E73, second series is Imprint position 2 (#C475FD);
           backgrounds and chrome are theme-correct in both renders.'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom Chart.js plugin draws vectors, unit circle, and dual-format
-          annotations — clearly above library defaults, though the origin-tick overlap
-          and grid prominence keep it short of publication-ready.
+        comment: Custom Chart.js plugin draws vectors, unit circle, parallelogram
+          guide, and dual-format annotations — the prior grid-prominence and origin-tick
+          issues that held this back are both resolved.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Generous padding and clean typography, but grid lines are more visible
-          than the 'subtle' target and the origin tick overlap is an unpolished detail.
+        comment: Generous padding, clean typography, subtler grid alpha (0.09) than
+          attempt 1, and the origin-tick overlap is fixed — reads as polished.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color/shape-coded categories and vector direction/magnitude create
-          visual hierarchy, but the parallelogram-addition relationship (z1, z2, z1+z2)
-          isn't visually connected beyond separate vectors.
+        comment: New dashed parallelogram guide visually completes the addition law
+          (z1 + z2 = sum) instead of leaving it as three disconnected vectors — directly
+          addresses the attempt-1 weakness.
     spec_compliance:
       score: 15
       max: 15
@@ -185,10 +179,9 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers the spec's own suggested example (roots of unity + arbitrary
-          points + sum) across multiple quadrants and both on/off-unit-circle magnitudes;
-          doesn't demonstrate a multiplication/rotation example from the Applications
-          list.
+        comment: Covers roots of unity + arbitrary points + sum across multiple quadrants
+          and both on/off-unit-circle magnitudes; doesn't demonstrate a multiplication/rotation
+          example from the Applications list.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -212,8 +205,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly flat data->plugin->chart flow; small formatting helper functions
-          and a plugin object with lifecycle methods are justified by Chart.js's plugin
+        comment: Mostly flat data->plugin->chart flow; small formatting helpers and
+          a plugin object with lifecycle methods are justified by Chart.js's plugin
           architecture.
       - id: CQ-02
         name: Reproducibility
@@ -257,10 +250,10 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: The custom plugin-driven vector/unit-circle rendering and the afterRender
-          aspect-ratio reconciliation are genuinely Chart.js-specific techniques,
-          not generic library usage.
-  verdict: REJECTED
+        comment: The custom plugin-driven vector/unit-circle/parallelogram rendering
+          and the afterRender aspect-ratio reconciliation are genuinely Chart.js-specific
+          techniques, not generic library usage.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -272,3 +265,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
