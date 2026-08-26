@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: histogram-basic
+created: '2026-08-26T06:15:44Z'
+updated: '2026-08-26T06:31:46Z'
+generated_by: claude-sonnet
+workflow_run: 32937121008
+issue: 654
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Idiomatic d3.bin() + scaleLinear() + axisBottom/axisLeft with a proper .data(bins).join("rect")
+    data-join
+  - 'First series is exactly Imprint #009E73, identical between light and dark renders;
+    over-torque tail correctly uses the amber semantic anchor (#DDCC77) rather than
+    an arbitrary color'
+  - New dashed threshold reference line plus a manually built legend ("Over-torque
+    risk (>895 N)") gives the chart a clear focal point and directly addresses the
+    prior review's storytelling feedback
+  - Bin edges are contiguous with thin pageBg-colored strokes between bars (no gaps),
+    per spec; y-axis starts at zero
+  - Realistic, neutral QC scenario (bolt shear-strength measurements) with a deliberate,
+    data-derived right-skew tail (threshold computed from mean + 1.5*stddev, not hard-coded)
+  - Deterministic reproducibility via a fixed-seed LCG + Box-Muller gaussian()
+  - Hover tooltips built with d3.pointer/getBBox for dynamic sizing add genuine, library-distinctive
+    interactivity that is invisible-but-harmless in the static PNG
+  - 'Clean theme-adaptive chrome: y-axis-only gridlines, minimal L-shaped frame, all
+    text legible in both themes'
+  weaknesses:
+  - Title occupies only ~29% of canvas width (short spec-id + language combination)
+    — not a violation given no clipping and full readability, but a touch more size/weight
+    would improve visual balance
+  - Two small helper functions (lcg, gaussian) slightly break strict KISS linear flow
+    — acceptable given the browser has no built-in normal-distribution RNG
+  - Distribution shows a right skew with one secondary bump near the peak rather than
+    a clearly multimodal shape — adequate for the spec's 'slight skew' requirement
+    but not maximal feature coverage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "histogram-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. X-axis label "Shear Strength (N)" and rotated Y-axis label "Number of Fasteners" in dark ink, legible; tick labels (700-950 on X, 0-40 on Y) in softer gray, all readable. Subtle horizontal gridlines at each Y tick. Only bottom+left axis lines drawn (L-shaped frame), tick marks removed. A small legend swatch top-right reads "Over-torque risk (>895 N)" in soft ink next to an amber square.
+      Data: A single distribution of green (#009E73) bars rising from near zero at ~680N, plateauing/bumping 800-840N, peaking (~41) near 845N, then decaying into a right tail. Bins beyond ~895N (mean + 1.5 std) are recolored amber (#DDCC77), the Imprint warning anchor, with a dashed vertical reference line marking the threshold exactly at the color transition. Thin off-white strokes separate every bar (no gaps between bins).
+      Legibility verdict: PASS — all text, including the new legend and threshold annotation, is clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Title, axis labels, tick labels, gridlines, legend text, and the dashed reference line have all flipped to light/soft tones and remain clearly legible. Same L-shaped axis frame and legend layout as the light render.
+      Data: Identical bar shape, bin boundaries, and colors as the light render — green (#009E73) for the main distribution, amber (#DDCC77) for the over-torque tail, both unchanged from light. Only chrome (background, text, grid, dashed line color) adapted to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; amber and green both remain clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, readable in both themes; title fills only ~29%
+          of width (short title text), under the 50-70% guideline but not clipped
+          or squeezed
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; new legend sits clear of the tallest bar
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 24 bins over 420 points, well-sized with clear pageBg separators
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/amber combination has strong contrast against both surfaces,
+          not a red-green pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart area uses the canvas well, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Units on X (N), descriptive Y
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exactly #009E73, identical across themes; amber tail
+          is the correct semantic-warning anchor, not an arbitrary hex; theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate amber/green contrast and a threshold line read as thoughtful
+          design, clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, minimal ticks, subtle grid, edge-highlighted bars,
+          generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Amber tail + dashed reference line + labeled threshold value give
+          the chart a clear focal point and immediate insight (over-torque risk zone)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with binned bars
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No gaps, thin bin edges, y-axis starts at zero, reasonable bin count
+          (24 for 420 obs)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = value range, Y = frequency, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; new legend label matches the
+          amber semantic
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Real right skew with a secondary bump near the peak, not extreme
+          multimodality
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bolt shear-strength QC sampling, neutral and comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Shear-strength values and data-derived threshold are physically plausible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small RNG helper functions (lcg, gaussian) slightly break strict
+          linear flow, but unavoidable without a seeded PRNG in-browser
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global, no extraneous packages
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI; hover tooltip is real interactivity gated behind
+          mouse events, not simulated
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; modern .data().join() API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.bin(), scale/axis generators, data-join, d3.pointer/getBBox —
+          expert idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Hover tooltips built from live getBBox measurement + d3.pointer are
+          genuinely d3-distinctive DOM-level techniques, not just declarative chart
+          config
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - hover-tooltips
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
