@@ -93,12 +93,13 @@ chart.setOption({
       symbolSize: 11,
       lineStyle: { width: 3.5, color: t.palette[0] },
       itemStyle: { color: t.palette[0] },
+      areaStyle: { color: t.palette[0], opacity: 0.06 },
       z: 3,
       markLine: {
         symbol: "none",
         silent: true,
         lineStyle: { type: "dashed", color: t.inkSoft, width: 1.5 },
-        label: { color: t.inkSoft, fontSize: 13, position: "insideEndTop", formatter: "{b}" },
+        label: { color: t.inkSoft, fontSize: 15, position: "insideEndTop", formatter: "{b}" },
         data: [
           { yAxis: 90, name: "90% threshold" },
           { yAxis: 95, name: "95% threshold" },
@@ -107,6 +108,7 @@ chart.setOption({
       markPoint: {
         symbol: "circle",
         symbolSize: 16,
+        symbolOffset: [16, -16],
         itemStyle: { color: t.pageBg, borderColor: t.ink, borderWidth: 3 },
         label: {
           show: true,
