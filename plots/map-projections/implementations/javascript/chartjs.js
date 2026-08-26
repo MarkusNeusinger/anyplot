@@ -93,8 +93,18 @@ const SOUTH_AMERICA = [
   [-62, -40], [-65, -50], [-68, -55], [-72, -52], [-73, -42], [-71, -30], [-70, -18],
   [-81, -5], [-80, 2], [-77, 8],
 ];
+// Middle East + Indian subcontinent — the largest landmass still missing from
+// this exact viewing hemisphere (centered 20E/5N puts the Arabian Peninsula
+// and India well inside the ~90-degree horizon).
+const MIDEAST_INDIA = [
+  [35, 33], [37, 21], [43, 13], [52, 13], [59, 23], [56, 27], [61, 25], [66, 24],
+  [69, 22], [72, 19], [74, 12], [77, 8], [80, 13], [84, 17], [87, 21], [92, 22],
+  [88, 27], [80, 30], [72, 33], [65, 35], [60, 33], [48, 34], [38, 34], [35, 33],
+];
 
-const continents = [AFRICA, EUROPE, SOUTH_AMERICA].map((ring) => projectLine(densify(ring, 8)));
+// Only continent-level silhouettes are modeled (no country borders) since
+// Chart.js ships no geo/GeoJSON plugin — see prompts/library/chartjs.md.
+const continents = [AFRICA, EUROPE, SOUTH_AMERICA, MIDEAST_INDIA].map((ring) => projectLine(densify(ring, 8)));
 
 // --- Tissot indicatrices: equal small circles on the globe rendered as
 // ellipses in the plane, showing exactly how orthographic distorts shape and
@@ -114,6 +124,32 @@ for (const lat of TISSOT_LATS) {
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
+
+// --- Custom plugin: fill land polygons with a neutral tone before any dataset
+// (graticule/coastline/globe) draws on top, so land reads distinctly from
+// ocean instead of relying on the coastline outline alone. -------------------
+const landPlugin = {
+  id: "landFill",
+  beforeDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    ctx.save();
+    ctx.fillStyle = hexToRgba(t.inkSoft, 0.12);
+    for (const ring of continents) {
+      const pts = ring.filter((p) => p.x !== null && p.y !== null);
+      if (pts.length < 3) continue;
+      ctx.beginPath();
+      pts.forEach((p, i) => {
+        const px = scales.x.getPixelForValue(p.x);
+        const py = scales.y.getPixelForValue(p.y);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      });
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  },
+};
 
 // --- Custom plugin: draw the Tissot indicatrix ellipses on top of the map --
 const tissotPlugin = {
@@ -210,5 +246,5 @@ new Chart(canvas, {
       y: { type: "linear", display: false, min: -1.155, max: 1.155 },
     },
   },
-  plugins: [tissotPlugin],
+  plugins: [landPlugin, tissotPlugin],
 });
