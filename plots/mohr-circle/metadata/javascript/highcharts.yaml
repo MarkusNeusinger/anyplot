@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: mohr-circle
 created: '2026-08-26T09:08:41Z'
-updated: '2026-08-26T09:16:14Z'
+updated: '2026-08-26T09:26:08Z'
 generated_by: claude-sonnet
 workflow_run: 32950409402
 issue: 4432
@@ -12,50 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mohr-circle/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
-  - Correct Mohr's Circle math (center, radius, principal stresses σ1/σ2, τmax, and
-    the 2θp rotation angle) matches the spec's formulas exactly
-  - True equal-aspect-ratio circle enforced via a chart load event that recalculates
-    axis extremes from plotWidth/plotHeight — the circle renders as a real circle,
-    not an ellipse
-  - 'Full spec feature coverage: circle outline, principal stress markers, max/min
-    shear stress markers, stress points A and B, the diameter line between them, the
-    2θp angle annotation, center reference lines, and a light grid'
-  - 'Clean theme adaptation — Imprint palette colors are identical between light and
-    dark renders, chrome (background, text, grid) correctly flips, and the first data
-    series uses the brand green #009E73'
-  - Creative use of the low-level Highcharts renderer API (chart.renderer.arc/text)
-    to draw the 2θp angle arc and label, working around the fact that the annotations
-    add-on module isn't loaded in the core bundle
-  - Realistic, neutral engineering scenario (steel shaft under combined bending and
-    torsion) with plausible MPa-scale stress values
+  - 'Correct physics: circle center, radius, sigma1, sigma2, tau_max, and 2-theta-p
+    are all mathematically consistent and correctly rendered'
+  - Genuine equal-aspect-ratio enforcement via dynamic pixel-scale computation in
+    chart.events.load, so the circle renders as a true circle instead of an ellipse
+  - Distinctive custom Highcharts renderer technique (chart.renderer.arc + halo-backed
+    renderer.label) for the 2-theta-p angle annotation, avoiding the dashed arc cutting
+    through the text
+  - 'Palette compliance: canonical Imprint order used correctly across all series
+    (green circle, lavender stress points, blue principal stresses, ochre max-shear
+    markers), identical between light and dark renders'
+  - Direct point labeling with legend disabled keeps the chart uncluttered while every
+    element stays identified
+  - Realistic engineering scenario (steel shaft under combined bending and torsion)
+    with plausible stress magnitudes for the domain
   weaknesses:
-  - 'Systematic text/line overlap across most of the derived-value labels in both
-    renders: ''σ1 = 148.0'' and ''σ2 = 12.0'' are cut through by the green circle
-    stroke (the label sits directly above the point where the circle has a near-vertical
-    tangent), ''τmax = 68.0'' and ''-τmax'' are crossed by the vertical dashed center
-    reference line, and the ''2θp = 54.0°'' label''s leading glyph is crossed by the
-    dashed angle arc. Increase the y-offset on these dataLabels (or give them a small
-    backgroundColor/padding matching the page background) so they clear the geometry
-    they annotate — points A(120, 55) and B(40, -55) show the offsets done correctly
-    and can be used as the reference.'
+  - Title occupies only ~45% of plot width, slightly under the 50-70% comfortable
+    range for a title this length (minor, no clipping or overflow)
+  - 'Chrome around the origin is a bit busy: grid lines plus the dashed diameter (A-B)
+    line, the dashed sigma=center reference line, and the dashed angle arc all converge
+    near the center — consider lightening or dropping the sigma=center reference line
+    since the diameter line and angle arc already anchor that geometry'
+  - LM-02 distinctive-feature usage (renderer.arc/label for annotation) is solid but
+    not maximal; could be pushed further into more uniquely Highcharts-specific territory
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), consistent with the theme spec.
-      Chrome: Title "mohr-circle · javascript · highcharts · anyplot.ai" in bold dark text, subtitle "Steel shaft under combined bending and torsion" in softer gray, both clearly legible. Axis titles "Normal Stress σ (MPa)" and "Shear Stress τ (MPa)" in dark-gray, tick labels in dark-gray, subtle light-gray gridlines every 20 units. A solid horizontal reference line at τ=0 and a dashed vertical reference line at σ=center (80) pass through the circle's center.
-      Data: A large green (#009E73) circle traced parametrically, a purple dashed diameter line connecting point A(120, 55) to point B(40, -55), purple circular markers at A and B with clear labels, blue diamond markers at the principal stresses σ1=148.0 and σ2=12.0, orange triangle markers at the max/min shear stress points (τmax=68.0 and -τmax), a small black dot at the circle's center, and a dashed angle arc annotating 2θp=54.0°. First series (circle) correctly uses the brand green.
-      Legibility verdict: PASS overall — all text is dark-on-light and readable — but note the "σ1 = 148.0", "σ2 = 12.0", "τmax = 68.0", "-τmax", and "2θp = 54.0°" labels each have a thin circle/dashed-line stroke crossing directly through part of the text (confirmed via pixel-level crops), which is a legibility/overlap blemish though the text remains readable.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "mohr-circle · javascript · highcharts · anyplot.ai" and gray subtitle "Steel shaft under combined bending and torsion" at top, both clearly readable. Axis titles "Normal Stress σ (MPa)" (x) and "Shear Stress τ (MPa)" (y) in medium-gray, dark tick labels on both axes, subtle light-gray gridlines. Solid reference lines through sigma=0/tau=0 and a dashed reference line at sigma=center, all in soft ink gray.
+      Data: A brand-green (#009E73) circle traces the Mohr's circle locus. A gray dashed diameter line connects point A(120, 55) and point B(40, -55), both marked with lavender (#C475FD) circular markers and labeled. Principal stresses sigma2=12.0 and sigma1=148.0 are marked with navy-blue (#4467A3) diamonds on the horizontal axis. Max shear stress tau_max=68.0 and -tau_max are marked with ochre (#BD8233) triangles at the top/bottom of the circle. A small dark dot marks the center, and a dashed angle arc with a halo-backed label reads "2θp = 54.0°". All data-label text sits on/near the plot without overlapping other elements.
+      Legibility verdict: PASS — every title, axis label, tick label, and data annotation is clearly readable against the light background; no overlap or clipping observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with the theme spec.
-      Chrome: Title and subtitle render in white/light-gray, fully legible against the dark background — no dark-on-dark failures. Axis titles and tick labels are light gray and clearly visible. Gridlines and the center reference lines are visible but subtle (light gray / dashed light gray).
-      Data: All data colors (green circle, purple points A/B and diameter line, blue diamond principal-stress markers, orange triangle shear-stress markers, black-ink center dot rendered in light ink on dark) are identical to the light render — only the chrome (background, text, grid) has flipped as required.
-      Legibility verdict: PASS overall — no dark-on-dark or light-on-light failures — same line-crossing-label blemish as the light render (σ1/σ2/τmax/-τmax/2θp labels crossed by circle stroke or dashed lines), consistent between both themes since it's a geometry issue, not a theme-token issue.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title and subtitle now render in light/off-white text, axis titles and tick labels in light gray, gridlines a subtle light-on-dark tint, reference lines in light ink-soft gray. All chrome elements flipped correctly from the light render.
+      Data: The same brand-green circle, lavender A/B stress-point markers, navy-blue principal-stress diamonds, and ochre max-shear triangles as the light render — colors are pixel-identical to the light theme; only the background, text, and grid flipped. The center dot is now light-colored to remain visible against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures found; every label (including the halo-backed "2θp = 54.0°" annotation) remains fully legible, and the halo backing correctly switched to the dark page color so it doesn't show as a light box on the dark theme.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,74 +60,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (14/16/22px), readable in both themes;
-          slightly undercut by lines crossing several labels
+        comment: All font sizes explicitly set, readable in both themes; title slightly
+          under the 50-70% width guideline but not cramped or clipped
       - id: VQ-02
         name: No Overlap
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Circle stroke crosses 'σ1 = 148.0' and 'σ2 = 12.0'; dashed center
-          line crosses 'τmax = 68.0' and '-τmax'; angle arc crosses '2θp = 54.0°'
-          — text stays readable so not severe, but the pattern repeats across 5 of
-          7 annotations
+        passed: true
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers sized appropriately (radius 6-7) for sparse, discrete stress
-          points
+        comment: Markers and line weights well adapted to a sparse, single-circle
+          dataset
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues per marker category, good contrast, not reliant on
-          red-green alone
+        comment: Distinct hues plus distinct marker shapes and page-bg outline strokes
+          for definition; no reliance on hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square canvas, true circle via equal-aspect logic, no clipping or
-          overflow
+        comment: Circle and annotations fill a large, well-balanced portion of the
+          square canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with MPa units
+        comment: Both axis titles are descriptive and include units (MPa)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Imprint palette used, correct light/dark backgrounds'
+        comment: 'First series is #009E73; remaining series follow canonical Imprint
+          order; theme-correct chrome and identical data colors across both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Distinct marker shapes per category and a custom angle arc show above-default
-          effort, offset by the recurring label/line overlap
+        passed: true
+        comment: Thoughtful custom renderer-based angle annotation and direct labeling
+          in place of a legend, clearly above a library default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace; refinement undercut by label overlaps
+        comment: Subtle grid and axis lines with generous whitespace, though the cluster
+          of dashed reference lines near the center is slightly busy
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy — circle, principal points, and angle annotation
-          guide the reader through the transformation
+        comment: Color- and shape-coded series plus the angle annotation create a
+          clear visual hierarchy that guides the reader through the geometry
     spec_compliance:
       score: 15
       max: 15
@@ -140,27 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Mohr's Circle construction
+        comment: Correct Mohr's circle rendered as a true circle via an equal-aspect-ratio
+          trick
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Circle, principal stresses, τmax/-τmax, points A/B, 2θp annotation,
-          equal aspect, grid, and reference lines all present
+        comment: Principal stresses, tau_max, points A/B, 2-theta-p annotation, equal
+          aspect ratio, grid, and center reference lines are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: σ on x-axis, τ on y-axis, all derived quantities plotted
+        comment: sigma on x, tau on y, full circle visible with margin
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'mohr-circle · javascript · highcharts · anyplot.ai';
-          legend appropriately disabled in favor of direct labels
+        comment: Title matches the mandated format exactly; no legend needed since
+          every element is directly labeled
     data_quality:
       score: 15
       max: 15
@@ -170,19 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows every core Mohr's Circle element
+        comment: 'Shows all aspects: principal stresses, max shear, stress points,
+          and rotation angle'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral steel-shaft bending+torsion scenario
+        comment: Neutral, comprehensible mechanical-engineering scenario (steel shaft
+          under combined bending and torsion)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stress values (40-148 MPa) are sensible for the domain
+        comment: Stress magnitudes (120/40/55 MPa) are realistic for steel and the
+          derived values are mathematically correct
     code_quality:
       score: 10
       max: 10
@@ -192,55 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no unnecessary functions or classes
+        comment: Flat data-then-chart structure; the load event callback is the idiomatic
+          way to do post-render pixel math in Highcharts
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded stress values
+        comment: Fully deterministic hard-coded stress values
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses the provided globals
+        comment: No unused imports; only the provided ANYPLOT_TOKENS/Highcharts globals
+          are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, real tooltip
+        comment: No fake UI or over-engineering; complexity matches the custom annotation
+          requirement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, animation disabled everywhere
+        comment: Uses Highcharts.chart("container", ...) with animation disabled per
+          the mount-node contract
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct use of scatter/line series, dataLabels, plotLines, and load-event
-          hooks
+        comment: Expert use of the series API plus chart.renderer for custom annotations
+          and events.load for post-layout adjustments
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom equal-aspect-ratio recalculation and low-level renderer.arc/text
-          annotation, working around the missing annotations module
+        comment: chart.renderer.arc/label with a halo-backed label and dynamic toPixels-based
+          equal-aspect scaling are genuinely Highcharts-specific techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
   patterns:
   - data-generation
   dataprep: []
