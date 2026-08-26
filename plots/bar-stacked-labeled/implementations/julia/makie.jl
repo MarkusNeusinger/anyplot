@@ -35,7 +35,6 @@ n_product = length(product_lines)
 x      = repeat(1:n_quarter, inner = n_product)
 stack  = repeat(1:n_product, outer = n_quarter)
 height = vec(permutedims(revenue))
-colors = IMPRINT_PALETTE[repeat(1:n_product, outer = n_quarter)]
 
 totals = vec(sum(revenue, dims = 2))
 
@@ -77,7 +76,8 @@ ax = Axis(
 barplot!(
     ax, x, height;
     stack       = stack,
-    color       = colors,
+    color       = stack,
+    colormap    = IMPRINT_PALETTE[1:n_product],
     width       = 0.6,
     strokewidth = 0,
 )
