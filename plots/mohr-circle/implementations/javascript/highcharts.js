@@ -68,12 +68,19 @@ Highcharts.chart("container", {
           .attr({ stroke: t.inkSoft, "stroke-width": 1.5, fill: "none", dashstyle: "Dash" })
           .add();
         const midAngle = (startAngle + endAngle) / 2;
-        const labelR = arcR + 26;
-        chart.renderer
-          .text(`2θp = ${twoThetaPDeg.toFixed(1)}°`, cx + labelR * Math.cos(midAngle), cy + labelR * Math.sin(midAngle))
-          .attr({ align: "center" })
+        const labelR = arcR + 34;
+        // Use renderer.label (not .text) so the halo matching the page background
+        // sits behind the glyphs, keeping the dashed arc from cutting through them.
+        const angleLabel = chart.renderer
+          .label(`2θp = ${twoThetaPDeg.toFixed(1)}°`, 0, 0)
+          .attr({ fill: t.pageBg, padding: 3, zIndex: 6 })
           .css({ color: t.inkSoft, fontSize: "14px" })
           .add();
+        const labelBox = angleLabel.getBBox();
+        angleLabel.attr({
+          x: cx + labelR * Math.cos(midAngle) - labelBox.width / 2,
+          y: cy + labelR * Math.sin(midAngle) - labelBox.height / 2,
+        });
       },
     },
   },
@@ -164,13 +171,20 @@ Highcharts.chart("container", {
       dataLabels: {
         enabled: true,
         style: { color: t.ink, fontSize: "14px", textOutline: "none" },
+        backgroundColor: t.pageBg,
+        borderWidth: 0,
+        borderRadius: 3,
+        padding: 3,
         formatter: function () {
           return this.point.label;
         },
       },
+      // σ1/σ2 sit at the circle's extreme left/right points, where the tangent
+      // is near-vertical — push the labels outward (away from the circle body)
+      // instead of straight up, so the stroke doesn't cut through the text.
       data: [
-        { x: sigma1, y: 0, label: `σ1 = ${sigma1.toFixed(1)}`, dataLabels: { align: "center", y: -16 } },
-        { x: sigma2, y: 0, label: `σ2 = ${sigma2.toFixed(1)}`, dataLabels: { align: "center", y: -16 } },
+        { x: sigma1, y: 0, label: `σ1 = ${sigma1.toFixed(1)}`, dataLabels: { align: "left", x: 12, y: -10 } },
+        { x: sigma2, y: 0, label: `σ2 = ${sigma2.toFixed(1)}`, dataLabels: { align: "right", x: -12, y: -10 } },
       ],
     },
     {
@@ -181,13 +195,20 @@ Highcharts.chart("container", {
       dataLabels: {
         enabled: true,
         style: { color: t.ink, fontSize: "14px", textOutline: "none" },
+        backgroundColor: t.pageBg,
+        borderWidth: 0,
+        borderRadius: 3,
+        padding: 3,
         formatter: function () {
           return this.point.label;
         },
       },
+      // τmax/-τmax sit on the dashed σ=center reference line — offset the
+      // labels sideways (not centered on x=center) so the dashed line doesn't
+      // run straight through the text.
       data: [
-        { x: center, y: tauMax, label: `τmax = ${tauMax.toFixed(1)}`, dataLabels: { align: "center", y: -14 } },
-        { x: center, y: -tauMax, label: `-τmax`, dataLabels: { align: "center", y: 24 } },
+        { x: center, y: tauMax, label: `τmax = ${tauMax.toFixed(1)}`, dataLabels: { align: "left", x: 10, y: -10 } },
+        { x: center, y: -tauMax, label: `-τmax`, dataLabels: { align: "left", x: 10, y: 22 } },
       ],
     },
     {
