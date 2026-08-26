@@ -23,16 +23,25 @@ function randomNormal(mean, std) {
 }
 
 const groups = [
-  { name: "Placebo", mean: 430, std: 55, n: 140 },
+  // A few attention-lapse (slow) and anticipatory (fast) trials beyond the
+  // whisker fences, as seen in real reaction-time data.
+  { name: "Placebo", mean: 430, std: 50, n: 136, outliers: [138, 148, 612, 628] },
   { name: "Low Dose", mean: 400, std: 50, n: 140 },
   { name: "Medium Dose", mean: 360, std: 48, n: 140 },
-  { name: "High Dose", mean: 305, std: 58, n: 140 },
+  // ~18% of subjects are non-responders whose reaction time stays near the
+  // placebo level, producing a genuinely bimodal distribution.
+  { name: "High Dose", mean: 305, std: 40, n: 140, mixture: { weight: 0.18, mean: 415, std: 35 } },
 ];
 
 const categories = groups.map((group, index) => {
-  const values = Array.from({ length: group.n }, () =>
-    Math.max(120, randomNormal(group.mean, group.std)),
-  ).sort((a, b) => a - b);
+  const generated = Array.from({ length: group.n }, () => {
+    const raw =
+      group.mixture && random() < group.mixture.weight
+        ? randomNormal(group.mixture.mean, group.mixture.std)
+        : randomNormal(group.mean, group.std);
+    return Math.max(120, raw);
+  });
+  const values = generated.concat(group.outliers ?? []).sort((a, b) => a - b);
   return { name: group.name, index, values };
 });
 
@@ -96,8 +105,8 @@ const rainSeries = categories.map((cat) => ({
   name: `${cat.name} observations`,
   data: cat.values.map((v) => [v, cat.index - RAIN_CENTER + (random() - 0.5) * 2 * RAIN_JITTER]),
   color: t.palette[cat.index % t.palette.length],
-  opacity: 0.6,
-  marker: { radius: 3, symbol: "circle", lineWidth: 0 },
+  opacity: 0.5,
+  marker: { radius: 2.5, symbol: "circle", lineWidth: 0 },
   enableMouseTracking: false,
   showInLegend: false,
   zIndex: 2,
