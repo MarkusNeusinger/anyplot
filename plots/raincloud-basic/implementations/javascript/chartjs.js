@@ -1,7 +1,7 @@
 // anyplot.ai
 // raincloud-basic: Basic Raincloud Plot
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-26
+// Quality: 89/100 | Created: 2026-08-26
 
 const t = window.ANYPLOT_TOKENS;
 
