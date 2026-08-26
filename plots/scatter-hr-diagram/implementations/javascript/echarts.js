@@ -65,12 +65,16 @@ stars.forEach((star) => {
 
 // --- Color by spectral type, following the conventional stellar palette ----
 // (blue-hot O/B -> near-white A -> yellow F/G -> orange K -> red-cool M).
+// AMBER_PALE is t.amber lightened toward white: F-type stars are white-yellow,
+// one shade paler than G's amber, so the two stay in the same yellow family
+// (per the domain-color semantic exception) while remaining distinguishable.
+const AMBER_PALE = "#EDE4B8";
 const SPEC_ORDER = ["O", "B", "A", "F", "G", "K", "M"];
 const SPEC_COLOR = {
   O: t.palette[2], // blue
   B: t.palette[5], // cyan-blue
   A: muted, // near-white
-  F: t.amber, // yellow-white
+  F: AMBER_PALE, // white-yellow
   G: t.amber, // yellow, Sun-like
   K: t.palette[3], // ochre / orange
   M: t.palette[4], // matte red, coolest
@@ -79,8 +83,8 @@ const SPEC_COLOR = {
 const seriesByType = SPEC_ORDER.map((type) => ({
   name: type,
   type: "scatter",
-  symbolSize: 14,
-  itemStyle: { color: SPEC_COLOR[type], opacity: 0.8 },
+  symbolSize: 12,
+  itemStyle: { color: SPEC_COLOR[type], opacity: 0.7 },
   data: stars.filter((star) => star.type === type).map((star) => [star.temp, star.lum]),
 }));
 
@@ -100,7 +104,7 @@ const sunSeries = {
 // so the four region captions are placed directly with the graphic component).
 const GRID = { left: 110, top: 130, right: 70, bottom: 150 };
 const MOUNT = window.ANYPLOT_SIZE;
-const X_DOMAIN = [Math.log10(2500), Math.log10(45000)]; // must match xAxis[0] min/max below
+const X_DOMAIN = [Math.log10(2500), Math.log10(45000)]; // must match xAxis min/max below
 const Y_DOMAIN = [Math.log10(1e-4), Math.log10(1e6)]; // must match yAxis min/max below
 
 function regionLabelPos(temp, lum) {
@@ -123,6 +127,34 @@ const regionLabels = [
   type: "text",
   ...regionLabelPos(region.temp, region.lum),
   style: { text: region.text, fill: muted, fontSize: 16, fontWeight: 500 },
+}));
+
+// --- Secondary spectral-class labels, placed at each class's true log-domain
+// midpoint (an evenly spaced category axis would misalign against the
+// non-uniform temperature boundaries below) -----------------------------------
+// Boundaries mirror spectralType() above; keep both in sync.
+const SPEC_BOUNDS = {
+  O: [30000, 45000],
+  B: [10000, 30000],
+  A: [7500, 10000],
+  F: [6000, 7500],
+  G: [5200, 6000],
+  K: [3700, 5200],
+  M: [2500, 3700],
+};
+
+function specTickLeft(low, high) {
+  const midTemp = Math.sqrt(low * high); // geometric mean = midpoint in log space
+  const plotW = MOUNT.width - GRID.left - GRID.right;
+  const fracX = (Math.log10(midTemp) - X_DOMAIN[0]) / (X_DOMAIN[1] - X_DOMAIN[0]);
+  return GRID.left + (1 - fracX) * plotW; // x-axis is inverse: hot (high temp) sits on the left
+}
+
+const specLabels = SPEC_ORDER.map((type) => ({
+  type: "text",
+  left: specTickLeft(...SPEC_BOUNDS[type]),
+  top: GRID.top - 26,
+  style: { text: type, fill: t.inkSoft, fontSize: 14, fontWeight: 500, align: "center" },
 }));
 
 // --- Init --------------------------------------------------------------------
@@ -156,35 +188,23 @@ chart.setOption({
     itemHeight: 12,
   },
   grid: { left: 110, right: 70, top: 130, bottom: 150 },
-  xAxis: [
-    {
-      type: "log",
-      inverse: true,
-      min: 2500,
-      max: 45000,
-      name: "Surface Temperature (K)",
-      nameLocation: "middle",
-      nameGap: 45,
-      nameTextStyle: { color: t.ink, fontSize: 16 },
-      axisLabel: {
-        color: t.inkSoft,
-        fontSize: 14,
-        formatter: (v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`),
-      },
-      axisLine: { lineStyle: { color: t.inkSoft } },
-      splitLine: { lineStyle: { color: t.grid } },
+  xAxis: {
+    type: "log",
+    inverse: true,
+    min: 2500,
+    max: 45000,
+    name: "Surface Temperature (K)",
+    nameLocation: "middle",
+    nameGap: 45,
+    nameTextStyle: { color: t.ink, fontSize: 16 },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      formatter: (v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : `${v}`),
     },
-    {
-      // Secondary axis: conventional spectral-class ticks (hot -> cool, left to right).
-      type: "category",
-      position: "top",
-      data: SPEC_ORDER,
-      axisTick: { show: false },
-      axisLine: { lineStyle: { color: t.inkSoft } },
-      axisLabel: { color: t.inkSoft, fontSize: 14, fontWeight: 500 },
-      splitLine: { show: false },
-    },
-  ],
+    axisLine: { lineStyle: { color: t.inkSoft } },
+    splitLine: { lineStyle: { color: t.grid } },
+  },
   yAxis: {
     type: "log",
     min: 1e-4,
@@ -198,5 +218,5 @@ chart.setOption({
     splitLine: { lineStyle: { color: t.grid } },
   },
   series: [...seriesByType, sunSeries],
-  graphic: regionLabels,
+  graphic: [...regionLabels, ...specLabels],
 });
