@@ -58,11 +58,14 @@ g.append("g")
 // --- Stacked bars ---------------------------------------------------------
 const series = d3.stack().keys(components)(data);
 
-g.append("g")
+const segments = g
+  .append("g")
   .selectAll("g")
   .data(series)
   .join("g")
-  .attr("fill", (d) => color(d.key))
+  .attr("fill", (d) => color(d.key));
+
+segments
   .selectAll("rect")
   .data((d) => d)
   .join("rect")
@@ -70,6 +73,25 @@ g.append("g")
   .attr("y", (d) => y(d[1]))
   .attr("width", x.bandwidth())
   .attr("height", (d) => y(d[0]) - y(d[1]));
+
+// --- In-segment value labels (distinct from the total labels above) ----------
+const MIN_LABEL_SEGMENT_HEIGHT = 46;
+segments
+  .selectAll(".segment-label")
+  .data((d) => d.filter((v) => y(v[0]) - y(v[1]) >= MIN_LABEL_SEGMENT_HEIGHT))
+  .join("text")
+  .attr("class", "segment-label")
+  .attr("x", (d) => x(d.data.quarter) + x.bandwidth() / 2)
+  .attr("y", (d) => (y(d[0]) + y(d[1])) / 2)
+  .attr("text-anchor", "middle")
+  .attr("dominant-baseline", "central")
+  .style("font-size", "15px")
+  .style("font-weight", "600")
+  .style("paint-order", "stroke")
+  .attr("stroke", "rgba(0,0,0,0.35)")
+  .attr("stroke-width", 3)
+  .attr("fill", "#FFFFFF")
+  .text((d) => `$${d[1] - d[0]}M`);
 
 // --- Total labels above each stack -------------------------------------------
 g.selectAll(".total-label")
@@ -153,6 +175,6 @@ svg
   .attr("y", 44)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
+  .style("font-size", "26px")
   .style("font-weight", "600")
   .text("bar-stacked-labeled · javascript · d3 · anyplot.ai");
