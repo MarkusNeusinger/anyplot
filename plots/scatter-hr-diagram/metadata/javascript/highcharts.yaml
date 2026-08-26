@@ -1,0 +1,257 @@
+library: highcharts
+language: javascript
+specification_id: scatter-hr-diagram
+created: '2026-08-26T11:25:19Z'
+updated: '2026-08-26T11:39:04Z'
+generated_by: claude-sonnet
+workflow_run: 32961183609
+issue: 4558
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Physically grounded data generation: main-sequence luminosity follows a calibrated
+    mass-luminosity relation (L ~ T^5.3) with the Sun landing exactly at (5778 K,
+    1 L☉), and giant/supergiant/white-dwarf populations occupy realistic temperature/luminosity
+    ranges'
+  - 'Clean dual-channel encoding: marker shape carries region, per-point color carries
+    spectral type, tied together by a combined legend and an explanatory subtitle'
+  - 'Correct astrophysical axis conventions: reversed logarithmic x-axis (hot/blue
+    left, cool/red right) and logarithmic y-axis for luminosity'
+  - 'Both renders are fully theme-correct: identical data colors between light and
+    dark, chrome (title, axis, ticks, grid, legend, Sun outline) flips correctly with
+    no legibility failures'
+  - Thoughtful, well-documented color-mapping trade-off given Imprint's fixed hue
+    pool (hot O/B → blue family, cool M → red, matching the two strongest real-world
+    spectral-color conventions)
+  weaknesses:
+  - '"Conventional colors" from the spec (white for A, yellow for F/G, orange for
+    K) are only approximated (lavender, ochre/green, rose) because Imprint''s 7-hue
+    pool has no white/yellow/orange — acceptable given house-style palette rules,
+    but a documented partial spec deviation'
+  - The O spectral class has a legend swatch (cyan) but zero stars ever reach the
+    30,000 K classification threshold across all 300 generated points (max temperature
+    ~28,220 K) — one of the seven legend entries never appears on the chart
+  - xAxis has gridLineColor set but no gridLineWidth, so only horizontal (y-axis)
+    gridlines render; the style guide recommends grid on both axes for scatter plots
+  - Legend title concatenates two labels with manual whitespace ("Region (shape)      Spectral
+    type (color)") instead of a cleaner two-part legend construction
+  - Moderate marker overlap in the densest sub-clusters (main sequence F/G stars,
+    red giants/K stars near the Sun's temperature range) slightly reduces per-point
+    visibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "scatter-hr-diagram · javascript · highcharts · anyplot.ai" and subtitle "Synthetic stellar population · marker color = spectral type, shape = region" sit dark and clearly readable at the top with generous margin (verified via edge crop, no clipping). X-axis "Surface Temperature (K)" is reversed and logarithmic, running 32k -> ~3k left to right. Y-axis "Luminosity (L☉, log scale)" is logarithmic, running 0.00001 to 1M, fully visible with margin on the left edge. Only horizontal gridlines are drawn (subtle, light gray) — no vertical gridlines despite xAxis.gridLineColor being set (gridLineWidth defaults to 0). Legend at the bottom lists region shapes (Main sequence circle, Red giants diamond, Supergiants triangle, White dwarfs square, Sun reference) plus spectral-type color swatches (O cyan, B blue, A lavender, F ochre, G green, K rose, M red), all fully within the canvas with margin on the right (verified via edge crop).
+      Data: ~300 points colored by spectral type and shaped by region, forming a clear diagonal main-sequence band plus distinct red-giant, supergiant, and white-dwarf clusters. The Sun is marked with a larger black-outlined circle and a "☉ Sun" data label. First class encountered in canonical OBAFGKM order (O) is cyan; the Sun's own G class is Imprint brand green #009E73. No O-class points actually appear in the data (confirmed by re-running the deterministic LCG: max generated temperature ≈28,220 K, below the 30,000 K O-class threshold) — a minor, astrophysically-plausible (O stars are genuinely rare) but real gap between the legend and the rendered data.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: All chrome (title, subtitle, axis titles, tick labels, grid, legend text) flips to light/off-white and remains fully readable — no dark-on-dark failures. The Sun marker's outline flips from black (light theme) to white (dark theme) as expected.
+      Data: Marker colors (cyan/blue/lavender/ochre/green/rose/red) are visually identical to the light render — only chrome flipped, confirming palette compliance across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (14/16/22px); readable in both themes; title
+          occupies well under 90% of width; balanced axis/tick sizing
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; thin marker strokes keep overlapping points distinguishable
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers visible but moderate overlap in densest F/G and red-giant/K
+          sub-clusters
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant shape+color encoding, CVD-safe Imprint hues, thin marker
+          outline stroke
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, no cutoff, canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes descriptive with units (K, L☉)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: All data colors are Imprint palette members, identical across themes;
+          chrome and backgrounds theme-correct in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping and dual-channel legend, clearly
+          above default; manually-spaced combined legend title is slightly kludgy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chrome, subtle grid, generous margins; xAxis grid lines configured
+          but not rendered (missing gridLineWidth), so only horizontal grid shows
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Diagonal main-sequence band, distinct giant/supergiant/white-dwarf
+          clusters, and the labeled Sun reference immediately convey the HR-diagram
+          insight
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct HR-diagram scatter with reversed log x-axis and log y-axis
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Regions, Sun marker, reversed/log axes all present; conventional
+          spectral colors (white/yellow/orange) only partially honored due to Imprint
+          constraints; O class present in legend but absent from generated data; optional
+          secondary spectral-class axis omitted (no penalty, optional)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Temperature on x, luminosity on y, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match data series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All four regions clearly present and distinct; O spectral class listed
+          in legend but never occurs among the 300 generated stars
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral astrophysics scenario, Sun used as a real reference point
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mass-luminosity relation calibrated so the Sun sits on the curve;
+          giant/supergiant/white-dwarf ranges are physically sensible
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (rand, gauss, spectralClass, starPoint) are
+          reasonable for per-point derived data but depart from pure top-to-bottom
+          structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, only browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or interactivity, appropriate complexity for the data
+          model
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation:false set on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter series, per-point color/dataLabels, legend-only
+          pseudo-series pattern for a combined legend
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Per-point styling, custom dataLabels formatting, and marker symbol
+          variety in a distinctly Highcharts way
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
