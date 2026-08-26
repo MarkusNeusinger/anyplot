@@ -56,7 +56,11 @@ const seriesDefs = [
 // Each series contributes 3 ECharts series: an invisible line pinning the
 // band's lower edge, a translucent fill spanning up to the band's upper
 // edge (both sharing a private stack so the fill floats at the right
-// height), and the opaque central stacked area on top.
+// height), and the opaque central stacked area below. ECharts paints all
+// z:2 elements above all z:1 elements regardless of series array order, so
+// every band (z:2) must outrank every opaque area (z:1) - otherwise a
+// later-stacked series' opaque fill (e.g. Wind, Gas) paints over an
+// earlier series' band (e.g. Solar's) wherever their height ranges overlap.
 const series = [];
 seriesDefs.forEach((s, idx) => {
   series.push({
@@ -67,7 +71,7 @@ seriesDefs.forEach((s, idx) => {
     symbol: "none",
     silent: true,
     tooltip: { show: false },
-    z: 1,
+    z: 2,
   });
   series.push({
     type: "line",
@@ -78,7 +82,7 @@ seriesDefs.forEach((s, idx) => {
     areaStyle: { color: s.color, opacity: 0.28 },
     silent: true,
     tooltip: { show: false },
-    z: 1,
+    z: 2,
   });
   series.push({
     name: s.name,
@@ -88,8 +92,8 @@ seriesDefs.forEach((s, idx) => {
     symbol: "none",
     itemStyle: { color: s.color },
     lineStyle: { width: 2.5, color: s.color },
-    areaStyle: { color: s.color, opacity: 0.82 },
-    z: 2,
+    areaStyle: { color: s.color, opacity: 1 },
+    z: 1,
   });
 });
 
