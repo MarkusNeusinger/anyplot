@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: sequence-logo-basic
 created: '2026-08-26T11:19:04Z'
-updated: '2026-08-26T11:23:44Z'
+updated: '2026-08-26T11:35:59Z'
 generated_by: claude-sonnet
 workflow_run: 32962154415
 issue: 4421
@@ -12,128 +12,120 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Correct entropy/information-content math (Shannon entropy vs. log2(4)=2-bit DNA
-    ceiling) drives the stack heights, matching the spec's bits-based scaling requirement.
-  - Letters are stacked in true frequency order (most frequent on top) via a stable
-    ascending sort, and each letter is a real scaled glyph (getBBox + scale transform)
-    stretched to fill its allocated cell width and height, not plain text.
-  - Nucleotide color coding follows the standard convention (A=green, C=blue, G=ochre,
-    T=red) mapped onto the closest Imprint hues — a well-justified domain semantic
-    exception, with data colors identical between light and dark renders.
-  - 'Clean, idiomatic D3: scaleBand/scaleLinear + axisBottom/axisLeft + data-join
-    pattern, subtle y-axis-only gridlines, L-shaped spines, generous margins, no overflow
-    or clipping in either theme.'
-  - Both renders are correctly theme-adaptive (background, ink, grid) while the data-color
-    palette stays fixed, and the mandated title format is exact.
+  - Distinctive serif/sans-serif typeface pairing (Georgia display title vs. sans-serif
+    chrome) directly resolves the DE-01 typography weakness flagged in attempt 1.
+  - Added a "Most conserved position" annotation (dashed leader + italic label) pointing
+    at position 6, giving the chart an intentional storytelling focal point beyond
+    the inherent sequence-logo form -- resolves the DE-03 feedback from attempt 1.
+  - Correct Shannon-entropy math scales stack heights against the 2-bit DNA ceiling,
+    and letters stack in true most-frequent-on-top order via a stable ascending sort.
+  - Letters are real scaled glyphs (getBBox + transform), stretched to fill each cell
+    width and height, not plain text -- a genuinely distinctive D3 technique.
+  - Domain-standard nucleotide coloring (A=green, C=blue, G=ochre, T=red) mapped onto
+    Imprint hues, identical between light and dark renders; both renders are fully
+    theme-correct with no dark-on-dark or light-on-light issues and no edge clipping.
   weaknesses:
-  - Near-uniform positions (4 and 10, ~0.01-0.02 bits total) collapse to hairline-thin
-    colored slivers at the baseline — scientifically correct, but at mobile widths
-    (~400px) these are effectively invisible, which could read as 'missing data' rather
-    than 'low conservation' to an unfamiliar viewer. Consider a very thin minimum-height
-    floor or a subtle baseline tick to signal presence without misrepresenting the
-    value.
-  - Typography is generic 'sans-serif' throughout (title, axis labels, ticks, and
-    the letter glyphs) with no distinctive typeface choice — functional but not particularly
-    refined design-wise.
-  - The y-axis fixed ceiling of 2.0 bits (correct per the DNA log2(4) convention)
-    leaves roughly 40% of vertical space empty above the tallest stack (~1.2 bits);
-    acceptable since it's the domain-standard comparability convention, but worth
-    noting as an unavoidable trade-off rather than a deliberate storytelling choice.
-  - infoContent() is a small standalone helper and the letter-stacking uses a map/sort/entries
-    chain rather than a single flat top-to-bottom script — still simple and readable,
-    but a slight step away from the purest KISS top-level style.
+  - Near-zero-information positions (4 and 10) still collapse to hairline slivers
+    at the baseline -- scientifically correct but risks reading as "missing data"
+    rather than "low conservation" at mobile thumbnail scale (~400px); this was flagged
+    as optional in attempt 1 and remains unaddressed.
+  - infoContent() helper plus a map/sort/entries chain is a small step away from a
+    flat top-to-bottom KISS script.
+  - Only the title/chrome received the distinctive serif treatment -- the letter glyphs
+    themselves remain the plain sans-serif chrome font, leaving some headroom for
+    further aesthetic polish.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "sequence-logo-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center; y-axis "Information content (bits)" (rotated) and x-axis "Position" labels in dark ink; tick labels (0.0–2.0 in 0.5 steps on y, 1–10 on x) in dark ink; subtle horizontal gridlines at each y tick; L-shaped left+bottom axis lines visible.
-      Data: Ten position columns of stacked, scaled letter glyphs. First (top, largest) letter per position colored by nucleotide — A=green (#009E73), C=blue (#4467A3), G=ochre (#BD8233), T=red (#AE3030) — with smaller letters stacked below in ascending-frequency order. Tallest stacks at positions 3 (T, ~1.0 bit), 6 (A, ~1.2 bits); near-flat/invisible slivers at positions 4 and 10 (low information content, as expected for near-uniform frequencies).
-      Legibility verdict: PASS — all title/axis/tick text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold serif title "sequence-logo-basic · javascript · d3 · anyplot.ai" centered at top in dark ink; "Position" (x) and "Information content (bits)" (y) axis labels in dark ink; subtle horizontal gridlines at 0.5-bit intervals; L-shaped left+bottom axis frame; italic "Most conserved position" annotation with dashed leader line above position 6. All chrome text is clearly readable against the light background.
+      Data: Ten position columns of stacked, scaled letter glyphs colored by nucleotide (A=green #009E73, C=blue #4467A3, G=ochre #BD8233, T=red #AE3030), letters ordered most-frequent-on-top. Tallest stacks at positions 3 (T, ~1.0 bit) and 6 (A, ~1.2 bits, the annotated peak); positions 4 and 10 collapse to near-invisible hairline slivers reflecting near-zero information content. First series color for the dominant/most conserved base (A) is the brand green #009E73.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (theme-flipped), fully legible; gridlines remain subtle; axis lines visible in light ink.
-      Data: Identical letter colors and stack geometry to the light render (green/blue/ochre/red) — confirms only chrome flipped, not data colors.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and letter glyphs are clearly distinguishable from the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title/axis text now in light ink, fully legible; gridlines and axis frame flipped to light tones; annotation text and dashed leader also flipped to light tones and remain legible.
+      Data: Letter colors and stack geometry are pixel-identical to the light render -- only chrome flipped, as required. All letter glyphs are clearly distinguishable from the near-black background; no dark-on-dark failures observed anywhere (title, ticks, axis labels, annotation).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All chrome text explicitly sized and readable in both themes; letter
-          glyphs at near-zero-information positions (4, 10) shrink to hairline slivers
-          that could be hard to spot at mobile widths.
+        comment: All font sizes explicitly set (16px ticks, 18px axis labels, 22px
+          title, 14px annotation); well-proportioned, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No collisions between title, axes, letters, or the peak annotation
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Letter sizes correctly track information content; sparse 10-position
-          layout keeps everything distinguishable.
+        comment: Glyph heights correctly track information content; near-zero positions
+          render as scientifically accurate hairline slivers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, no red-green-only encoding (letters are also
-          labeled by shape).
+        comment: Colors are shape-redundant (each nucleotide is both a distinct letter
+          and color), mitigating CVD concerns
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good margins, no clipping/overflow, title well within width bounds.
+        comment: Canvas dimension gate passed; generous margins, nothing clipped at
+          any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (bits); mandated title format.
+        comment: '"Position" and "Information content (bits)" -- descriptive with
+          units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Domain-standard nucleotide colors mapped to Imprint hues; correct
-          theme-adaptive backgrounds; data colors identical across themes.
+        comment: Domain-standard nucleotide semantic-exception mapping onto Imprint
+          hues; theme-correct backgrounds in both renders
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Professional and clean, but generic sans-serif typography throughout
-          with no distinctive typeface treatment.
+        passed: true
+        comment: Distinctive serif/sans-serif typeface pairing resolves attempt-1
+          feedback; letter glyphs remain plain sans-serif
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped spines, subtle single-axis grid, generous whitespace.
+        comment: L-shaped spines, subtle single-axis grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Height variation clearly flags conserved vs. variable positions,
-          but the hierarchy is largely inherent to the sequence-logo form rather than
-          an added storytelling device.
+        passed: true
+        comment: New "Most conserved position" callout adds an intentional focal point
+          beyond the inherent sequence-logo form
     spec_compliance:
       score: 15
       max: 15
@@ -143,27 +135,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct sequence logo with stacked scaled glyphs.
+        comment: Correct sequence logo
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Frequency-ordered stacking, bits-scaled height (max 2 for DNA), standard
-          color scheme, glyphs stretched not plain text.
+        comment: Stacking by frequency, bits scaling, scaled glyphs, axis labels all
+          present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = all 10 positions, Y = information content in bits, correctly
-          scaled.
+        comment: X=position, Y=information content (bits), all 10 positions shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact mandated title; no legend needed since letters self-label.
+        comment: Title matches mandated format exactly
     data_quality:
       score: 15
       max: 15
@@ -173,22 +164,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full spectrum from highly conserved (position 6, ~1.2 bits) to near-random
-          (positions 4, 10) positions.
+        comment: Varied conservation levels across all 10 positions, including near-zero
+          and highly conserved cases
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Plausible synthetic transcription-factor binding-site motif, neutral
-          subject matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Frequencies sum to 1 per position; bit values sensible for a 4-letter
-          DNA alphabet.
+        comment: Frequencies sum to 1 per position; bits within the 0-2 DNA range
     code_quality:
       score: 9
       max: 10
@@ -198,34 +187,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly flat top-level script; one small entropy helper and a map/sort/entries
-          chain keep it just shy of purest flat style.
+        comment: infoContent() helper plus map/sort/entries chain is a small step
+          from a flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded deterministic data, no RNG needed.
+        comment: Deterministic hard-coded motif data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3, no unused imports.
+        comment: No import statements; uses only the global d3
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: getBBox+scale-transform glyph technique is appropriately sophisticated
-          for the problem; no fake functionality.
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, no animation, current D3 v7 API (join,
-          scaleBand).
+        comment: 'Mounts to #container via ANYPLOT_SIZE, current D3 v7 API, no animation'
     library_mastery:
       score: 8
       max: 10
@@ -235,23 +222,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct scale/axis/join idioms.
+        comment: scaleBand/scaleLinear + axisBottom/axisLeft, idiomatic D3 patterns
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: getBBox-based glyph scaling to stretch text into filled cells is
-          a genuinely distinctive D3 technique, well beyond a basic bar/line chart.
+        comment: getBBox-based glyph scaling to stretch letters into filled cells
+          is a genuinely distinctive D3 technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - glyph-scaling
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - information-content
+  dataprep: []
   styling:
   - publication-ready

@@ -1,7 +1,7 @@
 // anyplot.ai
 // sequence-logo-basic: Sequence Logo for Motif Visualization
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-08-26
+// Quality: 92/100 | Created: 2026-08-26
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
