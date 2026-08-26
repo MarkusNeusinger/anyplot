@@ -135,7 +135,7 @@ new Chart(canvas, {
         display: true,
         text: "ks-test-comparison · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
+        font: { size: 27, weight: "500" },
         padding: { bottom: 8 },
       },
       subtitle: {
@@ -152,6 +152,15 @@ new Chart(canvas, {
           font: { size: 16 },
           usePointStyle: true,
           filter: (item) => item.datasetIndex < 2,
+        },
+      },
+      tooltip: {
+        callbacks: {
+          title: (items) => `Credit score ${Math.round(items[0].parsed.x)}`,
+          label: (item) =>
+            item.datasetIndex === 2
+              ? `Max divergence: D = ${ksD.toFixed(3)}`
+              : `${item.dataset.label.replace(/\s*\(n=\d+\)/, "")}: ${(item.parsed.y * 100).toFixed(1)}% cumulative`,
         },
       },
     },
