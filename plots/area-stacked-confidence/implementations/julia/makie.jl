@@ -78,13 +78,14 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xgridvisible       = false,
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
     xticks             = (quarters[tick_idx], quarter_labels[tick_idx]),
     xticklabelrotation = 0.35,
 )
+hidexdecorations!(ax; grid = false, minorgrid = false)
 
 # Stacked areas drawn first (opaque), then confidence bands overlaid
 # (semi-transparent so overlap with the next layer stays legible), then
@@ -113,6 +114,52 @@ Legend(
     backgroundcolor = PAGE_BG,
 )
 colsize!(fig.layout, 1, Relative(0.8))
+
+# Second linked Axis: the combined 90% PI half-width across all three stacked
+# series, sharing the x-axis with the main plot. This turns the widening
+# bands (visible but implicit above) into the chart's explicit headline
+# insight, using Makie's native multi-panel `linkxaxes!` layout rather than a
+# single fill_between-style band chart.
+total_half_width = vec(sum(half_width, dims = 2))
+
+ax2 = Axis(
+    fig[2, 1];
+    xlabel              = "Fiscal Quarter",
+    ylabel              = "Combined 90% PI\nhalf-width (\$M)",
+    xlabelsize          = 14,
+    ylabelsize          = 12,
+    xlabelcolor         = INK,
+    ylabelcolor         = INK_SOFT,
+    xticklabelsize      = 12,
+    yticklabelsize      = 10,
+    xticklabelcolor     = INK_SOFT,
+    yticklabelcolor     = INK_SOFT,
+    xtickcolor          = INK_SOFT,
+    ytickcolor          = INK_SOFT,
+    backgroundcolor     = PAGE_BG,
+    topspinevisible     = false,
+    rightspinevisible   = false,
+    leftspinecolor      = INK_SOFT,
+    bottomspinecolor    = INK_SOFT,
+    xgridvisible        = false,
+    ygridcolor          = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    xminorgridvisible   = false,
+    yminorgridvisible   = false,
+    xticks              = (quarters[tick_idx], quarter_labels[tick_idx]),
+    xticklabelrotation  = 0.35,
+)
+band!(ax2, quarters, zeros(n_quarters), total_half_width; color = (INK_SOFT, 0.28))
+lines!(ax2, quarters, total_half_width; color = INK_SOFT, linewidth = 2)
+text!(
+    ax2, quarters[end], total_half_width[end] - 0.35;
+    text  = "±$(round(total_half_width[end], digits = 1))M by Q1'29",
+    align = (:right, :top),
+    color = INK,
+    fontsize = 12,
+)
+linkxaxes!(ax, ax2)
+rowsize!(fig.layout, 1, Relative(0.74))
+rowsize!(fig.layout, 2, Relative(0.26))
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
