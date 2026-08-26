@@ -51,6 +51,9 @@ const histogramData = binCounts.map((count, idx) => ({
   y: count,
 }));
 
+const meanAmount =
+  transactionAmounts.reduce((sum, v) => sum + v, 0) / transactionAmounts.length;
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -79,6 +82,22 @@ Highcharts.chart("container", {
         return "$" + Math.round(this.value);
       },
     },
+    plotLines: [
+      {
+        value: meanAmount,
+        color: t.ink,
+        width: 2,
+        dashStyle: "Dash",
+        zIndex: 5,
+        label: {
+          text: `Mean: $${meanAmount.toFixed(0)}`,
+          style: { color: t.inkSoft, fontSize: "13px", fontWeight: "600" },
+          rotation: 0,
+          y: -8,
+          x: 4,
+        },
+      },
+    ],
   },
   yAxis: {
     min: 0,
@@ -106,6 +125,12 @@ Highcharts.chart("container", {
       groupPadding: 0,
       borderWidth: 1,
       borderColor: t.pageBg,
+      states: {
+        hover: {
+          brightness: 0.1,
+          borderColor: t.ink,
+        },
+      },
     },
   },
   series: [{ name: "Transactions", data: histogramData, color: t.palette[0] }],
