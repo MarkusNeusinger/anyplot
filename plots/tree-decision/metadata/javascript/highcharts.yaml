@@ -1,0 +1,246 @@
+library: highcharts
+language: javascript
+specification_id: tree-decision
+created: '2026-08-26T17:11:17Z'
+updated: '2026-08-26T17:22:22Z'
+generated_by: claude-sonnet
+workflow_run: 32991798227
+issue: 4569
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/tree-decision/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Hand-verified EMV rollback math is exactly correct at every node — a real analytical
+    decision tree, not just decorative numbers
+  - 'Clear, consistent semantic color language: brand green for "go" decisions, lavender
+    for chance, neutral ink for terminal reference points, and Imprint''s semantic-red
+    anchor reserved specifically for pruned/rejected branches'
+  - 'Creative, correct workaround for Highcharts'' missing networkgraph module: custom
+    right-pointing triangle symbol + render-event-driven connector/label overlay kept
+    in sync with the scatter axes via toPixels()'
+  - Redundant encoding (shape + dash-pattern + cross-mark + opacity) makes the chart
+    robust for colorblind readers
+  - Both renders pass theme-readability with identical data colors and fully flipped
+    chrome
+  weaknesses:
+  - A few branch-probability labels (e.g. "High Demand (p=0.50)", "Medium Demand (p=0.30)")
+    sit directly on the connector line rather than being offset or given a small background
+    chip, which is legible but slightly less crisp
+  - The script uses four small helper functions (fmtMoney, hexToRgba, toPoint, drawBranches)
+    rather than a fully flat top-to-bottom script
+  - The diagonal tree layout leaves the top-left and bottom-right canvas corners comparatively
+    empty — inherent to left-to-right tree layouts, not a defect
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1, not pure white
+      Chrome: title "tree-decision · javascript · highcharts · anyplot.ai" and subtitle are dark and fully legible; node-name labels, EMV/payoff labels, and branch-probability labels are dark/dark-soft text, all readable against the light background
+      Data: decision nodes (squares) are brand green #009E73 (first series); chance nodes (circles) are lavender (Imprint position 2); terminal nodes (triangles) are near-black (theme-adaptive "neutral" anchor); pruned branches are dashed matte red (Imprint position 5) with a red cross mark, faded terminal fill
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17, not pure black
+      Chrome: title and node-name labels are near-white; subtitle, EMV/payoff, and branch-probability labels are light gray; connector lines flipped from dark gray to light gray; no dark-on-dark text found anywhere
+      Data: decision nodes still #009E73, chance nodes still the same lavender, pruned branches still the same matte red — identical to light render; terminal-node fill flips to a light neutral tone (theme-adaptive) and remains clearly visible
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized and legible in both themes; a few branch-probability
+          labels sit directly on the connector line rather than being offset.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-marker collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radii and line widths well-matched to a compact 10-node tree;
+          pruned elements clearly distinguished.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Shape redundantly encodes node type; dash+cross-mark redundantly
+          encodes pruned status, independent of color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Diagonal tree spans corner-to-corner, centered legend, nothing clipped
+          or isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes intentionally hidden (appropriate for a positional tree diagram);
+          title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, chance nodes Imprint position 2, pruned branches
+          Imprint position 5 (semantic red), terminal nodes use theme-adaptive neutral
+          anchor; theme-correct chrome in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate semantic color system well above configured defaults,
+          typography stays fairly plain.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes fully hidden, no grid, generous whitespace, subtle marker borders.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Solid-optimal vs. dashed-red-pruned encoding makes the recommended
+          path immediately obvious.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct decision-tree structure via a legitimate scatter+custom-renderer
+          workaround for the missing networkgraph module.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: shapes, layout, pruning marks, EMV labels,
+          summing probabilities, correct branch-label content.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y used purely for tree layout positioning, appropriate for a node-link
+          diagram.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; legend entries match node shapes.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Two-stage decision, both decision and chance stages, positive and
+          negative terminal payoffs, accepted and rejected branches.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral R&D-investment business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Hand-verified EMV rollback arithmetic is exactly correct at every
+          node.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear but relies on four small helper functions.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hand-authored in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, only the provided globals.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactive elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Current Highcharts 12.x API, no deprecated calls.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of render events, multi-entry dataLabels, plotOptions,
+          axis pixel-mapping.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom marker symbol registration + render-synced SVG overlay via
+          chart.renderer and toPixels() — a Highcharts-specific workaround technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
