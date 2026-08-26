@@ -1,7 +1,7 @@
 // anyplot.ai
 // alluvial-opinion-flow: Opinion Flow Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-08-26
+// Quality: 90/100 | Created: 2026-08-26
 
 //# anyplot-orientation: landscape
 
