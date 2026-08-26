@@ -1,3 +1,7 @@
+// anyplot.ai
+// scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-08-26
 //# anyplot-orientation: square
 // anyplot.ai
 // scatter-complex-plane: Complex Plane Visualization (Argand Diagram)
