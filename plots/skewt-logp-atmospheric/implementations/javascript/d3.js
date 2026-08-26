@@ -107,8 +107,8 @@ svg
   .append("clipPath")
   .attr("id", "plot-clip")
   .append("rect")
-  .attr("x", margin.left)
-  .attr("y", margin.top)
+  .attr("x", 0)
+  .attr("y", 0)
   .attr("width", iw)
   .attr("height", ih);
 const clipped = g.append("g").attr("clip-path", "url(#plot-clip)");
@@ -156,7 +156,7 @@ clipped
   .attr("x", (tempC) => toX(tempC, 1000) + 6)
   .attr("y", ih - 8)
   .attr("fill", t.inkSoft)
-  .style("font-size", "12px")
+  .style("font-size", "13px")
   .text((tempC) => `${tempC}`);
 
 // --- Dry adiabats --------------------------------------------------------------
@@ -181,7 +181,7 @@ clipped
   .attr("class", "moist-adiabat")
   .attr("d", (startTempC) => skewLine(moistAdiabatPoints(startTempC)))
   .attr("fill", "none")
-  .attr("stroke", t.palette[5]) // cyan — moist / cool-sky reference lines
+  .attr("stroke", t.palette[1]) // lavender — canonical next slot for abstract reference lines
   .attr("stroke-width", 1.5)
   .attr("stroke-dasharray", "2,4")
   .attr("opacity", 0.7);
@@ -195,7 +195,7 @@ clipped
   .attr("class", "mixing-ratio")
   .attr("d", (w) => skewLine(mixingRatioPoints(w)))
   .attr("fill", "none")
-  .attr("stroke", t.palette[7]) // lime — classic mixing-ratio green
+  .attr("stroke", t.palette[5]) // cyan — canonical next slot for abstract reference lines
   .attr("stroke-width", 1.5)
   .attr("stroke-dasharray", "6,4")
   .attr("opacity", 0.7);
@@ -207,8 +207,8 @@ clipped
   .attr("x", (w) => toX(mixingRatioT(w, 400), 400))
   .attr("y", toY(400) - 6)
   .attr("text-anchor", "middle")
-  .attr("fill", t.palette[7])
-  .style("font-size", "11px")
+  .attr("fill", t.palette[5])
+  .style("font-size", "13px")
   .text((w) => `${w}`);
 
 // --- Temperature & dewpoint profiles --------------------------------------------
@@ -260,8 +260,8 @@ const legendItems = [
   { label: "Temperature", color: t.palette[0], dash: null },
   { label: "Dewpoint", color: t.palette[2], dash: "10,6" },
   { label: "Dry adiabat", color: t.palette[3], dash: null },
-  { label: "Moist adiabat", color: t.palette[5], dash: "2,4" },
-  { label: "Mixing ratio (g/kg)", color: t.palette[7], dash: "6,4" },
+  { label: "Moist adiabat", color: t.palette[1], dash: "2,4" },
+  { label: "Mixing ratio (g/kg)", color: t.palette[5], dash: "6,4" },
 ];
 const legend = g.append("g").attr("transform", `translate(18,18)`);
 legend
