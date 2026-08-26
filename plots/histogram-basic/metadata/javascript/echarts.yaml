@@ -1,0 +1,248 @@
+library: echarts
+language: javascript
+specification_id: histogram-basic
+created: '2026-08-26T06:19:51Z'
+updated: '2026-08-26T06:31:57Z'
+generated_by: claude-sonnet
+workflow_run: 32937303148
+issue: 654
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/echarts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - Correct, realistic right-skewed delivery-time dataset with a clean deterministic
+    LCG generator
+  - Spec's binning requirements (no gaps, thin visible bin edges, y-axis starts at
+    0) are all implemented correctly
+  - Theme-adaptive chrome and Imprint palette are correctly threaded through in both
+    light and dark renders — no legibility failures in either theme
+  - 'The added mean markLine directly addresses the prior review''s storytelling and
+    library-mastery gaps: it highlights the mean (25.0 min) against the visible right-skew,
+    and the dashed line + rotated label both use theme-adaptive ink so it reads correctly
+    in both themes'
+  - Explicit font sizing throughout produces a well-proportioned, uncluttered layout
+  weaknesses:
+  - Still a single flat-green fill beyond the new mean line — no gradient, no secondary
+    visual device to lift DE-01 aesthetic sophistication further
+  - The mean markLine is a good first storytelling device but doesn't call out the
+    mode/peak bin (~19 min) — combining both would give a stronger 'here's the shape'
+    narrative
+  - markLine is a solid ECharts-specific feature, but a visualMap gradient tied to
+    bar height or a markArea band would push Library Mastery further into distinctive
+    territory
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "histogram-basic · javascript · echarts · anyplot.ai" centered at top, dark axis titles ("Delivery Time (minutes)", "Frequency"), dark tick labels, subtle horizontal gridlines only. A dashed dark-ink vertical markLine sits at the mean bin with a rotated "Mean: 25.0 min" label above it. All text clearly visible against the light background.
+      Data: Single-series green (#009E73) bars, 22 contiguous bins with thin off-white borders separating them, right-skewed distribution peaking around the 19-minute bin (~56 count) tailing off toward 62 minutes. The mean line sits visibly right of the peak, correctly illustrating the right-skew pulling the mean above the mode.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis titles/tick labels rendered in light/white text, subtle light-gray gridlines. The mean markLine and its label correctly flip to light-ink/white (theme-adaptive `t.ink`), fully legible against the dark background — no dark-on-dark failures found.
+      Data: Bars are the identical #009E73 green as the light render — only chrome (background, text, gridlines, markLine ink) flipped between themes, data colors unchanged.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis names 16px, ticks
+          14px, mean label 13px); well-proportioned, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; mean label sits clear of the title and gridlines
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 22 bins appropriately sized for 400 samples; thin borders separate
+          bins per spec
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue bars on neutral background, strong contrast in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Delivery Time (minutes)'', ''Frequency'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds match #FAF8F1/#1A1A17; both
+          renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default; the added mean line is functional rather
+          than a stylistic device
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Hidden y-axis line, horizontal-only gridlines, bar edge separation,
+          plus a consistently-styled dashed reference line — more polish than a bare
+          default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean markLine now actively interprets the distribution, visually
+          connecting the right-skew to where the mean lands relative to the peak
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct basic histogram via binned bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No gaps between bars, thin visible bin edges, y-axis starts at 0
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = delivery-time bins, Y = frequency count, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; no legend needed for single
+          series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear right-skewed unimodal shape with visible tail matches spec
+          guidance; a multimodal alternative would show more edge cases but isn't
+          required
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Parcel delivery times via Erlang-shaped process is real, neutral,
+          comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8-62 minute range and count magnitudes (400 samples) are plausible
+          for delivery-time data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports->data->option flow; makeLcg helper is standard JS
+          seeded-RNG pattern
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42), fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global echarts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI/interactivity; markLine addition is minimal and
+          well-integrated
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no explicit size/dPR, animation:false
+          set
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level setOption with category/value axes, bar series,
+          and markLine; idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Now uses ECharts' markLine for a themed mean-reference annotation
+          — a real library-specific feature, though a visualMap gradient or markArea
+          would push this further
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting

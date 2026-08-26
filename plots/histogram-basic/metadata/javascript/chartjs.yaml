@@ -1,0 +1,245 @@
+library: chartjs
+language: javascript
+specification_id: histogram-basic
+created: '2026-08-26T06:15:51Z'
+updated: '2026-08-26T06:31:53Z'
+generated_by: claude-sonnet
+workflow_run: 32936943447
+issue: 654
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Modal bin is highlighted with a second Imprint palette color (palette[2]) and
+    the mean score is annotated with a dashed reference line and label via a custom
+    afterDatasetsDraw plugin, directly fixing the attempt-1 'no visual hierarchy or
+    storytelling' finding.
+  - Widened separation between the two generating normal distributions (mean 78 vs
+    mean 40, 80/20 mix) now produces a clearly legible secondary bump around scores
+    32-46, fixing the attempt-1 'mixture barely visible' finding.
+  - Y-axis label now reads 'Frequency (Students)', adding the units that attempt 1
+    was missing.
+  - Correct zero-gap histogram encoding (categoryPercentage/barPercentage = 1.0) with
+    thin pageBg-colored borders between bins, beginAtZero on the y-axis, deterministic
+    fixed-seed LCG data generation, and theme-correct chrome in both renders.
+  - Custom Chart.js plugin (afterDatasetsDraw) for the mean-line annotation is a genuine
+    library-specific technique, not a generic bar-as-histogram default.
+  weaknesses:
+  - The modal bin's blue highlight color has no legend or annotation explaining what
+    it represents — a viewer sees one bar colored differently from the rest with no
+    textual cue (unlike the mean line, which is self-labeled). Consider a small 'Most
+    common range' label or caption near the bar.
+  - 'Design Excellence is solid but still fairly minimal: one accent color plus one
+    reference line. Further hierarchy (e.g. a subtle callout box, secondary annotation
+    for the smaller cluster) would push this toward publication-grade polish.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "histogram-basic · javascript · chartjs · anyplot.ai" bold dark ink, centered top, fully visible with no clipping. X-axis title "Exam Score" and Y-axis title "Frequency (Students)" in dark ink, both legible. Tick labels in a softer gray, readable. Subtle horizontal-only gridlines. A dashed black vertical reference line labeled "Mean: 70.1" sits above the modal bin cluster and does not overlap the title.
+      Data: 20 contiguous bars, no gaps, thin off-white (pageBg) borders between bins. All bars are Imprint brand green (#009E73) except the single tallest (modal) bin, which is a second Imprint palette blue. Distribution shows a dominant right-side cluster (scores ~63-92) plus a clearly visible secondary bump around scores 32-46, correctly reflecting the two-group generating mixture.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white ink, fully legible against the dark background. The mean-line dashed reference and its label switch to white ink, still readable and non-overlapping with the title. Gridlines remain subtle.
+      Data: Same 20 bars with identical green/blue data colors as the light render (only the bin-separator border color flips to match pageBg) — confirms only chrome changed between themes. No dark-on-dark text failures found; all labels and the mean annotation are clearly visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All fonts explicitly sized, readable in both themes and at ~400px
+          mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Mean-line label sits clear of the title and bars, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and mean line clearly visible against both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue accent, not red-green as sole signal, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis now includes units ('Frequency (Students)'), fixing attempt-1
+          feedback
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/majority series is #009E73; modal accent uses in-palette color;
+          backgrounds theme-correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Two-tone modal accent plus mean-line annotation create intentional
+          hierarchy, up from the flat single-color fill in attempt 1
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean y-axis-only grid, no clutter, but otherwise unchanged from
+          attempt 1's refinement level
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Modal bin and mean line give a clear focal point, but the blue modal
+          color is not itself labeled/explained
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram via binned bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: No gaps between bars, thin bin-edge borders, y-axis starts at zero
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = score bins, Y = frequency, all data represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend correctly omitted for single
+          series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Secondary cluster around scores 32-46 is now clearly visible, fixing
+          attempt-1's 'barely visible mixture' finding
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Exam-score scenario is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 score range with sensible frequency counts for 400 students
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small LCG/normal helpers and the plugin object are necessary for
+          the technique, not over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses harness globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; plugin draws a real, functional reference
+          line
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, current Chart.js
+          API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic bar-as-histogram plus correct use of the Chart.js plugin
+          API (afterDatasetsDraw)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin for the mean-line annotation is a
+          genuine chartjs-specific feature, fixing attempt-1's 'generic technique'
+          finding
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - edge-highlighting
