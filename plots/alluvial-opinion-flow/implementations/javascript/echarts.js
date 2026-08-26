@@ -59,6 +59,21 @@ TRANSITIONS.forEach((matrix) => {
   totals.push(next);
 });
 
+// Net polarization callout: how the neutral middle and the disagree side
+// moved from the first wave to the last — computed from the same totals
+// driving the diagram, not a separate hard-coded claim.
+const firstTotals = totals[0];
+const lastTotals = totals[totals.length - 1];
+const pctChange = (from, to) => Math.round(((to - from) / from) * 100);
+const neutralPct = pctChange(firstTotals[2], lastTotals[2]);
+const disagreeSidePct = pctChange(
+  firstTotals[3] + firstTotals[4],
+  lastTotals[3] + lastTotals[4],
+);
+const polarizationCallout =
+  `Polarization trend: Neutral ${neutralPct}%, ` +
+  `Disagree + Strongly Disagree ${disagreeSidePct >= 0 ? "+" : ""}${disagreeSidePct}% (Q1 → Q4)`;
+
 const nodes = [];
 WAVES.forEach((wave, w) => {
   CATEGORIES.forEach((cat, c) => {
@@ -70,10 +85,7 @@ WAVES.forEach((wave, w) => {
       label: {
         position: w === WAVES.length - 1 ? "left" : "right",
         formatter: (params) =>
-          params.data.category +
-          "\n" +
-          params.data.total.toLocaleString() +
-          " resp.",
+          params.data.category + "\n" + params.data.total.toLocaleString(),
       },
     });
   });
@@ -93,8 +105,8 @@ TRANSITIONS.forEach((matrix, gap) => {
         value: count,
         lineStyle: {
           color: CATEGORIES[srcIdx].color,
-          opacity: stable ? 0.55 : 0.16,
-          curveness: 0.5,
+          opacity: stable ? 0.55 : 0.09,
+          curveness: 0.42,
         },
       });
     });
@@ -120,6 +132,22 @@ const graphicHeaders = WAVES.map((wave, i) => ({
   },
 }));
 
+// Explicit callout (spec asks to "highlight net flows … to reveal
+// polarization trends") so the shrinking-middle / growing-disagreement
+// story reads without comparing node totals by eye.
+const polarizationAnnotation = {
+  type: "text",
+  left: "center",
+  top: 62,
+  style: {
+    text: polarizationCallout,
+    fill: t.inkSoft,
+    fontSize: 15,
+    fontWeight: 600,
+    align: "center",
+  },
+};
+
 // --- Option ---------------------------------------------------------------
 chart.setOption({
   animation: false,
@@ -130,7 +158,7 @@ chart.setOption({
     top: 24,
     textStyle: { color: t.ink, fontSize: 22 },
   },
-  graphic: { elements: graphicHeaders },
+  graphic: { elements: [polarizationAnnotation, ...graphicHeaders] },
   series: [
     {
       type: "sankey",
@@ -150,7 +178,7 @@ chart.setOption({
         fontSize: 13,
         lineHeight: 16,
       },
-      lineStyle: { curveness: 0.5 },
+      lineStyle: { curveness: 0.42 },
     },
   ],
 });
