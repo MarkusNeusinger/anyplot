@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: raincloud-basic
 created: '2026-08-26T10:36:20Z'
-updated: '2026-08-26T10:40:51Z'
+updated: '2026-08-26T10:46:59Z'
 generated_by: claude-sonnet
 workflow_run: 32958475645
 issue: 1876
@@ -12,50 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/raincloud
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/raincloud-basic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - 'Correct raincloud composite: half-violin clipped to only the upper half, box
-    plot centered on the category baseline, jittered rain strictly below the baseline
-    — exactly matching the required cloud-above / box-on-line / rain-below layout
-    for horizontal orientation.'
-  - 'Deterministic seeded LCG data generation with a genuinely bimodal 50 mg-dose
-    group (fast responders vs. non-responders) that demonstrates precisely what a
-    raincloud plot is for: revealing multimodality a plain box plot would hide.'
-  - Correct Imprint palette order (green/lavender/blue/ochre) and correct theme-adaptive
-    chrome (t.ink, t.elevatedBg, t.pageBg) — verified consistent data colors and fully
-    readable chrome text in both light and dark renders.
-  - No edge clipping anywhere; canvas dimension gate passed; left margin sized to
-    fit the longest category label without crowding.
-  - Uses MUI X's documented composition API (useXScale/useYScale/useDrawingArea plus
-    raw SVG) — the correct, library-sanctioned approach for a chart type the community
-    package has no built-in support for.
+  - 'Correct raincloud composite: half-violin clipped to the upper half, box centered
+    on the baseline, rain strictly below — exactly matching the required horizontal
+    cloud-above/box-on/rain-below layout.'
+  - New subtle vertical gridlines (15%-opacity ink, aligned with x-axis ticks) directly
+    address the attempt-1 feedback and noticeably improve cross-category value comparison
+    without adding clutter.
+  - Deterministic seeded LCG data with a genuinely bimodal 50 mg-dose group (fast
+    responders vs. non-responders) that demonstrates exactly what a raincloud plot
+    is for.
+  - Correct Imprint palette order (green, lavender, blue, ochre) and correct theme-adaptive
+    chrome, verified consistent across both renders.
+  - No edge clipping anywhere; canvas dimension gate passed.
+  - Uses MUI X's documented composition API (useXScale/useYScale/useDrawingArea) —
+    the library-sanctioned approach for a chart type the community package has no
+    built-in support for.
   weaknesses:
-  - No gridlines make it slightly harder to compare exact reaction-time values across
-    the four category rows — a subtle vertical gridline (10-15% opacity, per style
-    guide) would aid cross-row alignment without adding clutter.
-  - The y-axis has no descriptive axis title (only the x-axis has 'Reaction Time (ms)');
-    category names are self-explanatory so this is minor, but a small 'Group' label
-    would complete the symmetry.
-  - As an interactive-library entry, the implementation doesn't lean on any MUI X
-    interactive affordances (tooltip customization, interactive legend) beyond scale
-    hooks — acceptable since these don't show in the static PNG, but a missed opportunity
-    for the HTML detail view.
-  - The statistical helper code (quantile/boxStats/kde/gaussianSample) is real complexity
-    in the file, justified by the lack of a stats library in the browser runtime,
-    but worth watching if the file grows further.
+  - Still doesn't showcase distinctive MUI X features beyond the scale/composition
+    hooks (e.g. no tooltip or legend customization in the interactive HTML output)
+    — acceptable but leaves Library Mastery capped.
+  - Y-axis has no descriptive axis title (categories are self-explanatory, so this
+    is minor).
+  - Statistical helper code (quantile/boxStats/kde/gaussianSample) adds real complexity
+    to an otherwise KISS-structured file, though justified by the lack of a browser
+    stats library.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "raincloud-basic · javascript · muix · anyplot.ai" in bold dark ink centered at top, clearly readable. X-axis labeled "Reaction Time (ms)" with dark tick labels every 20 ms from 280 to 660. Y-axis category labels (Placebo, 10 mg Dose, 25 mg Dose, 50 mg Dose) in dark ink to the left of each row, fully legible, no clipping.
-      Data: Four horizontal rows, each with a half-violin "cloud" rising above a thin baseline, a white-filled box (with dark outline, median line, and whisker caps) centered on the baseline, and jittered semi-transparent "rain" points scattered below the baseline. First series (Placebo) is brand green #009E73, followed by lavender, blue, and ochre — matching the canonical Imprint categorical order. The 50 mg row visibly shows a bimodal/skewed cloud shape versus the roughly unimodal shapes of the other three rows.
-      Legibility verdict: PASS — all title, axis, and tick text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "raincloud-basic · javascript · muix · anyplot.ai" centered at top. X-axis labeled "Reaction Time (ms)" with dark tick labels every 20 ms from 280-660. New subtle vertical gridlines (light grey, ~15% opacity) now run the full plot height aligned with the x-axis ticks. Four horizontal category rows (Placebo, 10 mg Dose, 25 mg Dose, 50 mg Dose) with dark category labels on the left.
+      Data: Each row shows a half-violin "cloud" rising above the baseline, a white-filled box (median line + whisker caps) centered on the baseline, and jittered semi-transparent rain points below. Colors follow the canonical Imprint order: green, lavender, blue, ochre — first series is #009E73 green. The 50 mg row visibly shows a bimodal cloud shape (two humps) versus the roughly unimodal others.
+      Legibility verdict: PASS — all text (title, axis label, tick labels, category labels) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis label, and tick labels all render in light/off-white ink, clearly visible against the dark background. Category labels on the left remain fully legible. Box fills switch to the dark elevated tone with white/light strokes and whisker lines, box outlines and whisker caps rendered in light ink instead of dark ink.
-      Data: Same four categories in the same order; data colors (green, lavender, blue, ochre) are visually identical to the light render — only the chrome (background, box fill, ink strokes) flipped for the dark theme, as required.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements (title, axis labels, tick labels, box strokes) use light ink on the dark surface and remain fully readable.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis label, and tick labels render in light/off-white ink, fully legible. The same vertical gridlines are present at matching low opacity in light ink. Box fills switch to the dark elevated tone with light strokes; whisker lines, box outlines, and median lines render in light ink instead of dark ink.
+      Data: Data colors (green, lavender, blue, ochre) are visually identical to the light render — only chrome flipped, as required. Cloud fill/stroke opacity and rain-point alpha match the light render.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all chrome elements are clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -66,52 +61,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 22px, axis label 16px, tick labels 14-15px — matches muix guidance,
-          all readable in both themes
+        comment: All text readable in both themes; fonts explicitly sized
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Box, whiskers, and rain points stay cleanly separated across all
-          four rows; no text/data collisions
+        comment: No collisions between text, box, cloud, or rain points
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Rain markers (r=4, alpha 0.55) sized appropriately for ~70 points/category;
-          box and whisker lines clearly visible
+        comment: Rain-point radius/alpha and cloud opacity appropriate for ~70 pts/group
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Ink-outlined boxes give redundant encoding; categories are also spatially
-          separated by row
+        comment: Imprint palette, adequate contrast, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; margins fit longest category label; no overflow
-          or clipping
+        comment: Good proportions, nothing cut off, new gridlines aligned cleanly
+          with ticks
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units ('Reaction Time (ms)'); title matches required
-          format
+        comment: '''Reaction Time (ms)'' descriptive with units; mandated title format
+          correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Canonical Imprint order (green/lavender/blue/ochre); backgrounds
-          match #FAF8F1 / #1A1A17; data colors identical across themes'
+        comment: 'First series #009E73, canonical order, correct theme backgrounds
+          both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -119,22 +110,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom composite chart built via documented composition API, elevated
-          box fill, whisker caps, layered alpha blending
+        comment: Custom composite chart via documented composition API, elevated box
+          fill, alpha-layered cloud
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Y-axis line/ticks removed for clean look, generous whitespace, but
-          no gridlines to aid cross-row value comparison
+        passed: true
+        comment: New subtle vertical gridlines (15% opacity) resolve the attempt-1
+          weakness; clean minimal chrome otherwise
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bimodal 50mg cloud shape and dose-response gradient are visually
-          apparent, though not called out with annotation
+        comment: Bimodal 50mg group and dose-response gradient are visually apparent
     spec_compliance:
       score: 15
       max: 15
@@ -144,27 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct raincloud composite (half-violin + box + jittered strip)
+        comment: Correct raincloud composite (half-violin + box + rain)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, cloud above/box on/rain below baseline, clipped
-          half-violin, jitter and alpha within spec ranges, median+quartiles present
+        comment: Cloud above / box on / rain below, clipped half-violin, jitter, alpha,
+          median+quartiles all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on y-axis, values on x-axis, correctly mapped
+        comment: Categories on y-axis, values on x-axis, horizontal orientation as
+          required
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend needed since categories are directly
-          labeled on the y-axis
+        comment: Title matches mandated format; no legend needed (categories self-labeled
+          on y-axis)
     data_quality:
       score: 15
       max: 15
@@ -174,21 +165,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All raincloud elements present with a deliberately multimodal group
-          to showcase the plot type's purpose
+        comment: Shows distribution shape, summary stats, and individual observations
+          simultaneously
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible clinical-trial reaction-time scenario across a
-          dose gradient
+        comment: Plausible, neutral drug-trial reaction-time scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times in a realistic 280-660ms range for a cognitive task
+        comment: Reaction times in a sensible 280-660 ms range, 70 obs/group
     code_quality:
       score: 9
       max: 10
@@ -198,33 +188,34 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (LCG, KDE, quantiles) but justified by the
-          lack of a browser stats library for a composite plot type
+        comment: Necessary helper functions (LCG, KDE, box stats) add some structure
+          beyond minimal script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG throughout, including jitter
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer/axes/hooks imported from @mui/x-charts, all used
+        comment: Only used @mui/x-charts imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean raw-SVG composition via documented hooks, no fake UI
+        comment: No fake UI/interactivity; appropriate complexity for the composite
+          chart
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation set, sized to ANYPLOT_SIZE,
-          harness contract respected
+        comment: 'Harness contract respected: default export, skipAnimation, sized
+          to ANYPLOT_SIZE'
     library_mastery:
       score: 6
       max: 10
@@ -234,15 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the library-recommended composition API (useXScale/useYScale/useDrawingArea)
-          for a chart type without built-in support
+        comment: Documented composition API (useXScale/useYScale/useDrawingArea) used
+          correctly
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Mostly uses MUI X for scale/axis machinery; doesn't showcase other
-          distinctive library features like custom tooltips or legends
+        comment: Still mostly uses MUI X for scale/axis machinery; doesn't showcase
+          other distinctive library features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -255,4 +246,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
+  - grid-styling
