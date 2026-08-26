@@ -13,6 +13,12 @@ const software = [27, 32, 35, 39];
 const services = [18, 21, 19, 24];
 const support = [11, 14, 13, 16];
 
+// The strongest quarter (highest stacked total) anchors the storytelling
+// emphasis below — a soft highlight band plus a bolder, brand-green total
+// label draw the eye straight to it.
+const peakIndex = quarters.length - 1;
+const peakBand = Highcharts.color(t.palette[0]).setOpacity(0.08).get();
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -25,13 +31,29 @@ Highcharts.chart("container", {
   colors: t.palette,
   title: {
     text: "bar-stacked-labeled · javascript · highcharts · anyplot.ai",
-    style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
+    style: { color: t.ink, fontSize: "27px", fontWeight: "700" },
+  },
+  subtitle: {
+    text:
+      "Q" +
+      quarters.length +
+      " leads at $" +
+      hardware[peakIndex] +
+      "M in Hardware — total revenue climbs every quarter",
+    style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
     categories: quarters,
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: peakIndex - 0.5,
+        to: peakIndex + 0.5,
+        color: peakBand,
+      },
+    ],
   },
   yAxis: {
     title: {
@@ -44,14 +66,21 @@ Highcharts.chart("container", {
     maxPadding: 0.14,
     stackLabels: {
       enabled: true,
-      style: {
-        color: t.ink,
-        fontSize: "17px",
-        fontWeight: "700",
-        textOutline: "none",
-      },
+      useHTML: true,
+      style: { textOutline: "none" },
       formatter: function () {
-        return "$" + this.total + "M";
+        const isPeak = this.x === peakIndex;
+        const color = isPeak ? t.palette[0] : t.ink;
+        const fontSize = isPeak ? "19px" : "17px";
+        return (
+          '<span style="color:' +
+          color +
+          ";font-size:" +
+          fontSize +
+          ';font-weight:700;">$' +
+          this.total +
+          "M</span>"
+        );
       },
     },
   },
@@ -63,6 +92,7 @@ Highcharts.chart("container", {
     series: { animation: false },
     column: {
       borderWidth: 0,
+      borderRadius: 2,
       stacking: "normal",
       pointPadding: 0.08,
       groupPadding: 0.14,
