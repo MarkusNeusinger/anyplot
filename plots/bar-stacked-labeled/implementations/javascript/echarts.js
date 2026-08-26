@@ -19,7 +19,7 @@ const totals = quarters.map((_, i) =>
 );
 const yAxisMax = Math.ceil((Math.max(...totals) * 1.15) / 50) * 50;
 
-const title = "Cloud Spend by Service · bar-stacked-labeled · javascript · echarts · anyplot.ai";
+const title = "Cloud Spend · bar-stacked-labeled · javascript · echarts · anyplot.ai";
 const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
 
 // --- Init ---------------------------------------------------------------------
@@ -52,7 +52,7 @@ chart.setOption({
   xAxis: {
     type: "category",
     data: quarters,
-    axisLabel: { color: t.inkSoft, fontSize: 16 },
+    axisLabel: { color: t.inkSoft, fontSize: 14 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
@@ -80,7 +80,11 @@ chart.setOption({
       name: "Total",
       type: "bar",
       stack: "spend",
-      data: totals.map(() => 0),
+      data: totals.map((_, i) =>
+        i === totals.length - 1
+          ? { value: 0, label: { fontSize: 23, color: t.palette[0] } }
+          : 0
+      ),
       itemStyle: { color: "transparent" },
       silent: true,
       tooltip: { show: false },
