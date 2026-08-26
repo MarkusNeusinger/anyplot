@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: map-tile-background
 created: '2026-08-26T08:36:07Z'
-updated: '2026-08-26T08:41:07Z'
+updated: '2026-08-26T08:52:19Z'
 generated_by: claude-sonnet
 workflow_run: 32947819888
 issue: 3756
@@ -12,56 +12,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-tile-background/javascript/echarts/plot-dark.html
-quality_score: 78
+quality_score: 79
 review:
   strengths:
-  - Honestly discloses the offline-render constraint in the subtitle ("schematic tile
-    backdrop (offline render, no live tile provider)") instead of pretending a fake
-    tile image is real
-  - 'Idiomatic ECharts composition: a custom renderItem series draws the tile-grid
-    backdrop while a separate scatter series handles the data points, with labelLayout
-    hideOverlap preventing label collisions'
-  - Theme-adaptive chrome is correctly wired end-to-end — tile fills, grid strokes,
-    title/subtitle/label text, and backgrounds all read cleanly in both light and
-    dark with no dark-on-dark or light-on-light failures
-  - 'Correct Imprint palette usage (brand green #009E73 for all markers, identical
-    between themes) and correct mount-node/API contract (no explicit devicePixelRatio,
-    animation: false)'
-  - Deterministic, realistic data (12 major US cities with plausible annual visitor
-    counts) with a sensible latitude-corrected equirectangular projection as a stand-in
-    for Web Mercator
+  - Marker size encodes annual visitors and the top destination gets a distinct ★
+    label plus amber outline, giving the map a clear visual hierarchy and focal point.
+  - Land/water classification is computed geometrically via point-in-polygon against
+    a real (if simplified) US coastline polygon, rather than a static checkerboard
+    — a more genuine schematic basemap.
+  - Honest, well-placed basemap attribution text discloses the offline-render limitation
+    instead of pretending a live tile provider was used.
+  - Imprint palette and theme tokens are correctly threaded through markers, highlight
+    color, coastline, and chrome in both themes — data colors are identical between
+    light and dark.
   weaknesses:
-  - The tile backdrop is a plain alternating checkerboard with zero geographic information
-    (no coastline, state borders, or terrain shape) — it does not deliver the spec's
-    core value of 'rich geographic context' for location-based analysis; consider
-    baking a minimal simplified US coastline/state-border polyline (hardcoded coordinate
-    array) into the custom series so the backdrop actually traces real geography even
-    without live tiles
-  - Spec's 'support multiple tile providers (OpenStreetMap, Stamen, CartoDB, satellite)'
-    and 'include proper attribution for tile providers' are not addressed at all —
-    there is only one undifferentiated grid style and no attribution/caption element
-  - 'Data storytelling is flat: size encodes visitor count but there is no focal emphasis
-    (e.g. highlighting the top city) to guide the viewer to the most important data
-    point'
-  - Visual polish is functional but generic — the alternating tile shades and thin
-    grid produce a plain grid look; a touch more differentiation (e.g. subtle shading
-    variation or a border treatment distinguishing 'land' vs 'water' cells) would
-    elevate aesthetic sophistication
+  - 'Land/water tile background is nearly invisible: land cells fill with `elevatedBg`,
+    which is only marginally distinct from the `pageBg` canvas, and water cells are
+    fully transparent. In both renders the schematic basemap reads as a near-blank
+    grid rather than a recognizable tile background — increase the land/water fill
+    contrast (e.g. push land cells further from the page background, add a faint tint
+    for water) so the terrain distinction the spec calls for is actually visible.'
+  - 'No zoom/pan interaction is wired up. The spec''s Notes explicitly ask interactive
+    libraries to ''enable zoom and pan to explore data at different scales,'' but
+    the cartesian2d custom-series setup has no `dataZoom`/`roam` equivalent — add
+    `dataZoom` (or move to a `geo`/coordinate system with `roam: true`) so the HTML
+    detail view supports zoom/pan.'
+  - The hardcoded US border/coastline polyline self-intersects near the New England
+    coast (Maine → an offshore point → back inland before reaching the Great Lakes),
+    producing a visible triangular spike that crosses right next to the New York and
+    Boston markers in both renders — it reads as a rendering glitch rather than a
+    coastline. Reorder/smooth that segment of `US_OUTLINE_LONLAT` so the path doesn't
+    cross itself.
+  - Spec asks for support for multiple tile providers (OpenStreetMap, Stamen, CartoDB,
+    satellite); only a single schematic land/water fallback is offered. Given the
+    offline render harness this is a reasonable substitute, but consider at least
+    varying the schematic style (e.g. a 'satellite-like' vs 'street-like' toggle)
+    to better honor the multi-provider intent.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (~#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: title "map-tile-background · javascript · echarts · anyplot.ai" in bold dark ink, subtitle "Marker size ∝ annual visitors (millions) · schematic tile backdrop (offline render, no live tile provider)" in a lighter gray — both clearly readable against the light background. The tile-grid backdrop alternates between two very close off-white shades with a subtle 1px grid stroke; city name labels render in dark gray directly above each marker with a small gap (no overlap with the marker or with neighboring labels, verified on the dense New York/Boston and San Francisco clusters).
-      Data: 12 green (#009E73) circular markers sized proportionally to annual visitor count (Miami/New York/San Francisco/Los Angeles largest, Houston/Phoenix/Denver smallest), each with a thin cream-colored border for definition against the tile backdrop.
-      Legibility verdict: PASS — all text is dark-on-light, no light-on-light issues.
+      Background: Warm off-white (~#FAF8F1), consistent with the Imprint light theme, not pure white.
+      Chrome: Title "map-tile-background · javascript · echarts · anyplot.ai" is bold and centered; the descriptive subtitle explains marker size, the star marker, and the offline schematic backdrop. A faded grid of ~18x10 basemap tiles sits behind a thin gray US coastline/border outline. Bottom-right attribution text ("Basemap attribution: offline schematic render...") is small but legible. All chrome (title, subtitle, city labels, attribution) is dark ink on the light background and reads clearly.
+      Data: 12 green (#009E73) circular markers over US cities, sized proportionally to annual visitor counts (larger for NY/LA/SF/Miami, smaller for Phoenix/Houston). New York, the top destination, has an amber (#... amber token) ring and amber-colored bold label with a star prefix. City name labels sit above each marker without overlapping each other.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black (~#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: title and subtitle switch to light text (white/light-gray) and remain clearly legible; the tile-grid backdrop alternates between two very close dark-charcoal shades with the same subtle grid stroke, now in a light-toned low-opacity line; city labels render in light gray, still with clean spacing above each marker and no dark-on-dark failures.
-      Data: markers are the identical #009E73 green at the identical sizes and positions as the light render — only the chrome (backgrounds, grid, text) flipped, confirming data-color consistency across themes.
-      Legibility verdict: PASS — all text is light-on-dark, no dark-on-dark issues.
+      Background: Warm near-black (~#1A1A17), consistent with the Imprint dark theme, not pure black.
+      Chrome: Same title/subtitle layout, now rendered in light ink (white/near-white) against the dark background — fully readable, no dark-on-dark issues. The tile grid lines and coastline outline are lighter gray, still faint but visible. Attribution text at bottom-right is legible light gray.
+      Data: Identical green (#009E73) markers, identical sizes and positions to the light render — confirms data colors are unchanged between themes, only chrome (background, text, grid) adapted. New York keeps the amber ring/label, clearly visible against the dark backdrop.
+      Legibility verdict: PASS
+
+    Shared observation (both renders): the land/water tile shading is very low-contrast — land cells (filled with the "elevated" background token) are barely distinguishable from water cells (transparent), so the "tile background" mostly reads as an empty grid with a coastline line on top rather than a rich basemap. The coastline polyline also self-intersects near the New England coast, producing a small triangular spike next to the New York/Boston markers in both renders.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -69,127 +72,128 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes for title/subtitle/labels; all readable in both
-          themes, no dark-on-dark/light-on-light
+        comment: Title, subtitle, city labels, attribution all readable in both themes;
+          attribution text is small (11px) but legible.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Verified no label/marker collisions even in the dense NY/Boston and
-          SF clusters; labelLayout hideOverlap in effect
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Sparse data (12 points) uses prominent, size-varied markers with
-          a contrasting border
+        comment: City labels do not collide; New York/Boston labels sit close together
+          but remain distinct.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Markers are clearly visible and sized by value, but the land/water
+          tile backdrop is nearly invisible against the page background.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue markers, no red-green reliance
+        comment: Green markers with amber highlight for the top destination read well
+          on both surfaces; no red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed; comfortable margins, no overflow or clipping
+        comment: Good title proportion and no clipping, but the self-intersecting
+          coastline spike near NY/Boston is a visible artifact.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally hidden (appropriate for a map); title matches
-          required format exactly
+        comment: Axes correctly hidden for a map; title/subtitle descriptive with
+          units (millions of visitors).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; backgrounds match Imprint surface tokens
-          in both themes'
+        comment: 'First series is #009E73; backgrounds correct FAF8F1/1A1A17; identical
+          data colors across themes.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Custom tile-grid backdrop shows some design thought but reads as
-          a plain checkerboard rather than a polished map substitute
+        comment: Nice touches (star highlight, proportional sizing) but the weak tile
+          backdrop undercuts overall polish.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Axes hidden, generous whitespace, subtle grid; but tile shading has
-          minimal visual interest
+        passed: true
+        comment: Minimal chrome, subtle grid, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Size encoding creates mild hierarchy but no focal emphasis on the
-          top city
+        comment: Marker size + star highlight create hierarchy, but the near-invisible
+          basemap doesn't add the intended geographic storytelling.
     spec_compliance:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Reads as a bubble/scatter map with a decorative grid, not a genuine
-          tile-background map with geographic imagery
+        passed: true
+        comment: Correct map/scatter-over-basemap type.
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Auto-fit to data bounds present; multiple tile providers and attribution
-          are not implemented
+        comment: No zoom/pan wired up despite the spec explicitly requesting it for
+          interactive libraries; multi-provider support is only a single offline schematic
+          fallback (reasonable given the offline harness, but not varied).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly projected and all 12 points shown
+        comment: lat/lon correctly projected, value correctly encodes marker size.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; no legend needed for single
-          series
+        comment: Title format matches spec; no legend needed for single series.
     data_quality:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Core 'rich geographic context' aspect of the plot type is absent
-          — backdrop carries no real geographic information
+        passed: true
+        comment: Covers lat, lon, value (as size), and label (city name) from the
+          spec's data fields.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US cities with plausible, neutral visitor figures
+        comment: Real US cities with plausible, neutral visitor counts.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1.8-8.2M annual visitors is a sensible range for major US cities
+        comment: 12 points within the recommended 10-500 range; visitor values (1.8M-8.2M)
+          are sensible.
     code_quality:
       score: 10
       max: 10
@@ -199,33 +203,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, clear top-to-bottom flow
+        comment: No classes; small helper functions (project, pointInPolygon) are
+          proportionate to the task.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Fully deterministic, hardcoded data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; only the echarts global is used
+        comment: No unused imports; echarts is the global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; appropriately complex custom renderItem
-          for the backdrop
+        comment: Appropriate complexity, no fake UI/interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false, no devicePixelRatio
-          override'
+        comment: animation:false set, no explicit devicePixelRatio, mount-node contract
+          respected.
     library_mastery:
       score: 6
       max: 10
@@ -235,22 +239,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper use of custom series + scatter composition, encode, and labelLayout
+        comment: Custom series renderItem, scatter with labelLayout hideOverlap —
+          solid ECharts API usage.
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses custom renderItem and labelLayout.hideOverlap, but no map-specific
-          ECharts feature is leveraged
-  verdict: REJECTED
+        comment: Custom series rendering is a real ECharts feature, but doesn't leverage
+          geo/roam capabilities that would make it more distinctive for a map use
+          case.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - custom-series
+  - annotations
+  - geospatial-projection
   patterns:
   - data-generation
-  - matrix-construction
-  dataprep: []
+  - iteration-over-groups
+  dataprep:
+  - normalization
   styling:
-  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
