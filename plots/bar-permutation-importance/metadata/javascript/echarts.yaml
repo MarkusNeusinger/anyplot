@@ -1,0 +1,244 @@
+library: echarts
+language: javascript
+specification_id: bar-permutation-importance
+created: '2026-08-26T18:36:58Z'
+updated: '2026-08-26T18:52:11Z'
+generated_by: claude-sonnet
+workflow_run: 32999895698
+issue: 2998
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Faithfully implements every spec requirement: bars sorted by mean importance
+    (highest at top), horizontal ±1 SD error bars via an idiomatic ECharts custom-series
+    renderItem, a dashed zero-reference markLine separating positive from noise/negative
+    features, and an imprint_seq sequential gradient mapped to importance magnitude
+    for visual emphasis.'
+  - 'Theme-adaptive chrome verified pixel-exact: light background samples to #FAF8F1,
+    dark background samples to #1A1A17, and error-bar strokes sample to #4A4A44 (inkSoft)
+    in the light render — text and chrome flip correctly while data colors stay identical
+    between themes.'
+  - No AR-09 edge clipping on any border — verified via direct pixel crops of the
+    left (feature labels), right (visualMap colorbar text), top (title), and bottom
+    (x-axis title) edges; all elements sit with comfortable margin inside the canvas.
+  - Realistic, neutral housing-price ML feature-importance dataset (median_income,
+    avg_rooms, distance_to_coast, ...) with plausible magnitudes, a clean descending
+    sort, and an honest near-zero/negative 'noise' feature (parcel_id_checksum) that
+    demonstrates the full range of the plot type.
+  - Clean, idiomatic ECharts usage combining a bar series + custom renderItem overlay
+    + continuous visualMap + markLine — a distinctive technique combination that would
+    take significant boilerplate to replicate in another charting library.
+  weaknesses:
+  - The smallest-magnitude features (year_built, garage_size, parcel_id_checksum)
+    render as near-invisible bar slivers right at the zero line — technically honest
+    given the near-zero data, but a minimum visible bar-width floor would improve
+    VQ-03 legibility for these rows.
+  - The x-axis auto-scales out to -0.1 even though data only dips to about -0.03 (mean
+    - std), leaving a visible empty band left of the zero markLine — an explicit xAxis.min
+    tuned closer to the real data range would tighten canvas utilization.
+  - 'Design Excellence is solid but not top-tier: no explicit callout/annotation on
+    the dominant feature (median_income) and the default x-axis tick marks are still
+    visible while the y-axis ticks were deliberately hidden — minor inconsistency
+    in the chrome polish.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled pixel value (250, 248, 241) — matches #FAF8F1 exactly.
+      Chrome: Bold dark title "bar-permutation-importance · javascript · echarts · anyplot.ai" centered at top, clearly readable; x-axis title "Decrease in Model R² Score" below the tick labels; feature names (median_income, avg_rooms, ... parcel_id_checksum) right-aligned on the y-axis, all legible dark-gray text against the cream background; subtle vertical gridlines on the value axis only. Error-bar whisker strokes sample to (74, 74, 68), matching the #4A4A44 inkSoft token exactly — not a stray color, confirmed by direct pixel sampling.
+      Data: 15 horizontal bars sorted descending by importance (median_income longest/highest at top), colored via a continuous blue→teal→green (imprint_seq) gradient keyed to each bar's importance value, with a "High importance" / "Low / noise" colorbar legend on the right. A dashed vertical reference line marks x=0. Horizontal error-bar whiskers (±1 SD) drawn on every bar.
+      Legibility verdict: PASS — all text readable, no overlap, no clipping at any edge (verified via pixel crops of all four borders).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled pixel value (26, 26, 23) — matches #1A1A17 exactly.
+      Chrome: Same title, axis title, and feature-name labels now rendered in light text, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines and error-bar whiskers switch to light gray/white for contrast.
+      Data: Identical bar lengths, order, and imprint_seq gradient hues as the light render — confirming the categorical/continuous data colors are unchanged between themes; only chrome (background, text, gridlines, whisker color) flipped.
+      Legibility verdict: PASS — all text readable in the dark theme, no dark-on-dark or light-on-light failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis name/labels 14, visualMap
+          text 13); readable in both themes; no overflow; title comfortably within
+          bounds
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars and error-bar caps clearly visible; smallest near-zero-importance
+          bars render as thin slivers (honest to the data, but a min-width floor would
+          help legibility)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Blue-green sequential gradient is CVD-safe, not reliant on red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills the majority of the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labeled 'Decrease in Model R² Score' — descriptive with an
+          implicit statistical unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used for single-polarity continuous importance
+          magnitude per spec; theme-correct chrome confirmed by pixel sampling in
+          both renders
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Thoughtful continuous color mapping and typography, above a plain
+          default but not publication-tier polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle value-axis gridlines only, y-axis ticks hidden, generous whitespace;
+          x-axis default tick marks left visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Sorted order + color gradient + zero reference line create a clear
+          visual hierarchy and focal point on median_income, though without an explicit
+          callout annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct horizontal permutation-importance bar chart with error bars
+          and color emphasis
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Sort by mean importance, horizontal error bars, sequential color
+          gradient, and zero reference line all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Features on y-axis, importance_mean as bar length on x-axis, importance_std
+          as error bars — correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title exactly matches the mandated format; visualMap colorbar legend
+          clearly labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Shows the full range from dominant positive importance down through
+          near-zero/negative noise feature
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, comprehensible housing-price ML feature set
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: R² decrease magnitudes and relative ordering are plausible for a
+          real permutation-importance analysis
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Straightforward data -> init -> option flow; the renderItem function
+          is a required ECharts custom-series callback, not structural over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Deterministic hard-coded data array
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No imports; uses only the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, appropriately complex, no fake UI or interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Follows the mount-node contract; animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Combines bar series, custom renderItem overlay, visualMap, and markLine
+          — well beyond baseline API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Custom renderItem error-bar overlay is a genuinely ECharts-distinctive
+          technique, hard to replicate elsewhere without significant boilerplate
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - patches
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
