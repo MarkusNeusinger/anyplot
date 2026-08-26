@@ -1,0 +1,254 @@
+library: d3
+language: javascript
+specification_id: scatter-complex-plane
+created: '2026-08-26T10:50:38Z'
+updated: '2026-08-26T11:04:48Z'
+generated_by: claude-sonnet
+workflow_run: 32959469599
+issue: 4427
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-complex-plane/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Palette compliance now correct: the two categories use consecutive canonical
+    Imprint indices (palette[0] green, palette[1] lavender) with no ordinal skip'
+  - Computed label-offset direction per vector angle keeps rectangular + polar annotations
+    legible and non-overlapping across all 8 points, including the near-horizontal
+    z0 case which now clears the x-axis tick band
+  - Custom per-category arrowhead markers (SVG marker defs) correctly colored to match
+    each vector's category
+  - True equal-aspect-ratio square plot area (side = min(availW, availH)) keeps the
+    unit circle perfectly circular as the spec requires
+  - Full Imprint token theming carried through grid, axis, and ink colors — both renders
+    are clean and legible with identical data colors
+  - Mathematically meaningful, spec-aligned dataset (5th roots of unity + arbitrary
+    points) that directly demonstrates the applications listed in the spec
+  weaknesses:
+  - z0 = 1+0i sits exactly on the x=1 tick. The full-height reference grid line for
+    that integer (drawn by the manual grid loop) passes straight through the '1.0'
+    tick-label text beneath the marker, partially cutting the '1' glyph in both renders
+    — visible in a tight crop around (x=1, y=0). Skip drawing the reference grid line
+    at any x/y value that coincides with a data point's coordinate, or add a small
+    local gap/halo behind axis tick labels so grid lines never overlap tick text.
+  - Design excellence stays close to the library-rules skeleton — the previous round's
+    feedback to add more typographic contrast between the rectangular (primary) and
+    polar (secondary) annotation lines, or a subtler grid opacity, was not yet applied
+    this round.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "5th Roots of Unity · scatter-complex-plane · javascript · d3 · anyplot.ai" and "Re"/"Im" axis end-labels render in dark ink; legend shows a green circle "5th roots of unity" and a lavender square "Arbitrary points" (now palette[1], the canonical second Imprint slot). Faint reference grid at integer real/imaginary values, dashed unit circle reference.
+      Data: Five green (#009E73) circles sit exactly on the dashed unit circle at 72° spacing (5th roots of unity, z0..z4); three lavender (#C475FD) squares (magnitudes 1.9-2.1) sit outside the circle (w1..w3). Colored vectors with arrowheads run from the origin to every point; each point carries a rectangular-form annotation (e.g. "z1 0.31+0.95i") plus a smaller italic polar-form annotation ("r=1.00, θ=72°") beneath it.
+      Legibility verdict: PASS overall, with one minor defect — the "1.0" x-axis tick label directly beneath the z0 marker (z0 = 1+0i lies exactly on that tick) has the vertical reference grid line for x=1 drawn straight through the "1" glyph, partially cutting it. Every other text element (title, legend, axis end-labels, all 8 point annotations, remaining tick labels) is cleanly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, axis labels, and tick labels now rendered in light ink against the dark surface; grid switches to a dark-appropriate subtle tone.
+      Data: Marker/vector colors (green #009E73, lavender #C475FD) are pixel-identical to the light render — confirmed only chrome flipped. Same dual-form annotations, fully legible in light text against the dark background.
+      Legibility verdict: PASS overall, same single defect as the light render — the "1.0" x-tick label has the x=1 reference grid line crossing through it beneath the z0 marker. No dark-on-dark failures; no other overlap or legibility issues observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: The x=1 reference grid line passes through the '1.0' tick label directly
+          under the z0 marker in both renders — the annotation-crowding issue from
+          attempt 1 is fixed, but a related tick/gridline collision remains at the
+          same coordinate
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers and vectors clearly visible; sparse data (8 points) uses
+          prominent 13px markers
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Circle vs. square marker shapes give redundant encoding beyond color
+          for the two categories
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correctly requested and matched; equal-aspect plot
+          area keeps the unit circle circular; no clipping at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Re/Im axis labels with signed imaginary tick format (e.g. '2i');
+          descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed from attempt 1 — categories now use consecutive canonical indices
+          palette[0] and palette[1]; backgrounds correctly theme-adaptive
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Custom arrowhead markers and computed angle-based label placement,
+          but overall styling stays close to the library-rules skeleton
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and generous whitespace, but no typographic refinement
+          was added beyond the standard theme tokens (unaddressed from attempt 1 feedback)
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear roots-on-circle vs. arbitrary-points-outside contrast, but
+          presentation remains primarily educational rather than having a strong single
+          focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Argand diagram / complex-plane scatter with vectors
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Real/imaginary axes through origin, dashed unit circle, vectors from
+          origin, equal aspect ratio, rectangular + polar annotations, category differentiation
+          — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Real part on x, imaginary on y, correctly scaled and labeled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match category names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5th roots of unity plus arbitrary points cover the spec's example
+          scenario directly
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mathematically valid, neutral, textbook-plausible dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitudes span 1.0-2.1, sensible for a complex-plane teaching example
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; flat, readable top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, per the mount-node contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; appropriate complexity for the vector-annotation
+          logic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds into #container per the harness contract; no animation; current
+          d3 v7 API'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scales, axes, and marker defs; margin convention followed
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Custom SVG marker defs and angle-based label offsets are solid but
+          not a showcase of D3-distinctive capability beyond the skeleton pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
