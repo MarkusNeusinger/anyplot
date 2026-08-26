@@ -51,8 +51,10 @@ const groups = [
   },
   {
     name: "Class Group C",
-    // Bimodal: a struggling cluster and a thriving cluster.
+    // Bimodal: a struggling cluster and a thriving cluster — the shape a
+    // plain box plot would flatten into a single, misleading median.
     sample: () => clamp(rand() < 0.45 ? randomNormal(rand, 62, 5) : randomNormal(rand, 87, 5), 50, 100),
+    note: "bimodal",
   },
   {
     name: "Class Group D",
@@ -138,10 +140,23 @@ function Violins() {
         const violinPath = `M${leftSide.join(" L")} L${rightSide.join(" L")} Z`;
 
         const { q1, median, q3, whiskerLow, whiskerHigh } = statsByCategory[i];
+        const isDistinctive = Boolean(groups[i].note);
 
         return (
           <g key={cat}>
-            <path d={violinPath} fill={color} fillOpacity={0.5} stroke={color} strokeWidth={1.75} strokeLinejoin="round" />
+            <path
+              d={violinPath}
+              fill={color}
+              fillOpacity={0.5}
+              stroke={color}
+              strokeWidth={isDistinctive ? 2.75 : 1.75}
+              strokeLinejoin="round"
+            />
+            {isDistinctive && (
+              <text x={center} y={20} textAnchor="middle" fontSize={13} fontStyle="italic" fill={t.inkSoft}>
+                {groups[i].note}
+              </text>
+            )}
             <line x1={center} x2={center} y1={yScale(whiskerLow)} y2={yScale(whiskerHigh)} stroke={t.ink} strokeWidth={1.5} />
             <rect
               x={center - boxHalfWidth}
@@ -188,7 +203,7 @@ export default function Chart() {
         height={chartHeight}
         series={[]}
         skipAnimation
-        margin={{ top: 20, right: 50, bottom: 64, left: 90 }}
+        margin={{ top: 32, right: 50, bottom: 64, left: 90 }}
         xAxis={[
           {
             id: "groups",
@@ -212,8 +227,8 @@ export default function Chart() {
           horizontal
           sx={{
             "& .MuiChartsGrid-line": {
-              opacity: 0.55,
-              strokeDasharray: "2 5",
+              stroke: t.grid,
+              opacity: 0.2,
             },
           }}
         />
