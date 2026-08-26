@@ -36,16 +36,16 @@ for (let i = 0; i <= arcSteps; i++) {
   arcPoints.push([center + arcRadius * Math.cos(rad), arcRadius * Math.sin(rad)]);
 }
 const arcMidRad = ((theta2p / 2) * Math.PI) / 180;
-const arcLabelPos = [center + arcRadius * 1.9 * Math.cos(arcMidRad), arcRadius * 1.9 * Math.sin(arcMidRad)];
+const arcLabelPos = [center + arcRadius * 3.1 * Math.cos(arcMidRad), arcRadius * 1.6 * Math.sin(arcMidRad)];
 
 // Equal padding on both axes keeps the circle a true circle: the σ-span
 // (2×radius) and τ-span (2×radius) are identical by construction, and the
 // grid box below is forced square, so equal source-unit spans map 1:1.
 const pad = radius * 0.65;
 
-// Imprint palette — semantic role assignment for Mohr's circle
+// Imprint palette — canonical ordinal assignment for Mohr's circle
 const CLR_GEOM = t.palette[0]; // brand green — circle geometry, center, angle arc
-const CLR_INPUT = t.palette[4]; // matte red (semantic: applied stress) — points A, B
+const CLR_INPUT = t.palette[1]; // lavender — applied stress points A, B
 const CLR_DERIVED = t.palette[2]; // blue — derived principal stresses / tau_max
 
 // Square grid box centered in the mount so xAxis/yAxis spans render 1:1
@@ -159,7 +159,7 @@ chart.setOption({
             show: true,
             formatter: `A (${sigmaX}, ${tauXY})`,
             position: "top",
-            offset: [18, -6],
+            offset: [26, -16],
             color: CLR_INPUT,
             fontSize: 15,
             fontWeight: "bold",
@@ -171,7 +171,7 @@ chart.setOption({
             show: true,
             formatter: `B (${sigmaY}, ${-tauXY})`,
             position: "bottom",
-            offset: [-18, 6],
+            offset: [-26, 16],
             color: CLR_INPUT,
             fontSize: 15,
             fontWeight: "bold",
@@ -193,7 +193,8 @@ chart.setOption({
             show: true,
             formatter: `σ₂ = ${sigma2.toFixed(1)} MPa`,
             position: "left",
-            distance: 20,
+            distance: 28,
+            offset: [0, -18],
             color: CLR_DERIVED,
             fontSize: 14,
             fontWeight: "bold",
@@ -207,7 +208,7 @@ chart.setOption({
             show: true,
             formatter: `σ₁ = ${sigma1.toFixed(1)} MPa`,
             position: "right",
-            distance: 20,
+            distance: 32,
             color: CLR_DERIVED,
             fontSize: 15,
             fontWeight: "bold",
@@ -234,7 +235,7 @@ chart.setOption({
             show: true,
             formatter: `τ_max = ${tauMax.toFixed(1)} MPa`,
             position: "top",
-            distance: 16,
+            distance: 24,
             color: CLR_DERIVED,
             fontSize: 14,
             fontWeight: "bold",
@@ -246,7 +247,7 @@ chart.setOption({
             show: true,
             formatter: `−τ_max = −${tauMax.toFixed(1)} MPa`,
             position: "bottom",
-            distance: 16,
+            distance: 24,
             color: CLR_DERIVED,
             fontSize: 14,
             fontWeight: "bold",
@@ -268,7 +269,7 @@ chart.setOption({
             show: true,
             formatter: `C (${center.toFixed(0)}, 0)`,
             position: "bottom",
-            offset: [20, 4],
+            offset: [24, 26],
             color: CLR_GEOM,
             fontSize: 13,
             fontWeight: "bold",
