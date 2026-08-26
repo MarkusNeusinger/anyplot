@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: violin-basic
 created: '2026-08-26T17:11:50Z'
-updated: '2026-08-26T17:17:18Z'
+updated: '2026-08-26T17:33:47Z'
 generated_by: claude-sonnet
 workflow_run: 32992152013
 issue: 722
@@ -15,46 +15,48 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-ba
 quality_score: 88
 review:
   strengths:
-  - Correctly builds a mirrored-KDE violin + inner quartile box from scratch via the
-    documented useXScale/useYScale composition hooks, since community @mui/x-charts
-    has no native violin/box component
-  - 'All spec notes satisfied: mirrored density on both sides, quartile box visible
-    inside the violin, and a contrasting median line'
-  - Four distinct distribution shapes (unimodal, narrow high-peak, bimodal, right-skewed)
-    genuinely demonstrate why a violin plot reveals more than a box plot alone
-  - Imprint palette used in canonical order (green, lavender, blue, ochre) and identical
-    across light/dark renders; only chrome flips
-  - Median line and box fill correctly swap between t.ink/t.pageBg per theme so contrast
-    is preserved in both renders
-  - Deterministic LCG-seeded data generation, clean single-purpose imports, correct
-    harness contract (default export, skipAnimation, sized to window.ANYPLOT_SIZE)
+  - Custom composition (ChartContainer + useXScale/useYScale) correctly reproduces
+    a violin+box chart type MUI X community has no native component for, following
+    the library's documented composition pattern
+  - 'Imprint palette used in canonical order (#009E73, #C475FD, #4467A3, #BD8233),
+    first series is brand green, data colors identical between light and dark renders'
+  - 'Genuine data storytelling: four categories are deliberately shaped differently
+    (unimodal, tight peak, bimodal, right-skewed) so the KDE shape — not just quartiles
+    — carries information a plain box plot would hide, with an explicit ''bimodal''
+    annotation calling out the distinctive group'
+  - Deterministic data generation via a fixed-seed LCG (browser has no seeded RNG),
+    clean imports, no fake interactivity
+  - Canvas exactly 3200x1800, mandated title format correct, quartile box + median
+    line + whiskers all present per spec's 'Notes' requirements
   weaknesses:
-  - Grid line opacity (0.55) exceeds the style guide's recommended 15-25% subtle range
-    — dashed horizontal gridlines read slightly stronger than ideal against the data
-  - 'Design excellence is functional rather than highly polished: flat single-opacity
-    fills and no additional emphasis/callout on the most novel shape (Class Group
-    C''s bimodal distribution) that could sharpen the storytelling'
-  - Several small helper functions (lcg, randomNormal, clamp, quantile, boxStats,
-    kde) are necessary given the from-scratch violin construction, but push past a
-    minimal KISS structure
-  - No redundant encoding (e.g. distinct stroke) beyond the palette hue on the non-first
-    categorical fills, though with only 4 series this is a minor, optional nicety
-    per the style guide's series-count guidance
+  - 'Each violin''s KDE is evaluated over the pooled global Y range (Y_MIN..Y_MAX
+    from ALL categories combined) rather than clipped to that category''s own plausible
+    range. Where density is near-zero but not exactly zero, the SVG path''s stroke
+    still traces a thin, persistent, visible line down to the axis floor -- most obvious
+    on Class Group B (tight cluster ~78-100) which shows a faint purple hairline continuing
+    all the way to the bottom axis in both renders, and to a lesser extent on Groups
+    A and D. Fix: truncate/clip the per-category grid to where density exceeds a small
+    threshold (e.g. ~1-2% of that category''s peak) before building the path, so the
+    stroke doesn''t draw a near-invisible-but-still-rendered tail across the full
+    canvas height.'
+  - The 'bimodal' annotation text is set at fontSize 13, slightly below the 14px tick-label
+    baseline used elsewhere in the chart -- bump to ~14-15px for consistency and to
+    stay legible at smaller thumbnail scales.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "violin-basic · javascript · muix · anyplot.ai" in dark ink, top-left. Y-axis label "Exam Score (%)" rotated at left, tick labels on both axes in dark/soft-dark ink, four x-axis category labels ("Class Group A/B/C/D") centered under each violin. Subtle dashed horizontal gridlines. All chrome clearly legible against the light background.
-      Data: Four mirrored violins in Imprint order — green (Class Group A, unimodal), lavender (Class Group B, narrow high peak), blue (Class Group C, visibly bimodal with two lobes), ochre (Class Group D, right-skewed with a long lower tail). Each violin has a solid black quartile box with a white median line, and a thin black whisker line running through the box.
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "violin-basic · javascript · muix · anyplot.ai" top-left in dark ink, clearly legible. Y-axis label "Exam Score (%)" and tick labels (50-100) in dark ink, fully readable. X-axis category labels (Class Group A-D) legible below each violin. Subtle horizontal gridlines at low opacity, visible but not dominant.
+      Data: Four mirrored-KDE violins, one per category, filled at ~50% opacity with a matching solid stroke outline: Class Group A green (#009E73), Class Group B lavender (#C475FD), Class Group C blue (#4467A3, annotated "bimodal" in italic gray text above it), Class Group D ochre (#BD8233) -- exactly the Imprint canonical categorical order with brand green first. Each violin carries a black quartile box (Q1-Q3), a black whisker line, and a white median line inside it. Group B (and to a lesser extent A and D) shows a thin, near-invisible-width tail trailing down to the bottom axis -- a KDE-grid artifact (see weaknesses).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink (near-white), fully readable against the dark background. Gridlines are the same subtle dashed style, appropriately dimmed for the dark surface. No dark-on-dark text anywhere.
-      Data: Identical violin hues (green/lavender/blue/ochre) and identical shapes to the light render — confirming the data colors are theme-invariant. The quartile boxes now render as light/cream fills with a dark median line and dark whisker line, correctly swapped for contrast against the light violin fills on the dark page.
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Title, axis labels, and tick labels all rendered in light ink, clearly legible against the dark background -- no dark-on-dark issues found. Gridlines subtle but visible.
+      Data: Same four violin colors as the light render (green/lavender/blue/ochre), confirming data colors are identical across themes; only chrome (background, text, grid) flips. Quartile box and median line invert to a cream fill/white line against the dark ink whisker, correctly using theme ink tokens rather than being hardcoded. Same trailing-tail artifact visible on Group B as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -62,48 +64,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/axis/tick labels explicitly sized (22/16/14 CSS px) and readable
-          in both themes
+        comment: All text readable in both themes; 'bimodal' annotation at 13px is
+          slightly below the 14px tick-label baseline
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No text or element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Density curves + box/whisker/median all clearly visible; appropriate
-          for aggregated (non-scatter) representation of 220 pts/group
+        comment: Violin/box/whisker/median clearly visible, but near-zero-density
+          KDE tails still render as thin visible strokes down to the axis floor on
+          several violins
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, first series brand green, no red-green sole
-          signal
+        comment: Distinct hues, adequate contrast in both themes, not reliant on red-green
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed; generous margins, nothing clipped or
-          overflowing
+        comment: Canvas gate passed, good margins, no cutoff; trailing tail lines
+          add minor visual clutter to otherwise clean proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled with units (%); categories self-label the x-axis
+        comment: Y-axis has descriptive label with unit; category names are self-explanatory
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order (green/lavender/blue/ochre), correct theme
-          backgrounds, data colors identical across themes
+        comment: Canonical Imprint order, brand green first, correct theme backgrounds,
+          colors identical across themes
     design_excellence:
       score: 13
       max: 20
@@ -112,23 +114,23 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Genuine custom composition (violin+box from scratch) but functional
-          flat styling rather than highly polished
+        passed: true
+        comment: Custom violin composition with intentional per-group distribution
+          shapes shows real design thought, but the tail artifact undercuts the polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: L-shaped spines and generous whitespace, but grid opacity (0.55)
-          runs stronger than the 15-25% subtle guideline
+        passed: true
+        comment: Ticks disabled on x-axis, subtle grid, generous whitespace; tail-rendering
+          artifact is the main refinement gap
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Four distinct shapes do the storytelling on their own; no additional
-          emphasis/callout on the standout bimodal group
+        passed: true
+        comment: Bimodal group and annotation give a clear focal point demonstrating
+          the plot type's value over a box plot
     spec_compliance:
       score: 15
       max: 15
@@ -138,7 +140,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with mirrored KDE and inner box
+        comment: Correct mirrored-KDE violin plot
       - id: SC-02
         name: Required Features
         score: 4
@@ -151,14 +153,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X = category, Y = value, axis range covers full data with padding
+        comment: Category on X, value on Y, axis range covers all data with padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; no legend needed since categories
-          self-label
+        comment: Title matches mandated format; no legend needed, categories self-labeled
+          on x-axis
     data_quality:
       score: 15
       max: 15
@@ -168,82 +170,78 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Unimodal, narrow-peak, bimodal, and right-skewed shapes cover the
-          feature space a violin plot is meant to reveal
+        comment: Shows shape, quartiles, median, and whisker range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Exam scores by class group — plausible and neutral
+        comment: Exam scores are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 220 pts/category (within 30-1000), 4 categories (within 2-6), 50-100%
-          score range
+        comment: 220 points x 4 categories, within spec's 30-1000 / 2-6 ranges, sensible
+          0-100 score domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Multiple small helper functions, justified by the from-scratch violin/box/KDE
-          math the library doesn't provide
+        passed: true
+        comment: Flat helper functions, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (42), fully deterministic
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer/ChartsGrid/ChartsXAxis/ChartsYAxis/useXScale/useYScale,
-          all used
+        comment: Only used @mui/x-charts imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity; appropriate complexity for the technique
+        comment: Appropriate complexity for a hand-built violin; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized to
-          window.ANYPLOT_SIZE'
+        comment: Correct default-export + skipAnimation contract, no manual save
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the library-documented composition technique (ChartContainer
+          + scale hooks) for an unsupported chart type
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses the documented useXScale/useYScale composition pattern for chart
-          types MUI X doesn't ship, staying within the community surface
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Leverages MUI X's scale hooks and ChartContainer/ChartsGrid layering
-          distinctively, though the actual mark rendering is a generic custom SVG
-          layer
+        comment: Low-level scale-hook composition is a genuinely distinctive MUI X
+          technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -251,4 +249,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
