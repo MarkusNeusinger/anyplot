@@ -5,12 +5,13 @@
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const light = t.theme === "light";
 
 // --- Data: Barcelona Bicing bike-share stations, daily rides ---------------
 // The runtime is offline (no fetch/CDN), so the "tile background" below is a
 // deterministic, procedurally generated street-grid basemap rather than a
 // fetched OSM/CartoDB raster — see the block-hash generator further down.
+// Pan/zoom (d3.zoom on the map group) and the provider switcher below are
+// genuine interactions in the exported HTML, not decorative placeholders.
 const stations = [
   { label: "Plaça Catalunya", lat: 41.387, lon: 2.1701, rides: 1450 },
   { label: "Passeig de Gràcia", lat: 41.3917, lon: 2.1649, rides: 1280 },
@@ -68,11 +69,32 @@ const projY = (lat) => offY + (latMax - lat) * fitScale;
 const zoomLevel = Math.max(10, Math.min(18, Math.round(Math.log2((360 * mapW) / (256 * (lonMax - lonMin))))));
 
 // --- Basemap tones (theme-adaptive, decorative — not data colors) ----------
-const landFill = light ? "#F1ECDD" : "#211E17";
-const blockFill = light ? "#E7DFC9" : "#282318";
-const parkFill = light ? "#D9E5C9" : "#1E2A1C";
-const waterFill = light ? "#CDE0EC" : "#1A2530";
-const streetStroke = light ? "rgba(26,26,23,0.3)" : "rgba(240,239,232,0.28)";
+// Derived from the Imprint chrome/categorical tokens by blending toward the
+// page background, instead of introducing custom hex values.
+const blend = (hex, amt) => d3.interpolateRgb(t.pageBg, hex)(amt);
+const providers = ["Streets", "Terrain", "Satellite"];
+const tones = {
+  Streets: {
+    land: blend(t.inkSoft, 0.1),
+    block: blend(t.inkSoft, 0.18),
+    park: blend(t.palette[7], 0.22), // lime
+    water: blend(t.palette[2], 0.24), // blue
+  },
+  Terrain: {
+    land: blend(t.palette[7], 0.16), // lime
+    block: blend(t.palette[7], 0.28),
+    park: blend(t.palette[7], 0.42),
+    water: blend(t.palette[2], 0.26),
+  },
+  Satellite: {
+    land: blend(t.palette[2], 0.28), // blue
+    block: blend(t.palette[5], 0.3), // cyan
+    park: blend(t.palette[7], 0.26),
+    water: blend(t.palette[2], 0.48),
+  },
+};
+let activeProvider = "Streets";
+const streetStroke = t.grid;
 
 // --- SVG mount ---------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -89,12 +111,25 @@ svg
 
 const mapG = svg.append("g").attr("clip-path", "url(#map-viewport)");
 
-mapG.append("rect").attr("x", mapX0).attr("y", mapY0).attr("width", mapW).attr("height", mapH).attr("fill", landFill);
+// Static land base — always fills the viewport regardless of pan/zoom, the
+// way a real tile layer falls back to a base color while tiles load.
+const bgRect = mapG
+  .append("rect")
+  .attr("x", mapX0)
+  .attr("y", mapY0)
+  .attr("width", mapW)
+  .attr("height", mapH)
+  .attr("fill", tones[activeProvider].land);
+
+// Everything that should pan/zoom together lives inside this group.
+const zoomLayer = mapG.append("g").attr("class", "zoom-layer");
 
 // --- Synthetic tile texture: deterministic street-grid basemap -------------
 // Fixed-hash pseudo-noise (no Math.random) so the "tiles" are reproducible.
 // Evokes Barcelona's Eixample grid blocks, with a coastline band toward the
-// bottom-right standing in for the Mediterranean.
+// bottom-right standing in for the Mediterranean. The grid extends a buffer
+// of cells beyond the viewport so panning/zooming still reveals basemap
+// texture instead of bare background.
 function blockHash(i, j) {
   const s = Math.sin(i * 12.9898 + j * 78.233) * 43758.5453;
   return s - Math.floor(s);
@@ -102,25 +137,28 @@ function blockHash(i, j) {
 
 const cell = 42;
 const gap = 3;
-const cols = Math.ceil(mapW / cell) + 1;
-const rows = Math.ceil(mapH / cell) + 1;
+const bufferCells = 4;
+const cols = Math.ceil(mapW / cell) + 1 + bufferCells * 2;
+const rows = Math.ceil(mapH / cell) + 1 + bufferCells * 2;
 
 const blocks = [];
 for (let j = 0; j < rows; j += 1) {
   for (let i = 0; i < cols; i += 1) {
-    const u = i / cols;
-    const v = j / rows;
+    const gx = mapX0 + (i - bufferCells) * cell;
+    const gy = mapY0 + (j - bufferCells) * cell;
+    const u = (gx - mapX0) / mapW;
+    const v = (gy - mapY0) / mapH;
     const isWater = u * 0.32 + v > 0.9;
     const h = blockHash(i, j);
-    let fill = null;
-    if (isWater) fill = waterFill;
-    else if (h > 0.94) fill = parkFill;
-    else if (h > 0.2) fill = blockFill;
-    if (fill) blocks.push({ x: mapX0 + i * cell, y: mapY0 + j * cell, fill, isWater });
+    let kind = null;
+    if (isWater) kind = "water";
+    else if (h > 0.94) kind = "park";
+    else if (h > 0.2) kind = "block";
+    if (kind) blocks.push({ x: gx, y: gy, kind, isWater });
   }
 }
 
-mapG
+const blockSel = zoomLayer
   .selectAll("rect.block")
   .data(blocks)
   .join("rect")
@@ -130,17 +168,19 @@ mapG
   .attr("width", (d) => cell - (d.isWater ? 0 : gap))
   .attr("height", (d) => cell - (d.isWater ? 0 : gap))
   .attr("rx", (d) => (d.isWater ? 0 : 7))
-  .attr("fill", (d) => d.fill);
+  .attr("fill", (d) => tones[activeProvider][d.kind]);
 
 const streetLines = [];
 for (let i = 0; i <= cols; i += 1) {
-  streetLines.push({ x1: mapX0 + i * cell, y1: mapY0, x2: mapX0 + i * cell, y2: mapY1 });
+  const gx = mapX0 + (i - bufferCells) * cell;
+  streetLines.push({ x1: gx, y1: mapY0 - bufferCells * cell, x2: gx, y2: mapY1 + bufferCells * cell });
 }
 for (let j = 0; j <= rows; j += 1) {
-  streetLines.push({ x1: mapX0, y1: mapY0 + j * cell, x2: mapX1, y2: mapY0 + j * cell });
+  const gy = mapY0 + (j - bufferCells) * cell;
+  streetLines.push({ x1: mapX0 - bufferCells * cell, y1: gy, x2: mapX1 + bufferCells * cell, y2: gy });
 }
 
-mapG
+zoomLayer
   .selectAll("line.street")
   .data(streetLines)
   .join("line")
@@ -152,24 +192,12 @@ mapG
   .attr("stroke", streetStroke)
   .attr("stroke-width", 1);
 
-// Map viewport frame
-svg
-  .append("rect")
-  .attr("x", mapX0)
-  .attr("y", mapY0)
-  .attr("width", mapW)
-  .attr("height", mapH)
-  .attr("rx", 18)
-  .attr("fill", "none")
-  .attr("stroke", t.inkSoft)
-  .attr("stroke-width", 1.5);
-
 // --- Station markers: color-encode daily rides via imprint_seq -------------
 const rideExtent = d3.extent(stations, (d) => d.rides);
 const colorScale = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain(rideExtent);
 const markerR = 14;
 
-mapG
+zoomLayer
   .selectAll("circle.station")
   .data(stations)
   .join("circle")
@@ -183,20 +211,24 @@ mapG
   .attr("fill-opacity", 0.92);
 
 // --- Station labels: radial placement + measured halo for legibility -------
-// A handful of stations sit under 300m apart (real Barcelona geography), so
-// the generic radial push alone still stacks their labels; these four get an
-// explicit directional override, the same manual-offset technique the
-// python/matplotlib sibling implementation uses for its own dense cluster.
+// The five stations in the dense central cluster (Plaça Catalunya, Passeig de
+// Gràcia, Rambla Catalunya, El Born, Gòtic) sit under 300m apart (real
+// Barcelona geography) and get explicit directional offsets, chosen to spread
+// them apart rather than relying on the generic radial push; two more crowded
+// stations (Sant Antoni Market, Poble Sec) get the same treatment.
 const manualOffsets = {
-  "El Born": [46, -30],
-  "Gòtic · Pl. Sant Jaume": [-52, 22],
-  "Sant Antoni Market": [-52, -6],
-  "Poble Sec": [48, 22],
+  "Plaça Catalunya": [0, -50],
+  "Passeig de Gràcia": [62, -20],
+  "Rambla Catalunya": [-62, 10],
+  "El Born": [55, -36],
+  "Gòtic · Pl. Sant Jaume": [-62, 26],
+  "Sant Antoni Market": [-62, -7],
+  "Poble Sec": [58, 26],
 };
 
 const centerX = mapX0 + mapW / 2;
 const centerY = mapY0 + mapH / 2;
-const labelG = svg.append("g");
+const labelG = zoomLayer.append("g");
 
 for (const d of stations) {
   const px = projX(d.lon);
@@ -213,8 +245,8 @@ for (const d of stations) {
     const dx = px - centerX;
     const dy = py - centerY;
     const norm = Math.hypot(dx, dy) || 1;
-    lx = px + (dx / norm) * 42;
-    ly = py + (dy / norm) * 26;
+    lx = px + (dx / norm) * 48;
+    ly = py + (dy / norm) * 30;
     anchor = dx >= 0 ? "start" : "end";
   }
 
@@ -242,12 +274,50 @@ for (const d of stations) {
     .attr("fill-opacity", 0.88);
 }
 
-// --- Legend: rides color scale + tile-provider selector ---------------------
+// Map viewport frame (drawn above the zoom layer, stays fixed while panning)
+svg
+  .append("rect")
+  .attr("x", mapX0)
+  .attr("y", mapY0)
+  .attr("width", mapW)
+  .attr("height", mapH)
+  .attr("rx", 18)
+  .attr("fill", "none")
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5);
+
+// --- Pan & zoom: d3.zoom() on a capture rect drives the map group ----------
+const zoomBehavior = d3
+  .zoom()
+  .scaleExtent([1, 4])
+  .extent([
+    [mapX0, mapY0],
+    [mapX1, mapY1],
+  ])
+  .translateExtent([
+    [mapX0 - bufferCells * cell, mapY0 - bufferCells * cell],
+    [mapX1 + bufferCells * cell, mapY1 + bufferCells * cell],
+  ])
+  .on("zoom", (event) => {
+    zoomLayer.attr("transform", event.transform);
+  });
+
+mapG
+  .append("rect")
+  .attr("class", "zoom-capture")
+  .attr("x", mapX0)
+  .attr("y", mapY0)
+  .attr("width", mapW)
+  .attr("height", mapH)
+  .attr("fill", "transparent")
+  .style("pointer-events", "all")
+  .style("cursor", "grab")
+  .call(zoomBehavior);
+
+// --- Legend: rides color scale + functional tile-provider switcher ---------
 const legendX = mapX1 - 158;
 const legendBarY = mapY0 + 54;
 const legendBarH = 120;
-const providers = ["Streets", "Terrain", "Satellite"];
-const activeProvider = "Streets";
 const legendBoxH = 54 + legendBarH + 20 + providers.length * 22 + 12;
 
 svg
@@ -310,32 +380,46 @@ svg
   .attr("fill", t.inkSoft)
   .text(rideExtent[0]);
 
-// Tile-provider swatches — illustrates provider-switching support (the active
-// style is the synthetic street basemap rendered above; no live tile fetch).
+// Tile-provider switcher — clicking a provider re-tints the basemap group
+// (bgRect + block fills) via the `tones` lookup; fully offline/deterministic,
+// no live tile fetch.
 const providerY0 = legendBarY + legendBarH + 26;
-providers.forEach((name, idx) => {
+const providerRows = providers.map((name, idx) => {
   const py = providerY0 + idx * 22;
-  const isActive = name === activeProvider;
-  svg
+  const row = svg.append("g").style("cursor", "pointer").on("click", () => setProvider(name));
+  const swatch = row
     .append("rect")
     .attr("x", legendX - 2)
     .attr("y", py - 11)
     .attr("width", 13)
     .attr("height", 13)
-    .attr("rx", 3)
-    .attr("fill", isActive ? t.palette[0] : "none")
-    .attr("stroke", isActive ? t.palette[0] : t.inkSoft)
-    .attr("stroke-width", 1.5);
-  svg
+    .attr("rx", 3);
+  const label = row
     .append("text")
     .attr("x", legendX + 16)
     .attr("y", py)
     .attr("dominant-baseline", "middle")
-    .style("font-size", "12px")
-    .style("font-weight", isActive ? "600" : "400")
-    .attr("fill", isActive ? t.ink : t.inkSoft)
-    .text(name);
+    .style("font-size", "12px");
+  return { name, swatch, label };
 });
+
+function setProvider(name) {
+  activeProvider = name;
+  bgRect.attr("fill", tones[name].land);
+  blockSel.attr("fill", (d) => tones[name][d.kind]);
+  for (const row of providerRows) {
+    const isActive = row.name === name;
+    row.swatch
+      .attr("fill", isActive ? t.palette[0] : "none")
+      .attr("stroke", isActive ? t.palette[0] : t.inkSoft)
+      .attr("stroke-width", 1.5);
+    row.label
+      .style("font-weight", isActive ? "600" : "400")
+      .attr("fill", isActive ? t.ink : t.inkSoft)
+      .text(row.name);
+  }
+}
+setProvider(activeProvider);
 
 // --- Auto-fit / attribution footnotes (bottom corners, inside viewport) ----
 function footnote(x, anchor, str) {
@@ -359,7 +443,7 @@ function footnote(x, anchor, str) {
     .attr("fill", t.elevatedBg)
     .attr("fill-opacity", 0.85);
 }
-footnote(mapX0 + 14, "start", `Auto-fit to data bounds · zoom ≈ ${zoomLevel}`);
+footnote(mapX0 + 14, "start", `Auto-fit to data bounds · zoom ≈ ${zoomLevel} · drag to pan, scroll to zoom`);
 footnote(mapX1 - 14, "end", "Basemap: anyplot synthetic street tiles (offline render)");
 
 // --- Title -------------------------------------------------------------
