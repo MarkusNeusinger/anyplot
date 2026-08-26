@@ -1,0 +1,267 @@
+library: chartjs
+language: javascript
+specification_id: skewt-logp-atmospheric
+created: '2026-08-26T11:51:42Z'
+updated: '2026-08-26T12:04:00Z'
+generated_by: claude-sonnet
+workflow_run: 32964501035
+issue: 3802
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'Physically accurate thermodynamics: dry adiabats via the Poisson equation, moist
+    adiabats via a numerically-integrated saturated adiabatic lapse rate (Bolton''s
+    formula), and mixing-ratio isopleths inverted from Bolton''s saturation vapor
+    pressure — a genuinely correct meteorological reference-line family, not decorative
+    diagonals.'
+  - 'Correct log-P inverted y-axis with the classic surface-referenced x-axis convention:
+    tick labels read as plain surface temperatures while the true isotherms are the
+    diagonal Isotherm dataset, matching how professional Skew-T charts are labeled.'
+  - 'Clean theme adaptation: identical Imprint data colors between renders, exact
+    #FAF8F1 / #1A1A17 backgrounds, and no dark-on-dark or light-on-light legibility
+    failures in either render.'
+  - Clear visual hierarchy — the temperature/dewpoint profile is drawn last, at full
+    opacity and 3-3.5px width, standing out clearly against the alpha-blended, thin
+    (~1-1.25px) family of 36 background reference lines.
+  - Realistic synthetic sounding including a believable tropopause temperature minimum/inversion
+    around 200 hPa rather than a monotonic straight-line cooling profile.
+  - Legend correctly filters out the empty-label duplicate datasets so only one swatch
+    per reference-line family appears, and stays readable even at the 400px mobile
+    thumbnail size.
+  weaknesses:
+  - Isotherm skew angle is shallower than the spec's explicit '45-degree angle' requirement.
+    With SKEW=50, X range [-95,160] (255 wide), and the ~1:1 chartArea aspect that
+    the square canvas produces, the isotherm's pixel slope works out to dx/dy ≈ 0.46
+    (about 25° from vertical / 65° from horizontal), not the 1:1 slope a true 45°
+    skew needs. Increase SKEW to roughly 105-110 (or narrow X_MIN/X_MAX) so the isotherms
+    render at a true 45° tilt — the underlying physics (dry/moist adiabat, mixing-ratio
+    formulas) does not need to change, only the skew constant.
+  - 'Legend swatches render as plain solid-color boxes rather than reflecting each
+    dataset''s actual line style (dashed dewpoint, dash-dot moist adiabat, dotted
+    mixing ratio) — a minor polish item; consider Chart.js `usePointStyle`/`pointStyle:
+    ''line''` with per-dataset `borderDash` so the legend previews match the plotted
+    line styles.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 exactly (sampled pixel (250,248,241)).
+      Chrome: Title "skewt-logp-atmospheric · javascript · chartjs · anyplot.ai" in dark ink, centered, ~48% of plot width. Axis titles "Temperature (°C)" and "Pressure (hPa)" in dark ink. Tick labels (pressure levels 1000-100 hPa on the inverted log y-axis, temperature -90° to 40° on the x-axis) in a slightly softer dark gray. Legend at the bottom lists Isotherm, Dry adiabat, Moist adiabat, Mixing ratio, Temperature, Dewpoint. A thin dark frame rectangle borders the whole plot area (intentional Skew-T box convention). All text is clearly readable against the light background — no light-on-light issues.
+      Data: First series (Temperature) is #009E73 brand green, solid line with markers, drawn thick and on top. Dewpoint is a dark blue (#4467A3) dashed line. Reference-line families are alpha-blended: gray isotherms, tan/ochre dashed dry adiabats, cyan dash-dot moist adiabats, lavender dotted mixing-ratio lines — all distinguishable from each other and from the two data series.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 exactly (sampled pixel (26,26,23)).
+      Chrome: Same title/axis-title/tick-label text, now rendered in light ink/gray, fully legible against the dark background. No dark-on-dark failures found — checked systematically by pixel-sampling full-width rows for any low-contrast band; only the intentional top/bottom frame border rows returned high-contrast, no stray or unreadable text rows.
+      Data: Temperature (green) and Dewpoint (blue) lines are pixel-identical in hue to the light render — only the chrome (background/text/frame) flipped, as required. Reference-line families (gray isotherms, ochre dry adiabats, cyan moist adiabats, lavender mixing-ratio lines) remain clearly visible against the dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes; readable in both themes and at the 400px mobile
+          thumbnail despite the dense 36-line reference grid
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Profile lines (3-3.5px, full opacity, size-4 markers) clearly separated
+          from thin alpha-blended reference families
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue series are CVD-safe Imprint colors, no red-green sole
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas gate passed; no overflow/clipping; balanced
+          title and axis-label proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) and Pressure (hPa) with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; other series use Imprint hues in a defensible
+          semantic order (blue=moisture, ochre=dry, cyan=moist); exact theme backgrounds
+          confirmed by pixel sampling'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Real thermodynamic formulas drive every reference family plus a custom
+          afterDraw frame plugin, well above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Distinct dash/dot styles per reference family, alpha-blended to stay
+          subtle; full 4-side frame is the correct convention for this instrument-style
+          chart
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point via line weight/opacity contrast between the sounding
+          profile and the reference-line backdrop
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Skew-T log-P diagram
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All required reference-line families present, but isotherms render
+          at ~25° from vertical, not the spec's stated 45°
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Pressure/temperature/dewpoint correctly mapped through the skew-T
+          transform
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels correct
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Temperature, dewpoint, isotherms, dry/moist adiabats, mixing ratio
+          all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral mid-latitude summer sounding with a realistic
+          tropopause inversion
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 1000-100 hPa radiosonde range, realistic °C values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small pure math helpers are proportionate to the required
+          thermodynamics
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; relies on documented globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for the chart type
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a canvas into #container, animation:false, no filesystem
+          calls'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Creative but idiomatic use of the scatter chart type, afterBuildTicks,
+          and a custom plugin for the frame
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom tooltip callback that inverts the skew transform back to real
+          temperature/pressure; legend filter for shared-family labels
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - log-scale
+  - coordinate-transform
+  - custom-tooltip
+  - reference-lines
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - numerical-integration
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - custom-plugin
+  - dash-patterns
