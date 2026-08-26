@@ -64,6 +64,45 @@ const elbowIdx = findElbowIndex(
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
+// --- Elbow callout (custom Chart.js plugin, no external deps) ----------------
+// Labels the elbow marker with the component count + cumulative variance so
+// the recommendation is self-explanatory without cross-referencing the legend.
+const elbowCalloutPlugin = {
+  id: "elbowCallout",
+  afterDatasetsDraw(chart) {
+    const meta = chart.getDatasetMeta(4);
+    const point = meta.data[elbowIdx];
+    if (!point) return;
+
+    const { ctx } = chart;
+    const { x, y } = point.getProps(["x", "y"], true);
+    const label = `${elbowIdx + 1} components · ${cumulativePct[elbowIdx].toFixed(1)}%`;
+
+    ctx.save();
+    ctx.font = "600 15px sans-serif";
+    const textWidth = ctx.measureText(label).width;
+    const boxWidth = textWidth + 22;
+    const boxHeight = 30;
+    const boxX = x - boxWidth / 2;
+    const boxY = y - boxHeight - 20;
+
+    ctx.fillStyle = t.ink;
+    ctx.beginPath();
+    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 6);
+    ctx.moveTo(x - 7, boxY + boxHeight);
+    ctx.lineTo(x + 7, boxY + boxHeight);
+    ctx.lineTo(x, boxY + boxHeight + 9);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = t.pageBg;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, x, boxY + boxHeight / 2);
+    ctx.restore();
+  },
+};
+
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
   type: "bar",
@@ -132,11 +171,12 @@ new Chart(canvas, {
       },
     ],
   },
+  plugins: [elbowCalloutPlugin],
   options: {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 10, right: 10, bottom: 4, left: 4 } },
+    layout: { padding: { top: 46, right: 10, bottom: 4, left: 4 } },
     plugins: {
       title: {
         display: true,
