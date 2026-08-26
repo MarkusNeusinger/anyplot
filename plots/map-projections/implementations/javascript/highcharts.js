@@ -5,7 +5,22 @@
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
-const LAND_FILL = t.theme === "dark" ? "rgba(240,239,232,0.16)" : "rgba(26,26,23,0.12)";
+// Subtle top-to-bottom gradient instead of a flat fill — a small texture cue
+// that still reads as "neutral land color" per the spec, using a Highcharts
+// gradient color object (a renderer-native feature, not a plain SVG attr).
+const LAND_FILL = {
+  linearGradient: { x1: 0, y1: 0, x2: 0, y2: 1 },
+  stops:
+    t.theme === "dark"
+      ? [
+          [0, "rgba(240,239,232,0.22)"],
+          [1, "rgba(240,239,232,0.10)"],
+        ]
+      : [
+          [0, "rgba(26,26,23,0.16)"],
+          [1, "rgba(26,26,23,0.08)"],
+        ],
+};
 
 // --- Projections (computed manually) ---------------------------------------
 // Only the core Highcharts bundle is loaded (no highmaps / modules — see
@@ -41,6 +56,27 @@ function mollweideProject(lonDeg, latDeg) {
   return [((2 * Math.SQRT2) / Math.PI) * lon * Math.cos(theta), Math.SQRT2 * Math.sin(theta)];
 }
 
+// Orthographic: azimuthal perspective as seen from infinity — shape and
+// scale are only true at the view center, with distortion growing toward the
+// limb, and only one hemisphere is visible at all (the far side is behind
+// the globe). Centered on the Africa/Europe/Atlantic quadrant so the visible
+// hemisphere still carries several recognizable landmasses.
+const ORTHO_LON0 = (10 * Math.PI) / 180;
+const ORTHO_LAT0 = (15 * Math.PI) / 180;
+function orthoVisible(lonDeg, latDeg) {
+  const lon = (lonDeg * Math.PI) / 180;
+  const lat = (latDeg * Math.PI) / 180;
+  return Math.sin(ORTHO_LAT0) * Math.sin(lat) + Math.cos(ORTHO_LAT0) * Math.cos(lat) * Math.cos(lon - ORTHO_LON0) >= 0;
+}
+function orthoProject(lonDeg, latDeg) {
+  const lon = (lonDeg * Math.PI) / 180;
+  const lat = (latDeg * Math.PI) / 180;
+  return [
+    Math.cos(lat) * Math.sin(lon - ORTHO_LON0),
+    Math.cos(ORTHO_LAT0) * Math.sin(lat) - Math.sin(ORTHO_LAT0) * Math.cos(lat) * Math.cos(lon - ORTHO_LON0),
+  ];
+}
+
 // --- Data: simplified continent silhouettes (in-memory, deterministic) -----
 // Coarse landmass outlines for illustration, not survey-grade GIS boundaries.
 const CONTINENTS = [
@@ -63,7 +99,7 @@ const CONTINENTS = [
 ];
 
 // Graticule — 30 deg meridians clipped at +/-85, 30 deg parallels, sampled
-// densely so Mollweide's curved meridians render smoothly.
+// densely so curved meridians (Mollweide, Orthographic) render smoothly.
 function sampleMeridian(lon, latFrom, latTo, step) {
   const pts = [];
   for (let lat = latFrom; lat < latTo; lat += step) pts.push([lon, lat]);
@@ -81,6 +117,31 @@ const GRATICULE_LINES = [];
   GRATICULE_LINES.push(sampleMeridian(lon, -85, 85, 5))
 );
 [-60, -30, 0, 30, 60].forEach((lat) => GRATICULE_LINES.push(sampleParallel(lat, -180, 180, 10)));
+
+// Splits a lon/lat polyline into the runs that pass a pane's visibility test
+// (Orthographic only — Mercator/Mollweide show the whole globe, so every
+// point is visible there). The far side of the globe projects into the same
+// disk as the near side, so a shape crossing the horizon must break into
+// separate paths instead of connecting straight across it.
+function visibleRuns(pointsLonLat, closed, isVisible) {
+  const n = pointsLonLat.length;
+  const vis = pointsLonLat.map((p) => isVisible(p[0], p[1]));
+  const runs = [];
+  let current = [];
+  for (let i = 0; i < n; i++) {
+    if (vis[i]) current.push(pointsLonLat[i]);
+    else if (current.length) {
+      runs.push(current);
+      current = [];
+    }
+  }
+  if (current.length) runs.push(current);
+  if (closed && runs.length > 1 && vis[0] && vis[n - 1]) {
+    const first = runs.shift();
+    runs[runs.length - 1] = runs[runs.length - 1].concat(first);
+  }
+  return runs;
+}
 
 // Tissot indicatrices — small spherical circles (angular radius 6 deg) at
 // graticule intersections, drawn through each projection. A true circle on
@@ -101,6 +162,10 @@ const TISSOT_CENTERS = [];
 [-60, -30, 0, 30, 60].forEach((lat) =>
   [-150, -90, -30, 30, 90, 150].forEach((lon) => TISSOT_CENTERS.push([lon, lat]))
 );
+// Orthographic only shows one hemisphere — pre-filter to centers that are
+// actually visible from the chosen viewpoint, so we don't draw circles that
+// would be entirely behind the globe.
+const ORTHO_TISSOT_CENTERS = TISSOT_CENTERS.filter(([lon, lat]) => orthoVisible(lon, lat));
 
 function buildEllipse(rx, ry, steps) {
   const pts = [];
@@ -112,9 +177,19 @@ function buildEllipse(rx, ry, steps) {
 }
 
 // --- Pane layout (CSS px, mount is 1600x900) --------------------------------
+// Two rows so the full canvas height is used: Mercator + Mollweide share the
+// top row (conformal vs. equal-area contrast), Orthographic sits alone below
+// (perspective/limb-distortion contrast, and only shows a single hemisphere).
+const UNIT = 290;
+const ROW_GAP = 50;
+const ROW1_TOP = 140;
+const ROW2_TOP = 500;
+const ROW1_WIDTH = UNIT + ROW_GAP + 2 * UNIT; // Mercator + gap + Mollweide (2x wide)
+const ROW1_LEFT = (1600 - ROW1_WIDTH) / 2;
 const LAYOUT = {
-  mercator: { left: 35, top: 160, width: 500, height: 500 },
-  mollweide: { left: 565, top: 160, width: 1000, height: 500 },
+  mercator: { left: ROW1_LEFT, top: ROW1_TOP, width: UNIT, height: UNIT },
+  mollweide: { left: ROW1_LEFT + UNIT + ROW_GAP, top: ROW1_TOP, width: 2 * UNIT, height: UNIT },
+  orthographic: { left: (1600 - UNIT) / 2, top: ROW2_TOP, width: UNIT, height: UNIT },
 };
 const PAD = 0.08;
 const MERCATOR_Y_MAX = mercatorProject(0, 85)[1];
@@ -124,10 +199,13 @@ const MOLLWEIDE_Y_MAX = Math.SQRT2;
 const PANES = [
   {
     key: "mercator",
-    name: "Mercator",
+    name: "Mercator (conformal)",
     axisIdx: 0,
     ...LAYOUT.mercator,
     project: mercatorProject,
+    xMax: Math.PI,
+    yMax: MERCATOR_Y_MAX,
+    tissotCenters: TISSOT_CENTERS,
     boundaryXY: [
       [-Math.PI, MERCATOR_Y_MAX],
       [Math.PI, MERCATOR_Y_MAX],
@@ -141,7 +219,22 @@ const PANES = [
     axisIdx: 1,
     ...LAYOUT.mollweide,
     project: mollweideProject,
+    xMax: MOLLWEIDE_X_MAX,
+    yMax: MOLLWEIDE_Y_MAX,
+    tissotCenters: TISSOT_CENTERS,
     boundaryXY: buildEllipse(MOLLWEIDE_X_MAX, MOLLWEIDE_Y_MAX, 72),
+  },
+  {
+    key: "orthographic",
+    name: "Orthographic (true at center)",
+    axisIdx: 2,
+    ...LAYOUT.orthographic,
+    project: orthoProject,
+    visible: orthoVisible,
+    xMax: 1,
+    yMax: 1,
+    tissotCenters: ORTHO_TISSOT_CENTERS,
+    boundaryXY: buildEllipse(1, 1, 72),
   },
 ];
 
@@ -161,11 +254,15 @@ function drawPane(chart, pane) {
     if (close) path.push("Z");
     return path;
   }
-  function pathFromLonLat(pointsLonLat, close) {
-    return pathFromXY(
-      pointsLonLat.map((p) => pane.project(p[0], p[1])),
-      close
-    );
+  // Draws a lon/lat shape, splitting it into visible runs first when the
+  // pane only shows one hemisphere (Orthographic).
+  function drawShape(pointsLonLat, close, attrs) {
+    const runs = pane.visible ? visibleRuns(pointsLonLat, close, pane.visible) : [pointsLonLat];
+    runs.forEach((run) => {
+      if (run.length < 2) return;
+      const xy = run.map((p) => pane.project(p[0], p[1]));
+      renderer.path(pathFromXY(xy, close)).attr(attrs).add(group);
+    });
   }
 
   renderer
@@ -174,21 +271,20 @@ function drawPane(chart, pane) {
     .add(group);
 
   GRATICULE_LINES.forEach((line) => {
-    renderer.path(pathFromLonLat(line, false)).attr({ fill: "none", stroke: t.grid, "stroke-width": 1 }).add(group);
+    drawShape(line, false, { fill: "none", stroke: t.grid, "stroke-width": 1 });
   });
 
   CONTINENTS.forEach((continent) => {
-    renderer
-      .path(pathFromLonLat(continent.ring, true))
-      .attr({ fill: LAND_FILL, stroke: t.inkSoft, "stroke-width": 1, opacity: 0.9 })
-      .add(group);
+    drawShape(continent.ring, true, { fill: LAND_FILL, stroke: t.inkSoft, "stroke-width": 1, opacity: 0.9 });
   });
 
-  TISSOT_CENTERS.forEach(([lon0, lat0]) => {
-    renderer
-      .path(pathFromLonLat(tissotCircle(lon0, lat0, 6, 24), true))
-      .attr({ fill: t.palette[0], "fill-opacity": 0.32, stroke: t.palette[0], "stroke-width": 1.2 })
-      .add(group);
+  pane.tissotCenters.forEach(([lon0, lat0]) => {
+    drawShape(tissotCircle(lon0, lat0, 6, 24), true, {
+      fill: t.palette[0],
+      "fill-opacity": 0.32,
+      stroke: t.palette[0],
+      "stroke-width": 1.2,
+    });
   });
 
   renderer
@@ -200,13 +296,20 @@ function drawPane(chart, pane) {
 
 function drawLegend(chart) {
   const renderer = chart.renderer;
-  const y = 700;
+  const y = 835;
   let x = 460;
   [
-    { swatch: LAND_FILL, stroke: t.inkSoft, label: "Landmass (simplified coastline)" },
-    { swatch: t.palette[0], stroke: t.palette[0], label: "Tissot indicatrix — angular distortion" },
+    { shape: "square", swatch: LAND_FILL, stroke: t.inkSoft, label: "Landmass (simplified coastline)" },
+    // Drawn with the circle it actually represents (renderer.circle, the
+    // same symbol primitive Highcharts uses for point markers) instead of a
+    // generic square swatch.
+    { shape: "circle", swatch: t.palette[0], stroke: t.palette[0], label: "Tissot indicatrix — angular distortion" },
   ].forEach((item) => {
-    renderer.rect(x, y, 18, 18, 2).attr({ fill: item.swatch, stroke: item.stroke, "stroke-width": 1 }).add();
+    if (item.shape === "circle") {
+      renderer.circle(x + 9, y + 9, 9).attr({ fill: item.swatch, stroke: item.stroke, "stroke-width": 1 }).add();
+    } else {
+      renderer.rect(x, y, 18, 18, 2).attr({ fill: item.swatch, stroke: item.stroke, "stroke-width": 1 }).add();
+    }
     const label = renderer
       .text(item.label, x + 26, y + 14)
       .css({ color: t.inkSoft, fontSize: "14px" })
@@ -242,8 +345,8 @@ Highcharts.chart("container", {
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: PANES.map((pane) => ({
-    min: pane.key === "mercator" ? -Math.PI * (1 + PAD) : -MOLLWEIDE_X_MAX * (1 + PAD),
-    max: pane.key === "mercator" ? Math.PI * (1 + PAD) : MOLLWEIDE_X_MAX * (1 + PAD),
+    min: -pane.xMax * (1 + PAD),
+    max: pane.xMax * (1 + PAD),
     left: pane.left + "px",
     top: pane.top + "px",
     width: pane.width + "px",
@@ -257,8 +360,8 @@ Highcharts.chart("container", {
     endOnTick: false,
   })),
   yAxis: PANES.map((pane) => ({
-    min: pane.key === "mercator" ? -MERCATOR_Y_MAX * (1 + PAD) : -MOLLWEIDE_Y_MAX * (1 + PAD),
-    max: pane.key === "mercator" ? MERCATOR_Y_MAX * (1 + PAD) : MOLLWEIDE_Y_MAX * (1 + PAD),
+    min: -pane.yMax * (1 + PAD),
+    max: pane.yMax * (1 + PAD),
     left: pane.left + "px",
     top: pane.top + "px",
     width: pane.width + "px",
