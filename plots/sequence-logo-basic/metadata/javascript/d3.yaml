@@ -1,0 +1,243 @@
+library: d3
+language: javascript
+specification_id: sequence-logo-basic
+created: '2026-08-26T11:19:04Z'
+updated: '2026-08-26T11:35:59Z'
+generated_by: claude-sonnet
+workflow_run: 32962154415
+issue: 4421
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sequence-logo-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Distinctive serif/sans-serif typeface pairing (Georgia display title vs. sans-serif
+    chrome) directly resolves the DE-01 typography weakness flagged in attempt 1.
+  - Added a "Most conserved position" annotation (dashed leader + italic label) pointing
+    at position 6, giving the chart an intentional storytelling focal point beyond
+    the inherent sequence-logo form -- resolves the DE-03 feedback from attempt 1.
+  - Correct Shannon-entropy math scales stack heights against the 2-bit DNA ceiling,
+    and letters stack in true most-frequent-on-top order via a stable ascending sort.
+  - Letters are real scaled glyphs (getBBox + transform), stretched to fill each cell
+    width and height, not plain text -- a genuinely distinctive D3 technique.
+  - Domain-standard nucleotide coloring (A=green, C=blue, G=ochre, T=red) mapped onto
+    Imprint hues, identical between light and dark renders; both renders are fully
+    theme-correct with no dark-on-dark or light-on-light issues and no edge clipping.
+  weaknesses:
+  - Near-zero-information positions (4 and 10) still collapse to hairline slivers
+    at the baseline -- scientifically correct but risks reading as "missing data"
+    rather than "low conservation" at mobile thumbnail scale (~400px); this was flagged
+    as optional in attempt 1 and remains unaddressed.
+  - infoContent() helper plus a map/sort/entries chain is a small step away from a
+    flat top-to-bottom KISS script.
+  - Only the title/chrome received the distinctive serif treatment -- the letter glyphs
+    themselves remain the plain sans-serif chrome font, leaving some headroom for
+    further aesthetic polish.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold serif title "sequence-logo-basic · javascript · d3 · anyplot.ai" centered at top in dark ink; "Position" (x) and "Information content (bits)" (y) axis labels in dark ink; subtle horizontal gridlines at 0.5-bit intervals; L-shaped left+bottom axis frame; italic "Most conserved position" annotation with dashed leader line above position 6. All chrome text is clearly readable against the light background.
+      Data: Ten position columns of stacked, scaled letter glyphs colored by nucleotide (A=green #009E73, C=blue #4467A3, G=ochre #BD8233, T=red #AE3030), letters ordered most-frequent-on-top. Tallest stacks at positions 3 (T, ~1.0 bit) and 6 (A, ~1.2 bits, the annotated peak); positions 4 and 10 collapse to near-invisible hairline slivers reflecting near-zero information content. First series color for the dominant/most conserved base (A) is the brand green #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title/axis text now in light ink, fully legible; gridlines and axis frame flipped to light tones; annotation text and dashed leader also flipped to light tones and remain legible.
+      Data: Letter colors and stack geometry are pixel-identical to the light render -- only chrome flipped, as required. All letter glyphs are clearly distinguishable from the near-black background; no dark-on-dark failures observed anywhere (title, ticks, axis labels, annotation).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (16px ticks, 18px axis labels, 22px
+          title, 14px annotation); well-proportioned, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, axes, letters, or the peak annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Glyph heights correctly track information content; near-zero positions
+          render as scientifically accurate hairline slivers
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Colors are shape-redundant (each nucleotide is both a distinct letter
+          and color), mitigating CVD concerns
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; generous margins, nothing clipped at
+          any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Position" and "Information content (bits)" -- descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Domain-standard nucleotide semantic-exception mapping onto Imprint
+          hues; theme-correct backgrounds in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Distinctive serif/sans-serif typeface pairing resolves attempt-1
+          feedback; letter glyphs remain plain sans-serif
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New "Most conserved position" callout adds an intentional focal point
+          beyond the inherent sequence-logo form
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sequence logo
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stacking by frequency, bits scaling, scaled glyphs, axis labels all
+          present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=position, Y=information content (bits), all 10 positions shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Varied conservation levels across all 10 positions, including near-zero
+          and highly conserved cases
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible synthetic transcription-factor binding-site motif, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Frequencies sum to 1 per position; bits within the 0-2 DNA range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: infoContent() helper plus map/sort/entries chain is a small step
+          from a flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hard-coded motif data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No import statements; uses only the global d3
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts to #container via ANYPLOT_SIZE, current D3 v7 API, no animation'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: scaleBand/scaleLinear + axisBottom/axisLeft, idiomatic D3 patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: getBBox-based glyph scaling to stretch letters into filled cells
+          is a genuinely distinctive D3 technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
