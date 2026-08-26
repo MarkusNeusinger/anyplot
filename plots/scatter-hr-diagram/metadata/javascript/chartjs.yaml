@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: scatter-hr-diagram
 created: '2026-08-26T11:03:43Z'
-updated: '2026-08-26T11:08:01Z'
+updated: '2026-08-26T11:25:13Z'
 generated_by: claude-sonnet
 workflow_run: 32960535708
 issue: 4558
@@ -12,46 +12,59 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-hr-diagram/javascript/chartjs/plot-dark.html
-quality_score: 78
+quality_score: 86
 review:
   strengths:
-  - Bubble radius is intentionally scaled per region to real relative stellar size
-    (small white dwarfs at radius 4, huge supergiants at radius 15) — a thoughtful
-    astrophysical touch beyond generic scatter styling.
-  - The Sun is marked with a distinct star-shaped point style colored from the theme
-    ink token, so it stays visible as a reference point on both light and dark chrome.
-  - X-axis is correctly reversed (hot on left, cool on right) with a log Y-axis for
-    luminosity, matching the astrophysical HR-diagram convention exactly.
-  - Regions are cleanly labeled via the legend with semantically chosen colors (red
-    for red giants, blue for the hot white dwarfs), documented with a rationale comment
-    in the code.
+  - 'All three attempt-1 weaknesses are fixed: points now carry a real spectral_type
+    field colored by the spec''s conventional astronomical scheme (blue O/B, pale-cyan
+    A, ochre F/G, amber K, red M) via a documented semantic-exception rationale, notable
+    named stars (Sirius A, Sirius B, Betelgeuse, Rigel, Proxima Centauri) are labeled
+    directly on the canvas, and the y-axis tick callback now formats luminosity as
+    clean numbers ("700,000", "0.3", "0.0001") instead of the old four-decimal-zero
+    output.'
+  - Marker radius is scaled per region to real relative stellar size (white dwarfs=4,
+    main sequence=5, red giants=11, supergiants=15), and the custom hrLabels plugin
+    computes each region's log-space centroid to place italic region labels, with
+    notable-star name placement flipping text alignment based on which half of the
+    chart it falls in to avoid running off the plot.
+  - X-axis is correctly reversed (hot/blue on left, cool/red on right) with a logarithmic
+    y-axis for luminosity, exactly matching the astrophysical HR-diagram convention;
+    both required region labels and the Sun reference point are present.
+  - Theme-adaptive chrome is threaded through consistently — title/subtitle/legend/axis
+    colors all use t.ink/t.inkSoft tokens, and marker borders use t.pageBg so filled
+    spectral-group points get a background-colored ring rather than a hardcoded white
+    edge, keeping them theme-correct on both surfaces.
   weaknesses:
-  - Spec explicitly requires points to be color-coded by spectral_type using conventional
-    colors (blue O/B, white A, yellow F/G, orange K, red M). The implementation colors
-    by region (main sequence / red giants / supergiants / white dwarfs) instead and
-    never generates a spectral_type field at all — the mandated spectral-class coloring
-    requirement is unmet.
-  - Data model is missing two of the five spec-listed fields — spectral_type and star_name.
-    No notable stars besides the Sun are labeled by name, which reduces feature/data
-    coverage versus the spec's data section.
-  - Y-axis (logarithmic) tick labels render with four trailing decimal zeros (e.g.
-    "700,000.0000", "0.3000", "0.0001") — add a ticks.callback on the y scale (mirroring
-    the existing x-axis callback) to format these as plain/compact numbers instead
-    of the raw toString() output.
-  - Optional secondary x-axis spectral-class labels (O, B, A, F, G, K, M) from the
-    spec's 'Optional' note are not included — not a deduction on its own, but pairing
-    it with a real spectral_type field would meaningfully strengthen spec compliance.
+  - The 'red giants' region label overlaps directly with two data markers (a K-type
+    amber point and an M-type red point) in both renders — the word 'red' is visually
+    cut through by the circles sitting in front of/behind it. Nudge REGION_LABEL_POS['red
+    giants'] further up/left so the label clears the cluster's bounding box, not just
+    its centroid.
+  - The 'Rigel' notable-star label is drawn directly on top of Rigel's own marker
+    circle instead of beside it, unlike the other notable-star labels which correctly
+    offset left/right of their point. Apply the same px ± 12 offset logic used for
+    the other notable stars so the name sits next to the marker, not stamped on it.
+  - The Sun's star-shaped marker sits inside a dense, overlapping cluster of F/G (ochre)
+    main-sequence points, and while its unique shape and ink color add some contrast,
+    the reference point reads as visually cluttered rather than the 'distinct reference
+    point' the spec calls for — consider a small halo/leader-line offset or rendering
+    it after the label pass so it isn't nested among same-region circles.
+  - Using the amber semantic anchor for the K spectral-color bucket is a defensible
+    domain-convention substitute for 'orange' given the palette has no orange hex,
+    but amber's documented role in the style guide is warning/caution, not a general-purpose
+    color-family stand-in — worth a one-line note in code that this is a secondary
+    reuse of the anchor, distinct from its primary semantic role.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Hertzsprung-Russell Diagram · scatter-hr-diagram · javascript · chartjs · anyplot.ai" is dark ink, fully visible and not clipped. X-axis title "Surface Temperature — hot → cool" and Y-axis title "Luminosity (L☉, log scale)" are dark ink and readable. Tick labels are a slightly softer dark gray (inkSoft), readable, though the Y-axis ticks show odd four-decimal formatting (e.g. "700,000.0000", "0.3000"). Legend row (main sequence, red giants, supergiants, white dwarfs, Sun) uses point-style swatches with dark ink text, all legible. Grid lines are subtle light-gray, visible but not dominant.
-      Data: Main sequence points are brand green (#009E73, first categorical series as required), red giants are dark matte red, supergiants are lavender/purple, white dwarfs are blue, and the Sun is a black star-shaped marker sitting inside the dense main-sequence cluster near 5,800 K / 1 L☉. Marker sizes vary meaningfully by region (small white dwarfs, large supergiants), aiding readability of the density differences.
-      Legibility verdict: PASS (all text readable against the light background; only the tick-number formatting is a cosmetic issue, not a legibility failure).
+      Chrome: Title "Hertzsprung-Russell Diagram · scatter-hr-diagram · javascript · chartjs · anyplot.ai" is dark ink and fully visible, not clipped at any edge. The italic subtitle explaining the color mapping is dark-gray (inkSoft) and readable. X-axis title "Surface Temperature — hot → cool" and y-axis title "Luminosity (L☉, log scale)" are dark ink and clear. Tick labels (temperature in K, luminosity with clean number formatting like "700,000", "0.3", "0.0001") are legible soft-dark gray. Legend row (O/B, A, F/G, K, M, Sun) with point-style swatches is fully legible in dark ink. Grid lines are subtle light gray on both axes, visible but not competing with data.
+      Data: Points are colored by spectral type using the conventional astronomical scheme — blue for O/B, pale cyan for A, ochre for F/G, amber for K, matte red for M — with marker radius scaled to each region's relative stellar size (small white dwarfs, large supergiants). The Sun is marked with a black star-shaped point sitting inside the dense F/G main-sequence cluster near 5,800 K / 1 L☉. Region labels ("main sequence", "red giants", "supergiants", "white dwarfs") and five notable named stars (Sirius A, Sirius B, Betelgeuse, Rigel, Proxima Centauri) are labeled directly in-plot. One legibility/overlap issue: the "red giants" label text is partially overlapped by two data markers, and the "Rigel" label sits directly on top of its own marker circle rather than beside it — both remain readable (dark text over lighter/mid-tone markers) but are visually crowded.
+      Legibility verdict: PASS (all chrome and data-region text is readable against the light background; the two label/marker overlaps noted above are a polish issue, not a legibility failure — no text pixels are actually illegible).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and legend text all render in light/off-white ink, clearly legible against the dark background — no dark-on-dark failures observed. Tick labels use a slightly dimmer light-gray (inkSoft) and remain readable. Grid lines are a subtle dark gray, visible without overpowering the plot.
-      Data: All data colors are identical to the light render — main sequence green, red giants dark red, supergiants lavender, white dwarfs blue, Sun marker now rendered in the light ink color (white/off-white) so it remains visible against the dark backdrop. Confirms only chrome flips between themes, not data colors.
+      Chrome: Title, subtitle, axis titles, tick labels, and legend text all switch to light/off-white ink and remain clearly legible against the dark background — no dark-on-dark failures found anywhere, including the in-plot region and notable-star labels which correctly flip from dark ink to light ink. Grid lines are a subtle light-gray at low opacity, visible without dominating.
+      Data: All data colors are pixel-identical to the light render (blue O/B, pale-cyan A, ochre F/G, amber K, red M, plus the black-ink Sun marker also flips to light ink) — confirms only chrome flips between themes, not data colors, per the palette rule. The same "red giants"/"Rigel" label-over-marker overlap observed in the light render is present here too, and remains readable (light text over the same markers) but visually crowded.
       Legibility verdict: PASS (all text readable against the dark background; no dark-on-dark or light-on-light failures found).
   criteria_checklist:
     visual_quality:
@@ -60,38 +73,39 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; y-axis tick labels have an unpolished
-          four-decimal-zero format (e.g. 700,000.0000).
+        comment: All text readable in both themes; y-axis decimal-formatting issue
+          from attempt 1 is fixed.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: No text overlap; some data-marker overlap in the dense red-giant
-          and main-sequence clusters but colors remain distinguishable.
+        comment: '''red giants'' label overlaps two data markers, and ''Rigel'' label
+          sits on top of its own marker instead of beside it, in both renders.'
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker radius thoughtfully scaled per region to relative stellar
-          size; the densest red-giant cluster has some marker overlap.
+        comment: Region-scaled marker radii read well; the Sun's star marker is legible
+          but visually crowded inside the dense F/G cluster.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four hues (green/red/purple/blue) differ in lightness too, not a
-          red-green-only signal.
+        comment: Conventional spectral hues differ in lightness as well as hue, not
+          a red-green-only signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas exactly 3200x1800, title ~45% width, no overflow or clipping.
+        comment: Canvas gate passed; no clipping at any edge, generous margins, title/subtitle/legend
+          well spaced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -103,35 +117,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; other regions use documented semantic-exception
-          palette order; theme-correct backgrounds in both renders.'
+        comment: Documented semantic-exception use of conventional spectral colors
+          instead of brand-green-first ordinal order, per default-style-guide.md domain-convention
+          rule; both renders theme-correct.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Bubble size mapped to real relative stellar radius per region, star-shaped
-          Sun marker — intentional beyond generic defaults.
+        comment: Region-scaled marker radii, custom in-plot label plugin, notable-star
+          callouts, and theme-adaptive marker borders show above-default polish.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid, no boxed frame, decent whitespace, but unpolished y-tick
-          number formatting undercuts refinement.
+        comment: Subtle grid and generous spacing, but the label/marker overlaps (red
+          giants, Rigel) and the crowded Sun marker undercut refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear main-sequence diagonal, distinct region clusters, Sun marked
-          as reference point — a legible narrative.
+        comment: Clear regional grouping, named notable stars, and a distinct (if
+          crowded) Sun reference point create a legible narrative arc.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,48 +157,50 @@ review:
         comment: Correct scatter plot.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: X-reversed, log-Y, region labels, and Sun marker all present, but
-          the spec-mandated spectral-type conventional-color coding is missing entirely
-          (colored by region instead).
+        passed: true
+        comment: Reversed x-axis, log y-axis, conventional spectral-type coloring,
+          all four regions labeled, Sun marked — every required feature present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=temperature, Y=luminosity, full spec ranges represented.
+        comment: Temperature on x, luminosity on y, full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend labels match region names.
+        comment: Title matches the mandated format with descriptive prefix; legend
+          labels match the spectral-group colors.
     data_quality:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: spectral_type and star_name fields from the spec's data section are
-          entirely absent; only temperature/luminosity/region are modeled.
+        passed: true
+        comment: All five spec data fields present (temperature, luminosity, spectral_type,
+          star_name, region) across ~206 stars in four regions.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible astrophysical scaling laws per region, neutral topic.
+        comment: Real astrophysical scaling per region plus real notable stars (Sirius
+          A/B, Betelgeuse, Rigel, Proxima Centauri, Sun) at plausible values; neutral
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Temperature 2,000-42,000K and luminosity 0.0001-700,000+ L☉ match
-          the spec's stated ranges well.
+        comment: Temperature ~2,000-42,000K and luminosity ~0.0001-700,000 L☉ closely
+          track the spec's stated ranges; population within the 100-500 star guidance.
     code_quality:
       score: 10
       max: 10
@@ -193,32 +210,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat script.
+        comment: Only small, clearly-named pure helper functions; no unnecessary classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG + Box-Muller.
+        comment: Fixed-seed LCG + Box-Muller PRNG, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; only the global Chart is used.
+        comment: No imports needed; uses only browser/Chart.js globals per the mount-node
+          contract.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity.
+        comment: No fake UI/interactivity; well-commented rationale for the semantic
+          color exception.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract exactly: canvas appended to #container,
-          responsive/maintainAspectRatio/animation set correctly.'
+        comment: 'Correct mount-node contract: single canvas appended to #container,
+          animation:false, current Chart.js v4 scatter/logarithmic API.'
     library_mastery:
       score: 7
       max: 10
@@ -228,20 +247,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic scatter type, logarithmic scale, reversed axis.
+        comment: Idiomatic scatter + logarithmic scale config, multi-dataset legend,
+          custom Chart.js plugin via afterDatasetsDraw.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom pointStyle 'star' for the Sun, per-dataset radius tuning —
-          goes beyond default usage.
-  verdict: REJECTED
+        comment: Per-point radius arrays, pointStyle:'star' for the Sun, and a bespoke
+          label-plugin are distinctive Chart.js-specific touches.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - publication-ready
