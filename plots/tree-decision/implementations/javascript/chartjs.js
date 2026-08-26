@@ -51,6 +51,22 @@ function layout(id, depth) {
 layout("d0", 0);
 const maxDepth = Math.max(...Object.values(coords).map((c) => c.x));
 
+// Right-align terminal payoffs into one column (dashed leader line bridges
+// each shallower terminal's structural depth to the aligned column) so the
+// tree's outcomes fill the canvas evenly instead of leaving empty pockets
+// wherever a branch resolves before reaching the deepest stage.
+const displayCoords = {};
+const leaders = [];
+NODES.forEach((n) => {
+  const c = coords[n.node_id];
+  if (n.node_type === "terminal" && c.x < maxDepth) {
+    displayCoords[n.node_id] = { x: maxDepth, y: c.y };
+    leaders.push({ data: [c, displayCoords[n.node_id]] });
+  } else {
+    displayCoords[n.node_id] = c;
+  }
+});
+
 // --- Helpers -----------------------------------------------------------
 function withAlpha(hex, alpha) {
   const h = hex.replace("#", "");
@@ -73,7 +89,7 @@ const NODE_STYLE = {
 };
 
 const nodesByType = { decision: [], chance: [], terminal: [] };
-NODES.forEach((node) => nodesByType[node.node_type].push({ x: coords[node.node_id].x, y: coords[node.node_id].y, node }));
+NODES.forEach((node) => nodesByType[node.node_type].push({ x: displayCoords[node.node_id].x, y: displayCoords[node.node_id].y, node }));
 
 const nodeDatasets = Object.entries(nodesByType).map(([type, points]) => {
   const style = NODE_STYLE[type];
@@ -101,6 +117,19 @@ const edgeDatasets = NODES.filter((n) => n.parent_id).map((child) => ({
   tension: 0,
 }));
 
+// --- Leader lines: faint dotted guides from a terminal's true depth out to
+// the aligned outcome column (purely a visual bridge, not a tree edge) -----
+const leaderDatasets = leaders.map(({ data }) => ({
+  data,
+  showLine: true,
+  borderColor: withAlpha(t.inkSoft, 0.22),
+  borderWidth: 1,
+  borderDash: [2, 3],
+  pointRadius: 0,
+  fill: false,
+  tension: 0,
+}));
+
 // --- Custom draw: branch labels, pruned cross marks, EMV/payoff text -------
 const annotationsPlugin = {
   id: "decisionTreeAnnotations",
@@ -115,7 +144,7 @@ const annotationsPlugin = {
       const midY = scales.y.getPixelForValue((parent.y + point.y) / 2);
       const alpha = child.pruned ? 0.4 : 1;
 
-      ctx.font = "13px sans-serif";
+      ctx.font = "15px sans-serif";
       ctx.fillStyle = withAlpha(t.inkSoft, alpha);
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
@@ -130,7 +159,7 @@ const annotationsPlugin = {
     });
 
     NODES.forEach((node) => {
-      const p = coords[node.node_id];
+      const p = displayCoords[node.node_id];
       const px = scales.x.getPixelForValue(p.x);
       const py = scales.y.getPixelForValue(p.y);
       const alpha = node.pruned ? 0.4 : 1;
@@ -167,7 +196,7 @@ const TITLE = "tree-decision · javascript · chartjs · anyplot.ai";
 
 new Chart(canvas, {
   type: "scatter",
-  data: { datasets: [...edgeDatasets, ...nodeDatasets] },
+  data: { datasets: [...edgeDatasets, ...leaderDatasets, ...nodeDatasets] },
   plugins: [annotationsPlugin],
   options: {
     responsive: true,
