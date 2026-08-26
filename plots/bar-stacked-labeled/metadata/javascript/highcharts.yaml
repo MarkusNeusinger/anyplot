@@ -1,0 +1,260 @@
+library: highcharts
+language: javascript
+specification_id: bar-stacked-labeled
+created: '2026-08-26T19:09:53Z'
+updated: '2026-08-26T19:24:23Z'
+generated_by: claude-sonnet
+workflow_run: 33003280712
+issue: 3504
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/javascript/highcharts/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Peak-quarter storytelling layer added: a subtle Imprint-green plotBand highlights
+    the Q4 column, and its stack-total label is bolder, larger, and rendered in brand
+    green — the eye lands on the standout quarter immediately.'
+  - Data-driven subtitle ("Q4 leads at $51M in Hardware — total revenue climbs every
+    quarter") names both the standout quarter and its top contributor, giving the
+    viewer the takeaway without doing mental arithmetic.
+  - Component data now varies naturally (Hardware dips in Q2, Services and Support
+    dip in Q3) instead of uniform quarter-over-quarter growth, better showcasing the
+    stacked-composition aspect of the spec.
+  - Correct idiomatic use of Highcharts' built-in stackLabels with a custom formatter
+    ("$XM") for the mandated total labels, plus plotBands and Highcharts.color().setOpacity()
+    for the peak-highlight treatment.
+  - 'Imprint palette and theme-adaptive chrome remain fully correct in both renders
+    — first series #009E73, canonical order for the rest, identical data colors across
+    themes, no dark-on-dark or light-on-light failures.'
+  - Clean, minimal, fully reproducible code (hardcoded deterministic arrays, no functions/classes)
+    with tuned axis headroom (maxPadding) so total labels never crowd the canvas top.
+  weaknesses:
+  - Title still renders at roughly 45-48% of the plot width even at the bumped 27px
+    size — below the ~70-85% the style guide expects for this exact mandated title
+    string. Not a legibility problem (fully readable, not clipped), just a proportional
+    nit; a further size bump would close the gap.
+  - The peak-highlight plotBand is very subtle (8% opacity) — effective but easy to
+    miss at a quick glance; a couple points more opacity would make the storytelling
+    emphasis land faster without competing with the data.
+  - Visual refinement (grid, spines, whitespace) is unchanged from the previous attempt
+    — solid but still close to the token-default baseline rather than an exhaustively
+    polished treatment.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "bar-stacked-labeled · javascript · highcharts · anyplot.ai" centered at top; soft-dark subtitle "Q4 leads at $51M in Hardware — total revenue climbs every quarter"; rotated "Revenue ($M)" y-axis title; soft-dark Q1-Q4 category labels and y-axis ticks (0-140); subtle horizontal gridlines; centered legend with four swatches (Hardware, Software, Services, Support). All fully readable against the light background.
+      Data: Four stacked columns, each built bottom-to-top from Support (ochre #BD8233) → Services (blue #4467A3) → Software (lavender #C475FD) → Hardware (green #009E73, topmost) — first categorical series is confirmed #009E73. Bold total labels sit above each stack ("$97M", "$105M", "$111M", "$130M"); the Q4 label is larger and rendered in brand green, and a soft green-tinted plotBand highlights the Q4 column to draw the eye to the peak quarter.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout with title/subtitle/axis titles/ticks/legend all rendered in light tones (no dark-on-dark anywhere); gridlines still subtly visible.
+      Data: Data colors are pixel-identical to the light render (ochre/blue/lavender/green stack, same $-value total labels, same Q4 green highlight band and green/bold peak label) — only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, fully readable in both themes, no
+          overflow/clipping; title still fills only ~45-48% of plot width vs. the
+          ~70-85% expected for this mandated title format
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap anywhere — title, subtitle, axis labels, stack totals,
+          and legend all sit clear of each other
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Column segments and total labels clearly visible and appropriately
+          sized for 4 categories x 4 components
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues (green/lavender/blue/ochre) with good contrast, CVD-safe,
+          no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills a healthy majority of the canvas, balanced margins, legend
+          anchored directly below the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis labeled 'Revenue ($M)' with units; category axis is self-explanatory
+          (Q1-Q4)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, remaining series in canonical Imprint order,
+          identical data colors across themes, correct theme-adaptive chrome and backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Peak-highlight band, differentiated peak total-label color/size,
+          and rounded bar corners add a clear design layer above the previous attempt's
+          plain token mapping
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, tuned padding/headroom, and a soft alpha-blended
+          highlight band; still close to a well-configured baseline rather than exhaustively
+          polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak band + bolder green total label + data-driven subtitle naming
+          the leading quarter and its top contributor — a clear focal point, viewer
+          sees the insight immediately
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked column chart with total labels above each stack
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Total labels above each stack, consistent $XM formatting, adequate
+          headroom above tallest bar (maxPadding + endOnTick:false)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on x-axis, stacked revenue on y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'bar-stacked-labeled · javascript · highcharts
+          · anyplot.ai'; legend labels match series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Components now show natural variation (Hardware dips Q2, Services/Support
+          dip Q3) rather than uniform growth, showcasing the stacked-composition aspect
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible business scenario — quarterly revenue by
+          product line
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and quarter-over-quarter growth rates are realistic for a
+          growing hardware/software business
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat imports/data/chart structure, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the provided ANYPLOT_TOKENS/Highcharts globals, nothing
+          unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise, no over-engineering, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Calls Highcharts.chart('container', ...) per the mount-node contract,
+          animation disabled, current API (stackLabels.formatter, useHTML)
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic stackLabels, plotBands, and Highcharts.color() utility
+          used exactly as the library intends
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: stackLabels.formatter with useHTML plus plotBands + programmatic
+          color opacity are distinctive Highcharts capabilities, well-matched to this
+          spec
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
