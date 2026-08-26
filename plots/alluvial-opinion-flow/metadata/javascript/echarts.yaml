@@ -1,0 +1,234 @@
+library: echarts
+language: javascript
+specification_id: alluvial-opinion-flow
+created: '2026-08-26T17:54:40Z'
+updated: '2026-08-26T18:09:22Z'
+generated_by: claude-sonnet
+workflow_run: 32995898524
+issue: 4430
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-opinion-flow/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'The Review 1 weaknesses were addressed directly: changer-flow opacity dropped
+    from 0.16 to 0.09 (cutting mid-chart visual noise) and a computed polarization-trend
+    subtitle now makes the spec''s ''reveal polarization'' requirement explicit'
+  - The polarization callout is derived from the same totals array driving the diagram,
+    not a separately hard-coded claim
+  - 'Data integrity is airtight: every wave''s category totals are the exact row/column
+    sums of the transition matrices, and all four waves sum to 1000 respondents'
+  - Consistent per-category coloring across all four waves using the Imprint semantic-exception
+    order, with brand green reserved for the first series
+  - Both light and dark renders are fully legible with correctly flipped chrome and
+    identical data colors
+  weaknesses:
+  - Node labels remain at 13px across 5 stacked rows x 4 columns of two-line 'Category
+    / N' text - still dense enough to be a mobile-scale (~400px) legibility risk
+  - LM-02 and DE-01 remain just short of top marks - a distinctive Sankey-only feature
+    (e.g. custom tooltip formatter, draggable node reordering) would push library
+    mastery further, though this is a minor enhancement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title, subtitle (new polarization-trend callout), column headers (Q1-Q4 2024), and node labels are all dark and clearly readable against the light background.
+      Data: Five category bands - Strongly Agree (#009E73 brand teal), Agree (#99B314 lime), Neutral (muted gray), Disagree (#BD8233 ochre), Strongly Disagree (#AE3030 matte red). Stable-respondent ribbons are thick/saturated (opacity 0.55); cross-category ribbons are faint (opacity 0.09), reducing mid-chart visual noise versus attempt 1.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title and headers render in white/light text; subtitle and node labels use a softer light-gray (inkSoft) tone. All clearly readable against every band color, including the darker red and ochre bands. No dark-on-dark failures.
+      Data: All five band colors are identical to the light render (teal, lime, gray, ochre, red) - confirms data-color consistency across themes; only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicit sizes set, readable in both themes; 13px dense node labels
+          remain a mobile-scale risk
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, nodes, headers, or the new subtitle
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lowered changer opacity (0.16 -> 0.09) resolved prior mid-chart noise
+          complaint
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hue never the sole distinguishing signal (fixed row position + lightness
+          variation)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; well-proportioned, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear chronological column headers; correct mandated title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Imprint semantic-exception order; theme-correct
+          in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Sentiment-driven color mapping, computed callout, custom graphic
+          overlays
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Reduced ribbon noise, generous margins, subtle node borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New computed polarization subtitle directly resolves attempt-1 storytelling
+          gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial/Sankey opinion-flow diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec Notes items now satisfied, including explicit polarization
+          callout
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Row/column sums verified, 1000 respondents preserved every wave
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; node labels substitute for a legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 waves x 5 categories, 20 flow connections, covers stability/change/totals
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Generic policy-approval survey framing, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1000 respondents, realistic modest wave-over-wave shifts
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script, idiomatic data-building helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; echarts global used correctly
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; polarization % derived from same data structure
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no explicit size/dpr'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper sankey config: nodeAlign, nodeGap, layoutIterations, emphasis.focus'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Creative graphic API usage for headers/callout, per-node label.formatter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
