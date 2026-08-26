@@ -30,6 +30,10 @@ for (let i = 0; i < 420; i++) {
   shearStrength.push(base + skewBump);
 }
 
+// Over-torque caution zone: mean + 1.5 standard deviations, derived from the
+// sample itself rather than a hard-coded spec number.
+const overTorqueThreshold = d3.mean(shearStrength) + 1.5 * d3.deviation(shearStrength);
+
 // --- Bins ---------------------------------------------------------------
 const binGenerator = d3.bin().domain(d3.extent(shearStrength)).thresholds(24);
 const bins = binGenerator(shearStrength);
@@ -58,17 +62,32 @@ g.append("g")
   .attr("stroke", t.grid)
   .attr("stroke-width", 1);
 
-// --- Bars -------------------------------------------------------------------
-g.selectAll("rect")
+// --- Bars ---------------------------------------------------------------
+// Bins beyond the over-torque caution zone are flagged in amber (the Imprint
+// warning anchor) so the skewed tail the data already contains reads as a
+// deliberate QC signal instead of just "the rightmost bars".
+const bars = g
+  .selectAll("rect.bar")
   .data(bins)
   .join("rect")
+  .attr("class", "bar")
   .attr("x", (d) => x(d.x0) + 1)
   .attr("y", (d) => y(d.length))
   .attr("width", (d) => Math.max(0, x(d.x1) - x(d.x0) - 1))
   .attr("height", (d) => ih - y(d.length))
-  .attr("fill", t.palette[0])
+  .attr("fill", (d) => ((d.x0 + d.x1) / 2 >= overTorqueThreshold ? t.amber : t.palette[0]))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
+
+// --- Over-torque reference line ------------------------------------------
+g.append("line")
+  .attr("x1", x(overTorqueThreshold))
+  .attr("x2", x(overTorqueThreshold))
+  .attr("y1", 0)
+  .attr("y2", ih)
+  .attr("stroke", t.inkSoft)
+  .attr("stroke-width", 1.5)
+  .attr("stroke-dasharray", "5,4");
 
 // --- Axes -------------------------------------------------------------------
 const xAxis = g
@@ -103,6 +122,16 @@ g.append("text")
   .style("font-size", "16px")
   .text("Number of Fasteners");
 
+// --- Over-torque legend (explains the amber semantic, top-right of chart) --
+const legend = g.append("g").attr("transform", `translate(${iw - 230}, 6)`);
+legend.append("rect").attr("width", 14).attr("height", 14).attr("y", -11).attr("fill", t.amber);
+legend
+  .append("text")
+  .attr("x", 20)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "13px")
+  .text(`Over-torque risk (>${Math.round(overTorqueThreshold)} N)`);
+
 // --- Title --------------------------------------------------------------
 svg
   .append("text")
@@ -113,3 +142,25 @@ svg
   .style("font-size", "22px")
   .style("font-weight", "600")
   .text("histogram-basic · javascript · d3 · anyplot.ai");
+
+// --- Hover tooltips (interactive; opacity 0 by default, invisible in the ---
+// --- static PNG, revealed via d3 mouse events in the exported HTML) --------
+const tooltip = svg
+  .append("g")
+  .attr("class", "tooltip")
+  .style("opacity", 0)
+  .style("pointer-events", "none");
+const tooltipRect = tooltip.append("rect").attr("fill", t.elevatedBg).attr("stroke", t.inkSoft).attr("rx", 4);
+const tooltipText = tooltip.append("text").attr("fill", t.ink).style("font-size", "13px");
+
+bars
+  .on("mouseover", function (event, d) {
+    tooltipText.text(`${Math.round(d.x0)}–${Math.round(d.x1)} N: ${d.length}`);
+    const bbox = tooltipText.node().getBBox();
+    tooltipRect.attr("width", bbox.width + 16).attr("height", bbox.height + 10);
+    tooltipText.attr("x", 8).attr("y", bbox.height + 1);
+    const [mx, my] = d3.pointer(event, svg.node());
+    tooltip.attr("transform", `translate(${mx + 12},${my - bbox.height - 20})`);
+    tooltip.style("opacity", 1);
+  })
+  .on("mouseout", () => tooltip.style("opacity", 0));
