@@ -87,10 +87,24 @@ const ANTARCTICA = [
   [180, -63], [180, -90], [-180, -90], [-180, -63],
 ];
 
-const landFeatures = [
+// Mercator has no pole-aware clipping (unlike .clipAngle() on Orthographic), so a
+// ring enclosing the south-pole singularity renders inverted once .clipExtent()
+// clips it to a finite rectangle. Clamp Antarctica's southern edge to the same
+// latitude as mercatorBounds (-82) for the Mercator panel so the ring never spans
+// the pole there.
+const ANTARCTICA_MERCATOR = [
+  [-180, -63], [-150, -65], [-120, -66], [-90, -68], [-60, -70], [-30, -72],
+  [0, -74], [30, -72], [60, -70], [90, -68], [120, -66], [150, -65],
+  [180, -63], [180, -82], [-180, -82], [-180, -63],
+];
+
+const baseLandRings = [
   NORTH_AMERICA, SOUTH_AMERICA, GREENLAND, EURASIA, AFRICA, MADAGASCAR,
-  AUSTRALIA, NEW_ZEALAND, JAPAN, BRITISH_ISLES, ANTARCTICA,
-].map(poly);
+  AUSTRALIA, NEW_ZEALAND, JAPAN, BRITISH_ISLES,
+];
+
+const landFeatures = [...baseLandRings, ANTARCTICA].map(poly);
+const landFeaturesMercator = [...baseLandRings, ANTARCTICA_MERCATOR].map(poly);
 
 // --- Graticule + Tissot indicatrices (equal angular-radius circles, reveal distortion) ---
 const graticule = d3.geoGraticule().step([30, 30]);
@@ -168,7 +182,8 @@ panels.forEach((p, i) => {
     .attr("fill", "none").attr("stroke", t.grid).attr("stroke-width", 1);
 
   // Landmasses (neutral fill — not a data-driven color)
-  g.selectAll("path.land").data(landFeatures).join("path")
+  const landData = p.key === "mercator" ? landFeaturesMercator : landFeatures;
+  g.selectAll("path.land").data(landData).join("path")
     .attr("class", "land").attr("d", path)
     .attr("fill", MUTED).attr("fill-opacity", 0.55)
     .attr("stroke", t.inkSoft).attr("stroke-width", 0.5);
