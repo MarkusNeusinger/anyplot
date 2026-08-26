@@ -7,13 +7,13 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) -----------------------------------------
 // 12-bp transcription-factor binding site: a highly conserved E-box core
-// (CACGTG, the canonical bHLH recognition motif) flanked by near-degenerate
+// (CACGTG, the canonical bHLH recognition motif) flanked by weakly-preferred
 // positions, letter order [A, C, G, T].
 const letters = ["A", "C", "G", "T"];
 const frequencyMatrix = [
-  [0.28, 0.24, 0.22, 0.26],
-  [0.32, 0.18, 0.22, 0.28],
-  [0.25, 0.25, 0.25, 0.25],
+  [0.45, 0.2, 0.15, 0.2],
+  [0.18, 0.19, 0.45, 0.18],
+  [0.18, 0.46, 0.18, 0.18],
   [0.15, 0.55, 0.1, 0.2],
   [0.05, 0.85, 0.05, 0.05],
   [0.82, 0.06, 0.06, 0.06],
@@ -21,8 +21,8 @@ const frequencyMatrix = [
   [0.05, 0.06, 0.84, 0.05],
   [0.05, 0.05, 0.06, 0.84],
   [0.06, 0.05, 0.83, 0.06],
-  [0.22, 0.28, 0.32, 0.18],
-  [0.29, 0.21, 0.24, 0.26],
+  [0.16, 0.18, 0.46, 0.2],
+  [0.46, 0.16, 0.18, 0.2],
 ];
 const positions = frequencyMatrix.map((_, i) => i + 1);
 const MAX_BITS = 2; // log2(4) -- max information content for a 4-letter DNA alphabet
@@ -90,8 +90,8 @@ const sequenceLogoGlyphs = {
         if (!el) continue;
 
         const rectWidth = el.width * 0.88;
-        const rectTop = el.y + 1.5;
-        const rectBottom = el.base - 1.5;
+        const rectTop = el.y + 0.5;
+        const rectBottom = el.base - 0.5;
         const rectHeight = rectBottom - rectTop;
         if (rectHeight <= 0) continue;
 
@@ -100,7 +100,11 @@ const sequenceLogoGlyphs = {
         const naturalWidth = metrics.width;
         const naturalHeight = metrics.actualBoundingBoxAscent || 72;
 
+        // Shadow (unlike stroke) isn't stretched by the non-uniform glyph
+        // scale below, so it gives a crisp, undistorted separation edge.
         ctx.save();
+        ctx.shadowColor = t.pageBg;
+        ctx.shadowBlur = 3;
         ctx.translate(el.x, rectBottom);
         ctx.scale(rectWidth / naturalWidth, rectHeight / naturalHeight);
         ctx.fillStyle = letterColor[letter];
