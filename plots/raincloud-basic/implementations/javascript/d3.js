@@ -1,7 +1,7 @@
 // anyplot.ai
 // raincloud-basic: Basic Raincloud Plot
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-08-26
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 91/100 | Created: 2026-08-26
 
 // --- Reproducible RNG (LCG + Box-Muller) ------------------------------------
 let seed = 20260826;
