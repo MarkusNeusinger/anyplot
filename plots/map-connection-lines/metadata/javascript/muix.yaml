@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: map-connection-lines
 created: '2026-08-26T08:03:16Z'
-updated: '2026-08-26T08:09:43Z'
+updated: '2026-08-26T08:20:05Z'
 generated_by: claude-sonnet
 workflow_run: 32945134075
 issue: 3746
@@ -12,190 +12,178 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-conne
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-connection-lines/javascript/muix/plot-dark.html
-quality_score: 80
+quality_score: 92
 review:
   strengths:
-  - Brand-green Imprint palette and theme-correct backgrounds/chrome hold identically
-    across both light and dark renders
-  - Thoughtful dual encoding of passenger volume via arc thickness AND opacity, plus
-    hub-circle radius scaled by route degree, creates a clear visual hierarchy (JFK/LHR/DXB/SYD
-    read immediately as major hubs)
-  - Manual label-nudging (labelNudge map) prevents the LHR/CDG/FRA labels from colliding
-    in the dense European cluster while keeping the markers at true coordinates —
-    real attention to detail
-  - Creative, idiomatic use of ChartContainer plus the useXScale/useYScale/useDrawingArea
-    hooks to build a custom SVG connection-arc overlay — a chart type MUI X does not
-    offer natively, achieved without leaving the community package
-  - 'Realistic, factually accurate data: real airport coordinates and plausible real-world
-    passenger volumes for the routes shown'
+  - Hub markers sized by route degree, plus line thickness and opacity mapped to passenger
+    volume within the spec's suggested 0.3-0.6 alpha range - a coherent multi-variable
+    encoding.
+  - Hand-traced continent outlines and Equator/Prime Meridian reference lines give
+    real geographic context despite MUI X having no native map/geo chart type.
+  - Idiomatic, creative use of MUI X's compositional model - useXScale/useYScale/useDrawingArea
+    hooks drive the quadratic-bezier arcs and continent paths as custom overlays layered
+    on ChartContainer.
+  - 'Both themes render correctly: identical #009E73 data color in light and dark,
+    theme-adaptive chrome, canvas exactly 3200x1800.'
+  - Manual label-nudge handling for the tightly clustered LHR/CDG/FRA hub successfully
+    avoids overlap there.
   weaknesses:
-  - 'Title is horizontally off-center in BOTH renders: measured pixel bounding box
-    is x=1613-2608 out of the 3200px canvas (center ~2110), while the canvas/plot-area
-    center is ~1600 - a ~510px (16% of width) rightward shift that leaves a large
-    empty quadrant at top-left. The MapTitle x calculation (drawingArea.left + drawingArea.width/2)
-    is not landing at the true center; center it explicitly against window.ANYPLOT_SIZE.width/2
-    instead, or debug why the drawingArea-based center is off.'
-  - Spec explicitly asks to 'show a base map with country borders or coastlines for
-    geographic context' - this implementation renders only a bare longitude/latitude
-    grid with Equator/Prime Meridian reference lines, no coastline or country-border
-    geography at all. Since MUI X community has no map component, add a simplified,
-    manually-drawn world-coastline SVG path (even a low-detail continent outline)
-    as a background layer behind the connection arcs so the chart reads as a map rather
-    than an abstract scatter grid.
-  - 'Line opacity slightly exceeds the spec''s suggested alpha range: code computes
-    strokeOpacity = 0.35 + ratio * 0.35, maxing at 0.70, versus the spec''s suggested
-    ~0.3-0.6 - tighten the formula to stay within that band.'
+  - SFO and LAX are geographically close; LAX's default label-nudge (dy = -(radius+8),
+    dx = 0, since it isn't in the manual labelNudge map) places the 'L' of the 'LAX'
+    text directly overlapping the SFO circle marker in both light and dark renders.
+    Add an SFO/LAX entry to labelNudge (same technique already used for LHR/CDG/FRA)
+    to separate them.
+  - The spec's optional `label` field (route name/identifier for tooltips) isn't surfaced
+    anywhere - not even as a native SVG <title> on each route path. Since the custom
+    overlay paths bypass MUI X's own tooltip system, add a <title> child per route
+    arc so the interactive HTML exposes route names on hover.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Title "map-connection-lines · javascript · muix · anyplot.ai" is dark ink, clearly legible, but sits noticeably right of the horizontal center (measured bbox x=1613-2608 of 3200px canvas), leaving a large blank area at top-left. Axis labels ("Longitude (°)", "Latitude (°)") and tick labels are dark/soft-dark ink, fully readable. Grid lines are thin and subtle. Dashed Equator/Prime Meridian reference lines with small gray labels are visible and unobtrusive. Caption at bottom-left ("Line thickness and opacity encode annual passenger volume...") is legible in soft ink.
-      Data: All connection arcs and airport markers render in the single brand green (#009E73), with arc thickness and opacity scaled to passenger volume and marker radius scaled to route-count (hub size). Airport code labels (JFK, LHR, SYD, etc.) are dark and legible, with LHR/CDG/FRA manually nudged apart to avoid collision.
-      Legibility verdict: PASS (title readable despite being off-center; all other text clearly readable against the light background).
+      Background: Warm off-white (#FAF8F1-consistent cream), not pure white.
+      Chrome: Title "map-connection-lines · javascript · muix · anyplot.ai" in dark ink, centered, fully visible. Longitude/Latitude axis titles and tick labels in dark/soft-dark ink, clearly legible. Grid lines are subtle light gray. Dashed Equator and Prime Meridian reference lines with small gray labels are visible but unobtrusive. Caption at bottom-left in soft ink explains the thickness/opacity encoding.
+      Data: Continent outlines rendered as light gray filled polygons with soft borders, giving map context. Sixteen green (#009E73) bezier-arc connection lines vary in thickness (2.5-8.5px) and opacity (0.3-0.6) by passenger volume. Sixteen green circular airport markers, sized by route-degree (hub importance), each with a white halo stroke and a dark IATA-code label positioned to avoid the marker.
+      Legibility verdict: PASS. All text reads clearly against the light background. One minor exception: the "LAX" label text overlaps the adjacent SFO marker circle (not a legibility failure of the text itself, but a collision with a data element - see weaknesses).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Same title text now rendered in light ink, same off-center position as the light render (identical pixel bbox, confirming a reproducible, deterministic layout defect rather than a one-off rendering fluke). Axis labels and tick labels are light-colored and clearly legible against the dark background - no dark-on-dark failures observed. Grid lines and reference-line dashes remain subtle but visible. Caption text is legible in soft light ink.
-      Data: Connection arcs and airport markers are still the identical brand green #009E73 as the light render - only the chrome (background, text, grid) flipped, as required. Airport code labels remain legible in light ink.
-      Legibility verdict: PASS (no dark-on-dark issues; data colors identical to light render; same title centering defect carries over).
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title and axis titles/ticks render in light ink, fully legible against the dark background - no dark-on-dark text anywhere. Grid lines are subtle light gray, visible without dominating. Reference-line labels and caption are in a soft light gray, readable.
+      Data: Identical #009E73 green used for arcs and markers - confirmed unchanged from the light render, only the chrome (background, text, grid, continent fill/stroke) flipped tone. Continent polygons render as dark gray masses with lighter gray outlines, still legible as landmasses against the near-black ocean/background.
+      Legibility verdict: PASS. All text is clearly readable in the dark theme; no dark-on-dark or light-on-light failures. Same LAX/SFO marker-label collision as in the light render (layout-level issue, present in both themes).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes; deducted
-          for the off-center title reducing overall proportional balance
+        comment: Explicit font sizes throughout (22/16/14/13px), all readable in both
+          themes; no dark-on-dark or light-on-light.
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: Manual label nudging (labelNudge) prevents any collisions, even in
-          the dense LHR/CDG/FRA cluster
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Arc thickness/opacity and marker radius scale sensibly with data,
-          though the JFK-LHR cluster of stacked arcs gets visually dense
+        comment: LHR/CDG/FRA cluster manually nudged and clean, but the LAX label
+          overlaps the SFO marker circle in both renders.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size scales with hub degree, line thickness/opacity scales
+          with passenger volume; well suited to 16-route density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue monochrome brand green, good contrast against both backgrounds,
-          no red-green reliance
+        comment: Single-hue green encoding via opacity/thickness, not red-green reliant,
+          good contrast on both backgrounds.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Plot area itself fills the canvas well, but the title sits ~16% of
-          canvas width right of true center in both renders, leaving an unbalanced
-          blank top-left quadrant
+        comment: Canvas dimension gate passed (3200x1800); title well-proportioned;
+          nothing clipped or overflowing.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) / Latitude (°) axis labels include units
+        comment: Longitude (°) / Latitude (°) axis titles with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 in both themes; backgrounds are theme-correct
-          #FAF8F1/#1A1A17'
+        comment: First/only series uses t.palette[0] (#009E73), identical in light
+          and dark; backgrounds match Imprint chrome tokens in both themes.
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful thickness+opacity+radius encoding gives the plot intentional
-          hierarchy, above a plain default, but monochrome rendering without any basemap
-          texture limits polish
+        comment: Hand-traced continent outlines, hub-degree marker sizing, and dual
+          value-encoding (thickness + opacity) show real design intent beyond a default
+          chart.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, careful label nudging; the off-center
-          title is the main refinement miss
+        comment: Subtle grid, generous margins, muted continent fill, no default MUI
+          X chrome clutter.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Hub-size and line-weight variation immediately surface which airports
-          and routes dominate the network
+        comment: Hub size + line weight/opacity create clear visual hierarchy of major
+          routes; caption anchors the reading; Equator/Prime Meridian add orientation.
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Correct connection-lines concept (curved arcs + endpoint markers)
-          but rendered as an abstract lon/lat grid rather than an actual map, missing
-          the geographic base layer the spec calls for
+        comment: Correct origin-destination connection-line map.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Curved connections, endpoint markers, and weight-encoded lines are
-          present, but the spec's explicit 'show a base map with country borders or
-          coastlines' requirement is entirely absent
+        comment: Curved arcs, thickness+opacity by value, endpoint markers, alpha
+          0.3-0.6, base map with continent outlines all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, latitude on Y, axis ranges padded to show all points
+        comment: Longitude on x, latitude on y, full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated 'map-connection-lines · javascript
-          · muix · anyplot.ai' format; no legend needed for the single-series encoding,
-          explained via caption instead
+        comment: Title format exactly 'map-connection-lines · javascript · muix ·
+          anyplot.ai'; caption substitutes for a legend to explain the single-series
+          encoding.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Wide range of passenger volumes (260k-820k) and hub degrees (1 to
-          4 routes) shown across intercontinental and regional routes
+        comment: Covers arcs, endpoint markers, hub sizing, value-driven thickness/opacity,
+          base map, and reference lines.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real airport codes/cities and a neutral, plausible business (aviation)
-          scenario
+        comment: Real major airports and plausible flight routes, neutral subject
+          matter.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Airport coordinates match real-world values and passenger-volume
-          figures are realistic for major international routes
+        comment: Passenger volumes (260k-820k/year) are plausible for major long-haul
+          routes.
     code_quality:
       score: 10
       max: 10
@@ -205,35 +193,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Component functions are the idiomatic React structure; no unnecessary
-          abstraction beyond that
+        comment: Component functions are the idiomatic React/MUI X unit here, not
+          unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded in-memory data
+        comment: Fully deterministic in-memory data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every imported hook/component is used
+        comment: Every import (ChartContainer, axes, grid, reference line, hooks)
+          is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity or over-engineering
+        comment: Real SVG geometry driving the arcs/markers, no fake UI or simulated
+          interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, skipAnimation and disableAxisListener
-          set per the harness contract
+        comment: skipAnimation set, sizes from window.ANYPLOT_SIZE, current MUI X
+          hook API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -241,16 +231,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correctly composes ChartContainer with axes, grid, and reference
-          lines using documented extension points
+        comment: Uses ChartContainer as a composition root with overlay components,
+          the documented pattern for custom chart types in MUI X.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses the low-level useXScale/useYScale/useDrawingArea hooks to build
-          a custom overlay chart type MUI X doesn't offer out of the box
-  verdict: REJECTED
+        comment: useXScale/useYScale/useDrawingArea hooks power a custom geo-style
+          overlay - a genuinely advanced, non-default use of the library's extension
+          points.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
