@@ -1,8 +1,7 @@
 // anyplot.ai
 // ks-test-comparison: Kolmogorov-Smirnov Plot for Distribution Comparison
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-08-26
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-08-26
 
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
