@@ -1,7 +1,7 @@
 // anyplot.ai
 // map-tile-background: Map with Tile Background
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-08-26
+// Quality: 78/100 | Created: 2026-08-26
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
