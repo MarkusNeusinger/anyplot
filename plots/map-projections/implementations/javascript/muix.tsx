@@ -1,3 +1,7 @@
+// anyplot.ai
+// map-projections: World Map with Different Projections
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-08-26
 //# anyplot-orientation: landscape
 // anyplot.ai
 // map-projections: World Map with Different Projections
