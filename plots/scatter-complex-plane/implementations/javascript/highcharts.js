@@ -32,38 +32,40 @@ const arbitraryPoints = [
   { re: -0.6, im: -2.1 },
 ];
 
-function formatRect(re, im) {
-  const sign = im >= 0 ? "+" : "-";
-  return `${re.toFixed(2)} ${sign} ${Math.abs(im).toFixed(2)}i`;
-}
+// Axis runs -3..3; flip the anchor inward once a point sits within
+// EDGE_MARGIN of an edge so its label doesn't crowd the canvas border.
+const AXIS_LIMIT = 3;
+const EDGE_MARGIN = 0.7;
 
-function labelPosition(re, im) {
+function pointLabelConfig(re, im, extraLine) {
+  const rect = `${re.toFixed(2)} ${im >= 0 ? "+" : "-"} ${Math.abs(im).toFixed(2)}i`;
+  const nearRight = re > AXIS_LIMIT - EDGE_MARGIN;
+  const nearLeft = re < -AXIS_LIMIT + EDGE_MARGIN;
+  const nearTop = im > AXIS_LIMIT - EDGE_MARGIN;
+  const nearBottom = im < -AXIS_LIMIT + EDGE_MARGIN;
+  const align = nearRight ? "right" : nearLeft ? "left" : re >= 0 ? "left" : "right";
+  const verticalAlign = nearTop ? "top" : nearBottom ? "bottom" : im >= 0 ? "bottom" : "top";
   return {
-    align: re >= 0 ? "left" : "right",
-    verticalAlign: im >= 0 ? "bottom" : "top",
-    x: re >= 0 ? 10 : -10,
-    y: im >= 0 ? -10 : 10,
+    align,
+    verticalAlign,
+    x: align === "left" ? 10 : -10,
+    y: verticalAlign === "bottom" ? -10 : 10,
+    formatter: function () {
+      return extraLine ? `${rect}<br/>${extraLine}` : rect;
+    },
   };
 }
 
 const rootData = roots.map((p) => ({
   x: p.re,
   y: p.im,
-  dataLabels: Object.assign(labelPosition(p.re, p.im), {
-    formatter: function () {
-      return `${formatRect(p.re, p.im)}<br/>r=1.00, θ=${p.angleDeg}°`;
-    },
-  }),
+  dataLabels: pointLabelConfig(p.re, p.im, `r=1.00, θ=${p.angleDeg}°`),
 }));
 
 const arbitraryData = arbitraryPoints.map((p) => ({
   x: p.re,
   y: p.im,
-  dataLabels: Object.assign(labelPosition(p.re, p.im), {
-    formatter: function () {
-      return formatRect(p.re, p.im);
-    },
-  }),
+  dataLabels: pointLabelConfig(p.re, p.im),
 }));
 
 // Unit circle reference (dashed), sampled every 5 degrees
@@ -86,10 +88,18 @@ function vectorSegments(points) {
 const rootVectors = vectorSegments(roots);
 const arbitraryVectors = vectorSegments(arbitraryPoints);
 
-// --- Arrowheads --------------------------------------------------------------
-// Core Highcharts has no vector/arrow series, so the arrowhead triangles are
-// drawn directly onto the SVG with the renderer once the axis pixel mapping
-// (including the equal-aspect adjustment below) is final.
+// --- Custom SVG overlays ------------------------------------------------------
+// Core Highcharts has no vector/arrow series and no way to fill a parametric
+// closed curve, so both the unit-circle shading and the arrowhead triangles
+// are drawn directly onto the SVG with the renderer once the axis pixel
+// mapping (including the equal-aspect adjustment below) is final.
+function drawCircleFill(chart, xAxis, yAxis, color) {
+  const cx = xAxis.toPixels(0);
+  const cy = yAxis.toPixels(0);
+  const r = Math.abs(xAxis.toPixels(1) - cx);
+  chart.renderer.circle(cx, cy, r).attr({ fill: color, opacity: 0.07, zIndex: 0 }).add();
+}
+
 function drawArrowhead(chart, xAxis, yAxis, re, im, color) {
   const x0 = xAxis.toPixels(0);
   const y0 = yAxis.toPixels(0);
@@ -148,6 +158,7 @@ Highcharts.chart("container", {
 
         const finalXAxis = chart.xAxis[0];
         const finalYAxis = chart.yAxis[0];
+        drawCircleFill(chart, finalXAxis, finalYAxis, t.inkSoft);
         roots.forEach((p) => drawArrowhead(chart, finalXAxis, finalYAxis, p.re, p.im, t.palette[0]));
         arbitraryPoints.forEach((p) => drawArrowhead(chart, finalXAxis, finalYAxis, p.re, p.im, t.palette[1]));
       },
@@ -188,7 +199,9 @@ Highcharts.chart("container", {
     series: { animation: false },
     line: { enableMouseTracking: false, marker: { enabled: false } },
     scatter: {
-      marker: { radius: 7, lineColor: t.pageBg, lineWidth: 1 },
+      // Small — the arrowhead tip drawn by drawArrowhead() already marks the
+      // point; this just keeps the point visible under the triangle.
+      marker: { radius: 3, lineWidth: 0 },
       dataLabels: {
         enabled: true,
         useHTML: false,
@@ -225,6 +238,7 @@ Highcharts.chart("container", {
       data: arbitraryVectors,
       color: t.palette[1],
       lineWidth: 2,
+      dashStyle: "ShortDash",
       showInLegend: false,
       zIndex: 2,
     },
