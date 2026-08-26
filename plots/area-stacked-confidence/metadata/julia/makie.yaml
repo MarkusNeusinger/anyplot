@@ -1,0 +1,264 @@
+library: makie
+language: julia
+specification_id: area-stacked-confidence
+created: '2026-08-26T17:52:34Z'
+updated: '2026-08-26T18:16:36Z'
+generated_by: claude-sonnet
+workflow_run: 32995596891
+issue: 3549
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
+review:
+  strengths:
+  - 'Correct Imprint palette in canonical order (brand green, lavender, blue) — identical
+    data colors across both themes, and plot backgrounds match #FAF8F1 / #1A1A17 exactly'
+  - 'Clean layered composition: opaque stacked areas, semi-transparent 90% PI bands
+    (alpha=0.28, within the spec''s 0.2-0.4 guidance), and boundary lines drawn on
+    top for a legible visual hierarchy'
+  - Theme-adaptive chrome is fully threaded through (spines, grid, tick colors, legend
+    text) — no light-on-light or dark-on-dark legibility failures in either render
+  - Title matches the mandated format exactly; legend clearly labels all three product
+    lines plus a dedicated '90% prediction interval' swatch
+  - Realistic, neutral quarterly-revenue-forecast scenario with a plausible prediction-interval-widening
+    formula (half-width grows with sqrt of forecast horizon)
+  weaknesses:
+  - 'CRITICAL LAYOUT BUG: the second Axis panel (ax2, ''Combined 90% PI half-width'')
+    and its text! annotation (''±X.XM by Q1''29'') — the code''s intended distinctive
+    feature via linkxaxes! and rowsize!(fig.layout, 2, Relative(0.26)) — are not visible
+    in either rendered PNG. The main stacked-area panel occupies roughly 90% of the
+    canvas height instead of the intended ~74%, and the x-axis tick labels / ''Fiscal
+    Quarter'' label at the very bottom appear to be orphaned from a collapsed, near-zero-height
+    ax2 rather than belonging to the main chart (whose own x-decorations were explicitly
+    hidden via hidexdecorations!). Debug why rowsize!/Relative isn''t reserving visible
+    plot area for row 2 (e.g. check whether colsize!/Legend placement on row 1 is
+    interfering with row 2''s sizing), or simplify by removing ax2 entirely and placing
+    the widening-uncertainty insight as a direct annotation on the main chart instead.'
+  - Confidence bands are quite subtle at this canvas scale — alpha=0.28 is within
+    the spec's suggested range, but since the intended headline callout (ax2) isn't
+    rendering, the widening-interval story has no other visual reinforcement in the
+    main panel
+  - No surviving visual hierarchy/callout highlights the growing uncertainty over
+    time in the main panel — the storytelling device that was meant to carry this
+    (the ax2 annotation) does not render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "area-stacked-confidence · julia · makie · anyplot.ai" in bold dark ink at the top, fully visible and not clipped. Y-axis "Revenue ($M, cumulative)" and x-axis "Fiscal Quarter" labels are dark and clearly legible. Tick labels (0/20/40/60 on Y; Q1'24...Q1'29 on X, rotated slightly) are legible mid-grey. Subtle horizontal gridlines visible but not distracting. Legend on the right (no frame) lists Core Platform, Cloud Services, Emerging Markets, and 90% prediction interval, all readable.
+      Data: Three stacked areas in brand green (#009E73, Core Platform, bottom), lavender (#C475FD, Cloud Services, middle), and blue (#4467A3, Emerging Markets, top) — matches Imprint canonical order. A subtle lighter overlay band (confidence interval) sits along each series boundary, most visible as the light grey-blue band on the outer edge of the total stack. Boundary lines drawn in the same series colors sit crisply on top.
+      Notable issue: Only ONE chart panel is visible, filling nearly the full canvas height. The code defines a second linked Axis panel below the main chart ("Combined 90% PI half-width") with its own y-axis, band, line and a "±X.XM by Q1'29" annotation, sized to occupy ~26% of the figure height — none of this is visible. The x-axis tick labels and "Fiscal Quarter" label sit immediately below the main stacked-area shape with no visible second panel above them, suggesting that panel's plot area rendered at (or very near) zero height.
+      Legibility verdict: PASS (all visible text is readable), but flagged as a layout/rendering defect — see weaknesses.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light ink/off-white and grey tones, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines are faint but visible. Legend renders the same as in the light theme with light-colored text.
+      Data: Same three data colors as the light render — green #009E73, lavender #C475FD, blue #4467A3 — confirming the data-color-identity rule (only chrome changed between themes). Confidence-band overlay and boundary lines are equally identifiable.
+      Notable issue: Same missing-second-panel defect as the light render — the "Combined 90% PI half-width" sub-panel and its annotation are absent, and the x-axis tick labels/"Fiscal Quarter" label appear directly below the main chart with no visible second-panel content above them.
+      Legibility verdict: PASS (all visible text is readable), but flagged as a layout/rendering defect — see weaknesses.
+  criteria_checklist:
+    visual_quality:
+      score: 25
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (titlesize=20, labels=14, ticks=12);
+          readable in both themes with no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or legend collisions; legend column reserved via colsize!
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Stacked areas and boundary lines clearly visible; confidence bands
+          somewhat subtle at alpha=0.28
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe; hues distinguishable without relying
+          on hue alone due to stacking order
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 1
+        max: 4
+        passed: false
+        comment: Second Axis panel (ax2, ~26% of intended height) does not visibly
+          render; main panel occupies ~90% of canvas height instead, with orphaned
+          x-axis tick labels beneath it
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Revenue ($M, cumulative)'', ''Fiscal
+          Quarter'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order for series 2-3; correct theme-adaptive
+          backgrounds in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful layered area/band/line composition and clean legend, but
+          overall polish undercut by the broken second-panel feature
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle y-only grid, frameless legend, generous
+          whitespace in the main panel
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Intended headline insight (widening-PI annotation in ax2) does not
+          render, leaving no visual hierarchy beyond the raw stacked shapes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked area chart with confidence bands
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct series colors with matching-hue bands, alpha in spec range,
+          consistent stack order, legend identifies bands
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = fiscal quarter, Y = cumulative revenue with bounds, correctly
+          stacked
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match series
+          plus the PI band
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows growth trend, per-series variation, and widening intervals;
+          widening is subtle but present
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible quarterly revenue forecast by product line scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic revenue magnitudes and growth rates; PI half-width scales
+          sensibly with forecast horizon
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Roughly a third of the script (ax2 + text! + linkxaxes! + rowsize!)
+          produces no visible output in the final render
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current Makie API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic band!/lines!/Legend/Axis usage, though the multi-panel
+          linkxaxes! setup doesn't function as intended
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Attempted distinctive linked-multi-panel layout, but it is not visible
+          in the rendered output, so no credit for the flagship feature
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - subplots
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
