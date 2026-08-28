@@ -183,9 +183,18 @@ When such paths merged, watch until the build succeeds — a red Cloud
 Build means production did NOT update even though the PR was green:
 
 ```bash
-gcloud builds list --limit 3
-gcloud builds log <id>   # on failure
+gcloud builds list --region=europe-west4 --limit 3 \
+  --format='table(id,status,createTime,substitutions.TRIGGER_NAME,substitutions.SHORT_SHA)'
+gcloud builds log --region=europe-west4 <id>   # on failure
 ```
+
+The `--region` flag is load-bearing: the `deploy-app` / `deploy-api`
+triggers are **regional** (europe-west4), and the global `gcloud builds
+list` answers with a handful of months-old global builds — all
+`SUCCESS`, none from today — which reads like "nothing was triggered"
+while both deploys are already done (2026-08-28, #10808 follow-through:
+a 20-minute poll on the global list never saw the builds). Match the
+`SHORT_SHA` column against the merge commit before trusting a row.
 
 ## Gotchas
 
