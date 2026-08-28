@@ -70,6 +70,13 @@ AI_AGENTS: tuple[tuple[str, str, str], ...] = (
     ("grok-deepsearch", "grok", "user_directed"),
     ("grokbot", "grok", "user_directed"),
     ("xai-grok", "grok", "user_directed"),
+    # The bare tokens the nginx map already serves (`~*grok`, `~*xai`): xAI's
+    # fetcher was seen sending plain "Grok" (AI-access audit 2026-08-19) and
+    # "xAI-Bot" without the grok substring (kurrentschrift, 2026-08-28). Both
+    # were prerendered but never counted, because nothing above matched them.
+    # Last among the xAI patterns so the specific ones keep winning.
+    ("grok", "grok", "user_directed"),
+    ("xai", "grok", "user_directed"),
     ("youbot", "you", "index"),
     ("cohere-ai", "cohere", "user_directed"),
     # Classic search crawlers. Worth recording for the same reason the AI ones
@@ -302,6 +309,68 @@ def track_og_image(
     # Fire-and-forget: create task without awaiting, but add exception handler.
     # Track via _BACKGROUND_TASKS so the GC cannot collect the task before it runs.
     task = asyncio.create_task(_send_plausible_event(user_agent, client_ip, "og_image_view", url, props, domain=domain))
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+    task.add_done_callback(_handle_task_exception)
+
+
+# The single-asset API reads an assistant makes after landing on a page: the
+# runnable source of one implementation and the detail of one spec. Nothing
+# else on the API is counted — the list endpoints, /plots/filter and the
+# machine files are catalogue navigation, not a request for one thing.
+# `/specs/map` shares the shape of a spec id and is excluded by name.
+_ASSET_ROUTES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"^/specs/([a-z0-9]+(?:-[a-z0-9]+)*)/([a-z0-9]+(?:-[a-z0-9]+)*)/code$"), "code"),
+    (re.compile(r"^/specs/([a-z0-9]+(?:-[a-z0-9]+)*)$"), "spec"),
+)
+_NOT_A_SPEC = frozenset({"map"})
+
+
+def classify_asset(path: str) -> tuple[str, str, str | None] | None:
+    """(asset, spec_id, library_id) for a single-asset API path, else None.
+
+    `asset` is `code` (one implementation's runnable source) or `spec` (one
+    spec's detail); `library_id` is None for a spec read.
+    """
+    for pattern, asset in _ASSET_ROUTES:
+        m = pattern.match(path)
+        if m is None:
+            continue
+        spec_id = m.group(1)
+        if spec_id in _NOT_A_SPEC:
+            return None
+        return asset, spec_id, (m.group(2) if m.lastindex and m.lastindex >= 2 else None)
+    return None
+
+
+def track_asset_fetch(request: Request, *, asset: str, spec: str, library: str | None, status: int) -> None:
+    """Record an AI or search agent fetching one asset through the API (fire-and-forget).
+
+    Same site, same gate and same audience rule as `track_bot_fetch`: humans
+    and unclassified clients cost nothing beyond a substring scan, and the
+    event goes to BOT_DOMAIN. The props answer "which plots do assistants
+    actually pull the code of": `asset` (code · spec), `spec`, `library`.
+
+    One caveat the dashboard must know: these routes answer `public,
+    max-age=300`, so a read that Cloudflare serves from its edge never reaches
+    this process. The count is therefore the cache MISSES — the first fetch
+    per URL per edge TTL — which for sporadic assistant traffic is nearly all
+    of them, but not the same thing as every request.
+    """
+    detected = detect_ai_agent(request.headers.get("user-agent", ""))
+    if detected is None:
+        return
+    assistant, kind = detected
+    props: dict[str, str] = {"asset": asset, "spec": spec, "assistant": assistant, "kind": kind, "status": str(status)}
+    if library is not None:
+        props["library"] = library
+    url = f"https://api.anyplot.ai{request.url.path}"
+
+    task = asyncio.create_task(
+        _send_plausible_event(
+            request.headers.get("user-agent", ""), visitor_ip(request), "asset_fetch", url, props, domain=BOT_DOMAIN
+        )
+    )
     _BACKGROUND_TASKS.add(task)
     task.add_done_callback(_BACKGROUND_TASKS.discard)
     task.add_done_callback(_handle_task_exception)

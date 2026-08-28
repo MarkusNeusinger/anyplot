@@ -98,7 +98,7 @@ asked about a plot page could describe nothing at all.
 | DuckDuckGo AI | `duckassistbot` |
 | Amazon (retrieval) | `amzn-searchbot`, `amzn-user` |
 | Meta AI search | `meta-webindexer` |
-| xAI / Grok · You.com · Cohere | `grokbot`, `xai-grok`, `grok-deepsearch`, `youbot`, `cohere-ai` — community-reported tokens, no vendor documentation; best-effort |
+| xAI / Grok · You.com · Cohere | `grok` (subsumes grokbot, xai-grok, grok-deepsearch and the bare `Grok` token), `xai` (an `xAI-Bot` UA without the grok substring fell through to the shell, 2026-08-28), `youbot`, `cohere-ai` — community-reported tokens, no vendor documentation; best-effort |
 
 Three vendor splits are easy to get backwards, so they are spelled out:
 
@@ -343,12 +343,23 @@ group verbatim; read the file for the rest:
 
 ```txt
 User-agent: Bytespider
-Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
+Content-Signal: search=yes,ai-input=yes,ai-train=yes
 Disallow: /
 ```
 
-Three properties of that file are deliberate and should survive any cleanup:
+The file opens with two terse comment lines naming `llms.txt` and the OpenAPI
+spec, and closes with a fuller block beside `Sitemap:` that also names
+`llms-full.txt` — see [Discoverability for assistants](#discoverability-for-assistants)
+for why a guide that nothing points to is findable only by guessing.
 
+Four properties of that file are deliberate and should survive any cleanup:
+
+- The `Content-Signal` line carries exactly the three
+  [contentsignals.org](https://contentsignals.org) tokens — `search`,
+  `ai-input`, `ai-train` — and nothing else. A `use=reference` token used to
+  ride along; it is not a signal, and a strict parser may discard the whole
+  line over an unknown token, taking the three real ones with it (dropped
+  2026-08-28, after kurrentschrift verified the vocabulary).
 - The `Content-Signal` line is repeated in **every** group. A crawler reads only
   the group that matches it, so a signal declared once under `User-agent: *`
   never reaches a named agent.
@@ -364,7 +375,12 @@ Three properties of that file are deliberate and should survive any cleanup:
 Dynamic endpoint at `GET /robots.txt`:
 
 ```txt
+# api.anyplot.ai — the open read API of anyplot.ai (JSON, no auth).
+# Machine guide with every retrieval recipe and full example URLs:
+# https://anyplot.ai/llms.txt — catalogue index: https://anyplot.ai/llms-full.txt
+# OpenAPI: https://api.anyplot.ai/openapi.json — MCP: https://api.anyplot.ai/mcp/
 User-agent: *
+Content-Signal: search=yes,ai-input=yes,ai-train=yes
 Disallow: /debug
 Disallow: /proxy
 Allow: /
@@ -377,6 +393,14 @@ host `llms.txt` advertises as the machine interface to the catalogue
 (AI-access audit 2026-08-19). Only `/debug` (internal diagnostics) and
 `/proxy` (a parameterised fetch proxy) stay excluded. `Disallow` lines come
 before the `Allow: /` catch-all for the first-match parsers described above.
+The comment head names the guide because this is the host an agent may reach
+first — through the README, a citation, a search result — and the
+`Content-Signal` line states the site's one policy on every host it covers.
+
+The API host also answers `GET /llms.txt` with a `302` to
+`https://anyplot.ai/llms.txt`: agents guess the convention on the host the
+README and both robots.txt files name, and a redirect beats a 404 and beats a
+served copy that would drift.
 
 ### AI crawler policy
 
@@ -451,6 +475,49 @@ The last command is the part this repo owns: `app/nginx.conf` maps the AI UAs
 onto the seo-proxy path, and `.github/workflows/bot-serving-check.yml` guards it
 daily against the Cloud Run origin (origin, not edge — so it reports on the
 nginx map no matter what the zone policy is, and will never catch edge drift).
+
+## Discoverability for assistants
+
+Two session protocols of external assistants against the sister project
+kurrentschrift (2026-08-28) showed the machine-facing chain failing at its
+first link: an assistant's fetch tool often allows only URLs that **already
+appeared verbatim in fetched content or a search result**. A URL the assistant
+composes itself, a path elided with `…` in a README, a relative link, or the
+bare `/llms.txt` convention are not enough — and the API host is in no search
+index. So the guide and one complete, callable example per surface stand
+wherever an agent actually reads, ranked by reach:
+
+1. **The SPA shell** (`app/index.html`), served on every route to every client
+   the nginx map does not recognise: a `<link rel="alternate" type="text/plain"
+   href="/llms.txt">` in the head and a `<noscript>` block with the **absolute**
+   URLs of `llms.txt`, `llms-full.txt`, one implementation's code endpoint
+   (`https://api.anyplot.ai/specs/bar-error/seaborn/code`, with the note that
+   spec id and library id are free parameters), one render PNG, `openapi.json`
+   and the MCP endpoint. Invisible in the rendered app; a JS-off human gets a
+   useful paragraph. Hidden indexable text beyond `<noscript>` was rejected
+   (cloaking risk).
+2. **Guessed paths resolve**: `/.well-known/llms.txt` on the site answers `302
+   /llms.txt` (nginx; it used to soft-404 with the SPA shell), and `/llms.txt`
+   on the API host redirects to the site file (`api/routers/seo.py`).
+3. **Both `robots.txt` files name the guide** — two terse lines at the very top
+   of the site file for readers that only take the file head seriously, a
+   fuller block beside `Sitemap:`, and the API host's comment head.
+4. **Every bot page links the guide** as a full URL in its footer nav, and every
+   implementation page spells out its own code URL in prose and carries a
+   visible `<pre><code class="language-json">` retrieval record (page, hub,
+   `code_json`, `spec_json`, renders, interactive versions, quality score)
+   beside the JSON-LD — the HTML-to-Markdown converters assistants read pages
+   through drop `<script>` and keep `<pre>`.
+
+The nginx `$is_bot` map, the `AI_AGENTS` taxonomy and the robots.txt file
+shape are shared verbatim with kurrentschrift (owner decision 2026-08-28): a
+change on one site is copied to the other in the same session.
+
+Guards: `app/src/routes/seoCoverage.test.ts` pins llms.txt ↔ route registry ↔
+robots.txt ↔ shell (including the example pair, which must be the same in the
+guide and the shell); `tests/unit/api/test_routers.py` pins the API host's
+robots.txt, the `/llms.txt` redirect, the nav links and the implementation
+record; `bot-serving-check.yml` probes the `.well-known` redirect daily.
 
 ## Sitemap
 
@@ -632,10 +699,12 @@ curl -o test.png https://api.anyplot.ai/og/scatter-basic.png
 
 | File | Purpose |
 |------|---------|
-| `app/nginx.conf` | Bot detection, SPA routing, sitemap proxy |
-| `app/public/robots.txt` | Frontend robots.txt (content signals, AI crawler policy, blocks /debug) |
+| `app/nginx.conf` | Bot detection, SPA routing, sitemap proxy, `.well-known/llms.txt` redirect |
+| `app/public/robots.txt` | Frontend robots.txt (content signals, AI crawler policy, blocks /debug, names the machine guide) |
 | `app/public/llms.txt` | Agent-facing site summary; served directly, never via the seo-proxy |
-| `api/routers/seo.py` | SEO proxy endpoints, robots.txt, sitemap generation |
+| `app/index.html` | SPA shell; its head link and `<noscript>` block are the machine fallback for unmapped agents |
+| `app/src/routes/seoCoverage.test.ts` | Drift guard: llms.txt ↔ route registry ↔ robots.txt ↔ shell |
+| `api/routers/seo.py` | SEO proxy endpoints, robots.txt, `/llms.txt` redirect, sitemap generation |
 | `api/routers/og_images.py` | Branded og:image endpoints |
 | `core/images.py` | Image processing, branding functions |
 | `.github/workflows/bot-serving-check.yml` | Daily synthetic check of the bot → seo-proxy path |

@@ -224,6 +224,12 @@ _HOME_JSONLD = {
 
 # Site-wide footer nav on every bot page: crawlers that land deep on an impl
 # page can reach the hub surfaces without executing the SPA.
+#
+# The two machine files close the nav, as full URLs. Assistants' fetch tools
+# often allow only URLs that already appeared verbatim in fetched content, so
+# a guide that is linked from nothing an assistant lands on is findable only by
+# guessing the llms.txt convention (kurrentschrift finding 2026-08-28,
+# docs/reference/seo.md "Discoverability").
 _BOT_NAV_HTML = (
     "<nav>"
     '<a href="https://anyplot.ai/">anyplot.ai</a> · '
@@ -234,7 +240,9 @@ _BOT_NAV_HTML = (
     '<a href="https://anyplot.ai/palette">palette</a> · '
     '<a href="https://anyplot.ai/mcp">mcp</a> · '
     '<a href="https://anyplot.ai/stats">stats</a> · '
-    '<a href="https://anyplot.ai/about">about</a>'
+    '<a href="https://anyplot.ai/about">about</a> · '
+    '<a href="https://anyplot.ai/llms.txt">llms.txt</a> · '
+    '<a href="https://anyplot.ai/llms-full.txt">llms-full.txt</a>'
     "</nav>"
 )
 
@@ -622,6 +630,56 @@ def _spec_keywords(spec) -> list[str]:
     return keywords
 
 
+def _build_impl_retrieval(spec, impl, page_url: str, hub_url: str) -> str:
+    """The machine-readable retrieval record of an implementation page.
+
+    Two properties matter, both learned from assistants that fetched the
+    sister project's pages (kurrentschrift, 2026-08-28):
+
+    - Every URL is COMPLETE and callable. Assistants' fetch tools often allow
+      only URLs that already appeared verbatim in fetched content, so the
+      `{spec_id}/{library}` template llms.txt offers is not enough on the page
+      an assistant actually lands on — this one spells its own code URL out.
+    - It is a VISIBLE ``<pre><code class="language-json">`` block, beside the
+      JSON-LD in the head, because the HTML-to-Markdown converters assistants
+      read pages through drop ``<script>`` and keep ``<pre>``.
+
+    Same field set as the "Renders" list above it, plus the JSON surfaces —
+    the list says which file is which in words, this block says it in a shape
+    a program can read without parsing prose.
+    """
+    code_url = f"https://api.anyplot.ai/specs/{spec.id}/{impl.library_id}/code"
+    record: dict[str, object] = {
+        "spec_id": spec.id,
+        "language": impl.library.language,
+        "library": impl.library_id,
+        "page": page_url,
+        "hub": hub_url,
+        "code_json": code_url,
+        "spec_json": f"https://api.anyplot.ai/specs/{spec.id}",
+    }
+    for key, url in (
+        ("render_light_png", impl.preview_url_light),
+        ("render_dark_png", impl.preview_url_dark),
+        ("interactive_light_html", impl.preview_html_light),
+        ("interactive_dark_html", impl.preview_html_dark),
+    ):
+        if url:
+            record[key] = url
+    if impl.quality_score is not None:
+        record["quality_score"] = impl.quality_score
+    record["license"] = "MIT"
+    record["guide"] = "https://anyplot.ai/llms.txt"
+    code_url_esc = html.escape(code_url, quote=True)
+    return (
+        "<h2>Retrieve this implementation</h2>"
+        f'<p>Runnable source as JSON, for any HTTP client: <a href="{code_url_esc}">{code_url_esc}</a>. '
+        'Any spec id and library id listed in <a href="https://anyplot.ai/llms-full.txt">llms-full.txt</a> '
+        "fit the same URL shape; every URL below is complete and callable.</p>"
+        f'<pre><code class="language-json">{html.escape(json.dumps(record, indent=2, ensure_ascii=False))}</code></pre>'
+    )
+
+
 def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
     """Full bot page for an implementation detail /{spec_id}/{language}/{library}.
 
@@ -675,6 +733,7 @@ def _build_impl_html(spec, impl, code: str | None, image: str) -> str:
             if code
             else ""
         )
+        + _build_impl_retrieval(spec, impl, page_url, hub_url)
         + f'<p>Part of <a href="{html.escape(hub_url, quote=True)}">{title_esc}</a> on anyplot.ai.</p>'
         + (f"<h2>Other implementations</h2><ul>{''.join(sibling_links)}</ul>" if sibling_links else "")
     )
@@ -723,8 +782,41 @@ async def get_robots():
     parsers stop at the first matching rule, so the specific exclusions must
     precede the blanket allow — the same ordering rule `app/public/robots.txt`
     documents. Specificity-compliant crawlers reach the same answer either way.
+
+    The comment head names the machine guide and the OpenAPI spec: this host
+    is the one llms.txt advertises, so an agent that reaches it first — via
+    the README, a search result, a citation — must be able to get to the
+    guide without guessing the convention (kurrentschrift finding
+    2026-08-28). The Content-Signal line is the site's: one open policy,
+    stated on every host it covers (contentsignals.org vocabulary only).
     """
-    return Response(content="User-agent: *\nDisallow: /debug\nDisallow: /proxy\nAllow: /\n", media_type="text/plain")
+    return Response(content=_API_ROBOTS_TXT, media_type="text/plain")
+
+
+_API_ROBOTS_TXT = (
+    "# api.anyplot.ai — the open read API of anyplot.ai (JSON, no auth).\n"
+    "# Machine guide with every retrieval recipe and full example URLs:\n"
+    "# https://anyplot.ai/llms.txt — catalogue index: https://anyplot.ai/llms-full.txt\n"
+    "# OpenAPI: https://api.anyplot.ai/openapi.json — MCP: https://api.anyplot.ai/mcp/\n"
+    "User-agent: *\n"
+    "Content-Signal: search=yes,ai-input=yes,ai-train=yes\n"
+    "Disallow: /debug\n"
+    "Disallow: /proxy\n"
+    "Allow: /\n"
+)
+
+
+@router.get("/llms.txt", include_in_schema=False)
+async def get_llms_txt() -> RedirectResponse:
+    """Redirect to the site's machine guide.
+
+    The guide lives on the site host (app/public/llms.txt, one source of
+    truth), but agents that land on this host — the README, both robots.txt
+    files and llms-full.txt name it — guess /llms.txt here too. A redirect
+    beats the 404 this answered until 2026-08-28, and beats a served copy that
+    would drift.
+    """
+    return RedirectResponse("https://anyplot.ai/llms.txt", status_code=302)
 
 
 @router.get("/sitemap.xml")

@@ -28,13 +28,13 @@ permissions:
 jobs:
   bot-serving:
     runs-on: ubuntu-latest
-    # 22 check() calls x (--retry 2 -> up to 3 attempts x --max-time 30) can
-    # reach ~33 min worst-case, plus two non-retried probes (llms.txt charset,
-    # trailing slash — 30s each); 38 leaves room to report a clean failure
-    # rather than dying to the job timeout, which reports nothing useful.
-    # Recompute this when adding checks: the ceiling is check() calls x 90s,
-    # plus margin.
-    timeout-minutes: 38
+    # 27 check() calls x (--retry 2 -> up to 3 attempts x --max-time 30) can
+    # reach ~41 min worst-case, plus four non-retried probes (llms.txt charset,
+    # trailing slash, og-image, .well-known redirect — 30s each); 46 leaves
+    # room to report a clean failure rather than dying to the job timeout,
+    # which reports nothing useful. Recompute this when adding checks: the
+    # ceiling is check() calls x 90s, plus margin.
+    timeout-minutes: 46
     steps:
       - name: Crawler UAs must get 200 + per-route titles
         run: |
@@ -50,16 +50,16 @@ jobs:
           fail=0
 
           check() {
-            local ua="$1" url="$2" expect="$3"
+            local ua="$1" url="$2" expect="$3" want="${4:-200}"
             local code
             # On curl failure REPLACE the code — a failing curl can still have
             # printed a partial -w code; appending would yield e.g. "200000".
             code=$(curl -sS --retry 2 --max-time 30 -A "$ua" -o body.html -w '%{http_code}' "$url") || code="000"
-            if [ "$code" != "200" ]; then
-              echo "::error::$url with UA '$ua' returned HTTP $code (expected 200)"
+            if [ "$code" != "$want" ]; then
+              echo "::error::$url with UA '$ua' returned HTTP $code (expected $want)"
               fail=1
             elif ! grep -qF "$expect" body.html; then
-              echo "::error::$url with UA '$ua' returned 200 but the body is missing: $expect"
+              echo "::error::$url with UA '$ua' returned $want but the body is missing: $expect"
               fail=1
             else
               echo "OK: $url ($ua)"
@@ -101,10 +101,41 @@ jobs:
             "Mozilla/5.0 (compatible; Amzn-User/1.0)" \
             "Mozilla/5.0 (compatible; Amazonbot/0.1; +https://developer.amazon.com/support/amazonbot)" \
             "meta-externalagent/1.1 (+https://developers.facebook.com/docs/sharing/webmasters/crawler)" \
-            "Grok/1.0"
+            "Grok/1.0" \
+            "Mozilla/5.0 (compatible; xAI-Bot/1.0)"
           do
             check "$ua" "$ORIGIN/scatter-basic" "<title>Basic Scatter Plot | anyplot.ai</title>"
           done
+
+          # A crawler asking for a URL that is no page gets a real 404 from the
+          # seo-proxy — the SPA shell would answer 200 (soft-404), and did for
+          # 161 stale migration URLs before the proxy learned to say no.
+          check "$GOOGLEBOT" "$ORIGIN/this-spec-does-not-exist" '"status":404' 404
+
+          # The machine files must be served directly, never proxied to the
+          # seo backend — including for a mapped crawler UA, which is the whole
+          # point of the `location =` bypasses. robots.txt and sitemap.xml
+          # join llms.txt below: the sitemap is proxied to the API for every
+          # client, and a broken proxy would hand a crawler the SPA shell.
+          check "$GOOGLEBOT" "$ORIGIN/robots.txt"  "User-agent: Bytespider"
+          check "$GOOGLEBOT" "$ORIGIN/sitemap.xml" "<urlset"
+
+          # The site card must be the FILE for a preview bot, not the proxy —
+          # a preview bot that lands on /seo-proxy/og-image.png shows nothing.
+          code=$(curl -sS --max-time 30 -A "$TWITTERBOT" -o /dev/null -w '%{http_code} %{content_type}' "$ORIGIN/og-image.png") || code="000"
+          case "$code" in
+            "200 image/png"*) echo "OK: og-image.png served as image to a preview bot" ;;
+            *) echo "::error::og-image.png for a preview bot: $code (expected 200 image/png)"; fail=1 ;;
+          esac
+
+          # A guessed /.well-known/llms.txt must land on the file, not on the
+          # SPA shell (which soft-404'd it with 200 until 2026-08-28).
+          wk_target=$(curl -sS --max-time 30 -o /dev/null -A "$CHATGPTUSER" \
+            -w '%{redirect_url}' "$ORIGIN/.well-known/llms.txt")
+          case "$wk_target" in
+            */llms.txt) echo "OK: .well-known/llms.txt -> $wk_target" ;;
+            *) echo "::error::.well-known/llms.txt did not redirect to the guide: '$wk_target'"; fail=1 ;;
+          esac
 
           # llms.txt must be served directly, never proxied to the seo backend —
           # including for a mapped crawler UA, which is the whole point of the
@@ -145,7 +176,9 @@ jobs:
             *) echo "OK: trailing slash -> $slash_target" ;;
           esac
 
-          # Control: humans must still get the SPA shell
-          check "$HUMAN" "$ORIGIN/" '<div id="root">'
+          # Control: humans must still get the SPA shell — on the home page
+          # and on a deep route.
+          check "$HUMAN" "$ORIGIN/"              '<div id="root">'
+          check "$HUMAN" "$ORIGIN/scatter-basic" '<div id="root">'
 
           exit $fail

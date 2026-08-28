@@ -51,17 +51,26 @@ def visitor_ip(request: Request) -> str:
     Spoofing is not a concern in this direction: a forged value skews a
     geolocation bucket, where forging the rate-limit key locked people out.
 
-    Order: `cf-connecting-ip`, which Cloudflare overwrites on proxied traffic
-    and is therefore both real and unforgeable; then the leftmost non-empty
-    forwarded entry; then the socket peer.
+    Order: the leftmost valid `x-forwarded-for` entry FIRST, then
+    `cf-connecting-ip`, then the socket peer. It used to be the other way
+    round, and that lost nearly every crawler read: the prerendered pages
+    reach this host through the site's nginx (Cloud Run app → Cloudflare →
+    API), so on that hop `cf-connecting-ip` is the app container's Google
+    egress address — exactly the "hosting provider IP" Plausible drops — while
+    the crawler itself is only visible as the first forwarded entry, where the
+    site-side Cloudflare put it. kurrentschrift measured the effect with probe
+    events on 2026-08-28 (34.90.x / 35.204.x dropped, a home IP kept): one
+    counted read in twenty. For a direct client behind Cloudflare the leftmost
+    entry and `cf-connecting-ip` are the same address, so nothing changes
+    there.
     """
-    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
-    if _is_ip(cf_ip):
-        return cf_ip
     for entry in request.headers.get("x-forwarded-for", "").split(","):
         candidate = entry.strip()
         if _is_ip(candidate):
             return candidate
+    cf_ip = request.headers.get("cf-connecting-ip", "").strip()
+    if _is_ip(cf_ip):
+        return cf_ip
     return request.client.host if request.client else ""
 
 

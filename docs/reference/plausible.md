@@ -241,6 +241,7 @@ events arrive server-side through the Events API, which is why it shows
 | Event | Properties | Source | Description |
 |-------|-----------|--------|-------------|
 | `bot_fetch` | `assistant`, `kind`, `path`, `status` | `api/main.py` (middleware) | An AI assistant or search crawler requested a catalogue page. Always recorded on `bots.anyplot.ai`. |
+| `asset_fetch` | `asset`, `spec`, `library`?, `assistant`, `kind`, `status` | `api/main.py` (middleware) | An AI assistant or search crawler fetched ONE thing through the API: an implementation's runnable source (`asset=code`, `GET /specs/{spec}/{library}/code`) or a spec's detail (`asset=spec`, `GET /specs/{spec}`). Lists, the map, the filter and the machine files are not recorded. Always on `bots.anyplot.ai`. See the cache caveat below. |
 | `og_image_view` | `page`, `platform`, `spec`?, `language`?, `library`?, `filter_*`?, plus `assistant` + `kind` when machine-fetched | `api/routers/og_images.py` | A preview image was fetched. **Split by audience**, see below. |
 
 #### og:image is split by who fetched it
@@ -281,17 +282,45 @@ rate-limit bucket. The rightmost entry is our own infrastructure, so reusing it
 here would discard every event. `api/request_context.py` documents why the two
 must stay separate.
 
-Register the three properties on the **`bots.anyplot.ai`** site, not on
-`anyplot.ai` — property registration is per site, and without it the events
-still arrive but cannot be broken down, which is the whole point of collecting
-them:
+The same trap has a second face on the crawler path. A prerendered page reaches
+the API through the site's nginx (Cloud Run app → Cloudflare → API), so on that
+hop `cf-connecting-ip` is the **app container's Google egress address** — a
+hosting-provider IP, dropped — while the crawler itself is only visible as the
+first `x-forwarded-for` entry, where the site-side Cloudflare put it.
+kurrentschrift measured the effect with probe events on 2026-08-28 (`34.90.x`
+and `35.204.x` dropped, a home IP kept): one counted read in twenty. Since
+2026-08-28 `visitor_ip` therefore reads the forwarded list **first** and falls
+back to `cf-connecting-ip`, and nginx's `@seo_proxy` forwards the crawler in
+`X-Forwarded-For` explicitly. For a direct client behind Cloudflare both
+headers name the same address, so nothing changes there. If `bot_fetch` counts
+ever look implausibly low again, this is the first thing to re-verify: the
+daily `bot-serving-check` fires ~25 crawler requests from a GitHub runner at
+06:23 UTC and should be visible on the bot site as that many events.
+
+Register the properties on the **`bots.anyplot.ai`** site, not on `anyplot.ai`
+— property registration is per site, and without it the events still arrive
+but cannot be broken down, which is the whole point of collecting them.
+`asset_fetch` also needs a **goal** (Custom event) of that name before the
+dashboard can break it down:
 
 | Property | Description | Used by |
 |----------|-------------|---------|
-| `assistant` | Vendor (`claude`, `chatgpt`, `gemini`, `mistral`, `perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …) | `bot_fetch` |
-| `kind` | Why it fetched — see the table below | `bot_fetch` |
+| `assistant` | Vendor (`claude`, `chatgpt`, `gemini`, `mistral`, `perplexity`, `meta`, `amazon`, `duckduckgo`, `grok`, `google`, `bing`, …) | `bot_fetch`, `asset_fetch` |
+| `kind` | Why it fetched — see the table below | `bot_fetch`, `asset_fetch` |
 | `path` | Public path that was requested, e.g. `/box-basic/python/matplotlib` | `bot_fetch` |
-| `status` | Response status as a string (`200`, `404`, …) | `bot_fetch` |
+| `status` | Response status as a string (`200`, `404`, …) | `bot_fetch`, `asset_fetch` |
+| `asset` | What was fetched through the API: `code` (one implementation's runnable source) or `spec` (one spec's detail) | `asset_fetch` |
+| `spec` | The spec id, e.g. `box-basic` | `asset_fetch` |
+| `library` | The library id for a `code` read, e.g. `seaborn`; absent on a `spec` read | `asset_fetch` |
+
+`asset_fetch` counts **cache misses**, not requests: the two routes answer
+`public, max-age=300` and are also what the SPA fetches, so Cloudflare serves
+repeat reads from its edge and those never reach the middleware. For sporadic
+assistant traffic — one assistant, one plot, minutes apart — nearly every read
+is a miss, so the number is close; it is not exact. The alternative (dropping
+the edge cache for routes the SPA needs on every spec page) was not worth the
+precision. Filter on `asset`, then break down by `spec` for "which plots do
+assistants pull the code of", and by `library` within `asset=code`.
 
 Filter on `status` before reading anything else. The event records the
 *request*, not a successful read: an assistant asking for a URL that no longer

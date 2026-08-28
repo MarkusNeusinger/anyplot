@@ -18,6 +18,26 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **LLM discoverability sync from kurrentschrift** — the sister project's
+  assistant-protocol findings (2026-08-28) carried over: assistants' fetch tools often allow
+  only URLs that already appeared verbatim in fetched content, so the machine guide and one
+  complete, callable example per surface now stand wherever an agent actually reads. The SPA
+  shell carries a `<link rel="alternate" href="/llms.txt">` and a `<noscript>` block with
+  absolute URLs (guide, `llms-full.txt`, one code endpoint, one render PNG, OpenAPI, MCP);
+  `/.well-known/llms.txt` redirects to the guide instead of soft-404ing with the shell, and
+  `api.anyplot.ai/llms.txt` redirects to the site file instead of 404ing; both `robots.txt`
+  files name `llms.txt` and the OpenAPI spec (two terse lines at the very top of the site
+  file, a fuller block beside `Sitemap:`, the API host's comment head); every bot page links
+  the guide from its footer nav, and every implementation page spells out its own code URL
+  and carries a visible JSON retrieval record beside the JSON-LD (HTML-to-Markdown converters
+  drop `<script>`, keep `<pre>`). The nginx map and `AI_AGENTS` gain `xai` (a `xAI-Bot` UA
+  fell through to the empty shell) and the bare `grok` token that was prerendered but never
+  counted. A new `asset_fetch` event on `bots.anyplot.ai` records which implementation's
+  code and which spec's detail assistants fetch through the API (cache misses — see
+  `docs/reference/plausible.md`). Guards: `app/src/routes/seoCoverage.test.ts` pins llms.txt
+  ↔ route registry ↔ robots.txt ↔ shell; `bot-serving-check` adds the `.well-known`
+  redirect, the robots/sitemap bypasses, the site card, a real 404 and a deep-route SPA
+  control. Doctrine: `docs/reference/seo.md` "Discoverability for assistants".
 - **`llms-full.txt` — the whole catalogue in one fetch** — a new
   `GET /llms-full.txt` lists every spec on one line (id, title, hub URL, implemented
   libraries) under a header that documents the retrieval recipes that work for *every*
@@ -32,6 +52,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Crawler reads on the bot site were mostly dropped by Plausible** — on the prerender path
+  (Cloud Run app → Cloudflare → API) `cf-connecting-ip` is the app container's Google egress
+  address, exactly the "hosting provider IP" Plausible discards, and `visitor_ip` preferred
+  it over the forwarded list where the crawler actually stands. kurrentschrift measured one
+  counted read in twenty with probe events (2026-08-28). `visitor_ip` now reads the leftmost
+  valid `x-forwarded-for` entry first and falls back to `cf-connecting-ip`; nginx's
+  `@seo_proxy` forwards the crawler in `X-Forwarded-For` explicitly.
+- **`robots.txt` carried an invalid `use=reference` Content-Signal token** — the
+  contentsignals.org vocabulary is exactly `search`, `ai-input` and `ai-train`; a strict
+  parser may discard the whole line over an unknown token, taking the three real signals with
+  it. Dropped from both groups; `seoCoverage.test.ts` pins the vocabulary.
 - **The generation retry cap counted a library's entire failure history, not the current
   run** — `impl-generate.yml` derives its "3 attempts" budget from hidden marker comments
   on the spec issue, and nothing ever deletes those markers. A `(spec, library)` pair that
