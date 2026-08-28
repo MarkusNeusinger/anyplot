@@ -1,7 +1,9 @@
 # Release
 
 Cut a new anyplot release: finalize the changelog, bump the version, tag, and publish the GitHub
-release. The release notes ARE the changelog section — no notes are written from scratch.
+release. The release notes are the changelog section **condensed** — never copied verbatim, never
+written from scratch (owner rule, 2026-08-28; the shape is in `CLAUDE.md` § "Changelog +
+releases", the procedure is step 7 below).
 
 ## Variables
 
@@ -14,9 +16,9 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
   precedent), minor for feature batches, patch for fix-only releases.
 - **Never work on `main` directly** — do the changelog/version edits on a `release/vX.Y.Z` branch
   and open a PR.
-- The release PR should touch exactly three files: `CHANGELOG.md`, `pyproject.toml`, and
-  `uv.lock` (the lock pins the project's own version — v3.0.0 precedent, commit d05e1f2a7). Keep
-  the diff tiny and auditable.
+- The release PR should touch exactly four files: `CHANGELOG.md`, `pyproject.toml`, `uv.lock`
+  (the lock pins the project's own version — v3.0.0 precedent, commit d05e1f2a7) and
+  `app/package.json` (step 4). Keep the diff tiny and auditable.
 - Pick a short **codename** (release theme, a few words) — it appears in three synchronized
   places: the changelog heading, the annotated tag message, and the GitHub release title.
 
@@ -45,11 +47,22 @@ version: $1 (optional — e.g. `3.1.0`; if omitted, propose one from the `[Unrel
    from `CLAUDE.md`. Ask the user to merge unless explicitly authorized to merge autonomously.
 6. **Tag after merge** (on the updated `main`):
    `git tag -a vX.Y.Z -m "<Codename> (YYYY-MM-DD)" && git push origin vX.Y.Z`
-7. **Publish the GitHub release** with the changelog section as body. Write the body to a temp
-   file first (it is multiline and contains backticks — do not inline it into `--notes`):
-   `gh release create vX.Y.Z --title "vX.Y.Z — <Codename>" --notes-file <tmpfile>` — the body is
-   the new version's `###` sections copied verbatim, plus a trailing
-   `**Full Changelog:** https://github.com/MarkusNeusinger/anyplot/compare/v<last>...vX.Y.Z` line.
+7. **Publish the GitHub release** with the changelog section **condensed** as body — never the
+   section copied (the v3.1.0 page was 640 lines). Write the body to a temp file first (it is
+   multiline and contains backticks — do not inline it into `--notes`), then
+   `gh release create vX.Y.Z --title "vX.Y.Z — <Codename>" --notes-file <tmpfile>`. The body:
+   - **Intro line:** merge count and PR range of the window (`git log v<last>..vX.Y.Z --oneline
+     --merges | wc -l` for the count; lowest and highest PR number for the range) and a link to
+     `CHANGELOG.md` — "the full record is [CHANGELOG.md](…), and each PR carries its own
+     reasoning".
+   - **The section's own `###` headings, in the section's order;** an empty heading is omitted.
+   - **One bullet per NOTABLE entry** — chores, dependency bumps, small fixes and the aggregate
+     lines are left out; there is no fixed count. Each bullet is at most two lines: the entry's
+     **bold title** verbatim, one clause with the essence or the headline number, its PR
+     reference. Numbers are copied exactly from the entry; only PR numbers that appear in the
+     section are cited.
+   - **Last line:** `**Full Changelog:** https://github.com/MarkusNeusinger/anyplot/compare/v<last>...vX.Y.Z`.
+   The full text lives only in the CHANGELOG; the release page is the index into it.
 8. **Verify:** `gh release view vX.Y.Z` renders correctly; the site masthead picks up the new tag
    automatically (`app/src/hooks/useLatestRelease.ts` fetches `releases/latest` with a 1 h
    localStorage cache — nothing to deploy).
