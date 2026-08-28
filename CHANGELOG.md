@@ -26,6 +26,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+## [3.2.0] — 2026-08-29 — Findable by assistants
+
+anyplot 3.2 makes the catalogue findable by assistants, not only legible to them. The sister
+project showed that an assistant's fetch tool often follows only URLs it has already seen in
+fetched text, so the machine guide and one complete, callable example per surface now stand
+wherever an agent actually reads — the SPA shell, both `robots.txt` files, every bot page. The
+whole catalogue is one fetch (`llms-full.txt`), the MCP server tells the truth for all fifteen
+libraries, and the bot site finally counts the crawler reads Plausible had been discarding.
+Behind that: a generation retry cap that had parked 87 library pairs for good, a frontend deploy
+that had failed silently, and a masthead that had claimed v1.0 through two releases.
+
 ### Added
 
 - **LLM discoverability sync from kurrentschrift** — the sister project's
@@ -62,6 +73,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **`uv.lock` was unparseable after three Dependabot merges landed in sequence** — #10614,
+  #10615 and #10616 each carried the new `httpx2` and `httpx2-jsfetch` package blocks, and the
+  three squash merges kept every copy, so `uv lock` and every `uv run` on `main` failed with
+  "Dependency `httpx2` has missing `source` field but has more than one matching package". The
+  duplicate blocks are removed and the lock re-validated; found by this release's version bump,
+  the first Python-touching change after the three merges (#10811).
 - **Crawler reads on the bot site were mostly dropped by Plausible** — on the prerender path
   (Cloud Run app → Cloudflare → API) `cf-connecting-ip` is the app container's Google egress
   address, exactly the "hosting provider IP" Plausible discards, and `visitor_ip` preferred
@@ -275,6 +292,9 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   pipeline story, the operator/privacy/transparency facts, and the actual palette hex values
   (straight from `core/palette.py`) — each derived from its single source of truth so the pages
   cannot drift (#10491).
+- **Dependencies:** 10 Dependabot PRs — `mcp` 1.28.1 → 2.0.0 (#10615), `anthropic` 0.122.0 →
+  1.0.0 (#10616), jsdom 29.1.1 → 30.0.1 (#10183), the MUI group (#8820), plus the grouped
+  python-minor (#10315, #10614), npm-minor (#10312, #10612) and actions (#10313, #10613) bumps.
 
 ### Removed
 
@@ -282,6 +302,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   were committed render outputs violating the previews-live-in-GCS rule (flagged by the
   2026-08-17 license audit, removal approved 2026-08-20); the served previews come from GCS and
   are unaffected (#10503).
+
+*Catalog: 302 new implementations across 82 specs — the JavaScript backfill (MUI X Charts 71,
+Highcharts 67, D3 47, ECharts 46, Chart.js 45) plus Makie 9, ggplot2 7 and 10 across the Python
+libraries; no new specs; 3,704 implementations over 324 specs.*
 
 ## [3.1.0] — 2026-08-19 — Legible to machines
 
@@ -1180,7 +1204,8 @@ interactive HTML previews.
   Actions workflows (spec creation, impl generation, AI review, auto-merge); Cloud Run +
   Cloud SQL + GCS; 1,081 unit tests.
 
-[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.1.0...HEAD
+[Unreleased]: https://github.com/MarkusNeusinger/anyplot/compare/v3.2.0...HEAD
+[3.2.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/MarkusNeusinger/anyplot/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/MarkusNeusinger/anyplot/compare/v2.4.0...v3.0.0
 [2.4.0]: https://github.com/MarkusNeusinger/anyplot/compare/v2.3.0...v2.4.0

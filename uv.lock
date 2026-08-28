@@ -226,7 +226,7 @@ wheels = [
 
 [[package]]
 name = "anyplot"
-version = "3.1.0"
+version = "3.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "alembic" },
@@ -1546,8 +1546,8 @@ name = "httpcore2"
 version = "2.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "h11" },
-    { name = "truststore" },
+    { name = "h11", marker = "sys_platform != 'emscripten'" },
+    { name = "truststore", marker = "sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/be/ad/f4f0e57345f1870f3e8cb624e058d7eca6e5a27d33bcc3311d9b618734cd/httpcore2-2.12.0.tar.gz", hash = "sha256:9293522bba0aa7c4c8e9e3f040c16575bd8868e155a77fa30c7a9085a5eae648", size = 67548, upload-time = "2026-08-18T13:22:08.211Z" }
 wheels = [
@@ -1596,31 +1596,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b1/df/48c586a5fe32a0f01324ee087459e112ebb7224f646c0b5023f5e79e9956/httpx-0.28.1.tar.gz", hash = "sha256:75e98c5f16b0f35b567856f597f06ff2270a374470a5c2392242528e3e3e42fc", size = 141406, upload-time = "2024-12-06T15:37:23.222Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl", hash = "sha256:d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad", size = 73517, upload-time = "2024-12-06T15:37:21.509Z" },
-]
-
-[[package]]
-name = "httpx2"
-version = "2.12.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "anyio", marker = "sys_platform != 'emscripten'" },
-    { name = "httpcore2", marker = "sys_platform != 'emscripten'" },
-    { name = "httpx2-jsfetch", marker = "sys_platform == 'emscripten'" },
-    { name = "idna" },
-    { name = "truststore", marker = "sys_platform != 'emscripten'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/7f/f8/579a8b51e42e38ee32647df9f08aa25643ae788e275cc625b199829c4671/httpx2-2.12.0.tar.gz", hash = "sha256:7631fe9887a8a2275f4a2540e053aa670fcc50742864a9ae7c66e609fdcf12cf", size = 100040, upload-time = "2026-08-18T13:22:09.086Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c8/95/411ba65569158e862368917aaf56597f3e5fa3b91b0502919638465a08f3/httpx2-2.12.0-py3-none-any.whl", hash = "sha256:cc8b6eecb8661c146b8f89a60e97456ee086e91a784ed31ac450c3a9e613dd36", size = 95427, upload-time = "2026-08-18T13:22:06.834Z" },
-]
-
-[[package]]
-name = "httpx2-jsfetch"
-version = "1.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/cd/c4/0e5636363151a2a1795e0a77617168b9ca438e1748ec05fc9b5687f93d64/httpx2_jsfetch-1.0.tar.gz", hash = "sha256:70a0e3eabfef7cce5ad9c629f7d01ca05e418f586646f4ddf14782e4c1454c60", size = 6872, upload-time = "2026-08-07T00:13:07.492Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/43/832f631d32e4f1211caa2ba368317739fe71f0b8530e4c9d15dc454bac2a/httpx2_jsfetch-1.0-py3-none-any.whl", hash = "sha256:cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32", size = 6382, upload-time = "2026-08-07T00:13:06.567Z" },
 ]
 
 [[package]]
@@ -2745,12 +2720,12 @@ resolution-markers = [
     "python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
-    { name = "matplotlib" },
-    { name = "mizani" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "scipy" },
-    { name = "statsmodels" },
+    { name = "matplotlib", marker = "sys_platform != 'emscripten'" },
+    { name = "mizani", marker = "sys_platform != 'emscripten'" },
+    { name = "numpy", marker = "sys_platform != 'emscripten'" },
+    { name = "pandas", marker = "sys_platform != 'emscripten'" },
+    { name = "scipy", marker = "sys_platform != 'emscripten'" },
+    { name = "statsmodels", marker = "sys_platform != 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/70/f4/c06a16b4ec540ff6af22e32144704f7e86dee18cd56eef14d66f9615cbf2/plotnine-0.15.7.tar.gz", hash = "sha256:6e578bdd93c7ba12ce495dcdeaf8651f8e4ccdceb0c85b94c8195566d709c2a0", size = 6855478, upload-time = "2026-06-13T10:47:14.277Z" }
 wheels = [
@@ -2766,12 +2741,12 @@ resolution-markers = [
     "python_full_version == '3.14.*' and sys_platform == 'emscripten'",
 ]
 dependencies = [
-    { name = "matplotlib" },
-    { name = "mizani" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "scipy" },
-    { name = "statsmodels" },
+    { name = "matplotlib", marker = "python_full_version >= '3.14' and sys_platform == 'emscripten'" },
+    { name = "mizani", marker = "python_full_version >= '3.14' and sys_platform == 'emscripten'" },
+    { name = "numpy", marker = "python_full_version >= '3.14' and sys_platform == 'emscripten'" },
+    { name = "pandas", marker = "python_full_version >= '3.14' and sys_platform == 'emscripten'" },
+    { name = "scipy", marker = "python_full_version >= '3.14' and sys_platform == 'emscripten'" },
+    { name = "statsmodels", marker = "python_full_version >= '3.14' and sys_platform == 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9f/5d/3471689cf15cf2b6ebb6ebdebc7e33831fb35d85e2323875b5a0e150505d/plotnine-0.15.8.tar.gz", hash = "sha256:d3859997c3abd6edff6dee376d912716e75bbe0b0099b7054176d84fe11e8e20", size = 6863148, upload-time = "2026-08-14T16:27:49.399Z" }
 wheels = [
@@ -2786,12 +2761,12 @@ resolution-markers = [
     "python_full_version < '3.14' and sys_platform == 'emscripten'",
 ]
 dependencies = [
-    { name = "matplotlib" },
-    { name = "mizani" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "scipy" },
-    { name = "statsmodels" },
+    { name = "matplotlib", marker = "python_full_version < '3.14' and sys_platform == 'emscripten'" },
+    { name = "mizani", marker = "python_full_version < '3.14' and sys_platform == 'emscripten'" },
+    { name = "numpy", marker = "python_full_version < '3.14' and sys_platform == 'emscripten'" },
+    { name = "pandas", marker = "python_full_version < '3.14' and sys_platform == 'emscripten'" },
+    { name = "scipy", marker = "python_full_version < '3.14' and sys_platform == 'emscripten'" },
+    { name = "statsmodels", marker = "python_full_version < '3.14' and sys_platform == 'emscripten'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2e/e8/d28be1fee4b1c7ef05f76bfb5a137ebc9b214f80b06b2771c73903d421e0/plotnine-0.16.0a12.tar.gz", hash = "sha256:e95565d9ae16ed60bfa16bcea2cb3c862e4b3165b8c257b8a96498f39bb8b17d", size = 7464639, upload-time = "2026-08-15T12:05:51.042Z" }
 wheels = [
@@ -3583,8 +3558,8 @@ name = "secretstorage"
 version = "3.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "cryptography" },
-    { name = "jeepney" },
+    { name = "cryptography", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "jeepney", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/1c/03/e834bcd866f2f8a49a85eaff47340affa3bfa391ee9912a952a1faa68c7b/secretstorage-3.5.0.tar.gz", hash = "sha256:f04b8e4689cbce351744d5537bf6b1329c6fc68f91fa666f60a380edddcd11be", size = 19884, upload-time = "2025-11-23T19:02:53.191Z" }
 wheels = [
