@@ -34,22 +34,22 @@
     "react-helmet-async": "^3.0.0",
     "react-router-dom": "^7.18.2",
     "react-syntax-highlighter": "^16.1.1",
-    "web-vitals": "^6.1.0"
+    "web-vitals": "^6.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.4",
+    "@testing-library/user-event": "^14.6.5",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-react-swc": "^4.3.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "eslint": "^10.8.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^10.9.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-perfectionist": "^5.10.1",
     "eslint-plugin-react-hooks": "^7.1.1",
@@ -62,6 +62,6 @@
     "vite": "8.0.16",
     "vite-plugin-checker": "^0.14.5",
     "vite-plugin-compression2": "^2.5.3",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
   }
 }
