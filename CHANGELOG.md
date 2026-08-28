@@ -37,7 +37,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `docs/reference/plausible.md`). Guards: `app/src/routes/seoCoverage.test.ts` pins llms.txt
   ↔ route registry ↔ robots.txt ↔ shell; `bot-serving-check` adds the `.well-known`
   redirect, the robots/sitemap bypasses, the site card, a real 404 and a deep-route SPA
-  control. Doctrine: `docs/reference/seo.md` "Discoverability for assistants".
+  control. Doctrine: `docs/reference/seo.md` "Discoverability for assistants" (#10808).
 - **`llms-full.txt` — the whole catalogue in one fetch** — a new
   `GET /llms-full.txt` lists every spec on one line (id, title, hub URL, implemented
   libraries) under a header that documents the retrieval recipes that work for *every*
@@ -58,11 +58,11 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   it over the forwarded list where the crawler actually stands. kurrentschrift measured one
   counted read in twenty with probe events (2026-08-28). `visitor_ip` now reads the leftmost
   valid `x-forwarded-for` entry first and falls back to `cf-connecting-ip`; nginx's
-  `@seo_proxy` forwards the crawler in `X-Forwarded-For` explicitly.
+  `@seo_proxy` forwards the crawler in `X-Forwarded-For` explicitly (#10808).
 - **`robots.txt` carried an invalid `use=reference` Content-Signal token** — the
   contentsignals.org vocabulary is exactly `search`, `ai-input` and `ai-train`; a strict
   parser may discard the whole line over an unknown token, taking the three real signals with
-  it. Dropped from both groups; `seoCoverage.test.ts` pins the vocabulary.
+  it. Dropped from both groups; `seoCoverage.test.ts` pins the vocabulary (#10808).
 - **The generation retry cap counted a library's entire failure history, not the current
   run** — `impl-generate.yml` derives its "3 attempts" budget from hidden marker comments
   on the spec issue, and nothing ever deletes those markers. A `(spec, library)` pair that
