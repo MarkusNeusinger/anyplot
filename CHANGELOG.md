@@ -229,7 +229,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   cited, and the full text lives only here. The v3.1.0 release page was the whole section copied
   — 640 lines. The rule lives in `CLAUDE.md` § "Changelog + releases",
   `.github/copilot-instructions.md`, this file's header and `agentic/commands/release.md` — the
-  same rule kurrentschrift adopted on 2026-08-28.
+  same rule kurrentschrift adopted on 2026-08-28 (#10810).
 - **`open-pr` skill: the post-merge Cloud Build watch names the region** — `gcloud builds
   list` without `--region=europe-west4` answers with months-old global builds (all `SUCCESS`,
   none from today), which reads like "nothing was triggered" while both regional deploys are
