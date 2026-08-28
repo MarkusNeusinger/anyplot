@@ -197,8 +197,11 @@ async def record_bot_fetch(request: Request, call_next):
         return response
     asset = classify_asset(path)
     if asset is not None:
-        kind, spec_id, library_id = asset
-        track_asset_fetch(request, asset=kind, spec=spec_id, library=library_id, status=response.status_code)
+        # `asset_type` is what was fetched (code · spec) — not the agent's
+        # `kind` (user_directed · index · …), which track_asset_fetch derives
+        # from the user agent itself.
+        asset_type, spec_id, library_id = asset
+        track_asset_fetch(request, asset=asset_type, spec=spec_id, library=library_id, status=response.status_code)
     return response
 
 
