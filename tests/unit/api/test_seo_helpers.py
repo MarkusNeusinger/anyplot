@@ -439,7 +439,11 @@ class TestBuildImplHtml:
 
     def test_no_code_no_pre_block(self) -> None:
         page = self._page(code=None)
-        assert "<pre>" not in page
+        # No source block — the retrieval record has its own <pre> (class
+        # language-json) and must stay, so an assistant can still reach the
+        # code endpoint from a page whose source is not stored.
+        assert "<pre><code>" not in page
+        assert '<pre><code class="language-json">' in page
         # page is still enriched otherwise
         assert '<a href="https://anyplot.ai/scatter-basic">' in page
 
@@ -658,6 +662,7 @@ class TestRenderAssetList:
         impl.preview_html_light = f"{self.BASE}/plot-light.html" if interactive else None
         impl.preview_html_dark = f"{self.BASE}/plot-dark.html" if interactive else None
         impl.updated = None  # serialized into JSON-LD — must not be a MagicMock
+        impl.quality_score = None  # serialized into the retrieval record — same rule
         return impl
 
     def test_names_both_themes_explicitly(self) -> None:

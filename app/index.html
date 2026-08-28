@@ -41,6 +41,14 @@
       })();
     </script>
 
+    <!-- Machine-facing fallback in the SHELL itself: agents whose user agent
+         is not in the nginx $is_bot map get this file on every route, and most
+         of them read the raw HTML without executing JS. This link and the
+         <noscript> block in the body put the machine guide and one complete,
+         callable example URL into every first response — invisible in the
+         rendered app. Doctrine: docs/reference/seo.md ("Discoverability"). -->
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt — machine guide" />
+
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://anyplot.ai/" />
@@ -146,14 +154,31 @@
            Until now "here" was a completely empty page — Grok's fetcher read
            exactly that and reported the site as having no content (AI-access
            audit 2026-08-19). Point such clients at the surfaces that work for
-           everyone. -->
+           everyone.
+
+           Absolute URLs on purpose, and one COMPLETE example per surface:
+           assistants' fetch tools often allow only URLs that already appeared
+           verbatim in fetched content, so a relative link or a URL template
+           with placeholders leaves the API unreachable (kurrentschrift
+           finding 2026-08-28, docs/reference/seo.md "Discoverability"). Keep
+           the example pair in step with llms.txt. -->
       <h1>anyplot.ai — the open plot catalogue</h1>
       <p>
-        This page needs JavaScript. Machine-readable access works without it:
-        <a href="/llms.txt">llms.txt</a> (how to query the catalogue),
-        <a href="/llms-full.txt">llms-full.txt</a> (every spec, one per line),
-        the <a href="https://api.anyplot.ai/openapi.json">JSON API</a>, and the
-        <a href="https://github.com/MarkusNeusinger/anyplot">GitHub repository</a>.
+        This page needs JavaScript. Machine-readable access works without it.
+        The machine guide with every retrieval recipe is
+        <a href="https://anyplot.ai/llms.txt">https://anyplot.ai/llms.txt</a>; the whole
+        catalogue, one line per spec, is
+        <a href="https://anyplot.ai/llms-full.txt">https://anyplot.ai/llms-full.txt</a>.
+        The open JSON API returns the runnable source of any implementation, e.g.
+        <a href="https://api.anyplot.ai/specs/bar-error/seaborn/code">https://api.anyplot.ai/specs/bar-error/seaborn/code</a>
+        — the spec id and the library id are free parameters (any pair listed in llms-full.txt) —
+        and every rendered plot is a plain PNG, e.g.
+        <a href="https://storage.googleapis.com/anyplot-images/plots/bar-error/python/seaborn/plot-light.png">https://storage.googleapis.com/anyplot-images/plots/bar-error/python/seaborn/plot-light.png</a>.
+        API documentation: <a href="https://api.anyplot.ai/openapi.json">https://api.anyplot.ai/openapi.json</a> ·
+        MCP endpoint: <a href="https://api.anyplot.ai/mcp/">https://api.anyplot.ai/mcp/</a> ·
+        source: <a href="https://github.com/MarkusNeusinger/anyplot">https://github.com/MarkusNeusinger/anyplot</a>.
+        Crawlers and assistants with known user agents receive a prerendered full-text
+        version of every page at the same URL.
       </p>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>

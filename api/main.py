@@ -16,7 +16,7 @@ from fastapi import FastAPI, HTTPException, Request, Response  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
-from api.analytics import track_bot_fetch  # noqa: E402
+from api.analytics import classify_asset, track_asset_fetch, track_bot_fetch  # noqa: E402
 from api.cache import cache_key, set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
@@ -181,16 +181,27 @@ app.add_middleware(
 # longer exists is a signal worth keeping, it just is not a page view.
 @app.middleware("http")
 async def record_bot_fetch(request: Request, call_next):
-    """Report AI/search agent page requests to the bot analytics site.
+    """Report AI/search agent page requests and single-asset API reads to the bot site.
 
     Requests, not reads: the status is recorded rather than filtered on, so a
-    404 is visible as a miss instead of counted as a page view.
+    404 is visible as a miss instead of counted as a page view. Page reads
+    (/seo-proxy) become `bot_fetch`; one implementation's code or one spec's
+    detail fetched through the API becomes `asset_fetch` — the list endpoints
+    and the machine files are not recorded.
     """
     response: Response = await call_next(request)
     path = request.url.path
     if path.startswith("/seo-proxy"):
         # The public URL, never this router's internal prefix
         track_bot_fetch(request, path.removeprefix("/seo-proxy") or "/", response.status_code)
+        return response
+    asset = classify_asset(path)
+    if asset is not None:
+        # `asset_type` is what was fetched (code · spec) — not the agent's
+        # `kind` (user_directed · index · …), which track_asset_fetch derives
+        # from the user agent itself.
+        asset_type, spec_id, library_id = asset
+        track_asset_fetch(request, asset=asset_type, spec=spec_id, library=library_id, status=response.status_code)
     return response
 
 

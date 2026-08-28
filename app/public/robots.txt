@@ -1,3 +1,6 @@
+# llms.txt (machine guide): https://anyplot.ai/llms.txt
+# OpenAPI: https://api.anyplot.ai/openapi.json
+#
 # Crawler policy — everything here is open, to humans and machines alike.
 #
 # The catalogue is MIT-licensed and published to be reused: every plot page
@@ -37,7 +40,10 @@
 #      first-match parser lets /debug and /interactive through (verified with
 #      Python's urllib.robotparser, which is exactly such a parser).
 #
-# Content signals per contentsignals.org:
+# Content signals per contentsignals.org (these three tokens are the whole
+# vocabulary; nothing else is valid on the line — a `use=reference` token
+# used to ride along here, and a strict parser may discard the entire line
+# over an unknown token, taking the three real signals with it):
 #   search:   indexing and returning links/excerpts — yes
 #   ai-input: retrieval for AI answers, grounding, citation — yes
 #   ai-train: training or fine-tuning models — yes
@@ -50,16 +56,22 @@
 # Control does the actual enforcing. If its behaviour changes, this group can
 # go — nothing in the licence or the policy above argues against it.
 User-agent: Bytespider
-Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
+Content-Signal: search=yes,ai-input=yes,ai-train=yes
 Disallow: /
 
 # Everyone else: search engines, AI assistants and their training crawlers,
 # social and link previews, feed readers. /debug and /interactive are app
 # internals rather than catalogue content and are not worth crawling.
 User-agent: *
-Content-Signal: search=yes,ai-input=yes,ai-train=yes,use=reference
+Content-Signal: search=yes,ai-input=yes,ai-train=yes
 Disallow: /debug
 Disallow: /interactive
 Allow: /
 
 Sitemap: https://anyplot.ai/sitemap.xml
+
+# Machine guide for AI assistants — every retrieval recipe with a full example
+# URL (runnable source via the JSON API, render PNGs, OpenAPI, the MCP
+# endpoint), and the whole catalogue as one line per spec:
+# https://anyplot.ai/llms.txt
+# https://anyplot.ai/llms-full.txt

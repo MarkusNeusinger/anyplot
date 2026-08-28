@@ -44,6 +44,7 @@ and the spec itself at `.../plots/{spec_id}/specification.md`.
 - [Plot gallery](https://anyplot.ai/plots): every rendered implementation, filterable by library, language and tags
 - [Specifications](https://anyplot.ai/specs): the library-agnostic plot specs the implementations are generated from
 - [Libraries](https://anyplot.ai/libraries): the fifteen supported plotting libraries across four languages
+- [Network map](https://anyplot.ai/map): every spec as a node, grouped by visual similarity — the catalogue's neighbourhoods (interactive; the data behind it is `GET https://api.anyplot.ai/specs/map`)
 - [Sitemap](https://anyplot.ai/sitemap.xml): every spec hub and implementation page
 
 ## Docs

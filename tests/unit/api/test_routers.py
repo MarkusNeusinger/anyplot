@@ -634,6 +634,38 @@ class TestSeoRouter:
         # Specific exclusions must precede the catch-all: a first-match parser
         # stops at Allow: / and would never reach them.
         assert content.index("Disallow: /debug") < content.index("Allow: /")
+        # The site's open policy, stated on this host too — and only the three
+        # contentsignals.org tokens, never the invalid `use=reference` that
+        # used to ride along on the site file.
+        assert "Content-Signal: search=yes,ai-input=yes,ai-train=yes\n" in content
+        assert "use=reference" not in content
+        # The guide is only findable by guessing the convention unless the
+        # files an agent actually fetches point to it.
+        assert "https://anyplot.ai/llms.txt" in content
+        assert "https://anyplot.ai/llms-full.txt" in content
+        assert "https://api.anyplot.ai/openapi.json" in content
+
+    def test_llms_txt_on_the_api_host_redirects_to_the_site_file(self, client: TestClient) -> None:
+        """Agents guess /llms.txt on the host the README and robots.txt name.
+
+        A redirect to the one source of truth beats the 404 this used to be,
+        and beats a served copy that would drift.
+        """
+        response = client.get("/llms.txt", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "https://anyplot.ai/llms.txt"
+
+    def test_bot_nav_links_the_machine_files_as_full_urls(self, client: TestClient) -> None:
+        """Every bot page must let an assistant reach the guide from where it landed.
+
+        Fetch tools often allow only URLs that already appeared verbatim in
+        fetched content — a guide linked from nothing is findable only by
+        guessing.
+        """
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/seo-proxy/")
+        assert '<a href="https://anyplot.ai/llms.txt">llms.txt</a>' in response.text
+        assert '<a href="https://anyplot.ai/llms-full.txt">llms-full.txt</a>' in response.text
 
     def test_llms_full_txt_without_db(self, client: TestClient) -> None:
         """llms-full.txt degrades to the header (retrieval recipes) without a DB."""
@@ -747,9 +779,47 @@ class TestSeoProxyRouter:
 
     def test_robots_and_sitemap_are_not_page_reads(self, client: TestClient) -> None:
         """Both live on this router but are machine files, not catalogue pages."""
-        with patch("api.main.track_bot_fetch") as track:
+        with patch("api.main.track_bot_fetch") as track, patch("api.main.track_asset_fetch") as asset:
             client.get("/robots.txt", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
             client.get("/sitemap.xml", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"})
+            client.get(
+                "/llms.txt", headers={"User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)"}, follow_redirects=False
+            )
+        track.assert_not_called()
+        asset.assert_not_called()
+
+    def test_an_assistant_reading_one_implementation_s_code_is_an_asset_fetch(self, client: TestClient) -> None:
+        """The API read that follows a page read: which plot's code did it pull."""
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_asset_fetch") as track:
+            response = client.get(
+                "/specs/bar-basic/seaborn/code", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"}
+            )
+        track.assert_called_once()
+        assert track.call_args.kwargs == {
+            "asset": "code",
+            "spec": "bar-basic",
+            "library": "seaborn",
+            "status": response.status_code,
+        }
+
+    def test_an_assistant_reading_one_spec_is_an_asset_fetch(self, client: TestClient) -> None:
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_asset_fetch") as track:
+            response = client.get(
+                "/specs/bar-basic", headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"}
+            )
+        track.assert_called_once()
+        assert track.call_args.kwargs == {
+            "asset": "spec",
+            "spec": "bar-basic",
+            "library": None,
+            "status": response.status_code,
+        }
+
+    def test_catalogue_navigation_is_not_an_asset_fetch(self, client: TestClient) -> None:
+        """Lists, the map and the filter are navigation, not a request for one thing."""
+        with patch(DB_CONFIG_PATCH, return_value=False), patch("api.main.track_asset_fetch") as track:
+            for path in ("/specs", "/specs/map", "/plots/filter?plot=bar", "/libraries", "/llms-full.txt"):
+                client.get(path, headers={"User-Agent": "Mozilla/5.0 (compatible; Claude-User/1.0)"})
         track.assert_not_called()
 
     def test_seo_home_canonical_ignores_filter_params(self, client: TestClient) -> None:
@@ -943,6 +1013,14 @@ class TestSeoProxyRouter:
             assert "api.anyplot.ai/og/scatter-basic/python/matplotlib.png" in response.text
             # Enriched body carries the implementation source for crawlers
             assert "<pre><code>import matplotlib.pyplot as plt</code></pre>" in response.text
+            # ...and its own retrieval record: the complete, callable code URL
+            # in prose AND in a visible JSON block (HTML-to-Markdown converters
+            # drop <script>, so the JSON-LD alone never reaches an assistant).
+            code_url = "https://api.anyplot.ai/specs/scatter-basic/matplotlib/code"
+            assert f'<a href="{code_url}">{code_url}</a>' in response.text
+            assert '<pre><code class="language-json">' in response.text
+            assert f"&quot;code_json&quot;: &quot;{code_url}&quot;" in response.text
+            assert "&quot;spec_json&quot;: &quot;https://api.anyplot.ai/specs/scatter-basic&quot;" in response.text
 
     def test_seo_spec_implementation_not_found(self, db_client) -> None:
         """SEO spec implementation should return 404 when spec not found."""
@@ -1051,8 +1129,12 @@ class TestSeoProxyRouter:
             response = client.get("/seo-proxy/scatter-basic/python/seaborn")
             assert response.status_code == 200
             assert "api.anyplot.ai/og/home.png" in response.text  # Default image via API
-            # No stored code -> no <pre> block, page still renders
-            assert "<pre>" not in response.text
+            # No stored code -> no source block, page still renders — and the
+            # retrieval record (its own <pre>, class language-json) stays, so
+            # an assistant can still reach the code endpoint from the page.
+            assert "<pre><code>" not in response.text
+            assert '<pre><code class="language-json">' in response.text
+            assert "https://api.anyplot.ai/specs/scatter-basic/seaborn/code" in response.text
 
     def test_seo_about(self, client: TestClient) -> None:
         """SEO about page must carry the pipeline story, not just og:tags."""
