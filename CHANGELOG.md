@@ -5,8 +5,18 @@ All notable changes to this project are documented here. The format is based on
 rather than library SemVer: major for milestone releases, minor for feature batches, patch for
 fix-only (see `agentic/commands/release.md`).
 
-Every non-exempt PR adds its entries under `[Unreleased]`; a release moves that section under a
-new version heading (see `agentic/commands/release.md`). Product, pipeline-infrastructure, and
+Every non-exempt PR adds its entries under `[Unreleased]`, each bullet with its PR reference. A
+release moves that section under a new version heading (`## [X.Y.Z] — YYYY-MM-DD — <codename>`)
+and bumps `pyproject.toml` (`project.version`), `uv.lock` and `app/package.json` in the same
+commit, via a PR (procedure: `agentic/commands/release.md`). After the merge the tag goes on the
+merge commit and the GitHub release is created from the section — condensed, never copied (rule
+of 2026-08-28): an intro line with the merge count, the PR range and a link to this file; the
+section's own headings in the section's order (an empty one is omitted); one bullet per NOTABLE
+entry — chores, dependency bumps and small fixes are left out, and there is no fixed count — at
+most two lines each: its bold title, one clause with the essence or the headline number, its PR
+reference; a compare link as the last line. Numbers are copied exactly and only PR numbers from
+the section are cited; the full text lives only here — the release page is the index into it.
+Product, pipeline-infrastructure, and
 docs changes are covered here. **Exempt:** the automated plot pipeline's routine output
 (spec-create, impl-generate/review/repair/merge, spec auto-polish, and daily-regen PRs) and
 individual Dependabot bumps — listing those per entry would drown the file (900+ automated
@@ -211,6 +221,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **GitHub releases are the CHANGELOG section condensed, never copied** — a release body now
+  carries an intro line (merge count, PR range, link to this file), the section's own headings,
+  one bullet per notable entry at most two lines long (bold title, one clause with the essence or
+  the headline number, PR reference) and a compare link as the last line; chores, dependency bumps
+  and small fixes stay out, numbers are copied exactly, only PR numbers from the section are
+  cited, and the full text lives only here. The v3.1.0 release page was the whole section copied
+  — 640 lines. The rule lives in `CLAUDE.md` § "Changelog + releases",
+  `.github/copilot-instructions.md`, this file's header and `agentic/commands/release.md` — the
+  same rule kurrentschrift adopted on 2026-08-28.
 - **`open-pr` skill: the post-merge Cloud Build watch names the region** — `gcloud builds
   list` without `--region=europe-west4` answers with months-old global builds (all `SUCCESS`,
   none from today), which reads like "nothing was triggered" while both regional deploys are
