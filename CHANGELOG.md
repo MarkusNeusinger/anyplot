@@ -215,7 +215,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   list` without `--region=europe-west4` answers with months-old global builds (all `SUCCESS`,
   none from today), which reads like "nothing was triggered" while both regional deploys are
   already done; the #10808 follow-through polled that list for 20 minutes. The command now
-  carries the region and a `SHORT_SHA` column to match against the merge commit.
+  carries the region and a `SHORT_SHA` column to match against the merge commit (#10809).
 - **`babysit-pipeline`'s gap-backfill guidance corrected against a completed run** — the
   section shipped in #10628 was written mid-backfill and three of its claims did not
   survive the rest of it. The halt-on-cluster threshold counted raw failed runs, but one
