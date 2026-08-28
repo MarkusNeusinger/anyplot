@@ -78,7 +78,7 @@ that had failed silently, and a masthead that had claimed v1.0 through two relea
   three squash merges kept every copy, so `uv lock` and every `uv run` on `main` failed with
   "Dependency `httpx2` has missing `source` field but has more than one matching package". The
   duplicate blocks are removed and the lock re-validated; found by this release's version bump,
-  the first Python-touching change after the three merges.
+  the first Python-touching change after the three merges (#10811).
 - **Crawler reads on the bot site were mostly dropped by Plausible** — on the prerender path
   (Cloud Run app → Cloudflare → API) `cf-connecting-ip` is the app container's Google egress
   address, exactly the "hosting provider IP" Plausible discards, and `visitor_ip` preferred
