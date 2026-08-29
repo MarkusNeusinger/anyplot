@@ -53,8 +53,13 @@ steps:
       - '1'
       - '--timeout'
       - '60'
+      # Scale to zero. This service is a static nginx that boots in ~0.26 s, and
+      # measured traffic never leaves it idle long enough to be reclaimed: over
+      # 7 days the longest gap between requests was 11 min, against Cloud Run's
+      # ~15 min idle window. A warm instance cost ~EUR 8.30/month for 99.56 %
+      # idle time. The API keeps min-instances=1 — its cold start is ~11.6 s.
       - '--min-instances'
-      - '1'
+      - '0'
       - '--max-instances'
       - '3'
       - '--port'
