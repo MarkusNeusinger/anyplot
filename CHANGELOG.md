@@ -31,7 +31,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **`anyplot-app` scales to zero** — the frontend service ran a permanently warm
   instance for ~EUR 8.30/month while 99.56% of the paid time was idle. It is a static
   nginx image that boots in ~0.26 s, and a 7-day request trace at one-minute resolution
-  shows the longest gap between requests is 11 minutes, against Cloud Run's ~15 minute
+  shows the longest gap between requests is 11 minutes, against Cloud Run's ~15-minute
   idle window — so the instance is in practice never reclaimed and visitors keep the
   same time to first byte. `anyplot-api` keeps `min-instances=1`: its cold start is
   ~11.6 s and its traffic does leave gaps over 15 minutes. (#10812)
