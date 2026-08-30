@@ -49,6 +49,7 @@ from api.version import APP_VERSION  # noqa: E402
 from core.config import settings  # noqa: E402
 from core.constants import LANGUAGES_METADATA, LIBRARIES_METADATA  # noqa: E402
 from core.database import close_db, init_db, is_db_configured  # noqa: E402
+from core.images import has_text_shaping  # noqa: E402
 
 
 # Configure logging
@@ -108,6 +109,14 @@ async def _prewarm_cache() -> None:
 async def lifespan(app: FastAPI):
     """Manage application lifecycle."""
     logger.info("Starting anyplot API...")
+
+    # Text shaping decides whether the OG cards carry MonoLisa's italic swashes
+    # (`ss02`) and kerning at all — log it once so a degraded image is visible
+    # in Cloud Run logs instead of only in a pixel diff of the served PNG.
+    if has_text_shaping():
+        logger.info("Text shaping (libraqm): available")
+    else:
+        logger.error("Text shaping (libraqm): MISSING — OG images render unkerned and without MonoLisa swashes")
 
     # Initialize database connection
     if is_db_configured():

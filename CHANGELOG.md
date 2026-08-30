@@ -26,6 +26,17 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Fixed
+
+- **OG cards render without MonoLisa's italic swashes in production** — the live
+  `api.anyplot.ai/og/home.png` is pixel-identical to a render forced onto Pillow's
+  BASIC layout engine, which means the deployed container's Pillow has no libraqm:
+  the `ss02` stylistic set on `— any library.` is dropped and no text is kerned. The
+  helper that draws feature runs swallowed the exception, so the degradation was
+  invisible in the logs and the endpoint kept returning a valid 200 PNG. The fallback
+  now warns once per process, the API logs the shaping capability at startup, and
+  `api/Dockerfile` fails the build outright when Pillow lands without libraqm. (#PR)
+
 ### Changed
 
 - **`anyplot-app` scales to zero** — the frontend service ran a permanently warm
