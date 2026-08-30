@@ -35,7 +35,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   helper that draws feature runs swallowed the exception, so the degradation was
   invisible in the logs and the endpoint kept returning a valid 200 PNG. The fallback
   now warns once per process, the API logs the shaping capability at startup, and
-  `api/Dockerfile` fails the build outright when Pillow lands without libraqm. (#PR)
+  `api/Dockerfile` fails the build outright when Pillow lands without libraqm. (#10813)
 
 ### Changed
 
