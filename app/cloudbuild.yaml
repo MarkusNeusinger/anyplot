@@ -53,8 +53,13 @@ steps:
       - '1'
       - '--timeout'
       - '60'
+      # Scale to zero: this is a static nginx that boots in a fraction of a
+      # second, and its traffic is dense enough that Cloud Run rarely reclaims
+      # the instance anyway, so a warm one bought almost nothing. The API keeps
+      # min-instances=1 — its cold start is orders of magnitude larger.
+      # Measurements behind this: #10812.
       - '--min-instances'
-      - '1'
+      - '0'
       - '--max-instances'
       - '3'
       - '--port'
