@@ -903,6 +903,132 @@ class TestGetMonolisaFontPath:
         assert cache_dir.exists()
 
 
+class TestTextShaping:
+    """Tests for libraqm text shaping detection and the feature-drawing helper."""
+
+    @pytest.fixture(autouse=True)
+    def reset_warn_flag(self):
+        """Reset the once-per-process warning latch so each test can observe it."""
+        import core.images
+
+        core.images._SHAPING_WARNED = False
+        yield
+        core.images._SHAPING_WARNED = False
+
+    def test_environment_has_text_shaping(self) -> None:
+        """The rendering environment must have libraqm.
+
+        Without it every OG card silently loses MonoLisa's italic `ss02`
+        swashes and all kerning — exactly the production regression this
+        module guards against. A red test here means the Pillow wheel (or the
+        container image) lost libraqm, not that the test is wrong.
+        """
+        from core.images import has_text_shaping
+
+        assert has_text_shaping(), "Pillow has no libraqm support — OG images would render unkerned"
+
+    def test_draws_with_features_when_shaping_available(self) -> None:
+        """Should pass the requested OpenType features through to Pillow."""
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        draw = MagicMock()
+        with patch("core.images.has_text_shaping", return_value=True):
+            core.images._draw_text_with_features(
+                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss02"]
+            )
+
+        assert draw.text.call_args.kwargs["features"] == ["ss02"]
+
+    def test_warns_once_when_shaping_unavailable(self, caplog) -> None:
+        """Should fall back to plain text AND log the degradation exactly once."""
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        draw = MagicMock()
+        with patch("core.images.has_text_shaping", return_value=False), caplog.at_level(logging.WARNING):
+            core.images._draw_text_with_features(
+                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss02"]
+            )
+            core.images._draw_text_with_features(
+                draw, (0, 40), "— any library.", font=None, fill="#000000", features=["ss02"]
+            )
+
+        # Features dropped, text still drawn
+        assert "features" not in draw.text.call_args.kwargs
+        assert draw.text.call_count == 2
+        # Warned once, not per text run
+        warnings = [r for r in caplog.records if "libraqm" in r.getMessage()]
+        assert len(warnings) == 1
+
+    def test_warns_when_font_lacks_feature(self, caplog) -> None:
+        """Should fall back and log when Pillow rejects the feature for this font."""
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        import core.images
+
+        draw = MagicMock()
+        draw.text.side_effect = [KeyError("unsupported"), None]
+        with patch("core.images.has_text_shaping", return_value=True), caplog.at_level(logging.WARNING):
+            core.images._draw_text_with_features(
+                draw, (0, 0), "— any library.", font=None, fill="#000000", features=["ss02"]
+            )
+
+        assert draw.text.call_count == 2  # feature attempt + plain fallback
+        assert any("not applied" in r.getMessage() for r in caplog.records)
+
+    def test_no_features_draws_plain_text(self) -> None:
+        """Should not touch the features kwarg when no features are requested."""
+        from unittest.mock import MagicMock
+
+        import core.images
+
+        draw = MagicMock()
+        core.images._draw_text_with_features(draw, (0, 0), "plain", font=None, fill="#000000")
+
+        assert "features" not in draw.text.call_args.kwargs
+
+    def test_home_og_image_renders_swashes(self) -> None:
+        """The home card must differ with and without `ss02` — proof the swashes land.
+
+        Guards the production regression directly: when the feature is dropped
+        the card still renders, so only a pixel comparison catches it. Skipped
+        where MonoLisa is not cached locally (no GCS access): the DejaVu
+        fallback has no `ss02`, so both renders would legitimately match.
+        """
+        from io import BytesIO
+        from unittest.mock import patch
+
+        from PIL import ImageChops
+
+        from core.images import FONT_CACHE_DIR, create_home_og_image
+
+        if not (FONT_CACHE_DIR / "MonoLisaVariableItalic.ttf").exists():
+            pytest.skip("MonoLisa italic not cached locally — swash rendering cannot be verified")
+
+        with_features = create_home_og_image(theme="light")
+        with patch("core.images.has_text_shaping", return_value=False):
+            without_features = create_home_og_image(theme="light")
+
+        assert isinstance(with_features, bytes)
+        assert isinstance(without_features, bytes)
+
+        # Compare pixels, not encoded bytes: a PNG encoder change would make a
+        # byte comparison pass while the swashes are gone.
+        swashed = Image.open(BytesIO(with_features)).convert("RGB")
+        plain = Image.open(BytesIO(without_features)).convert("RGB")
+        diff_box = ImageChops.difference(swashed, plain).getbbox()
+
+        assert diff_box is not None, "`ss02` changed no pixel — the swashes are not being applied"
+        # The tagline is the only line drawn with features, so the diff must sit
+        # in the headline block and nowhere else (eyebrow row ends at y≈100).
+        assert diff_box[1] > 100, f"unexpected diff outside the tagline block: {diff_box}"
+
+
 class TestBrandingCLI:
     """Tests for branding CLI commands."""
 

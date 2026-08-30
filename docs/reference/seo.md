@@ -324,8 +324,31 @@ Layout:
 
 Uses **MonoLisa** variable font (commercial, not in repo):
 - Downloaded from GCS: `gs://anyplot-static/fonts/MonoLisaVariableNormal.ttf`
+- Italic variant (`MonoLisaVariableItalic.ttf`) for the tagline swashes
 - Cached locally in `/tmp/anyplot-fonts/`
 - Fallback: DejaVuSansMono-Bold
+
+### Text shaping (libraqm)
+
+The home card draws its `— any library.` line with the OpenType stylistic set
+`ss02`, which turns MonoLisa Italic into its script forms. Pillow can only apply
+OpenType features and kerning when it is built with libraqm; without it, Pillow
+silently switches to its BASIC layout engine and the card renders unkerned and
+without swashes — the response stays a valid 200 PNG, so nothing else signals
+the degradation.
+
+Two guards keep that visible:
+
+- `api/Dockerfile` fails the build when the installed Pillow lacks libraqm.
+- The API logs the capability at startup (`Text shaping (libraqm): available`,
+  or an error line when it is missing), and `core.images` logs a warning the
+  first time a feature run is dropped.
+
+To check an environment yourself, run:
+
+```bash
+uv run python -c "from PIL import features; print(features.check('raqm'))"
+```
 
 ## Robots.txt
 

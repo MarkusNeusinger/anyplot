@@ -22,6 +22,15 @@ RUN pip install --no-cache-dir uv && \
     uv venv && \
     uv sync --frozen
 
+# Fail the build if Pillow lands without libraqm. Without text shaping Pillow
+# falls back to its BASIC layout engine: the OG cards lose MonoLisa's italic
+# `ss02` swashes and all kerning, and nothing in the response signals it — the
+# only symptom is an off-brand PNG. Better a red build than a silent regression.
+RUN .venv/bin/python -c "\
+from PIL import features; \
+assert features.check('raqm'), \
+'Pillow was installed without libraqm — OG image text shaping would be disabled. Use a Pillow wheel that bundles libraqm (or install libraqm before building it from source).'"
+
 # Copy application code
 COPY api/ ./api/
 COPY core/ ./core/

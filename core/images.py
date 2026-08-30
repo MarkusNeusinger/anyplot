@@ -21,6 +21,7 @@ from io import BytesIO
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
+from PIL import features as pil_features
 
 # anyplot categorical palette — "imprint" (v3 hybrid-v3 ordering).
 # Defined as a separate module so the project's named-API (palette.green,
@@ -937,20 +938,68 @@ def create_branded_header(width: int = OG_WIDTH, height: int = HEADER_HEIGHT) ->
     return header
 
 
+def has_text_shaping() -> bool:
+    """Whether Pillow can shape text (libraqm/HarfBuzz present).
+
+    Without it Pillow silently uses its BASIC layout engine: OpenType features
+    such as MonoLisa's `ss02` italic swashes are unavailable AND no text is
+    kerned, so every OG card renders subtly off-brand. Public so the API can
+    report the capability at startup instead of discovering it from a diff of
+    two PNGs.
+    """
+    try:
+        return bool(pil_features.check("raqm"))
+    except Exception:  # pragma: no cover — defensive: older/patched Pillow builds
+        return False
+
+
+def _warn_missing_shaping(features: list[str]) -> None:
+    """Log the missing-libraqm degradation once per process.
+
+    Once, not per text run: a degraded worker draws the same warning on every
+    request and would otherwise bury the rest of the log.
+    """
+    global _SHAPING_WARNED
+    if _SHAPING_WARNED:
+        return
+    _SHAPING_WARNED = True
+    logger.warning(
+        "Pillow has no libraqm/HarfBuzz support — OpenType features %s are dropped and text is rendered "
+        "unkerned (BASIC layout). OG cards will not match the brand rendering; rebuild the image with a "
+        "Pillow wheel that bundles libraqm.",
+        features,
+    )
+
+
+_SHAPING_WARNED = False
+
+
 def _draw_text_with_features(
     draw: ImageDraw.ImageDraw, xy: tuple[int, int], text: str, *, font, fill, features: list[str] | None = None
 ) -> None:
     """Draw text with optional OpenType features (e.g. `ss02` for MonoLisa Italic swashes).
 
     Falls back to plain `draw.text(...)` when Pillow is built without libraqm
-    (no feature support) or when the font doesn't supply the requested feature.
+    (no feature support) or when the font doesn't supply the requested feature —
+    but says so in the log rather than degrading silently, which is how the
+    production OG cards lost their italic swashes unnoticed (issue: OG image
+    served without MonoLisa `ss02`).
     """
+    if not features:
+        draw.text(xy, text, font=font, fill=fill)
+        return
+
+    if not has_text_shaping():
+        _warn_missing_shaping(features)
+        draw.text(xy, text, font=font, fill=fill)
+        return
+
     try:
-        if features:
-            draw.text(xy, text, font=font, fill=fill, features=features)
-        else:
-            draw.text(xy, text, font=font, fill=fill)
-    except Exception:
+        draw.text(xy, text, font=font, fill=fill, features=features)
+    except (KeyError, ValueError, OSError) as exc:
+        # KeyError is what Pillow raises when features are unsupported; the
+        # others cover a font that lacks the requested set.
+        logger.warning("OpenType features %s not applied to %r: %s", features, text, exc)
         draw.text(xy, text, font=font, fill=fill)
 
 
