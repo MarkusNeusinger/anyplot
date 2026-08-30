@@ -1000,7 +1000,10 @@ class TestTextShaping:
         where MonoLisa is not cached locally (no GCS access): the DejaVu
         fallback has no `ss02`, so both renders would legitimately match.
         """
+        from io import BytesIO
         from unittest.mock import patch
+
+        from PIL import ImageChops
 
         from core.images import FONT_CACHE_DIR, create_home_og_image
 
@@ -1012,7 +1015,18 @@ class TestTextShaping:
             without_features = create_home_og_image(theme="light")
 
         assert isinstance(with_features, bytes)
-        assert with_features != without_features
+        assert isinstance(without_features, bytes)
+
+        # Compare pixels, not encoded bytes: a PNG encoder change would make a
+        # byte comparison pass while the swashes are gone.
+        swashed = Image.open(BytesIO(with_features)).convert("RGB")
+        plain = Image.open(BytesIO(without_features)).convert("RGB")
+        diff_box = ImageChops.difference(swashed, plain).getbbox()
+
+        assert diff_box is not None, "`ss02` changed no pixel — the swashes are not being applied"
+        # The tagline is the only line drawn with features, so the diff must sit
+        # in the headline block and nowhere else (eyebrow row ends at y≈100).
+        assert diff_box[1] > 100, f"unexpected diff outside the tagline block: {diff_box}"
 
 
 class TestBrandingCLI:
