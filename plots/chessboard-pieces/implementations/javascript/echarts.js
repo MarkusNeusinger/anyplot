@@ -1,12 +1,8 @@
 // anyplot.ai
 // chessboard-pieces: Chess Board with Pieces for Position Diagrams
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-01
-//# anyplot-orientation: square
-// anyplot.ai
-// chessboard-pieces: Chess Board with Pieces for Position Diagrams
-// Library: echarts 6.1.0 | JavaScript 22
 // Quality: pending | Created: 2026-09-01
+//# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -38,10 +34,18 @@ const PIECE_BLACK_FILL = "#1A1A17";
 const PIECE_BLACK_STROKE = "#F5F1E6";
 
 // Board squares: light square at h1, standard orientation (white at bottom).
-// Dark squares use the Imprint ochre hue at reduced opacity — the palette's
-// documented "wood" semantic anchor — blended live over the page background.
-const LIGHT_SQUARE = t.elevatedBg;
+// Both square tones are alpha-blends over the page background rather than a
+// solid theme token, so the light/dark luminance ordering stays correct in
+// both themes (a solid t.elevatedBg is nearly black in dark mode, which would
+// read *darker* than the ochre-blended dark square). Dark squares use the
+// Imprint ochre hue — the palette's documented "wood" semantic anchor.
+const LIGHT_SQUARE = "rgba(245, 241, 230, 0.45)";
 const DARK_SQUARE = "rgba(189, 130, 51, 0.45)";
+
+// Checkmate emphasis: 4.Qxf7# — the queen delivers mate from f7, checking the
+// king on e8. A soft amber outline on those two squares calls out the
+// decisive move without adding chart junk (pieces + squares stay untouched).
+const HIGHLIGHT_SQUARES = new Set(["f7", "e8"]);
 
 const squares = [];
 FILES.forEach((file, col) => {
@@ -58,6 +62,8 @@ const pieces = Object.keys(PIECES).map((square) => {
   const isWhite = code === code.toUpperCase();
   return [file, rank, PIECE_GLYPH[code], isWhite ? 1 : 0];
 });
+
+const highlights = [...HIGHLIGHT_SQUARES].map((square) => [square[0], square[1]]);
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -131,6 +137,33 @@ chart.setOption({
     {
       type: "custom",
       coordinateSystem: "cartesian2d",
+      data: highlights,
+      renderItem: (params, api) => {
+        const center = api.coord([api.value(0), api.value(1)]);
+        const size = api.size([1, 1]);
+        const inset = Math.min(size[0], size[1]) * 0.06;
+        return {
+          type: "rect",
+          shape: {
+            x: center[0] - size[0] / 2 + inset,
+            y: center[1] - size[1] / 2 + inset,
+            width: size[0] - inset * 2,
+            height: size[1] - inset * 2,
+            r: inset,
+          },
+          style: {
+            fill: "transparent",
+            stroke: t.amber,
+            lineWidth: 3,
+          },
+          silent: true,
+        };
+      },
+      z: 2,
+    },
+    {
+      type: "custom",
+      coordinateSystem: "cartesian2d",
       data: pieces,
       renderItem: (params, api) => {
         const isWhite = api.value(3) === 1;
@@ -154,7 +187,7 @@ chart.setOption({
           silent: true,
         };
       },
-      z: 2,
+      z: 3,
     },
   ],
 });
