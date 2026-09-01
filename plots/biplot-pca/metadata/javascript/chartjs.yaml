@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: biplot-pca
 created: '2026-09-01T18:32:09Z'
-updated: '2026-09-01T18:36:37Z'
+updated: '2026-09-01T18:47:43Z'
 generated_by: claude-sonnet
 workflow_run: 33543493654
 issue: 3417
@@ -12,54 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Implements a real Jacobi-eigenvalue PCA from scratch (correlation matrix, eigen-decomposition,
-    projection) with a deterministic seeded LCG — no shortcuts or fake data given
-    the browser has no PCA library.
-  - 'Correct correlation-biplot construction: loadings scaled by sqrt(eigenvalue)
-    then rescaled to match the score cloud''s magnitude, plus a dashed unit-circle
-    reference exactly as the spec''s ''Notes'' section suggests.'
-  - Loading arrows are hand-drawn with proper arrowheads and outward-anchored text
-    labels for all 6 variables (Temperature, Pressure, Humidity, FlowRate, Vibration,
-    ToolWear) — matches spec's 'label each loading arrow' requirement.
-  - 'Full Imprint palette + theme-chrome compliance verified in both renders: Line
-    A/B/C use palette positions 1-3 (#009E73 green first), backgrounds are the correct
-    warm off-white/near-black, and all text/grid/arrow colors flip correctly with
-    no dark-on-dark or light-on-light failures.'
-  - Axis titles show 'PC1 (55.1%)' / 'PC2 (38.9%)' — variance-explained percentages
-    included exactly as the spec requires.
-  - Clean idiomatic Chart.js plugin architecture (beforeDraw for background, afterDatasetsDraw
-    for spines/unit-circle/arrows) cleanly separates concerns instead of hacking everything
-    into one plugin.
+  - Implements a genuine PCA (correlation matrix + Jacobi eigenvalue decomposition)
+    entirely client-side rather than faking loadings — real dimensionality reduction,
+    not a lookalike.
+  - Dominant-loading visual emphasis (full ink + heavier stroke on the strongest loading
+    vector) is a thoughtful data-storytelling touch that doesn't reuse a data/group
+    color.
+  - Synthetic data has genuine low-rank correlation structure (per-line latent offsets
+    + shared noise), producing a realistic and recoverable PCA signal.
+  - Clean theme handling — verified no dark-on-dark or light-on-light issues, and
+    no clipping at any canvas edge.
   weaknesses:
-  - Title fills only ~33% of plot width at the default 22px fontsize — well under
-    the 50-70% guideline for a 47-char title on a 3200px-wide canvas; a slightly larger
-    fontsize would give it more visual presence relative to the chart body.
-  - Data storytelling (DE-03) is functional but flat — no emphasis technique (e.g.
-    a callout on the most-separated group, or fading the unit circle further) draws
-    the eye to the biplot's key insight beyond the raw arrow directions.
-  - Seven top-level helper functions/plugin objects (lcg, randn, jacobiEigen, bgPlugin,
-    spinePlugin, unitCirclePlugin, loadingArrowPlugin) push code complexity higher
-    than the KISS ideal — largely unavoidable for an in-browser PCA implementation,
-    but bgPlugin and spinePlugin could be merged into one draw plugin to trim one
-    function.
+  - Arrow-label font (sans-serif) doesn't match Chart.js's own default font family
+    used for ticks/title/legend — minor typographic inconsistency between plugin-drawn
+    canvas text and Chart.js-rendered text.
+  - Grid lines are a bit more prominent than the "barely-there" ideal described in
+    the style guide; consider a slightly lower-opacity grid color for a more refined
+    look.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-range), not pure white — correct light-theme surface.
-      Chrome: Title "biplot-pca · javascript · chartjs · anyplot.ai" in bold dark ink at top-center; axis titles "PC1 (55.1%)" and "PC2 (38.9%)" in dark ink; tick labels in softer dark gray; subtle light-gray gridlines on both axes; legend "Line A / Line B / Line C" top-right with circular swatches; an L-shaped left+bottom spine frame in soft ink; six loading-vector labels (Humidity, Vibration, FlowRate, ToolWear, Temperature, Pressure) in bold dark text at each arrow tip. All fully readable against the light background.
-      Data: ~90 scatter points across 3 groups — Line A green (#009E73), Line B lavender/purple, Line C blue — matches Imprint palette positions 1-3 with brand green first. Six dark-gray arrows radiate from the origin to each loading, with a dashed ellipse (unit circle) as magnitude reference.
-      Legibility verdict: PASS — no light-on-light issues; all text and data are clearly distinguishable from the cream background.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "biplot-pca · javascript · chartjs · anyplot.ai" in bold dark ink at top; legend top-right (Line A/B/C with circular swatches); axis titles "PC1 (55.1%)" / "PC2 (38.9%)" and tick labels in ink-soft gray; L-shaped spine (left+bottom only); six loading-arrow labels (Humidity, Vibration, FlowRate, ToolWear, Temperature, Pressure) in dark ink. All clearly readable against the light background.
+      Data: ~90 scatter points colored green (Line A, #009E73), magenta/purple (Line B), blue-gray (Line C); loading arrows mostly muted ink-soft gray with the dominant loading (Temperature) in full-ink bold; dashed gray unit-circle reference ellipse.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-range), not pure black — correct dark-theme surface.
-      Chrome: Same title, axis titles, tick labels, and loading-arrow labels, now rendered in light/off-white ink, fully legible against the dark surface; gridlines are faint light-gray; the L-shaped spine and loading arrows render in light gray (theme-adaptive ink-soft token) instead of the light render's dark gray, remaining clearly visible; legend swatches and text also flip to light ink.
-      Data: Point colors are pixel-identical to the light render — same green/lavender/blue for Line A/B/C — confirming only chrome (not data colors) flips between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick label, legend entry, and loading label is clearly legible against the near-black background. Brand green remains vivid and distinguishable on the dark surface.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same layout as light render with all chrome (title, legend, axis titles, tick labels, spine, arrow labels) flipped to light-colored ink; dashed unit circle and non-dominant arrows switch to a lighter gray. No dark-on-dark issues — all text remains legible, including small tick labels and arrow labels.
+      Data: Point and arrow colors identical in hue to the light render (green/magenta/blue-gray palette, dominant-loading full-ink emphasis) — confirms only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -67,54 +54,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All titles, axis labels, tick labels, legend, and loading labels
-          are readable in both themes at explicit font sizes (title 22px, axis 16px,
-          ticks 14px, legend 15px, arrow labels 15px).
+        comment: All text explicitly sized and readable in both themes; arrow-label
+          font slightly inconsistent with Chart.js's own font family
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions; loading labels are cleanly
-          offset from arrow tips.
+        comment: No text/point collisions found, including near the Humidity label
+          and legend/ToolWear region
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Point radius 8 is appropriate for ~90 points across 3 groups; arrows
-          have clear arrowheads and are easily distinguished from scatter points.
+        comment: Marker size well-matched to ~90-point density; arrow heads and dominant
+          loading clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette positions 1-3 are CVD-safe; group identity does not
-          rely on red-green alone.
+        comment: Three distinguishable hues, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), nothing clipped, generous padding
-          reserved for right-side arrow labels. Title fills only ~33% of plot width
-          at default fontsize, under the 50-70% guideline for its length.
+        comment: Canvas gate passed (3200x1800); no clipping at any edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: PC1/PC2 axis titles include variance-explained percentages exactly
-          as the spec requests.
+        comment: Both axes show component name and variance explained
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 brand green; palette order preserved; backgrounds
-          are theme-correct in both renders.'
+        comment: 'First series is #009E73; backgrounds theme-correct; data colors
+          identical across themes'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -122,22 +104,20 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom plugin-driven background, spines, unit circle, and hand-drawn
-          arrows show real design intent beyond library defaults.
+        comment: L-shaped spine, unit-circle reference, custom PCA math pipeline
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: L-shaped spine only, subtle gridlines, generous whitespace, no legend
-          box frame.
+        comment: Spines removed, generous padding; grid slightly more prominent than
+          ideal
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Group clusters and loading directions are readable, but no additional
-          emphasis technique highlights the key insight.
+        comment: Dominant loading highlighted in full ink creates a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct PCA biplot: scatter of scores + arrows for loadings.'
+        comment: Correct PCA biplot
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: PC1 vs PC2 default view, grouped colored scores, origin-anchored
-          labeled loading arrows, scaled loadings, variance-explained axis labels,
-          and a unit circle are all present.
+        comment: Scores, labeled loading arrows, unit circle, variance-explained axes
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Scores correctly projected from standardized data onto top-2 eigenvectors;
-          axes show the full data range.
+        comment: PC1 vs PC2 correctly plotted and scaled
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches 'biplot-pca · javascript · chartjs · anyplot.ai' exactly;
-          legend labels (Line A/B/C) match the data groups.
+        comment: Title format matches exactly; legend matches groups
     data_quality:
       score: 15
       max: 15
@@ -179,24 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 variables (within the 4-10 recommendation) and 90 observations
-          (within 30-200) across 3 groups with genuine low-rank structure for PCA
-          to recover.
+        comment: 6 variables, 90 observations, scores+loadings+unit circle all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Process-monitoring measurements (Temperature, Pressure, Humidity,
-          FlowRate, Vibration, ToolWear) across 3 production lines — plausible and
-          neutral, matching the spec's manufacturing QC application.
+        comment: Plausible, neutral process-monitoring scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standardized-data PCA produces sensible score/loading magnitudes,
-          appropriately rescaled to be visually comparable.
+        comment: Genuine low-rank latent structure gives realistic PCA signal
     code_quality:
       score: 9
       max: 10
@@ -206,36 +178,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions/plugin objects are defined, but this is
-          largely unavoidable for an in-browser PCA implementation with no external
-          library.
+        comment: A few helper functions needed for in-browser PCA math
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG (seed=42) for all randomness.
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses window.ANYPLOT_TOKENS and the global Chart — no unused
-          imports.
+        comment: No imports beyond the Chart global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity; complexity matches the genuine requirement
-          of computing PCA client-side.
+        comment: No fake interactivity, clean structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Mounts a single canvas into #container, animation:false, current
-          Chart.js scatter API.'
+        comment: Correct mount-node contract, animation disabled
     library_mastery:
       score: 8
       max: 10
@@ -245,21 +212,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard scatter dataset config plus idiomatic options structure.
+        comment: Idiomatic scatter type with correct responsive/animation options
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Effective use of Chart.js's plugin hooks (beforeDraw/afterDatasetsDraw)
-          to layer custom background, spines, unit circle, and arrows on top of the
-          core scatter render.
+        comment: Effective use of Chart.js plugin system for custom canvas drawing
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
@@ -269,5 +233,5 @@ impl_tags:
   - correlation-matrix
   - normalization
   styling:
+  - minimal-chrome
   - alpha-blending
-  - edge-highlighting
