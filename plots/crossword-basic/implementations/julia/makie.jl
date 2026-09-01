@@ -1,0 +1,105 @@
+# anyplot.ai
+# crossword-basic: Crossword Puzzle Grid
+# Library: Makie.jl 0.22 | Julia 1.11
+# Quality: pending | Created: 2026-09-01
+
+using CairoMakie
+using Colors
+
+# --- Theme tokens -------------------------------------------------------------
+const THEME       = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
+const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+
+# --- Data ----------------------------------------------------------------------
+# 15x15 grid; blocking cells carry traditional 180-degree rotational symmetry.
+# Seeding only the upper half and mirroring each seed guarantees the symmetry
+# by construction rather than by manually checking a hand-typed matrix.
+const N = 15
+
+seed_blocks = [
+    (1, 4), (1, 11), (2, 4), (2, 11), (3, 4), (3, 8), (3, 11),
+    (4, 1), (4, 2), (4, 7), (5, 5), (5, 10), (6, 3), (6, 6),
+    (7, 7), (8, 1), (8, 4),
+]
+
+blocked = falses(N, N)
+for (r, c) in seed_blocks
+    blocked[r, c] = true
+    blocked[N + 1 - r, N + 1 - c] = true
+end
+
+# Word-start numbering: a cell is numbered when it opens an across and/or a
+# down entry, scanning left-to-right then top-to-bottom (standard convention).
+numbers = zeros(Int, N, N)
+counter = Ref(1)
+for r in 1:N, c in 1:N
+    blocked[r, c] && continue
+    starts_across = (c == 1 || blocked[r, c - 1]) && (c < N && !blocked[r, c + 1])
+    starts_down = (r == 1 || blocked[r - 1, c]) && (r < N && !blocked[r + 1, c])
+    if starts_across || starts_down
+        numbers[r, c] = counter[]
+        counter[] += 1
+    end
+end
+
+# --- Plot ------------------------------------------------------------------
+fig = Figure(
+    resolution = (1200, 1200),
+    fontsize = 14,
+    backgroundcolor = PAGE_BG,
+)
+
+ax = Axis(
+    fig[1, 1];
+    title = "crossword-basic · julia · makie · anyplot.ai",
+    titlesize = 24,
+    titlecolor = INK,
+    aspect = DataAspect(),
+    backgroundcolor = PAGE_BG,
+)
+hidedecorations!(ax)
+hidespines!(ax)
+xlims!(ax, -0.4, N + 0.4)
+ylims!(ax, -0.4, N + 0.4)
+
+# Entry cells (white, for letters) vs. blocking cells (black) — kept
+# monochrome per the spec's print-style convention, theme-adaptive chrome only.
+cell_rects = [Rect2f(Float32(c - 1), Float32(N - r), 1.0f0, 1.0f0) for r in 1:N for c in 1:N]
+cell_colors = [blocked[r, c] ? INK : ELEVATED_BG for r in 1:N for c in 1:N]
+poly!(ax, cell_rects; color = cell_colors, strokewidth = 0)
+
+# Grid lines separating every cell
+for i in 0:N
+    linesegments!(ax, [Point2f(0, i), Point2f(N, i)]; color = INK_SOFT, linewidth = 1.5)
+    linesegments!(ax, [Point2f(i, 0), Point2f(i, N)]; color = INK_SOFT, linewidth = 1.5)
+end
+
+# Outer frame
+lines!(
+    ax,
+    [Point2f(0, 0), Point2f(N, 0), Point2f(N, N), Point2f(0, N), Point2f(0, 0)];
+    color = INK,
+    linewidth = 3,
+)
+
+# Clue-start numbers, top-left corner of each entry cell
+for r in 1:N, c in 1:N
+    numbers[r, c] == 0 && continue
+    x = c - 1
+    y = N - r
+    text!(
+        ax,
+        x + 0.08,
+        y + 1 - 0.1;
+        text = string(numbers[r, c]),
+        fontsize = 14,
+        color = INK_SOFT,
+        align = (:left, :top),
+    )
+end
+
+# --- Save -----------------------------------------------------------------
+save("plot-$(THEME).png", fig; px_per_unit = 2)
