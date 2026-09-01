@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: contour-map-geographic
 created: '2026-09-01T23:28:16Z'
-updated: '2026-09-01T23:37:56Z'
+updated: '2026-09-01T23:48:47Z'
 generated_by: claude-sonnet
 workflow_run: 33569606991
 issue: 3772
@@ -12,105 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - Synthetic Puget Sound coastline anchors the contour map in real geography, satisfying
-    the 'geographic basemap' requirement without a mapping dependency
-  - Both filled and line contours are present, with index contours labeled at meaningful
-    500 m intervals using Makie's native contour labeling (labels=true, labelformatter)
-  - Five real named Cascade volcanoes with accurate lat/lon and roughly accurate elevations
-    provide an engaging, factually grounded dataset
-  - Theme-adaptive chrome (spines, grid, axis colors, legend box, coastline mask)
-    correctly flips between light and dark renders; imprint_seq data colors stay identical
-    across themes
-  - Canvas is exactly 3200x1800 with generous, balanced margins and no clipped elements
-    at the borders
+  - Factually accurate real-world elevation data for named Cascade Range volcanoes
+    (Mount Rainier 4392 m, Mount Baker 3286 m, Mount Adams 3743 m, Glacier Peak 3213
+    m, Mount St. Helens 2549 m all match real published elevations)
+  - 'Theme-adaptive chrome is fully correct in both renders: page background, spines,
+    grid opacity, tick/label colors, legend box, and colorbar all flip cleanly between
+    #FAF8F1/#1A1A17 while data colors (imprint_seq gradient) stay identical'
+  - Labeled index contours (500-2000 m) combined with filled contour bands satisfy
+    both the line-only and filled-contour requirements from the spec simultaneously,
+    using a custom labelformatter for clean '<value> m' labels
+  - Custom coastline mask (poly! over a sine-perturbed boundary) cleanly separates
+    land/water with no rendering artifacts at the mask edge
+  - 'No overlap, no edge clipping, and good canvas utilization across both renders;
+    colorbar is directly linked to the contourf plot object using the imprint_seq
+    gradient (#009E73 to #4467A3), correct for single-polarity elevation data'
   weaknesses:
-  - 'Peak-name labels (text!(... color=INK, strokecolor=PAGE_BG, strokewidth=3)) render
-    with the stroke visually dominating the fill because strokewidth=3 is large relative
-    to labelsize=11 pixels of glyph. Pixel-sampled the dark render: bulk label fill
-    is (26,26,23)=#1A1A17 (dark ink), not the intended light INK; only a thin rim
-    of the light fill color is visible. Result: dark-ink text sits on the mid-tone
-    teal/blue contourf fill in the dark render, measured contrast ~3.5:1 (below WCAG
-    AA 4.5:1 for normal text). Fix: reduce strokewidth to ~1.2-1.5 so the fill color
-    reads as dominant, matching how the built-in contour-line labels already render
-    correctly with their auto background box.'
-  - Design Excellence is solid (labeled peaks, coastline context, gradient fill) but
-    not yet publication-tier polish — index-contour value labels and peak-name labels
-    use similar weight/size, so at a glance they read as one label class rather than
-    two; a small visual differentiation (bolder peak names, or a subtle background
-    chip only on peak names) would sharpen the hierarchy.
+  - 'Peak-name text!() labels use strokewidth=1.3 against a fontsize=12 bold font,
+    which is thick enough that the PAGE_BG halo color visually dominates over the
+    intended INK fill: in the light render the peak names render mostly off-white
+    instead of dark ink, and mostly dark instead of light in the dark render. Still
+    legible against the mid-toned teal/blue contour fill, but the fill/halo balance
+    is inverted from what the color=INK, strokecolor=PAGE_BG code intends -- reduce
+    strokewidth to ~0.8-1.0 (or bump fontsize slightly) so INK stays the dominant
+    fill color in both themes.'
+  - 'LM-02: contour labeling and colorbar-linking are solid but not deeply distinctive
+    to Makie specifically -- similar capabilities exist in matplotlib/ggplot2. Leaning
+    on a more Makie-unique technique (e.g. a custom recipe, GeoMakie-style projection
+    touch, or layout composition) would raise distinctiveness.'
+  - 500 m contour interval is coarser than the spec's own example of ~100 m for elevation
+    data; reasonable given the 0-4500 m range shown, but a tighter labeled interval
+    (e.g. every 250 m) nearer the summits would read as more deliberately 'meaningful'
+    per the spec's guidance.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "Cascade Range Volcanoes · contour-map-geographic · julia · makie · anyplot.ai" is bold, dark, centered at top and fully visible. Longitude (bottom, °W-formatted ticks) and Latitude (left, °N-formatted ticks) axis labels and tick labels are dark/soft-dark and clearly readable. L-shaped spine (top/right removed), subtle ~12% opacity gridlines. Colorbar on the right labeled "Elevation (m)" with ticks 0-4500, dark text, fully visible with comfortable right margin. Legend box (bottom-right, cream elevated background) with "Puget Sound coastline" and "Volcanic peak" entries, dark readable text.
-      Data: Filled contour uses the imprint_seq green (#009E73) to blue (#4467A3) sequential gradient — five raised "volcano" mounds (Mount Baker, Glacier Peak, Mount Rainier, Mount St. Helens, Mount Adams) each marked with a dark upward-triangle marker and a name+elevation text label. Index contour lines (500 m interval) are labeled inline (e.g. "500 m", "1500 m", "2000 m") with a small light background chip behind each — these read cleanly. A wavy dark coastline separates the cream (masked, unmapped) ocean area to the west from the green landmass.
-      Legibility verdict: PASS. All chrome text (title, axis, ticks, colorbar, legend) is crisp. The five peak-name annotations are also legible in this theme — pixel-sampling shows their bulk fill renders as the light PAGE_BG color (#FAF8F1) against the mid-tone contour fill, ~5.3:1 contrast, comfortably above AA.
+      Background: Warm off-white (#FAF8F1) on the water/masked region west of the coastline; matches spec.
+      Chrome: Title "Cascade Range Volcanoes · contour-map-geographic · julia · makie · anyplot.ai" in dark ink, fully readable. Longitude/Latitude axis titles and °W/°N tick labels in dark ink and soft dark-gray respectively, all clearly legible. Legend ("Puget Sound coastline", "Volcanic peak") sits bottom-right in an elevated off-white box with dark text and a soft border -- fully readable. Colorbar labeled "Elevation (m)" with dark ticks/labels on the off-white background -- fully readable. Grid lines are faint and subtle.
+      Data: Filled elevation contours run from green (#009E73, low elevation) to blue (#4467A3, high elevation, matching the imprint_seq gradient), with black contour lines and labeled index contours (500-2000 m) in "X m" format. Five volcanic peaks are marked with dark triangles and labeled with name + elevation; the label text itself renders mostly off-white with a thin dark outline (a halo effect that keeps it legible against the mid-toned contour fill even though it's the reverse of the code's literal INK-fill/PAGE_BG-halo intent). Puget Sound coastline is a soft dark-gray wavy line separating land from the masked water area.
+      Legibility verdict: PASS -- all chrome text is dark-on-light and clearly legible; peak-name halo labels are legible via outline contrast despite the fill/halo inversion noted above.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title, axis labels/ticks, colorbar labels, legend box (dark elevated #242420 background) all correctly flip to light-colored text (#F0EFE8 / #B8B7B0) and remain fully readable against the dark background — no dark-on-dark chrome failures. Spines, grid, and coastline stroke are light-toned and subtle, matching the theme.
-      Data: Colors are identical to the light render — same imprint_seq green-to-blue fill, same peak positions and coastline shape; only the chrome flipped, as required.
-      Legibility verdict: PASS overall, with one flagged issue: the five peak-name text labels (drawn via a manual text!() call with color=INK, strokecolor=PAGE_BG, strokewidth=3) do NOT read as light text in this theme as the code intends. Because strokewidth=3 is large relative to labelsize=11, the stroke visually dominates the glyph and the bulk of each label renders in the dark ink color (#1A1A17) sitting on the mid-tone teal/blue contour fill — pixel-sampled contrast ~3.5:1, below the WCAG AA 4.5:1 target (though the text remains distinguishable, not fully "unreadable"). This is distinct from — and does not affect — the built-in contour-line value labels ("500 m", "1500 m", etc.), which use Makie's automatic label background box and render with correct, strong contrast in both themes.
+      Background: Warm near-black (#1A1A17) on the water/masked region, matches spec.
+      Chrome: Title, axis titles, and tick labels all render in light ink/soft-light-gray, clearly legible against the dark background. Legend box is a dark elevated surface with light text and a light border, fully readable. Colorbar labels are light-colored and legible against the dark background. Grid lines are faint and subtle, consistent with the light render's density.
+      Data: Filled elevation contours and contour-line colors are pixel-identical to the light render (same green-to-blue imprint_seq gradient, same peak marker positions) -- only chrome flipped as expected. Contour lines and index-contour labels render in white/light ink instead of black. Peak-name labels render mostly dark with a light outline (again the halo dominates over the literal fill color, but stays legible against the mid-toned fill). Coastline line renders in a light soft-gray, clearly distinguishable from the near-black water.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures; all chrome is theme-correctly flipped and data colors match the light render exactly.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: Chrome text (title/axis/ticks/colorbar/legend) is fully readable
-          in both themes; the 5 peak-name annotations have a strokewidth-vs-fontsize
-          imbalance that inverts the intended fill/stroke roles, producing borderline-low
-          contrast specifically in the dark render
+        comment: All sizes explicit and readable in both themes; peak-name halo/fill
+          balance is inverted from code intent (see weaknesses) but stays legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-marker collisions observed in either render
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Peak markers, contour lines, and coastline are all clearly visible
-          and well-sized for the sparse (5-point) peak set and 72x60 contour grid
+        comment: Triangle markers, contour lines, and labels all clearly visible for
+          this sparse 5-peak dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: imprint_seq is CVD-safe, but the peak-label stroke inversion drops
-          dark-render text contrast to ~3.5:1, below WCAG AA
+        comment: Single-hue-progression imprint_seq gradient, good contrast, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed exactly; no clipping at any edge; balanced
-          margins; plot fills a large majority of the canvas
+        comment: Balanced canvas use, colorbar and legend well-placed, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude axis labels with degree-formatted (°W/°N) tick
-          units
+        comment: Longitude/Latitude with degree-unit tick formatting (°W/°N)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (green->blue) correctly used for single-polarity elevation
-          data; backgrounds are theme-correct #FAF8F1/#1A1A17; data colors identical
-          across themes'
+        comment: 'imprint_seq gradient starting at #009E73, correct theme backgrounds
+          and chrome in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -118,22 +119,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom coastline geometry, labeled peaks, and a coherent geographic
-          narrative go well beyond a configured default
+        comment: Custom halo-labeled peaks, masked coastline, intentional hierarchy
+          -- clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: L-shaped spines, subtle grid, generous whitespace; some refinement
-          still possible in label hierarchy
+        comment: Spines removed, subtle grid, generous whitespace, styled legend/colorbar
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Named, labeled volcanic peaks against a color-graded elevation field
-          create a clear visual hierarchy and focal points
+        comment: Named, elevation-labeled peaks against a real geographic backdrop
+          create an immediate, clear focal narrative
     spec_compliance:
       score: 15
       max: 15
@@ -143,54 +143,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Filled + line contours over lon/lat geographic coordinates
+        comment: Contour lines overlaid on a geographic lat/lon basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Geographic basemap (coastline), labeled contours at meaningful 500
-          m intervals, both filled and line contours, appropriate colormap, colorbar
-          all present
+        comment: Labeled contours, filled + line contours, coastline basemap, colorbar,
+          meaningful intervals all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, latitude on Y, full grid extent shown via axis limits
+        comment: Longitude on x, latitude on y, full grid shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · contour-map-geographic · julia
-          · makie · anyplot.ai'; legend labels (coastline, volcanic peak) match the
-          plotted elements
+        comment: Title matches mandated format; legend labels match the two plotted
+          elements
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a full elevation range from sea level to ~4400 m across 5 distinct
-          peaks with varying prominence
+        comment: Five peaks of varying elevation plus baseline terrain and water mask
+          show the full range of contour behavior
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, named Cascade Range volcanoes with plausible coordinates and
-          elevations; neutral scientific/geographic topic
+        comment: Real, neutral geographic/geological scenario -- named Cascade volcanoes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation values and peak spacing are geographically realistic for
-          the Washington Cascades; 72x60 grid within the spec's 20x20-100x100 range
+        comment: Peak elevations match real published values exactly
     code_quality:
       score: 10
       max: 10
@@ -200,13 +196,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports -> data -> plot -> save, no functions/classes
+        comment: Linear imports/data/plot/save script, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data generation; Random.seed!(42) set
+        comment: Random.seed!(42) set; underlying data is fully deterministic regardless
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -218,44 +214,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a geographic contour composition; no fake
-          UI
+        comment: Appropriate complexity, no fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2 via current CairoMakie
-          API
+        comment: Saves plot-$(THEME).png at px_per_unit=2, current CairoMakie API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses contourf!, contour!, Colorbar, axislegend as idiomatic high-level
-          Makie API
+        comment: Idiomatic Axis/contourf!/contour!/Colorbar/axislegend usage, Colorbar
+          directly linked to the contourf plot object
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Native contour-line labeling (labels=true, labelformatter) is a distinctive
-          Makie feature used correctly
+        comment: Makie's auto-placed contour labels (labels=true, labelformatter)
+          used well, but the technique isn't uniquely Makie
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - Colors
   techniques:
+  - contour-labels
+  - filled-contours
   - colorbar
-  - annotations
-  - layer-composition
+  - geographic-coordinates
+  - coastline-masking
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
-  - edge-highlighting
+  - publication-ready
+  - theme-adaptive
+  - text-halo
