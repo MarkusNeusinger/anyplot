@@ -151,6 +151,27 @@ const scaledLoadings = loadings.map((l) => ({
 }));
 const axisMax = Math.max(maxScoreAbs, loadingScale) * 1.2;
 
+// --- Dominant loading + its most-aligned cultivar (interpretive callout) ---
+const loadingMagnitudes = loadings.map((l) => Math.hypot(l.x, l.y));
+const dominantIdx = loadingMagnitudes.indexOf(Math.max(...loadingMagnitudes));
+const dominantUnit = {
+  x: loadings[dominantIdx].x / loadingMagnitudes[dominantIdx],
+  y: loadings[dominantIdx].y / loadingMagnitudes[dominantIdx],
+};
+const groupCentroids = groups.map((g, gi) => {
+  const groupScores = scores.filter((_, i) => groupIndex[i] === gi);
+  const n = groupScores.length;
+  return {
+    name: g.name,
+    meanX: groupScores.reduce((s, r) => s + r[0], 0) / n,
+    meanY: groupScores.reduce((s, r) => s + r[1], 0) / n,
+  };
+});
+const alignedGroup = groupCentroids.reduce((best, c) => {
+  const proj = c.meanX * dominantUnit.x + c.meanY * dominantUnit.y;
+  return proj > best.proj ? { name: c.name, proj } : best;
+}, { name: null, proj: -Infinity });
+
 // --- Group score series ------------------------------------------------------
 const seriesData = groups.map((g, gi) => ({
   name: g.name,
@@ -192,16 +213,42 @@ Highcharts.chart("container", {
         // Loading vectors — arrows drawn from the origin
         const originX = xAxis.toPixels(0, false);
         const originY = yAxis.toPixels(0, false);
-        scaledLoadings.forEach((l) => {
+
+        // Precompute label anchors, then resolve vertical collisions per side
+        // (right-side labels otherwise crowd together at mobile width).
+        const labelAnchors = scaledLoadings.map((l) => ({
+          x: xAxis.toPixels(l.x * 1.12, false),
+          y: yAxis.toPixels(l.y * 1.12, false),
+          align: l.x >= 0 ? "left" : "right",
+        }));
+        const minGap = 16;
+        ["left", "right"].forEach((side) => {
+          const group = labelAnchors
+            .map((a, idx) => ({ ...a, idx }))
+            .filter((a) => a.align === side)
+            .sort((a, b) => a.y - b.y);
+          for (let i = 1; i < group.length; i++) {
+            if (group[i].y - group[i - 1].y < minGap) {
+              group[i].y = group[i - 1].y + minGap;
+            }
+            labelAnchors[group[i].idx].y = group[i].y;
+          }
+        });
+
+        scaledLoadings.forEach((l, idx) => {
+          const isDominant = idx === dominantIdx;
+          const strokeColor = isDominant ? t.amber : t.ink;
+          const strokeWidth = isDominant ? 3 : 2;
+
           const tipX = xAxis.toPixels(l.x, false);
           const tipY = yAxis.toPixels(l.y, false);
           renderer
             .path(["M", originX, originY, "L", tipX, tipY])
-            .attr({ stroke: t.ink, "stroke-width": 2 })
+            .attr({ stroke: strokeColor, "stroke-width": strokeWidth })
             .add();
 
           const angle = Math.atan2(tipY - originY, tipX - originX);
-          const headLen = 10;
+          const headLen = isDominant ? 12 : 10;
           const headAngle = 0.45;
           const h1x = tipX - headLen * Math.cos(angle - headAngle);
           const h1y = tipY - headLen * Math.sin(angle - headAngle);
@@ -209,15 +256,18 @@ Highcharts.chart("container", {
           const h2y = tipY - headLen * Math.sin(angle + headAngle);
           renderer
             .path(["M", h1x, h1y, "L", tipX, tipY, "L", h2x, h2y])
-            .attr({ stroke: t.ink, "stroke-width": 2, fill: "none" })
+            .attr({ stroke: strokeColor, "stroke-width": strokeWidth, fill: "none" })
             .add();
 
-          const labelX = xAxis.toPixels(l.x * 1.12, false);
-          const labelY = yAxis.toPixels(l.y * 1.12, false);
+          const anchor = labelAnchors[idx];
           renderer
-            .text(l.name, labelX, labelY)
-            .attr({ align: l.x >= 0 ? "left" : "right" })
-            .css({ color: t.ink, fontSize: "13px", fontWeight: "600" })
+            .text(l.name, anchor.x, anchor.y)
+            .attr({ align: anchor.align })
+            .css({
+              color: isDominant ? t.amber : t.ink,
+              fontSize: "13px",
+              fontWeight: isDominant ? "700" : "600",
+            })
             .add();
         });
       },
@@ -233,6 +283,15 @@ Highcharts.chart("container", {
     text: "Points: standardized wine-cultivar scores · Arrows: variable loadings (scaled) · Dashed: unit circle",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
+  caption: {
+    text:
+      "Strongest signal: " +
+      featureNames[dominantIdx] +
+      " loads most heavily, aligning most closely with " +
+      alignedGroup.name,
+    align: "left",
+    style: { color: t.amber, fontSize: "13px", fontStyle: "italic" },
+  },
   xAxis: {
     title: {
       text: "PC1 (" + pc1Pct.toFixed(1) + "%)",
@@ -240,12 +299,13 @@ Highcharts.chart("container", {
     },
     min: -axisMax,
     max: axisMax,
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickLength: 0,
     gridLineColor: t.grid,
     gridLineWidth: 1,
+    gridLineDashStyle: "Dot",
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-    plotLines: [{ value: 0, color: t.grid, width: 1, zIndex: 1 }],
+    plotLines: [{ value: 0, color: t.inkSoft, width: 1.5, zIndex: 1 }],
   },
   yAxis: {
     title: {
@@ -254,12 +314,13 @@ Highcharts.chart("container", {
     },
     min: -axisMax,
     max: axisMax,
-    lineColor: t.inkSoft,
-    tickColor: t.inkSoft,
+    lineWidth: 0,
+    tickLength: 0,
     gridLineColor: t.grid,
     gridLineWidth: 1,
+    gridLineDashStyle: "Dot",
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-    plotLines: [{ value: 0, color: t.grid, width: 1, zIndex: 1 }],
+    plotLines: [{ value: 0, color: t.inkSoft, width: 1.5, zIndex: 1 }],
   },
   legend: {
     enabled: true,
