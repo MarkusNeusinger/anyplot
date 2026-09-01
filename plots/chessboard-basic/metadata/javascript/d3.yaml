@@ -1,0 +1,257 @@
+library: d3
+language: javascript
+specification_id: chessboard-basic
+created: '2026-09-01T23:14:41Z'
+updated: '2026-09-01T23:29:07Z'
+generated_by: claude-sonnet
+workflow_run: 33569767618
+issue: 3340
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Directly addressed the prior review''s DE-01/DE-02 weakness: the flat checkerboard
+    now sits on an elevated bezel with a theme-adaptive drop shadow (feDropShadow
+    riding the ink token), giving it a physical, tactile board feel instead of a plain
+    grid'
+  - Added a subtle amber corner accent on h1 and a8 -- the light-square corners the
+    spec explicitly calls out -- creating a small focal point/storytelling touch that
+    was missing before (DE-03 improvement)
+  - Switched square and label positioning from manual index arithmetic to idiomatic
+    d3 scaleBand domains (files / reversed ranks), a cleaner and more d3-idiomatic
+    pattern than the previous attempt (LM-01 improvement)
+  - 'Chess orientation remains exactly correct per spec: h1 and a8 verified as light
+    squares via (col+row)%2 parity, matching real-world convention'
+  - 'Both renders are fully theme-correct: chrome (title, frame, rank/file labels)
+    uses ANYPLOT_TOKENS and adapts correctly, while board square colors are intentionally
+    fixed across themes (documented physical-object design choice) -- no dark-on-dark,
+    light-on-light, or edge-clipping issues in either render'
+  weaknesses:
+  - 'LM-02 still generic: beyond the new drop-shadow filter, the implementation relies
+    on basic selection/join + band scales without showcasing more distinctive d3 capabilities
+    (transitions, interactivity, custom shapes) -- a reasonable choice for a static
+    reference grid, but it keeps Library Mastery modest'
+  - DE-01/DE-02 improved meaningfully but the board itself is still a literal checkerboard
+    beyond the bezel/shadow -- there is room for further refinement (e.g. subtly rounded
+    square corners, finer frame treatment) before this reaches publication-ready polish
+  - The corner-accent dots (opacity 0.6, r=9% of square size) are quite subtle by
+    design -- intentional restraint given the classic-board look, but could be marginally
+    more legible when the PNG is scaled down to mobile width
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "chessboard-basic · javascript · d3 · anyplot.ai" in bold dark text at top, clearly legible. The board now rests on a rounded, subtly shadowed elevated bezel (t.elevatedBg + feDropShadow) that visually separates it from the page. Rank labels (8-1, top to bottom) sit to the left in muted dark grey; file labels (a-h) sit below the board in the same style -- all clearly legible against the light background. A thin dark frame outlines the full 8x8 board.
+      Data: 64 squares alternating between a warm cream (~#EDE0C8) and a mid-brown (~#8B5A2B) -- classic chess board coloring, positioned via d3 scaleBand. h1 (bottom-right) and a8 (top-left) are both light squares, matching standard chess board orientation, and each carries a small subtle amber accent dot marking it as a named corner.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title now rendered in light/white text, clearly legible against the dark background. The bezel drop-shadow reads as a faint glow rather than a shadow (flood-color rides the ink token), still giving the board a lifted, physical presence. Rank and file labels rendered in light grey, clearly legible -- no dark-on-dark failures anywhere. Frame outline still visible in a soft light stroke.
+      Data: Identical cream/brown checkerboard colors and corner-accent placement as the light render -- confirms board "data" colors are intentionally theme-independent (a documented physical-object design choice), while only the surrounding chrome (title, labels, frame, bezel) flips with theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, rank and file labels are readable in both themes at full res,
+          explicit font sizes (19px labels, 27px title); font sizes could be marginally
+          larger for the mobile-scaled view
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, frame, bezel, or squares
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 64 squares and labels clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Cream/brown contrast is not red-green dependent, adequate contrast
+          throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 1:1 square canvas, canvas gate passed, no overflow or clipping,
+          balanced margins, board now sits on a well-proportioned bezel
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format exactly; file/rank labels are the correct
+          descriptive coordinate system
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Board squares use classic cream/brown per the spec''s explicit real-world-object
+          exception, not categorical data; chrome (title, labels, frame, bezel) correctly
+          uses theme-adaptive ink tokens; backgrounds match #FAF8F1/#1A1A17; corner
+          accent uses the amber semantic anchor appropriately'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: The elevated bezel with theme-adaptive drop shadow gives the board
+          a tactile, physical presence -- a clear step up from the prior plain checkerboard,
+          though still short of publication-ready flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Rounded bezel, subtle shadow, generous whitespace, and the inkSoft
+          frame stroke show real attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: The amber corner accent on h1/a8 creates a small, intentional focal
+          point tied directly to a spec callout -- a real improvement over the previous
+          equal-weight grid
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 8x8 chessboard grid with alternating squares
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Algebraic notation (a-h, 1-8), classic cream/brown contrast, light
+          square at h1/a8, board frame, 1:1 aspect ratio -- all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 64 squares mapped correctly via scaleBand domains, full grid
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches required format; no legend needed (self-explanatory
+          two-color board)
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows full grid, alternating colors, labels, frame, and the named-corner
+          accent -- covers all plot-type aspects
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Matches real chess board conventions exactly (h1/a8 light squares)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Fixed 8x8 as required, no scale issues
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary functions/classes, straightforward top-to-bottom script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only uses the global d3 bundle, no extra imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the added bezel/shadow/accent, no fake
+          UI/interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly builds svg into #container sized from window.ANYPLOT_SIZE,
+          current d3 v7 API'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Now uses idiomatic d3 scaleBand for both square and label positioning
+          instead of manual index math -- a clear improvement over the prior attempt
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: The new SVG feDropShadow filter is a nice touch, but overall usage
+          (selection/join, band scales) remains fairly generic and could be replicated
+          in other SVG-based libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling: []
