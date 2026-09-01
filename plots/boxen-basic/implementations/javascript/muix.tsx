@@ -1,8 +1,7 @@
 // anyplot.ai
 // boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-01
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-09-01
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
