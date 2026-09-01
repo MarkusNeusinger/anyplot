@@ -91,11 +91,11 @@ export default function Chart() {
             disableTicks: true,
             tickLabelInterval: (value) => digitAtCenter.has(value),
             valueFormatter: (value) => digitAtCenter.get(value) ?? "",
-            tickLabelStyle: { fontSize: 16, fontFamily: "monospace" },
+            tickLabelStyle: { fontSize: 22, fontFamily: "monospace", fontWeight: 700 },
           },
         ]}
         leftAxis={null}
-        margin={{ top: 16, right: 24, bottom: 48, left: 24 }}
+        margin={{ top: 16, right: 24, bottom: 56, left: 24 }}
         slotProps={{ legend: { hidden: true } }}
         skipAnimation
       />
