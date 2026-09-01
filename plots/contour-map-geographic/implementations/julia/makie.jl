@@ -1,7 +1,7 @@
 # anyplot.ai
 # contour-map-geographic: Contour Lines on Geographic Map
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-09-01
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 85/100 | Created: 2026-09-01
 
 using CairoMakie
 using Colors
