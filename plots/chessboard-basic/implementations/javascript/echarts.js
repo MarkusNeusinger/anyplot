@@ -21,10 +21,11 @@ for (let file = 0; file < files.length; file++) {
 }
 
 // Wood-toned board: dark squares use the Imprint ochre hue (semantic
-// exception — wood → ochre); light squares use the elevated-surface token so
-// they read as raw wood against the page, in both themes.
+// exception — wood → ochre); light squares use the amber semantic anchor, a
+// fixed non-theme-adaptive gold tone, so the light/dark square pair keeps the
+// same identity in both themes (data colors must not flip with the theme).
 const DARK_SQUARE = t.palette[3];
-const LIGHT_SQUARE = t.elevatedBg;
+const LIGHT_SQUARE = t.amber;
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -35,9 +36,11 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "chessboard-basic · javascript · echarts · anyplot.ai",
+    subtext: "White's near-right square (h1) is light — standard orientation",
     left: "center",
     top: 20,
     textStyle: { color: t.ink, fontSize: 22 },
+    subtextStyle: { color: t.inkSoft, fontSize: 16 },
   },
   grid: { left: 140, right: 140, top: 140, bottom: 140 },
   xAxis: {
