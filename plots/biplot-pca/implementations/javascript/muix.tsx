@@ -198,7 +198,7 @@ const series = PRODUCTION_LINES.map((line, lineIndex) => ({
 
 // --- Push label y-positions apart on each side so nearly-parallel loading
 // arrows (e.g. Throughput/Temperature above) don't print overlapping text ---
-const MIN_LABEL_GAP = 26;
+const MIN_LABEL_GAP = 34;
 function declutterLabels(items) {
   const sides = [true, false].map((pointsRight) =>
     items
@@ -213,6 +213,14 @@ function declutterLabels(items) {
   });
   return sides.flat();
 }
+
+// --- Unit-circle reference for correlation-biplot scaling: a loading vector
+// reaching this radius represents a variable perfectly captured by PC1+PC2 ---
+const UNIT_CIRCLE_STEPS = 72;
+const unitCirclePoints = Array.from({ length: UNIT_CIRCLE_STEPS + 1 }, (_, i) => {
+  const angle = (i / UNIT_CIRCLE_STEPS) * 2 * Math.PI;
+  return { x: Math.cos(angle) * loadingDisplayScale, y: Math.sin(angle) * loadingDisplayScale };
+});
 
 // --- Loading-vector overlay, drawn in data space via the chart scale hooks --
 function LoadingArrows() {
@@ -235,6 +243,14 @@ function LoadingArrows() {
           <path d="M0,0 L8,4 L0,8 Z" fill={t.ink} />
         </marker>
       </defs>
+      <polyline
+        points={unitCirclePoints.map((p) => `${xScale(p.x)},${yScale(p.y)}`).join(" ")}
+        fill="none"
+        stroke={t.inkSoft}
+        strokeWidth={1}
+        strokeDasharray="4 4"
+        opacity={0.6}
+      />
       <line
         x1={xScale(axisMin)}
         x2={xScale(axisMax)}
@@ -320,6 +336,7 @@ export default function Chart() {
       ]}
       margin={{ top: 72, right: 56, bottom: 110, left: 92 }}
       disableVoronoi
+      skipAnimation
     >
       <text
         x={size.width / 2}
