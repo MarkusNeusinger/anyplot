@@ -79,8 +79,19 @@ const svg = d3.select("#container").append("svg").attr("width", width).attr("hei
 
 const board = svg.append("g").attr("transform", `translate(${boardX},${boardY})`);
 
+// Column/row -> pixel placement via d3-scale bands (rank 8 at the top, rank 1
+// at the bottom — white-at-bottom board orientation).
+const xScale = d3.scaleBand().domain(d3.range(8)).range([0, boardSize]);
+const yScale = d3.scaleBand().domain(d3.range(8)).range([boardSize, 0]);
+
 // --- Squares (light square on h1, per standard chess convention) ----------
-const darkSquare = d3.interpolateRgb(t.pageBg, t.ink)(0.22);
+// Explicit per-theme board tones (not a pageBg/ink blend) so the light square
+// is always the higher-luminance one in both themes. The previous
+// `d3.interpolateRgb(t.pageBg, t.ink)` approach inverted in dark mode because
+// `t.ink` flips from dark to light between themes, flipping the blend
+// direction along with it.
+const boardTones =
+  t.theme === "dark" ? { light: "#403F38", dark: t.elevatedBg } : { light: t.elevatedBg, dark: "#C9C7C1" };
 const squares = [];
 for (let row = 0; row < 8; row++) {
   for (let col = 0; col < 8; col++) {
@@ -93,11 +104,11 @@ board
   .data(squares)
   .join("rect")
   .attr("class", "square")
-  .attr("x", (d) => d.col * cell)
-  .attr("y", (d) => (7 - d.row) * cell)
-  .attr("width", cell)
-  .attr("height", cell)
-  .attr("fill", (d) => (d.light ? t.elevatedBg : darkSquare));
+  .attr("x", (d) => xScale(d.col))
+  .attr("y", (d) => yScale(d.row))
+  .attr("width", xScale.bandwidth())
+  .attr("height", yScale.bandwidth())
+  .attr("fill", (d) => (d.light ? boardTones.light : boardTones.dark));
 
 board
   .append("rect")
@@ -122,8 +133,8 @@ board
   .data(pieceData)
   .join("text")
   .attr("class", "piece")
-  .attr("x", (d) => d.col * cell + cell / 2)
-  .attr("y", (d) => (7 - d.row) * cell + cell / 2)
+  .attr("x", (d) => xScale(d.col) + xScale.bandwidth() / 2)
+  .attr("y", (d) => yScale(d.row) + yScale.bandwidth() / 2)
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "central")
   .style("font-family", "'DejaVu Sans', sans-serif")
@@ -140,7 +151,7 @@ board
   .data(files)
   .join("text")
   .attr("class", "file-label")
-  .attr("x", (_, i) => i * cell + cell / 2)
+  .attr("x", (_, i) => xScale(i) + xScale.bandwidth() / 2)
   .attr("y", boardSize + 34)
   .attr("text-anchor", "middle")
   .attr("fill", t.inkSoft)
@@ -153,7 +164,7 @@ board
   .join("text")
   .attr("class", "rank-label")
   .attr("x", -26)
-  .attr("y", (r) => (8 - r) * cell + cell / 2)
+  .attr("y", (r) => yScale(r - 1) + yScale.bandwidth() / 2)
   .attr("text-anchor", "middle")
   .attr("dominant-baseline", "central")
   .attr("fill", t.inkSoft)
