@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: chessboard-pieces
 created: '2026-09-01T23:20:58Z'
-updated: '2026-09-01T23:26:47Z'
+updated: '2026-09-01T23:36:32Z'
 generated_by: claude-sonnet
 workflow_run: 33570045685
 issue: 3350
@@ -12,54 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
+  - 'Both previous-attempt weaknesses are fixed: dark-square/light-square fills now
+    alpha-blend over the page background so light squares stay visually lighter than
+    dark squares in BOTH themes (verified: ~123 vs ~76 relative luminance in the dark
+    render), and a soft amber outline now highlights f7/e8 to call out the delivering
+    queen and mated king.'
   - Accurately renders a real, well-known chess position (Scholar's Mate, final position
-    after 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#) — verified square-by-square against
-    the actual game moves, giving strong data realism instead of an arbitrary arrangement.
+    after 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#), verified square-by-square against
+    the actual game moves.
   - 'Correct board geometry: light square at h1, standard white-at-bottom orientation,
-    and accurate file/rank labels.'
-  - 'Thoughtful semantic color exception, explicitly documented in code comments:
-    dark squares use the Imprint ochre hue (#BD8233, the palette''s ''wood'' anchor)
-    blended at reduced opacity instead of blindly following ordinal categorical order.'
+    accurate file/rank labels.'
   - Piece rendering uses a fixed, theme-independent ivory/ink duotone (hollow outline
-    for white pieces, solid fill for black pieces) that stays legible in both themes
-    and matches the real-world white/black chess convention.
-  - Idiomatic-but-advanced ECharts usage via a `custom` series `renderItem` for both
-    squares and glyphs, using `api.coord`/`api.size` for precise per-square centering
-    rather than a simpler, less flexible chart type.
-  - 'Clean theme-adaptive chrome, `animation: false` set correctly, and fully deterministic
-    hard-coded data.'
+    for white, solid fill for black) — legible in both themes, matches the real-world
+    chess convention, and is documented in code as an intentional Imprint semantic
+    exception.
+  - Idiomatic-but-advanced ECharts usage via `custom` series `renderItem` for squares,
+    highlight outlines, and glyphs, using `api.coord`/`api.size` for precise per-square
+    centering.
+  - 'Clean theme-adaptive chrome, `animation: false` set correctly, fully deterministic
+    hard-coded data, no unused imports.'
   weaknesses:
-  - 'In the dark render, ''light'' squares (mapped to t.elevatedBg, a near-black #242420)
-    render darker than ''dark'' squares (the ochre blend, which is visually brighter/warmer)
-    — the light/dark square luminance relationship is effectively inverted between
-    themes even though the alternating pattern itself stays readable. Pick a brighter,
-    still theme-adaptive tone for the light squares in dark mode so relative luminance
-    ordering matches the light render.'
-  - No visual emphasis or annotation calls out the checkmate itself (e.g. a subtle
-    highlight on the mated king's square or the delivering queen) — a missed data-storytelling
-    opportunity given this is a famous decisive position rather than an arbitrary
-    one.
-  - Design polish is competent but fairly utilitarian — nothing in the composition
-    currently signals 'this position matters' beyond the title text; a highlight on
-    the last-move squares (f7/h5) would add hierarchy without clutter.
+  - Design polish is still fairly literal/utilitarian — the checkmate highlight (amber
+    outline on f7/e8) is a good addition, but nothing else in the composition builds
+    further hierarchy (e.g. a subtle dimming of irrelevant squares, or a move-arrow)
+    that would push this from 'accurate diagram' to 'polished editorial graphic'.
+  - The two highlighted squares communicate 'these squares matter' but not why (queen
+    delivering check vs. king in check) — a tiny caption or legend swatch distinguishing
+    the two would remove ambiguity for a viewer unfamiliar with the game.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) fills the canvas around a centered 8x8 board.
       Chrome: Title "Scholar's Mate · chessboard-pieces · javascript · echarts · anyplot.ai" in dark ink at top, clearly readable. File labels (a-h) below the board and rank labels (1-8) to the left are in a softer gray, both legible against the light background. Board border is a thin dark outline; individual squares have subtle hairline strokes.
-      Data: Squares alternate warm cream (light squares, h1 correctly light) and a tan/ochre wash (dark squares, blended from the Imprint ochre hue). Pieces render as recognizable chess-icon glyphs — white pieces as hollow ivory-fill/dark-stroke outlines, black pieces as solid dark-fill/ivory-stroke shapes — matching the real Scholar's Mate final position (queen captured on f7, knights on c6/f6, pawn on e5, etc.).
+      Data: Squares alternate warm cream (light squares, h1 correctly light) and a tan/ochre wash (dark squares, blended from the Imprint ochre hue). The king square (e8) and queen square (f7) are outlined with a soft amber highlight, calling out the checkmating move. Pieces render as recognizable chess-icon glyphs — white pieces as hollow ivory-fill/dark-stroke outlines, black pieces as solid dark-fill/ivory-stroke shapes — matching the real Scholar's Mate final position.
       Legibility verdict: PASS — all text and pieces are clearly readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) fills the canvas.
-      Chrome: Title and axis labels switch to light ink/gray tones, both clearly readable against the dark background. No dark-on-dark text was observed.
-      Data: The same Scholar's Mate position and identical piece glyph colors as the light render (white pieces ivory/dark-stroke, black pieces dark/ivory-stroke) — data colors match across themes as required. Squares still alternate two tones, though the "light" square color (near-black elevated surface) now reads slightly darker than the "dark" square's ochre blend, effectively flipping which square looks lighter versus the light render (see Weaknesses) — the checkerboard pattern itself, however, remains clearly distinguishable and readable.
-      Legibility verdict: PASS — all text and pieces remain legible; the noted square-luminance inversion is a design nuance, not a readability failure.
+      Chrome: Title and axis labels switch to light ink/gray tones, both clearly readable against the dark background. No dark-on-dark text observed.
+      Data: Identical Scholar's Mate position and identical piece glyph colors as the light render (data colors match across themes, as required). Squares alternate a mid-gray tone (light squares, now correctly blended so they read LIGHTER than the dark squares — the previous-attempt luminance inversion is fixed) and a warm brown/ochre tone (dark squares). The same amber outline highlights e8/f7 and remains clearly visible against the dark board.
+      Legibility verdict: PASS — all text and pieces remain legible; light/dark square luminance ordering now matches the light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -73,7 +70,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No collisions between pieces, squares, or labels
+        comment: No collisions between pieces, squares, highlight outlines, or labels
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -86,14 +83,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Piece color/fill-vs-outline is redundant with shape, not solely hue-dependent
+        comment: Piece color is redundant with fill-vs-outline shape encoding, not
+          solely hue-dependent
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and no clipping, but dark-theme light/dark square
-          luminance is inverted vs light theme
+        comment: Good proportions, nothing clipped; dark-theme square luminance inversion
+          from attempt 1 is now fixed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,19 +103,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Dark squares use Imprint ochre (wood semantic exception); backgrounds
-          correct #FAF8F1/#1A1A17'
+        comment: 'Dark squares use Imprint ochre (documented wood semantic exception);
+          backgrounds correct #FAF8F1/#1A1A17; amber highlight uses token color'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color mapping, but overall a literal board diagram
-          without extra polish
+        comment: Thoughtful semantic color mapping plus checkmate-square highlight;
+          still a fairly literal board diagram overall
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -127,11 +125,11 @@ review:
           whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No emphasis on the checkmate itself despite it being a famous decisive
-          position
+        passed: true
+        comment: Amber outline on f7/e8 now calls out the decisive checkmate move,
+          addressing the prior attempt's missing emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -237,8 +235,8 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Custom renderItem-driven board+glyph rendering goes well beyond basic
-          chart types
+        comment: Custom renderItem-driven board+glyph+highlight rendering goes well
+          beyond basic chart types
   verdict: APPROVED
 impl_tags:
   dependencies: []
