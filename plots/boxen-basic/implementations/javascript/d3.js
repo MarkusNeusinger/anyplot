@@ -65,6 +65,8 @@ function letterValueStats(sortedValues) {
 }
 const stats = groups.map((g) => letterValueStats(g.values));
 const k = stats[0].k;
+const spreads = groups.map((g) => d3.max(g.values) - d3.min(g.values));
+const standoutIdx = spreads.indexOf(d3.max(spreads));
 
 // --- Scales -------------------------------------------------------------------
 const x = d3
@@ -144,7 +146,8 @@ groups.forEach((grp, idx) => {
       .attr("stroke-width", 1.5);
   }
 
-  // Median line spans the widest (innermost) box.
+  // Median line spans the widest (innermost) box; the standout group gets a
+  // bolder line as a subtle storytelling cue.
   const innerWidth = widthScale(1);
   cell
     .append("line")
@@ -153,7 +156,7 @@ groups.forEach((grp, idx) => {
     .attr("y1", y(s.median))
     .attr("y2", y(s.median))
     .attr("stroke", t.ink)
-    .attr("stroke-width", 3);
+    .attr("stroke-width", idx === standoutIdx ? 4 : 3);
 
   // Outliers beyond the deepest letter value, jittered deterministically.
   const jitterWidth = widthScale(k) * 0.9;
@@ -163,14 +166,28 @@ groups.forEach((grp, idx) => {
     .join("circle")
     .attr("cx", (v) => cx + (((v * 97) % 1) - 0.5) * jitterWidth)
     .attr("cy", (v) => y(v))
-    .attr("r", 3.2)
+    .attr("r", 4.6)
     .attr("fill", color)
     .attr("fill-opacity", 0.6)
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 0.8);
+
+  // Callout on the group with the widest overall spread.
+  if (idx === standoutIdx) {
+    const topY = Math.max(12, y(d3.max(grp.values)) - 16);
+    cell
+      .append("text")
+      .attr("x", cx)
+      .attr("y", topY)
+      .attr("text-anchor", "middle")
+      .attr("fill", color)
+      .style("font-size", "13px")
+      .style("font-weight", "600")
+      .text("Widest spread ▲");
+  }
 });
 
-// --- Legend: quantile depth encoding -------------------------------------------
+// --- Legend: service colors + quantile depth encoding --------------------------
 const legend = svg.append("g").attr("transform", `translate(${margin.left + iw + 50},${margin.top + 10})`);
 legend
   .append("text")
@@ -179,11 +196,40 @@ legend
   .attr("fill", t.ink)
   .style("font-size", "16px")
   .style("font-weight", "600")
+  .text("Service");
+
+const catRowHeight = 26;
+groups.forEach((grp, i) => {
+  const rowY = 24 + i * catRowHeight;
+  legend
+    .append("rect")
+    .attr("x", 0)
+    .attr("y", rowY)
+    .attr("width", 16)
+    .attr("height", 16)
+    .attr("fill", t.palette[i % t.palette.length]);
+  legend
+    .append("text")
+    .attr("x", 26)
+    .attr("y", rowY + 13)
+    .attr("fill", t.inkSoft)
+    .style("font-size", "14px")
+    .text(grp.name);
+});
+
+const depthLegendY = 24 + groups.length * catRowHeight + 24;
+legend
+  .append("text")
+  .attr("x", 0)
+  .attr("y", depthLegendY)
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .style("font-weight", "600")
   .text("Letter-value depth");
 
 const legendRowHeight = 34;
 for (let i = 1; i <= k; i++) {
-  const rowY = 26 + (i - 1) * legendRowHeight;
+  const rowY = depthLegendY + 26 + (i - 1) * legendRowHeight;
   const swatchW = 16 + (k - i) * 6;
   const coverage = stats[0].levels[i - 1].coverage;
   legend
@@ -202,12 +248,12 @@ for (let i = 1; i <= k; i++) {
     .style("font-size", "14px")
     .text(`${(coverage * 100).toFixed(1).replace(/\.0$/, "")}% of data`);
 }
-const outlierRowY = 26 + k * legendRowHeight;
+const outlierRowY = depthLegendY + 26 + k * legendRowHeight;
 legend
   .append("circle")
   .attr("cx", 8)
   .attr("cy", outlierRowY + 8)
-  .attr("r", 3.2)
+  .attr("r", 4.6)
   .attr("fill", t.inkSoft)
   .attr("fill-opacity", 0.7);
 legend
@@ -218,16 +264,20 @@ legend
   .style("font-size", "14px")
   .text("Outliers");
 
-// --- Title ------------------------------------------------------------------
+// --- Title --------------------------------------------------------------------
+// Sized against the real rendered text width (Chromium layout, not a character-
+// count guess) so it reliably fills ~60% of the canvas width.
 const title = "API Latency by Service · boxen-basic · javascript · d3 · anyplot.ai";
-const baseTitleSize = 22;
-const titleSize = title.length > 67 ? Math.max(16, Math.round((baseTitleSize * 67) / title.length)) : baseTitleSize;
-svg
+const baseTitleSize = 26;
+const titleText = svg
   .append("text")
   .attr("x", width / 2)
   .attr("y", 56)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", `${titleSize}px`)
+  .style("font-size", `${baseTitleSize}px`)
   .style("font-weight", "600")
   .text(title);
+const measuredWidth = titleText.node().getComputedTextLength();
+const fittedTitleSize = Math.min(32, Math.max(18, Math.round((baseTitleSize * (width * 0.6)) / measuredWidth)));
+titleText.style("font-size", `${fittedTitleSize}px`);
