@@ -62,11 +62,12 @@ const titleFontSize =
 const PADDING = 60;
 const TITLE_H = 50;
 const LABEL_H = 56;
+const CAPTION_H = 28;
 const GAP = 24;
 
 // --- Chart (default-exported component — the harness mounts it) ------------
 export default function Chart() {
-  const chartHeight = SIZE.height - PADDING * 2 - TITLE_H - LABEL_H - GAP;
+  const chartHeight = SIZE.height - PADDING * 2 - TITLE_H - LABEL_H - CAPTION_H - GAP;
   const chartWidth = SIZE.width - PADDING * 2;
 
   return (
@@ -117,6 +118,9 @@ export default function Chart() {
         }}
       >
         {CONTENT}
+      </div>
+      <div style={{ height: CAPTION_H, textAlign: "center", fontSize: 14, color: t.inkSoft }}>
+        Code 128 · Subset B (full ASCII, ANSI/ISO quiet zones)
       </div>
     </div>
   );
