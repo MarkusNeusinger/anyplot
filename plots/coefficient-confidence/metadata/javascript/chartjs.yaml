@@ -1,0 +1,255 @@
+library: chartjs
+language: javascript
+specification_id: coefficient-confidence
+created: '2026-09-01T23:16:18Z'
+updated: '2026-09-01T23:21:50Z'
+generated_by: claude-sonnet
+workflow_run: 33569730883
+issue: 3576
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct horizontal coefficient plot with 95% CI bars, a dashed zero-reference
+    line, and semantic color-coding (Imprint brand green #009E73 for significant coefficients,
+    theme-adaptive muted gray for non-significant) that exactly matches the spec''s
+    stated requirements.'
+  - Clever, idiomatic use of Chart.js floating-bar ranges ([ciLower, ciUpper] pairs)
+    for the confidence-interval whiskers and capsule-shaped point markers (narrow
+    range + borderRadius), combined with a line-type zero-reference dataset in a single
+    mixed chart.
+  - 'Full theme-adaptive chrome: title/axis/tick colors and the semantic muted anchor
+    correctly branch on window.ANYPLOT_THEME, data colors are pixel-identical between
+    light and dark renders, and both surfaces use the correct warm off-white / near-black
+    backgrounds.'
+  - Realistic, neutral housing-regression dataset sorted by |coefficient| descending,
+    covering both positive and negative effects and both significant and non-significant
+    cases (full DQ-01 feature coverage).
+  weaknesses:
+  - Title occupies only roughly a third of the canvas width at the current 22px size
+    — well under the 50-70% target for a title this length; a slightly larger title
+    fontsize would give it more visual weight without any overflow risk.
+  - CI bars and the significant/not-significant point markers use flat fills with
+    no edge highlight; the style guide recommends a subtle white/ink edge on bar and
+    marker elements for definition, especially where the CI band and point marker
+    overlap.
+  - The significant/not-significant split is implemented as two parallel bar datasets
+    with null-masking (significantEstimates / notSignificantEstimates) rather than
+    a single dataset with per-point scriptable backgroundColor — functionally correct
+    but a more idiomatic Chart.js pattern would use one dataset with a scriptable
+    color callback keyed on row.significant.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "coefficient-confidence · javascript · chartjs · anyplot.ai" in dark ink, centered top. Y-axis shows 8 variable-name labels (Square Footage, Distance to City Center (mi), Bathrooms, Age of Home (years), Garage Spaces, Lot Size (acres), Bedrooms, Renovated Kitchen) in dark text, left-aligned. X-axis title "Coefficient Estimate ($1,000s per unit, standardized)" and numeric ticks (-40 to 50) in soft dark gray. Legend at bottom center with 4 entries: "95% Confidence Interval" (light gray swatch), "Zero effect" (dashed line icon), "Significant (95% CI excludes 0)" (green swatch), "Not significant" (gray swatch). Vertical gridlines subtle, dashed black zero-reference line at x=0. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Each row shows a thin gray horizontal bar for the 95% CI, with a small rounded-capsule marker at the point estimate — green (#009E73) for the 6 significant coefficients (Square Footage, Distance to City Center, Bathrooms, Age of Home, Garage Spaces, Lot Size), muted gray for the 2 non-significant ones (Bedrooms, Renovated Kitchen) whose CIs cross zero.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, tick labels, and legend, now rendered in light ink (#F0EFE8) / soft light gray, fully legible against the dark background. Zero-reference line switches to a light dashed line (still dashed white, correctly inverted from black on light). Gridlines remain subtle.
+      Data: Confidence-interval bars and significance markers are unchanged in color from the light render — same brand green #009E73 for significant points and the same muted-gray hue class (now #A8A79F per the theme-adaptive MUTED constant) for non-significant points and CI fill. No dark-on-dark or light-on-light failures detected anywhere (title, axis labels, tick labels, legend text, y-axis category labels all clearly legible).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, x-title 17, legend 15, y
+          ticks 15, x ticks 14) and readable in both themes; title runs somewhat narrower
+          than the usual 50-70% width target.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or marker overlap in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 8 coefficients (sparse) get prominent 20px capsule markers and clearly
+          visible CI bars.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs. muted-gray significance encoding is CVD-safe and not red-green.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy share of the canvas, nothing
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis label includes units: ''Coefficient Estimate ($1,000s per
+          unit, standardized)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/significant series is #009E73, muted anchor is theme-adaptive
+          (#6B6A63 light / #A8A79F dark), backgrounds are theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Semantic color use (significance) plus deliberate typographic hierarchy
+          is clearly above Chart.js defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid and generous whitespace; misses the recommended
+          edge-highlight on bars/markers.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Magnitude-sorted rows plus significance color-coding create clear
+          visual hierarchy guiding the reader.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct coefficient/forest-style plot with horizontal error bars.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero reference line, significance color-coding, magnitude ordering,
+          horizontal layout, labeled effect-measure axis all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Coefficients on y-axis, values on x-axis, all 8 rows visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'coefficient-confidence · javascript · chartjs · anyplot.ai';
+          legend labels are descriptive and match the data semantics.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both positive and negative coefficients, both significant and non-significant
+          cases present.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral housing-price regression scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficient magnitudes and CI widths are internally consistent and
+          domain-plausible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> mount -> chart structure, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the window globals it needs.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI or fake-interactivity code.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mount-node contract respected; animation: false set; current Chart.js
+          4.x API.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of mixed bar+line datasets and floating-bar ranges for
+          CIs; a scriptable per-point color callback would be the more idiomatic single-dataset
+          approach.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Floating-bar ranges plus rounded-capsule point markers via borderRadius
+          is a genuine Chart.js-specific technique for representing point-in-range
+          estimates.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
