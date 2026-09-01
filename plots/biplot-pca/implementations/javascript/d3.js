@@ -146,6 +146,11 @@ const loadings = featureNames.map((name, j) => ({
   pc2: eigenvectors[j][pc2Idx] * Math.sqrt(eigenvalues[pc2Idx]),
 }));
 
+// The feature whose loading correlates most strongly with PC1 is the single
+// best explanation for the group separation visible along that axis — call
+// it out visually instead of leaving every arrow at the same default weight.
+const topDriver = loadings.reduce((best, d) => (Math.abs(d.pc1) > Math.abs(best.pc1) ? d : best), loadings[0]);
+
 const maxScoreRadius = d3.max(scores, (d) => Math.hypot(d.pc1, d.pc2));
 const arrowScale = 0.85 * maxScoreRadius;
 const extent = maxScoreRadius * 1.3;
@@ -223,9 +228,9 @@ svg
   .join("circle")
   .attr("cx", (d) => x(d.pc1))
   .attr("cy", (d) => y(d.pc2))
-  .attr("r", 7)
+  .attr("r", 6)
   .attr("fill", (d) => color(d.group))
-  .attr("fill-opacity", 0.75)
+  .attr("fill-opacity", 0.65)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
 
@@ -239,23 +244,23 @@ svg
   .attr("x2", (d) => x(d.pc1 * arrowScale))
   .attr("y2", (d) => y(d.pc2 * arrowScale))
   .attr("stroke", t.ink)
-  .attr("stroke-width", 2.5)
+  .attr("stroke-width", (d) => (d.name === topDriver.name ? 3.5 : 2.5))
   .attr("marker-end", "url(#loading-arrowhead)");
 
 svg
   .selectAll(".loading-label")
   .data(loadings)
   .join("text")
-  .attr("x", (d) => x(d.pc1 * arrowScale * 1.14))
-  .attr("y", (d) => y(d.pc2 * arrowScale * 1.14))
+  .attr("x", (d) => x(d.pc1 * arrowScale * 1.2))
+  .attr("y", (d) => y(d.pc2 * arrowScale * 1.2))
   .attr("text-anchor", (d) => (d.pc1 >= 0 ? "start" : "end"))
   .attr("dominant-baseline", (d) => (d.pc2 >= 0 ? "auto" : "hanging"))
   .attr("fill", t.ink)
-  .style("font-size", "15px")
-  .style("font-weight", "600")
+  .style("font-size", (d) => (d.name === topDriver.name ? "17px" : "15px"))
+  .style("font-weight", (d) => (d.name === topDriver.name ? "700" : "600"))
   .style("paint-order", "stroke")
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 5)
+  .attr("stroke-width", 6.5)
   .text((d) => d.name);
 
 // --- Legend -----------------------------------------------------------------------
@@ -285,9 +290,21 @@ groups.forEach((grp, i) => {
 svg
   .append("text")
   .attr("x", width / 2)
-  .attr("y", 55)
+  .attr("y", 60)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "22px")
+  .style("font-size", "26px")
   .style("font-weight", "600")
   .text("biplot-pca · javascript · d3 · anyplot.ai");
+
+// Subtitle: call out the strongest driver of the PC1 separation seen in the
+// scores below, so the story is more than "points happen to cluster by color".
+svg
+  .append("text")
+  .attr("x", width / 2)
+  .attr("y", 92)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft)
+  .style("font-size", "15px")
+  .style("font-style", "italic")
+  .text(`${topDriver.name} loads most strongly on PC1 — the axis separating growth-habit groups`);
