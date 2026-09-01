@@ -1,0 +1,237 @@
+library: chartjs
+language: javascript
+specification_id: biplot-pca
+created: '2026-09-01T18:32:09Z'
+updated: '2026-09-01T18:47:43Z'
+generated_by: claude-sonnet
+workflow_run: 33543493654
+issue: 3417
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/chartjs/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Implements a genuine PCA (correlation matrix + Jacobi eigenvalue decomposition)
+    entirely client-side rather than faking loadings — real dimensionality reduction,
+    not a lookalike.
+  - Dominant-loading visual emphasis (full ink + heavier stroke on the strongest loading
+    vector) is a thoughtful data-storytelling touch that doesn't reuse a data/group
+    color.
+  - Synthetic data has genuine low-rank correlation structure (per-line latent offsets
+    + shared noise), producing a realistic and recoverable PCA signal.
+  - Clean theme handling — verified no dark-on-dark or light-on-light issues, and
+    no clipping at any canvas edge.
+  weaknesses:
+  - Arrow-label font (sans-serif) doesn't match Chart.js's own default font family
+    used for ticks/title/legend — minor typographic inconsistency between plugin-drawn
+    canvas text and Chart.js-rendered text.
+  - Grid lines are a bit more prominent than the "barely-there" ideal described in
+    the style guide; consider a slightly lower-opacity grid color for a more refined
+    look.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "biplot-pca · javascript · chartjs · anyplot.ai" in bold dark ink at top; legend top-right (Line A/B/C with circular swatches); axis titles "PC1 (55.1%)" / "PC2 (38.9%)" and tick labels in ink-soft gray; L-shaped spine (left+bottom only); six loading-arrow labels (Humidity, Vibration, FlowRate, ToolWear, Temperature, Pressure) in dark ink. All clearly readable against the light background.
+      Data: ~90 scatter points colored green (Line A, #009E73), magenta/purple (Line B), blue-gray (Line C); loading arrows mostly muted ink-soft gray with the dominant loading (Temperature) in full-ink bold; dashed gray unit-circle reference ellipse.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same layout as light render with all chrome (title, legend, axis titles, tick labels, spine, arrow labels) flipped to light-colored ink; dashed unit circle and non-dominant arrows switch to a lighter gray. No dark-on-dark issues — all text remains legible, including small tick labels and arrow labels.
+      Data: Point and arrow colors identical in hue to the light render (green/magenta/blue-gray palette, dominant-loading full-ink emphasis) — confirms only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; arrow-label
+          font slightly inconsistent with Chart.js's own font family
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/point collisions found, including near the Humidity label
+          and legend/ToolWear region
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker size well-matched to ~90-point density; arrow heads and dominant
+          loading clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three distinguishable hues, no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); no clipping at any edge
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes show component name and variance explained
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds theme-correct; data colors
+          identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: L-shaped spine, unit-circle reference, custom PCA math pipeline
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, generous padding; grid slightly more prominent than
+          ideal
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dominant loading highlighted in full ink creates a clear focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PCA biplot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores, labeled loading arrows, unit circle, variance-explained axes
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: PC1 vs PC2 correctly plotted and scaled
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches exactly; legend matches groups
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 variables, 90 observations, scores+loadings+unit circle all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral process-monitoring scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Genuine low-rank latent structure gives realistic PCA signal
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions needed for in-browser PCA math
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the Chart global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity, clean structure
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic scatter type with correct responsive/animation options
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Effective use of Chart.js plugin system for custom canvas drawing
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - pca
+  - correlation-matrix
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
