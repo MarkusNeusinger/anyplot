@@ -194,8 +194,8 @@ const contourPlugin = {
 
       ctx.beginPath();
       ctx.strokeStyle = t.ink;
-      ctx.globalAlpha = isIndex ? 0.55 : 0.25;
-      ctx.lineWidth = isIndex ? 1.8 : 0.8;
+      ctx.globalAlpha = isIndex ? 0.55 : 0.38;
+      ctx.lineWidth = isIndex ? 1.8 : 1.1;
       for (const [a, b] of segments) {
         ctx.moveTo(a[0], a[1]);
         ctx.lineTo(b[0], b[1]);
@@ -270,9 +270,16 @@ const contourPlugin = {
     ctx.fillText('Elevation (m)', barX + barW / 2, ca.top - 22);
 
     // Ticks are inset from the bar's top/bottom edges so their labels never
-    // collide with the "Elevation (m)" title or the axis below.
+    // collide with the "Elevation (m)" title or the axis below. Values are
+    // snapped to the nearest 250 m so the colorbar reads round numbers
+    // instead of raw min/mid/max data values.
     const TICK_INSET = 12;
-    const ticks = [Z_MAX, (Z_MIN + Z_MAX) / 2, Z_MIN];
+    const TICK_ROUND = 250;
+    const ticks = [
+      Math.floor(Z_MAX / TICK_ROUND) * TICK_ROUND,
+      Math.round((Z_MIN + Z_MAX) / 2 / TICK_ROUND) * TICK_ROUND,
+      Math.ceil(Z_MIN / TICK_ROUND) * TICK_ROUND,
+    ];
     ctx.strokeStyle = t.inkSoft;
     ctx.fillStyle = t.inkSoft;
     ctx.font = '15px sans-serif';
@@ -322,9 +329,10 @@ new Chart(canvas, {
         labels: {
           color: t.ink,
           font: { size: 14 },
+          usePointStyle: true,
           generateLabels: () => [
-            { text: 'Wilderness boundary', fillStyle: 'transparent', strokeStyle: t.ink, lineWidth: 2, lineDash: [8, 5] },
-            { text: 'Summit', fillStyle: t.ink, strokeStyle: t.pageBg, lineWidth: 2 },
+            { text: 'Wilderness boundary', pointStyle: 'line', strokeStyle: t.ink, lineWidth: 2, lineDash: [8, 5] },
+            { text: 'Summit', pointStyle: 'triangle', fillStyle: t.ink, strokeStyle: t.pageBg, lineWidth: 2 },
           ],
         },
       },
