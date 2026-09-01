@@ -49,6 +49,20 @@ const gridMax = Math.max(...flatValues);
 const halfDLon = (lons[1] - lons[0]) / 2;
 const halfDLat = (lats[1] - lats[0]) / 2;
 
+// --- Locate the single highest grid point for a focal-point callout --------
+let peakRow = 0;
+let peakCol = 0;
+grid.forEach((row, j) => {
+  row.forEach((value, i) => {
+    if (value > grid[peakRow][peakCol]) {
+      peakRow = j;
+      peakCol = i;
+    }
+  });
+});
+const peakLon = lons[peakCol];
+const peakLat = lats[peakRow];
+
 // --- Contour levels: round-number intervals spanning the field -------------
 const LEVEL_STEP = 300; // meters
 const firstLevel = Math.ceil((gridMin + LEVEL_STEP) / LEVEL_STEP) * LEVEL_STEP;
@@ -56,18 +70,24 @@ const levels = [];
 for (let lvl = firstLevel; lvl < gridMax; lvl += LEVEL_STEP) levels.push(lvl);
 
 // --- Imprint sequential color scale (single-polarity: low -> high) ---------
-function hexToRgb(hex) {
-  return {
-    r: parseInt(hex.slice(1, 3), 16),
-    g: parseInt(hex.slice(3, 5), 16),
-    b: parseInt(hex.slice(5, 7), 16),
-  };
+// Parses both "#RRGGBB" and "rgb(r, g, b)" so mixHex() results can be re-mixed
+// (e.g. blending an already-mixed isoline color further toward t.ink).
+function parseColor(color) {
+  if (color.startsWith("#")) {
+    return {
+      r: parseInt(color.slice(1, 3), 16),
+      g: parseInt(color.slice(3, 5), 16),
+      b: parseInt(color.slice(5, 7), 16),
+    };
+  }
+  const [r, g, b] = color.match(/[\d.]+/g).map(Number);
+  return { r, g, b };
 }
 
-function mixHex(hexLow, hexHigh, frac) {
+function mixHex(colorLow, colorHigh, frac) {
   const f = Math.max(0, Math.min(1, frac));
-  const a = hexToRgb(hexLow);
-  const b = hexToRgb(hexHigh);
+  const a = parseColor(colorLow);
+  const b = parseColor(colorHigh);
   const r = Math.round(a.r + (b.r - a.r) * f);
   const g = Math.round(a.g + (b.g - a.g) * f);
   const bl = Math.round(a.b + (b.b - a.b) * f);
@@ -187,6 +207,11 @@ function stitchPolylines(segments) {
 
 // --- Build one real Highcharts series per traced polyline -------------------
 // Each isoline is genuine point data (hover works), not a decorative overlay.
+// Lines are blended toward t.ink (more so on dark theme, where both ends of
+// the seq gradient sit close in lightness to the near-black page) so isolines
+// stay legible against the raster without changing the raster's own colors.
+const ISOLINE_INK_BLEND = t.theme === "dark" ? 0.34 : 0.12;
+const topLevel = levels[levels.length - 1];
 const contourSeries = [];
 levels.forEach((level, levelIdx) => {
   const polylines = stitchPolylines(marchingSquares(level)).filter(
@@ -194,20 +219,22 @@ levels.forEach((level, levelIdx) => {
   );
   if (polylines.length === 0) return;
 
-  const lineColor = mixHex(t.seq[0], t.seq[1], (level - gridMin) / (gridMax - gridMin));
+  const isFocalLevel = level === topLevel;
+  const baseColor = mixHex(t.seq[0], t.seq[1], (level - gridMin) / (gridMax - gridMin));
+  const lineColor = mixHex(baseColor, t.ink, ISOLINE_INK_BLEND);
   const longest = polylines.reduce((a, b) => (b.length > a.length ? b : a));
 
   polylines.forEach((line) => {
     const midIdx = Math.floor(line.length / 2);
-    const showLabel = line === longest && levelIdx % 2 === 0;
+    const showLabel = line === longest && (levelIdx % 2 === 0 || isFocalLevel);
     contourSeries.push({
       name: `${level} m`,
       type: "spline",
       color: lineColor,
-      lineWidth: 2.2,
+      lineWidth: isFocalLevel ? 3.2 : 2.2,
       marker: { enabled: false },
       showInLegend: false,
-      zIndex: 4,
+      zIndex: isFocalLevel ? 5 : 4,
       tooltip: { headerFormat: "", pointFormat: `Elevation isoline: <b>${level} m</b>` },
       data: line.map((p, idx) => {
         const point = { x: p[0], y: p[1] };
@@ -256,6 +283,61 @@ const boundarySeries = {
   showInLegend: true,
   zIndex: 2,
   data: boundaryPoints.map((p) => ({ x: p[0], y: p[1] })),
+};
+
+// --- Ridge-crest reference line (second geographic context feature, -------
+// --- a stylized topographic divide tracing the massif chain) ---------------
+const ridgelinePoints = [
+  [6.35, 46.42],
+  [6.72, 46.08],
+  [7.05, 45.58],
+  [7.4, 45.62],
+  [7.95, 46.02],
+  [8.35, 45.42],
+  [8.62, 45.28],
+];
+const ridgelineSeries = {
+  name: "Ridge crest (reference)",
+  type: "line",
+  color: t.inkSoft,
+  dashStyle: "Dot",
+  lineWidth: 1.6,
+  marker: { enabled: false },
+  enableMouseTracking: false,
+  showInLegend: true,
+  zIndex: 3,
+  data: ridgelinePoints.map((p) => ({ x: p[0], y: p[1] })),
+};
+
+// --- Highest-peak focal callout (sharpens the terrain read beyond an -------
+// --- evenly-weighted four-peak overview) ------------------------------------
+const peakSeries = {
+  name: "Highest peak",
+  type: "scatter",
+  color: t.ink,
+  marker: {
+    enabled: true,
+    symbol: "triangle",
+    radius: 7,
+    fillColor: t.amber,
+    lineColor: t.ink,
+    lineWidth: 1.5,
+  },
+  enableMouseTracking: false,
+  showInLegend: true,
+  zIndex: 6,
+  dataLabels: {
+    enabled: true,
+    format: `Highest peak · ${Math.round(gridMax)} m`,
+    y: -16,
+    style: { color: t.ink, fontSize: "13px", fontWeight: "700", textOutline: "none" },
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    borderWidth: 1,
+    borderRadius: 3,
+    padding: 4,
+  },
+  data: [{ x: peakLon, y: peakLat }],
 };
 
 // --- Filled elevation raster (core Highcharts has no heatmap/colorAxis -----
@@ -376,5 +458,5 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false, states: { hover: { enabled: false } } },
   },
-  series: [boundarySeries, ...contourSeries],
+  series: [boundarySeries, ridgelineSeries, peakSeries, ...contourSeries],
 });
