@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: boxen-basic
 created: '2026-09-01T18:43:50Z'
-updated: '2026-09-01T18:52:22Z'
+updated: '2026-09-01T19:06:17Z'
 generated_by: claude-sonnet
 workflow_run: 33544512780
 issue: 3414
@@ -12,133 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Correct letter-value/boxen-plot math via d3.quantileSorted: median box plus 6
-    nested depth levels at the right coverage percentages (50%, 75%, 87.5%, 93.8%,
-    96.9%, 98.4%), each narrower than the last.'
-  - 'Imprint palette applied correctly: first series #009E73 (Auth API), remaining
-    three follow canonical order (#C475FD, #4467A3, #BD8233) and stay identical between
-    light and dark renders.'
-  - 'Both themes correctly implemented: #FAF8F1/#1A1A17 backgrounds, all text theme-adaptive
-    via t.ink/t.inkSoft, legend swatches recolor per theme — no dark-on-dark or light-on-light
-    failures.'
-  - Data genuinely varies across the four services (different medians, spreads, and
-    outlier counts), satisfying full feature coverage for the plot type.
-  - Deterministic seeded LCG RNG (seed 42) — fully reproducible.
-  - 'Idiomatic D3: scaleBand/scaleLinear, axisBottom/Left, and the .data().join()
-    pattern for outlier circles; hand-rolled quantile-depth computation is a distinctive
-    low-level use of D3 that a canned chart library couldn''t easily replicate.'
-  - Title matches the mandated format with a descriptive prefix; axis labels are descriptive
-    with units ("Response Time (ms)").
+  - Statistically accurate letter-value computation (legend coverage percentages match
+    the actual pLow/pHigh quantile math exactly)
+  - 'Pixel-verified theme-correct chrome: light background #FAF8F1, dark background
+    #1A1A17, identical data colors across both renders'
+  - Dynamic title auto-fit via getComputedTextLength() avoids both clipping and cramped
+    sizing for the long mandated title string
+  - '"Widest spread ▲" callout plus a bolder median line gives the plot a clear, immediate
+    focal point without simulating fake interactivity'
   weaknesses:
-  - Outlier markers (r=3.2px) are small for such a sparse set (~1.6% of points per
-    group, ~24 dots) — increase radius to ~4.5-5px so they read as clearly prominent
-    individual points.
-  - Title uses only ~40-45% of the plot width at the current auto-scaled font size,
-    well under the 50-70% target — consider a slightly larger title fontsize (the
-    length-based scaling formula is being conservative here) for better visual balance.
-  - Legend swatches use plain ink/opacity blocks disconnected from the actual per-category
-    series colors used in the boxes — consider tinting the swatches with the series
-    color (or adding a small color key) so the depth legend visually ties back to
-    the data.
-  - No explicit visual emphasis calls out the standout finding (e.g. Payment API's
-    higher median and wider spread, or Search API's largest outlier) — a subtle callout
-    or highlighted group would strengthen the data storytelling beyond the opacity/size
-    gradient alone.
-  - A handful of small helper functions (LCG RNG, letter-value-depth/stats) deviate
-    from a strict linear Imports→Data→Plot→Save structure — reasonable given the statistics
-    involved, but worth noting for KISS scoring.
+  - Helper functions (letterValueDepth, letterValueStats, randNormal) push the script
+    away from a flat KISS structure -- could be inlined or simplified, though the
+    math genuinely needs them
+  - All four service distributions share the same log-normal shape (varying only in
+    scale/spread); a differently-shaped distribution for one group would demonstrate
+    more of the letter-value plot's diagnostic power
+  - Nested boxes are drawn with a manual .append() loop per level rather than a .data(levels).join("rect")
+    pattern -- functionally fine but slightly less idiomatic D3
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "API Latency by Service · boxen-basic · javascript · d3 · anyplot.ai" centered at top; dark "Response Time (ms)" y-axis label and "Service Endpoint" x-axis label; dark tick labels on both axes; subtle horizontal gridlines; right-side "Letter-value depth" legend with black-shaded swatches at decreasing opacity plus an outlier dot swatch. All text is clearly legible against the light background — no light-on-light issues.
-      Data: Four boxen (letter-value) groups — Auth API (green #009E73), Search API (lavender #C475FD), Payment API (blue #4467A3), Notify API (ochre #BD8233) — each drawn as 6 nested rectangles narrowing and lightening toward the tails, a solid median line, and small jittered outlier dots beyond the deepest level in the same series color.
+      Background: Warm off-white, measured pixel-exact at #FAF8F1 -- matches spec.
+      Chrome: Title "API Latency by Service · boxen-basic · javascript · d3 · anyplot.ai" in dark ink, auto-fit to width; axis labels "Response Time (ms)" and "Service Endpoint" both descriptive with units/context; tick labels and two-part legend (service colors + letter-value depth coverage) all clearly readable in dark text against the light background.
+      Data: Four boxen groups (Auth API green #009E73, Search API lavender, Payment API blue, Notify API ochre) -- canonical Imprint order, first series is brand green. Nested translucent boxes narrow and lighten with quantile depth; outlier dots and a dark median line per group; a "Widest spread ▲" callout above Search API.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light/off-white text, fully legible against the dark background; gridlines remain subtle; legend text and depth swatches recolored to light shades for the same "Letter-value depth" legend. No dark-on-dark failures — every chrome element is clearly readable.
-      Data: Identical box geometry and identical series colors (#009E73, #C475FD, #4467A3, #BD8233) to the light render — only chrome (background, text, grid, legend swatch shading) flipped, confirming data-color consistency across themes. The white median line reads clearly against each colored box.
+      Background: Warm near-black, measured pixel-exact at #1A1A17 -- matches spec.
+      Chrome: Title, axis labels, tick labels, and legend all render in light ink and are fully legible; median lines switch to white for contrast; gridlines remain subtle but visible. No dark-on-dark failures found.
+      Data: Confirmed identical to light render -- same green/lavender/blue/ochre hues and box structure, only chrome (background, text, grid) flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (15-22px), readable in both themes; title
-          fits without clipping but uses only ~40-45% of width, below the 50-70% target.
+        comment: All font sizes explicitly set (px); title auto-fit via getComputedTextLength();
+          legible in both themes and at 400px thumbnail
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in either render.
+        comment: Legend, callout, axes, boxes all well separated in both renders
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Nested boxes well-sized; outlier markers (r=3.2px) are a bit small
-          for the sparse ~1.6% outlier set.
+        comment: Boxen widths/opacities scale cleanly with depth; outlier markers
+          visible without clutter
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Distinct hues plus opacity-graded shading; no red-green-only signal.
+        comment: Depth-based alpha blending plus distinct hues; no red-green-only
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart area uses a healthy majority of the canvas; legend sits close
-          to the plot; balanced margins; nothing cut off.
+        comment: Plot area and legend balanced within canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Response Time (ms)" and "Service Endpoint" — descriptive with units
-          where applicable.'
+        comment: '"Response Time (ms)" and "Service Endpoint" descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; remaining three follow canonical Imprint order;
-          both renders theme-correct.'
+        comment: 'First series #009E73; canonical Imprint order; backgrounds pixel-exact
+          #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful opacity-graded nested boxes, but overall reads as a solid,
-          competent build rather than a standout design.
+        comment: Depth-based opacity encoding, fitted title, storytelling callout
+          go beyond a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle single-axis grid, no top/right spines, generous whitespace;
-          legend swatches use neutral ink rather than tying back to series colors.
+        comment: Subtle y-only gridlines, restrained axis chrome, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Opacity/size gradient guides the eye toward the median and tail,
-          but nothing explicitly calls out the standout group.
+        passed: true
+        comment: '"Widest spread ▲" callout plus bolder median line creates an immediate
+          focal point'
     spec_compliance:
       score: 15
       max: 15
@@ -148,53 +128,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a letter-value/boxen plot with nested, narrowing
-          boxes rather than a plain box plot.
+        comment: Correct boxen/letter-value plot with nested quantile boxes
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Nested boxes, decreasing width by depth, opacity shading, individual
-          outlier points, and an explanatory legend are all present.
+        comment: Nested narrowing boxes, contrasting opacity per level, outliers as
+          individual points, clear axis labels + legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = service category, Y = response time; all data represented.
+        comment: X = service category, Y = response time; axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; legend labels
-          (depth % + outliers) are accurate.
+        comment: Title matches required format; legend labels match service names
+          and depth coverage
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Differing spreads, medians, and outlier counts across the four services
-          show the full range of letter-value plot features.
+        comment: Outliers and differing spreads shown; all groups share the same log-normal
+          shape rather than varying shape
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: API response time by service is a realistic, neutral business/tech
-          scenario.
+        comment: API latency by service endpoint is realistic, neutral, technical
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log-normal latency values (tens to ~1100ms) are plausible for real
-          API response-time distributions.
+        comment: Median latencies (~90-235ms) with right-skewed tails and plausible
+          outliers
     code_quality:
       score: 9
       max: 10
@@ -204,61 +183,63 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A handful of small helper functions (LCG RNG, letter-value stats)
-          are used, reasonable for the statistics involved.
+        comment: Uses several small helper functions for letter-value math rather
+          than a flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic LCG seeded with 42.
+        comment: Deterministic fixed-seed LCG (seed 42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; only the d3 global is used.
+        comment: Only the d3 global used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately complex for the computation required; no fake
-          UI.
+        comment: Appropriately complex, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Builds the SVG inside #container sized from ANYPLOT_SIZE, no animation,
-          current d3 v7 API.'
+        comment: Correct mount-node contract, current D3 v7 API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of scaleBand/scaleLinear, axisBottom/Left, and the
-          .data().join() pattern.
+        comment: Good scale/axis usage and data-join for outliers; nested boxes drawn
+          via append loop instead of data-join
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Hand-rolled letter-value computation via d3.quantileSorted plus depth-driven
-          width/opacity scales leverages D3's low-level flexibility distinctively.
-  verdict: REJECTED
+        comment: getComputedTextLength()-driven title auto-fit and d3.quantileSorted-based
+          letter-value stats
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - quantile-computation
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready
