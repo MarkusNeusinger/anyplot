@@ -26,13 +26,13 @@ const significant = indexed.filter((r) => r.significant);
 const notSignificant = indexed.filter((r) => !r.significant);
 
 // --- Custom-series renderer for horizontal confidence-interval whiskers -----
-function whiskerRenderItem(color) {
+function whiskerRenderItem(color, lineWidth) {
   return function (params, api) {
     const categoryIndex = api.value(0);
     const low = api.coord([api.value(1), categoryIndex]);
     const high = api.coord([api.value(2), categoryIndex]);
     const capHalf = 9;
-    const style = { stroke: color, lineWidth: 2.5 };
+    const style = { stroke: color, lineWidth };
     return {
       type: "group",
       children: [
@@ -90,7 +90,7 @@ chart.setOption({
       type: "custom",
       name: "__whisker_sig",
       silent: true,
-      renderItem: whiskerRenderItem(t.palette[0]),
+      renderItem: whiskerRenderItem(t.palette[0], 2.5),
       encode: { x: [1, 2], y: 0 },
       data: significant.map((r) => [r.idx, r.ciLower, r.ciUpper]),
       z: 2,
@@ -99,7 +99,7 @@ chart.setOption({
       type: "custom",
       name: "__whisker_notsig",
       silent: true,
-      renderItem: whiskerRenderItem(t.muted),
+      renderItem: whiskerRenderItem(t.inkSoft, 1.5),
       encode: { x: [1, 2], y: 0 },
       data: notSignificant.map((r) => [r.idx, r.ciLower, r.ciUpper]),
       z: 2,
@@ -123,7 +123,7 @@ chart.setOption({
       name: "Not significant",
       type: "scatter",
       symbolSize: 18,
-      itemStyle: { color: t.muted },
+      itemStyle: { color: t.inkSoft },
       data: notSignificant.map((r) => [r.coefficient, r.idx]),
       z: 3,
     },
