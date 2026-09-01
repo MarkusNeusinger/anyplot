@@ -1,0 +1,244 @@
+library: highcharts
+language: javascript
+specification_id: chessboard-pieces
+created: '2026-09-01T23:23:15Z'
+updated: '2026-09-01T23:28:39Z'
+generated_by: claude-sonnet
+workflow_run: 33570245218
+issue: 3350
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Elegant custom SVGRenderer solution that works around the unloaded heatmap module
+    — draws the 8x8 grid and piece glyphs directly via chart.renderer.rect/text, a
+    genuinely idiomatic Highcharts technique rather than a workaround.
+  - 'Correct standard chess-board orientation: a1 is dark, h1 is light, white pieces
+    sit at the bottom (rows 1-2) — matches the spec''s explicit convention notes exactly.'
+  - Piece color/team is encoded by glyph shape (hollow outline vs. filled Unicode
+    symbol) rather than by hue, so the diagram is fully colorblind-safe with zero
+    reliance on color to distinguish white from black.
+  - Full token-driven theming (elevatedBg / ink@16% / inkSoft / pageBg) keeps the
+    checkerboard and all text legible and consistent in both light and dark renders
+    — only chrome flips, exactly as required.
+  - Realistic, well-known educational position (Scholar's Mate, final position after
+    4.Qxf7#) with a descriptive subtitle, and all six piece types are represented
+    for both colors.
+  weaknesses:
+  - 'Design polish is solid but not top-tier: the checkerboard and coordinate labels
+    are clean and correct but fairly plain — a touch more refinement (e.g. subtle
+    square corner treatment or slightly more distinctive coordinate-label styling)
+    would lift Design Excellence further. Not severe enough to require a fix.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "chessboard-pieces · javascript · highcharts · anyplot.ai" in bold dark ink, fully visible with margin above; subtitle "Scholar's mate · final position after 4.Qxf7#" in soft gray below it, clearly readable. Rank labels (1-8) sit in the left gutter, file labels (a-h) in the bottom gutter, both in the same soft-ink color, legible and not clipped.
+      Data: 8x8 checkerboard alternates a warm off-white/elevated tint (light squares) with a translucent dark gray (dark squares); a1 is dark and h1 is light, matching standard chess convention. All 32 pieces render as dark-ink Unicode glyphs — white pieces as hollow/outline symbols, black pieces as solid/filled symbols — so team is encoded by shape, not color. Each glyph has a subtle page-background text outline that keeps it crisp against the square fill.
+      Legibility verdict: PASS — every title, subtitle, and coordinate label is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Same title and subtitle, now rendered in light ink, fully legible against the dark background. Rank/file coordinate labels also flip to a light soft-ink tone and remain clearly readable, no clipping.
+      Data: The checkerboard flips to two dark grays (a lighter charcoal for "light" squares, near-black for "dark" squares) while preserving the same a1-dark/h1-light pattern. Pieces render as light-ink glyphs (hollow outline for white pieces, solid filled for black pieces) — the shape-based team encoding is identical to the light render, only the ink color itself flips with the chrome, which is expected since piece color is a chrome/ink token, not a categorical data series.
+      Legibility verdict: PASS — no dark-on-dark failures; every glyph, label, title, and subtitle is clearly visible against the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, subtitle, and rank/file labels are explicitly sized and fully
+          readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, pieces, or labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Piece glyphs sized at ~62% of cell size, prominent for the sparse
+          32-piece set.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Team is encoded by glyph shape (hollow vs filled), not color — fully
+          CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas well used, board centered, gutters sized correctly
+          for coordinate labels, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; rank/file coordinate labels serve
+          as the chart's descriptive axis equivalent.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds transparent over correct page tokens, squares/text built
+          entirely from theme tokens (elevatedBg/ink/inkSoft/pageBg), no default colors.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, intentional custom board rendering; solid but not award-winning
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis clutter, subtle checker contrast, generous whitespace and
+          framing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Named historical position with contextual subtitle gives a clear
+          focal narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chessboard-with-pieces diagram.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Pieces dict, Unicode symbols, upper/lowercase team distinction all
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Square-to-piece mapping correct; a1 dark / h1 light / white-at-bottom
+          convention verified.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match; no legend needed (N/A, not penalized).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All six piece types shown for both colors.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, well-known, neutral educational chess position (Scholar's Mate).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 8x8 board, valid resulting position.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, two simple loops, no unnecessary abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded position, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the provided globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for custom rendering, no fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled at chart and series
+          level.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly falls back to core SVGRenderer since the heatmap module
+          isn't loaded, rather than forcing an unavailable series type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Direct chart.renderer.rect/text usage for a custom overlay is a genuinely
+          distinctive Highcharts technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

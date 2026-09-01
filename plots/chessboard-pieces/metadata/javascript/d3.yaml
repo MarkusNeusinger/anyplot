@@ -1,0 +1,246 @@
+library: d3
+language: javascript
+specification_id: chessboard-pieces
+created: '2026-09-01T23:17:06Z'
+updated: '2026-09-01T23:36:03Z'
+generated_by: claude-sonnet
+workflow_run: 33569849539
+issue: 3350
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Renders a historically accurate Scholar's Mate final position (verified piece-by-piece
+    against the real game) instead of an arbitrary/abstract arrangement
+  - 'Theme-inversion bug from attempt 1 is correctly fixed: explicit per-theme board
+    tones now guarantee the light square is always the higher-luminance one in both
+    light and dark renders, matching the spec''s ''light square at h1'' chess convention'
+  - Piece glyphs use a fill+stroke pairing (light fill/dark stroke for white, dark
+    fill/light stroke for black) so identity reads clearly regardless of underlying
+    square color or theme
+  - Dynamic title fontsize formula keeps the long mandated title comfortably within
+    the canvas in both themes
+  - Contextual subtitle (opening moves) adds data storytelling beyond a bare diagram
+  - 'Clean idiomatic D3 usage: d3.scaleBand for grid placement, single data-join builds
+    all 64 squares, second join places pieces'
+  - KISS code structure with zero external dependencies beyond the d3 global; fully
+    deterministic, hardcoded position
+  weaknesses:
+  - Library Mastery is still fairly generic for D3 beyond the new scaleBand usage
+    — no axes, shape generators, or other distinctive modules
+  - The board is a plain two-tone checkerboard with no visual emphasis on the checkmating
+    square/piece (f7), leaving some data-storytelling upside on the table
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent) canvas surrounding a centered 8x8 board.
+      Chrome: Bold dark title "Scholar's Mate, Move 4 · chessboard-pieces · javascript · d3 · anyplot.ai" and a lighter dark-gray subtitle "White delivers checkmate: 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#" both sit clearly above the board, fully readable against the cream background. File letters (a-h) below the board and rank numbers (1-8) to its left are legible mid-gray text.
+      Data: Board squares alternate between a near-white tone (elevatedBg, "light" squares) and a light warm gray (~#C9C7C1, "dark" squares) — h1 (bottom-right) correctly reads as the lighter of the two, matching standard chess convention. White pieces render as cream-filled glyphs with a thin dark outline, black pieces as dark-filled glyphs with a thin cream outline — both read clearly against either square shade. Position matches the real Scholar's Mate checkmate (Ke1, Ra1/Rh1, Bc1, Bc4, Nb1/Ng1, Qf7 for white; Ke8, Qd8, Ra8/Rh8, Bc8/Bf8, Nc6/Nf6, pawns for black).
+      Legibility verdict: PASS — all text and pieces clearly readable, no overlap, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent) canvas.
+      Chrome: Title and subtitle render in light cream / soft light-gray text, fully readable against the near-black background — no dark-on-dark failures. File/rank labels remain legible light-gray text.
+      Data: Board squares now alternate between a medium warm-gray tone (~#403F38, "light" squares) and a very dark charcoal tone (~elevatedBg/#242420, "dark" squares) — h1 (bottom-right) is still the visually lighter of the two here, so the light/dark square identity no longer inverts between themes (this was the exact defect flagged in attempt 1, now confirmed fixed). Piece colors keep the same fill/stroke structure as the light render (by piece color, not by theme): black pieces read as hollow cream-outlined silhouettes, white pieces as solid cream shapes — both clearly distinguishable from the dark board and from each other.
+      Legibility verdict: PASS — no readability failure, and the previously-flagged square-shade inversion is fixed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (dynamic title formula, 18px subtitle, 20px
+          file/rank labels, cell*0.72 pieces); fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, subtitle, labels, board, or pieces
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Pieces sized at cell*0.72 with outline strokes for contrast; sparse
+          data (32 pieces) sized prominently
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fill+stroke outline pairing on every piece gives strong contrast
+          independent of hue; no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400); board fills the large majority of
+          the canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: File/rank labels are correct chess notation; title/subtitle descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed: explicit per-theme board tones keep the light square the
+          higher-luminance one in both themes; backgrounds and chrome are theme-correct
+          in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful fill+stroke piece styling by piece color goes above library
+          defaults, but the board is a plain two-tone checkerboard with no additional
+          flourish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Generous whitespace, subtle single-stroke board frame, clean composition;
+          theme-inversion bug fixed and board tones are now purpose-built per theme
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Contextual subtitle narrates the opening moves; would score higher
+          with a visual callout on the mating square/piece
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chessboard-with-pieces diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Dict-mapped pieces, Unicode glyphs, white-at-bottom orientation,
+          centered pieces, and light-square-at-h1 convention all correctly visualized
+          in both themes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Square-to-(col,row) mapping verified correct for every piece in the
+          position
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; no legend needed for a single board
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All six piece types in both colors are represented on the board
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, well-known chess game (Scholar's Mate) — ideal educational
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Every piece placement matches the true Scholar's Mate final position
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-to-bottom script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded position, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, nothing unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately concise, no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current D3 v7 join API, animation-free
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses d3.scaleBand for grid layout alongside the idiomatic selection.data().join()
+          pattern for both squares and pieces
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Repurposing scaleBand for an 8x8 grid is a reasonable trick, but
+          doesn't otherwise reach for other D3-unique modules (axes, shape generators,
+          hierarchy)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting
