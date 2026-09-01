@@ -1,8 +1,7 @@
 // anyplot.ai
 // boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-01
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-09-01
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
