@@ -71,11 +71,59 @@ const REGIONS = [
   },
 ];
 
+// --- Basemap: simplified world continent outlines (rough, low-vertex hand
+// trace -- geographic context only, not a precise survey boundary) ----------
+const NORTH_AMERICA = [
+  [-165, 68], [-150, 60], [-130, 55], [-125, 48], [-124, 40], [-118, 34],
+  [-108, 23], [-97, 16], [-90, 14], [-84, 9], [-77, 8], [-82, 22], [-80, 31],
+  [-75, 35], [-71, 41], [-66, 45], [-60, 48], [-55, 52], [-65, 58], [-80, 62],
+  [-95, 68], [-110, 72], [-130, 71], [-150, 71], [-165, 68],
+];
+const SOUTH_AMERICA = [
+  [-77, 8], [-79, 1], [-81, -5], [-81, -15], [-75, -20], [-71, -30],
+  [-71, -40], [-73, -50], [-68, -55], [-65, -52], [-62, -42], [-58, -34],
+  [-48, -25], [-40, -12], [-50, 0], [-60, 5], [-65, 8], [-77, 8],
+];
+const AFRICA = [
+  [-17, 15], [-16, 21], [-10, 30], [0, 37], [10, 37], [20, 32], [32, 31],
+  [35, 27], [43, 13], [51, 12], [45, 0], [40, -12], [35, -20], [33, -27],
+  [27, -33], [18, -34], [14, -23], [12, -6], [9, 4], [-5, 5], [-11, 7],
+  [-17, 15],
+];
+const EURASIA = [
+  [-9, 37], [-9, 44], [-5, 48], [3, 51], [10, 60], [25, 70], [40, 68],
+  [60, 72], [90, 75], [130, 75], [170, 66], [160, 55], [140, 45], [130, 35],
+  [122, 30], [108, 10], [100, 5], [95, 15], [88, 22], [80, 10], [77, 8],
+  [70, 20], [65, 25], [55, 27], [50, 15], [35, 15], [35, 32], [28, 36],
+  [23, 37], [12, 38], [-5, 36], [-9, 37],
+];
+const AUSTRALIA = [
+  [113, -22], [114, -30], [121, -34], [130, -32], [137, -35], [141, -38],
+  [147, -38], [150, -37], [153, -28], [145, -17], [142, -11], [136, -12],
+  [130, -12], [124, -15], [113, -22],
+];
+const CONTINENTS = [NORTH_AMERICA, SOUTH_AMERICA, AFRICA, EURASIA, AUSTRALIA];
+
+// Fills+outlines one continent polygon; coordinates are projected through the
+// chart's own lon/lat value axes via api.coord (same cartesian2d technique
+// used for the coastline/ocean layer in hexbin-map-geographic).
+function makeLandRenderer(coords) {
+  return function renderLand(params, api) {
+    const points = coords.map(([lon, lat]) => api.coord([lon, lat]));
+    return {
+      type: "polygon",
+      shape: { points },
+      style: { fill: t.grid, stroke: t.inkSoft, lineWidth: 1, opacity: 0.55 },
+      silent: true,
+    };
+  };
+}
+
 const ALL_POPS = REGIONS.flatMap((r) => r.cities.map((c) => c.pop));
 const POP_MIN = Math.min(...ALL_POPS);
 const POP_MAX = Math.max(...ALL_POPS);
-const SIZE_MIN = 16;
-const SIZE_MAX = 90;
+const SIZE_MIN = 24;
+const SIZE_MAX = 78;
 
 // Bubble diameter scales with sqrt(value) so bubble AREA — not radius — is
 // proportional to population, per anyplot's bubble-map perception rule.
@@ -165,7 +213,7 @@ chart.setOption({
     name: "Latitude",
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
     min: -60,
-    max: 85,
+    max: 80,
     interval: 30,
     axisLabel: {
       color: t.inkSoft,
@@ -177,23 +225,36 @@ chart.setOption({
     splitLine: { lineStyle: { color: t.grid } },
   },
   graphic: legendGraphics,
-  series: REGIONS.map((region, i) => ({
-    name: region.name,
-    type: "scatter",
-    data: region.cities.map((c) => ({ name: c.name, value: [c.lon, c.lat, c.pop] })),
-    symbolSize: (val) => bubbleSize(val[2]),
-    itemStyle: { color: region.color, opacity: 0.62 },
-    emphasis: { itemStyle: { opacity: 0.9 } },
-    ...(i === 0
-      ? {
-          markLine: {
-            silent: true,
-            symbol: "none",
-            lineStyle: { color: t.ink, opacity: 0.2, type: "dashed", width: 1 },
-            label: { show: false },
-            data: [{ xAxis: 0 }, { yAxis: 0 }],
-          },
-        }
-      : {}),
-  })),
+  series: [
+    ...CONTINENTS.map((coords, i) => ({
+      name: `Basemap ${i}`,
+      type: "custom",
+      coordinateSystem: "cartesian2d",
+      renderItem: makeLandRenderer(coords),
+      data: [[0, 0]],
+      silent: true,
+      tooltip: { show: false },
+      z: 0,
+    })),
+    ...REGIONS.map((region, i) => ({
+      name: region.name,
+      type: "scatter",
+      data: region.cities.map((c) => ({ name: c.name, value: [c.lon, c.lat, c.pop] })),
+      symbolSize: (val) => bubbleSize(val[2]),
+      itemStyle: { color: region.color, opacity: 0.58, borderColor: t.pageBg, borderWidth: 1 },
+      emphasis: { itemStyle: { opacity: 0.9 } },
+      z: 2,
+      ...(i === 0
+        ? {
+            markLine: {
+              silent: true,
+              symbol: "none",
+              lineStyle: { color: t.ink, opacity: 0.2, type: "dashed", width: 1 },
+              label: { show: false },
+              data: [{ xAxis: 0 }, { yAxis: 0 }],
+            },
+          }
+        : {}),
+    })),
+  ],
 });
