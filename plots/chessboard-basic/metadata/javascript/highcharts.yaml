@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: chessboard-basic
 created: '2026-09-01T23:22:34Z'
-updated: '2026-09-01T23:27:16Z'
+updated: '2026-09-01T23:37:09Z'
 generated_by: claude-sonnet
 workflow_run: 33570161470
 issue: 3340
@@ -12,46 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
+  - 'Correctly resolved the attempt-1 rejection: dark squares now use the ochre semantic-exception
+    color (palette[3], #BD8233 ''wood'') instead of the ordinal-first brand green,
+    matching the spec''s explicit ''classic light/dark contrast (e.g., cream/brown)''
+    requirement and the style guide''s documented wood→ochre exception'
   - 'Distinctive Highcharts technique: chart.events.load computes exact cell size
-    from plotSizeX/plotSizeY and updates marker.radius before redraw, so the square
-    markers tile edge-to-edge with no gaps or overlap regardless of container size'
-  - 'Correct chess geometry: dark squares placed so light squares fall on the h1 and
-    a8 corners, matching standard chess board orientation, with all 32 dark squares
-    present and labeled with correct algebraic notation'
+    from plotSizeX/plotSizeY and updates marker.radius before redraw, so square markers
+    tile edge-to-edge with no gaps or overlap regardless of container size'
+  - 'Correct chess geometry: light squares fall on h1 and a8 per standard board orientation,
+    all 32 dark squares present and labeled with correct algebraic notation'
   - Clean, minimal chrome (no axis lines, ticks, or gridlines) with generous whitespace;
-    both light and dark renders pass the theme-readability checklist — identical brand-green
-    data color in both themes, chrome correctly flips, no dark-on-dark or light-on-light
-    text
-  - Code is simple, deterministic, free of fake interactivity, and uses only the mandated
-    Imprint palette entry (no custom hexes, no default Highcharts palette)
+    both renders pass the theme-readability checklist — identical data color in both
+    themes, chrome correctly flips, no dark-on-dark or light-on-light text
+  - Code is simple, deterministic, free of fake interactivity, and uses only mandated
+    Imprint palette entries (no custom hexes, no default Highcharts palette)
   weaknesses:
-  - 'Color scheme diverges from the spec''s explicit request for ''classic light/dark
-    contrast (e.g., cream/brown or white/gray)''. Dark squares render as brand green
-    (#009E73) against the plain page background, which reads as an abstract polka-dot/checker
-    grid rather than an authentic chess board. Consider the style guide''s Semantic
-    Exception mechanism (prompts/default-style-guide.md, ''Semantic exception'' section)
-    to reassign a warmer Imprint member (e.g. ochre #BD8233, which the guide already
-    maps to ''wood'') to the dark squares instead of the ordinal-first green, while
-    keeping light squares on the neutral page background — this stays within the no-custom-hex
-    rule but reads as a real chess board.'
-  - 'DE-03 (Data Storytelling): a static alternating grid has no visual hierarchy
-    or focal point beyond the pattern itself — acceptable for this plot type but not
-    evidence for raising above the low default.'
+  - 'Duplicate/stale header block: lines 1-10 contain two conflicting comment headers
+    — a stale ''highcharts 12.6.0 | JavaScript 22.23.2'' / ''Quality: 85/100'' block
+    (leftover from attempt 1) immediately followed by the current ''Highcharts 12.6.0
+    | Node 22'' / ''Quality: pending'' block, with the ''//# anyplot-orientation:
+    square'' directive sandwiched between them. Remove the stale first block so the
+    shipped file carries one consistent header.'
+  - DE-03 (Data Storytelling) remains at the low default — a static alternating grid
+    is expected and acceptable for this plot type, but there is no additional visual
+    hierarchy or focal point beyond the checker pattern itself.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "chessboard-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible at the top. File labels (a-h) at the bottom and rank labels (1-8) on the left in a softer dark-gray ink, all fully visible with no clipping or overlap. No axis lines, ticks, or gridlines are drawn (intentional minimal chrome).
-      Data: An 8x8 checkerboard of square markers — 32 filled squares in brand green (#009E73, Imprint palette position 1) representing the dark squares, alternating with the plain cream page background representing the light squares. Squares tile edge-to-edge with no visible gaps or overlaps. Light squares correctly fall on h1 and a8 per standard chess board orientation.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "chessboard-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly legible at the top and comfortably within plot width. File labels (a-h) at the bottom and rank labels (1-8) on the left in a softer dark-gray ink, all fully visible with no clipping or overlap. No axis lines, ticks, or gridlines are drawn (intentional minimal chrome).
+      Data: An 8x8 checkerboard of square markers -- 32 filled squares in ochre/wood-brown (#BD8233, Imprint palette position 4, semantic exception for "wood") representing the dark squares, alternating with the plain cream page background representing the light squares. This reads as an authentic wooden chess board rather than an abstract polka-dot grid. Squares are evenly spaced with no visible overlap. Light squares correctly fall on h1 and a8 per standard chess board orientation.
+      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
       Chrome: Same title, now in light ink, clearly legible against the dark background. File/rank labels rendered in a softer light-gray tone, fully visible, no clipping or overlap.
-      Data: Same 8x8 checkerboard pattern with the identical brand-green (#009E73) squares for the dark squares — confirmed pixel-identical hue to the light render. Light squares are the near-black page background instead of cream, since only chrome color tokens flip and the light-square color is the page background token, not a Imprint palette value.
-      Legibility verdict: PASS — all title/axis text is clearly readable against the dark background; no dark-on-dark failures observed. Brand green remains clearly visible against the near-black surface.
+      Data: Same 8x8 checkerboard pattern with the identical ochre (#BD8233) squares for the dark squares -- confirmed pixel-identical hue to the light render, satisfying the "data colors identical between light/dark" rule. Light squares are the near-black page background instead of cream, since only chrome color tokens flip and the light-square color is the page background token, not an Imprint palette value.
+      Legibility verdict: PASS -- all title/axis text is clearly readable against the dark background; no dark-on-dark failures observed. Ochre squares remain clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,8 +61,7 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes and at 400px thumbnail
-          scale
+        comment: Explicit font sizes, readable in both themes and at thumbnail scale
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -102,20 +100,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, backgrounds match Imprint tokens, both
-          renders theme-correct'
+        comment: Dark squares correctly use the documented wood→ochre semantic exception
+          (palette[3]); backgrounds match Imprint tokens; both renders theme-correct
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Clean minimal presentation with a genuinely clever dynamic tiling
-          technique, but the green/cream color choice undercuts the 'chess board'
-          visual metaphor the spec asks for
+        comment: The ochre/cream color fix now reads as an authentic wooden chess
+          board; combined with the clever dynamic tiling technique this is a clear
+          improvement over attempt 1
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -129,9 +127,9 @@ review:
         max: 6
         passed: false
         comment: Static pattern with no additional visual hierarchy or focal point
-          beyond the grid itself
+          beyond the grid itself; acceptable default for this plot type
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,13 +141,12 @@ review:
           module is loaded in the core bundle
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 8x8 grid, algebraic labels, and correct h1/a8 light-square placement
-          are all present, but the spec's explicit 'classic light/dark contrast (cream/brown
-          or white/gray)' color requirement is not honored — squares render brand-green
-          vs page background instead
+        passed: true
+        comment: 8x8 grid, algebraic labels, correct h1/a8 light-square placement,
+          and now the spec's 'classic light/dark contrast (e.g., cream/brown)' color
+          requirement is honored via the ochre/cream pairing
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -213,8 +210,9 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; the load-event resize is a real, purposeful
-          technique
+        comment: 'No fake functionality; the load-event resize is a real, purposeful
+          technique. Note: header comment block has a duplicate/stale section (see
+          weaknesses) that should be cleaned up'
       - id: CQ-05
         name: Output & API
         score: 1
@@ -239,14 +237,12 @@ review:
         passed: true
         comment: Dynamic marker-radius computation from plotSizeX/plotSizeY is a distinctive,
           non-obvious Highcharts technique
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
