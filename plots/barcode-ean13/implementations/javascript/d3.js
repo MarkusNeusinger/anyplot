@@ -1,7 +1,7 @@
 // anyplot.ai
 // barcode-ean13: EAN-13 Barcode
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-01
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 76/100 | Created: 2026-09-01
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
