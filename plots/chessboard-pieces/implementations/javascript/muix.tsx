@@ -1,3 +1,7 @@
+// anyplot.ai
+// chessboard-pieces: Chess Board with Pieces for Position Diagrams
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 94/100 | Created: 2026-09-01
 //# anyplot-orientation: square
 // anyplot.ai
 // chessboard-pieces: Chess Board with Pieces for Position Diagrams
