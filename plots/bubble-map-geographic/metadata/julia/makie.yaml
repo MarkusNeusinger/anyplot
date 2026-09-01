@@ -1,0 +1,243 @@
+library: makie
+language: julia
+specification_id: bubble-map-geographic
+created: '2026-09-01T18:44:09Z'
+updated: '2026-09-01T19:18:09Z'
+generated_by: claude-sonnet
+workflow_run: 33544106604
+issue: 3625
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Africa, Europe, and Asia basemap coastlines were substantially refined since Attempt
+    1 — the India peninsula, Horn of Africa, Cape, Gulf of Guinea bulge, and Scandinavia/Iberia
+    are all now correctly shaped and positioned
+  - Axis labels now carry proper degree-symbol units (Longitude (°) / Latitude (°))
+  - Removed the unused Random import/seed that had no effect on the fully hardcoded
+    data
+  - Correct area-proportional bubble sizing via sqrt(population) so visual area (not
+    radius) tracks the data value, exactly as the spec requires
+  - Dual legend (region color key + population size key) built with GridLayout and
+    MarkerElement, cleanly separated in its own column, frameless, with no edge clipping
+  - Imprint palette applied in canonical order across 6 world regions, identical data
+    colors between light and dark renders, theme-correct chrome in both
+  - Real, plausible major-city population data across all 6 populated continents with
+    accurate lat/lon coordinates and realistic metro population figures
+  weaknesses:
+  - North America's basemap polygon is still geographically distorted (elongated,
+    moose-antler-like shape rather than a recognizable continent outline) — refine
+    its coordinate list the same way Africa/Europe/Asia were refined this round
+  - South America's polygon is a coarse simplification too, though less visually jarring
+    than North America's
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "World's Largest Cities by Population · bubble-map-geographic · julia · makie · anyplot.ai" is dark and fully visible, not clipped. "Longitude (°)" and "Latitude (°)" axis labels (with degree-symbol units) and tick labels render in dark/soft-dark ink, clearly readable. Region and size legends are frameless, positioned in a right-hand column with no edge clipping.
+      Data: Bubbles colored by continent — Asia #009E73 (brand green), Africa lavender, Europe blue, North America ochre, South America matte red, Oceania cyan — sized by sqrt(population) so area tracks the data value. Alpha ~0.65 with light strokes for definition in dense clusters. Basemap now shows a recognizable India peninsula, Horn of Africa, Cape, Gulf of Guinea bulge, and Scandinavia/Iberia coastlines (refined this attempt); North America's outline remains a coarse, distorted shape.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels flip to light/off-white ink, fully legible — no dark-on-dark failures. Basemap fill and graticule flip to a higher-contrast gray-on-black scheme. Legend text (region names, size values 2M/15M/35M) is light-colored and legible.
+      Data: Bubble colors are pixel-identical to the light render across all 6 regions — only chrome (background, basemap fill, text, gridlines, legend box) flips, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, title fontsize scaled for length,
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; bubble overlap in dense clusters is spec-sanctioned
+          and handled via alpha/stroke
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: sqrt-scaled area-proportional sizing keeps even small values visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Alpha + theme-matched stroke keeps overlapping same-hue bubbles distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good canvas utilization, balanced legend column, no clipped elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°) / Latitude (°) now carry units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Africa/Europe/Asia coastlines markedly improved; North/South America
+          polygons remain simplified
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, frameless legends, subtle graticule; blocky North
+          America outline is the main detractor
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color-by-region plus size encoding gives visual hierarchy of population
+          magnitude by geography
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct geographic bubble map with size-encoded markers
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Size legend, alpha transparency, basemap, minimum bubble size, area-proportional
+          scaling all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude/latitude correctly mapped to x/y, all data visible within
+          axis limits
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; legend labels match
+          region categories
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All spec data fields represented with real variation across 6 continents
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real, neutral scenario: major world cities by metro population'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Population figures and coordinates realistic; Africa/Europe/Asia
+          coastlines now sound, North America still distorted
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded city data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused Random import/seed removed; only CairoMakie and Colors remain,
+          both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via px_per_unit=2, current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of Figure/Axis/scatter!/poly!/Legend/GridLayout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: GridLayout-based side-by-side legends and custom MarkerElement size
+          key are Makie-distinctive touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
