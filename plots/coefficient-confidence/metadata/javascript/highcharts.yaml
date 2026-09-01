@@ -1,0 +1,248 @@
+library: highcharts
+language: javascript
+specification_id: coefficient-confidence
+created: '2026-09-01T23:24:46Z'
+updated: '2026-09-01T23:30:42Z'
+generated_by: claude-sonnet
+workflow_run: 33570325854
+issue: 3576
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Dual-encodes statistical significance via both marker shape (square vs. triangle)
+    and color (muted ink vs. Imprint green) — strong CVD accessibility, never relying
+    on color alone (VQ-04).
+  - Correctly works around the missing highcharts-more/errorbar module by drawing
+    whiskers as null-separated line segments instead of reaching for a forbidden add-on
+    module, with a comment explaining why — respects the library's hard constraints
+    while still delivering full CI whiskers.
+  - Coefficients ordered by |coefficient| ascending (weakest at bottom, strongest
+    at top) matching the spec's magnitude-ordering guidance, with a dashed zero-reference
+    line clearly marking the null-hypothesis threshold.
+  - 'Both renders are theme-correct: first series is #009E73, and ink/inkSoft/grid/pageBg
+    tokens are threaded through title, axes, gridlines, and legend identically in
+    light and dark.'
+  - Realistic, neutral housing-price regression context with sensible coefficient
+    magnitudes and directionally plausible effects (e.g., distance to city center
+    negative, school rating positive).
+  weaknesses:
+  - The CI-whisker/marker split across two legend-less line series plus two scatter
+    series is a functional but not the most idiomatic Highcharts composition — acceptable
+    given the highcharts-more constraint, but it's a workaround rather than a first-class
+    errorbar API.
+  - Design stays close to clean-and-readable rather than pushing into more distinguished
+    art direction — e.g. no subtitle giving regression context (sample size, model
+    type), no alternating row shading to help track long variable-name rows across
+    the wide x-axis range.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "coefficient-confidence · javascript · highcharts · anyplot.ai" in bold dark ink at top-center, fully visible, not clipped. X-axis title "Coefficient Estimate ($1,000s per unit)" below the axis, dark-ink tick labels from -6 to 11, and nine y-axis category labels (variable names) in dark ink, all clearly legible. Subtle vertical gridlines at each x tick. A dashed vertical reference line at x=0 marks the null-hypothesis threshold. Legend at the bottom shows a gray square swatch ("Not significant (95% CI includes 0)") and a green triangle swatch ("Significant (95% CI excludes 0)").
+      Data: Nine horizontal whiskers (CI lines) each terminating in a marker at the point estimate — green triangles for the six significant coefficients whose CI excludes zero (Square Footage, Renovation Year, School Rating, Distance to City Center, Number of Bedrooms, Lot Size), and muted-gray squares for the three not-significant coefficients whose CI includes zero (Crime Rate Index, Garage Spaces, Age of Property). The significant series correctly uses the Imprint brand green #009E73.
+      Legibility verdict: PASS — all text clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, tick labels, and category labels now rendered in light ink, all clearly visible against the dark background. Gridlines and the dashed zero-reference line render in a lighter, still-subtle tone appropriate for dark mode. Legend swatches and labels are legible in light text.
+      Data: Whisker lines and markers use identical colors to the light render — green (#009E73) for significant coefficients, and a lighter muted gray for not-significant ones (correctly swapped from the darker muted tone used in light mode, per the theme-adaptive inkMuted token) — confirming data colors are consistent in hue while only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, and legend text is clearly readable against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all text readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, markers, or legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 9-point sparse data with radius-8 markers and lineWidth-3 whiskers;
+          clearly visible, could be marginally more prominent.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Significance encoded by shape AND color, not color alone; strong
+          CVD safety.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; no cutoff or overflow; good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x-axis title with units ($1,000s per unit).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; both renders theme-correct backgrounds
+          and chrome.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional dual color/shape encoding, restrained palette, clear
+          hierarchy.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axis box, subtle single-direction gridlines, generous whitespace;
+          y-axis chrome minimized.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color/shape split plus zero-reference line immediately guides the
+          viewer to which coefficients are statistically significant.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct coefficient/forest plot with horizontal CI whiskers.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero reference line, magnitude ordering, significance encoding, horizontal
+          layout, and units-labeled axis all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Coefficients on y-axis, values on x-axis; all 9 rows shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels are descriptive
+          and accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Uses variable, coefficient, ci_lower, ci_upper, and a derived significant
+          flag.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral housing-price regression predictors with sensible
+          directional effects.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficient magnitudes (-4.2 to 8.9, $1,000s per unit) are domain-sensible.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data array.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the Highcharts global is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; the null-segment whisker workaround is documented and
+          appropriately scoped.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; animation disabled on chart and series;
+          no explicit width/height.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct core-bundle-only approach given highcharts-more is unavailable;
+          composition is a workaround rather than a first-class API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative null-separated line-segment technique to fake errorbar whiskers
+          without add-on modules.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - error-bars
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - publication-ready
