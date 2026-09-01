@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: boxen-basic
 created: '2026-09-01T18:42:43Z'
-updated: '2026-09-01T18:49:21Z'
+updated: '2026-09-01T19:12:14Z'
 generated_by: claude-sonnet
 workflow_run: 33543999694
 issue: 3414
@@ -12,50 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - Correctly implements the letter-value/boxen algorithm from scratch (poly! rects)
-    since Makie has no native boxenplot! — respects the library's no-workaround rule
-    instead of faking it with boxplot!
-  - Depth-scaled shading via weighted_color_mean (full brand color at the fourths,
-    fading toward the page background at the deepest level) gives a genuine, readable
-    visual encoding of quantile depth
-  - Outliers beyond the deepest letter value are drawn as small, semi-transparent
-    jittered points, exactly as the spec requires, and stay visually subordinate to
-    the boxes
-  - Both renders are pixel-correct 3200x1800, theme chrome (background/ink/grid/spines)
-    flips correctly while all four categorical data colors stay identical between
-    light and dark
-  - Median line, tapering box widths, and the descriptive caption together build a
-    clear visual hierarchy that tells the distribution-shape story at a glance
+  - Implements the real Tukey letter-value math (letter_value_depth, letter_values
+    via quantile()) rather than approximating a boxen plot with a stock boxplot primitive
+  - Sample sizes are varied per endpoint (1.5k-25k), which genuinely drives different
+    letter-value depths (4-8 levels) across categories, visually demonstrating the
+    depth-scales-with-n property the spec calls for
+  - 'Correct Imprint palette usage: brand green as the first series, canonical multi-series
+    order, theme-correct FAF8F1/1A1A17 backgrounds identical data colors across both
+    renders'
+  - 'Clean chrome: top/right spines removed, single subtle horizontal grid, median
+    line drawn across the fourths box, well-jittered low-alpha outlier scatter beyond
+    the deepest letter value'
+  - Caption below the plot explains the letter-value technique in plain language for
+    viewers unfamiliar with the method
   weaknesses:
-  - Spec explicitly asks for 'a legend explaining quantile levels' — the implementation
-    only has a text caption below the plot, with no visual key mapping shade depth
-    to letter-value level (e.g. a small swatch strip from darkest=fourths to lightest=deepest
-    with level labels). Add a compact legend/colorbar-style key.
-  - letter_value_depth(n) collapses to k=8 for every category here (n ranges 3000-6000,
-    all clamp to the 4-8 ceiling) — the 'depth scales with sample size' claim in the
-    code comment isn't actually visible in this dataset; consider widening the sample-size
-    range or the depth formula so the scaling is demonstrable, or adjust the comment.
-  - Two small helper functions (letter_value_depth, letter_values) are defined for
-    what's otherwise a flat script — justified by the quantile math, but keep an eye
-    on KISS as the pattern grows.
+  - The 'Quantile Depth' legend always samples the green ramp (weighted_color_mean
+    against IMPRINT_PALETTE[1], the API Gateway color) regardless of which series
+    it is meant to explain, so for Auth Service (purple), Payment Service (blue),
+    and Search Service (ochre) the legend swatches don't match the hue those boxes
+    actually shade toward. A viewer can't map a legend swatch directly onto three
+    of the four series without inferring the shade-not-hue convention themselves.
+    Either build a small per-series depth key or add an explicit caption clause stating
+    the ramp is shown in a reference hue and depth is conveyed by shade only.
+  - In the densest categories (Auth Service, Payment Service at 8k-12k points), the
+    outlier scatter at markersize=5/alpha=0.35 reads as a blurred vertical streak
+    rather than discrete points — slightly more horizontal jitter spread or a lower
+    alpha would separate them further.
+  - letter_value_depth and letter_values are standalone helper functions, which pushes
+    past the strict KISS/no-functions convention; justified here by the nontrivial
+    Tukey letter-value math Makie doesn't provide natively, but worth a passing note.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "boxen-basic · julia · makie · anyplot.ai" in bold dark ink, clearly legible. X-axis label "Endpoint" and Y-axis label "Response Time (ms)" in dark ink, fully readable. Tick labels (endpoint names, Y-axis numbers) in a softer gray-ink tone, legible against the light background. Subtle horizontal gridlines only (no vertical grid), top/right spines removed, left/bottom spines a soft gray. Caption below the axis is small but readable dark-gray text.
-      Data: Four nested "boxen" silhouettes (API Gateway, Auth Service, Payment Service, Search Service), each tapering from a wide central box (fourths) down through progressively narrower, lighter-shaded bands to the deepest letter value, then thin jittered outlier dots beyond. First series (API Gateway) is Imprint brand green #009E73; the other three use lavender, blue, and ochre — consistent with the Imprint categorical palette. A black median line crosses the widest box of each category.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "boxen-basic · julia · makie · anyplot.ai" in bold dark ink at top center; axis titles "Endpoint" (x) and "Response Time (ms)" (y) in dark ink; tick labels in a softer grey-ink; single horizontal grid at alpha ~0.15; top/right spines removed, left/bottom spines in soft ink. Legend "Quantile Depth" at right lists Fourths through 512ths with green swatches darkening toward the deepest level. Caption sentence below the plot in soft ink.
+      Data: Four endpoints (API Gateway, Auth Service, Payment Service, Search Service) each rendered as tapering nested boxen (widest = fourths, narrowest = deepest letter value), first series (API Gateway) is anyplot brand green #009E73, followed by lavender/purple, blue, and ochre in canonical Imprint order. A black median line crosses each fourths box. Faint jittered outlier dots extend above/below the deepest box, tinted to match each series color at low alpha.
+      Legibility verdict: PASS — all title, axis, tick, and legend text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title and axis labels flip to a light off-white ink, tick labels flip to a softer light-gray tone — both clearly legible against the dark background. Gridlines remain subtle. Spines are a muted light-gray. Caption text is light-gray and readable.
-      Data: Same four categories in the identical four hues (green, lavender, blue, ochre) as the light render — confirmed unchanged data colors, only chrome flipped. The median line switches to a light/white line so it still reads against the darker box fills.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, and tick label is clearly visible against the near-black background.
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same layout as the light render with all ink flipped to light tones — title and axis labels in near-white, tick labels in a lighter soft-grey, grid line still faint but visible against the dark surface, spines in the same soft tone. Legend and caption text both rendered in light ink, fully legible.
+      Data: Identical box positions, tapering, and outlier scatter as the light render. Series colors are pixel-identical to the light render (green, lavender, blue, ochre) — only the chrome (background/ink/grid) flipped, confirming correct theme-adaptive implementation. Median line switches to a light stroke so it still reads against the now-colored boxes.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis labels, ticks, legend, caption) is clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,74 +66,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, axis labels, ticks, and caption all legible in both themes;
-          caption is on the smaller side
+        comment: All text readable in both themes with explicit font sizes; legend
+          text is on the small side at 12pt but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, boxes, or outlier points in either render
+        comment: No collisions between text, legend, caption, or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Outlier markers appropriately small (size 5) and alpha-blended (0.35)
-          for dense underlying data; boxes clearly visible
+        comment: Outlier markers adapted with low alpha for density, but densest categories
+          still read as a blurred streak
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast in both themes; not reliant on red-green as sole signal
+        comment: Four distinguishable hues, not red-green reliant, good contrast on
+          both backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Confirmed 3200x1800 exactly; no clipping; proportions balanced
+        comment: Title well within width bounds, balanced axis labels, nothing overflowing
+          or clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Response Time (ms)); title matches
-          canonical format
+        comment: Descriptive axis labels with units (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, other series follow Imprint order, backgrounds
-          match theme tokens exactly, data colors identical across themes'
+        comment: 'First series is #009E73, canonical multi-series order, correct theme-adaptive
+          backgrounds, identical data colors across renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Depth-shaded gradient via weighted_color_mean and median line show
-          real design intent, above generic defaults
+        comment: Genuine custom letter-value math with gradient shading, but the legend's
+          single-hue ramp undercuts the polish slightly
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, single-axis subtle grid, page-background stroke separating
-          nested boxes cleanly
+        comment: Spines removed, grid subtle single-axis, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Tapering silhouette plus caption guides the viewer to the distribution-shape
-          story; no strong single focal emphasis beyond that
+        comment: Clear per-endpoint hierarchy and explanatory caption, but legend
+          hue mismatch with 3 of 4 series muddies the depth story
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,48 +144,47 @@ review:
         comment: Correct letter-value/boxen plot
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nested tapering boxes, shading, outliers, axis labels all present;
-          formal legend explaining quantile levels is missing (caption text only)
+        comment: Nested tapering boxes, shading by depth, outliers as points, legend
+          and axis labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=endpoint category, Y=response time, all data represented
+        comment: X = endpoint category, Y = response time, all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches '{spec-id} · {language} · {library} · anyplot.ai';
-          no series legend needed since categories self-identify via x-axis
+        comment: Title matches mandated format exactly; legend labels match letter-value
+          depth names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers nested boxes, tapering width, shading, outliers; missing the
-          explicit legend sub-feature from the spec notes
+        comment: Shows nesting, tapering, shading, and outliers together
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response-time latency by endpoint is plausible and neutral
+        comment: Plausible, neutral server-latency scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log-normal right-skewed latencies (tens to ~900ms) are realistic
-          for this domain
+        comment: 1.5k-25k points per category within spec's 1000-100000+ range, sensible
+          ms values
     code_quality:
       score: 9
       max: 10
@@ -192,14 +194,14 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions defined for the quantile math — justified
-          by the algorithm but deviates from the strict no-functions default
+        comment: Two small helper functions for the Tukey letter-value math, justified
+          but non-trivial
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -211,13 +213,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, appropriate complexity for the algorithm
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current Makie API
     library_mastery:
       score: 7
       max: 10
@@ -227,20 +229,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic poly!/Rect2f construction, GridLayout Label row with rowsize!
-          Auto sizing for the caption
+        comment: Idiomatic Figure/Axis/poly!/lines!/scatter!/Legend composition since
+          Makie has no native boxen primitive
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Builds a letter-value plot from primitives (no native boxenplot!
-          in Makie) using Colors.jl weighted_color_mean for depth shading — a genuinely
-          library-specific solution
+        comment: Custom Legend with PolyElement, RGBAf alpha grid, Colors.jl weighted_color_mean
+          shading ramp
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
+  - manual-ticks
   - layer-composition
   patterns:
   - data-generation

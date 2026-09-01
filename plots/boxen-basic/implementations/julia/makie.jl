@@ -1,7 +1,7 @@
 # anyplot.ai
 # boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-09-01
+# Quality: 89/100 | Created: 2026-09-01
 
 using CairoMakie
 using Colors
