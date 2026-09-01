@@ -8,11 +8,13 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Synthetic elevation model of a coastal mountain range (Cascade-like terrain):
-// a wavy coastline, an inland rise, and three peaks. Grid: 46 x 46 points over
-// a 4.2° x 4.2° lon/lat box.
+// a wavy coastline, an inland rise, and three peaks. Grid: 70 x 70 points over
+// a 4.2° x 4.2° lon/lat box (fine enough that marching-squares isolines read
+// as smooth curves rather than faceted polygons).
 const LON_MIN = -124.6, LON_MAX = -120.4;
 const LAT_MIN = 43.6, LAT_MAX = 47.8;
-const NX = 46, NY = 46;
+const NX = 70, NY = 70;
+const TICK_INTERVAL = Math.max(1, Math.floor(NX / 7));
 
 const lonVals = Array.from({ length: NX }, (_, i) => LON_MIN + (i * (LON_MAX - LON_MIN)) / (NX - 1));
 const latVals = Array.from({ length: NY }, (_, j) => LAT_MIN + (j * (LAT_MAX - LAT_MIN)) / (NY - 1));
@@ -68,6 +70,13 @@ for (let j = 0; j < NY - 1; j++) {
   coastSegments.push([[x1, j], [x2, j + 1]]);
 }
 
+// Single ocean polygon following the coastline exactly (left edge, up the
+// coastline, top edge) — avoids the seam artifacts a per-cell tile fill
+// would leave between adjacent water rects.
+const oceanPolygon = [[-0.5, -0.5]];
+for (let j = 0; j < NY; j++) oceanPolygon.push([lonToIndex(coastLon(latVals[j])), j]);
+oceanPolygon.push([-0.5, NY - 0.5]);
+
 // --- Marching squares: isoline segments for one elevation threshold ---------
 function contourSegments(threshold) {
   const segs = [];
@@ -110,6 +119,79 @@ function contourSegments(threshold) {
   return segs;
 }
 
+// --- Chain raw marching-squares segments into connected paths --------------
+// Adjacent cells produce segments that share an exact interpolated endpoint
+// (same grid-edge crossing), so a simple point-key walk reconnects them into
+// closed loops (rings around a peak) or open chains (cut off by the map
+// edge). Chaining first is what lets us smooth the *path*, not each tiny
+// facet independently, and label once per loop instead of once per segment.
+function chainSegments(segs) {
+  const key = (p) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`;
+  const pointMap = new Map();
+  segs.forEach((seg, idx) => {
+    [0, 1].forEach((end) => {
+      const k = key(seg[end]);
+      if (!pointMap.has(k)) pointMap.set(k, []);
+      pointMap.get(k).push({ idx, end });
+    });
+  });
+
+  const used = new Array(segs.length).fill(false);
+  const chains = [];
+  const takeNeighbor = (pointKey, currentIdx) => {
+    const candidates = pointMap.get(pointKey) || [];
+    for (const c of candidates) {
+      if (c.idx !== currentIdx && !used[c.idx]) return c;
+    }
+    return null;
+  };
+
+  for (let start = 0; start < segs.length; start++) {
+    if (used[start]) continue;
+    used[start] = true;
+    const chain = [segs[start][0], segs[start][1]];
+
+    let next = takeNeighbor(key(chain[chain.length - 1]), start);
+    while (next) {
+      const seg = segs[next.idx];
+      chain.push(seg[next.end === 0 ? 1 : 0]);
+      used[next.idx] = true;
+      next = takeNeighbor(key(chain[chain.length - 1]), next.idx);
+    }
+    let prev = takeNeighbor(key(chain[0]), -1);
+    while (prev) {
+      const seg = segs[prev.idx];
+      chain.unshift(seg[prev.end === 0 ? 1 : 0]);
+      used[prev.idx] = true;
+      prev = takeNeighbor(key(chain[0]), prev.idx);
+    }
+    chains.push(chain);
+  }
+  return chains;
+}
+
+// Chaikin corner-cutting: replaces each edge with two points 1/4 and 3/4
+// along it, rounding the polygonal marching-squares output into a smooth
+// curve without changing the underlying topology.
+function chaikinSmooth(points, iterations, closed) {
+  let pts = points;
+  for (let it = 0; it < iterations; it++) {
+    const next = [];
+    const n = pts.length;
+    const edgeCount = closed ? n : n - 1;
+    if (!closed) next.push(pts[0]);
+    for (let i = 0; i < edgeCount; i++) {
+      const p0 = pts[i];
+      const p1 = pts[(i + 1) % n];
+      next.push([p0[0] * 0.75 + p1[0] * 0.25, p0[1] * 0.75 + p1[1] * 0.25]);
+      next.push([p0[0] * 0.25 + p1[0] * 0.75, p0[1] * 0.25 + p1[1] * 0.75]);
+    }
+    if (!closed) next.push(pts[pts.length - 1]);
+    pts = next;
+  }
+  return pts;
+}
+
 // Elevation isolines every 400 m; every third line (1200 m) is a bold, labeled
 // "index contour" — the cartographic convention for topographic maps.
 const CONTOUR_INTERVAL = 400;
@@ -117,22 +199,34 @@ const INDEX_EVERY = 1200;
 const levels = [];
 for (let lvl = CONTOUR_INTERVAL; lvl <= maxVal; lvl += CONTOUR_INTERVAL) levels.push(lvl);
 
-// Segment tuples: [x1, y1, x2, y2, label, bold]
-const segData = [];
+// One entry per smoothed contour loop/chain: { points, labels, bold }. A
+// single elevation level often forms one long connected boundary that
+// snakes past several peaks (the inland-rise term keeps the ridge between
+// peaks above the threshold too) rather than one separate ring per peak —
+// so index (bold) chains get a label every ~220 points of path, spacing
+// labels out along the line instead of stamping just one per chain.
+const LABEL_SPACING = 220;
+const contourPaths = [];
 levels.forEach((threshold) => {
   const bold = threshold % INDEX_EVERY === 0;
-  const segs = contourSegments(threshold);
-  let bestI = 0, bestDist = Infinity;
-  segs.forEach((seg, si) => {
-    const mx = (seg[0][0] + seg[1][0]) / 2;
-    const my = (seg[0][1] + seg[1][1]) / 2;
-    if (mx < 5 || mx > NX - 5 || my < 5 || my > NY - 5) return;
-    const d = (mx - NX / 2) ** 2 + (my - NY / 2) ** 2;
-    if (d < bestDist) { bestDist = d; bestI = si; }
-  });
-  const lbl = `${threshold} m`;
-  segs.forEach((seg, si) => {
-    segData.push([seg[0][0], seg[0][1], seg[1][0], seg[1][1], bold && si === bestI ? lbl : '', bold ? 1 : 0]);
+  const rawChains = chainSegments(contourSegments(threshold));
+  rawChains.forEach((chain) => {
+    if (chain.length < 2) return;
+    const closed =
+      chain.length > 2 &&
+      Math.abs(chain[0][0] - chain[chain.length - 1][0]) < 1e-4 &&
+      Math.abs(chain[0][1] - chain[chain.length - 1][1]) < 1e-4;
+    const smoothed = chaikinSmooth(chain, 2, closed);
+
+    const labels = [];
+    if (bold) {
+      const count = Math.max(1, Math.round(smoothed.length / LABEL_SPACING));
+      for (let k = 0; k < count; k++) {
+        const at = Math.min(smoothed.length - 1, Math.floor(((k + 0.5) * smoothed.length) / count));
+        labels.push({ text: `${threshold} m`, at });
+      }
+    }
+    contourPaths.push({ points: smoothed, labels, bold });
   });
 });
 
@@ -158,7 +252,7 @@ chart.setOption({
     nameLocation: 'middle',
     nameGap: 50,
     nameTextStyle: { color: t.inkSoft, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 14, interval: 7 },
+    axisLabel: { color: t.inkSoft, fontSize: 14, interval: TICK_INTERVAL },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
@@ -170,7 +264,7 @@ chart.setOption({
     nameLocation: 'middle',
     nameGap: 60,
     nameTextStyle: { color: t.inkSoft, fontSize: 16 },
-    axisLabel: { color: t.inkSoft, fontSize: 14, interval: 7 },
+    axisLabel: { color: t.inkSoft, fontSize: 14, interval: TICK_INTERVAL },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
@@ -178,7 +272,7 @@ chart.setOption({
   visualMap: {
     min: 0,
     max: maxVal,
-    seriesIndex: [0],
+    seriesIndex: [1],
     calculable: false,
     orient: 'vertical',
     right: 25,
@@ -192,10 +286,30 @@ chart.setOption({
   },
   series: [
     {
-      // Filled elevation surface — land tiles only, ocean left as page background.
+      // Subtle basemap tint for the ocean — the "water → blue" semantic
+      // exception from the Imprint palette, at low opacity so it reads as a
+      // faint fill rather than competing with the imprint_seq land gradient.
+      type: 'custom',
+      coordinateSystem: 'cartesian2d',
+      renderItem(params, api) {
+        const coords = oceanPolygon.map((p) => api.coord(p));
+        return {
+          type: 'polygon',
+          shape: { points: coords },
+          style: { fill: t.palette[2], opacity: 0.22 },
+        };
+      },
+      data: [[0, 0]],
+      encode: { x: 0, y: 1 },
+      z: 1,
+      silent: true,
+    },
+    {
+      // Filled elevation surface — land tiles only.
       type: 'heatmap',
       data: gridData,
       emphasis: { disabled: true },
+      z: 2,
     },
     {
       // Coastline overlay marking land/ocean boundary.
@@ -217,31 +331,24 @@ chart.setOption({
       silent: true,
     },
     {
-      // Elevation isolines via marching squares — bold + labeled every 1200 m.
+      // Elevation isolines via marching squares, chained into paths and
+      // Chaikin-smoothed — bold + labeled (once per loop) every 1200 m.
       type: 'custom',
       coordinateSystem: 'cartesian2d',
       renderItem(params, api) {
-        const x1 = api.value(0), y1 = api.value(1);
-        const x2 = api.value(2), y2 = api.value(3);
-        const lbl = api.value(4);
-        const bold = api.value(5) === 1;
-        const p1 = api.coord([x1, y1]);
-        const p2 = api.coord([x2, y2]);
-
+        const path = contourPaths[params.dataIndex];
+        const coords = path.points.map((p) => api.coord(p));
         const lineEl = {
-          type: 'line',
-          shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
-          style: { stroke: t.ink, lineWidth: bold ? 2.4 : 1.2, opacity: bold ? 0.8 : 0.4 },
+          type: 'polyline',
+          shape: { points: coords },
+          style: { stroke: t.ink, lineWidth: path.bold ? 2.4 : 1.2, opacity: path.bold ? 0.8 : 0.4, fill: 'none' },
         };
 
-        if (!lbl) return lineEl;
+        if (!path.labels.length) return lineEl;
 
-        const mx = (p1[0] + p2[0]) / 2;
-        const my = (p1[1] + p2[1]) / 2;
-        return {
-          type: 'group',
-          children: [
-            lineEl,
+        const labelEls = path.labels.flatMap((lbl) => {
+          const [mx, my] = coords[lbl.at];
+          return [
             {
               type: 'rect',
               shape: { x: mx - 30, y: my - 18, width: 60, height: 20, r: 3 },
@@ -251,12 +358,21 @@ chart.setOption({
               type: 'text',
               x: mx,
               y: my - 8,
-              style: { text: lbl, fill: t.ink, fontSize: 13, fontFamily: 'sans-serif', textAlign: 'center', opacity: 0.95 },
+              style: {
+                text: lbl.text,
+                fill: t.ink,
+                fontSize: 13,
+                fontFamily: 'sans-serif',
+                textAlign: 'center',
+                opacity: 0.95,
+              },
             },
-          ],
-        };
+          ];
+        });
+
+        return { type: 'group', children: [lineEl, ...labelEls] };
       },
-      data: segData,
+      data: contourPaths.map((_, idx) => [idx, 0]),
       encode: { x: 0, y: 1 },
       z: 10,
       silent: true,
