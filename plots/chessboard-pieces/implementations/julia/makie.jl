@@ -1,7 +1,7 @@
 # anyplot.ai
 # chessboard-pieces: Chess Board with Pieces for Position Diagrams
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 86/100 | Created: 2026-09-01
+# Quality: 90/100 | Created: 2026-09-01
 
 using CairoMakie
 using Colors
