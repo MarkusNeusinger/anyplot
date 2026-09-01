@@ -5,6 +5,11 @@
 
 const t = window.ANYPLOT_TOKENS;
 
+// A physical barcode's marks must stay dark-on-light regardless of display
+// theme to remain machine-scannable — fixed, not theme-adaptive like chrome.
+const BARCODE_INK = "#1A1A17";
+const BARCODE_CARD = "#FAF8F1";
+
 // --- EAN-13 encoding tables (GS1 standard) ----------------------------------
 const L_CODE = [
   "0001101", "0011001", "0010011", "0111101", "0100011",
@@ -80,6 +85,9 @@ Highcharts.chart("container", {
   chart: {
     type: "column",
     backgroundColor: "transparent",
+    plotBackgroundColor: BARCODE_CARD,
+    plotBorderWidth: 0,
+    plotShadow: false,
     animation: false,
     marginBottom: 90,
     style: { fontFamily: "inherit" },
@@ -126,7 +134,7 @@ Highcharts.chart("container", {
       name: "Bars",
       type: "column",
       data: barData,
-      color: t.ink,
+      color: BARCODE_INK,
       dataLabels: { enabled: false },
     },
     {
