@@ -3,9 +3,13 @@
 // Library: d3 7.9.0 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-01
 
+//# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
-const margin = { top: 90, right: 190, bottom: 90, left: 90 };
+// Hawai'i Island's bbox is nearly square (lon range 1.35 deg x cos(19.6 deg)
+// = 1.27 deg vs. lat range 1.3 deg), so a square canvas lets the map fill the
+// frame instead of being stranded inside a 16:9 landscape with dead margins.
+const margin = { top: 90, right: 150, bottom: 90, left: 90 };
 
 // --- Data: synthetic elevation model of Hawai'i Island (Big Island) --------
 // Two shield-volcano summits near the real Mauna Kea / Mauna Loa positions,
@@ -25,25 +29,21 @@ const peaks = [
   { lon: -155.602, lat: 19.4721, elevation: 4169, spread: 0.13 }, // Mauna Loa
 ];
 
-function elevationAt(lon, lat) {
-  let base = 0;
-  for (const p of peaks) {
-    const d2 = (lon - p.lon) ** 2 + (lat - p.lat) ** 2;
-    base += p.elevation * Math.exp(-d2 / (2 * p.spread * p.spread));
-  }
-  // Ridge texture fades to zero away from the summits, so it can't push
-  // isolated low-lying ocean cells above the coastline threshold.
-  const ridgeMask = Math.min(1, base / 600);
-  const ridgeTexture = 45 * Math.sin(lon * 90) * Math.cos(lat * 70) * ridgeMask;
-  return Math.max(0, base + ridgeTexture - 90); // sea-level cutoff
-}
-
 const grid = new Float64Array(NX * NY);
 for (let j = 0; j < NY; j++) {
   const lat = LAT_MIN + (j / (NY - 1)) * (LAT_MAX - LAT_MIN);
   for (let i = 0; i < NX; i++) {
     const lon = LON_MIN + (i / (NX - 1)) * (LON_MAX - LON_MIN);
-    grid[j * NX + i] = elevationAt(lon, lat);
+    let base = 0;
+    for (const p of peaks) {
+      const d2 = (lon - p.lon) ** 2 + (lat - p.lat) ** 2;
+      base += p.elevation * Math.exp(-d2 / (2 * p.spread * p.spread));
+    }
+    // Ridge texture fades to zero away from the summits, so it can't push
+    // isolated low-lying ocean cells above the coastline threshold.
+    const ridgeMask = Math.min(1, base / 600);
+    const ridgeTexture = 45 * Math.sin(lon * 90) * Math.cos(lat * 70) * ridgeMask;
+    grid[j * NX + i] = Math.max(0, base + ridgeTexture - 90); // sea-level cutoff
   }
 }
 const maxElevation = d3.max(grid);
@@ -54,13 +54,6 @@ const maxBand = Math.ceil(maxElevation / STEP) * STEP;
 const thresholds = [1];
 for (let v = STEP; v <= maxBand; v += STEP) thresholds.push(v);
 
-function idxToLonLat([x, y]) {
-  return [
-    LON_MIN + (x / (NX - 1)) * (LON_MAX - LON_MIN),
-    LAT_MIN + (y / (NY - 1)) * (LAT_MAX - LAT_MIN),
-  ];
-}
-
 const contoursGeo = d3
   .contours()
   .size([NX, NY])
@@ -68,7 +61,14 @@ const contoursGeo = d3
   .map((c) => ({
     type: "MultiPolygon",
     value: c.value,
-    coordinates: c.coordinates.map((poly) => poly.map((ring) => ring.map(idxToLonLat))),
+    coordinates: c.coordinates.map((poly) =>
+      poly.map((ring) =>
+        ring.map(([x, y]) => [
+          LON_MIN + (x / (NX - 1)) * (LON_MAX - LON_MIN),
+          LAT_MIN + (y / (NY - 1)) * (LAT_MAX - LAT_MIN),
+        ]),
+      ),
+    ),
   }));
 
 // --- Projection fitted to the region, inside the margin box -----------------
@@ -254,9 +254,10 @@ for (const lat of latTicks) {
     .text(`${lat.toFixed(1)}°N`);
 }
 
-// Colorbar legend
+// Colorbar legend — hugs the map's actual right edge instead of the margin
+// box, so there's no dead gap on near-square geographic bboxes.
 const barWidth = 26;
-const barX = width - margin.right + 60;
+const barX = mapX1 + 34;
 const barY0 = mapY0;
 const barY1 = mapY1;
 
@@ -297,7 +298,9 @@ svg
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 1);
 
-const colorbarTicks = [0, 1000, 2000, 3000, 4000].filter((v) => v <= maxBand);
+// Includes maxBand itself so the top of the gradient always carries a label,
+// even when it falls between the round 1000 m steps (e.g. 4500).
+const colorbarTicks = d3.range(0, maxBand, 1000).concat(maxBand);
 for (const val of colorbarTicks) {
   const y = barY1 - (val / maxBand) * (barY1 - barY0);
   svg
