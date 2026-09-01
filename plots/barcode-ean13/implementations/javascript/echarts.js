@@ -136,9 +136,12 @@ const chart = echarts.init(document.getElementById("container"));
 const title = "Specialty Coffee Beans 250g · barcode-ean13 · javascript · echarts · anyplot.ai";
 const titleFontSize = Math.max(15, Math.round(22 * Math.min(1, 67 / title.length)));
 
+const gtin = digits.join("");
+
 chart.setOption({
   animation: false,
   backgroundColor: "transparent",
+  tooltip: {},
   title: {
     text: title,
     left: "center",
@@ -151,6 +154,11 @@ chart.setOption({
         type: "rect",
         shape: { x: cardX, y: cardY, width: cardW, height: cardH, r: 6 },
         style: { fill: LABEL_BG, stroke: LABEL_BORDER, lineWidth: 1.5, shadowBlur: 18, shadowColor: "rgba(0,0,0,0.18)", shadowOffsetY: 6 },
+        // Graphic elements can carry their own tooltip config (ECharts-specific,
+        // not a generic canvas capability); hover over the card to reveal the
+        // GTIN this barcode encodes — purely an interactive-HTML affordance,
+        // invisible to the static screenshot.
+        tooltip: { show: true, formatter: `GTIN: ${gtin}` },
       },
       ...barRects,
       ...digitTexts,
