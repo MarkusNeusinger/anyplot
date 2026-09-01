@@ -1,0 +1,270 @@
+library: chartjs
+language: javascript
+specification_id: chessboard-pieces
+created: '2026-09-01T23:16:04Z'
+updated: '2026-09-01T23:21:35Z'
+generated_by: claude-sonnet
+workflow_run: 33569645959
+issue: 3350
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Position data is historically accurate: the piece dict exactly reproduces the
+    real Fool''s Mate final position (32 pieces, no captures, Black queen correctly
+    relocated d8→h4, White pawns correctly on f3/g4) — verified square by square against
+    the known 1.f3 e5 2.g4 Qh4# game.'
+  - 'Correct chess board conventions: white pieces at the bottom (ranks 1-2), light
+    square on h1, and dark square on a1, matching the spec''s explicit orientation
+    requirement.'
+  - 'Idiomatic and rules-compliant Chart.js solution: since Chart.js has no native
+    board/grid chart type, the implementation uses a hidden scatter chart purely as
+    a canvas + title/theme host and draws the board via the library''s own `afterDatasetsDraw`
+    plugin hook — exactly the sanctioned mechanism (no external chartjs-chart-* plugin,
+    no borrowed library).'
+  - 'Well-reasoned, explicitly documented departure from the Imprint categorical palette
+    for piece color: chess armies are drawn with a fixed black/white identity (using
+    the INK / dark-theme-INK token values, not arbitrary hex) so the pieces keep their
+    real-world identity across light/dark themes, exactly the way a brand color would.'
+  - 'Both renders are clean and legible: warm off-white/near-black theme backgrounds,
+    no dark-on-dark or light-on-light text, subtle alpha-tinted checkerboard squares,
+    no clipped or overlapping elements, generous margins around the board and coordinate
+    labels.'
+  - Pieces are well-centered within their squares with sensible padding (pieceSize
+    = 0.72 × cell) per the spec's explicit note about not touching square edges.
+  weaknesses:
+  - No Imprint-palette element appears anywhere in the chart (board squares use ink-token
+    tints, pieces use fixed black/white) — defensible given chess's real-world black/white
+    convention and explained in a code comment, but flag for awareness since it's
+    a full opt-out of the categorical palette rather than a semantic re-mapping within
+    it.
+  - No visual emphasis on the checkmate itself (e.g. a subtle highlight on the checkmated
+    king's e1 square, or the queen's h4-e1 mating diagonal) — the title names 'Fool's
+    Mate' but nothing in the diagram calls out why the position is famous, leaving
+    some data-storytelling value on the table.
+  - Coordinate labels (a-h / 1-8) are sized at cell*0.16 (~43 source px on the 2400px
+    canvas); at the 400px mobile thumbnail this scales down to ~7px, on the small
+    side even for single-character glyphs — consider cell*0.18-0.20 for extra mobile
+    safety margin.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white, not dark.
+      Chrome: Title "Fool's Mate · chessboard-pieces · javascript · chartjs · anyplot.ai" in dark ink, fully visible and centered above the board. File labels (a-h) below the board and rank labels (8-1) to its left are in a soft dark gray, small but crisp. Board frame is a thin dark stroke.
+      Data: An 8x8 checkerboard alternating between two subtle ink-tinted squares (light gray / slightly darker gray) with correct chess coloring (a1 dark, h1 light). 32 Unicode chess glyphs are placed on their squares: white pieces rendered with light fill + dark outline, black pieces with dark fill + light outline, both fully legible against either square shade. The position matches the historical "Fool's Mate" final position exactly (White pawns on f3/g4, Black queen on h4, no captures).
+      Legibility verdict: PASS - title, coordinate labels, and every piece glyph are clearly readable against the light background; no light-on-light text anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black, not light.
+      Chrome: Same title text now in light ink, fully visible and centered. File/rank labels are in a soft light gray, matching size and placement of the light render. Board frame is a thin light stroke.
+      Data: The same checkerboard pattern with darker alpha tints appropriate for the dark surface, correct h1-light/a1-dark orientation preserved. Piece colors are identical to the light render (white pieces stay light-filled/dark-outlined, black pieces stay dark-filled/light-outlined) — the brand-consistency invariant holds: piece identity does not flip with theme, exactly as the code intends for chess semantics.
+      Legibility verdict: PASS - no dark-on-dark failures; every title character, coordinate label, and piece glyph reads clearly against the near-black background. No element relies on the brand green (not used in this chart, appropriately, since chess pieces need fixed black/white identity rather than categorical color).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and coordinate labels readable in both themes at full resolution;
+          coordinate label font (~43 source px, ~7px at 400px mobile thumbnail) is
+          on the smaller side for mobile safety margin
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between pieces, labels, title, or frame
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 32 pieces all clearly visible with stroke+fill contrast against both
+          light and dark square tints
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Pure black/white piece contrast with outline stroke is CVD-safe by
+          design; no reliance on hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas, board centered with generous margins, no
+          overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard algebraic notation coordinates are self-explanatory; title
+          matches mandated format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'No Imprint categorical hues used, but pieces use fixed ink-token
+          black/white (not arbitrary custom hex) for a well-justified real-world chess
+          convention; backgrounds are theme-correct #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Subtle alpha-tinted checkerboard, consistent piece styling, clean
+          frame and coordinate labels — clearly above generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No chartjunk, hidden scales/legend, generous whitespace around the
+          board
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Title names 'Fool's Mate' but the diagram has no visual emphasis
+          (e.g. highlighted mating square/diagonal) calling out why the position is
+          notable
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Chess board with pieces, matches spec exactly
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Unicode glyphs, square->piece dict, white-bottom orientation, h1
+          light corner, centered pieces with edge margin — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Every square/piece pair maps to the correct board coordinate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai'; legend correctly omitted (not applicable to a board diagram)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both colors, all six piece types, full board coordinates all represented
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Verified-accurate reproduction of the historical Fool's Mate position,
+          neutral subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 32 pieces, zero captures — exactly correct for this specific two-move
+          game
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: The plugin object + small helpers are the minimal necessary structure
+          for canvas-drawn board content, not gratuitous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded position, no RNG involved
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global Chart and ANYPLOT_TOKENS are used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity for a canvas-drawn
+          board
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container, animation:false set, no fixed canvas size,
+          current Chart.js plugin API'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Chart.js's own plugin API (afterDatasetsDraw, Chart.register)
+          exactly as the library rules prescribe for chart types with no native support,
+          avoiding any external plugin workaround
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative repurposing of a scatter host + custom plugin to render
+          a genuinely unsupported chart type; could go further by leaning into HTML-only
+          interactive touches (hover square/piece info)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - canvas-drawing
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
