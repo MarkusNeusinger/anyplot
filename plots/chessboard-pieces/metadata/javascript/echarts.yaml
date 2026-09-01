@@ -1,0 +1,250 @@
+library: echarts
+language: javascript
+specification_id: chessboard-pieces
+created: '2026-09-01T23:20:58Z'
+updated: '2026-09-01T23:36:32Z'
+generated_by: claude-sonnet
+workflow_run: 33570045685
+issue: 3350
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Both previous-attempt weaknesses are fixed: dark-square/light-square fills now
+    alpha-blend over the page background so light squares stay visually lighter than
+    dark squares in BOTH themes (verified: ~123 vs ~76 relative luminance in the dark
+    render), and a soft amber outline now highlights f7/e8 to call out the delivering
+    queen and mated king.'
+  - Accurately renders a real, well-known chess position (Scholar's Mate, final position
+    after 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#), verified square-by-square against
+    the actual game moves.
+  - 'Correct board geometry: light square at h1, standard white-at-bottom orientation,
+    accurate file/rank labels.'
+  - Piece rendering uses a fixed, theme-independent ivory/ink duotone (hollow outline
+    for white, solid fill for black) — legible in both themes, matches the real-world
+    chess convention, and is documented in code as an intentional Imprint semantic
+    exception.
+  - Idiomatic-but-advanced ECharts usage via `custom` series `renderItem` for squares,
+    highlight outlines, and glyphs, using `api.coord`/`api.size` for precise per-square
+    centering.
+  - 'Clean theme-adaptive chrome, `animation: false` set correctly, fully deterministic
+    hard-coded data, no unused imports.'
+  weaknesses:
+  - Design polish is still fairly literal/utilitarian — the checkmate highlight (amber
+    outline on f7/e8) is a good addition, but nothing else in the composition builds
+    further hierarchy (e.g. a subtle dimming of irrelevant squares, or a move-arrow)
+    that would push this from 'accurate diagram' to 'polished editorial graphic'.
+  - The two highlighted squares communicate 'these squares matter' but not why (queen
+    delivering check vs. king in check) — a tiny caption or legend swatch distinguishing
+    the two would remove ambiguity for a viewer unfamiliar with the game.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the canvas around a centered 8x8 board.
+      Chrome: Title "Scholar's Mate · chessboard-pieces · javascript · echarts · anyplot.ai" in dark ink at top, clearly readable. File labels (a-h) below the board and rank labels (1-8) to the left are in a softer gray, both legible against the light background. Board border is a thin dark outline; individual squares have subtle hairline strokes.
+      Data: Squares alternate warm cream (light squares, h1 correctly light) and a tan/ochre wash (dark squares, blended from the Imprint ochre hue). The king square (e8) and queen square (f7) are outlined with a soft amber highlight, calling out the checkmating move. Pieces render as recognizable chess-icon glyphs — white pieces as hollow ivory-fill/dark-stroke outlines, black pieces as solid dark-fill/ivory-stroke shapes — matching the real Scholar's Mate final position.
+      Legibility verdict: PASS — all text and pieces are clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the canvas.
+      Chrome: Title and axis labels switch to light ink/gray tones, both clearly readable against the dark background. No dark-on-dark text observed.
+      Data: Identical Scholar's Mate position and identical piece glyph colors as the light render (data colors match across themes, as required). Squares alternate a mid-gray tone (light squares, now correctly blended so they read LIGHTER than the dark squares — the previous-attempt luminance inversion is fixed) and a warm brown/ochre tone (dark squares). The same amber outline highlights e8/f7 and remains clearly visible against the dark board.
+      Legibility verdict: PASS — all text and pieces remain legible; light/dark square luminance ordering now matches the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and axis labels explicitly sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between pieces, squares, highlight outlines, or labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Piece glyphs sized to ~62% of square size, clearly visible without
+          touching edges
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Piece color is redundant with fill-vs-outline shape encoding, not
+          solely hue-dependent
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing clipped; dark-theme square luminance inversion
+          from attempt 1 is now fixed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard algebraic file/rank labels; mandated title format followed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Dark squares use Imprint ochre (documented wood semantic exception);
+          backgrounds correct #FAF8F1/#1A1A17; amber highlight uses token color'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color mapping plus checkmate-square highlight;
+          still a fairly literal board diagram overall
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis lines/ticks/splitlines removed, clean board border, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Amber outline on f7/e8 now calls out the decisive checkmate move,
+          addressing the prior attempt's missing emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chessboard-with-pieces diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Unicode-style glyphs, light square at h1, pieces centered without
+          touching edges
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Every square/piece verified against the actual Scholar's Mate game
+          moves
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; no legend
+          needed for a single board
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All six piece types shown for both colors plus empty squares
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, well-known instructional chess position
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 8x8 board and piece count
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary abstraction beyond the renderItem callbacks required
+          by the custom-series API
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded position data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses only the global echarts object, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current ECharts
+          API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of custom series with api.coord/api.size for cartesian-grid
+          rendering
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom renderItem-driven board+glyph+highlight rendering goes well
+          beyond basic chart types
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
