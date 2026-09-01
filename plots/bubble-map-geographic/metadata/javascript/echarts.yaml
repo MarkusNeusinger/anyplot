@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: bubble-map-geographic
 created: '2026-09-01T18:51:31Z'
-updated: '2026-09-01T18:59:07Z'
+updated: '2026-09-01T19:13:37Z'
 generated_by: claude-sonnet
 workflow_run: 33544865410
 issue: 3625
@@ -12,69 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/echarts/plot-dark.html
-quality_score: 75
+quality_score: 88
 review:
   strengths:
-  - Bubble diameter is scaled via sqrt(value) so bubble AREA (not radius) is proportional
-    to population, exactly matching the spec's perception rule.
-  - Custom size-key legend (37M/15M/5M reference circles with radii computed via the
-    same bubbleSize() function) accurately documents the size-to-value mapping.
-  - First categorical series is the Imprint brand green (#009E73) and the remaining
-    five continents follow canonical palette order; both renders keep data colors
-    identical and flip only chrome correctly (confirmed FAF8F1/1A1A17 backgrounds,
-    ink/inkSoft text).
-  - Realistic, neutral, roughly factually-correct metro population figures (Tokyo
-    37.4M, Delhi 32.9M, etc.) spanning a meaningful range of city sizes.
-  - Title format and legend labels are correct; tooltip formatter surfaces exact city
-    name and population for the interactive HTML view.
-  - 'Deterministic, in-memory data with no external fetches, following the mount-node
-    contract (no explicit width/height, animation: false).'
+  - 'Directly addresses attempt 1''s core weakness: a hand-traced continent basemap
+    (5 custom `renderItem` polygon series projected via `api.coord`) now sits beneath
+    the bubbles, so the chart reads as a recognizable world map instead of an abstract
+    lon/lat scatter -- mirrors the precedent technique from hexbin-map-geographic.'
+  - Bubble diameter still scales via sqrt(value) so bubble AREA is proportional to
+    population; SIZE_MIN was raised from 16 to 24 CSS px, making the smallest bubbles
+    (Sydney/Melbourne ~5.2-5.3M) clearly visible against the sparse 23-point dataset.
+  - 'New per-bubble border (`borderColor: t.pageBg`) helps separate overlapping circles
+    in the dense Asia cluster without relying on the PNG-invisible tooltip.'
+  - First categorical series is Imprint brand green (#009E73), remaining five continents
+    follow canonical palette order; data colors are pixel-identical between renders
+    and only chrome (background, text, grid, basemap fill) flips theme-correctly (FAF8F1/1A1A17).
+  - Custom size-key legend (37M/15M/5M reference circles sized via the same bubbleSize()
+    function) accurately documents the size-to-value mapping.
+  - Realistic, neutral, roughly factually-correct metro population figures spanning
+    a wide range of city sizes across all six inhabited continents.
+  - 'Title format and legend labels correct; deterministic in-memory data; follows
+    the mount-node contract (no explicit width/height, animation: false).'
   weaknesses:
-  - 'Spec explicitly requires ''geographic context with country boundaries or coastlines
-    as basemap'', but the implementation renders lon/lat purely as generic numeric
-    value axes with no landmass, coastline, or country outline at all -- it reads
-    as an abstract scatter chart rather than a world bubble map. This repo already
-    has a working precedent for exactly this problem: plots/hexbin-map-geographic/implementations/javascript/echarts.js
-    hand-codes a coastline polyline plus an ocean-tint custom series drawn in the
-    same cartesian2d coordinate system used here (no echarts-gl, no registerMap, no
-    network fetch needed) -- apply the same technique at world scale: add a simplified
-    continent-outline polyline/polygon series (rough coordinates are fine, e.g. a
-    low-vertex hand-traced world outline) rendered with type: ''line''/''custom''
-    beneath the bubble series, so the chart is visually recognizable as a world map
-    at a glance.'
-  - 'The Asia cluster (8 overlapping cities: Tokyo, Delhi, Shanghai, Dhaka, Beijing,
-    Mumbai, Osaka, Karachi) packs into a tight region where large, heavily-overlapping
-    bubbles blend into an indistinct blob in the static PNG -- consider slightly reducing
-    max bubble size or increasing opacity contrast so individual cities stay distinguishable
-    without relying on the (PNG-invisible) tooltip.'
-  - Smallest bubbles (Sydney/Melbourne at ~5.2-5.3M, SIZE_MIN=16 CSS px diameter)
-    are quite small relative to the 1600-css-px-wide mount for only 23 total data
-    points -- per the data-density heuristic, sparse datasets (<50 points) should
-    use larger, more prominent markers; raise SIZE_MIN so low-value cities stay clearly
-    visible at both desktop and mobile widths.
-  - Y-axis domain (-60 to 85) leaves a large empty band above ~55N and below ~-38
-    (no data there), wasting roughly a third of the vertical plot area -- tightening
-    the latitude range (or adding a visible basemap that naturally justifies the extra
-    frame) would improve canvas utilization.
-  - Design is a well-configured, sound scatter chart but lacks a strong distinctive-to-echarts
-    feature (no geo component, no visualMap, no custom renderItem) -- once a basemap
-    layer is added, consider drawing it as an echarts custom series (as hexbin-map-geographic
-    does) to also lift Library Mastery.
+  - The 8-city Asia cluster (Tokyo, Delhi, Shanghai, Dhaka, Beijing, Mumbai, Osaka,
+    Karachi) still packs into a tight region where large bubbles heavily overlap;
+    the new page-background border helps separate them but several city pairs (Tokyo/Osaka,
+    Delhi/Mumbai, Shanghai/Beijing) still blend into a partially indistinct cluster
+    in the static PNG -- consider a touch more opacity contrast or slight positional
+    nudging to keep individual cities distinguishable.
+  - The chart grid (1300x560 CSS px within a 1600x900 mount) leaves a sizeable blank
+    band below the map (~20% of canvas height, roughly from the southern edge of the
+    plotted latitude range to the canvas bottom) -- likely a deliberate longitude/latitude
+    aspect-ratio trade-off, but tightening the y-axis domain further or centering
+    the grid vertically would reduce the wasted whitespace.
+  - No echarts geo component or visualMap is used; the basemap is a clever custom-series
+    workaround but doesn't yet showcase echarts' native geographic tooling -- fine
+    given no external map JSON is available, but worth noting for library-mastery
+    ceiling.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1), matches the required light-theme surface.
-      Chrome: Title "World City Populations · bubble-map-geographic · javascript · echarts · anyplot.ai" centered at top in dark ink; a 6-entry horizontal legend (Asia, Africa, Europe, N. America, S. America, Oceania) below it; "Longitude" axis name centered under the x-axis with tick labels every 30° suffixed W/E; "Latitude" axis name at the top-left of the y-axis with tick labels every 30° suffixed N/S; a right-side "Population (M)" size-key legend with 37M/15M/5M reference circles. All text renders in dark ink/soft-ink tones and is clearly legible against the light background.
-      Data: 23 bubbles positioned by real longitude/latitude, colored by continent (Asia = Imprint brand green #009E73, Africa = lavender, Europe = blue, N. America = ochre, S. America = matte red, Oceania = cyan), sized by sqrt(population) with ~0.62 fill opacity. No basemap, coastline, or country outline is present -- only a plain gridded value-axis plane with faint dashed reference lines at the equator and prime meridian, so the chart reads as an abstract lon/lat scatter plot rather than a recognizable world map.
-      Legibility verdict: PASS (all text readable, no dark-on-dark/light-on-light issues).
+      Chrome: Title "World City Populations · bubble-map-geographic · javascript · echarts · anyplot.ai" centered at top in dark ink; a 6-entry horizontal legend (Asia, Africa, Europe, N. America, S. America, Oceania) below it; "Longitude" axis name centered under the x-axis with tick labels every 30 degrees suffixed W/E; "Latitude" axis name at the top-left of the y-axis with tick labels every 30 degrees suffixed N/S; a right-side "Population (M)" size-key legend with 37M/15M/5M reference circles. A light-grey continent basemap (rough hand-traced outlines for North America, South America, Africa, Eurasia, and Australia) now sits beneath the bubbles, giving clear geographic context. All text renders in dark ink/soft-ink tones and is clearly legible against the light background; no clipping at any canvas edge.
+      Data: 23 bubbles positioned by real longitude/latitude on top of their correct continents, colored by continent (Asia = Imprint brand green #009E73, Africa = lavender, Europe = blue, N. America = ochre, S. America = matte red, Oceania = cyan), sized by sqrt(population) with ~0.58 fill opacity and a thin page-background-colored border separating overlapping circles. The Asia cluster (8 cities) still overlaps somewhat but individual bubble edges remain distinguishable thanks to the border.
+      Legibility verdict: PASS (all text readable, no dark-on-dark/light-on-light issues, no edge clipping).
 
     Dark render (plot-dark.png):
       Background: Warm near-black (~#1A1A17), matches the required dark-theme surface.
-      Chrome: Identical layout to the light render -- title, legend, axis names/ticks, and size-key legend all re-rendered in light ink/soft-ink tones (white/light-gray text) against the dark background. No dark-on-dark or light-on-light failures observed; every label is clearly legible.
-      Data: Same 23 bubbles at the same lon/lat positions with identical fill colors and sizes as the light render (confirmed pixel-for-pixel color match across themes) -- only the chrome (background, text, grid, dashed reference lines) flipped tone. Same absence of any basemap/coastline/country-outline layer.
-      Legibility verdict: PASS (all text readable, no dark-on-dark failures).
+      Chrome: Identical layout to the light render -- title, legend, axis names/ticks, and size-key legend all re-rendered in light ink/soft-ink tones (white/light-gray text) against the dark background. The continent basemap fill/stroke also flips to a darker, still-visible grey tone appropriate for the dark surface. No dark-on-dark or light-on-light failures observed; every label is clearly legible; no edge clipping.
+      Data: Same 23 bubbles at the same lon/lat positions with identical fill colors and sizes as the light render (confirmed pixel-for-pixel color match across themes) -- only the chrome (background, text, grid, basemap fill) flipped tone.
+      Legibility verdict: PASS (all text readable, no dark-on-dark failures, brand green #009E73 reads clearly on the dark surface).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -89,28 +78,30 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps text or data; overlapping bubbles are expected/intentional
-          via alpha.
+        comment: No text overlaps text or data; overlapping bubbles are a VQ-03 concern,
+          not a text-overlap issue.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Smallest bubbles (SIZE_MIN=16) are small for a sparse 23-point dataset;
-          the 8-city Asia cluster blends into an indistinct blob from heavy overlap.
+        passed: true
+        comment: SIZE_MIN raised to 24 and a page-background border now separates
+          overlapping bubbles; the 8-city Asia cluster still partially blends but
+          individual circles remain distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint palette, alpha applied for overlap.
+        comment: Good contrast, CVD-safe Imprint palette, alpha + border applied for
+          overlap separation.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Well-balanced overall, but latitude domain (-60 to 85) leaves a large
-          unused vertical band with no data.
+        comment: Well-balanced overall; grid + legend use a majority of the canvas,
+          but a sizeable blank band remains below the plotted latitude range.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -125,50 +116,48 @@ review:
         comment: 'First series is brand green #009E73, canonical order for the rest,
           correct theme-adaptive backgrounds in both renders.'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured but generic scatter look; missing the geographic
-          basemap that would give it a distinctive, publication-ready identity.
+        passed: true
+        comment: Hand-traced continent basemap plus custom size-key legend and border-separated
+          bubbles push this clearly above a configured default.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, decent whitespace, though large empty vertical bands
-          reduce polish.
+        comment: Subtle grid, thoughtful bubble borders, decent whitespace, though
+          the unused band below the map reduces polish.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Continent color grouping + size hierarchy gives some structure, but
-          without geographic context the spatial story (where in the world) isn't
-          immediately legible.
+        passed: true
+        comment: Geographic basemap plus continent color-coding and size hierarchy
+          now let the viewer immediately see 'where' and 'how much' at a glance.
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correctly implements area-proportional bubble sizing; missing the
-          map/geographic framing that distinguishes a bubble MAP from a bubble scatter
-          chart.
+        comment: Correctly implements an area-proportional bubble map with geographic
+          basemap framing.
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Spec explicitly requires 'geographic context with country boundaries
-          or coastlines as basemap' -- entirely absent.
+        passed: true
+        comment: Basemap, size legend, transparency, and minimum bubble size are all
+          present, resolving attempt 1's primary omission.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -183,16 +172,15 @@ review:
         passed: true
         comment: Title format correct; legend labels match continent names.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Good range of population sizes and continents; could add a couple
-          of very small towns for more contrast against the large metros.
+        comment: Good range of population sizes and all six inhabited continents represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -215,7 +203,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, flat structure with small helper functions.
+        comment: Flat structure with small, purposeful helper functions.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -241,29 +229,30 @@ review:
         passed: true
         comment: Follows the mount-node contract correctly, animation disabled.
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct scatter-series usage but doesn't leverage echarts' geo/custom-series
-          capabilities for the basemap layer.
+        comment: Correct scatter-series usage plus custom-series renderItem for the
+          basemap layer, following the repo's own echarts precedent.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic scatter + symbolSize usage; no echarts-distinctive feature
-          (custom renderItem, geo, visualMap) employed.
-  verdict: REJECTED
+        passed: true
+        comment: Custom renderItem with api.coord projection for a hand-built basemap
+          is a genuinely echarts-distinctive technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - annotations
+  - basemap-overlay
   patterns:
   - data-generation
   - iteration-over-groups
