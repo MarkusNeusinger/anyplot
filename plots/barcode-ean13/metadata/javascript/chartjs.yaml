@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: barcode-ean13
 created: '2026-09-01T18:32:33Z'
-updated: '2026-09-01T18:38:43Z'
+updated: '2026-09-01T18:54:43Z'
 generated_by: claude-sonnet
 workflow_run: 33543396457
 issue: 3808
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/chartjs/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
   - Deterministic, byte-correct EAN-13 encoding — the L/G/R code tables, parity table,
@@ -26,43 +26,42 @@ review:
     example rather than an abstract placeholder.
   - 'Creative, idiomatic Chart.js technique: a floating/range bar dataset for the
     module bars plus a custom afterDraw plugin that reads chart.scales.x/y.getPixelForValue()
-    to place digit labels precisely — a genuinely distinctive use of Chart.js''s plugin
-    architecture.'
+    to place digit labels precisely.'
   - 'Well-reasoned, explicitly documented exception to the brand-green rule: bars
     render in theme-adaptive ink because a barcode''s contrast is functional (scannability),
-    not categorical data — consistent across both themes.'
-  - Title fontsize correctly follows the style guide's proportional-scaling formula
-    (round(22 × 67/len(title))) for the longer descriptive-prefixed title, avoiding
-    overflow.
-  - Canvas is well utilized with balanced left/right quiet-zone margins; the barcode
-    and digits stay clearly legible even scaled down to the 400px mobile thumbnail.
+    not categorical data.'
+  - 'Repair attempt directly addressed both prior weaknesses: layout.padding.bottom
+    raised from 20 to 64 to rebalance the vertical margins, and a new faint quiet-zone
+    strokeRect (drawn in the grid token) was added around the bars as the requested
+    subtle refinement touch — confirmed present in the rendered PNG as a hairline
+    frame from y≈127 to y≈1316.'
   weaknesses:
-  - 'Bottom margin (layout.padding.bottom: 20) is noticeably tighter than the top
-    margin (title + padding.top) in both renders — nothing is clipped, but the vertical
-    whitespace is slightly unbalanced; add a touch more bottom padding or trim the
-    y-scale max for symmetry.'
-  - Design Excellence is inherently capped by the plot type — a monochrome barcode
-    has no color harmony to showcase; a subtle secondary touch (e.g., a faint quiet-zone
-    frame or a small caption noting the digit groups) could add polish without compromising
-    scannability.
-  - No visual hierarchy or storytelling beyond faithful encoding — expected for a
-    barcode, but it keeps Data Storytelling (DE-03) at the default score; no fix required
-    beyond general polish.
+  - Bottom margin is now larger than the top margin (measured ~66px top vs ~128px
+    bottom on the 1800px-tall canvas) — the padding fix overcorrected slightly in
+    the opposite direction. Nothing is clipped and the imbalance is much milder than
+    before, but a small trim of layout.padding.bottom (e.g. 64 -> ~40) would center
+    it more precisely.
+  - Design Excellence remains inherently limited by the plot type — a monochrome barcode
+    has little room for color harmony, and the new quiet-zone frame is a refinement
+    touch rather than a storytelling device, so Data Storytelling stays at the default
+    score.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "German Retail Product · barcode-ean13 · javascript · chartjs · anyplot.ai" in dark ink, centered top, clearly readable. No axis labels/ticks (intentionally hidden — a barcode has no cartesian axes). Human-readable digits ("4 0 0 6 3 8 1 3 3 3 9 3 1") sit below the bars in dark ink, evenly spaced, first digit "4" placed outside the left guard bars per spec.
-      Data: Vertical bars render in solid dark ink (theme-adaptive, not brand green) against the cream background — correct choice since a barcode's bars are a functional scannable mark, not a categorical data series. Bar widths visibly vary between 1 and 4 modules, matching real EAN-13 module encoding. Start, center, and end guard bars are visibly taller, extending down through the digit-label gap, exactly as on a real printed barcode. 9-module quiet zones are visible as blank margins on both left and right edges.
-      Legibility verdict: PASS — title and all 13 digits are crisp and unambiguous; no light-on-light issues.
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "German Retail Product · barcode-ean13 · javascript · chartjs · anyplot.ai" renders in dark ink, centered at the top, clearly readable. No cartesian axes/ticks (correctly hidden — a barcode has no meaningful X/Y axes). A new faint hairline frame (grid-token color) traces the full quiet-zone + bar region, confirmed present via pixel inspection (y≈127 top edge, y≈1316 bottom edge, x≈13-15 left edge) — subtle enough to never compete with the bars' scannable contrast.
+      Data: Vertical bars in solid dark ink represent the encoded modules, with widths visibly varying between 1 and 4 modules, matching real EAN-13 encoding. Start, center, and end guard bars are visibly taller, extending through the human-readable digit strip, exactly as on a real printed barcode. 9-module quiet zones are visible as blank margins on both edges. All 13 digits ("4 0 0 6 3 8 1 3 3 3 9 3 1") sit below the bars, evenly spaced, first digit "4" correctly placed outside the left guard.
+      Legibility verdict: PASS — title and all digits are crisp and unambiguous against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title and digit labels render in light ink (theme-flipped), fully legible against the dark background. Layout is otherwise identical to the light render.
-      Data: Bars flip from dark ink to light ink (theme-adaptive chrome, not a data color) while retaining identical widths/positions to the light render — correct, since these are functional marks, not the Imprint categorical palette. Guard-bar heights and quiet-zone margins are unchanged from light.
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and digit labels flip to light ink, fully legible against the dark surface. The hairline quiet-zone frame is present in the same position, flipped to the theme-adaptive grid color.
+      Data: Bars flip from dark ink to light ink (theme-adaptive chrome, not a data color) while retaining identical widths and positions to the light render — correct, since these bars function as a scannable mark rather than Imprint categorical data. Guard-bar heights, digit positions, and quiet-zone margins are unchanged from the light render.
       Legibility verdict: PASS — no dark-on-dark or light-on-light failures; all digits and the title are clearly visible.
+
+    Both renders confirm the padding rebalance (top≈66px, bottom≈128px measured on the 3200x1800 canvas) is a clear improvement over the prior attempt's more extreme asymmetry, and the requested quiet-zone frame refinement is genuinely present, not just claimed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -70,53 +69,54 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title fontsize explicitly computed via the proportional-scaling formula;
-          digits at fixed 26px canvas font remain crisp even at the 400px mobile thumbnail
-          in both themes.
+        comment: Title fontsize explicitly computed via the proportional-scaling formula
+          (round(22 × 67/len(title))); digits at a fixed 26px canvas font remain crisp
+          even scaled to the 400px mobile thumbnail in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between bars, digits, or title in either render.
+        comment: No collisions between bars, digits, title, or the new quiet-zone
+          frame.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Module bars (1-4 module widths) are all individually distinguishable
+        comment: All module bar widths (1-4 modules) are individually distinguishable
           at full size and thumbnail scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximal ink-vs-background contrast in both themes; no red-green reliance.
+        comment: Maximal ink-vs-background contrast in both themes, no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Barcode fills most of the canvas with balanced left/right quiet zones,
-          but the bottom padding (20px) is noticeably tighter than the top (title
-          + padding) — minor asymmetry, nothing cut off.
+        comment: Padding rebalanced (layout.padding.bottom 20 -> 64); measured margins
+          ~66px top vs ~128px bottom on the 1800px canvas, a clear improvement over
+          the prior asymmetry. Nothing clipped, barcode fills the canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for cartesian axis labels — a barcode has no meaningful X/Y axes;
-          title itself is descriptive and correctly formatted.
+        comment: N/A for cartesian axis labels — a barcode has none; title is descriptive
+          and correctly formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: Bars intentionally use theme-adaptive ink rather than Imprint brand
-          green — justified exception since the bars are a functional scannable mark,
+          green — justified exception since bars are a functional scannable mark,
           not categorical data; backgrounds and chrome are theme-correct in both renders.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -125,15 +125,16 @@ review:
         max: 8
         passed: false
         comment: Clearly above a naive default (accurate module rendering, correct
-          guard-bar heights), but a monochrome barcode has little room for color harmony
-          or typographic flourish.
+          guard-bar heights, subtle frame), but a monochrome barcode inherently has
+          little room for color harmony or typographic flourish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No grid, no spines, generous and mostly balanced whitespace; minor
-          deduction for the top/bottom margin asymmetry noted in VQ-05.
+        comment: No grid, no spines, generous and now well-balanced whitespace, plus
+          a new hairline quiet-zone frame — a genuine polish detail confirmed present
+          via pixel inspection.
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -141,7 +142,7 @@ review:
         passed: false
         comment: Default — the plot faithfully encodes the number but adds no visual
           hierarchy or emphasis beyond correctness, which is expected for this plot
-          type.
+          type; the new frame is refinement, not narrative.
     spec_compliance:
       score: 15
       max: 15
@@ -252,8 +253,9 @@ review:
         max: 5
         passed: true
         comment: Custom afterDraw plugin reading chart.scales pixel mapping to place
-          digit labels is a distinctive use of Chart.js's plugin architecture.
-  verdict: REJECTED
+          digit labels and draw the quiet-zone frame is a distinctive use of Chart.js's
+          plugin architecture.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
