@@ -121,10 +121,11 @@ scatter!(ax, [p.lon for p in PEAKS], [p.lat for p in PEAKS];
 for p in PEAKS
     text!(ax, p.lon, p.lat;
         text        = "$(p.name) ($(Int(round(p.elev))) m)",
-        fontsize    = 11,
+        fontsize    = 12,
+        font        = :bold,
         color       = INK,
         strokecolor = PAGE_BG,
-        strokewidth = 3,
+        strokewidth = 1.3,
         align       = (:center, :bottom),
         offset      = (0, 14),
     )
