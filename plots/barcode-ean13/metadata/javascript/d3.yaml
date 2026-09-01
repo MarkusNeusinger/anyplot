@@ -1,0 +1,251 @@
+library: d3
+language: javascript
+specification_id: barcode-ean13
+created: '2026-09-01T18:32:53Z'
+updated: '2026-09-01T18:50:29Z'
+generated_by: claude-sonnet
+workflow_run: 33543636857
+issue: 3808
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/d3/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Technically correct EAN-13 encoding, verified end-to-end: checksum algorithm,
+    L/G/R code tables, and leading-digit parity pattern all match the standard, and
+    the resulting code (5901234123457) is the exact real-world example given in specification.md'
+  - 'Fixed the attempt-1 theme bug: bar and label ink is now a fixed BARCODE_INK/BARCODE_BG
+    constant, so the barcode stays dark-ink-on-light-card in both light and dark renders
+    — only the title chrome flips, matching the real-world requirement that a barcode
+    must stay scannable regardless of page theme'
+  - 'Fixed the attempt-1 library-mastery gap: bars are now drawn via an idiomatic
+    d3 data-join (selection.data(barData).join(''rect'')) with a d3.scaleLinear module-to-pixel
+    scale, instead of a manual for-loop with hand-computed pixel positions'
+  - Increased module width (9px→11px) and bar heights, improving canvas utilization
+    and making the bars more prominent without any overlap or clipping
+  - Clean, deterministic, single-pass KISS code with no fake interactivity; correct
+    mandated title format
+  - 'Realistic, neutral data: ''590'' is a real GS1 country-code prefix (Poland),
+    giving a plausible retail product code'
+  weaknesses:
+  - Card/barcode area still covers only ~42% of canvas width and ~33% of canvas height,
+    leaving noticeable empty space above the title and below the card — some of this
+    is inherent to a barcode's wide/short natural aspect ratio, but there is still
+    room to grow the card or add a supporting caption/element to use the vertical
+    space more intentionally
+  - 'Design excellence remains fairly utilitarian: the elevated card and guard-bar
+    height differentiation are nice touches, but there is no additional visual hierarchy,
+    secondary annotation, or storytelling element beyond the default barcode presentation'
+  - 'Library mastery is still fairly basic beyond the new data-join/scale fix: no
+    use of other d3-distinctive features (e.g. d3.range for module generation, d3-format
+    for digit grouping, or a d3.scaleBand for guard-vs-digit bar height selection)
+    that would showcase deeper D3 idiom beyond a linear pixel scale'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1.
+      Chrome: centered bold title "barcode-ean13 · javascript · d3 · anyplot.ai" in dark ink at the top; an elevated, rounded-corner card (light cream #FAF8F1 fill, subtle #D9D4C3 border) holds the barcode. No axes/grid — appropriate for this plot type.
+      Data: barcode bars render as solid near-black (#1A1A17) bars on the light card, with taller guard bars at the start, center, and end acting as sync marks; three digit groups below the bars ("5", "901234", "123457") in a monospace font, also dark ink. The leading digit sits outside the left guard as required.
+      Legibility verdict: PASS — title and digit labels are clearly readable against the light card/page; no overlap or clipping.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17.
+      Chrome: same centered title, now rendered in light ink — correctly theme-flipped chrome.
+      Data: the barcode card and bars are IDENTICAL in color to the light render (light card, dark-ink bars, dark-ink digit text) — this is the fix from attempt 1, where the bars used to invert to light-on-dark and break real-world scannability. The card now reads as a physical label placed on the dark page background, which is both a real-world-accurate barcode and a pleasant visual "elevated card on dark surface" effect.
+      Legibility verdict: PASS — all chrome (title) is clearly visible against the dark background, and the barcode itself remains scannable (dark bars on light card) exactly as attempt 1's feedback required. No dark-on-dark or light-on-light failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes (26px title, 30px digits), readable and well-proportioned
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars are thick (11px modules) and clearly visible; guard bars taller
+          than digit bars for sync-mark distinction
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast monochrome ink vs. background, no CVD concerns
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Improved from attempt 1 (moduleWidth 9→11, taller bars); card now
+          covers ~42% width / ~33% height, still somewhat generous whitespace above
+          title / below card
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this plot type; title correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds theme-correct; barcode ink/card are intentionally fixed
+          (not theme-flipping) per the domain requirement that a barcode stay dark-on-light
+          to remain scannable — a justified, well-documented exception
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Elevated rounded card and monospace digit typography show some polish,
+          but overall still reads as a well-configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Generous whitespace, clean card, subtle border, guard-bar height
+          differentiation; limited additional refinement beyond that
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Functional/technical plot type — no visual hierarchy beyond the default
+          barcode presentation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct EAN-13 linear barcode with guard patterns
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zones (9 modules each side), all three guard types, human-readable
+          digit placement, and now scannable dark-on-light bars in BOTH themes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 13 digits correctly encoded and displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows quiet zones, all three guard types, and both digit groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Valid GS1 prefix (590 = Poland), realistic retail product code, neutral
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Checksum algorithm verified correct against the spec's own example
+          code
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 global only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no over-engineering, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly mounts a single svg to #container per the harness contract'
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Fixed from attempt 1: now uses selection.data(barData).join(''rect'')
+          with a d3.scaleLinear module-to-pixel scale instead of a manual for-loop'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Data-join and linear scale are correct D3 idiom but still basic;
+          no use of other d3-distinctive features (d3.range, d3-format, transitions,
+          d3-shape)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
