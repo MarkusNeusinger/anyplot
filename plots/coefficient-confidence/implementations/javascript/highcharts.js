@@ -1,8 +1,7 @@
 // anyplot.ai
 // coefficient-confidence: Coefficient Plot with Confidence Intervals
-// Library: Highcharts 12.6.0 | Node 22
-// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
-// Quality: pending | Created: 2026-09-01
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-01
 
 const t = window.ANYPLOT_TOKENS;
 // ANYPLOT_TOKENS has no "muted" field — derive the theme-adaptive muted-ink
