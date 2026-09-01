@@ -1,7 +1,7 @@
 // anyplot.ai
 // coefficient-confidence: Coefficient Plot with Confidence Intervals
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-01
+// Quality: 91/100 | Created: 2026-09-01
 
 const t = window.ANYPLOT_TOKENS;
 const isLight = window.ANYPLOT_THEME !== "dark";

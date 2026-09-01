@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: coefficient-confidence
 created: '2026-09-01T23:17:40Z'
-updated: '2026-09-01T23:22:13Z'
+updated: '2026-09-01T23:33:42Z'
 generated_by: claude-sonnet
 workflow_run: 33569931742
 issue: 3576
@@ -12,135 +12,112 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Correct coefficient-plot form: horizontal error bars with point estimates, variables
-    on the y-axis, values on the x-axis, exactly as the spec''s ''preferred for long
-    variable names'' guidance requests'
-  - Variables ordered by |coefficient| descending, matching the spec's 'typically
-    ordered by coefficient magnitude' note
-  - Dashed vertical zero-reference line correctly signals the null-hypothesis threshold
-  - Significant vs. non-significant coefficients are cleanly distinguished with brand
-    green (#009E73) vs. the theme-adaptive `muted` semantic anchor — a textbook use
-    of the semantic-exception rule (status encoding), not an arbitrary color choice
-  - 'Both renders verified theme-correct: `#FAF8F1`/`#1A1A17` backgrounds, all chrome
-    (title, ticks, axis label, legend) uses theme-adaptive ink tokens, and the data
-    colors are pixel-identical between light and dark'
-  - 'Idiomatic D3: proper `.data(data).join(...)` pattern, `scaleBand`/`scaleLinear`,
-    `d3.axisBottom`/`d3.axisLeft`, `d3.format(''+.2f'')` for signed tick labels'
-  - Axis label states the effect measure with notation and units ('Standardized Coefficient
-    (β) with 95% Confidence Interval')
-  - Title format and legend labels are exactly correct; legend text spells out the
-    statistical meaning ('95% CI excludes 0') rather than a bare 'Yes/No'
-  - 'Realistic, factually coherent housing-regression data: signs and relative magnitudes
-    (crime rate and age negative, square footage/bathrooms/garage positive) all match
-    real-world expectations'
-  - Clean, deterministic, KISS-structured code with no functions/classes and no fake
-    interactivity
+  - The "practically negligible" zero-band is a genuinely useful addition beyond the
+    spec's minimum ask (just a zero line) — it visually separates "crosses zero but
+    barely" from confidently non-zero effects.
+  - Point-marker radius scaled by |coefficient| gives the largest effects more visual
+    weight without cluttering the chart.
+  - 'The callout on the top driver ("Largest driver: square_footage (+0.42)") adds
+    a clear narrative focal point per SC/DE storytelling goals.'
+  - Data is correctly pre-sorted by |coefficient| descending, matching the spec's
+    "typically ordered by magnitude" note.
+  - Both themes render cleanly with correctly swapped chrome and identical data colors
+    — no legibility issues in either render.
   weaknesses:
-  - Design Excellence is solid but not yet distinctive — every marker/error-bar is
-    styled identically regardless of magnitude or significance; a subtle visual hierarchy
-    (e.g. slightly larger markers for the top few |coefficient| rows, or a faint shaded
-    band around the zero line marking the 'practically negligible' zone) would push
-    this from 'good default' to 'publication-ready'
-  - No annotation calls out the effect-size ranking or highlights the single largest
-    positive/negative driver — the viewer has to scan all 12 rows to find the story
-    instead of being guided to it
-  - Confidence-interval caps are plain, uniform crossbars — a small refinement (rounded
-    caps, or a lighter alpha on the whisker vs. the point) would add polish consistent
-    with a 'perfect visual refinement' bar
+  - 'Design Excellence could go further: consider a subtle y-axis-only guideline per
+    row or slightly heavier caps on the largest-CI bars to reinforce hierarchy beyond
+    color/size alone.'
+  - Library Mastery is solid but generic — the manual error-bar construction and radius
+    scale don't showcase anything distinctly d3-only. Not a blocker, just headroom
+    for attempt 3 if further iteration happens.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "coefficient-confidence · javascript · d3 · anyplot.ai" in bold dark ink, centered top. X-axis tick labels (+0.60 … -0.40) and y-axis variable names (square_footage … has_pool) in dark-grey ink, clearly legible. Axis label "Standardized Coefficient (β) with 95% Confidence Interval" in dark ink below the x-axis. Legend top-right with two circular swatches ("Significant (95% CI excludes 0)" in green, "Not significant" in grey) — fully readable against the light background. Dashed zero-reference line in soft dark grey.
-      Data: First 7 rows (square_footage through lot_size_acres) render in brand green #009E73 with green error bars and point markers; the remaining 5 rows (renovated through has_pool) render in muted grey. All markers have a thin light-colored stroke that matches the page background, giving a clean "cut-out" look.
-      Legibility verdict: PASS — no light-on-light or hard-to-read text anywhere.
+      Background: Warm off-white, consistent with #FAF8F1 - PASS
+      Chrome: Title "coefficient-confidence · javascript · d3 · anyplot.ai" centered and bold, x-axis label "Standardized Coefficient (β) with 95% Confidence Interval" below axis, tick labels on both axes, legend top-right (Significant / Not significant) - all clearly readable in dark ink
+      Data: 12 variables ordered by |coefficient| descending, significant coefficients in Imprint green #009E73, non-significant in muted gray, dashed zero-reference line, shaded "negligible" band around zero, green callout label on the top driver
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light off-white ink, centered top. Axis tick labels and y-axis variable names render in light grey, clearly visible against the dark background. Axis label in light ink below the x-axis. Legend renders identically positioned with the same two swatches, text in light grey. Dashed zero-reference line in light grey, subtle but visible.
-      Data: Significant rows are the identical #009E73 green as the light render; non-significant rows use the dark-theme muted anchor (light grey), which is appropriately different from the light-theme muted grey since `muted` is theme-adaptive by design — this is expected, not a violation, since only the categorical data colors (green) must stay fixed, not the semantic 'muted' anchor. Marker strokes match the dark page background.
-      Legibility verdict: PASS — no dark-on-dark failures; every title, tick label, axis label, and legend entry is clearly legible against the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 - PASS
+      Chrome: Same title, axis label, tick labels, and legend, rendered in light ink - all clearly readable, no dark-on-dark issues found
+      Data: Colors identical to light render (green #009E73 for significant markers/bars); muted anchor color correctly swaps to a lighter theme-adaptive gray for chrome-context elements while data semantics stay identical
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14px/16px/24px); readable in both
-          themes; title fits comfortably without clipping
+        comment: All text readable in both themes at appropriate font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, ticks, or data
+        comment: No collisions between text, markers, error bars, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 sparse coefficients with prominent 9px-radius markers and 2.5px
-          error bar strokes — well adapted to low data density
+        comment: Markers sized by effect magnitude, clear CI caps, appropriate density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/grey distinction is CVD-safe, not red-green, and reinforced
-          by the legend text
+        comment: Green/gray distinguished by hue and legend text, not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart area covers ~58% of canvas, balanced margins given long snake_case
-          variable names on the y-axis
+        comment: Correct 3200x1800 canvas, generous margins, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis label states the effect measure with notation ('Standardized
-          Coefficient (β)')
+        comment: X-axis label states effect measure with units; title follows mandated
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, non-significant uses the theme-adaptive
-          muted anchor (correct semantic role), backgrounds and chrome are theme-correct
-          in both renders'
+        comment: 'First series is #009E73; both renders theme-correct; data colors
+          identical across themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured, semantically meaningful design but not yet exceptional
-          — no magnitude-based visual emphasis
+        passed: true
+        comment: Negligible zero-band, magnitude-scaled markers, and largest-driver
+          callout show real design intent
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: No grid, L-shaped spines, generous row padding, but crossbar caps
-          and marker sizing are uniform
+        passed: true
+        comment: Domain lines only, tick marks suppressed, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Color contrast and magnitude ordering create hierarchy, but no explicit
-          callout of the standout driver
+        passed: true
+        comment: Magnitude ordering plus significance coloring plus callout gives
+          clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -150,27 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct coefficient/forest-plot form with horizontal CI error bars
+        comment: Horizontal coefficient plot with CI error bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Zero line, magnitude ordering, significance color-coding, effect-measure
-          axis label all present
+        comment: Zero line, magnitude ordering, significance color distinction, horizontal
+          layout, effect-measure axis label all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coefficients on x, variables on y, all 12 rows visible
+        comment: Coefficients on x, variables on y, all 12 shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels precisely describe the significance
-          encoding
+        comment: Title matches mandated format; legend labels precise
     data_quality:
       score: 15
       max: 15
@@ -180,22 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows significant and non-significant coefficients, positive and
-          negative signs, varied CI widths
+        comment: Point estimate, CI bounds, and significance flag all represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing-price regression predictors are a real, neutral, comprehensible
-          scenario
+        comment: Plausible standardized coefficients from a housing-price regression,
+          neutral subject
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standardized coefficient magnitudes and signs (crime/age negative,
-          size/amenities positive) match real-world expectations
+        comment: 12 variables, realistic magnitudes and CI widths
     code_quality:
       score: 10
       max: 10
@@ -205,32 +179,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → scales → marks → axes, no functions/classes
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully hard-coded, deterministic data array
+        comment: Hardcoded, deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global d3 is used, nothing unused
+        comment: Only the d3 global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately concise, no fake interactivity or over-engineering
+        comment: Appropriately complex, no faked interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows the mount-node contract correctly, sizes svg from window.ANYPLOT_SIZE,
-          current D3 7 API
+        comment: Correct mount-node contract, current d3 v7 API, no animation
     library_mastery:
       score: 7
       max: 10
@@ -240,24 +213,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct scale/axis/join idioms; no advanced selection patterns needed
-          for this static form
+        comment: Proper use of scaleLinear/scaleBand/d3.extent/d3.format and .join()
+          pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Hand-built error-bar + point plot from raw SVG primitives, leveraging
-          D3's low-level flexibility since no built-in error-bar mark exists — beyond
-          generic usage but not a showcase feature
-  verdict: REJECTED
+        comment: Manual error-bar construction and magnitude-scaled radius are competent
+          but fairly standard d3 composition
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
-  patterns:
-  - data-generation
+  patterns: []
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
   - minimal-chrome
