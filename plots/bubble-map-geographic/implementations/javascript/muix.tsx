@@ -17,7 +17,7 @@ const cities = [
   { name: "Tokyo", lon: 139.7, lat: 35.7, population: 37.4, region: "Asia-Pacific" },
   { name: "Delhi", lon: 77.2, lat: 28.6, population: 32.9, region: "Asia-Pacific" },
   { name: "Shanghai", lon: 121.5, lat: 31.2, population: 29.2, region: "Asia-Pacific" },
-  { name: "Jakarta", lon: 106.8, lat: -6.2, population: 11.2, region: "Asia-Pacific" },
+  { name: "Jakarta", lon: 106.8, lat: -6.2, population: 33.4, region: "Asia-Pacific" },
   { name: "Sydney", lon: 151.2, lat: -33.9, population: 5.3, region: "Asia-Pacific" },
   { name: "Moscow", lon: 37.6, lat: 55.8, population: 12.6, region: "Europe" },
   { name: "Istanbul", lon: 29.0, lat: 41.0, population: 15.5, region: "Europe" },
@@ -42,13 +42,17 @@ const cities = [
 const MIN_RADIUS = 9;
 const MAX_RADIUS = 46;
 const maxPopulation = Math.max(...cities.map((c) => c.population));
-const radiusFor = (population) => Math.max(MIN_RADIUS, MAX_RADIUS * Math.sqrt(population / maxPopulation));
+const radiusFor = (population) =>
+  Math.max(MIN_RADIUS, MAX_RADIUS * Math.sqrt(population / maxPopulation));
 
 // Secondary encoding: world region, from the Imprint categorical palette.
-// Bubbles carry ~0.62 alpha (translucent fill via 8-digit hex) so overlapping
-// markers in dense regions stay legible, per the spec's transparency guidance.
-const ALPHA_HEX = "9E";
-const regionColor = (region) => `${t.palette[REGIONS.indexOf(region)]}${ALPHA_HEX}`;
+// Solid (non-alpha) fill: an alpha-hex fill composites against the page
+// background, which differs between themes (#FAF8F1 vs #1A1A17), so the same
+// alpha value renders as a visibly different hue per theme — a violation of
+// the Imprint contract that data colors stay identical across themes. Overlap
+// legibility in dense clusters instead comes from the largest-first draw
+// order below (smaller circles stay uncovered on top of larger ones).
+const regionColor = (region) => t.palette[REGIONS.indexOf(region)];
 
 const lonLabel = (v) => `${Math.round(Math.abs(v))}°${v < 0 ? "W" : "E"}`;
 const latLabel = (v) => `${Math.round(Math.abs(v))}°${v < 0 ? "S" : "N"}`;
@@ -64,7 +68,8 @@ const series = [...cities]
     data: [{ x: c.lon, y: c.lat, id: c.name }],
     markerSize: radiusFor(c.population),
     color: regionColor(c.region),
-    valueFormatter: () => `${c.name} — ${c.population.toFixed(1)}M residents · ${latLabel(c.lat)}, ${lonLabel(c.lon)}`,
+    valueFormatter: () =>
+      `${c.name} — ${c.population.toFixed(1)}M residents · ${latLabel(c.lat)}, ${lonLabel(c.lon)}`,
   }));
 
 const title = "bubble-map-geographic · javascript · muix · anyplot.ai";
@@ -99,6 +104,8 @@ export default function Chart() {
           tickNumber: 7,
           valueFormatter: lonLabel,
           label: "Longitude",
+          labelStyle: { fontSize: 15 },
+          tickLabelStyle: { fontSize: 14 },
         },
       ]}
       yAxis={[
@@ -109,13 +116,22 @@ export default function Chart() {
           tickNumber: 6,
           valueFormatter: latLabel,
           label: "Latitude",
+          labelStyle: { fontSize: 15 },
+          tickLabelStyle: { fontSize: 14 },
         },
       ]}
       grid={{ horizontal: true, vertical: true }}
       legend={{ hidden: true }}
       skipAnimation
     >
-      <text x={width / 2} y={50} textAnchor="middle" fontSize={titleFontSize} fontWeight={600} fill={t.ink}>
+      <text
+        x={width / 2}
+        y={50}
+        textAnchor="middle"
+        fontSize={titleFontSize}
+        fontWeight={600}
+        fill={t.ink}
+      >
         {title}
       </text>
       <text x={width / 2} y={78} textAnchor="middle" fontSize={14} fill={t.inkSoft}>
@@ -123,7 +139,12 @@ export default function Chart() {
       </text>
 
       {/* Size legend: reference circles anchor the population-to-area scale */}
-      <text x={legendCenters[0] - legendRadii[0]} y={legendBaselineY - MAX_RADIUS - 20} fontSize={13} fill={t.inkSoft}>
+      <text
+        x={legendCenters[0] - legendRadii[0]}
+        y={legendBaselineY - MAX_RADIUS - 20}
+        fontSize={13}
+        fill={t.inkSoft}
+      >
         Population (millions)
       </text>
       {legendPopulations.map((pop, i) => (
@@ -136,7 +157,13 @@ export default function Chart() {
             stroke={t.inkSoft}
             strokeWidth={1.5}
           />
-          <text x={legendCenters[i]} y={legendBaselineY + 18} textAnchor="middle" fontSize={13} fill={t.inkSoft}>
+          <text
+            x={legendCenters[i]}
+            y={legendBaselineY + 18}
+            textAnchor="middle"
+            fontSize={13}
+            fill={t.inkSoft}
+          >
             {pop}M
           </text>
         </g>
