@@ -1,7 +1,7 @@
 # anyplot.ai
 # barcode-ean13: EAN-13 Barcode
-# Library: makie 0.22.10 | Julia 1.11.9
-# Quality: pending | Created: 2026-09-01
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 90/100 | Created: 2026-09-01
 
 using CairoMakie
 using Colors
