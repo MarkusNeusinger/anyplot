@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: contour-map-geographic
 created: '2026-09-01T23:28:47Z'
-updated: '2026-09-01T23:35:59Z'
+updated: '2026-09-01T23:51:32Z'
 generated_by: claude-sonnet
 workflow_run: 33570406383
 issue: 3772
@@ -12,97 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - 'Clever, constraint-respecting engineering: core Highcharts has neither a heatmap/colorAxis
-    module nor a maps module loaded, so the raster fill, colorbar legend, and isoline
-    tracing (marching squares) are all built from genuine primitives (chart.renderer,
-    real spline series) rather than faking or switching libraries.'
-  - Correct sequential Imprint colormap (imprint_seq, green->blue) for single-polarity
-    elevation data, with data colors verified identical between light and dark renders.
-  - 'Theme-adaptive chrome is fully correct in both renders: label boxes, boundary
-    line, legend box, and text all flip appropriately with no dark-on-dark or light-on-light
-    failures.'
-  - Realistic, neutral alpine elevation scenario with four differently-sized peaks
-    and a sensible 300 m contour interval.
+  - Creative use of Highcharts' SVGRenderer to draw a genuine data-colored elevation
+    raster (chart.renderer.rect) and a custom colorbar legend, since core Highcharts
+    ships no heatmap/colorAxis module — a technically sound workaround, not a fake
+    visual.
+  - From-scratch marching-squares implementation traces real isolines as genuine Highcharts
+    point-series data (hover-enabled), not decorative SVG paths, satisfying the requirement
+    for real library series.
+  - Correct imprint_seq sequential colormap (green to blue) for elevation; data colors
+    are identical between light and dark renders, and all chrome (title, axis, tick
+    labels, custom legend text, contour labels) is fully theme-adaptive and legible
+    in both themes.
+  - 'Clear focal point: the highest peak is called out with an amber-marked triangle
+    and label, and its isoline is rendered thicker and more prominent, creating a
+    strong data-storytelling hierarchy.'
+  - Realistic, geographically-plausible alpine elevation data (420-3597 m across a
+    real lon/lat bounding box) with four distinct peak massifs, giving good feature
+    coverage of contour density and elevation range.
   weaknesses:
-  - Geographic context is limited to one synthetic dashed 'survey area boundary' polygon
-    - no coastline, political border, or terrain-shading cue, so the 'geographic basemap'
-    spec requirement is only partially met. Consider adding a second reference polyline
-    (e.g., a stylized ridge/valley line or a secondary administrative-style border)
-    to reinforce the geographic framing.
-  - Isoline contrast is a bit low against the raster on the dark render (both gradient
-    ends sit close in perceived lightness to the near-black backdrop) - consider a
-    slightly higher-contrast stroke treatment (e.g., blend toward t.ink/t.pageBg instead
-    of purely toward seq[1]) for the line color on dark theme specifically.
-  - 'Design Excellence has room to grow: the raster currently reads as flat, evenly-weighted
-    terrain - introduce a stronger single focal point (e.g., dashed peak-label callouts
-    on the tallest massif, or subtle emphasis/legend ordering by peak) to sharpen
-    the data-storytelling.'
-  - Several non-trivial helper functions (marching squares, polyline stitching) depart
-    from the KISS 'no functions' ideal - necessary here since core Highcharts has
-    no built-in contour algorithm, but worth flagging for the code-quality bar.
+  - The hand-drawn 36x20 elevation raster is visibly coarse/blocky (individual rect
+    cell edges are noticeable, especially in the flat green low-elevation areas) —
+    increasing the grid resolution (e.g. 60x40) would give smoother-looking shading
+    without changing the marching-squares logic.
+  - Title occupies a noticeably smaller share of the canvas width than the ~70-85%
+    typical for the mandated title string at default fontsize — not a defect (still
+    fully legible, no overlap or clipping), but there is room to grow it slightly
+    for stronger visual hierarchy.
+  - Heavy reliance on custom chart.renderer drawing (raster fill + colorbar legend)
+    rather than Highcharts' native chart/legend primitives is a necessary workaround
+    given the missing colorAxis/heatmap module, but it means the implementation doesn't
+    showcase Highcharts' highest-level idiomatic API for this data type.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
-      Chrome: Bold dark title "contour-map-geographic · javascript · highcharts · anyplot.ai" and gray subtitle, both clearly visible. Longitude/Latitude axis titles and tick labels (with ° units) are dark and fully readable. Contour-level label boxes (900 m, 1500 m, 2100 m, 2700 m, 3300 m) are white boxes with dark text - readable, no overlap. Custom "Elevation" colorbar legend on the right with dark text on a light elevated-bg box.
-      Data: Smooth green-to-blue sequential raster (Imprint imprint_seq) representing elevation, overlaid with thin darker isolines. Dark dashed "Survey area boundary" polygon with matching bottom legend entry.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "contour-map-geographic · javascript · highcharts · anyplot.ai" and subtitle render in dark ink, clearly visible; longitude/latitude tick labels and axis titles are dark/soft-dark and fully legible; the "Elevation" colorbar card at top-right has a light card fill with dark text; contour-level labels ("900 m", "2100 m", "2700 m", "3300 m") and the "Highest peak · 3597 m" callout sit in light label boxes with dark text, fully readable against the underlying raster; bottom legend ("Survey area boundary", "Ridge crest (reference)", "Highest peak") is dark-on-light and legible.
+      Data: A green-to-blue sequential raster (imprint_seq) fills the whole survey grid, darkening toward the four peak massifs; isolines are a muted blue-gray tone blended toward ink for contrast against the raster; the highest-peak marker is an amber-filled triangle with a dark outline; boundary/ridge reference lines are dashed/dotted in a soft ink tone. First data-bearing element (the raster fill low end and gradient) begins at imprint_seq[0] = #009E73-family green, consistent with the sequential Imprint scale.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black.
-      Chrome: Title and subtitle flip to light text, fully readable. Axis titles/labels flip to light. Contour-level label boxes flip to dark elevated background with light text - correct adaptation, no dark-on-dark failures. Colorbar legend box flips to dark elevated background with light labels.
-      Data: Raster and isoline colors are identical to the light render (confirmed - only chrome flipped). Boundary polygon flips to a light dashed line.
-      Legibility verdict: PASS (minor note: isoline contrast against the raster is somewhat lower than in the light render since both gradient ends sit closer in perceived lightness to the near-black backdrop, but every line and label remains distinguishable - not a legibility failure)
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light/off-white ink, clearly visible against the dark background; axis titles and tick labels are light soft-gray and fully legible; the "Elevation" colorbar card has a dark elevated-surface fill with light text; contour-level labels and the "Highest peak · 3597 m" callout use dark label boxes with light text (correctly inverted from the light render, not dark-on-dark); bottom legend text is light-on-dark and legible.
+      Data: The raster gradient (green to blue) is visually identical to the light render — same hues, same spatial pattern, confirming data colors do not shift with theme; isolines are the same blue-gray family but blended slightly more toward the light ink tone for contrast against the darker raster (a deliberate, theme-adaptive structural choice, not a change to the data-color mapping); the amber peak marker is identical to the light render; boundary/ridge reference lines are dashed/dotted in a lighter soft-ink tone appropriate for the dark surface.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; every text element sits on a background with adequate contrast in its own theme.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes
+        comment: All font sizes explicitly set; readable in both themes; title fits
+          without clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between labels, legend, or data
+        comment: No overlapping text or data elements observed.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Isolines slightly lower-contrast on dark theme but still visible
+        comment: Isolines and the peak marker are well sized; the raster's grid cells
+          are visibly coarse/blocky.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe sequential Imprint colormap
+        comment: Good contrast; amber peak marker and blue/green raster distinguishable
+          without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, legend adjacent to plot
+        comment: Plot area fills most of the canvas; colorbar legend sits adjacent
+          to the plot, not isolated.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with degree units
+        comment: '"Longitude (°E)" / "Latitude (°N)" — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: imprint_seq used correctly for single-polarity elevation data; theme-correct
-          chrome in both renders
+          chrome and backgrounds in both renders; data colors identical across themes.
     design_excellence:
       score: 15
       max: 20
@@ -112,23 +118,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Bespoke raster + labeled isolines + manual colorbar, clearly above
-          library defaults
+        comment: Thoughtful Imprint palette use and layered hierarchy (raster + isolines
+          + boundary + ridge + peak callout); raster blockiness holds back full publication
+          polish.
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Grid disabled, subtle spines, generous whitespace
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Clear terrain read via color+labels, but no single peak emphasized
-          as focal point
+        comment: No native grid/spines, subtle isoline styling, generous whitespace;
+          raster cell edges are a visible rough edge.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Highest-peak callout plus a thicker focal isoline create a clear
+          focal point and guide the viewer.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,48 +144,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct filled+line contour over lat/lon coordinates
+        comment: Correct contour/isoline map with both filled raster and line contours.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Contours, labels, colormap, colorbar present; geographic context
-          limited to one synthetic boundary polygon
+        comment: Labeled isolines, filled + line contours, colorbar, and geographic
+          context (boundary/ridge proxy, since no maps module is available) all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lon=x, lat=y correct, all data visible
+        comment: Longitude on X, latitude on Y; axes show the full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match
+        comment: Title matches the mandated format exactly; legend labels correctly
+          describe the boundary/ridge/peak series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Four distinct peak massifs plus valley floor, solid variation
+        comment: Four distinct peak massifs at different heights plus a valley floor,
+          with appropriately dense isoline spacing.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible alpine survey scenario
+        comment: Realistic, neutral alpine-survey scenario anchored to a real-world
+          lon/lat region.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation range and 300 m contour interval physically sensible
+        comment: Elevation range (420-3597 m) is plausible for the chosen Alps-region
+          bounding box.
     code_quality:
       score: 9
       max: 10
@@ -187,56 +199,59 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Necessary helper functions for marching-squares contour tracing since
-          core Highcharts has no built-in algorithm
+        comment: Several helper functions (marching squares, stitching, raster/legend
+          drawing) are necessary for the from-scratch contour algorithm but depart
+          from strict KISS.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Fully deterministic synthetic data, no RNG.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports
+        comment: No unused imports; only the Highcharts global is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or interactivity, complexity is warranted
+        comment: Clean and well-organized, no fake UI or simulated interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, credits disabled
+        comment: Uses Highcharts.chart('container', …) correctly; animation disabled;
+          no deprecated APIs.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Good use of chart.renderer + axis.toPixels alongside real spline
-          series
+        comment: Correct chart construction and series config, but leans on manual
+          SVGRenderer drawing rather than Highcharts' highest-level primitives, forced
+          by the missing colorAxis/heatmap module.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Direct SVG-renderer overlay driven by chart axis pixel-mapping is
-          a genuinely Highcharts-specific technique
-  verdict: REJECTED
+        comment: From-scratch marching-squares isoline tracing plus a hand-built raster/colorbar
+          via chart.renderer is a distinctive, hard-to-replicate-trivially use of
+          Highcharts' extensibility.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
   - annotations
   - custom-legend
   patterns:
@@ -247,4 +262,5 @@ impl_tags:
   - interpolation
   styling:
   - custom-colormap
+  - gradient-fill
   - publication-ready
