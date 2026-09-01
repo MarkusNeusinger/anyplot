@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-map-geographic: Bubble Map with Sized Geographic Markers
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-01
+// Quality: 84/100 | Created: 2026-09-01
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 
 const t = window.ANYPLOT_TOKENS;
