@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: barcode-code128
 created: '2026-09-01T18:38:51Z'
-updated: '2026-09-01T18:44:17Z'
+updated: '2026-09-01T19:04:45Z'
 generated_by: claude-sonnet
 workflow_run: 33543044881
 issue: 3809
@@ -12,58 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Verified-correct Code 128 Subset B encoding: symbol values, weighted mod-103
-    checksum (manually re-derived from "SPEC-88451-QC" and confirmed to equal 9, matching
-    the footer), ISO/IEC 15417 bar/space width table, and Stop pattern are all technically
-    accurate'
-  - 10-module quiet zones on each side match the ISO minimum, and the human-readable
-    text is placed directly below the bars per spec
-  - Thoughtful, explicitly-commented design decision to keep the barcode card fixed
-    black-ink-on-white regardless of theme (a printed label doesn't follow the page's
-    dark/light mode) while still correctly flipping title/subtitle/footnote chrome
-    between light and dark tokens
-  - Clean three-tier typography hierarchy (title, subtitle, bold human-readable code,
-    muted footnote metadata) with every fontsize explicitly set
-  - Fully custom, minimal-chrome geometric rendering (hidedecorations!/hidespines!,
-    poly!/text! primitives, DataAspect()) rather than forcing a barcode into an inappropriate
-    default Axis look
-  - Realistic, on-spec laboratory specimen scenario matching the spec's stated healthcare/lab
-    use case
-  - Both renders are theme-correct with no clipping and no overlap
+  - 'Precisely fixed both weaknesses from the previous review: vertical margins are
+    now balanced (top ~11% / bottom ~12%, was 8%/20%+), and a tasteful Imprint-green
+    accent rule was added as the suggested "small polish touch"'
+  - Verified-correct Code 128 Subset B encoding (symbol values, mod-103 checksum re-derived
+    to 9, ISO/IEC 15417 bar/space widths, Stop pattern) carried over unchanged
+  - Both renders remain theme-correct with no clipping and no overlap; canvas confirmed
+    at exact 3200x1800 px
   weaknesses:
-  - Title spans only ~30% of the canvas width, well under the ~50-70% recommended
-    range — enlarge the title fontsize slightly so it reads with more visual weight
-    relative to the label card below it
-  - 'Vertical whitespace is imbalanced: the margin above the title (~8% of canvas
-    height) is much smaller than the empty space below the footnote text (~20%+) —
-    tighten the bottom margin or shift the whole composition down slightly so top/bottom
-    margins read as balanced'
-  - Overall composition is polished but still close to a 'well-configured default'
-    rather than truly publication-grade — consider a small additional polish touch
-    (e.g. a subtle Imprint-green accent mark or thin border/shadow on the label card)
-    without ever compromising the black-ink-on-white barcode contract needed for scan
-    reliability
-  - Spec mentions three switchable Code 128 subsets (A/B/C); this implementation only
-    demonstrates Subset B (a reasonable choice for a single barcode, and already noted
-    in the footer) — no change required, just noting for context
+  - Title still occupies only ~30-33% of canvas width -- the fontsize-only bump (26->30)
+    wasn't enough to reach the ~50-70% range recommended for a short custom title
+    like this one; consider a larger jump (e.g. fontsize 34-36) or a slightly narrower
+    canvas margin around the label card to raise the title's visual weight relative
+    to the card
+  - DE-03 (data storytelling) is unchanged at "good but default" -- the barcode card
+    is a clear focal point, but there's no further hierarchy beyond that; not required
+    for this spec, just noting for context
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "barcode-code128 · julia · makie · anyplot.ai" in dark ink, subtitle "Laboratory specimen label" in softer gray beneath it, footnote "Code 128, Subset B · Quiet zone 10 modules each side · Check digit 9" in muted gray at the bottom — all clearly readable against the light background.
-      Data: A white label card sits centered on the page holding a black Code 128 barcode (Subset B) encoding "SPEC-88451-QC", with the human-readable text in bold dark ink directly below the bars. The card and bars are pure white/black by design (documented in-code as a deliberate exception since a printed label's ink does not follow the page theme), with generous quiet-zone padding on both sides of the bars.
-      Legibility verdict: PASS — every text element (title, subtitle, human-readable code, footnote) is clearly legible with strong contrast against #FAF8F1.
+      Chrome: Title "barcode-code128 · julia · makie · anyplot.ai" in dark ink, subtitle "Laboratory specimen label" in softer gray beneath it, a small Imprint-green accent rule, and a muted footnote "Code 128, Subset B · Quiet zone 10 modules each side · Check digit 9" at the bottom -- all clearly readable against the light background.
+      Data: A white label card sits centered on the page holding a black Code 128 barcode (Subset B) encoding "SPEC-88451-QC", with bold dark human-readable text directly below the bars. Card and bars stay pure white/black by design (a printed label doesn't follow the page theme), with generous quiet-zone padding on both sides.
+      Legibility verdict: PASS -- every text element is clearly legible with strong contrast against #FAF8F1.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Title now renders in light off-white ink, subtitle and footnote in lighter muted grays — all chrome correctly flipped to theme-adaptive tokens.
-      Data: The label card and barcode are identical to the light render — same white card, same black bars, same bold human-readable text — confirming the "printed label" exception is applied consistently and the barcode geometry itself is unchanged between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all surrounding chrome text is light-colored and reads clearly against the near-black page, and the fixed-white card provides strong contrast for the black barcode regardless of page theme.
+      Chrome: Title renders in light off-white ink, subtitle and footnote in lighter muted grays -- all chrome correctly flipped to theme-adaptive tokens. Green accent rule identical to light render.
+      Data: The label card and barcode are identical to the light render -- same white card, same black bars, same bold human-readable text -- confirming the "printed label" exception is applied consistently.
+      Legibility verdict: PASS -- no dark-on-dark failures; all chrome text is light-colored and reads clearly against the near-black page.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,8 +53,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All fontsizes explicit, readable in both themes; title occupies only
-          ~30% of width, under the recommended range
+        comment: All fontsizes explicit, readable in both themes; title width (~30-33%)
+          still under the 50-70% guideline despite the fontsize bump
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -94,11 +76,11 @@ review:
         comment: Pure black/white barcode plus theme-adaptive text; no CVD concerns
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall utilization but bottom margin is noticeably larger than
-          the top margin
+        comment: Vertical margin imbalance from attempt 1 is resolved; top/bottom
+          now read as balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,34 +92,34 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Chrome correctly theme-adaptive in both renders; fixed black/white
-          barcode card is a documented, spec-mandated exception (scan reliability),
-          not a compliance miss
+        comment: Chrome correctly theme-adaptive in both renders; new accent rule
+          uses correct Imprint green; fixed black/white barcode is a documented spec-mandated
+          exception
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom geometric rendering with a well-reasoned theme exception,
-          clearly above a configured default
+        comment: Added the suggested Imprint-green accent rule as a small polish touch
+          on top of the custom geometric rendering
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All decorations/spines hidden, generous padding; slight whitespace
-          imbalance keeps it from perfect
+        comment: All decorations/spines hidden, generous padding, and the margin imbalance
+          is now resolved
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Card focal point plus layered metadata (subset, quiet zone, check
-          digit) creates hierarchy beyond a raw data dump
+        comment: Card focal point plus layered metadata creates hierarchy beyond a
+          raw data dump; unchanged from last review
     spec_compliance:
       score: 15
       max: 15
@@ -178,8 +160,7 @@ review:
         max: 6
         passed: true
         comment: Shows a complete, correctly-annotated barcode; does not demonstrate
-          subset switching mentioned in the spec, a reasonable simplification for
-          a single barcode
+          subset switching, a reasonable simplification for a single barcode
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -215,7 +196,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors, both used
+        comment: Only CairoMakie and Colors, both used; new ACCENT constant is used
       - id: CQ-04
         name: Code Elegance
         score: 2
@@ -245,9 +226,9 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Batched Rect2f polygon rendering via a single poly! call is a genuinely
-          Makie-idiomatic technique
-  verdict: REJECTED
+        comment: Batched Rect2f polygon rendering via a single poly! call for all
+          bars is a genuinely Makie-idiomatic technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
