@@ -1,7 +1,7 @@
 // anyplot.ai
 // boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-01
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 92/100 | Created: 2026-09-01
 
 const t = window.ANYPLOT_TOKENS;
 const THEME = window.ANYPLOT_THEME === "dark" ? "dark" : "light";
