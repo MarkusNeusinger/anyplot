@@ -33,44 +33,61 @@ const CENTER_GUARD = [QUIET + 45, QUIET + 49];
 const END_GUARD = [QUIET + 92, QUIET + 94];
 const inGuard = (i) => (i >= START_GUARD[0] && i <= START_GUARD[1]) || (i >= CENTER_GUARD[0] && i <= CENTER_GUARD[1]) || (i >= END_GUARD[0] && i <= END_GUARD[1]);
 
+// A physical barcode must stay dark-ink-on-light-background to remain
+// scannable regardless of the page's light/dark theme — only the
+// surrounding chrome (title) is allowed to flip with ANYPLOT_THEME.
+const BARCODE_BG = "#FAF8F1";
+const BARCODE_BORDER = "#D9D4C3";
+const BARCODE_INK = "#1A1A17";
+
 // --- Layout -------------------------------------------------------------------
-const moduleWidth = 9;
+const moduleWidth = 11;
 const barcodeWidth = bits.length * moduleWidth;
 const startX = (width - barcodeWidth) / 2;
-const digitBarHeight = 260;
-const guardBarHeight = digitBarHeight + 28;
-const barsTopY = 300;
+const digitBarHeight = 420;
+const guardBarHeight = digitBarHeight + 40;
+const barsTopY = 260;
 
-const cardPad = 70;
-const cardTop = barsTopY - 60;
-const cardBottom = barsTopY + guardBarHeight + 120;
+const cardPad = 60;
+const cardTop = barsTopY - 50;
+const textY = barsTopY + guardBarHeight + 50;
+const cardBottom = textY + 40;
 
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
-// Label card — barcodes read as printed labels, so an elevated card grounds it.
+// Label card — barcodes read as printed labels, so an elevated card grounds
+// it; the card stays fixed light regardless of theme (see BARCODE_* above).
 svg.append("rect")
   .attr("x", startX - cardPad).attr("y", cardTop)
   .attr("width", barcodeWidth + cardPad * 2).attr("height", cardBottom - cardTop)
   .attr("rx", 24)
-  .attr("fill", t.elevatedBg)
-  .attr("stroke", t.grid)
+  .attr("fill", BARCODE_BG)
+  .attr("stroke", BARCODE_BORDER)
   .attr("stroke-width", 1.5);
 
-// Bars — one rect per "1" module; guard bars extend further down as sync marks.
-const bars = svg.append("g");
-for (let i = 0; i < bits.length; i++) {
-  if (bits[i] !== "1") continue;
-  bars.append("rect")
-    .attr("x", startX + i * moduleWidth).attr("y", barsTopY)
-    .attr("width", moduleWidth).attr("height", inGuard(i) ? guardBarHeight : digitBarHeight)
-    .attr("fill", t.ink);
-}
+// Bars — one rect per "1" module, bound via a data-join with a linear scale
+// mapping module index to pixel offset; guard bars extend further down as
+// sync marks.
+const moduleX = d3.scaleLinear().domain([0, bits.length]).range([0, barcodeWidth]);
+const moduleW = moduleX(1) - moduleX(0);
+const barData = [...bits]
+  .map((bit, i) => ({ bit, i, guard: inGuard(i) }))
+  .filter((d) => d.bit === "1");
+
+svg.append("g")
+  .selectAll("rect")
+  .data(barData)
+  .join("rect")
+  .attr("x", (d) => startX + moduleX(d.i))
+  .attr("y", barsTopY)
+  .attr("width", moduleW)
+  .attr("height", (d) => (d.guard ? guardBarHeight : digitBarHeight))
+  .attr("fill", BARCODE_INK);
 
 // Human-readable digits — leading digit sits left of the start guard; the two
 // six-digit groups center under their own encoded region.
-const textY = barsTopY + guardBarHeight + 44;
-const digitFont = { fontFamily: "ui-monospace, 'SFMono-Regular', Menlo, monospace", fontSize: "30px", fill: t.ink };
+const digitFont = { fontFamily: "ui-monospace, 'SFMono-Regular', Menlo, monospace", fontSize: "30px", fill: BARCODE_INK };
 
 svg.append("text")
   .attr("x", startX + (START_GUARD[0] - 1) * moduleWidth).attr("y", textY)
