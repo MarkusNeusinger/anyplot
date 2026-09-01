@@ -22,8 +22,11 @@ const IMPRINT_PALETTE = [
 # --- Data --------------------------------------------------------------------
 # Response-time distributions (ms) across server endpoints, right-skewed
 # (log-normal) as is typical for latency data at high request volumes.
+# Traffic volume varies sharply by endpoint (25k req for the public gateway
+# down to 1.5k for the low-traffic payment path) so letter-value depth below
+# actually spans its full range instead of clamping at the ceiling.
 endpoints = ["API Gateway", "Auth Service", "Payment Service", "Search Service"]
-n_points  = [4000, 6000, 3000, 5000]
+n_points  = [25000, 8000, 1500, 12000]
 mu        = [3.9, 4.3, 4.6, 4.1]
 sigma     = [0.35, 0.45, 0.55, 0.40]
 response_times = [exp.(randn(n_points[j]) .* sigma[j] .+ mu[j]) for j in eachindex(endpoints)]
@@ -31,8 +34,10 @@ response_times = [exp.(randn(n_points[j]) .* sigma[j] .+ mu[j]) for j in eachind
 # --- Letter values (Tukey) ---------------------------------------------------
 # Level i covers the central probability mass [2^-(i+1), 1 - 2^-(i+1)]:
 # i=1 -> fourths (quartiles), i=2 -> eighths, i=3 -> sixteenths, and so on.
-# Depth scales with sample size so larger categories reveal more tail detail.
-letter_value_depth(n) = clamp(floor(Int, log2(n)) - 3, 4, 8)
+# Depth scales with sample size: Payment Service's ~1.5k points stop at 4
+# levels while API Gateway's 25k points reach the 8-level ceiling.
+letter_value_depth(n) = clamp(floor(Int, log2(n)) - 6, 3, 8)
+LEVEL_NAMES = ["Fourths", "Eighths", "16ths", "32nds", "64ths", "128ths", "256ths", "512ths"]
 
 function letter_values(values, k)
     lo = Vector{Float64}(undef, k)
@@ -110,7 +115,7 @@ for (j, name) in enumerate(endpoints)
         ax,
         [j - base_half_width, j + base_half_width], [median_val, median_val];
         color     = INK,
-        linewidth = 2.5,
+        linewidth = 3.0,
     )
 
     # Outliers beyond the deepest letter value
@@ -127,14 +132,42 @@ for (j, name) in enumerate(endpoints)
     end
 end
 
+# Depth legend: swatch strip mapping shade darkness to letter-value level,
+# built with the same weighted_color_mean ramp used for the boxes so the
+# legend colors match the plot exactly. Uses the deepest category (API
+# Gateway, k = max_k) as the reference hue.
+max_k = maximum(letter_value_depth(n) for n in n_points)
+legend_elems = [
+    PolyElement(
+        color       = weighted_color_mean(1 - (i - 1) / max(max_k - 1, 1) * 0.65, IMPRINT_PALETTE[1], PAGE_BG),
+        strokecolor = PAGE_BG,
+        strokewidth = 1,
+    )
+    for i in 1:max_k
+]
+Legend(
+    fig[1, 2],
+    legend_elems,
+    LEVEL_NAMES[1:max_k],
+    "Quantile Depth";
+    labelcolor      = INK,
+    titlecolor      = INK,
+    labelsize       = 12,
+    titlesize       = 13,
+    framevisible    = false,
+    backgroundcolor = PAGE_BG,
+    tellheight      = false,
+)
+
 Label(
-    fig[2, 1],
+    fig[2, 1:2],
     "Nested boxes taper from the fourths (25–75%) out to the deepest letter value " *
     "(scaled to sample size); dots mark outliers beyond the deepest box.";
     fontsize = 12,
     color    = INK_SOFT,
 )
 
+colsize!(fig.layout, 2, Relative(0.14))
 rowsize!(fig.layout, 2, Auto(0.08))
 
 # --- Save ----------------------------------------------------------------------
