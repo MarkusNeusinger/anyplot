@@ -1,7 +1,7 @@
 # anyplot.ai
 # crossword-basic: Crossword Puzzle Grid
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-09-01
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 83/100 | Created: 2026-09-01
 
 using CairoMakie
 using Colors
