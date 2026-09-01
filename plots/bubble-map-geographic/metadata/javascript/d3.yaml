@@ -1,0 +1,274 @@
+library: d3
+language: javascript
+specification_id: bubble-map-geographic
+created: '2026-09-01T18:50:30Z'
+updated: '2026-09-01T19:18:41Z'
+generated_by: claude-sonnet
+workflow_run: 33544615059
+issue: 3625
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Legend/basemap overlap from the previous review is fixed: the size-legend inset
+    panel was moved to the empty Pacific strip left of North America (mapX0+20), verified
+    clear of every landmass and bubble in both renders — no more clipped Australia
+    coastline.'
+  - The legend's largest reference value was raised from 35M to 40M, so it now correctly
+    exceeds the largest actual bubble (Tokyo, 37.4M) instead of under-representing
+    it.
+  - Coastline blockiness was directly addressed with a new densify() helper that inserts
+    deterministic perpendicular-bulge vertices along long straight ring edges, giving
+    the hand-authored coastlines a noticeably more organic, less faceted read at this
+    canvas size.
+  - Idiomatic, advanced d3-geo usage (geoEqualEarth, geoPath, fitExtent) plus a geoArea-based
+    ring-winding correction that correctly handles antimeridian clipping for hand-authored
+    coastlines — a genuinely distinctive D3 technique.
+  - Bubble AREA (not radius) is correctly scaled via d3.scaleSqrt, and fill-opacity
+    0.6 alpha-blending handles overlap well in dense clusters (South/East Asia, Nile
+    delta) exactly as the spec recommends.
+  - Real hover tooltips (name, population, coordinates) driven by genuine mouseenter/mousemove/mouseleave
+    handlers — no faked interactivity — plus theme-adaptive chrome that is correct
+    and identical in data color across both renders.
+  - Realistic, neutral, factually plausible metro-population data (37.4M down to 9.5M)
+    tracking real UN World Urbanization Prospects estimates.
+  weaknesses:
+  - Hand-simplified coastline rings (EURASIA, AFRICA especially) are improved by densify()
+    but still read as somewhat low-vertex/blocky on close inspection — a fully publication-ready
+    basemap would need still more intermediate points along the Sahara-to-Arabia stretch
+    and the Horn of Africa.
+  - Element sizing (bubble radius range 6-34px for 24 points) is visible and readable
+    but not re-tuned from the prior attempt — still relies on the same range that
+    the prior review scored as good-but-not-optimal.
+  - Data storytelling remains purely encoding-driven (size + z-order sort) with no
+    annotation or callout highlighting a specific insight (e.g. the S/E Asia population
+    cluster) — acceptable since the spec doesn't require annotations, but a missed
+    opportunity for a stronger focal point.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "World Megacities by Population · bubble-map-geographic · javascript · d3 · anyplot.ai" and a lighter gray subtitle "Bubble area ∝ metro-area population · fewer, larger markers avoid overplotting" are both centered above the map and fully readable against the light background. The size-legend box ("Population (millions)", bottom-left this time, over open Pacific ocean) has a dark bold header and gray value labels (40M/20M/10M) with baseline-aligned reference circles, all legible on its off-white elevated panel, and — unlike the previous attempt — does not overlap any landmass.
+      Data: Continents render as neutral warm-gray filled polygons (coastline basemap, no country borders) with a thin, subtle stroke; edges look a bit more organic than a raw polygon thanks to the added densify() bulge vertices, though still simplified. 24 city bubbles are filled in brand green (#009E73) at ~60% opacity with a thin light stroke for definition, sized by population (Tokyo largest, London smallest). Overlapping clusters (Delhi/Mumbai/Kolkata/Dhaka/Karachi, Cairo/Istanbul, Lagos/Kinshasa, São Paulo/Rio, Tokyo/Osaka) are distinguishable thanks to alpha blending and outlines.
+      Legibility verdict: PASS — all text readable, no dark-on-dark/light-on-light issues, and the legend no longer clips any basemap content.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and subtitle render in light ink / soft-ink tones, fully readable against the dark background — no dark-on-dark failures. The legend panel is a dark elevated surface (#242420-equivalent) with light text, readable, same bottom-left ocean placement, still clear of any landmass.
+      Data: Continents render as a slightly lighter neutral gray than the background; bubbles remain identical brand green (#009E73) to the light render — data colors are unchanged between themes, only chrome (background, land fill, text, legend box) flips as expected.
+      Legibility verdict: PASS — all text readable in both themes; no dark-on-dark or light-on-light failures found; no legend/landmass overlap in this theme either.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title fontsize dynamically computed
+          from title length and fits comfortably without clipping; readable in both
+          themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text overlap. The legend panel no longer overlaps basemap/landmass
+          content (fixed from the prior attempt), so the earlier deduction no longer
+          applies.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bubble radii (6-34px) are visible and area-scaled to population;
+          sparse point count (24) handled with prominent-enough markers and 0.6 alpha
+          for overlap — unchanged from the prior attempt, still not maximally optimal.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green with light/dark stroke halos gives good
+          contrast against both land and background; no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills most of the canvas with balanced margins; the size-legend
+          panel was moved to a verified-clear ocean area and no longer overlaps Australia
+          or any other landmass in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No literal axes (map plot); title and subtitle are fully descriptive
+          of the encoding.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is #009E73 in both renders; background is #FAF8F1
+          light / #1A1A17 dark; chrome is theme-correct in both.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom size-legend design and halo-stroked bubbles; the
+          new densify() helper visibly softens the previously-flagged blocky coastlines,
+          though Eurasia/Africa are still somewhat low-vertex on close inspection.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid needed, generous whitespace, subtle land stroke; the legend-over-Australia
+          detail flagged last review is now caught and fixed, showing real attention
+          to polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size-first sort (largest cities drawn under smaller ones) plus a
+          subtitle explaining the area-encoding gives the reader a clear read on population
+          concentration (S/E Asia cluster jumps out immediately); no annotation-driven
+          focal point beyond that, unchanged from prior attempt.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bubble map with geographically projected, sized markers.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Area-based sizing, size legend (now correctly ≥ max data value),
+          alpha transparency, coastline basemap, minimum bubble size, and real hover
+          tooltips are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lat/lon correctly projected via geoEqualEarth + fitExtent; all 24
+          cities render at geographically correct positions.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format with a descriptive prefix;
+          size legend is clearly labeled and now geometrically accurate.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide magnitude range (9.5M-37.4M), both dense overlapping clusters
+          and isolated points, spread across most continents.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral world-city population data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population figures track plausible real-world metro-area estimates
+          and relative ordering.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear top-to-bottom flow; poly() and densify() are small, well-commented
+          geometry utilities, not architectural over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; d3 is the pinned global per the mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom geo-projection + legend; real
+          (not faked) interactivity; well-commented on the antimeridian ring-winding
+          fix and the legend-placement rationale.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract, single svg append, no animation/transitions.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of d3-geo (geoEqualEarth, geoPath, fitExtent, geoArea)
+          and d3-scale (scaleSqrt) — genuinely high-level, idiomatic D3.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The geoArea-based ring-winding correction for antimeridian clipping
+          is a distinctive, non-trivial D3-specific technique not easily replicated
+          in other charting libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - hover-tooltips
+  - geographic-projection
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
