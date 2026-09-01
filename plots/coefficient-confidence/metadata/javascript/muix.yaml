@@ -1,0 +1,229 @@
+library: muix
+language: javascript
+specification_id: coefficient-confidence
+created: '2026-09-01T23:26:02Z'
+updated: '2026-09-01T23:30:56Z'
+generated_by: claude-sonnet
+workflow_run: 33570520975
+issue: 3576
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/muix/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - Custom ConfidenceWhiskers component built on useXScale/useYScale is a sophisticated,
+    correct use of MUI X's low-level hooks to render error bars the library has no
+    built-in series type for
+  - Correct semantic use of the muted anchor color (not an arbitrary gray) for the
+    'not significant' category, matching the style guide's neutral/disabled convention
+  - 'Clean minimal chrome: y-axis line/ticks disabled, only labels remain; subtle
+    vertical gridlines; no unnecessary borders'
+  - Title font-size scaling formula (TITLE_SIZE) keeps long titles proportionate
+  weaknesses:
+  - CI widths are fairly uniform across all 11 variables (~0.13-0.17) rather than
+    varying with standard error/sample characteristics - a small realism nit, not
+    a functional issue
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 target.
+      Chrome: Title "Housing Price Regression · coefficient-confidence · javascript · muix · anyplot.ai" centered at top in dark ink, comfortably sized, no clipping. X-axis labeled "Coefficient Estimate (Standardized β)" with ticks every 0.05 from -0.65 to 0.75, evenly spaced and unbunched. Y-axis shows 11 variable names, no axis line/ticks (disabled by design). Dashed zero-reference line with italic "No effect (β = 0)" label. Bottom legend with two swatches. All chrome text is dark and clearly readable.
+      Data: 11 rows, point + horizontal CI whisker each. 6 significant rows colored brand green #009E73 (first series, correct per palette rule). 5 non-significant rows colored the "muted" semantic anchor gray.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 target.
+      Chrome: Same title, axis labels, ticks, legend, and reference-line annotation, all flipped to light-colored text/lines. No dark-on-dark issues found anywhere, including the small italic zero-line label near the bottom axis.
+      Data: Colors identical to light render (#009E73 green for significant rows; theme-adaptive muted anchor gray for non-significant rows, which is the expected/documented behavior for that semantic token, not a data-identity violation).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized, readable in both themes, ticks unbunched
+          at full res
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between whiskers, markers, labels, legend, or annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparse data (11 pts) with prominent 16px markers and 3px whisker
+          strokes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe green/gray encoding reinforced by legend text
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Comfortable margins, canvas gate passed, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Units-labeled x-axis, correct mandated title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: First series correct brand green; muted anchor used correctly for
+          non-significant category; backgrounds visually match targets but not pixel-sampled
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Clean, restrained, intentional magnitude ordering
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: No spines, y-axis line/ticks disabled, subtle gridlines, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color separates significance instantly; ordering plus zero-line tells
+          the story clearly
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct coefficient/forest plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Zero line, magnitude ordering, significance color coding, effect-measure
+          axis label all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Coefficients on y, values on x, all 11 rows shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; legend labels unambiguous
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Point estimates, CI bounds, significance, variable names all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible housing-price regression predictors and effect signs
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Realistic beta range; CI widths slightly too uniform across variables
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes; small justified helper component
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used imports, community package only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, skipAnimation present, sized from ANYPLOT_SIZE
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly delegates output to harness; current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper composable ChartContainer assembly matching documented pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale hooks for hand-drawn whiskers is a distinctive,
+          non-trivial technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - minimal-chrome
