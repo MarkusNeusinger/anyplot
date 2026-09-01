@@ -49,6 +49,26 @@ const poly = (ring) => {
     : f;
 };
 
+// Insert extra vertices (with a small deterministic perpendicular bulge) along
+// long, dead-straight edges so the hand-simplified rings read as coastal
+// curves instead of faceted polygon edges — no RNG, stays reproducible.
+const densify = (ring) =>
+  ring.slice(0, -1).flatMap(([x0, y0], i) => {
+    const [x1, y1] = ring[i + 1];
+    const dist = Math.hypot(x1 - x0, y1 - y0);
+    const extra = dist > 14 ? 3 : dist > 7 ? 1 : 0;
+    const points = [[x0, y0]];
+    for (let s = 1; s <= extra; s++) {
+      const f = s / (extra + 1);
+      const bulge = Math.sin(f * Math.PI) * (dist > 14 ? 1.1 : 0.6);
+      points.push([
+        x0 + (x1 - x0) * f - ((y1 - y0) / dist) * bulge,
+        y0 + (y1 - y0) * f + ((x1 - x0) / dist) * bulge,
+      ]);
+    }
+    return points;
+  }).concat([ring[ring.length - 1]]);
+
 const NORTH_AMERICA = [
   [-168, 66], [-155, 59], [-135, 58], [-125, 48], [-117, 32], [-105, 20],
   [-97, 16], [-90, 14], [-83, 9], [-77, 8], [-80, 25], [-75, 35],
@@ -106,7 +126,7 @@ const BRITISH_ISLES = [
 const landFeatures = [
   NORTH_AMERICA, SOUTH_AMERICA, EURASIA, AFRICA, AUSTRALIA,
   JAPAN, PHILIPPINES, INDONESIA, BRITISH_ISLES,
-].map(poly);
+].map((ring) => poly(densify(ring)));
 
 const mapBounds = {
   type: "Polygon",
@@ -207,12 +227,18 @@ svg
     tooltip.style("opacity", 0);
   });
 
-// --- Size legend — inset panel, readable over land or ocean ---------------
+// --- Size legend — inset panel over open ocean -----------------------------
+// Bottom-right (mapX1-20, mapY1-20 corner) sits on top of Australia in this
+// projection/fitExtent; the empty Pacific strip left of North America
+// (x < ~300 at this canvas size) is verified clear of every landmass and
+// bubble, so the panel is anchored there instead.
 const legendW = 210;
 const legendH = 160;
-const legendX = mapX1 - legendW - 20;
+const legendX = mapX0 + 20;
 const legendY = mapY1 - legendH - 20;
-const legendValues = [10, 20, 35];
+// Top reference value must be >= the largest bubble's population (37.4M)
+// so the legend never under-represents the largest marker on the map.
+const legendValues = [10, 20, 40];
 const legendMaxR = radius(d3.max(legendValues));
 
 const legendG = svg.append("g").attr("transform", `translate(${legendX},${legendY})`);
