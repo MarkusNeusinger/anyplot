@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: barcode-ean13
 created: '2026-09-01T18:40:07Z'
-updated: '2026-09-01T18:46:26Z'
+updated: '2026-09-01T19:00:59Z'
 generated_by: claude-sonnet
 workflow_run: 33544148033
 issue: 3808
@@ -12,51 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 87
 review:
   strengths:
+  - 'The Attempt-1 blocking weakness is fixed correctly: bar fill now uses a fixed
+    BARCODE_INK (#1A1A17) constant instead of the theme-adaptive t.ink token, so the
+    barcode marks stay identical dark-on-light in both renders and remain machine-scannable
+    regardless of display theme.'
+  - A dedicated BARCODE_CARD (#FAF8F1) plotBackgroundColor draws a fixed light substrate
+    behind the bars, so the plot visually reads as a physical printed barcode label
+    sitting on the theme-adaptive page background rather than dissolving into it on
+    dark mode.
   - 'Accurate GS1 EAN-13 encoding: correct L/G/R module tables, parity-table digit-set
-    selection, and a correctly-computed check digit (verified by hand: check digit
-    = 0 for product code 890123456789)'
-  - Correct start (101), center (01010), and end (101) guard patterns, rendered taller
-    than the digit bars via GUARD_HEIGHT, matching the real-world barcode convention
-  - Quiet zones exceed the spec minimum on both sides (13 modules left, 11 modules
-    right vs. the required 9)
-  - 'Human-readable digits are correctly grouped and centered: the leading digit stands
-    alone in the left quiet zone, and the two 6-digit groups are centered under their
-    own 7-module blocks'
+    selection, and correctly-computed check digit (verified by hand: check digit =
+    0 for product code 890123456789).'
+  - Correct start (101), center (01010), and end (101) guard patterns rendered taller
+    than the digit bars via GUARD_HEIGHT, matching real-world barcode convention.
+  - 'Quiet zones exceed the spec minimum on both sides (13 modules left, 11 modules
+    right vs. the required 9), and human-readable digits are correctly grouped: the
+    leading digit stands alone in the left quiet zone, and the two 6-digit groups
+    are centered under their own 7-module blocks.'
   - Clean, legible, explicitly-sized typography with no overlap or edge clipping in
-    either theme; good canvas utilization with balanced margins
+    either theme; chrome (title, digit-label color) still adapts correctly between
+    light and dark.
   weaknesses:
-  - 'The bar color is bound to `t.ink` (a theme chrome token), so the barcode pattern
-    itself inverts between renders: black bars on the light background but white bars
-    on the dark background. A real EAN-13 barcode needs dark marks on a light substrate
-    to stay machine-scannable — inverting it breaks the plot''s stated purpose (''a
-    scannable linear barcode''). Fix: keep the bars a fixed dark tone (or draw a light
-    quiet-zone/card rectangle behind the barcode) so the mark itself does not flip
-    with theme — only the surrounding chrome should adapt.'
   - encodeEAN13/checkDigit are defined as standalone functions rather than inlined
     into a flat Imports → Data → Plot script (CQ-01 KISS deduction) — understandable
     given the encoding-table complexity, but could be flattened into direct array
     construction.
-  - Design Excellence is at the 'well-configured, functional default' level — no additional
-    polish (e.g. a subtle card background, refined guard-bar contrast, or a small
-    caption) pushes it past pure correctness into something more visually distinctive.
+  - Design Excellence remains at the 'well-configured, functional default' level —
+    beyond the new card background, no further polish (e.g. a subtle drop shadow/border
+    on the card, refined guard-bar contrast, or a small caption) pushes it past pure
+    correctness into something more visually distinctive.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "barcode-ean13 · javascript · highcharts · anyplot.ai" in bold dark text, centered top, fully readable. Human-readable digits (8 9 0 1 2 3 4 5 6 7 8 9 0) rendered below the bars in a medium-weight soft-ink gray, clearly legible. No axis lines, ticks, or legend (correctly hidden for this plot type).
-      Data: All bars rendered solid black (t.ink on light theme), with the start guard, center guard, and end guard bars extending visibly lower than the digit bars — a correct, standard barcode convention. Bar widths vary between 1 and 4 modules as expected from GS1 encoding. Quiet zones (blank space) are visible on both left and right edges.
+      Background: Warm off-white, consistent with #FAF8F1. The barcode card background (also #FAF8F1) is the same fixed tone, so it blends seamlessly with the page in light mode.
+      Chrome: Title "barcode-ean13 · javascript · highcharts · anyplot.ai" in bold dark text, centered top, fully readable. Human-readable digits (8 9 0 1 2 3 4 5 6 7 8 9 0) rendered below the bars in medium-weight soft-ink gray, clearly legible. No axis lines, ticks, or legend (correctly hidden for this plot type).
+      Data: All bars rendered solid fixed-black (#1A1A17), with the start guard, center guard, and end guard bars extending visibly lower than the digit bars — a correct, standard barcode convention. Bar widths vary between 1 and 4 modules as expected from GS1 encoding. Quiet zones (blank space) are visible on both left and right edges.
       Legibility verdict: PASS - title and digit labels are both clearly readable against the light background; no overlap or clipping observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Title and digit labels correctly flip to light-colored text, fully readable against the dark background — no dark-on-dark failures observed.
-      Data: The bars themselves flip color too — from black (light theme) to near-white (dark theme) — because the bar fill is bound to the `t.ink` chrome token rather than a fixed data color. Structurally (guard heights, bar widths, positions) the pattern is otherwise pixel-identical to the light render.
-      Legibility verdict: PASS for text readability, but flagged as a correctness weakness: unlike the "data colors must stay identical between themes" rule for ordinary charts, a barcode's marks inverting with theme undermines its real-world scannability (see Weaknesses).
+      Background: Warm near-black, consistent with #1A1A17, page background. The barcode card is rendered as a distinct fixed off-white (#FAF8F1) rectangle floating on the dark page, clearly separated by a visible edge — a deliberate, effective "physical label on a dark surface" presentation.
+      Chrome: Title and digit labels correctly flip to light-colored text where they sit outside the card, fully readable against the dark background — no dark-on-dark failures observed.
+      Data: Bars are rendered in the SAME fixed-black (#1A1A17) as the light render — confirmed pixel-identical bar pattern, widths, and guard heights between the two renders. This fixes the Attempt-1 defect where bars inverted to white-on-dark and broke scannability.
+      Legibility verdict: PASS - text is fully legible, and critically, the barcode marks themselves are now theme-invariant and remain machine-scannable in both renders.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -89,7 +91,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, nothing cut off
+        comment: Good canvas utilization, balanced margins, nothing cut off; canvas
+          dimension gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -99,14 +102,14 @@ review:
           spec format
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Chrome (background/text) is theme-correct, but the bar 'data' color
-          reuses the ink chrome token so the barcode marks themselves invert between
-          light and dark instead of staying identical
+        passed: true
+        comment: 'Fixed: bars now use a fixed dark ink constant (BARCODE_INK) instead
+          of the theme token, so barcode marks are identical between light and dark;
+          chrome (title/labels/page background) still adapts correctly per theme'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -118,11 +121,12 @@ review:
           polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clean, minimal chrome, generous whitespace, guard-bar height contrast
-          is a nice touch
+        comment: Clean, minimal chrome, generous whitespace; the new fixed-tone barcode
+          card reads as a deliberate 'physical label' surface against the dark page,
+          a genuine refinement over Attempt 1
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -131,7 +135,7 @@ review:
         comment: Purely functional display, no added hierarchy or narrative (expected
           default for this plot type)
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,11 +146,12 @@ review:
         comment: Correct EAN-13 barcode structure with all guard patterns
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Guards, quiet zones, human-readable digits all present; dark-mode
-          inversion undermines the 'scannable' requirement
+        comment: Guards, quiet zones, human-readable digits all present; barcode now
+          stays theme-invariant and machine-scannable, satisfying the spec's 'scannable'
+          requirement
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -160,7 +165,7 @@ review:
         passed: true
         comment: Title format matches spec exactly; no legend needed
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -178,11 +183,12 @@ review:
         comment: Neutral, plausible retail product code
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Check digit and module encoding are factually correct, but a real
-          barcode does not invert its scannable marks based on display theme
+        passed: true
+        comment: Check digit and module encoding are factually correct; the barcode's
+          scannable marks no longer invert with display theme, matching real-world
+          barcode behavior
     code_quality:
       score: 9
       max: 10
@@ -238,7 +244,7 @@ review:
         comment: Combines stacking, a transparent spacer series, and scatter dataLabels
           with crop:false/overflow:allow for custom label placement - a reasonably
           distinctive technique combination
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
