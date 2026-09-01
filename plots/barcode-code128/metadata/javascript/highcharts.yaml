@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: barcode-code128
 created: '2026-09-01T18:37:29Z'
-updated: '2026-09-01T18:42:52Z'
+updated: '2026-09-01T18:57:41Z'
 generated_by: claude-sonnet
 workflow_run: 33544038253
 issue: 3809
@@ -12,98 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/highcharts/plot-dark.html
-quality_score: 77
+quality_score: 87
 review:
   strengths:
+  - 'Both flagged issues from Attempt 1 are fully resolved: plotOptions.column.borderRadius:
+    0 produces crisp flat-topped bars with no scalloped/notched seams on merged modules,
+    and the barcode itself now renders with fixed BARCODE_INK/BARCODE_BG literals
+    so it stays high-contrast black-on-white in both light and dark themes as the
+    spec''s scan-reliability note requires'
   - 'Correct Code 128 Subset-B encoding: accurate element-width table, modulo-103
-    check digit calculation, proper Start-B/Stop symbols, and a compliant >=10-module
-    quiet zone on both sides'
-  - Human-readable text rendered below the bars per the spec's Notes, using a letter-spaced
-    monospace font for clarity
-  - Fully deterministic, dependency-free implementation that respects the JS harness's
-    mount-node contract (animation disabled everywhere, no explicit width/height,
-    credits disabled, transparent chart background)
-  - Realistic, spec-matching example content (SHIP-2024-ABC123)
+    check digit, proper Start-B/Stop symbols, and a compliant >=10-module quiet zone
+    on both sides'
+  - Human-readable text rendered below the bars in a clean letter-spaced monospace
+    font, fully legible and well-separated from the bars in both themes
+  - Chrome (title, human-readable label, page background) still correctly adapts via
+    t.ink/theme tokens while the barcode data itself stays theme-invariant -- exactly
+    the intended data-vs-chrome separation
+  - 'Fully deterministic, dependency-free implementation that respects the JS harness''s
+    mount-node contract (animation: false everywhere, no explicit width/height, credits
+    disabled, transparent chart background)'
+  - Realistic, spec-matching example content (SHIP-2024-ABC123) taken directly from
+    the spec's own example
   weaknesses:
-  - 'Rounded-corner artifact on merged bars: Highcharts'' default column borderRadius
-    is not overridden, so multi-width barcode modules (adjacent same-color 1-unit
-    columns) show a scalloped/notched top instead of one flat rectangular block. Add
-    borderRadius: 0 to plotOptions.column (alongside the existing borderWidth: 0)
-    to render crisp, flat-topped bars.'
-  - 'Dark-mode contrast inversion breaks the spec''s scan-reliability requirement:
-    the bars are colored with t.ink, which flips to a light color in dark theme, producing
-    light bars on a near-black background instead of the required high-contrast black-on-white.
-    Render the barcode itself with a fixed black-on-white (or near-white) surface
-    so the encoded pattern keeps constant ink/background polarity in both themes,
-    while only the surrounding chrome (title, human-readable label, page background)
-    adapts via theme tokens.'
-  - Only demonstrates Subset B; never exercises the subset A/C switching the spec's
-    Description highlights as a defining Code 128 characteristic. Not required by
-    the spec's Data section (subset is optional), but a missed opportunity for feature
-    coverage / library mastery.
+  - Only demonstrates Subset B; never exercises the Subset A/C switching the spec's
+    Description calls out as a defining Code 128 capability -- not required by the
+    spec's Data section (subset is optional) but a missed opportunity for DQ-01/LM-02
+  - Utilitarian layout with no visual hierarchy or storytelling beyond the barcode
+    itself -- expected for this plot type but keeps DE-03 at the default
+  - Nothing distinctive to Highcharts specifically beyond a styled/zero-radius column
+    chart repurposed as a barcode; the same result could be produced with any bar-rendering
+    library
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1
-      Chrome: title "barcode-code128 · javascript · highcharts · anyplot.ai" in bold dark text above the bars; human-readable content "SHIP-2024-ABC123" in letter-spaced monospace below the bars. Both fully readable.
-      Data: black (near-#1A1A17) vertical bars on the light background, with white quiet zones on both sides. Zoomed inspection shows bar tops have small rounded-corner notches where adjacent same-color modules meet, instead of one flat rectangular top (Highcharts default column borderRadius not overridden).
+      Background: Warm off-white, matches #FAF8F1 -- confirmed via pixel sampling of the quiet-zone margins.
+      Chrome: Title "barcode-code128 · javascript · highcharts · anyplot.ai" is bold dark text, centered, fully legible, no overflow (~57% of canvas width). Human-readable label "SHIP-2024-ABC123" is set below the bars in a letter-spaced monospace dark font, clearly readable, well separated from the bars with generous whitespace.
+      Data: A dense series of black (#1A1A17) vertical bars of varying module widths forms the Code 128 barcode, with generous white quiet zones on both sides. Zoomed inspection confirms bars now have flat rectangular tops (the Attempt-1 scalloped/notched-corner artifact from the unset borderRadius is gone -- plotOptions.column.borderRadius: 0 fixed it). Bars fill ~90% of canvas width and ~80% of the vertical band between title and label.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17
-      Chrome: title and human-readable text render in light ink (t.ink/t.inkSoft), fully readable against the dark background - no dark-on-dark chrome failure.
-      Data: bars are colored via t.ink, which flips to a light/cream color in dark theme, so the barcode itself renders as light bars on a dark background - the inverse polarity of the light render's black-on-white bars. Same rounded-corner notch artifact present at bar tops. Bar positions (which modules are "on") are identical to the light render as expected; only ink/background polarity is wrong for a scannable barcode.
-      Legibility verdict: PASS for chrome text; FAIL for barcode scan-reliability requirement (spec requires high-contrast black bars on white background, not achieved here)
+      Background: Warm near-black, matches #1A1A17 -- confirmed via pixel sampling outside the barcode card.
+      Chrome: Title and human-readable label both render in light ink (t.ink flips correctly), fully legible against the dark background -- no dark-on-dark failure.
+      Data: The barcode itself renders on a fixed off-white BARCODE_BG card with fixed black BARCODE_INK bars -- identical polarity to the light render, as required. This is a deliberate, spec-compliant exception to "chrome adapts, data doesn't": the encoded pattern is data, not chrome, and Attempt 1's regression (bars colored via theme-adaptive t.ink, inverting to light-bars-on-dark) is fixed. Zoomed inspection confirms flat-topped bars identical to the light render, just displayed against the fixed light card rather than the dark page background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes
+        comment: Title 22px bold, human-readable label 20px monospace with letter-spacing,
+          both explicitly sized and fully readable in both themes; no overflow or
+          clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions
+        comment: No collisions between title, bars, and human-readable label
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Default column borderRadius causes notched/scalloped tops on merged
-          bars
+        passed: true
+        comment: 'borderRadius: 0 now added -- bars render as crisp flat-topped rectangles,
+          the Attempt-1 scalloped-corner artifact is gone'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast within each render
+        comment: Pure high-contrast black/white ink, no CVD concern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off
+        comment: Bars fill ~90% of canvas width and ~80% of the vertical band; balanced
+          quiet-zone margins; nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Human-readable content doubles as descriptive label
+        comment: Human-readable content string doubles as descriptive axis title,
+          appropriate for the domain
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Chrome theme-correct, but barcode ink itself flips color with theme
-          instead of staying constant like data should
+        passed: true
+        comment: Barcode bars now use fixed BARCODE_INK/BARCODE_BG literals (data,
+          not chrome) matching spec's scan-reliability requirement; chrome (title/label/page
+          bg) correctly theme-adapts via t.ink; both renders theme-correct
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -111,21 +117,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Careful module construction and typography, above generic defaults
+        comment: Careful integer module-width construction, believable quiet zones,
+          monospace letter-spaced label -- clearly above a generic bar chart, both
+          Attempt-1 defects now fixed
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Axes/legend hidden well, but default borderRadius left unaddressed
+        passed: true
+        comment: Axes/legend/gridlines fully hidden, borderRadius fixed, generous
+          whitespace between elements; still fairly plain/utilitarian overall
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Utilitarian display, no storytelling expected
+        comment: Utilitarian display as expected for a barcode -- no storytelling
+          required or present (default)
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,26 +143,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128 barcode
+        comment: Correctly built as a Code 128 barcode via a zero-radius column chart
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Check digit, quiet zones, start/stop, human-readable text all present,
-          but dark render violates required black-on-white contrast
+        passed: true
+        comment: Quiet zones, modulo-103 check digit, Start/Stop patterns, human-readable
+          text, and now consistent high-contrast black-on-white in both themes --
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Module positions correctly mapped
+        comment: Module positions correctly mapped to bar x/color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct
+        comment: Title format correct, no legend needed
     data_quality:
       score: 13
       max: 15
@@ -161,21 +172,23 @@ review:
         name: Feature Coverage
         score: 4
         max: 6
-        passed: false
-        comment: No subset A/C switching demonstrated, contrast inversion undercuts
-          scannable feature
+        passed: true
+        comment: Realistic mixed alphanumeric string correctly encoded with Subset
+          B, check digit, quiet zones, but never demonstrates subset A/C switching
+          the spec's Description highlights
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Matches spec's own shipping-label example
+        comment: SHIP-2024-ABC123 matches the spec's own shipping-label example, neutral
+          and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 17-char content within recommended range
+        comment: 17-character content well within the 'up to 48 characters' guidance
     code_quality:
       score: 10
       max: 10
@@ -185,52 +198,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic
+        comment: Fully deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused deps
+        comment: No unused imports/dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity for barcode encoding logic, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract
+        comment: Correct mount-node contract, animation disabled on chart and series,
+          credits disabled
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct high-level API, missed borderRadius gotcha
+        comment: Correct high-level Highcharts.chart() + column series usage, and
+          the library-specific borderRadius gotcha from Attempt 1 is now fixed
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Creative repurposing of column series, nothing Highcharts-distinctive
-  verdict: REJECTED
+        comment: Creative repurposing of the column series for a barcode, but nothing
+          distinctive to Highcharts specifically beyond a styled bar chart
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
-  patterns: []
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome
