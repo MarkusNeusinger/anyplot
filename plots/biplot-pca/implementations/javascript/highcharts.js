@@ -1,7 +1,7 @@
 // anyplot.ai
 // biplot-pca: PCA Biplot with Scores and Loading Vectors
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-01
+// Quality: 93/100 | Created: 2026-09-01
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;

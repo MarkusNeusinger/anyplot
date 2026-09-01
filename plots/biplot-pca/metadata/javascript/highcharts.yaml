@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: biplot-pca
 created: '2026-09-01T18:41:52Z'
-updated: '2026-09-01T18:47:10Z'
+updated: '2026-09-01T19:02:04Z'
 generated_by: claude-sonnet
 workflow_run: 33544252170
 issue: 3417
@@ -12,53 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
+  - 'Fixed the attempt-1 label-crowding weakness: the right-side loading labels (Alcohol,
+    Phenols, Flavanoids) now go through an explicit vertical-collision-resolution
+    pass (labelAnchors + minGap sort), so they stay legibly separated at both desktop
+    and mobile scale'
+  - 'Fixed the attempt-1 data-storytelling weakness: the dominant loading vector (Flavanoids)
+    is now highlighted in amber with a thicker stroke, and an explicit interpretive
+    caption ("Strongest signal: Flavanoids loads most heavily, aligning most closely
+    with Cultivar A") calls out the takeaway instead of leaving the viewer to infer
+    it'
   - 'Correct Imprint palette: brand green (#009E73) is the first series (Cultivar
-    A), canonical order continues for the other two groups, and chrome (background,
-    text, grid, legend) is theme-correct in both renders'
-  - 'Full spec coverage: PC1/PC2 observation scores colored by group, scaled loading
-    arrows from the origin labeled with variable names, variance-annotated axis titles
-    (''PC1 (64.1%)'', ''PC2 (19.5%)''), and a dashed unit circle for correlation-biplot
-    scaling'
+    A), canonical order continues for Cultivar B/C, and all chrome (background, text,
+    grid, legend) is theme-correct in both renders'
+  - 'Full spec coverage: PC1/PC2 scores colored by group, scaled loading arrows from
+    the origin labeled with variable names, variance-annotated axis titles (''PC1
+    (64.1%)'', ''PC2 (19.5%)''), and a dashed unit circle for correlation-biplot scaling'
   - Genuine from-scratch PCA (Jacobi eigenvalue decomposition on the correlation matrix)
-    with a deterministic seeded LCG/Box-Muller PRNG — solid engineering given no PCA
-    library is available in the browser
-  - Distinctive use of Highcharts' low-level chart.renderer SVG API to draw the loading
-    arrows, arrowheads, labels, and unit circle since the annotations module isn't
-    loaded
+    with a deterministic seeded LCG/Box-Muller PRNG, plus a distinctive use of Highcharts'
+    low-level chart.renderer SVG API to draw arrows, arrowheads, labels and the unit
+    circle since the annotations module isn't loaded
   - Clean typography hierarchy with explicit font sizes throughout (title 22px, subtitle
-    14px, axis titles 16px, ticks/legend 14px), legible in both light and dark renders
-    including at mobile scale
+    14px, axis titles 16px, ticks/legend 14px, arrow labels 13px), legible in both
+    light and dark renders including at mobile scale
   weaknesses:
-  - 'Design Excellence stays at ''good, not exceptional'': the plot area still reads
-    close to a well-configured Highcharts default (standard grid on both axes, no
-    extra visual refinement like reduced tick marks or a stronger focal emphasis)
-    — consider trimming the grid further or adding one deliberate emphasis technique'
-  - The three right-side loading labels (Alcohol, Phenols, Flavanoids) sit close together
-    vertically near y=0 to y=0.9 — at mobile width (~400px) they crowd toward each
-    other; nudge their placement or angle slightly apart to guarantee separation at
-    small sizes
+  - The amber semantic anchor (reserved by the style guide for 'warning / caution')
+    is repurposed here as a generic emphasis color for the dominant loading vector
+    and the interpretive caption, rather than for an actual warning/caution role —
+    a defensible storytelling choice but a deviation from the anchor's documented
+    semantic scope; consider using a bolder stroke-width/weight on the existing ink
+    color instead of amber for the emphasis if this recurs elsewhere
+  - 'Design Excellence is strong but not yet exceptional: the grid still renders on
+    both axes at the Highcharts-default dotted style rather than a more deliberately
+    refined treatment (e.g. an even lighter opacity or a single reference axis emphasized
+    more than the other)'
   - 'LM-01: the arrow/label rendering happens through manual renderer.path/text calls
     (necessary since the annotations module isn''t loaded) rather than a higher-level
     Highcharts construct — correct given the constraint, but keeps idiomatic-usage
-    score from maxing out'
-  - 'DE-03: color-separated clusters and radiating arrows create structure, but the
-    chart doesn''t call out a specific interpretive takeaway (e.g. which cultivar
-    correlates most with which chemical variable) — a touch more emphasis would elevate
-    the storytelling'
+    from maxing out'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "biplot-pca · javascript · highcharts · anyplot.ai" and subtitle in dark ink, fully readable; axis titles "PC1 (64.1%)" / "PC2 (19.5%)" and tick labels in dark/soft ink, clearly legible; subtle light-gray gridlines on both axes; loading-vector arrows and their variable-name labels (Alcohol, Malic Acid, Ash, Alkalinity, Phenols, Flavanoids) rendered in dark ink, all readable; dashed unit-circle reference visible at low opacity; legend (Cultivar A/B/C) at bottom in soft ink.
-      Data: First series (Cultivar A) is brand green #009E73; Cultivar B is lavender/purple; Cultivar C is blue — matches Imprint canonical order positions 1-3.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "biplot-pca · javascript · highcharts · anyplot.ai" in bold dark ink and subtitle "Points: standardized wine-cultivar scores · Arrows: variable loadings (scaled) · Dashed: unit circle" in soft ink are both fully readable; axis titles "PC1 (64.1%)" / "PC2 (19.5%)" and numeric tick labels are dark/soft ink, clearly legible against the light surface; subtle dotted gridlines on both axes plus solid origin cross-lines; six loading-vector arrows with variable-name labels (Alcohol, Malic Acid, Ash, Alkalinity, Phenols, Flavanoids) render in dark ink except the dominant "Flavanoids" arrow/label, which is in amber with a heavier stroke; a dashed unit-circle reference is visible at low opacity; a bottom-left italic amber caption calls out the dominant loading and its most-aligned cultivar; legend (Cultivar A/B/C) sits centered below the plot in soft ink.
+      Data: First series (Cultivar A) is brand green #009E73; Cultivar B is lavender/purple (#C475FD); Cultivar C is blue (#4467A3) — matches Imprint canonical order positions 1-3. No text overlaps data or other text; the previously-crowded right-side loading labels (Alcohol/Phenols/Flavanoids) are now visibly separated.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, subtitle, axis titles, and tick labels rendered in light ink, fully readable against the dark surface; gridlines subtle and visible; loading-vector arrows and their labels rendered in white/light ink, all legible; dashed unit circle visible; legend text in light soft ink at bottom, readable.
-      Data: Cultivar A/B/C colors are identical to the light render (#009E73 green, lavender, blue) — only chrome flipped, as required.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles, and tick labels render in light ink, fully readable against the dark surface; no dark-on-dark text anywhere; dotted gridlines and origin cross-lines are subtle but visible; loading-vector arrows and their labels render in white/light ink (dominant "Flavanoids" arrow/label stays amber for consistency with the light render); dashed unit circle is visible; legend text is in light soft ink at the bottom, readable.
+      Data: Cultivar A/B/C colors are pixel-identical to the light render (#009E73 green, lavender, blue) — only chrome flipped, as required. Brand green #009E73 remains clearly visible against the dark background.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -67,12 +71,13 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title 22px, subtitle/labels 14px,
+        comment: All font sizes explicitly set (title 22px, subtitle/labels 14px,
           axis titles 16px, arrow labels 13px); readable in both themes and at mobile
-          scale. Minor: the three right-side loading labels sit close together vertically.'
+          scale. The attempt-1 label-crowding issue is fixed via explicit vertical
+          collision resolution.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -85,7 +90,7 @@ review:
         max: 6
         passed: true
         comment: 60 scatter points at radius 6 with distinct group colors are well-sized
-          for the density; loading arrows are clearly visible at stroke-width 2.
+          for the density; loading arrows are clearly visible at stroke-width 2-3.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -99,7 +104,7 @@ review:
         max: 4
         passed: true
         comment: Plot fills a large, balanced portion of the square canvas; legend
-          sits directly below the plot, not isolated; no cut-off content.
+          sits directly below the plot; no cut-off content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,36 +114,42 @@ review:
           'PC2 (19.5%)').
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: 'First series is #009E73; remaining two groups use Imprint canonical
-          positions 2-3; chrome and background are theme-correct in both renders.'
+        comment: 'First series is #009E73; remaining groups use Imprint canonical
+          positions 2-3; chrome and background are theme-correct in both renders.
+          Deduction: the amber semantic anchor is used as a generic emphasis color
+          for the dominant loading vector/caption rather than for its documented ''warning/caution''
+          role.'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom loading-vector arrows, arrowheads, and a unit-circle reference
-          go beyond a library default; correct thoughtful palette use.
+        comment: Custom loading-vector arrows/arrowheads, a unit-circle reference,
+          and an amber-highlighted dominant loading with interpretive caption go well
+          beyond a library default.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid is subtle and axes are effectively L-shaped, but the plot area
-          still reads close to a well-configured Highcharts default overall.
+        comment: Spines removed (lineWidth 0, no tick marks), grid is subtle and dotted,
+          generous whitespace; still reads close to a well-configured Highcharts baseline
+          rather than a heavily bespoke treatment.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color-separated clusters plus radiating labeled arrows create clear
-          visual hierarchy, though no specific interpretive takeaway is called out.
+        comment: Color-separated clusters, radiating labeled arrows, an amber-highlighted
+          dominant vector, and an explicit interpretive caption now create a clear
+          focal point and takeaway — directly fixes the attempt-1 weakness.
     spec_compliance:
       score: 15
       max: 15
@@ -187,8 +198,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Synthetic wine-cultivar physicochemical data is a real, neutral,
-          comprehensible scenario.
+        comment: Synthetic wine-cultivar physicochemical data with the standard UCI
+          Wine feature naming ('Flavanoids') is a real, neutral, comprehensible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -235,7 +246,7 @@ review:
         comment: Follows the mount-node contract correctly; animation disabled on
           chart and series.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,18 +255,17 @@ review:
         max: 5
         passed: true
         comment: Core scatter series configured idiomatically; the arrow/label overlay
-          uses manual chart.renderer calls, which is the correct approach given the
-          annotations module isn't loaded but is lower-level than a single high-level
-          API call.
+          uses manual chart.renderer calls, which is correct given the annotations
+          module isn't loaded but is lower-level than a single high-level API call.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
         comment: Leverages Highcharts' low-level SVG renderer (chart.renderer.path/text)
-          to build custom biplot vectors and a unit circle — a feature distinctive
-          to Highcharts' architecture.
-  verdict: REJECTED
+          to build custom biplot vectors, a unit circle, and an emphasis-highlighted
+          dominant loading — distinctive use of Highcharts' architecture.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
