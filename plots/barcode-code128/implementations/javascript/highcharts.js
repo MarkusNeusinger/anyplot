@@ -30,6 +30,12 @@ const CODE128_WIDTHS = [
 const START_B = 104;
 const STOP = 106;
 
+// The barcode itself is encoded *data*, not chrome: it must stay high-contrast
+// black-on-white in both themes for scan reliability, so these are fixed
+// literals rather than theme tokens (only the title/label chrome uses t.ink).
+const BARCODE_INK = "#1A1A17";
+const BARCODE_BG = "#FAF8F1";
+
 const content = "SHIP-2024-ABC123";
 
 // Subset B maps printable ASCII 32-126 to symbol values 0-94.
@@ -55,13 +61,14 @@ const QUIET_ZONE = 10; // blank modules either side — Code 128 requires >=10x
 const barData = modules.map((bit, i) => ({
   x: i,
   y: 1,
-  color: bit ? t.ink : "transparent",
+  color: bit ? BARCODE_INK : "transparent",
 }));
 
 Highcharts.chart("container", {
   chart: {
     type: "column",
     backgroundColor: "transparent",
+    plotBackgroundColor: BARCODE_BG,
     animation: false,
     style: { fontFamily: "inherit" },
   },
@@ -103,6 +110,7 @@ Highcharts.chart("container", {
       pointPadding: 0,
       groupPadding: 0,
       borderWidth: 0,
+      borderRadius: 0,
       pointRange: 1,
     },
     series: { animation: false },
