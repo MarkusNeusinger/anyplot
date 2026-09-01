@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: biplot-pca
 created: '2026-09-01T18:38:45Z'
-updated: '2026-09-01T18:45:22Z'
+updated: '2026-09-01T19:01:33Z'
 generated_by: claude-sonnet
 workflow_run: 33543741805
 issue: 3417
@@ -12,52 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - From-scratch correlation-matrix PCA via a cyclic Jacobi eigenvalue solver, entirely
-    in vanilla D3/JS with a seeded LCG for deterministic reproducibility — a genuinely
-    hard feature to implement without numpy/sklearn.
-  - Imprint palette applied in canonical order (green/lavender/blue) and fully theme-adaptive
-    chrome (arrows, axis text, halo strokes) verified identical data colors across
-    both light and dark renders.
-  - Correlation-biplot unit circle correctly implemented as a loading-magnitude reference,
-    matching the specification's optional recommendation.
-  - Quadrant-aware text-anchor/baseline logic on the loading labels (text-anchor and
-    dominant-baseline branch on arrow sign) avoids most label collisions despite 6
-    arrows fanning in different directions.
-  - Clean, correctly formatted title, accurate PC1/PC2 variance-percentage axis labels,
-    and a legend that matches the group labels exactly.
+  - 'Correct correlation-biplot construction from scratch: standardizes columns, builds
+    the correlation matrix, and diagonalizes it with a Jacobi eigenvalue routine —
+    a legitimate approach given d3 has no linear-algebra library'
+  - Dashed unit circle correctly scaled to the same arrowScale as the loading vectors,
+    giving a real reference for loading magnitude as the spec suggests
+  - 'Data storytelling: the italic subtitle names the strongest PC1 driver and the
+    corresponding arrow is rendered bolder/thicker than the rest — a genuine visual
+    hierarchy, not just a data dump'
+  - Text halos (paint-order stroke in page-bg color) behind loading labels keep them
+    legible where they cross arrows or the unit circle, in both themes
+  - 'Imprint palette applied in canonical order (#009E73, #C475FD, #4467A3) and fully
+    theme-correct chrome in both renders (warm off-white / warm near-black backgrounds,
+    ink-adaptive arrows and axis text)'
+  - Axis labels include variance-explained percentages per PC, matching the spec's
+    example format
+  - Square canvas is the right call here — an equal-aspect plot area is required for
+    loading-vector angles to read correctly, and the layout code explicitly computes
+    a square plotSize before scaling
   weaknesses:
-  - A score point sits directly on top of the 'Sepal Width' loading label in both
-    renders (near the label's trailing 'd'/'th') — nudge the label's offset multiplier
-    or increase its background-stroke width slightly so it clears any nearby point.
-  - Several score points overlap heavily in the dense center-left cluster where Standard
-    and Vigorous groups meet — lower fill-opacity slightly (e.g. 0.65) or reduce marker
-    radius by 1px to reduce overplotting in that region.
-  - Title occupies only ~35-38% of the square canvas width, well under the ~50-70%
-    guideline for a short mandated title — there's ample top whitespace, so increasing
-    the title font-size a few px (e.g. 22px to 25-26px) would strengthen the visual
-    hierarchy without risking overflow.
-  - 'Design Excellence is solid but generic: the chart relies entirely on color-coded
-    group separation for its story with no additional emphasis (e.g. a subtle annotation
-    or size/weight variation calling out which loadings best explain the group split)
-    — consider a small enhancement to elevate storytelling beyond default grouping.'
+  - Title occupies only ~50% of canvas width at 26px — on the low end of the 50-70%
+    target for a short, non-prefixed mandated title; a touch more font size would
+    use the whitespace better without risking overflow
+  - PCA helper functions (lcg, gaussian, jacobiEigen) push the file structure away
+    from strict flat KISS Imports->Data->Plot->Save shape; justified since d3 has
+    no eigen-decomposition primitive, but still a minor deviation from the ideal
+  - Only one loading arrow (top PC1 driver) gets visual emphasis — a second callout
+    on the top PC2 driver, or direct percentage labels on the loading arrows, would
+    deepen the storytelling further
+  - No axis grid lines; acceptable minimalist choice for a biplot with many arrows
+    already crossing the origin, but a very faint y-axis-only or both-axes grid at
+    10-15% opacity could help readers line up score points against the axis ticks
+    without competing with the arrows
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "biplot-pca · javascript · d3 · anyplot.ai" in bold dark ink at top-center. Axis titles "PC1 (65.1%)" (bottom, centered) and "PC2 (20.0%)" (left, rotated) in dark ink. Tick labels (-4 to 4 on both axes) in soft dark gray. Axis domain lines dark, L-shaped (no top/right spine). Dashed unit-circle reference in light gray. Legend "Growth habit" with three swatches (Compact/Standard/Vigorous) at right, all text and labels clearly legible against the light background.
-      Data: Six black loading arrows radiate from the origin (Sepal Length, Petal Length, Petal Width, Sepal Width, Leaf Area, Stem Height), each labeled in bold black text with a light halo stroke for contrast. ~90 score points colored green (#009E73, Compact), lavender/purple (Standard), and steel blue (Vigorous) — first series is correctly the Imprint brand green. Points show clear separation along PC1: green cluster on the left, blue cluster on the right, purple in between.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues found. One minor defect: a stray point sits directly against the "Sepal Width" label text.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "biplot-pca · javascript · d3 · anyplot.ai" centered at top, italic dark-gray subtitle below it calling out the top PC1 driver ("Sepal Length loads most strongly on PC1 — the axis separating growth-habit groups"). Axis titles "PC1 (65.1%)" and "PC2 (20.0%)" in dark ink, tick labels in soft dark gray, L-shaped axis frame (only left/bottom domain lines). A "Growth habit" legend with three color swatches (Compact/Standard/Vigorous) sits to the right of the plot, vertically centered. All text is clearly readable against the light background — no light-on-light failures observed.
+      Data: Six black arrows radiate from the origin (Sepal Length, Petal Length, Petal Width, Sepal Width, Leaf Area, Stem Height), each labeled with a halo-stroked text label; the Sepal Length arrow is visibly thicker/bolder than the others per the top-driver emphasis. A dashed gray unit circle surrounds the arrows as a magnitude reference. ~90 semi-transparent circular score points are colored by group: green (#009E73, Compact), lavender/purple (Standard), and blue (Vigorous) — first series is the mandated brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, axis titles, and tick labels all render in light/off-white tones, clearly visible against the dark background. Axis domain lines are light-colored. The unit circle is a subtle light-gray dashed stroke, visible but not competing with data. Legend swatches and text are all legible in white/light-gray.
-      Data: Loading arrows flip to white (from t.ink token) with light-on-dark halo strokes on their labels — fully legible. Score point colors are identical to the light render (green #009E73, lavender, blue) — confirms data colors are theme-independent; only chrome flipped as required.
-      Legibility verdict: PASS — no dark-on-dark failures found; every title/label/tick is clearly visible against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis titles/tick labels, now rendered in light ink (white/off-white) and soft light gray for secondary text and legend labels. Axis frame lines are light-colored. All text is clearly readable against the dark background — no dark-on-dark failures; tick labels, axis titles, legend text, and arrow labels all flip correctly to light ink.
+      Data: The six loading arrows and their halo-stroked labels flip to white/light ink (chrome), while the unit circle stays a subtle light-gray dash. The three group colors (green, lavender, blue) are visually identical to the light render — confirming the Imprint categorical palette data colors are constant across themes, only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,76 +69,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14-22px), readable in both themes,
-          no overflow/clipping; title comfortably fits but occupies only ~35-38% of
-          the square canvas width, below the ideal proportion for a short mandated
-          title
+        comment: All font sizes explicit; readable in both themes; title fits without
+          clipping though on the low end of target width
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: One score point sits directly against the 'Sepal Width' loading label
-          in both renders; otherwise no collisions
+        comment: No overlap between arrow labels, points, axis text, or legend
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker size (r=7, opacity 0.75) is reasonable for ~90 points, but
-          a dense center-left cluster of Standard/Vigorous points overlaps noticeably
+        comment: Score points and arrows clearly visible and reasonably sized for
+          ~90 points; not perfectly optimized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three CVD-safe hues, not relying on red-green alone, adequate contrast
-          on both surfaces
+        comment: Green/lavender/blue groups distinguishable, no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area, legend, and title use a well-balanced majority of the
-          square canvas with generous, even margins
+        comment: Equal-aspect square plot fills a good share of canvas, legend near
+          plot, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis titles include the variance-explained percentage (PC1 65.1%,
-          PC2 20.0%)
+        comment: PC1/PC2 axis titles include variance-explained percentages
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, canonical Imprint order for remaining groups,
-          correct theme backgrounds and fully theme-adaptive chrome in both renders'
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
     design_excellence:
-      score: 14
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful color use and typography clearly above a generic default,
-          but the overall treatment (arrows + points + legend) is a fairly standard
-          biplot presentation without an especially distinctive polish
+        passed: true
+        comment: Unit circle, halo-stroked labels, emphasized top-driver arrow — clearly
+          above configured defaults
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
-        comment: L-shaped spines, no competing gridlines (only the purposeful dashed
-          unit circle), generous whitespace, halo-stroked labels for legibility
+        passed: true
+        comment: L-shaped spines, no competing grid, generous whitespace, subtle dashed
+          reference circle
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: Clear visual hierarchy via color-coded group separation along PC1
-          guides the viewer to the insight, but no additional emphasis (annotation,
-          size/weight variation) beyond default grouping
+        passed: true
+        comment: Subtitle names the driving variable and the corresponding arrow is
+          bolded — clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -143,45 +143,50 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct PCA biplot with scores as points and loadings as arrows
+        passed: true
+        comment: 'Correct PCA biplot: scores as points, loadings as arrows'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Scores, loadings, arrow labels, variance-percentage axis labels,
-          and the optional unit circle are all present
+        passed: true
+        comment: PC1 vs PC2 default view, grouped scores, labeled loading arrows scaled
+          to be visible, variance-explained axis labels, unit circle reference
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: PC1 on x-axis, PC2 on y-axis, all data visible within extent
+        passed: true
+        comment: PC1 on x, PC2 on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title format exactly matches the mandated pattern; legend labels
-          match group data
+        passed: true
+        comment: Title matches mandated format; legend labels match group names
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
-        comment: Scores and loadings both shown; 6 loading arrows fan across distinct
-          angles rather than bunching, 3 groups with clear PC1 separation
+        passed: true
+        comment: Six loading vectors fanned at distinct angles, three groups separated
+          mainly along PC1
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, comprehensible plant-morphology survey scenario
+        passed: true
+        comment: Plant morphology survey — real, neutral scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Feature means/spreads (sepal/petal cm-scale, leaf area, stem height)
-          are plausible for plant morphology data
+        passed: true
+        comment: Plausible feature means/spreads and variance-explained percentages
     code_quality:
       score: 9
       max: 10
@@ -190,60 +195,64 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: Uses small helper functions (LCG RNG, gaussian, Jacobi eigensolver)
-          — a deviation from pure top-to-bottom script, but effectively unavoidable
-          since D3/browser has no linear-algebra library to call for PCA
+        passed: true
+        comment: Overall linear script, but includes lcg/gaussian/jacobiEigen helper
+          functions (necessary for PCA without a linear-algebra library)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Seeded LCG (seed=42) produces fully deterministic data
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No imports beyond the provided d3 global
+        passed: true
+        comment: No imports beyond the d3 global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriate complexity for a from-scratch biplot/PCA, no fake functionality
+        passed: true
+        comment: Appropriate complexity for a from-scratch PCA, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Correctly mounts svg into #container per the harness contract, no
-          deprecated API'
+        passed: true
+        comment: 'Single svg mounted to #container, current d3 API'
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
-        comment: Proper selection.data().join() pattern, d3 scale/axis generators,
-          scaleOrdinal for categorical color
+        passed: true
+        comment: Idiomatic selection/data/join, scales, axes
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: Custom SVG marker defs for arrowheads and quadrant-aware label anchoring
-          showcase D3's low-level SVG control for a plot type (biplot) that off-the-shelf
-          chart libraries don't natively support
-  verdict: REJECTED
+        passed: true
+        comment: Custom SVG marker defs for arrowheads and paint-order text halos
+          — low-level SVG control distinctive to d3
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   - matrix-construction
+  - iteration-over-groups
   dataprep:
   - pca
   - correlation-matrix
   - normalization
   styling:
   - alpha-blending
+  - edge-highlighting
