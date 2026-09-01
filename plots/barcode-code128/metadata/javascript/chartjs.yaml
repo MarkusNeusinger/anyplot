@@ -1,0 +1,269 @@
+library: chartjs
+language: javascript
+specification_id: barcode-code128
+created: '2026-09-01T18:34:01Z'
+updated: '2026-09-01T18:39:51Z'
+generated_by: claude-sonnet
+workflow_run: 33543292228
+issue: 3809
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Algorithmically correct Code 128 Set B encoder: charCode-32 symbol lookup, weighted
+    mod-103 checksum (verified by hand: check digit 31 for "SHIP-2024-ABC123"), correct
+    11-module symbol patterns, and a proper 13-module STOP pattern (11-bit table entry
+    + trailing 2-module termination bar).'
+  - 'All spec Notes requirements satisfied: 10-module quiet zones on both sides, human-readable
+    text below the barcode, check-digit shown, high-contrast black-on-white bars.'
+  - 'Idiomatic, distinctive Chart.js technique: floating-bar dataset ([min,max] per
+    module) with categoryPercentage/barPercentage=1 to render contiguous bars, combined
+    with beforeDatasetsDraw/afterDatasetsDraw plugin hooks to paint the label card
+    and human-readable text — goes well beyond basic options/plugin config.'
+  - Clear, well-reasoned code comments justify the one deliberate palette exception
+    (fixed black-on-white bars, per the spec's own scannability requirement) versus
+    the theme-adaptive title chrome — makes the design intent obvious to a future
+    reader or repair pass.
+  - Realistic, neutral example data ("SHIP-2024-ABC123" shipping label) matching the
+    spec's own suggested example exactly.
+  - 'Clean KISS structure, no fake interactivity, correct mount-node contract (animation:
+    false, canvas appended once, no width/height overrides).'
+  weaknesses:
+  - Only demonstrates Code Set B — the spec's description explicitly calls out that
+    Code 128 supports three subsets (A/B/C) 'switched dynamically for optimal encoding
+    efficiency,' but this implementation never shows that switching behavior (e.g.,
+    a numeric run encoded via Set C for density). Not a correctness bug, but leaves
+    a headline feature of the format uncovered by the example.
+  - The visualization is intentionally monochrome for scannability (correct call per
+    spec), but as a result carries zero Imprint brand-green accent anywhere on the
+    card (title text uses only theme ink tokens) — a small decorative touch (e.g.,
+    a thin green rule under the title, or a colored corner tag) could add brand cohesion
+    without touching the bars.
+  - The 'Code 128B · check digit 31 (mod 103)' subtitle exposes internal algorithm
+    mechanics (modulus, subset letter) that a real-world shipping label would never
+    print — fine for an educational/technical visualization, but slightly undercuts
+    the 'as found on real labels' framing from the spec's Applications section.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), consistent with the mandated light-theme mount background. The label card itself is also off-white/cream (same fixed CARD_BG token), bordered by a thin subtle rule.
+      Chrome: Title "barcode-code128 · javascript · chartjs · anyplot.ai" in bold dark ink, clearly legible, comfortably sized (~30% of canvas width, not squeezed, not overflowing). No axis labels/ticks/legend — correctly hidden for a barcode visualization.
+      Data: A dense vertical black-bar Code 128 pattern occupying the top ~2/3 of the card, with visible quiet-zone whitespace on both left and right edges before the bars start. Below the bars, "SHIP-2024-ABC123" is rendered in bold monospace dark ink, and "Code 128B · check digit 31 (mod 103)" in a lighter/smaller monospace weight beneath it. Bars and text are both dark-on-cream, maximum contrast.
+      Legibility verdict: PASS — all text and bars are clearly readable, no overlap, no clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) mount, correctly flipped from light. The label card itself stays cream/off-white — a deliberate, spec-justified fixed color (barcode must remain black-on-white regardless of surrounding theme for scan reliability), documented in code comments.
+      Chrome: Title text is now light/white (theme ink token correctly flipped), clearly readable against the dark mount background. No dark-on-dark failure — the title correctly tracks ANYPLOT_THEME while the barcode card intentionally does not.
+      Data: The barcode bars and human-readable text underneath are rendered with the exact same fixed dark-ink-on-cream-card treatment as the light render — pixel-identical data presentation, confirming color identity is preserved between themes (the only difference is the surrounding mount background and title color, as intended).
+      Legibility verdict: PASS — title readable against dark mount, barcode/text readable against its own cream card in both renders; no dark-on-dark or light-on-light failures anywhere.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, content 30px, subtitle
+          18px). Readable in both themes, no overflow, no squeeze.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars are crisp and clearly visible at correct module density; matches
+          real barcode proportions.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Pure black-on-cream is maximum contrast and inherently CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Card fills ~90% of canvas width/height with balanced margins; nothing
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis labels N/A for a barcode plot (correctly hidden); title format
+          is descriptive and exact.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed black-on-white bars are a deliberate, spec-mandated exception
+          ('high contrast black bars on white background for maximum scan reliability')
+          — a stronger domain color convention than any Imprint semantic-exception
+          example. Chrome (title, mount background) is fully theme-correct and identical
+          to the mandated tokens in both renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom canvas-plugin rendering (label card, two-tier typography)
+          is clearly above library defaults; capped short of top marks since the domain
+          forces a monochrome palette with limited room for color-driven polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous quiet-zone whitespace, subtle card border rule, no competing
+          chrome — good refinement without being exhaustive.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two-tier text hierarchy (bold content vs. lighter check-digit annotation)
+          creates a clear read order and exposes the encoding mechanics.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Code 128 barcode type, fully realized (start/data/checksum/stop
+          + quiet zones).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zones, start/stop patterns, mod-103 check digit, human-readable
+          text, high-contrast black-on-white — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Every module of the encoded content is mapped to a bar/space; nothing
+          truncated.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'barcode-code128 · javascript · chartjs · anyplot.ai';
+          legend correctly omitted (single series).
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Covers the core encode/checksum/quiet-zone/human-readable pipeline
+          well, but never exercises Code Set A/C or subset switching, which the spec's
+          own description calls out as a headline Code 128 feature.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic, neutral shipping-label content, matching the spec's own
+          suggested example.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Manually re-derived the mod-103 checksum for 'SHIP-2024-ABC123' and
+          confirmed it equals 31, matching the displayed value — algorithm is factually
+          correct.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports/data/mount/chart flow; the plugin object is the idiomatic
+          Chart.js extension mechanism, not gratuitous abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals; nothing unused.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a real encoding algorithm; no fake UI
+          or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of floating-bar datasets plus beforeDatasetsDraw/afterDatasetsDraw
+          plugin hooks — textbook Chart.js extensibility.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Canvas-level custom plugin drawing combined with floating-bar geometry
+          is fairly distinctive to Chart.js's architecture, though the underlying
+          technique could be approximated in other canvas-based libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting
