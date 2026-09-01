@@ -94,6 +94,7 @@ for square in sort(collect(keys(pieces)))
     text!(ax, col - 0.5, row - 0.5;
         text        = PIECE_GLYPHS[piece],
         fontsize    = 76,
+        font        = "DejaVu Sans",
         color       = is_white ? PIECE_LIGHT : PIECE_DARK,
         strokecolor = is_white ? PIECE_DARK : PIECE_LIGHT,
         strokewidth = 2.5,
