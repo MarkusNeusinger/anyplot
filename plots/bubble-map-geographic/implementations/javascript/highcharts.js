@@ -247,6 +247,16 @@ const BOUNDARY_COLORS = {
   Divergent: t.palette[2],
 };
 
+// --- Deterministic render-only jitter for the dense California/Baja --------
+// --- Transform cluster, which otherwise reads as a single blob at map ------
+// --- scale; underlying quake.lat/lon stay the true historical values -------
+const RENDER_JITTER = {
+  "San Francisco, USA (1906)": { dLon: -1.6, dLat: 1.3 },
+  "Ridgecrest, USA (2019)": { dLon: 1.6, dLat: 0.6 },
+  "Northridge, USA (1994)": { dLon: -1.6, dLat: -0.9 },
+  "El Mayor-Cucapah, Mexico (2010)": { dLon: 1.6, dLat: -1.5 },
+};
+
 // --- Bubble sizing: area (not radius) scales with magnitude -----------------
 const MIN_R = 6;
 const MAX_R = 30;
@@ -272,18 +282,21 @@ const series = BOUNDARY_ORDER.map((boundary) => ({
   zIndex: 5,
   data: earthquakes
     .filter((quake) => quake.boundary === boundary)
-    .map((quake) => ({
-      x: quake.lon,
-      y: quake.lat,
-      name: quake.name,
-      magnitude: quake.magnitude,
-      marker: {
-        radius: radiusFor(quake.magnitude),
-        fillColor: hexToRgba(BOUNDARY_COLORS[boundary], 0.62),
-        lineColor: t.pageBg,
-        lineWidth: 1.5,
-      },
-    })),
+    .map((quake) => {
+      const jitter = RENDER_JITTER[quake.name];
+      return {
+        x: quake.lon + (jitter ? jitter.dLon : 0),
+        y: quake.lat + (jitter ? jitter.dLat : 0),
+        name: quake.name,
+        magnitude: quake.magnitude,
+        marker: {
+          radius: radiusFor(quake.magnitude),
+          fillColor: hexToRgba(BOUNDARY_COLORS[boundary], 0.62),
+          lineColor: t.pageBg,
+          lineWidth: 1.5,
+        },
+      };
+    }),
 }));
 
 // --- Simplified world coastlines (equirectangular lon/lat vertices) ---------
@@ -466,11 +479,30 @@ const CONTINENTS = [
   ],
 ];
 
+// --- Corner-cutting refinement (2 Chaikin iterations) so the coastlines -----
+// --- read as smooth curves instead of the raw low-vertex source polygons ---
+function smoothPolygon(points, iterations) {
+  let pts = points;
+  for (let iter = 0; iter < iterations; iter++) {
+    const refined = [];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const [x0, y0] = pts[i];
+      const [x1, y1] = pts[i + 1];
+      refined.push([x0 + 0.25 * (x1 - x0), y0 + 0.25 * (y1 - y0)]);
+      refined.push([x0 + 0.75 * (x1 - x0), y0 + 0.75 * (y1 - y0)]);
+    }
+    refined.push(refined[0]);
+    pts = refined;
+  }
+  return pts;
+}
+
 function drawContinents(chart) {
   const xAxis = chart.xAxis[0];
   const yAxis = chart.yAxis[0];
   CONTINENTS.forEach((polygon) => {
-    const path = polygon.map((point, i) => [
+    const smoothed = smoothPolygon(polygon, 2);
+    const path = smoothed.map((point, i) => [
       i === 0 ? "M" : "L",
       xAxis.toPixels(point[0], false),
       yAxis.toPixels(point[1], false),
@@ -561,7 +593,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Significant earthquakes, sized by magnitude and colored by tectonic boundary type",
+    text: "Significant earthquakes, sized by magnitude and colored by tectonic boundary type — note the convergent-boundary clustering around the Pacific “Ring of Fire”",
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
