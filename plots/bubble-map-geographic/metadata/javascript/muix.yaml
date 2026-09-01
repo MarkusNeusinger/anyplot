@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bubble-map-geographic
 created: '2026-09-01T19:00:51Z'
-updated: '2026-09-01T19:08:17Z'
+updated: '2026-09-01T19:23:36Z'
 generated_by: claude-sonnet
 workflow_run: 33545839048
 issue: 3625
@@ -15,117 +15,111 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-ma
 quality_score: 84
 review:
   strengths:
-  - Title exactly matches the mandated `bubble-map-geographic · javascript · muix
-    · anyplot.ai` format.
+  - 'Fixed the attempt-1 palette-identity issue: bubble fills now use solid (non-alpha)
+    colors, so data colors are pixel-identical between light and dark renders — confirmed
+    by direct crop comparison.'
+  - 'Fixed the attempt-1 data-quality issue: Jakarta''s population now uses the same
+    metro-area (Jabodetabek) scale as every other city (33.4M).'
+  - Explicit tickLabelStyle/labelStyle font sizes now lock in legibility at the CSS
+    mount resolution instead of relying on unverified theme defaults.
+  - Area-accurate bubble sizing (sqrt scaling) with a MIN_RADIUS floor keeps small
+    cities visible, matching the spec's minimum-bubble-size guidance.
   - Well-engineered dual custom legend (population-size reference circles + region
-    color swatches) clearly documents both the size and color encodings.
-  - Area-accurate bubble sizing (sqrt scaling of population to radius) with a sensible
-    MIN_RADIUS floor keeps small cities visible, matching the spec's explicit minimum-bubble-size
-    guidance.
-  - Alpha transparency (~0.62) combined with largest-first draw order keeps overlapping
-    bubbles in dense regions (Europe cluster, Asia-Pacific cluster) legible.
-  - Clean, deterministic, single-file dataset with plausible real-world 2023 metro
-    population figures across 20 cities spanning 4 world regions — neutral, real-world
-    scenario.
-  - Theme-adaptive chrome (title, subtitle, axis labels, tick labels, legend text)
-    is fully readable in both light and dark renders with no dark-on-dark or light-on-light
-    failures.
+    color swatches) clearly documents both encodings, with no clipping or overflow
+    at the canvas edges.
+  - Clean, deterministic dataset with plausible real-world 2023 metro populations
+    across 20 cities in 4 regions — neutral, real-world scenario.
+  - Canonical Imprint palette order used correctly (Asia-Pacific = brand green first),
+    and both renders use theme-correct backgrounds/chrome.
   weaknesses:
+  - The rotated 'Latitude' axis label overlaps the '20°N' tick label in both renders
+    (confirmed via pixel crop) — the axis title sits directly through the tick text
+    instead of clearing it. Add left margin / shift the y-axis label position (or
+    its offset) so it doesn't collide with whichever tick happens to land near the
+    axis-label's vertical center.
+  - Same-color overlapping bubbles (e.g. Tokyo/Shanghai, Delhi/Jakarta — both Asia-Pacific
+    green) have no stroke/edge to distinguish them; they merge into a single blob
+    shape with only the outer contour hinting at two circles. Add a subtle stroke
+    (e.g. page-background-colored or theme-ink 1px edge) per the style guide's 'white
+    edge for definition, especially with overlapping points' guidance.
   - 'Missing basemap/geographic context: the spec explicitly asks for ''country boundaries
-    or coastlines as basemap''. The implementation substitutes a lon/lat graticule
-    grid only — a reasonable workaround given MUI X community''s lack of any geo primitive,
-    but it still leaves a required spec feature unmet. If feasible within the community
-    surface (e.g. lightweight continent-outline SVG paths added as chart children),
-    add faint boundary context; otherwise this is a hard library ceiling worth calling
-    out explicitly rather than only in a code comment.'
-  - 'Palette identity shifts between themes: the 8-digit alpha hex (`${palette}9E`)
-    is composited over different page backgrounds, so e.g. the Africa ''blue'' reads
-    as a muted slate-blue on the cream light background but a noticeably richer navy
-    on the near-black dark background. The Imprint contract requires data colors to
-    look identical across themes (only chrome should flip) — reduce/remove the alpha-driven
-    hue drift, e.g. by using a lower fixed alpha with an added stroke for definition
-    instead of relying on background compositing.'
-  - Axis title and tick label styling relies on MUI X theme defaults (no explicit
-    tickLabelStyle/slotProps font sizing) rather than the style guide's 2-3x-larger-than-default
-    guidance — currently readable at full resolution but unverified at mobile scale
-    (~400px). Set explicit font sizes for the Longitude/Latitude axis labels and tick
-    labels to guarantee legibility.
-  - Jakarta's population (11.2M) is inconsistent with the 'metro-area' definition
-    used for every other city — Jakarta's Jabodetabek metro area is one of the world's
-    largest urban agglomerations, commonly cited well above 30M, not 11.2M (which
-    corresponds to city-proper boundaries). Correct the figure so all cities use a
-    consistent metro-area definition.
+    or coastlines as basemap.'' A lon/lat graticule substitutes — a reasonable workaround
+    for MUI X community''s lack of any geo primitive, but the requirement is still
+    unmet. This is a known library ceiling (documented in-code) rather than an oversight.'
+  - No transparency/alpha is applied to bubble fills (spec suggests alpha ~0.5-0.7
+    for overlapping bubbles); the largest-first draw order alone doesn't fully compensate
+    for same-color overlap readability (see weakness above).
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "bubble-map-geographic · javascript · muix · anyplot.ai" centered at top, a smaller dark-gray subtitle explaining the size/color encoding beneath it. Longitude (x, °W/°E) and Latitude (y, °N/°S) axis titles and degree-formatted tick labels are dark and clearly legible against the light background. A faint lon/lat graticule (grid) runs across the plot area. Below the plot, two custom legends: a "Population (millions)" size-reference legend (5M/15M/35M open circles) and a 4-swatch region color legend (Asia-Pacific, Europe, Africa, Americas).
-      Data: 20 translucent bubbles positioned at city longitude/latitude, sized by population (sqrt-area scaling) and colored by world region — Asia-Pacific green (close to #009E73), Europe lavender/purple, Africa blue, Americas ochre/tan. All bubbles are clearly distinguishable from the background and from each other; overlapping clusters (e.g. Europe near 0-40°E, the Asia-Pacific pair near 120-140°E) stay legible thanks to alpha transparency.
-      Legibility verdict: PASS — all text is readable, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "bubble-map-geographic · javascript · muix · anyplot.ai" centered at top, with a dark-gray subtitle beneath it. Longitude (°W/°E) and Latitude (°N/°S) axis titles and degree-formatted tick labels are dark and legible against the light background. A subtle lon/lat graticule (grid) runs across the plot area. Below the plot: a "Population (millions)" size-reference legend (5M/15M/35M open circles) and a 4-swatch region color legend (Asia-Pacific, Europe, Africa, Americas), both cleanly spaced with no clipping at any canvas edge.
+      Data: 20 solid-fill bubbles positioned at city longitude/latitude, sized by population (sqrt-area scaling, MIN_RADIUS floor for small cities) and colored by world region — Asia-Pacific = brand green (#009E73, first Imprint slot), Europe = lavender, Africa = blue, Americas = ochre, in canonical Imprint order.
+      Legibility verdict: FAIL (localized) — the rotated "Latitude" axis-title text overlaps the "20°N" tick label (confirmed via pixel crop: the "e" of "Latitude" sits directly on top of the "2" of "20°N"). All other text (title, subtitle, other tick labels, both legends) is clearly readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle now rendered in light/off-white text, fully legible against the dark background. Axis titles and degree-formatted tick labels are light-colored and clearly readable; the graticule grid is faint but visible. Both legends (size-reference circles and region color swatches) retain light-colored labels and are fully legible.
-      Data: Same 20 bubbles at identical positions and sizes as the light render, confirming the geometry and size encoding did not change. Colors are recognizably the same hues (green, purple, blue, ochre) as the light render, but not pixel-identical: because each bubble uses an alpha-blended fill composited over the page background, the Africa "blue" in particular reads visibly richer/more saturated navy in the dark render than the muted slate-blue seen in the light render — a real hue shift caused by the alpha compositing against different backgrounds, not just a chrome change.
-      Legibility verdict: PASS on text readability — no dark-on-dark failures — but FLAG the alpha-driven data-color shift as a palette-identity issue (see Weaknesses / VQ-07).
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle now rendered in light/off-white text, fully legible. Axis titles, tick labels, and both legends retain light-colored text with no dark-on-dark failures anywhere else on the canvas.
+      Data: Bubble fill colors are pixel-identical to the light render (confirmed via crop comparison) — the attempt-1 alpha-compositing hue-shift issue (Africa "blue" reading differently per theme) is fixed by switching to solid fills. Only chrome (background, text, grid) flips between themes, as required.
+      Legibility verdict: FAIL (localized) — the same "Latitude"/"20°N" text collision reproduces identically in the dark render (confirmed via pixel crop). All other text is legible with no other dark-on-dark issues.
+
+    Additional check: no AR-09 edge clipping found — title, bottom legends, and left/right axis all sit safely within the canvas with margin to spare in both renders.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title/subtitle/legend text have explicit fontSize props and read
-          cleanly at full resolution in both themes; axis title and tick labels rely
-          on MUI X theme defaults rather than explicit sizing.
+        comment: Explicit tickLabelStyle/labelStyle font sizes lock in legibility;
+          all text readable in both themes except the localized Latitude/20°N collision
+          (see VQ-02).
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: No text-on-text or text-on-data collisions; bubble-to-bubble overlap
-          in dense clusters is handled via alpha and draw order, not a legibility
-          problem.
+        passed: false
+        comment: Rotated 'Latitude' axis-title text overlaps the '20°N' tick label
+          in both renders (confirmed via pixel crop) — a real, localized text-on-text
+          collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bubble sizes (radius 9-46px CSS) are prominent for this sparse (20-point)
-          dataset; MIN_RADIUS floor keeps the smallest cities visible.
+        comment: Markers well-sized for 20-point density with a sensible floor; same-color
+          overlapping bubbles (Tokyo/Shanghai, Delhi/Jakarta) lack a stroke to disambiguate
+          them.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 4 regions is within the 'color alone is enough' range; hues stay
-          distinguishable even with alpha blending.
+        comment: 4 categorical colors well distinguished, CVD-safe, no red-green-only
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large majority of the canvas with balanced margins;
-          both legends sit directly beneath the plot rather than floating isolated.
+        comment: Good proportions, nothing clipped at canvas edges (title, legends,
+          axes all confirmed with margin).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude axis titles plus degree-formatted (°N/°S/°E/°W)
-          tick labels effectively communicate units.
+        comment: Descriptive axis labels with degree units; mandated title format
+          followed exactly.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Categorical hues follow Imprint palette positions 1-4, and backgrounds
-          are theme-correct, but the alpha-hex fill (palette+'9E') is composited against
-          different page backgrounds, causing a visible hue/saturation shift (esp.
-          the Africa blue) between light and dark renders — data colors should stay
-          visually identical across themes.
+        passed: true
+        comment: 'Fixed from attempt 1: solid fills keep data colors pixel-identical
+          across themes; canonical Imprint order used; backgrounds theme-correct.'
     design_excellence:
       score: 14
       max: 20
@@ -135,24 +129,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom dual legend, explanatory subtitle, degree-formatted ticks,
-          and a length-aware title fontsize formula show intentional polish beyond
-          library defaults.
+        comment: Custom dual legend, explanatory subtitle, length-aware title sizing
+          — clearly above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis (no boxed frame), subtle graticule grid, generous whitespace;
-          some refinement visible but not fully hand-tuned.
+        comment: L-shaped implied layout, subtle graticule, generous whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size + color visual hierarchy (draw-order sorting so small bubbles
-          stay visible) helps the reader spot the largest metros at a glance, though
-          there is no explicit annotation calling out a specific insight.
+        comment: Size + color hierarchy with largest-first draw order aids readability;
+          no explicit insight annotation.
     spec_compliance:
       score: 13
       max: 15
@@ -162,35 +153,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly implements a sized-marker bubble map over lon/lat coordinates,
-          the best available adaptation given MUI X community's lack of a native geo
-          chart type.
+        comment: Correct bubble-map-geographic chart type via ScatterChart with per-city
+          markerSize.
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Size encoding, size legend, alpha transparency, minimum bubble size,
-          and secondary color encoding are all present, but the spec's explicit 'country
-          boundaries or coastlines as basemap' requirement is not met — only a lon/lat
-          graticule substitutes for geographic context.
+        comment: Still missing 'country boundaries or coastlines as basemap' (documented
+          library ceiling for MUI X community); no alpha transparency for overlap
+          handling.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on x, latitude on y, axis ranges cover all 20 cities without
-          clipping.
+        comment: Longitude/latitude correctly mapped to x/y; full data range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format is exact; the custom region-based legend appropriately
-          replaces a per-city legend (which would need 20 entries) and its labels
-          match the data categories.
+        comment: Title matches mandated format exactly; legend labels match region
+          names.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -198,23 +185,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Population values span 4.9M-37.4M across 4 world regions with meaningful
-          size variation.
+        comment: Size, color, tooltip, and size-legend all present; missing geographic
+          basemap context.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world city population data, neutral business/demographic topic.
+        comment: Plausible, neutral real-world 2023 metro populations across 20 cities.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Most city figures align with real metro-area populations, but Jakarta
-          (11.2M) uses a city-proper-scale figure while every other city uses a metro-area
-          figure — Jakarta's actual metro area (Jabodetabek) is one of the world's
-          largest, well above 30M.
+        comment: 'Fixed from attempt 1: Jakarta now uses a consistent metro-area figure
+          (33.4M).'
     code_quality:
       score: 10
       max: 10
@@ -224,34 +209,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only small, necessary helper functions (radiusFor, regionColor, lon/latLabel)
-          plus the required default-export component.
+        comment: No unnecessary functions/classes; flat, readable structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded city array, no randomness.
+        comment: Hardcoded, deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports ScatterChart from @mui/x-charts.
+        comment: Only ScatterChart imported.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a custom bubble map with dual legends;
-          no fake UI or simulated interactivity.
+        comment: Well-commented design rationale, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, sizes from window.ANYPLOT_SIZE, current @mui/x-charts/ScatterChart
-          API — harness owns saving.
+        comment: Correct default-export component contract, skipAnimation set, sized
+          from ANYPLOT_SIZE.
     library_mastery:
       score: 7
       max: 10
@@ -261,26 +244,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic per-series markerSize/valueFormatter/color usage plus xAxis/yAxis
-          config and grid; correctly uses MUI X's SVG-children composition pattern
-          for custom legends.
+        comment: Idiomatic per-series markerSize/color, valueFormatter tooltips, custom
+          axis formatting.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Injecting raw SVG children directly into the chart for custom size/color
-          legends leverages a composition model fairly distinctive to MUI X's React/SVG
-          architecture.
-  verdict: REJECTED
+        comment: SVG-children composition for custom dual legends is a distinctive
+          MUI X technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  styling:
-  - alpha-blending
+  dataprep: []
+  styling: []
