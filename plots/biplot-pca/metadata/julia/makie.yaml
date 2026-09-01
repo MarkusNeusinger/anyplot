@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: biplot-pca
 created: '2026-09-01T18:38:39Z'
-updated: '2026-09-01T18:44:39Z'
+updated: '2026-09-01T19:21:42Z'
 generated_by: claude-sonnet
 workflow_run: 33543253546
 issue: 3417
@@ -15,62 +15,85 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Full spec coverage: unit-circle reference, variance-% axis labels, and label-collision
-    avoidance (label_dy nudging) go beyond the spec''s minimum requirements'
-  - Correct, deterministic correlation-matrix PCA implementation (standardize → cor()
-    → eigen(), sorted by descending eigenvalue) with DataAspect() keeping the reference
-    circle circular
+  - The 'Sepal Width' loading label no longer crowds the neighboring setosa point
+    cluster — the tip-vs-label spacing fix from Attempt 1 feedback is visually confirmed
+    in both renders
+  - Correct, deterministic correlation-matrix PCA (standardize → cor() → eigen(),
+    sorted by descending eigenvalue) with DataAspect() keeping the unit-circle reference
+    circular, plus full spec coverage (variance-% axis labels, labeled loading arrows,
+    unit circle, group coloring)
+  - Loading-arrow linewidth is scaled by loading magnitude (arrow_linewidth = 1.8
+    + 1.8 * relative magnitude), a genuine, visually-confirmed hierarchy cue that
+    makes the dominant Sepal Length/Sepal Width drivers read as thicker arrows than
+    Petal Length/Petal Width
   - Clean theme-adaptive chrome and Imprint palette compliance identical across both
-    renders
+    renders; backgrounds, text, and legend swatches are theme-correct with no dark-on-dark
+    or light-on-light failures
   weaknesses:
-  - 'Design Excellence is the main gap to publication quality: consider a stronger
-    focal point (e.g., subtle per-group density hulls/ellipses, or emphasizing the
-    dominant loading vectors with slightly heavier line weight than the shorter ones)
-    to push DE-03 storytelling further'
-  - Tighten the square canvas's top/bottom whitespace and the plot-to-legend gap slightly
-    to raise canvas utilization (VQ-05)
-  - Nudge the 'Sepal Width' loading label further from the neighboring setosa point
-    cluster in the upper-right to remove the last bit of visual crowding
-  - Consider a borderless (or lighter-weight) legend frame for a more refined look
-    (DE-02)
+  - 'The per-group 1.5σ density ellipses (poly! block, lines ~99-111) render zero
+    visible pixels in EITHER theme — verified by pixel-level inspection of the exact
+    predicted ellipse bounding box (e.g. setosa: cols 1565-1727, rows 745-1477 on
+    the 2400x2400 canvas), which shows only background and marker anti-aliasing, no
+    fill tint or stroke arc. The math (covariance eigendecomposition, radii, rotation)
+    is correct and the ellipse extent is well within the visible axis range, so this
+    is a rendering/API bug, not a data-range issue. Likely cause: the `color = (IMPRINT_PALETTE[i],
+    0.10)` / `strokecolor = (IMPRINT_PALETTE[i], 0.35)` tuple-alpha syntax on `poly!`
+    may not apply the way it does on `hlines!`/`vlines!` in this Makie version. Fix
+    by switching to explicit `RGBAf(c.r, c.g, c.b, alpha)` (as already used for the
+    gridlines/hlines in this same file) and re-render to CONFIRM the ellipses are
+    actually visible before relying on them for DE-03 credit — or remove the dead
+    code if it can''t be made to render.'
+  - '`Legend(fig[1, 2], ax, "Species"; framevisible = false, ...)` still produces
+    a clearly visible bordered box around the legend in both renders (confirmed by
+    direct crop inspection) — the borderless-legend fix requested after Attempt 1
+    did not take effect. Investigate whether this Makie/CairoMakie version needs a
+    different attribute (e.g. explicit `framecolor = :transparent` or a GridLayout
+    box style) to actually remove the frame, and visually verify the rendered PNG
+    before claiming the fix landed.'
+  - Because neither of the two headline Attempt-1-feedback fixes (density ellipses,
+    borderless legend) is visually present in the output, Design Excellence (DE-01/DE-02/DE-03)
+    is scored on the unchanged actual appearance rather than the code's intent — the
+    plot still relies primarily on species color plus the new (working) arrow-weight
+    cue for its visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "biplot-pca · julia · makie · anyplot.ai" bold black, axis labels "PC1 (73.0%)" / "PC2 (22.9%)", tick labels, loading-vector labels (Sepal Length, Sepal Width, Petal Length, Petal Width), and legend ("Species": setosa/versicolor/virginica) all rendered in dark ink — clearly readable against the light background.
-      Data: 150 iris points colored by species — setosa = brand green #009E73 (first series, correct), versicolor = lavender #C475FD, virginica = blue #4467A3 (canonical Imprint order). Four black loading arrows radiate from the origin with a dashed unit-circle reference.
+      Background: Warm off-white, matches #FAF8F1 exactly (measured RGB 250,248,241) — not pure white.
+      Chrome: Title "biplot-pca · julia · makie · anyplot.ai" bold dark ink, centered near the top; axis labels "PC1 (73.0%)" / "PC2 (22.9%)" with variance-explained percentages; tick labels and the four loading-vector labels (Sepal Length, Sepal Width, Petal Length, Petal Width) all in dark ink, clearly readable; "Species" legend to the right in an elevated cream box with a visible black border/frame (despite the source setting framevisible=false — this border is still rendered). All text is legible against the light background with no light-on-light issues.
+      Data: 150 iris points colored by species — setosa = brand green #009E73 (first series, correct), versicolor = lavender #C475FD, virginica = blue #4467A3 (canonical Imprint order). Four black loading arrows radiate from the origin with a dashed unit-circle reference; arrow linewidth visibly varies by loading magnitude (Sepal Length/Sepal Width arrows read thicker than Petal Length/Petal Width). Pixel-level inspection of the predicted per-group density-ellipse bounding boxes found NO visible fill or stroke pixels — the ellipse code does not produce a visible effect in this render.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: All chrome elements (title, axis labels, tick labels, loading-vector labels, gridlines, legend box/text) correctly flip to light ink (white/off-white). No dark-on-dark failures observed. Loading arrows are chrome (theme-adaptive INK token), so they correctly render white in dark mode.
-      Data: Species point colors (green/lavender/blue) are identical to the light render — confirms categorical palette held constant across themes.
+      Background: Warm near-black, matches #1A1A17 exactly (measured RGB 26,26,23) — not pure black.
+      Chrome: All chrome (title, axis labels, tick labels, loading-vector labels, gridlines, legend box/text) correctly flips to light ink; no dark-on-dark failures observed. The legend still shows the same visible border (now light-colored) as the light render — same non-functional framevisible=false issue, just theme-correct in color.
+      Data: Species point colors (green/lavender/blue) and loading-arrow color logic are identical to the light render, confirming the categorical palette is held constant across themes. Same absence of any visible density-ellipse pixels as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; 'Sepal
-          Width' label slightly crowded near a setosa point
+        comment: All font sizes explicitly set; the 'Sepal Width' label crowding flagged
+          in Attempt 1 is resolved, now clear of the setosa cluster; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Label nudge logic successfully separates close loading labels; no
-          text collisions
+        comment: No text-on-text or text-on-data collisions; label nudge logic keeps
+          close loading labels separated
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: markersize=12 and arrow linewidth=2.5/arrowsize=18 are clearly visible
-          for 150 points
+        comment: markersize=12 adequate for 150 points; arrows clearly visible with
+          magnitude-scaled linewidth
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -82,21 +105,21 @@ review:
         score: 3
         max: 4
         passed: true
-        comment: DataAspect() keeps the unit circle circular; top/bottom whitespace
-          and plot-to-legend gap slightly exceed ideal tightness
+        comment: Content spans ~77% of canvas height; margins slightly tighter than
+          Attempt 1 but not dramatically changed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: PC1/PC2 labels include variance explained percentages
+        comment: PC1/PC2 labels include variance explained
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73, canonical order for remaining species, theme-correct
-          chrome in both renders'
+          backgrounds/chrome in both renders'
     design_excellence:
       score: 14
       max: 20
@@ -106,22 +129,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom palette, theme-adaptive chrome, unit-circle reference, label-collision
-          avoidance — above configured default, short of full publication polish
+        comment: Custom palette, theme-adaptive chrome, unit-circle reference, magnitude-scaled
+          arrow weight; the attempted density-ellipse addition is not visually credited
+          since it does not render
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle gridlines, generous whitespace;
-          legend keeps a visible frame box
+        comment: Top/right spines removed, subtle gridlines; legend still shows a
+          visible bordered frame in both renders despite framevisible=false in source
+          — the requested fix did not take visual effect
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Species coloring creates a clear visual takeaway but relies on color
-          alone, no explicit annotation/callout
+        comment: Species coloring plus the new working arrow-weight cue for dominant
+          loadings create visual hierarchy; the density-ellipse addition intended
+          to push this further is not visible in the render
     spec_compliance:
       score: 15
       max: 15
@@ -137,8 +163,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Every 'Notes' item from the spec is present, including the optional
-          unit-circle reference
+        comment: Every 'Notes' item from the spec is present, including the unit-circle
+          reference
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -176,7 +202,7 @@ review:
         comment: 73.0%/22.9% variance explained matches the well-known real-world
           iris PCA result
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -200,10 +226,12 @@ review:
           are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriately complex, no over-engineering or fake UI
+        comment: The per-group ellipse poly! block (~12 lines) is dead code that produces
+          no visible output in either render — not fake/simulated functionality, but
+          a non-functional addition that should be fixed or removed
       - id: CQ-05
         name: Output & API
         score: 1
@@ -228,7 +256,7 @@ review:
         passed: false
         comment: arrows! and DataAspect() are Makie-idiomatic touches, though the
           biplot composition itself is a common cross-library pattern
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
