@@ -39,6 +39,15 @@ const xMax = d3.max(data, (d) => d.ciUpper);
 const xPad = (xMax - xMin) * 0.1;
 const x = d3.scaleLinear().domain([xMin - xPad, xMax + xPad]).nice().range([0, iw]);
 const y = d3.scaleBand().domain(data.map((d) => d.variable)).range([0, ih]).padding(0.45);
+// Marker radius scales with |coefficient|, giving the strongest effects visual weight.
+const r = d3.scaleLinear().domain(d3.extent(data, (d) => Math.abs(d.coefficient))).range([6.5, 11]);
+
+// --- "Practically negligible" zone band around zero -----------------------------
+const negligible = (xMax - xMin) * 0.03;
+g.append("rect")
+  .attr("x", x(-negligible)).attr("width", x(negligible) - x(-negligible))
+  .attr("y", 0).attr("height", ih)
+  .attr("fill", muted).attr("opacity", isLight ? 0.1 : 0.14);
 
 // --- Zero reference line -------------------------------------------------------
 g.append("line")
@@ -57,7 +66,9 @@ rows.append("line")
   .attr("y1", (d) => y(d.variable) + y.bandwidth() / 2)
   .attr("y2", (d) => y(d.variable) + y.bandwidth() / 2)
   .attr("stroke", (d) => (d.significant ? t.palette[0] : muted))
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", 2.5)
+  .attr("stroke-linecap", "round")
+  .attr("opacity", 0.6);
 
 for (const bound of ["ciLower", "ciUpper"]) {
   rows.append("line")
@@ -65,13 +76,14 @@ for (const bound of ["ciLower", "ciUpper"]) {
     .attr("y1", (d) => y(d.variable) + y.bandwidth() / 2 - capHalf)
     .attr("y2", (d) => y(d.variable) + y.bandwidth() / 2 + capHalf)
     .attr("stroke", (d) => (d.significant ? t.palette[0] : muted))
-    .attr("stroke-width", 2.5);
+    .attr("stroke-width", 2.5)
+    .attr("stroke-linecap", "round");
 }
 
 rows.append("circle")
   .attr("cx", (d) => x(d.coefficient))
   .attr("cy", (d) => y(d.variable) + y.bandwidth() / 2)
-  .attr("r", 9)
+  .attr("r", (d) => r(Math.abs(d.coefficient)))
   .attr("fill", (d) => (d.significant ? t.palette[0] : muted))
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5);
@@ -115,3 +127,13 @@ legendItems.forEach((item, i) => {
     .attr("fill", t.inkSoft).style("font-size", "14px")
     .text(item.label);
 });
+
+// --- Callout: highlight the single largest driver --------------------------------
+const top = data[0];
+const topCy = y(top.variable) + y.bandwidth() / 2;
+const topCx = x(top.coefficient);
+g.append("text")
+  .attr("x", topCx).attr("y", topCy - r(Math.abs(top.coefficient)) - 12)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.palette[0]).style("font-size", "13px").style("font-weight", "600")
+  .text(`Largest driver: ${top.variable} (+${top.coefficient.toFixed(2)})`);
