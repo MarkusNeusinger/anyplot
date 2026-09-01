@@ -66,7 +66,9 @@ const moduleSize = Math.floor((width - marginX * 2) / totalModules);
 const barcodeWidth = moduleSize * totalModules;
 const barcodeX = (width - barcodeWidth) / 2;
 
-const barTop = 200;
+// Shifted down from the top so the whitespace above the barcode block
+// balances the whitespace below the caption (see review feedback).
+const barTop = 242;
 const barHeight = 380;
 
 // --- SVG mount ----------------------------------------------------------------
@@ -77,12 +79,20 @@ const svg = d3.select("#container").append("svg").attr("width", width).attr("hei
 // pattern IS the encoded content, not a categorical series, so it follows
 // chrome contrast rules: dark ink on the light surface, light ink on the
 // dark surface, always maximally contrasted against the page background.
-let cursor = barcodeX + QUIET_MODULES * moduleSize;
+// Module position (in module units, not pixels) maps to pixel-x through an
+// idiomatic D3 linear scale, rather than accumulating raw pixel offsets.
+const moduleScale = d3.scaleLinear().domain([0, totalModules]).range([barcodeX, barcodeX + barcodeWidth]);
+
+let modulePos = QUIET_MODULES;
 const bars = [];
 for (const el of elements) {
-  const w = el.moduleWidth * moduleSize;
-  if (el.dark) bars.push({ x: cursor, w });
-  cursor += w;
+  if (el.dark) {
+    bars.push({
+      x: moduleScale(modulePos),
+      w: moduleScale(modulePos + el.moduleWidth) - moduleScale(modulePos),
+    });
+  }
+  modulePos += el.moduleWidth;
 }
 
 svg.selectAll("rect.bar").data(bars).join("rect")
