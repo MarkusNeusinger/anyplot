@@ -20,6 +20,9 @@ const LABEL_BG = colorant"#FFFFFF"
 const BAR_INK  = colorant"#0A0A0A"
 const LABEL_INK = colorant"#1A1A17"
 
+# Imprint brand accent — a data-palette color, so it stays fixed across themes.
+const ACCENT = colorant"#009E73"
+
 # --- Data: Code 128 Subset B encoding -----------------------------------------
 # Laboratory specimen tracking label.
 content = "SPEC-88451-QC"
@@ -82,14 +85,14 @@ edges       = cumsum(vcat([0.0], flat_widths))
 bar_starts  = edges[1:end-1][is_bar] .+ bar_x0
 bar_lengths = flat_widths[is_bar]
 
-bar_y_bottom = 390.0
+bar_y_bottom = 357.5
 bar_height   = 260.0
 bar_rects    = Rect2f.(bar_starts, bar_y_bottom, bar_lengths, bar_height)
 
 card_pad_x  = 60.0
 card_x      = block_left - card_pad_x
 card_width  = 2 * half_block + 2 * card_pad_x
-card_y      = 300.0
+card_y      = 267.5
 card_height = 400.0
 
 # --- Plot ------------------------------------------------------------------
@@ -104,15 +107,20 @@ ylims!(ax, 0, 900)
 poly!(ax, Rect2f(card_x, card_y, card_width, card_height); color = LABEL_BG)
 poly!(ax, bar_rects; color = BAR_INK)
 
-text!(ax, canvas_center, 815;
+text!(ax, canvas_center, 782.5;
       text = "barcode-code128 · julia · makie · anyplot.ai",
-      color = INK, fontsize = 26, align = (:center, :center))
-text!(ax, canvas_center, 758;
+      color = INK, fontsize = 30, align = (:center, :center))
+text!(ax, canvas_center, 725.5;
       text = "Laboratory specimen label",
       color = INK_SOFT, fontsize = 18, align = (:center, :center))
-text!(ax, canvas_center, 340; text = content,
+
+# Brand accent between the subtitle and the card — a small polish touch
+# that never touches the black-ink-on-white barcode itself.
+poly!(ax, Rect2f(canvas_center - 55, 693.5, 110, 4); color = ACCENT)
+
+text!(ax, canvas_center, 307.5; text = content,
       color = LABEL_INK, fontsize = 26, font = :bold, align = (:center, :center))
-text!(ax, canvas_center, 150;
+text!(ax, canvas_center, 117.5;
       text = "Code 128, Subset B  ·  Quiet zone $(quiet_modules) modules each side  ·  Check digit $(checksum)",
       color = INK_MUTED, fontsize = 15, align = (:center, :center))
 
