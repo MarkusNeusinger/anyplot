@@ -28,6 +28,19 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The API image installs `libraqm0`, which is what actually restores text shaping —
+  and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
+  build-time assertion on `features.check('raqm')` on the understanding that the locked
+  Pillow 12.3.0 manylinux wheel bundles libraqm. It does not: the wheel `dlopen()`s
+  libraqm at runtime, so in a bare `python:3.13-slim` the check is `False` and both
+  HarfBuzz and FriBiDi report no version at all. The assertion therefore failed every
+  build of this image, and the `deploy-api` trigger has been failing since that merge —
+  the serving revision is still the one built on 2026-08-28, so nothing merged since has
+  shipped. Installing the Debian `libraqm0` package (32 KB plus its HarfBuzz/FriBiDi
+  dependencies) turns the check `True`, verified in the built image. The assertion also
+  moves to the runtime stage, where it checks the image that actually serves: in the
+  builder stage it would pass on a venv whose runtime never got the library, which is
+  exactly the false green the guard exists to prevent. (#10813)
 - **OG cards render without MonoLisa's italic swashes in production** — the live
   `api.anyplot.ai/og/home.png` is pixel-identical to a render forced onto Pillow's
   BASIC layout engine, which means the deployed container's Pillow has no libraqm:
@@ -39,6 +52,25 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Changed
 
+- **The API image is built in two stages and drops two thirds of its weight** — the
+  single-stage `api/Dockerfile` produced a 1.6 GB image (502 MB compressed in Artifact
+  Registry) of which 277 MB compressed was ballast in two layers: `build-essential`,
+  which never compiled anything because all 108 packages this image installs ship
+  wheels, and a `chown -R appuser:appuser /app` that ran after the venv was in place
+  and so rewrote the whole environment into a second layer. The build now installs into
+  a builder stage and copies only the finished venv across with `COPY --chown`, which
+  sets ownership as the layer is written. Measured: 1.62 GB to 693 MB. Less Artifact
+  Registry growth per deploy and a shorter deploy rollout; `min-instances 1` already
+  covers the user-facing cold start.
+- **The API deploy smoke-tests a candidate revision before it takes traffic** — the
+  pipeline deployed straight onto live traffic, so a broken image served users until
+  someone noticed. It now deploys with `--no-traffic --tag=candidate` and a
+  deterministic `--revision-suffix`, probes that revision on its tag URL (`/health`,
+  `/libraries`, `/languages`, `/plots/filter` for the database path, and `/debug/status`
+  for the fail-closed admin gate), and only then shifts traffic to exactly the revision
+  it smoked — never `--to-latest`, which could promote a concurrent build's unsmoked
+  revision. Adopted verbatim from the sibling repo kurrentschrift, which has had this
+  net since its first deploy.
 - **`anyplot-app` scales to zero** — the frontend service ran a permanently warm
   instance for ~EUR 8.30/month while 99.56% of the paid time was idle. It is a static
   nginx image that boots in ~0.26 s, and a 7-day request trace at one-minute resolution
