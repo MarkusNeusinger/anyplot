@@ -108,7 +108,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 20, bottom: 20 } },
+    layout: { padding: { top: 20, bottom: 64 } },
     plugins: {
       title: { display: true, text: title, color: t.ink, font: { size: titleFontSize, weight: "500" } },
       legend: { display: false },
@@ -128,6 +128,21 @@ new Chart(canvas, {
         const y = chart.scales.y;
         const moduleWidth = x.getPixelForValue(1) - x.getPixelForValue(0);
         const yLabel = y.getPixelForValue(0.15);
+
+        // Faint quiet-zone frame: a subtle outline around the full symbol
+        // (bars + quiet zones), the way a printed barcode label is often
+        // bordered. Uses the low-contrast grid token so it reads as a
+        // hairline, never competing with the bars' scannable contrast.
+        ctx.save();
+        ctx.strokeStyle = t.grid;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(
+          x.getPixelForValue(0),
+          y.getPixelForValue(1.3),
+          x.getPixelForValue(labels.length - 1) + moduleWidth - x.getPixelForValue(0),
+          y.getPixelForValue(0.3) - y.getPixelForValue(1.3)
+        );
+        ctx.restore();
 
         ctx.save();
         ctx.fillStyle = t.ink;
