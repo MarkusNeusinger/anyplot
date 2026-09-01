@@ -1,7 +1,7 @@
 // anyplot.ai
 // chessboard-pieces: Chess Board with Pieces for Position Diagrams
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-01
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-01
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
