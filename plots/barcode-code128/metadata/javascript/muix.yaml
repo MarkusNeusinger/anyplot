@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: barcode-code128
 created: '2026-09-01T18:44:00Z'
-updated: '2026-09-01T18:51:47Z'
+updated: '2026-09-01T19:10:50Z'
 generated_by: claude-sonnet
 workflow_run: 33544293774
 issue: 3809
@@ -12,7 +12,7 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 85
 review:
   strengths:
   - Real ISO/IEC 15417 Code 128 Subset B symbol table with a correct modulo-103 checksum,
@@ -21,40 +21,47 @@ review:
     Stop patterns per spec
   - Run-length-encodes the bit string into stacked BarChart segments so bar widths
     are geometrically exact, not visually approximated
-  - Bars use the theme-adaptive ink token instead of the brand-green Imprint position,
-    with a documented rationale (barcode ink is structural, not categorical data)
-    — correct domain call that keeps the barcode looking like a real barcode in both
-    themes
   - 'Clean, minimal-chrome layout: axes/legend/tooltip fully hidden, generous whitespace,
     monospaced human-readable text with realistic letter-spacing below the bars'
-  - Human-readable text and title are legible with clear contrast in both light and
-    dark renders
+  - Title and human-readable label are legible with explicit font sizes in both themes;
+    bars use the theme-adaptive ink token with a documented rationale (structural
+    ink, not categorical data) so the barcode still reads correctly on both surfaces
   weaknesses:
+  - 'The Attempt-1 repair added a caption div ("Code 128 · Subset B (full ASCII, ANSI/ISO
+    quiet zones)") but never renders it: muix.tsx:70 computes `chartHeight = SIZE.height
+    - PADDING*2 - TITLE_H - LABEL_H - CAPTION_H - GAP` subtracting GAP only once,
+    even though the JSX places two separate GAP spacer divs (title→chart and chart→label).
+    Total content height (804 CSS px) exceeds the 780 CSS px available, so the caption
+    is squeezed out of the visible frame — confirmed by pixel-scanning both plot-light.png
+    and plot-dark.png: the last non-background row is y=1616 of 1800, and no caption
+    text appears anywhere below the human-readable label in either render. Fix: change
+    `GAP` to `GAP * 2` in the chartHeight formula so all six stacked elements (title,
+    gap, chart, gap, label, caption) fit the available height.'
+  - As a direct side effect of the same bug, the bottom whitespace (~184px) is noticeably
+    larger than the top padding (~60px), so the composition reads slightly bottom-heavy
+    instead of symmetric.
   - Only demonstrates Subset B; the spec mentions Code 128's dynamic A/B/C subset
     switching but a single static example reasonably only needs to show one — not
     a real defect, just unexplored breadth
-  - Dark render inverts to light bars on a dark background rather than literal black-on-white;
-    acceptable as a theme-adaptive design choice for a catalog visualization (not
-    a physical label), but worth flagging since the spec's 'high contrast black bars
-    on white background for maximum scan reliability' note is framed around print/scan
-    reliability
   - No visual hierarchy or storytelling beyond the barcode pattern itself — expected
-    for this plot type, but keeps DE-03 at its default
+    for this plot type, keeps DE-03 at its default
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1.
+      Background: warm off-white, consistent with #FAF8F1 (verified pixel value 250,248,241 uniformly outside the bars).
       Chrome: title "barcode-code128 · javascript · muix · anyplot.ai" in dark ink, top-left, clearly legible. Human-readable text "SHIP-2024-ABC123" centered below the barcode in monospaced, letter-spaced dark ink.
-      Data: barcode bars rendered as solid near-black (ink) vertical bars of varying width against the off-white background, with visible quiet zones on both sides — high contrast, easy to distinguish bar/space widths.
+      Data: barcode bars rendered as solid near-black (#1A1A17 ink) vertical bars of varying width against the off-white background, with visible quiet zones on both sides — high contrast, easy to distinguish bar/space widths.
+      Note: the intended caption line ("Code 128 · Subset B (full ASCII, ANSI/ISO quiet zones)") added in the Attempt-1 repair does not appear anywhere in the render — confirmed by pixel scan (no non-background pixels below y=1616 of 1800).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17.
-      Chrome: title and human-readable text rendered in light ink, clearly legible against the dark background — no dark-on-dark issue.
-      Data: barcode bars rendered as light/cream vertical bars against the dark background — an inverted but internally consistent high-contrast rendering (data widths/pattern identical to the light render; only the ink color flipped per the theme token, which is a documented, intentional structural-ink design choice rather than a categorical Imprint palette color).
+      Background: warm near-black, consistent with #1A1A17 (verified pixel value 26,26,23 uniformly outside the bars).
+      Chrome: title and human-readable text rendered in light ink (#F0EFE8), clearly legible against the dark background — no dark-on-dark issue.
+      Data: barcode bars rendered as light/cream (#F0EFE8) vertical bars against the dark background — data widths/pattern identical to the light render; only the ink color flipped per the theme token, a documented structural-ink design choice rather than a categorical Imprint palette color.
+      Note: same missing-caption issue as the light render — no content renders below the human-readable label.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,8 +69,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and human-readable label are legible with explicit font sizes
-          in both themes
+        comment: Title and human-readable label legible with explicit font sizes in
+          both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -81,13 +88,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Pure luminance contrast (ink vs. background) — inherently CVD-safe
+        comment: Pure luminance contrast (ink vs. background) is inherently CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, symmetric margins, nothing clipped
+        comment: Correct 3200x1800 canvas, nothing clipped (verified via pixel scan),
+          but a height-budget bug leaves the bottom margin (~184px) visibly larger
+          than the top padding (~60px)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -100,7 +109,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Backgrounds correct per theme; bars use ink token as a documented,
+        comment: Backgrounds correct per theme; bars use the ink token as a documented,
           domain-justified exception to the brand-green categorical rule
     design_excellence:
       score: 12
@@ -119,7 +128,8 @@ review:
         max: 6
         passed: true
         comment: Axes/legend/tooltip hidden, generous whitespace, realistic monospaced
-          label styling
+          label styling; slightly undercut by the unbalanced bottom margin from the
+          caption bug
       - id: DE-03
         name: Data Storytelling
         score: 2
@@ -181,7 +191,7 @@ review:
         passed: true
         comment: 17 characters, well within the spec's recommended 48-character limit
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -204,10 +214,11 @@ review:
         comment: Only BarChart imported and used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Custom encoder is appropriately complex for the domain, no fake UI
+        comment: The Attempt-1 repair's caption element is dead code — a height-budget
+          arithmetic bug (GAP subtracted once instead of twice) means it never renders
       - id: CQ-05
         name: Output & API
         score: 1

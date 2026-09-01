@@ -1,7 +1,7 @@
 // anyplot.ai
 // barcode-code128: Code 128 Barcode
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-01
+// Quality: 85/100 | Created: 2026-09-01
 import { BarChart } from "@mui/x-charts/BarChart";
 
 const t = window.ANYPLOT_TOKENS;
