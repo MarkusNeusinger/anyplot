@@ -19,8 +19,12 @@ const LON_MIN = -123.6;
 const LON_MAX = -120.4;
 const LAT_MIN = 45.5;
 const LAT_MAX = 47.3;
-const NLON = 61;
-const NLAT = 35;
+// Grid resolution: fine enough that marching-squares rounds out the tight
+// peak sigmas (~0.13-0.22 deg) into smooth isolines instead of faceting into
+// visible hexagons near the summits, and dense enough that adjacent raster
+// cells blend without visible seams.
+const NLON = 101;
+const NLAT = 61;
 
 const LONS = Array.from(
   { length: NLON },
@@ -185,6 +189,30 @@ function ContourLayer() {
   const { left, top, width: areaW, height: areaH } = useDrawingArea();
   const xOf = (lon: number) => left + ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * areaW;
   const yOf = (lat: number) => top + (1 - (lat - LAT_MIN) / (LAT_MAX - LAT_MIN)) * areaH;
+  // Peak-name pills sit in a fixed box directly above each summit. Index-
+  // contour labels default to the ring's middle segment (as before), but if
+  // that spot falls inside a peak-name pill, we scan outward along the ring
+  // for the nearest segment that clears every pill instead.
+  const peakLabelBoxes = PEAKS.map((p) => {
+    const cx = xOf(p.lon);
+    const cy = yOf(p.lat);
+    return { x0: cx - 44, x1: cx + 44, y0: cy - 52, y1: cy - 34 };
+  });
+  const clearsPeakLabels = (mx: number, my: number) =>
+    peakLabelBoxes.every((b) => mx + 28 < b.x0 || mx - 28 > b.x1 || my + 10 < b.y0 || my - 10 > b.y1);
+  const pickLabelSegment = (segments: Segment[]): Segment => {
+    const mid = Math.floor(segments.length / 2);
+    for (let d = 0; d < segments.length; d++) {
+      for (const idx of d === 0 ? [mid] : [mid + d, mid - d]) {
+        if (idx < 0 || idx >= segments.length) continue;
+        const seg = segments[idx];
+        const mx = (xOf(seg[0][0]) + xOf(seg[1][0])) / 2;
+        const my = (yOf(seg[0][1]) + yOf(seg[1][1])) / 2;
+        if (clearsPeakLabels(mx, my)) return seg;
+      }
+    }
+    return segments[mid];
+  };
 
   return (
     <g>
@@ -218,7 +246,7 @@ function ContourLayer() {
       })}
       {CONTOURS.filter(({ level }) => level % INDEX_STEP === 0 && level > MIN_ELEV).map(({ level, segments }) => {
         if (segments.length === 0) return null;
-        const [[lon0, lat0], [lon1, lat1]] = segments[Math.floor(segments.length / 2)];
+        const [[lon0, lat0], [lon1, lat1]] = pickLabelSegment(segments);
         const cx = (xOf(lon0) + xOf(lon1)) / 2;
         const cy = (yOf(lat0) + yOf(lat1)) / 2;
         return (
@@ -238,15 +266,34 @@ function ContourLayer() {
         strokeLinecap="round"
         strokeOpacity={0.75}
       />
-      <text
-        x={xOf(RIVER[0][0]) + 6}
-        y={yOf(RIVER[0][1]) - 10}
-        fontSize={13}
-        fontStyle="italic"
-        fill={INK_MUTED}
-      >
-        Columbia River
-      </text>
+      <g>
+        <rect x={xOf(RIVER[0][0]) + 2} y={yOf(RIVER[0][1]) - 22} width={104} height={18} rx={4} fill={t.pageBg} opacity={0.85} />
+        <text
+          x={xOf(RIVER[0][0]) + 6}
+          y={yOf(RIVER[0][1]) - 10}
+          fontSize={13}
+          fontStyle="italic"
+          fill={INK_MUTED}
+        >
+          Columbia River
+        </text>
+      </g>
+      {PEAKS.map((p) => {
+        const cx = xOf(p.lon);
+        const cy = yOf(p.lat);
+        // Peak names sit well above the summit, clear of the tight innermost
+        // contour ring and its numeric label (which land right at the
+        // summit point for the tallest peaks) — no separate summit dot, to
+        // avoid colliding with that ring label.
+        return (
+          <g key={p.name}>
+            <rect x={cx - 44} y={cy - 52} width={88} height={18} rx={4} fill={t.pageBg} opacity={0.85} />
+            <text x={cx} y={cy - 39} textAnchor="middle" fontSize={12} fontWeight={600} fill={t.ink}>
+              {p.name}
+            </text>
+          </g>
+        );
+      })}
     </g>
   );
 }
