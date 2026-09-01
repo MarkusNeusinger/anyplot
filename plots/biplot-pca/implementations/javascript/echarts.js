@@ -151,7 +151,7 @@ const groupSeries = groups.map((g, gi) => ({
   type: "scatter",
   data: scores1.flatMap((x, i) => (groupOf[i] === g.name ? [[x, scores2[i]]] : [])),
   symbolSize: 16,
-  itemStyle: { color: t.palette[gi], opacity: 0.85, borderColor: t.pageBg, borderWidth: 1.5 },
+  itemStyle: { color: t.palette[gi], opacity: 0.75, borderColor: t.pageBg, borderWidth: 1.5 },
   z: 5,
 }));
 
@@ -170,6 +170,10 @@ chart.setOption({
   legend: {
     top: 84,
     left: "center",
+    // Only the score groups — the loading-vector series already has its own
+    // arrow labels on the plot, and its default legend swatch (a plain
+    // rectangle) doesn't read as a vector, so it's dropped here.
+    data: groups.map((g) => g.name),
     textStyle: { color: t.ink, fontSize: 15 },
     itemGap: 28,
     itemWidth: 22,
@@ -185,7 +189,7 @@ chart.setOption({
     nameGap: 40,
     nameTextStyle: { color: t.ink, fontSize: 17 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { onZero: true, lineStyle: { color: t.inkSoft, width: 1.5 } },
+    axisLine: { onZero: true, lineStyle: { color: t.inkSoft, width: 1, opacity: 0.35 } },
     axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
@@ -198,7 +202,7 @@ chart.setOption({
     nameGap: 50,
     nameTextStyle: { color: t.ink, fontSize: 17 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { onZero: true, lineStyle: { color: t.inkSoft, width: 1.5 } },
+    axisLine: { onZero: true, lineStyle: { color: t.inkSoft, width: 1, opacity: 0.35 } },
     axisTick: { show: false },
     splitLine: { show: true, lineStyle: { color: t.grid } },
   },
