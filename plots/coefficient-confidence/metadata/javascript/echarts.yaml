@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: coefficient-confidence
 created: '2026-09-01T23:19:48Z'
-updated: '2026-09-01T23:25:48Z'
+updated: '2026-09-01T23:36:59Z'
 generated_by: claude-sonnet
 workflow_run: 33570125664
 issue: 3576
@@ -12,61 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/javascript/echarts/plot-dark.html
-quality_score: 49
+quality_score: 89
 review:
   strengths:
-  - 'Correct plot type: horizontal coefficient plot with categorical y-axis, ordered
-    by absolute coefficient magnitude descending, exactly as the spec recommends for
-    long variable names'
-  - Dashed reference line at x=0 clearly marks the null-hypothesis threshold
-  - 'First categorical series correctly uses Imprint brand green #009E73, and title/legend/axis-label
-    format all match spec requirements with explicit units ("Coefficient Estimate
-    (percentage points)")'
-  - Data is a realistic, neutral business scenario (e-commerce conversion drivers)
-    with a good mix of positive/negative coefficients and varying CI widths, including
-    a near-zero-crossing example (Popup Ads)
-  - Idiomatic use of ECharts' custom series `renderItem` to hand-draw whisker caps
-    — a technique genuinely distinctive to ECharts
+  - 'Statistically sound data: the significant/not-significant flag matches whether
+    each confidence interval crosses zero for all 10 rows, and coefficients are ordered
+    by absolute magnitude descending as the spec requests.'
+  - Idiomatic ECharts custom-series renderItem builds the horizontal whisker (cap-line-cap)
+    primitives from api.coord, a genuinely distinctive technique beyond basic scatter/bar
+    usage.
+  - Significance is encoded through two independent channels (color AND whisker line
+    width), not color alone, which helps color-vision-deficient readers.
+  - Dashed zero-reference line via markLine communicates the null-hypothesis threshold
+    clearly, reinforcing the plot's storytelling purpose.
+  - 'Theme-adaptive chrome is correct in both renders: warm off-white / near-black
+    backgrounds, all text legible, brand green #009E73 identical between light and
+    dark.'
+  - Title format and legend labels match spec conventions exactly; axis label states
+    the effect measure with units ("Coefficient Estimate (percentage points)").
   weaknesses:
-  - 'Critical rendering bug: the code reads `t.muted` (lines 102, 126) for the "Not
-    significant" whisker stroke and marker fill, but `window.ANYPLOT_TOKENS` (see
-    automation/js-render/render.mjs themeTokens()) only defines pageBg, elevatedBg,
-    ink, inkSoft, grid, palette, amber, seq, div — there is no `muted` key. `t.muted`
-    is `undefined`, so `stroke: undefined` in whiskerRenderItem makes the confidence-interval
-    whisker lines for every non-significant coefficient invisible. Visible in both
-    plot-light.png and plot-dark.png: rows "Popup Ads" through "Loyalty Points Program"
-    (6 of 10 coefficients) show only a dot, with no error-bar caps or line at all,
-    even though the underlying data has ciLower/ciUpper values for all of them. This
-    breaks the plot''s core purpose (a coefficient plot exists specifically to show
-    whether the CI crosses zero) for the majority of the data. Fix: replace `t.muted`
-    with a real token, e.g. `t.inkSoft`, or hardcode the style-guide''s theme-adaptive
-    muted anchor (`#6B6A63` light / `#A8A79F` dark) branching on `window.ANYPLOT_THEME`.'
-  - As a direct consequence, the "Not significant" marker color is not driven by an
-    intentional theme-adaptive token either — it currently renders via ECharts' silent
-    default-palette fallback (since itemStyle.color is also `undefined`), which is
-    not part of the documented Imprint palette or its semantic anchors and does not
-    shift between light/dark the way a real theme token would.
-  - With the whiskers gone for 6/10 rows, color hue becomes the only signal distinguishing
-    significant from non-significant coefficients — a fragile, non-redundant encoding
-    once the intended whisker-presence/absence hierarchy collapses.
-  - 'Design Excellence and Data Storytelling are held back by the same bug: the plot''s
-    intended story ("insignificant coefficients have CIs that cross zero") is unverifiable
-    for most rows since no CI is drawn for them at all.'
+  - Legend swatches only show dots, not the whisker line-width distinction used in
+    the plot body, so the color/weight double-encoding isn't previewed in the legend
+    itself — minor, doesn't affect the plot area.
+  - Design excellence is solid but fairly conventional for a forest/coefficient plot
+    (no extra polish like alternating row bands or effect-size annotations) — room
+    to push aesthetic sophistication further.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Website Conversion Drivers · coefficient-confidence · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly readable. Legend ("Significant" / "Not significant") centered below the title with green and slate-gray swatches. X-axis labeled "Coefficient Estimate (percentage points)" with tick labels -9..9; y-axis shows 10 variable names, all legible dark-gray text against the light background. Vertical gridlines are faint. A dashed vertical reference line marks x=0.
-      Data: Top 4 rows ("Mobile Optimization Score", "Checkout Steps", "Free Shipping Offer", "Page Load Speed") are green (#009E73) dots each with a clearly visible horizontal whisker (line + end caps) showing the confidence interval. The remaining 6 rows ("Popup Ads" through "Loyalty Points Program") show only a slate/purple-gray dot each — NO whisker line or end caps are visible at all, even though these rows have their own ci_lower/ci_upper values in the source data. This is a rendering defect (see weaknesses), not a design choice.
-      Legibility verdict: PASS (all text is readable), but the plot has a data-completeness defect — CI whiskers are entirely missing for 6 of 10 coefficients.
+      Chrome: Title "Website Conversion Drivers · coefficient-confidence · javascript · echarts · anyplot.ai" centered at top in dark ink, fully legible. Legend below title with two swatches ("Significant" green, "Not significant" gray). Y-axis lists 10 variable names in dark-gray text, x-axis "Coefficient Estimate (percentage points)" label below tick row. Subtle vertical gridlines at -9/-6/-3/0/3/6/9. Dashed vertical reference line at x=0.
+      Data: 10 rows, each a filled circle (18px) with a horizontal whisker (cap-line-cap) showing the confidence interval. First categorical series (significant) is the brand green #009E73 with a thicker whisker; non-significant rows are dark gray with a thinner whisker. Rows ordered by |coefficient| descending, matching the spec.
+      Legibility verdict: PASS — all title/legend/axis/tick text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis structure as the light render, now rendered in light ink/text (#F0EFE8-ish) against the dark background — clearly readable, no dark-on-dark issues. Gridlines are faint light lines.
-      Data: The green (#009E73) marker color and its whiskers are identical to the light render for the 4 significant rows, as required. The "Not significant" dot color again looks like the same slate/purple-gray as in the light render (i.e. it does NOT visibly shift the way a true theme-adaptive "muted" token should), and the same 6 rows are again missing any whisker line entirely.
-      Legibility verdict: PASS (all text and the green series are readable and theme-correct), but the same whisker-visibility defect as the light render is present, and the non-significant marker color is not actually a theme token (see weaknesses — `t.muted` does not exist in ANYPLOT_TOKENS).
+      Chrome: Same title and legend, now rendered in white/light-gray text, fully legible. Gridlines and dashed zero-reference line switch to light tones appropriate for the dark surface. Axis labels and tick labels are light gray, clearly visible.
+      Data: Significant-row color is identical #009E73 green to the light render (confirmed). Non-significant rows switch from dark gray to a light gray tone (ink-soft chrome token, not a palette color) so they remain visible against the dark background — this is expected theme-adaptive chrome, not a data-color violation, since the only data-palette color in use is palette[0] (green).
+      Legibility verdict: PASS — no dark-on-dark failures; all text and markers are clearly distinguishable from the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -74,57 +59,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 17px, axis name 16px, tick/legend
-          14-15px); readable in both themes; title comfortably fits at well under
-          90% width.
+        comment: All titles/labels/ticks readable in both themes, explicit font sizes
+          throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or marks; generous row spacing across the 10
-          categories.
+        comment: No collisions between text, markers, or legend
       - id: VQ-03
         name: Element Visibility
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: Confidence-interval whiskers, the plot's defining data element, are
-          completely invisible for 6 of 10 rows due to a stroke-color bug (t.muted
-          is undefined) — invisible-elements cap applies.
+        passed: true
+        comment: Sparse 10-point data with 18px markers and clearly visible whiskers/caps
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: With whiskers missing for the gray group, hue becomes the sole distinguishing
-          signal, and the gray itself is an unintentional fallback rather than a stable,
-          contrast-checked token.
+        passed: true
+        comment: Significance encoded via color AND line width, not color alone; no
+          red-green pairing
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a healthy share of the canvas, legend
-          sits near the plot, nothing clipped.
+        comment: No clipping, no overflow, balanced margins, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Coefficient Estimate (percentage points)" — descriptive with explicit
-          units.'
+        comment: Axis states the effect measure with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73. Second series relies on t.muted,
-          a token that does not exist in window.ANYPLOT_TOKENS; the rendered color
-          is an accidental ECharts default-palette fallback, not a documented theme-adaptive
-          anchor, and does not shift between light/dark.'
+        passed: true
+        comment: 'First series is #009E73, identical across themes; backgrounds correct
+          in both renders'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -132,26 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Dashed zero-reference line, deliberate marker sizing, and magnitude
-          ordering elevate it above raw defaults, but the rendering bug undercuts
-          the execution.
+        comment: Custom whisker rendering and deliberate color/weight hierarchy, but
+          fairly conventional forest-plot presentation overall
       - id: DE-02
         name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle single-axis gridlines, hidden ticks, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtle 15%-alpha gridlines, no boxed spines, ticks hidden, generous
-          whitespace.
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: The intended hierarchy (whisker = evidence of significance) collapses
-          into "gray dot, no evidence" for 60% of rows — the core storytelling mechanism
-          of a coefficient plot is invisible for most of the data.
+        comment: Dashed zero-reference line and color/weight-coded significance guide
+          the reader to the key takeaway
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -159,54 +132,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct horizontal coefficient plot with categorical y-axis.
+        comment: Correct coefficient/forest plot with horizontal CI whiskers
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Spec requires "horizontal error bars showing confidence intervals"
-          — missing for 6 of 10 coefficients, a key required feature.
+        passed: true
+        comment: Zero reference line, magnitude ordering, significance distinction,
+          horizontal layout all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = coefficient value, Y = categorical variable; all data present
-          on the axes.
+        comment: X=coefficient value, Y=variable name, correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          the data.
+        comment: Title matches mandated format; legend labels match data semantics
     data_quality:
-      score: 10
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 1
+        score: 6
         max: 6
-        passed: false
-        comment: The underlying data has CI bounds for all 10 coefficients, but the
-          rendering shows the CI feature for only 4 of them.
+        passed: true
+        comment: variable, coefficient, ci_lower, ci_upper, significant all present
+          and internally consistent
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral e-commerce conversion-rate scenario.
+        comment: Plausible, neutral e-commerce conversion-rate scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible percentage-point effect sizes, sensible mix of signs and
-          CI widths.
+        comment: Percentage-point effect sizes and CI widths are sensible for the
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -214,35 +185,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes, flat data -> option structure.
+        comment: Minimal structure; renderItem callback is required by the ECharts
+          custom-series API, not superfluous abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data.
+        comment: Hardcoded deterministic data array
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only the echarts global is used.
+        comment: No extraneous imports, uses global echarts only
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: References `t.muted`, a token key that doesn't exist on ANYPLOT_TOKENS,
-          with no fallback — a real correctness bug, not just style.
+        passed: true
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract correctly: no explicit size, no
-          devicePixelRatio, animation: false.'
+        comment: Correct mount-node contract, animation:false
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -250,22 +220,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of custom series encode/renderItem, markLine, and category
-          axis idioms.
+        comment: Correct use of custom series encode/coord, scatter, markLine
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Hand-drawn whisker caps via custom renderItem is a genuinely ECharts-distinctive
-          technique, even though its execution is currently broken for half the data.
-  verdict: REJECTED
+        comment: Custom renderItem whisker construction is a genuinely distinctive
+          ECharts technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-series-renderer
-  - reference-line
+  - error-bars
+  - annotations
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - minimal-chrome
