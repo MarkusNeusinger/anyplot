@@ -1,7 +1,7 @@
 // anyplot.ai
 // barcode-code128: Code 128 Barcode
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-01
+// Quality: 87/100 | Created: 2026-09-01
 
 const t = window.ANYPLOT_TOKENS;
 
