@@ -12,18 +12,19 @@ const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 
-# Board squares pair the Imprint brand green (dark square) with a
-# theme-adaptive off-white (light square) — a classic tournament-set
-# green/cream contrast built from Imprint tokens.
-const LIGHT_SQUARE = THEME == "light" ? colorant"#FAF8F1" : colorant"#F0EFE8"
+# Board squares pair the Imprint brand green (dark square) with the fixed
+# Imprint amber anchor (light square) — both data colors stay identical
+# across themes; only the surrounding chrome (background/text/grid) flips.
 const DARK_SQUARE  = colorant"#009E73"
+const LIGHT_SQUARE = colorant"#DDCC77"
 
 # --- Data ---------------------------------------------------------------
 # Standard chess board: a1 is dark, light squares at h1 and a8.
 # (file index + rank index) even -> dark square; odd -> light square.
 files = 'a':'h'
 ranks = 1:8
-board = [(f + r) % 2 == 0 ? 0 : 1 for f in 0:7, r in 0:7]
+squares      = [Rect2f(f + 0.5, r + 0.5, 1, 1) for f in 0:7 for r in 0:7]
+square_color = [(f + r) % 2 == 0 ? DARK_SQUARE : LIGHT_SQUARE for f in 0:7 for r in 0:7]
 
 # --- Plot -------------------------------------------------------------------
 title_str = "chessboard-basic · julia · makie · anyplot.ai"
@@ -57,13 +58,15 @@ ax = Axis(
     ygridvisible      = false,
 )
 
-heatmap!(ax, 1:8, 1:8, board; colormap = [DARK_SQUARE, LIGHT_SQUARE])
+# Each square is its own poly! Rect2f — a Makie-idiomatic geometry
+# primitive rather than a generic two-color heatmap — with a thin ink
+# hairline stroke between squares for definition.
+hairline = RGBAf(INK.r, INK.g, INK.b, 0.15)
+poly!(ax, squares; color = square_color, strokecolor = hairline, strokewidth = 1)
 
-# Thin ink-colored grid lines between squares for definition.
-for i in 0.5:1:8.5
-    hlines!(ax, [i]; xmin = 0, xmax = 1, color = RGBAf(INK.r, INK.g, INK.b, 0.15), linewidth = 1)
-    vlines!(ax, [i]; ymin = 0, ymax = 1, color = RGBAf(INK.r, INK.g, INK.b, 0.15), linewidth = 1)
-end
+# Outer board frame: a crisp ink-soft border around the full 8x8 grid gives
+# the eye a clean boundary and extra polish beyond the flat square fills.
+lines!(ax, [0.5, 8.5, 8.5, 0.5, 0.5], [0.5, 0.5, 8.5, 8.5, 0.5]; color = INK_SOFT, linewidth = 2.5)
 
 limits!(ax, 0.5, 8.5, 0.5, 8.5)
 
