@@ -1,0 +1,242 @@
+library: makie
+language: julia
+specification_id: chessboard-basic
+created: '2026-09-01T23:29:03Z'
+updated: '2026-09-01T23:51:04Z'
+generated_by: claude-sonnet
+workflow_run: 33570296238
+issue: 3340
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - LIGHT_SQUARE is now a single fixed hex (#DDCC77, the Imprint amber anchor) identical
+    across both renders — fully resolves the attempt-1 VQ-07 theme-adaptivity violation.
+  - Rebuilt with per-square poly!(Rect2f) geometry instead of a generic two-color
+    heatmap — a genuinely Makie-idiomatic geometry-drawing pattern, directly addressing
+    the attempt-1 LM-02 feedback.
+  - Added a crisp outer board frame (lines! in INK_SOFT) around the 8x8 grid — the
+    extra polish the attempt-1 review asked for under DE-01/DE-02.
+  - 'Chess square coloring is factually correct: a1 dark, h1 and a8 light, matching
+    standard algebraic-notation convention.'
+  - DataAspect() plus the 2400x2400 canonical square canvas correctly enforces 1:1
+    square proportions.
+  - Clean KISS script structure (theme tokens -> data -> plot -> save), fully deterministic,
+    only CairoMakie + Colors imported and both used.
+  weaknesses:
+  - No visual hierarchy or focal point beyond the base checkerboard pattern (expected
+    default for a 'basic' spec, but keeps Data Storytelling at the default score).
+  - poly!(Rect2f) per-square drawing is a solid Makie geometry pattern but is still
+    conceptually replicable in other libraries (e.g. matplotlib patches.Rectangle),
+    so it doesn't fully max out Library Mastery's distinctiveness bar.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "chessboard-basic · julia · makie · anyplot.ai" in dark ink, centered above the board, fully visible with generous margin. Column labels a-h below the board and row labels 1-8 on the left, rendered in medium-gray (INK_SOFT), fully legible. A crisp ink-soft outer frame borders the full 8x8 grid. No tick marks, spines minimized to a clean L-shape look.
+      Data: 8x8 checkerboard alternates brand green (#009E73, "dark" squares) with a warm tan/amber (#DDCC77, "light" squares), separated by thin low-opacity ink hairlines. a1 (bottom-left) is green/dark, h1 (bottom-right) and a8 (top-left) are amber/light — matches standard chess convention. First categorical color is exactly Imprint brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title renders in light off-white ink, clearly legible; column/row tick labels render in soft light gray (INK_SOFT for dark theme), fully legible against the dark background. Outer board frame and hairlines flip to the light-theme-appropriate ink-soft tone. No dark-on-dark text anywhere.
+      Data: Square fills are pixel-identical to the light render — brand green #009E73 and amber #DDCC77 are both fixed constants, confirmed unchanged between themes. This resolves the attempt-1 finding where the light square reused the theme-adaptive PAGE_BG token.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (titlesize=20, tick label size=16); title
+          comfortably proportioned, no overflow, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Squares are large, evenly filled, clearly bounded by hairlines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Teal-green vs. warm amber hue families are CVD-distinguishable, not
+          red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Board fills the majority of the square canvas with balanced margins;
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Standard algebraic column/row labels (a-h, 1-8) are the correct descriptive
+          labeling for this chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; light square is now a single fixed Imprint
+          amber hex identical in both renders; backgrounds and chrome are theme-correct
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate brand-green/amber two-tone palette plus outer frame is
+          a clear step above default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle hairlines, minimized spines/ticks, new outer board frame;
+          strong but not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: No visual hierarchy beyond the checkerboard itself — acceptable default
+          for a basic spec
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct 8x8 chessboard grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 8x8 grid, alternating colors, a-h/1-8 labels, correct light/dark
+          corner convention all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Files/ranks correctly mapped to X/Y with full 8x8 coverage
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches exact mandated format; no legend needed for a self-explanatory
+          two-color grid
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 64 squares shown with correct alternating pattern
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard, neutral, real-world chess board
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: a1 dark, h1/a8 light — factually correct per standard chess convention
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Theme tokens -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic board data, no randomness needed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately simple, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current save()/px_per_unit API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: poly!/Rect2f geometry, Axis with DataAspect(), theme-adaptive chrome
+          tokens — all idiomatic Makie patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Per-square poly!(Rect2f) is Makie-idiomatic but conceptually replicable
+          via patches in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - patches
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

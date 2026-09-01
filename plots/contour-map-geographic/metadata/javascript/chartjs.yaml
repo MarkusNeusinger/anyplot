@@ -1,0 +1,252 @@
+library: chartjs
+language: javascript
+specification_id: contour-map-geographic
+created: '2026-09-01T23:23:36Z'
+updated: '2026-09-01T23:41:19Z'
+generated_by: claude-sonnet
+workflow_run: 33569815833
+issue: 3772
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All three Attempt 1 weaknesses are fixed: the ''Summit'' legend swatch is now
+    a triangle matching the map marker, minor contour lines are more visible (alpha
+    0.25→0.38, width 0.8→1.1), and colorbar ticks are snapped to round 250 m values
+    (750/2250/3500) instead of raw min/mid/max'
+  - True marching-squares isolines computed from scratch via a contourOverlay afterDraw
+    plugin, since Chart.js has no native contour/geo chart type
+  - Both filled elevation bands and line-only isolines are present, satisfying the
+    spec's 'support both' requirement
+  - Index contours (every 1000 m) are bolder and carry elevation-value labels with
+    opaque background boxes, while minor contours (every 200 m) are visually subordinate
+    but now clearly legible
+  - Hand-drawn colorbar correctly uses the Imprint sequential colormap (green→blue)
+    instead of a generic/terrain colormap
+  - Full theme-adaptive chrome with no dark-on-dark or light-on-light failures in
+    either render; data colors identical across themes
+  - Wilderness-boundary polygon + summit marker overlay gives real geographic anchoring
+    beyond an abstract x/y contour plot
+  - Fully deterministic, in-memory synthetic elevation data with no RNG dependency
+  weaknesses:
+  - The script carries several small helper functions (hexToRgb, lerpColor, seqColor,
+    edgePx) alongside the marching-squares implementation — justified by the algorithm's
+    complexity, but denser than a typical anyplot KISS script
+  - Minor (200 m) contour lines, while improved, are still somewhat subtle against
+    the mid-tone elevation bands — acceptable but not a strength
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Mount Rainier Foothills · contour-map-geographic · javascript · chartjs · anyplot.ai" in dark ink, clearly readable. Legend shows a dashed-line swatch for "Wilderness boundary" and a triangle swatch for "Summit" (now matching the actual map marker shape). Axis titles "Longitude"/"Latitude" and tick labels ("121.85°W" … "46.95°N") are legible. Colorbar title "Elevation (m)" and ticks (750/2250/3500 — round values) are legible.
+      Data: Filled elevation bands run brand green (#009E73, low) → blue (#4467A3, high, near the summit) — the Imprint sequential colormap, confirmed as first-series green. Isolines are dark, bold + labeled ("1000 m", "2000 m", "3000 m") every 1000 m, with visible minor lines every 200 m. Dashed wilderness-boundary polygon and filled triangular summit marker in dark ink.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: All chrome (title, legend, axis titles, tick labels, colorbar title/ticks) flips to light ink and stays legible. Contour-value label boxes flip to dark opaque backgrounds with light text — no dark-on-dark failure since the box uses the page-background token. No dark-on-dark or light-on-light issues found anywhere, including in the zoomed crops of title, legend, and colorbar regions.
+      Data: Elevation bands (green→blue) and isolines confirmed identical in color to the light render — only chrome flipped. Isolines flip to light gray/white and remain visible against the mid-tone bands.
+      Legibility verdict: PASS
+
+    Zoomed-crop check (title bar, colorbar, all four canvas edges, both themes): no text/data overlap, no clipping at canvas borders, fill extends cleanly to axis bounds with no background gaps at the grid edges.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; colorbar ticks now round (750/2250/3500)
+          after fix
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, confirmed via zoomed crops
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Index contours, boundary, and summit clearly visible; minor contours
+          now legible after alpha/width bump
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential colormap, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced composition, generous colorbar padding, nothing cut off,
+          canvas gate passed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive, unit-labeled (°W/°N, meters)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used correctly for single-polarity elevation data; correct
+          theme backgrounds in both renders
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom filled bands + labeled isolines + boundary + summit + hand-built
+          colorbar, well beyond default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean chrome, subtle line-weight hierarchy; legend swatch now matches
+          marker shape
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point at the summit; color + contour density communicate
+          terrain shape
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct filled+line contour map anchored to real lat/lon
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Isolines, labels at meaningful intervals, both fill and line-only
+          variants, colorbar all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon→x, lat→y correctly mapped, full grid range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format fully correct; legend swatch shapes now match map markers
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers every plot-type aspect from the spec notes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic terrain near a real place name
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 m contour interval / 1000 m index interval sensible for a ~700-3600
+          m elevation range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions, justified by the marching-squares
+          algorithm but denser than typical
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, only browser globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real computation throughout, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false, no filesystem calls'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Standard scatter type + afterDraw plugin hook, standard options config
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom contourOverlay plugin, custom generateLabels legend, and a
+          hand-built colorbar creatively extend Chart.js's plugin architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - interpolation
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill

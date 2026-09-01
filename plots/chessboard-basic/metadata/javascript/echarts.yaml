@@ -1,0 +1,244 @@
+library: echarts
+language: javascript
+specification_id: chessboard-basic
+created: '2026-09-01T23:18:19Z'
+updated: '2026-09-01T23:35:54Z'
+generated_by: claude-sonnet
+workflow_run: 33569968275
+issue: 3340
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed the attempt-1 theme-flip bug: the light square now uses the amber semantic
+    anchor (#DDCC77), a fixed non-theme-adaptive color, so both the light and dark
+    squares are pixel-identical across the light and dark renders, matching the ''data
+    colors stay identical across themes'' rule.'
+  - 'Correct chess board orientation verified mathematically: (file + rank) % 2 places
+    light squares at h1 and a8, matching real-world convention.'
+  - Idiomatic use of ECharts' custom series (renderItem + api.coord/api.size) for
+    a bespoke grid shape - the right tool for this job.
+  - Clean, deterministic, minimal-chrome implementation with no axis lines/ticks/gridlines
+    competing with the board.
+  - Title, subtitle, and tick labels are fully theme-adaptive, legible, and unclipped
+    in both renders.
+  - Well-documented code comments explain the semantic-exception color reasoning for
+    both squares.
+  weaknesses:
+  - Design storytelling is minimal - acceptable for a reference-diagram plot type,
+    but a subtle touch (e.g. a light corner accent, coordinate highlight, or caption
+    noting the h1/a8 orientation) could lift DE-03 without adding fake interactivity.
+  - The amber semantic anchor is documented for a 'warning/caution' role rather than
+    a general light-square wood tone; it works visually here and correctly solves
+    the theme-flip issue, but a future iteration could consider whether a dedicated
+    light-wood value reads more intentionally than reusing the warning anchor.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, matches #FAF8F1.
+      Chrome: title "chessboard-basic · javascript · echarts · anyplot.ai" in dark ink, centered above the board; subtitle "White's near-right square (h1) is light — standard orientation" in soft dark gray beneath it; column labels a-h at bottom and row labels 1-8 on the left, all clearly readable.
+      Data: 8x8 board alternates ochre (#BD8233, Imprint "wood" semantic exception) dark squares and amber (#DDCC77, semantic anchor) light squares. Light square correctly falls at h1 (bottom-right) and a8 (top-left), matching real-world chess convention. Thin theme-adaptive stroke separates each square.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, matches #1A1A17.
+      Chrome: title and subtitle rendered in light gray/white, tick labels in soft light gray, all fully readable against the dark background - no dark-on-dark failures for any text element.
+      Data: both the ochre "dark square" color and the amber "light square" color are pixel-identical to the light render - this is the fix for the attempt-1 weakness, where the light square previously used a theme-adaptive chrome token and flipped from near-white to near-black between themes. Now both squares read as a consistent, high-contrast light/dark pair in both themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Explicit font sizes, no overflow, readable in both themes at desktop
+          and mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, title, or squares.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Squares are clearly sized, bordered, and now equally visible against
+          both the light and dark page background.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Strong luminance contrast between amber and ochre squares; no red-green
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Board occupies a well-balanced portion of the square canvas with
+          even margins, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Algebraic file/rank notation is fully descriptive labeling for this
+          plot type.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fixed from attempt 1: both square colors are now fixed, non-theme-adaptive
+          values (Imprint palette[3] ochre + amber semantic anchor), so data colors
+          stay identical across light and dark themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful wood-tone color choice with documented semantic reasoning,
+          above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No axis lines/ticks/gridlines, generous whitespace, subtle per-square
+          stroke.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Alternating pattern communicates the classic board layout, but no
+          additional visual hierarchy or emphasis beyond the base grid.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grid/board rendering via a bespoke custom series.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 8x8 grid, alternating colors, a-h/1-8 notation, 1:1 aspect ratio
+          all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: file->x, rank->y correctly assigned; light square correctly at h1
+          and a8.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed for a two-tone board.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full 64-square board with correct alternating pattern.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard chess board, real-world accurate, neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8 rows x 8 columns matches the spec exactly, correct orientation.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data->init->option script, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic grid generation, no RNG needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided echarts global.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract, animation: false set, current custom
+          series API.'
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct, idiomatic use of ECharts' custom series with renderItem/api.coord/api.size.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Coordinate-aware custom-series renderer is a genuine ECharts strength,
+          though not unique among JS libraries (d3 handles this equally well).
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-series
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
