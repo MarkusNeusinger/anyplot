@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: biplot-pca
+created: '2026-09-01T18:45:34Z'
+updated: '2026-09-01T19:10:19Z'
+generated_by: claude-sonnet
+workflow_run: 33543993610
+issue: 3417
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Correct correlation-loading scaling (loadings = eigenvector * sqrt(eigenvalue))
+    paired with a matching unit-circle reference — a proper correlation biplot, not
+    a naive coefficient-vector plot
+  - Power-iteration PCA with Hotelling deflation implemented from scratch in the browser
+    (no ML library available in this runtime), with deterministic seeded LCG data
+    generation
+  - Auto sign-orientation (flips PC1/PC2 sign so Line A reads positive-PC1, Line B
+    reads positive-PC2) — thoughtful since PCA sign is otherwise arbitrary
+  - 'Repair attempt cleanly resolved all three prior weaknesses: legend now shows
+    only the three score-group swatches (mismatched ''Variable loadings'' rectangle
+    removed), origin axis lines are visibly dimmed (opacity 0.35) so loading vectors
+    read as the clear focal element, and marker opacity (0.75) now separates the densest
+    cluster near the origin'
+  - Title, PC1/PC2 axis labels with variance %, and legend all match the specification
+    precisely; palette fully compliant with identical data colors across light/dark
+    and theme-correct chrome in both renders
+  weaknesses:
+  - 'Loading-arrow labels overlap their own arrowheads: the ''Pressure'', ''Humidity'',
+    and ''Vibration'' arrows terminate with the arrowhead symbol drawn directly on
+    top of the first 1-2 letters of the label (confirmed by close-up crop in both
+    renders). Only ''Temperature'' (near-horizontal vector) clears cleanly; ''Throughput''
+    just grazes the label top. Root cause: the fixed `distance: [cos(angle)*34, -sin(angle)*34]`
+    offset is too small for steeper vector angles combined with the `symbolSize: [0,
+    14]` arrowhead — increase the offset magnitude (e.g. scale by a larger constant
+    or add the arrow''s half-length) so the label clears the arrowhead for all five
+    angles, not just near-horizontal ones.'
+  - Data storytelling is solid but not excellent — no explicit emphasis (e.g. bolding/coloring)
+    on the vector most aligned with the dominant group split, so the reader has to
+    infer the key driver themselves
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "biplot-pca · javascript · echarts · anyplot.ai" centered at top in dark ink. Legend shows only the three score-group swatches (Line A/B/C) — the mismatched "Variable loadings" rectangle swatch from the previous attempt has been removed. PC1 (63.1%) and PC2 (34.5%) axis titles with variance percentages, dark-ink axis names, soft-ink tick labels, subtle light-gray gridlines. Origin cross-hair axis lines are now visibly dimmed (thin, low opacity) so they no longer compete with the loading vectors.
+      Data: Three scatter groups — Line A in brand green (#009E73), Line B in lavender, Line C in blue-gray — with 0.75 opacity giving good separation in the dense cluster near the origin. Five black loading-arrow vectors (Temperature, Pressure, Vibration, Humidity, Throughput) radiate from the origin with bold labels on theme-matched background chips, plus a dashed unit circle for magnitude reference. Close-up inspection shows the Pressure, Humidity, and Vibration arrowheads are drawn directly over the first letter(s) of their own labels (arrow-into-glyph overlap), while Temperature and Throughput are clear.
+      Legibility verdict: PASS (all text is readable against the light background; the arrow/label overlap noted above is a visual collision, not an illegibility issue).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, legend, axis titles, and tick labels render in light/off-white ink, fully legible. Dimmed origin axis lines remain subtle. Grid lines are visible but unobtrusive.
+      Data: Data colors are identical to the light render (green/lavender/blue-gray, same series positions) — only chrome flipped. Loading-arrow strokes and labels flip from black/dark-ink to white/light-ink and remain fully legible against the dark background — no dark-on-dark failures. Same Pressure/Humidity/Vibration arrowhead-over-label overlap reproduces identically in this theme (confirmed via close-up crop), consistent with it being a geometry issue rather than a theme-specific rendering bug.
+      Legibility verdict: PASS (no dark-on-dark failures; same arrow/label overlap present as in the light render).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, readable in both themes; minor crispness loss
+          where arrowheads touch label glyphs
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Pressure/Humidity/Vibration arrowheads are drawn on top of the first
+          letter(s) of their own labels in both renders — confirmed via close-up crop
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker opacity 0.75 now separates the densest cluster near the origin,
+          up from the prior attempt's overplotting
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adequate contrast, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas gate passed, balanced proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: PC1/PC2 axis names include variance-explained percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical data colors across themes, correct
+          theme-adaptive chrome'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Correlation-scaled loadings, unit circle, dimmed origin lines — thoughtful,
+          near publication polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Origin axis lines dimmed and mismatched legend swatch removed, resolving
+          prior competing-visual-weight issue
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Group coloring and sign-oriented axes guide reading, but no explicit
+          emphasis on the dominant driving vector
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct PCA biplot with scores and loading vectors
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Scores, loading arrows with variable-name labels, PC1/PC2 with variance
+          %, unit circle all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: PC1 vs PC2 correctly mapped to x/y, equal axis ranges preserve vector
+          angles
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match group
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Five correlated features, three groups, full PCA pipeline from raw
+          data
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral process-quality manufacturing scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 90 observations across 3 lines, 5 features — within spec's recommended
+          ranges
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions (matVecMul, powerIteration) are necessary
+          since no linear-algebra library is available in the browser runtime
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract followed correctly, animation disabled
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic use of scatter + lines series, theme tokens threaded correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses echarts' lines series with arrow symbol and per-item label distance
+          offsets for loading vectors; legend curated to exclude the non-representative
+          vector swatch
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  - normalization
+  - pca
+  styling:
+  - alpha-blending

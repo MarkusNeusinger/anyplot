@@ -75,8 +75,74 @@ steps:
       - "--cpu-throttling"
       - "--concurrency=15"
       - "--timeout=600"
+      # Deploy WITHOUT routing traffic: the smoke step probes this revision on
+      # its tag URL first, and only the promote step below shifts traffic — so a
+      # bad image never serves users, not even between deploy and a failing
+      # smoke. Mirrors kurrentschrift's api/cloudbuild.yaml, which had this net
+      # while this pipeline deployed straight onto live traffic. The `candidate`
+      # tag moves to each new revision, and the deterministic revision suffix
+      # lets promote target EXACTLY the revision this build smoked (never a
+      # concurrent build's newer one).
+      # `b` prefix: Cloud Run requires the suffix to start with a lowercase
+      # letter, and $BUILD_ID is a UUID that usually starts with a digit.
+      - "--no-traffic"
+      - "--tag=candidate"
+      - "--revision-suffix=b$BUILD_ID"
     id: "deploy"
     waitFor: ["push-image"]
+
+  # Pre-traffic smoke against the CANDIDATE revision (tag URL, serving no
+  # traffic yet): a bad image that still answers /health can 500 on the real
+  # read paths — probe what the public site depends on, plus the fail-closed
+  # admin gate. Retries cover the candidate's own cold start.
+  - name: "gcr.io/cloud-builders/gcloud"
+    entrypoint: "bash"
+    args:
+      - "-ceu"
+      - |
+        # Resolve the candidate tag's URL AND assert it still points at THIS
+        # build's revision (deterministic --revision-suffix) — a concurrent
+        # build re-tagging `candidate` must fail this build, not get smoked
+        # on its behalf.
+        read -r URL REV <<< "$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
+          | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['url'], c['revisionName'])")"
+        test "$$REV" = "${_SERVICE_NAME}-b$BUILD_ID" || { echo "candidate tag moved to $$REV (expected ${_SERVICE_NAME}-b$BUILD_ID)"; exit 1; }
+        echo "smoke against candidate $$URL ($$REV)"
+        # Retry EVERY probe: a freshly deployed candidate starts cold whatever
+        # _MIN_INSTANCES says, so the first call that touches the DB may be the
+        # first real DB request of that container's life and can fail once.
+        RETRY="--retry 5 --retry-delay 5 --retry-all-errors"
+        curl -fsS $$RETRY "$$URL/health" | grep -q '"healthy"'
+        # /libraries and /languages fall back to static metadata when the DB is
+        # unreachable (optional_db), so they prove the app serves but not the
+        # database. /plots/filter takes require_db — it is the probe that fails
+        # when the Cloud SQL connection is broken.
+        curl -fsS $$RETRY "$$URL/libraries" | grep -q '"libraries"'
+        curl -fsS $$RETRY "$$URL/languages" | grep -q '"languages"'
+        curl -fsS $$RETRY "$$URL/plots/filter" >/dev/null
+        # Fail-closed admin gate. 401 is the answer with ADMIN_TOKEN present and
+        # no header sent; a 503 here would mean the secret never arrived, which
+        # is exactly the misconfiguration worth failing the build over.
+        code=$$(curl -s $$RETRY -o /dev/null -w '%{http_code}' "$$URL/debug/status")
+        test "$$code" = "401" || { echo "admin gate expected 401, got $$code"; exit 1; }
+        echo "smoke OK"
+    id: "smoke"
+    waitFor: ["deploy"]
+
+  # Smoke passed — route 100% of traffic to EXACTLY the revision this build
+  # deployed and smoked (deterministic name via --revision-suffix), never
+  # `--to-latest`, which could promote a concurrent build's unsmoked revision.
+  - name: "gcr.io/cloud-builders/gcloud"
+    args:
+      - "run"
+      - "services"
+      - "update-traffic"
+      - "${_SERVICE_NAME}"
+      - "--region=${_REGION}"
+      - "--platform=managed"
+      - "--to-revisions=${_SERVICE_NAME}-b$BUILD_ID=100"
+    id: "promote"
+    waitFor: ["smoke"]
 
   # Report deployed URL
   - name: "gcr.io/cloud-builders/gcloud"
@@ -89,7 +155,7 @@ steps:
       - "--platform=managed"
       - "--format=value(status.url)"
     id: "get-url"
-    waitFor: ["deploy"]
+    waitFor: ["promote"]
 
 # Store image in Artifact Registry
 images:
