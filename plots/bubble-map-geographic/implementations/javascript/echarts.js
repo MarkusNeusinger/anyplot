@@ -1,7 +1,7 @@
 // anyplot.ai
 // bubble-map-geographic: Bubble Map with Sized Geographic Markers
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-01
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 75/100 | Created: 2026-09-01
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
