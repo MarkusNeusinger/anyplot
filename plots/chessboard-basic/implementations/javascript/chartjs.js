@@ -1,7 +1,7 @@
 // anyplot.ai
 // chessboard-basic: Chess Board Grid Visualization
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-01
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 94/100 | Created: 2026-09-01
 
 //# anyplot-orientation: square
 const t = window.ANYPLOT_TOKENS;
