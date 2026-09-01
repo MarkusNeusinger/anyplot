@@ -1,3 +1,7 @@
+// anyplot.ai
+// biplot-pca: PCA Biplot with Scores and Loading Vectors
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 87/100 | Created: 2026-09-01
 //# anyplot-orientation: landscape
 // anyplot.ai
 // biplot-pca: PCA Biplot with Scores and Loading Vectors
