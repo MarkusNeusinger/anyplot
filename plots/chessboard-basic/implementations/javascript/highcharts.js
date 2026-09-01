@@ -87,7 +87,10 @@ Highcharts.chart("container", {
     {
       name: "Dark squares",
       data: darkSquares,
-      color: t.palette[0],
+      // Semantic exception (default-style-guide.md): wood -> ochre, not the
+      // ordinal-first brand green, so the board reads as an authentic chess
+      // board rather than an abstract checker grid.
+      color: t.palette[3],
       marker: { symbol: "square", radius: 40, lineWidth: 0 },
     },
   ],
