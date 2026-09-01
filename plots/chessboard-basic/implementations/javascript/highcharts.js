@@ -1,3 +1,7 @@
+// anyplot.ai
+// chessboard-basic: Chess Board Grid Visualization
+// Library: highcharts 12.6.0 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-09-01
 //# anyplot-orientation: square
 // anyplot.ai
 // chessboard-basic: Chess Board Grid Visualization
