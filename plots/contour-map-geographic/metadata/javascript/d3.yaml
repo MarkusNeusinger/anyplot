@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: contour-map-geographic
 created: '2026-09-01T23:29:36Z'
-updated: '2026-09-01T23:39:40Z'
+updated: '2026-09-01T23:50:35Z'
 generated_by: claude-sonnet
 workflow_run: 33570012292
 issue: 3772
@@ -12,62 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Genuinely idiomatic d3-contour + d3-geo combination: raw elevation grid is contoured
-    in index space via d3.contours(), then every ring coordinate is reprojected into
-    lon/lat and rendered through a fitted geoMercator + geoPath — a distinctive D3
-    feature pairing that is hard to replicate in other charting libraries.'
-  - 'Elevation values are factually grounded: the two synthetic peaks (4207 m / 4169
-    m) match the real-world summit elevations of Mauna Kea and Mauna Loa on Hawai''i
-    Island almost exactly, and the derived 0 m isoline produces a recognizable, closed
-    island coastline.'
-  - Both filled hypsometric bands and line-only isoline detail are rendered together,
-    satisfying the spec's 'support both line-only and optional filled contours' requirement
-    in one composition.
-  - Contour value labels (1000/2000/3000/4000 m) are placed via a compass-direction
-    extremum search per ring rather than a fixed arc fraction, keeping the four callouts
-    spread around the island's open flanks with no overlap.
-  - 'Theme chrome is pixel-perfect: background, title ink, and coastline/tick colors
-    were verified by direct pixel sampling to match the exact Imprint tokens (#FAF8F1/#1A1A17
-    background, #1A1A17/#F0EFE8 ink) in both renders, and the imprint_seq green→blue
-    data colors are identical across light and dark.'
-  - Colorbar legend with units ('Elevation (m)') and tick labels is present and correctly
-    scaled to the data's max elevation band.
+  - 'Real-world accurate geography: peak positions and elevations closely match the
+    actual Mauna Kea (4207 m) and Mauna Loa (4169 m) summits on Hawai''i Island, giving
+    DQ-03 near-perfect factual grounding.'
+  - 'Distinctive D3-geo + d3-contour integration: contour polygons are computed in
+    grid-index space and reprojected into lon/lat before being rendered through geoPath,
+    a technique that is genuinely specific to D3''s ecosystem.'
+  - 'Contour value labels use a stroke halo (paint-order: stroke) and cardinal-direction
+    placement so they stay legible over both light and dark chrome without colliding
+    with the isolines.'
+  - Continuous elevation data correctly uses the imprint_seq colormap (brand green
+    -> blue), with identical data colors between the light and dark renders and theme-correct
+    backgrounds/text in both.
+  - Combines filled hypsometric bands, thinner interior isolines, an emphasized 0
+    m coastline, and a labeled colorbar with tick marks -- covering both the filled
+    and line-only contour requirements from the spec.
   weaknesses:
-  - 'Unbalanced canvas utilization (VQ-05): pixel measurement shows the map box occupies
-    only x=795..2204 (44% width) and the colorbar sits at x=2939..2992, leaving a
-    ~735px (23% of canvas width) dead gap between the map''s right edge and the colorbar,
-    plus a ~795px (25%) blank margin on the far left with only tick labels in it.
-    Map+colorbar together cover only ~38-40% of total canvas area. Recommend either
-    tightening barX to sit closer to mapX1, shrinking margin.left/right so the near-square
-    geographic bbox (lon range 1.35° × cos(19.6°)≈1.27° ≈ lat range 1.3°) is not stranded
-    inside a 16:9 frame, or switching to `//# anyplot-orientation: square` so the
-    map itself fills most of the canvas.'
-  - 'CQ-01 KISS structure: the implementation defines two named helper functions (`elevationAt`,
-    `idxToLonLat`) plus a nested-loop callback for label placement, deviating from
-    the library skeleton''s flat Imports→Data→Plot→Save structure. Understandable
-    given the coordinate-transform reuse, but worth flattening or minimizing where
-    possible.'
-  - Colorbar's topmost value (maxBand = 4500) has no tick label since colorbarTicks
-    is capped at 4000 — the top of the gradient reads as unlabeled blue with no numeric
-    anchor.
+  - Interior isolines are thin (1px) and drawn at 50% opacity, which is a little subtle
+    against the sequential fill bands once the PNG is scaled down to ~400px mobile
+    width -- consider a slightly heavier stroke-width or opacity for the mid-density
+    bands.
+  - The rectangular four-sided map frame departs from the style guide's default L-shaped-spine
+    preference; acceptable for a geographic map, but a lighter/thinner frame stroke
+    would reduce visual weight and read closer to the house style.
+  - Only one terrain feature type (twin volcanic peaks) is demonstrated -- a labeled
+    saddle point or secondary coastal feature would further round out DQ-01 feature
+    coverage in a future iteration.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at (50,50) = RGB(250,248,241) = #FAF8F1, exact match to the light-theme token — not pure white.
-      Chrome: Title "Hawai'i Island Elevation · contour-map-geographic · javascript · d3 · anyplot.ai" centered top, dark ink, pixel-sampled darkest title pixel = RGB(26,26,23) = #1A1A17 exact match. Lat/lon tick labels (e.g. "156.2°W", "20.2°N") in soft gray along bottom/left. Colorbar titled "Elevation (m)" with tick values 0/1000/2000/3000/4000 to the right. Contour value labels ("1000 m".."4000 m") sit inside their rings with a white halo, fully legible against the colored fill. Thin gray lon/lat graticule visible under the fill. All chrome text clearly visible against the light background.
-      Data: A teardrop/pill-shaped island outline (dark ink coastline) fills with a green-to-blue sequential gradient (imprint_seq) — green (~RGB 0-25,150-160,115-140, matching #009E73 at the coastline) transitioning to blue (~RGB 50-60,110-120,150-160, matching #4467A3) at the two summit cores. Two distinct high-elevation cores (twin volcano peaks) are visible, one north, one south, joined by a saddle of mid-elevation bands. Thin isolines subdivide the fill into stepped bands.
-      Legibility verdict: PASS — no light-on-light text found; all title/axis/colorbar/contour-label text reads clearly against the #FAF8F1 surface.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Hawai'i Island Elevation · contour-map-geographic · javascript · d3 · anyplot.ai" is bold dark ink, clearly readable and comfortably sized (~55% of canvas width). Longitude/latitude tick labels ("156.2°W" ... "20.2°N") are dark-gray, small but legible. Faint lon/lat graticule lines are visible over the light background. Colorbar on the right is titled "Elevation (m)" with dark tick labels at 0/1000/2000/3000/4000 m.
+      Data: A two-peak island silhouette (Hawai'i Island shape) rendered as concentric sequential-color bands from teal-green (low elevation, near #009E73) through blue (high elevation, near #4467A3), matching imprint_seq. A bold dark coastline traces the 0 m isoline, thinner semi-transparent isolines mark intermediate elevation bands, and white-haloed labels ("1000 m", "2000 m", "3000 m", "4000 m") sit at the outer edge of their respective rings without overlapping data or each other.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at (50,50) = RGB(26,26,23) = #1A1A17, exact match to the dark-theme token — not pure black.
-      Chrome: Same title text now in light ink, pixel-sampled lightest title pixel = RGB(240,239,232) = #F0EFE8 exact match. Tick labels, colorbar title/ticks, and contour-value label halos all flipped to light-on-dark and remain legible. The coastline stroke (drawn with the theme "ink" token) correctly renders as a light outline against the dark background instead of the black line used in the light render — this is expected theme-adaptive chrome behavior, not a data-color change. Graticule lines are faint but visible.
-      Data: Confirmed identical to the light render — the same green-to-blue imprint_seq gradient anchors the coastline (~#009E73) to the twin summit cores (~#4467A3); only the surrounding chrome (background, ink, coastline stroke) flipped polarity, exactly as required.
-      Legibility verdict: PASS — no dark-on-dark failures found; all chrome text and data remain fully readable, and the "brand green" reads consistently well on the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, axis tick labels, colorbar title/ticks, and the graticule all switch to light-colored ink/gray tones and remain fully legible against the dark background. No dark-on-dark text was found.
+      Data: The same two-peak elevation gradient (teal-green to blue) as the light render -- colors are visually identical between the two themes, only the chrome (background, text, coastline stroke color reference) adapts. Contour labels keep their halo (now a dark stroke) so they stay readable over both the pale-green fill and the near-black background outside the island.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -75,52 +63,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (15px contour labels, 14px ticks,
-          13px colorbar ticks, dynamically scaled title); readable in both themes;
-          minor: topmost colorbar value (4500) unlabeled'
+        comment: All font sizes explicitly set; readable in both themes; title comfortably
+          ~55% of canvas width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; compass-direction label placement keeps
-          the 4 contour labels spread apart
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Filled bands and isolines clearly visible and appropriately spaced
-          for the 90x90 grid
+        comment: Filled bands and coastline are clearly visible; interior isolines
+          a bit subtle at small scale
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-blue imprint_seq is CVD-safe; white-halo text ensures
-          contrast over the gradient fill
+        comment: imprint_seq gradient is CVD-safe and high-contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Pixel-measured: map box 795-2204px (44% width) vs colorbar at 2939-2992px
-          leaves a 735px (23%) dead gap, plus a 795px (25%) blank left margin; map+colorbar
-          together cover only ~38-40% of canvas area with unbalanced margins'
+        passed: true
+        comment: Map + colorbar fill the square canvas well with balanced margins,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Lat/lon tick labels carry explicit units (°N/°W); colorbar labeled
-          'Elevation (m)'
+        comment: Lon/lat ticks carry °W/°N units; colorbar labeled 'Elevation (m)'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Pixel-verified: background exact #FAF8F1/#1A1A17, imprint_seq anchors
-          match #009E73/#4467A3, chrome ink exact #1A1A17/#F0EFE8 in both themes'
+        comment: Continuous elevation data uses imprint_seq; backgrounds and chrome
+          are theme-correct in both renders
     design_excellence:
       score: 14
       max: 20
@@ -130,24 +113,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom hypsometric fill layering, compass-based label placement,
-          and dynamic title scaling are clearly above library defaults; whitespace
-          imbalance keeps it below publication-grade
+        comment: Custom sequential palette, halo-stroked labels, hypsometric shading
+          -- clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle graticule, appropriate full-rect frame for a map; refinement
-          undercut by the unbalanced margins/gap noted in VQ-05
+        comment: Subtle graticule and generous whitespace; the full four-sided map
+          frame is heavier than the house L-shaped-spine default
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Twin-peak focal points and direct elevation labels create clear visual
-          hierarchy, though the story is the expected 'here is the elevation gradient'
-          rather than a surprising insight
+        comment: Color gradient and cardinal-placed labels create clear visual hierarchy
+          toward the two summits
     spec_compliance:
       score: 15
       max: 15
@@ -157,90 +138,88 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: contour lines over a geographic basemap'
+        comment: 'Correct: contour lines anchored to a geographic lon/lat basemap'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled bands + line-only isolines, labeled contours, colorbar legend,
-          derived coastline basemap all present
+        comment: Filled + line-only contours, labeled isolines at meaningful 500 m/1000
+          m intervals, colorbar legend, coastline anchor all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon/lat correctly mapped via fitted geoMercator; full data extent
-          shown inside the frame
+        comment: Lon/lat correctly projected via geoMercator; axes show the full grid
+          extent
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format with descriptive prefix; colorbar legend
-          labels match the elevation data
+        comment: Title matches the mandated format with descriptive prefix; colorbar
+          legend labels correct
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Filled bands, isolines, labels, and twin-peak variation together
-          cover all aspects of a contour map
+        comment: Twin peaks, ridge texture, and a closed coastline are shown; a secondary
+          terrain feature would round this out further
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral geographic scenario (Hawai'i Island shield volcanoes)
+        comment: Real, neutral geographic/scientific scenario (Hawai'i Island elevation)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Peak elevations (4207m/4169m) closely match real-world Mauna Kea/Mauna
-          Loa summits
+        comment: Peak elevations closely match the real Mauna Kea/Mauna Loa summit
+          heights
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Two named helper functions (elevationAt, idxToLonLat) plus a nested-loop
-          label-placement callback deviate from the flat Imports->Data->Plot->Save
-          skeleton
+        passed: true
+        comment: No functions/classes; linear imports -> data -> render flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, no RNG
+        comment: Fully deterministic synthetic terrain, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: d3 global only, no stray imports
+        comment: Only the d3 global is used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality; complexity is appropriate to contour-map construction
+        comment: Appropriate complexity for a geo-projected contour map; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, no animation, current d3 API usage
+        comment: Follows the d3 mount-node contract; no deprecated API usage
     library_mastery:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -248,16 +227,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of d3-contour, d3-geo (geoMercator/geoPath/geoGraticule),
-          and d3-scale sequential interpolation
+        comment: Idiomatic use of d3.contours, d3.geoMercator/geoPath, d3.geoGraticule,
+          and d3.scaleSequential
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: The d3-contour + d3-geo reprojection pipeline is genuinely distinctive
-          to D3 and not easily replicated in other charting libraries
-  verdict: REJECTED
+        comment: Reprojecting d3-contour polygons through a geographic projection
+          is a technique distinctive to D3
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -267,9 +246,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
-  - publication-ready
+  - custom-colormap
   - gradient-fill
   - alpha-blending
