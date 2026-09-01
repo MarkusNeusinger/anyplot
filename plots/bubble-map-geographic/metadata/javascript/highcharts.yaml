@@ -1,0 +1,256 @@
+library: highcharts
+language: javascript
+specification_id: bubble-map-geographic
+created: '2026-09-01T18:57:15Z'
+updated: '2026-09-01T19:14:43Z'
+generated_by: claude-sonnet
+workflow_run: 33545116880
+issue: 3625
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/highcharts/plot-dark.html
+quality_score: 86
+review:
+  strengths:
+  - 'Genuine geographic bubble map on core-only Highcharts: hand-built basemap via
+    chart.renderer paths with Chaikin corner-cutting to smooth the low-vertex coastline
+    source data into readable continent shapes.'
+  - Bubble area scales with magnitude via sqrt-normalized radius with an explicit
+    MIN_R floor, matching the spec's 'scale area not radius' and 'minimum bubble size'
+    notes.
+  - Real historical earthquake dataset (33 events, M5.0-M9.5) colored by tectonic
+    boundary type, with a subtitle that calls out the Ring of Fire clustering pattern
+    as a storytelling hook.
+  - Hand-built magnitude size legend (core Highcharts has no bubble legend) is deliberately
+    offset to clear the Samoa Islands bubble near the antimeridian, and alpha=0.62
+    fill handles the dense California/Chile clusters well.
+  - Deterministic render-only jitter for the overlapping California/Baja cluster is
+    clearly separated from and documented apart from the true historical lat/lon values.
+  - Theme chrome (title, axis, grid, land/ocean fill) correctly flips between light
+    and dark while all data colors (green/purple/blue-gray) stay identical.
+  weaknesses:
+  - Simplified coastline polygons merge Europe, Africa, and Asia into one connected
+    blob with no strait/sea gaps (Gibraltar, Suez, Mediterranean) — reduces geographic
+    recognizability versus a real basemap; consider adding a couple of narrow sea
+    cuts.
+  - Dense clusters (California/Baja transform cluster, Chile convergent pair) still
+    show meaningful bubble-on-bubble occlusion even after jitter and alpha blending
+    — smaller bubbles in those clusters partially disappear under larger overlapping
+    ones.
+  - Size-legend circles are rendered in a flat neutral gray (t.inkSoft) rather than
+    referencing any data color, which is a reasonable choice for a magnitude-only
+    legend but could be mistaken for a fourth category at a glance; consider a one-line
+    legend caption clarifying it encodes magnitude only, independent of color.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) canvas around a light-blue ocean fill (#CFE3EF) with tan/beige continent shapes (#E4E0D2) outlined in a soft brown edge — matches the required light theme.
+      Chrome: Title "bubble-map-geographic · javascript · highcharts · anyplot.ai" in bold dark text is fully visible and unclipped at the top; the subtitle below it is legible gray-brown text; axis titles "Longitude (°)" / "Latitude (°)" and tick labels are dark and clearly readable against the light background; gridlines are subtle light-gray lines that don't compete with data; the bottom legend ("Convergent boundary" / "Transform boundary" / "Divergent boundary") is legible dark text with matching colored swatches.
+      Data: First/majority series (Convergent boundary) renders in Imprint green (#009E73, palette[0]), Transform boundary in a light purple, Divergent boundary in a muted blue-gray — all three are clearly distinguishable by hue, not just red/green. Bubbles are semi-transparent (alpha ~0.62) with a thin light-colored stroke, sized from ~6px (M5.0, Iceland) up to ~30px (M9.5, Valdivia). The hand-drawn "Magnitude" size legend (three reference circles M6.0/M7.5/M9.0 in neutral gray) sits in a bordered box in the lower-left, clear of any data bubble.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black canvas (#1A1A17) around a dark navy ocean fill (#16222E) with dark olive-brown continent shapes (#33332C) — matches the required dark theme, not pure black.
+      Chrome: Title and subtitle render in light/off-white text, fully visible and unclipped at the top; axis titles and tick labels are light gray, clearly readable against the dark background — no dark-on-dark failures observed; gridlines are subtle and visible without dominating; the legend at the bottom uses light text with the same colored swatches as the light render.
+      Data: Bubble colors are visually identical to the light render (green/purple/blue-gray, same hues and same series-to-boundary mapping) — only the chrome (background, land/ocean fill, text, gridlines) flips between themes, as required. The size-legend box uses the dark elevated-surface fill with light border/text, staying legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, axis titles 16px, labels 14px);
+          readable in both themes via theme tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; some bubble-on-bubble occlusion in the CA/Chile
+          clusters despite jitter and alpha
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: MIN_R floor keeps small magnitudes visible; alpha 0.62 handles the
+          moderate point density (33 points) well
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple/blue-gray categories, not red-green dependent
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: No cutoff elements, well-proportioned title, legend box clears all
+          bubbles including near the antimeridian
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (°)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/majority series = #009E73 (palette[0]); backgrounds match
+          #FAF8F1/#1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Chaikin corner-cutting smooths the basemap, hand-built size legend,
+          documented render-only jitter — above-baseline sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean chrome, subtle grid, land/ocean fill adds polish; continents
+          remain visually crude at their coastline joins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explicitly calls out the Ring of Fire clustering, colors
+          reinforce the geological narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct geographic bubble map
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Size legend, alpha transparency, basemap, min bubble size, hover
+          tooltips all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon/lat -> x/y, magnitude -> size, boundary -> color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match category names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers size, color-category, geographic placement, and tooltip label
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real historical earthquakes with real magnitudes and locations, neutral
+          subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitudes 5.0-9.5 are realistic Richter-scale values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions are justified by the custom-renderer basemap/legend
+          drawing needed on core-only Highcharts
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded dataset
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity for the ask
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: No savefig call; harness owns output; animation disabled on chart
+          and series
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of chart.renderer for basemap/legend given core bundle
+          has no map module
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom renderer basemap, hand-built size legend, tooltip pointFormatter
+          go beyond generic scatter usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - alpha-blending
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
