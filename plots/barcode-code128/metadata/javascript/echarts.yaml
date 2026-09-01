@@ -1,0 +1,265 @@
+library: echarts
+language: javascript
+specification_id: barcode-code128
+created: '2026-09-01T18:38:28Z'
+updated: '2026-09-01T18:58:56Z'
+generated_by: claude-sonnet
+workflow_run: 33543779858
+issue: 3809
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/javascript/echarts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'All three weaknesses from the attempt-1 review are directly addressed: the subtitle
+    now names the subset-switching feature (''Subset B of 3 switchable subsets (A/B/C)''),
+    the bottom whitespace is rebalanced (BAR_BOTTOM_GAP 280->250), and the single
+    summary caption was replaced with real per-segment bracket annotations (Start
+    B / data / check / Stop) that map directly onto the bar ranges they describe.'
+  - Per-segment brackets are drawn with correct start/end module positions derived
+    from the actual symbol-width accounting (symbolWidths, dataStart/dataEnd/checkStart/checkEnd/stopStart/stopEnd)
+    -- verified against the encode loop, they line up with the true Start B, data,
+    check, and Stop bar groups, not just eyeballed positions.
+  - Zoomed-in inspection of the tightest label pair ('check' and 'Stop', the two shortest
+    segments) shows clean separation with no overlap or crowding in either render.
+  - Quiet-zone labels bumped 11px->13px addressing the previously flagged smallest-text-on-canvas
+    concern; all text remains explicitly sized and legible in both themes.
+  - Correct and verified Code 128 Subset B encoding (Start B, per-character lookup,
+    modulo-103 checksum, Stop) carries over unchanged and remains standard-compliant.
+  - 'Clean theme-adaptive chrome throughout (title, subtitle, quiet-zone labels, human-readable
+    text, bracket lines/labels) using t.ink/t.inkSoft; both renders remain fully legible
+    with correct #FAF8F1/#1A1A17 backgrounds.'
+  - Deterministic, dependency-free, KISS-structured code; the new segment/bracket
+    logic is organized cleanly alongside the existing encode/layout sections with
+    no fake UI or over-engineering.
+  weaknesses:
+  - Subset switching is still only mentioned in the subtitle text, not actually demonstrated
+    in the bars -- the visualization still encodes with Subset B only, so full DQ-01
+    feature coverage of the spec's 'three code subsets (A, B, C) that can be switched
+    dynamically' remains partial.
+  - Aesthetic sophistication (color, typography) is functionally unchanged from attempt
+    1 -- the fixes improved storytelling and layout balance, not color harmony or
+    type design, so DE-01 stays in the 'clean, functional, above-default' tier rather
+    than 'publication-ready'.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), not pure white -- correct.
+      Chrome: Bold dark title "barcode-code128 · javascript · echarts · anyplot.ai" centered at top, gray subtitle below it ("Code 128, Subset B of 3 switchable subsets (A/B/C)  ·  check digit 67 (mod 103)  ·  12 data characters"), small italic "quiet zone" labels (13px) above the left/right margins of the bar block, bold monospace human-readable text "P K G - 4 8 2 1 3 - R X" below the bars, and four per-segment bracket annotations (tick-line-tick brackets with centered labels) directly beneath the human-readable text reading "Start B", "data (12 chars)", "check", "Stop" -- each bracket spans exactly the bar range it names. All text renders in dark ink against the light background; a zoomed crop of the tightest pair ("check"/"Stop") confirms no overlap.
+      Data: Dense sequence of solid black bars of varying width (Start B + 12 data symbols + check symbol + Stop) on the light background -- maximum black-on-white contrast, matching the spec's "high contrast black bars on white background" requirement.
+      Legibility verdict: PASS -- title, subtitle, quiet-zone labels, human-readable text, and all four bracket labels are clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), not pure black -- correct.
+      Chrome: Same title/subtitle/labels/bracket layout as the light render, now rendered in light ink (near-white/light-gray) against the dark background -- confirmed theme-correct flip, no dark-on-dark failures anywhere (title, subtitle, quiet-zone labels, human-readable text, and all four bracket labels are clearly visible).
+      Data: Bars invert to light-colored bars on the near-black background -- both bars and background follow the theme-adaptive ink/page tokens. Bar widths/positions and bracket geometry are pixel-identical to the light render -- only the bar/background polarity flips with the theme, as intended.
+      Legibility verdict: PASS -- all text clearly readable against the dark background; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized; quiet-zone labels bumped 11px->13px and
+          bracket labels set at 14px, fixing the smallest-text concern from attempt
+          1. Readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; verified via zoomed crop that the tightest
+          bracket-label pair (check/Stop) is cleanly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar widths clearly distinguishable at full resolution in both themes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Maximum contrast bars against background in both light and dark renders.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: BAR_BOTTOM_GAP reduced 280->250 and bracket annotations now fill
+          the previously empty bottom band; canvas 3200x1800 correct, nothing clipped,
+          well-balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title exactly matches required format; no axes needed for a barcode,
+          subtitle carries the informational role.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark); bars use theme-adaptive
+          ink token, appropriate for a binary scan pattern rather than categorical
+          series data.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, functional design with a clear multi-tier type hierarchy;
+          color/typography sophistication is unchanged from attempt 1, still constrained
+          by the barcode's functional requirements.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Bottom whitespace rebalanced and now filled with functional bracket
+          annotations instead of dead space; no chartjunk, generous horizontal whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Per-segment brackets now map directly onto the actual Start B / data
+          / check / Stop bar ranges instead of a single generic caption -- directly
+          fixes the attempt-1 weakness and meaningfully strengthens the structural
+          narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Code 128 barcode visualization via custom bar rendering.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: quiet zones, Start pattern, mandatory
+          check digit (mod 103, verified correct), Stop pattern, human-readable text,
+          high-contrast bars.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Content 'PKG-48213-RX' correctly encoded (verified checksum) and
+          displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'barcode-code128 · javascript · echarts · anyplot.ai';
+          no legend needed for a single-series barcode.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Subset-switching feature is now named in the subtitle, but the bars
+          themselves still only demonstrate Subset B -- partial improvement over attempt
+          1, not full coverage of the A/B/C switching feature.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: '''PKG-48213-RX'' is a realistic, neutral package-tracking code matching
+          the spec''s example format.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 12 characters is well within the recommended <=48-character width.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes beyond the required renderItem callback; linear,
+          readable procedural code.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; hardcoded content, no randomness.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global echarts/ANYPLOT_TOKENS contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: New segment/bracket-annotation logic is organized cleanly alongside
+          the existing encode/layout sections; no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount-node contract: echarts.init with no explicit size/devicePixelRatio,
+          animation: false set.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom series with renderItem + api.coord remains the correct, purpose-built
+          ECharts primitive for exact geometric bar rendering like a barcode.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Combines custom renderItem coordinate mapping with the graphic array
+          (now extended with line + text primitives for the brackets) -- a distinctive,
+          well-executed multi-API composition.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-series-rendering
+  patterns: []
+  dataprep: []
+  styling:
+  - minimal-chrome

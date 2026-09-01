@@ -1,0 +1,272 @@
+library: chartjs
+language: javascript
+specification_id: boxen-basic
+created: '2026-09-01T18:42:50Z'
+updated: '2026-09-01T18:52:13Z'
+generated_by: claude-sonnet
+workflow_run: 33544257734
+issue: 3414
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Nested letter-value boxes correctly narrow and lighten (thickness 104→28px, alpha
+    0.85→0.2) as they move outward from the median (~50% coverage) to the deepest
+    level (~97% coverage), exactly matching the spec's 'boxes decrease in width for
+    deeper quantiles' requirement.
+  - 'Synthesizes a boxen/letter-value plot from Chart.js floating-bar ranges (data:
+    {x, y: [lo, hi]}) layered with a scatter dataset for outliers — a chart type Chart.js
+    has no native geometry for — which is strong evidence of library mastery (AR-05
+    satisfied via real plotting API usage, not styling tricks).'
+  - 'Fully deterministic: a seeded LCG + Box–Muller normal sampler generates four
+    lognormal-distributed service-latency populations with fixed seeds (11, 23, 37,
+    53).'
+  - 'Realistic, neutral, well-differentiated dataset: Cache Layer is tight and fast
+    (~15ms median, few outliers) while Database has a wide spread and heavy right
+    tail (up to ~700ms) — genuinely demonstrates why a letter-value plot reveals more
+    tail behavior than a standard boxplot.'
+  - Theme-adaptive chrome is fully correct in both renders — title/axis text, tick
+    labels, grid, subtitle, legend, and the median marker (t.ink) all flip correctly
+    with zero dark-on-dark or light-on-light failures, while the data hue (#009E73)
+    stays pixel-identical across themes.
+  - Legend clearly labels each nested coverage band (~97%/~94%/~87%/~75%/~50% of data)
+    plus Median and Outliers, directly satisfying the spec's 'clear axis labels and
+    legend explaining quantile levels' requirement.
+  weaknesses:
+  - Title occupies only ~33% of the canvas width at the default 22px CSS size — comfortably
+    readable and not the mandated-title exception territory, but below the style guide's
+    ~50-70% target; a slightly larger title font would give it more visual presence.
+  - Helper functions (letterValues, randNormal, hexToRgba, median) add more structure
+    than the CQ-01 'no functions/classes' ideal — justified here by the need to compute
+    letter-value depths/quantiles from scratch, but worth noting for KISS scoring.
+  - The floating-bar + scatter composition, while effective and idiomatic, doesn't
+    reach for a feature that's uniquely hard to replicate in another library (e.g.
+    a custom plugin-drawn median glyph or richer interactive tooltip content) — keeps
+    LM-02 short of full marks.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "boxen-basic · javascript · chartjs · anyplot.ai" at top, italic gray subtitle below it explaining the nested-box encoding, dark "Service Endpoint" / "Response Time (ms)" axis titles, dark x-axis category ticks (API Gateway, Auth Service, Database, Cache Layer), gray y-axis tick numbers (0–700), subtle horizontal gridlines, and a bottom legend row (coverage bands + Median + Outliers) — all clearly readable against the light background, no light-on-light issues.
+      Data: Four groups of nested, semi-transparent green boxes (single brand hue #009E73 at descending alpha from innermost/widest to outermost/narrowest), a solid dark median tick per group, and light-green jittered outlier dots beyond the outermost band. Database shows the widest spread and heaviest tail of outliers (up to ~690ms); Cache Layer is tight and low (~15ms).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis-title/tick/legend structure, all re-rendered in light text (white title, light-gray subtitle and tick labels) against the dark surface — fully readable, no dark-on-dark failures. Gridlines are faint and unobtrusive.
+      Data: Identical green hue and alpha structure per nested box level as the light render — confirmed pixel-identical brand green (#009E73) data colors; only the median tick color flips from near-black to near-white (theme-adaptive ink token) and the outlier dot color remains consistent.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, fully readable in both themes; title
+          is legible and not overflowing but occupies a modest ~33% of canvas width
+          vs. the ~50-70% style-guide target.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; legend entries evenly spaced along the bottom.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Nested boxes and outlier markers clearly visible with density-appropriate
+          alpha; minor inherent overlap in the densest outlier cluster (Cache Layer).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue alpha ramp plus ink-colored median line gives sufficient
+          contrast without relying on hue alone; no red-green signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills a large majority of the canvas with balanced margins;
+          legend sits directly beneath the plot, not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Response Time (ms)'' and ''Service Endpoint'' are descriptive
+          with units where applicable.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) categorical series is #009E73 (Imprint brand green),
+          identical across themes; median uses the theme-adaptive ink/neutral token;
+          backgrounds are #FAF8F1/#1A1A17; all chrome theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful nested-shading scheme with intentional visual hierarchy,
+          clearly above library defaults, though the single-hue palette keeps it below
+          top-tier polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single-axis grid, no visible spine clutter, generous whitespace,
+          clean legend styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through box-size/spread contrast across services
+          (Database's heavy tail vs. Cache Layer's tight cluster) surfaces the insight
+          without needing explicit annotations.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct boxen/letter-value plot with nested nested-box geometry.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nested letter-value boxes with decreasing width, contrasting shading,
+          outliers beyond the deepest level, clear legend of quantile levels — all
+          present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on X, response-time value on Y, all data visible within
+          axis bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches 'boxen-basic · javascript · chartjs · anyplot.ai' exactly;
+          legend labels match the coverage bands.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows outliers AND clearly different spreads/tail behavior across
+          the four services.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Server response-time distributions across backend services — real,
+          neutral, technology/business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Cache fastest (~15ms), Database slowest (~180ms median, long tail)
+          — matches real-world intuition about service latency ordering.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions (LCG, letter-value depths, median, hex-to-rgba)
+          are used — more structure than the ideal, but justified by the algorithmic
+          requirement of computing letter values from scratch.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG per service.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals/imports; only window.ANYPLOT_TOKENS and Chart are
+          used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for the visualization, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly composes floating-bar ranges and a mixed bar/scatter dataset
+          — Chart.js's recommended technique for building range/box-style visuals
+          it doesn't natively support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Chart.js's floating-bar range + mixed dataset-type composition,
+          a reasonably distinctive technique though conceptually portable to other
+          libraries with custom coding.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
