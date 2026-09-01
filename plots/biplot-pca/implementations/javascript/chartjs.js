@@ -147,23 +147,30 @@ const loadingRadius = Math.max(...loadingsRaw.map(([x, y]) => Math.sqrt(x * x + 
 const loadingScale = (scoreRadius / loadingRadius) * 0.85;
 const loadings = loadingsRaw.map(([x, y]) => [x * loadingScale, y * loadingScale]);
 
-// --- Title (fontsize scaled to length, baseline 67 chars -> 22px) ----------
+// --- Title (fontsize scaled to length, baseline 67 chars -> 27px) ----------
+// Short titles get the full baseline size so they still fill a healthy share
+// of the plot width; only titles longer than the 67-char baseline shrink.
 const titleText = "biplot-pca · javascript · chartjs · anyplot.ai";
-const titleFontSize = titleText.length > 67 ? Math.round((22 * 67) / titleText.length) : 22;
+const titleFontSize = titleText.length > 67 ? Math.round((27 * 67) / titleText.length) : 27;
+
+// --- Data storytelling: highlight the most influential loading -------------
+// The variable with the largest correlation-loading magnitude drives PC1/PC2
+// the most; rendering it in full ink (vs. the muted ink-soft of the rest)
+// draws the eye straight to the biplot's key insight.
+const loadingMagnitudes = loadingsRaw.map(([x, y]) => Math.sqrt(x * x + y * y));
+const dominantLoading = loadingMagnitudes.indexOf(Math.max(...loadingMagnitudes));
 
 // --- Plugins -----------------------------------------------------------------
-const bgPlugin = {
-    id: "bg",
+// Background fill + L-shaped spine frame, combined into one draw plugin
+// since both are simple chrome strokes with no shared state.
+const chromePlugin = {
+    id: "chrome",
     beforeDraw({ ctx, width, height }) {
         ctx.save();
         ctx.fillStyle = t.pageBg;
         ctx.fillRect(0, 0, width, height);
         ctx.restore();
     },
-};
-
-const spinePlugin = {
-    id: "spines",
     afterDatasetsDraw({ ctx, chartArea: { top, right, bottom, left } }) {
         ctx.save();
         ctx.strokeStyle = t.inkSoft;
@@ -197,21 +204,28 @@ const unitCirclePlugin = {
     },
 };
 
-// Loading arrows + variable labels, drawn from the origin outward.
+// Loading arrows + variable labels, drawn from the origin outward. The
+// dominant loading (largest correlation magnitude) renders in full ink with
+// a heavier stroke and bolder label so the eye lands on the variable that
+// drives the components the most, before scanning the rest — a chrome-only
+// emphasis that doesn't reuse a data (group) color.
 const loadingArrowPlugin = {
     id: "loadingArrows",
     afterDatasetsDraw({ ctx, scales: { x: xs, y: ys } }) {
         const originX = xs.getPixelForValue(0);
         const originY = ys.getPixelForValue(0);
         ctx.save();
-        ctx.strokeStyle = t.inkSoft;
-        ctx.fillStyle = t.inkSoft;
-        ctx.lineWidth = 2;
         loadings.forEach(([lx, ly], i) => {
+            const isDominant = i === dominantLoading;
+            const arrowColor = isDominant ? t.ink : t.inkSoft;
             const tipX = xs.getPixelForValue(lx);
             const tipY = ys.getPixelForValue(ly);
             const angle = Math.atan2(tipY - originY, tipX - originX);
             const headLen = 12;
+
+            ctx.strokeStyle = arrowColor;
+            ctx.fillStyle = arrowColor;
+            ctx.lineWidth = isDominant ? 3 : 2;
 
             ctx.beginPath();
             ctx.moveTo(originX, originY);
@@ -231,12 +245,11 @@ const loadingArrowPlugin = {
             ctx.closePath();
             ctx.fill();
 
-            ctx.font = "600 15px sans-serif";
+            ctx.font = isDominant ? "700 16px sans-serif" : "600 15px sans-serif";
             ctx.fillStyle = t.ink;
             ctx.textAlign = tipX >= originX ? "left" : "right";
             ctx.textBaseline = tipY >= originY ? "top" : "bottom";
             ctx.fillText(variables[i], tipX + (tipX >= originX ? 6 : -6), tipY + (tipY >= originY ? 6 : -6));
-            ctx.fillStyle = t.inkSoft;
         });
         ctx.restore();
     },
@@ -307,5 +320,5 @@ new Chart(canvas, {
             },
         },
     },
-    plugins: [bgPlugin, unitCirclePlugin, spinePlugin, loadingArrowPlugin],
+    plugins: [chromePlugin, unitCirclePlugin, loadingArrowPlugin],
 });
