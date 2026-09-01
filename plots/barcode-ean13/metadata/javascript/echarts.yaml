@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: barcode-ean13
 created: '2026-09-01T18:37:06Z'
-updated: '2026-09-01T18:41:05Z'
+updated: '2026-09-01T18:56:09Z'
 generated_by: claude-sonnet
 workflow_run: 33543887150
 issue: 3808
@@ -12,44 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
   - 'Correct, from-scratch EAN-13 encoding: check-digit calculation, L/G/R code tables,
-    and first-digit parity all verified against the spec''s own example code (5901234123457
-    → same visible digit sequence).'
-  - Thoughtful 'product label' aesthetic — rounded card, subtle drop shadow, off-white
-    paper background, monospace digit font — elevates a technical diagram into a polished
-    visual without adding fake UI.
+    and first-digit parity all verified against the spec''s own example digits (5901234123457).'
   - Correctly implements guard-bar height differentiation (start/center/end guards
     taller than digit bars) and the real-world convention of placing the first digit
     alone in the left quiet zone.
+  - Thoughtful 'product label' aesthetic (rounded card, subtle drop shadow, off-white
+    paper background, monospace digit font) that elevates a technical diagram into
+    a polished visual without adding fake UI.
   - Theme-adaptive chrome (title uses t.ink) while intentionally keeping the barcode
-    itself fixed black-on-paper in both themes — correctly reasoned in a code comment
-    (a scanner reads contrast, not brand chrome) and confirmed identical across both
-    renders.
+    itself fixed black-on-paper in both themes, correctly reasoned in a code comment
+    and confirmed pixel-identical across both renders.
+  - 'The repair addressed the prior LM-02 feedback with a genuinely ECharts-specific
+    touch: a per-graphic-element tooltip revealing the encoded GTIN on hover, invisible
+    to the static PNG and correctly scoped to the interactive HTML output.'
   - Deterministic, dependency-free, in-memory data; clean code with no unused imports.
   weaknesses:
   - Design Excellence (data storytelling) is inherently capped by the plot type —
     this is a faithful reproduction of a real-world artifact rather than a data narrative,
-    so DE-03 stays at the default; not an execution flaw, just an acknowledged ceiling.
-  - LM-02 (distinctive features) credits the graphic-API composition, but rect/text
-    primitives are the generic canvas escape hatch any charting library exposes rather
-    than an ECharts-specific capability — a future revision could lean harder on an
-    ECharts-only touch (e.g. subtle shadow via graphic z-layering, or a hover state
-    in the HTML output) to earn full marks there.
+    so DE-03 stays at the default; not an execution flaw, just an acknowledged ceiling
+    for a barcode reproduction.
+  - Title occupies only ~40% of the plot width (the descriptive-prefix + spec-id +
+    language + library string pushed length past 67 chars, and the linear fontsize-scaling
+    formula shrank it proportionally to avoid overflow) — readable and not a defect,
+    but slightly under the 50-70% target; a marginally larger title fontsize (with
+    correspondingly tighter card margins) could better balance the composition.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white page background (#FAF8F1-ish), consistent with the light theme spec.
-      Chrome: Title "Specialty Coffee Beans 250g · barcode-ean13 · javascript · echarts · anyplot.ai" is centered at the top in dark ink, fully legible, comfortably sized (not overflowing, not squeezed). A rounded card with a subtle border and soft drop shadow sits centered below it.
-      Data: The barcode itself renders as solid black bars on a near-white paper card (#FDFCF5), with clearly taller guard bars at the start, center, and end positions. Human-readable digits "5 9 0 1 2 3 4" and "1 2 3 4 5 7" sit below the bars in a monospace font, with the leading "5" isolated in the left quiet zone per the EAN-13 convention. All text and bars are sharply legible against the card and page.
-      Legibility verdict: PASS
+      Background: Warm off-white page background, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "Specialty Coffee Beans 250g · barcode-ean13 · javascript · echarts · anyplot.ai" is centered at the top in dark ink, fully legible, comfortably sized and not clipped. A rounded card with a subtle border and soft drop shadow sits centered below it.
+      Data: The card holds solid black bars on a near-white paper surface (fixed paper color, not theme-adaptive by design), with clearly taller guard bars at the start, center, and end module positions. Human-readable digits "5  9 0 1 2 3 4  1 2 3 4 5 7" sit below the bars in a monospace font, with the leading "5" isolated in the left quiet zone outside the start guard. All 13 encoded digits are shown and match the checksum-verified EAN-13 code 5901234123457.
+      Legibility verdict: PASS — all text and bars are sharply legible against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black page background (#1A1A17-ish), consistent with the dark theme spec.
-      Chrome: Same title text now in light/off-white ink, fully legible against the dark page. The label card itself is unchanged — same rounded shape, border, and shadow.
-      Data: The barcode card and bars are pixel-identical to the light render (same off-white paper card, same solid black bars, same digit strings and positions) — correct, since a physical barcode must stay black-on-white regardless of site theme to remain scannable. No dark-on-dark issue exists because the card intentionally opts out of the page's theme for its interior.
-      Legibility verdict: PASS
+      Background: Warm near-black page background, consistent with #1A1A17 (not pure black).
+      Chrome: Same title text, now rendered in light ink, fully legible against the dark page. No dark-on-dark issue.
+      Data: The label card itself (background, border, bars, digits) is pixel-identical to the light render, which is correct and intentional — a physical barcode must stay black-on-white regardless of site theme to remain scannable; the code comments explicitly document this design decision. The surrounding chrome (title, page) still adapts to the theme while the card interior deliberately opts out.
+      Legibility verdict: PASS — no legibility failures in either theme; data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,51 +62,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and digit labels read clearly in both themes; title font scales
-          down with title length so it never overflows.
+        comment: All font sizes explicit (dynamic title-scaling formula, fixed digit
+          fontSize=32); readable in both themes; no clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, card, bars, or digit labels.
+        comment: No overlap between title, card, bars, or digits.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are bold and well-sized; guard bars are visibly taller than
-          digit bars, matching real barcode convention.
+        comment: Bars well-scaled (12px module width in mount space), crisp and clearly
+          visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximum-contrast black-on-paper bars in both themes; no color-based
-          signal at all, so no CVD risk.
+        comment: Monochrome black-on-paper barcode gives maximum contrast; no CVD
+          concerns.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Card is centered with generous margin on all sides; nothing clipped
-          or overflowing; canvas gate passed.
+        comment: Card uses the large majority of canvas width/height with balanced
+          margins; nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for this plot type; title is descriptive and correctly
-          formatted.
+        comment: No traditional axes needed for a barcode; title and human-readable
+          digit labels are descriptive and correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Title/chrome correctly uses Imprint theme tokens (t.ink, t.inkSoft);
-          the barcode itself is correctly exempt from the categorical palette (a real
-          barcode must stay black-on-white to remain scannable) and this is explicitly
-          reasoned in a code comment.
+        comment: Theme-adaptive chrome (title uses t.ink, page background) is correct;
+          barcode interior intentionally fixed black-on-paper for real-world scannability,
+          explicitly documented in code.
     design_excellence:
       score: 10
       max: 20
@@ -114,23 +115,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Rounded card, soft drop shadow, dedicated paper color, and monospace
-          digit font show real design intent beyond ECharts defaults.
+        comment: Rounded card, soft drop shadow, dedicated paper color, monospace
+          digit font show real design intent above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Generous whitespace and a restrained border; refinement is present
-          but modest since there's no grid/spine work to do for this plot type.
+        comment: Generous whitespace, restrained border; modest since the plot type
+          has no grid/spine work to refine.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Default — a barcode reproduction has little room for narrative hierarchy
-          or a data-driven focal point; this is an inherent ceiling of the plot type,
-          not an execution gap.
+        comment: Default; a faithful barcode reproduction has little room for narrative
+          hierarchy, an inherent ceiling of the plot type, not an execution gap.
     spec_compliance:
       score: 15
       max: 15
@@ -146,23 +146,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones (9 modules each side), start/center/end guard patterns,
-          standard 1-4 module bar widths, and human-readable digits with first digit
-          outside the left guard are all present and correctly encoded.
+        comment: Quiet zones (9 modules), start/center/end guard patterns, 1-4 module
+          bar widths, human-readable digits with first digit outside left guard —
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 digits correctly encoded and mapped to bar positions; check
-          digit verified correct by hand-recomputation.
+        comment: Bit pattern correctly mapped to bar positions/widths; all 13 digits
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows '{Descriptive Title} · barcode-ean13 · javascript ·
-          echarts · anyplot.ai' format exactly; no legend needed.
+        comment: Title format correct with descriptive prefix; no legend needed for
+          a single-series barcode.
     data_quality:
       score: 15
       max: 15
@@ -172,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates every structural aspect called out in the spec: quiet
-          zones, guard patterns, variable bar widths, human-readable digits.'
+        comment: 'Shows full encoding: guard patterns, varied bar widths, computed
+          check digit.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Uses the spec's own example-style Polish product-code prefix (590...)
-          for a neutral specialty-coffee product; plausible and non-controversial.
+        comment: Realistic, neutral retail product ('Specialty Coffee Beans 250g')
+          with a real-format Polish GTIN prefix.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bar/module widths and digit font size are sized appropriately for
-          a 3200x1800 canvas and would remain legible well below full size.
+        comment: Check-digit math independently verified correct (weighted sum mod
+          10 -> 7, matching the rendered digits).
     code_quality:
       score: 10
       max: 10
@@ -197,36 +197,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small helper functions are appropriate given the barcode-encoding
-          domain; no unnecessary abstraction.
+        comment: Linear imports -> data/encoding -> layout -> option structure; helper
+          functions are appropriate for the algorithmic encoding logic, not over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded digit sequence.
+        comment: Fully deterministic, hard-coded digit sequence.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided globals.
+        comment: No unused imports; echarts is the pre-supplied global.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or simulated interactivity; complexity matches the encoding
-          problem.
+        comment: Clean, appropriately complex for barcode encoding; no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract exactly: no explicit size/devicePixelRatio
-          on echarts.init, animation: false set.'
+        comment: Correct mount-node contract, animation:false set, current ECharts
+          API (setOption + graphic elements).
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -234,23 +233,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly reaches for the graphic elements API since EAN-13 has no
-          native ECharts chart type, per the library's own 'no workarounds' guidance.
+        comment: echarts.init + setOption with a graphic-elements layer is the correct
+          idiomatic approach for a plot type with no native ECharts series (custom
+          barcode rendering).
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Creative composition of rect/text graphic primitives to build a from-scratch
-          barcode renderer; docked slightly since these primitives are a generic canvas
-          escape hatch rather than an ECharts-only capability.
+        comment: 'Repair added a genuinely ECharts-specific touch: per-graphic-element
+          tooltip config revealing the encoded GTIN on hover, an interactive-HTML-only
+          affordance correctly scoped away from the static PNG.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - patches
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - minimal-chrome
+  - edge-highlighting
