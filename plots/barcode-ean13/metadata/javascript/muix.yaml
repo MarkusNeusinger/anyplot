@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: barcode-ean13
 created: '2026-09-01T18:45:37Z'
-updated: '2026-09-01T18:54:56Z'
+updated: '2026-09-01T19:05:21Z'
 generated_by: claude-sonnet
 workflow_run: 33544401354
 issue: 3808
@@ -12,113 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Correct from-scratch EAN-13 encoding: canonical L-code table, derived R/G codes
-    via bitwise complement/reverse, correct parity table selection by the first digit,
-    and a correctly computed check digit (12-digit input "590123412345" + computed
-    check digit 7 = "5901234123457", matching the spec''s own Polish-product example)'
-  - 'All required structural elements present: 9-module quiet zones on both sides,
-    start (101) / center (01010) / end (101) guard patterns, and correct variable
-    module-width bars (1-4 modules) achieved elegantly via zero-gap adjacent band
-    bars (categoryGapRatio=0, barGapRatio=0)'
+  - Mobile-legibility fix from attempt 1 verified directly against plot-light_400.png
+    / plot-dark_400.png -- digit labels are now clearly readable at 400px in both
+    themes
+  - 'Correct from-scratch EAN-13 encoding: canonical L-code table, derived R/G codes,
+    correct parity table selection by the first digit, and a correctly computed check
+    digit ("590123412345" -> check digit 7 -> "5901234123457", matching the spec''s
+    own Polish-product example)'
+  - 'All required structural elements present: 9-module quiet zones, start/center/end
+    guard patterns, and correct variable module-width bars (1-4 modules) via zero-gap
+    adjacent band bars'
   - Human-readable digits correctly centered under each digit's 7-module block, with
-    the first digit correctly placed outside the left guard in the quiet zone, exactly
-    matching the spec's placement requirement
-  - 'Clean, minimal chrome: axis line/ticks/legend hidden, no clutter, correct theme-adaptive
-    ink color for text and bars in both light and dark renders'
+    the first digit correctly placed outside the left guard in the quiet zone
+  - Clean, minimal chrome; correct theme-adaptive ink color in both renders
   - Creative, idiomatic use of MUI X's band-scale BarChart (tickLabelInterval + valueFormatter
-    for selective digit labeling, zero-gap bars for module-width fidelity) to repurpose
-    a bar chart primitive into a genuinely different, correctly-encoded visualization
+    + zero-gap bars) to repurpose a bar-chart primitive into a correctly-encoded barcode
   - Canvas size, skipAnimation, default export, and harness contract all correctly
-    followed; deterministic, seed-free data generation
+    followed; deterministic data
   weaknesses:
-  - 'Digit labels (tickLabelStyle fontSize: 16 CSS px, monospace) become nearly illegible
-    at the mobile-thumbnail scale (~400px width render) -- confirmed in both plot-light_400.png
-    and plot-dark_400.png, where the ''5 9 0 1 2 3 4 1 2 3 4 5 7'' sequence collapses
-    to unreadable specks. Increase fontSize (e.g. to ~20-22 CSS px) or font-weight
-    so the digits stay legible when the srcset scales the image down.'
-  - 'Bars use the theme ink color (t.ink) rather than the Imprint brand green (#009E73)
-    for what is the chart''s only data series -- this is a defensible real-world-fidelity
-    call (a scannable barcode conventionally must be dark-on-light/light-on-dark to
-    look authentic) and is explicitly documented in a code comment, but it does deviate
-    from the hard ''first categorical series is ALWAYS #009E73, across every plot
-    type'' rule. Keep the monochrome bars for authenticity, but consider whether a
-    small brand-green accent element (e.g. a thin colored corner tag or ID label)
-    could nod to the palette without compromising the barcode''s realism.'
-  - 'DE-03 Data Storytelling is minimal: the chart is a literal, functional barcode
-    rendering with no additional visual hierarchy, emphasis, or narrative device beyond
-    the correct encoding itself -- a subtle touch (e.g. a faint caption noting the
-    encoded value, or delicately marking the guard-pattern regions) could add data-storytelling
-    value without breaking barcode authenticity'
+  - 'Bars use t.ink instead of Imprint brand green #009E73 for the chart''s only data
+    series -- defensible as a real-world-fidelity call for barcode authenticity (documented
+    in a code comment), but still a deviation from the hard ''first categorical series
+    is always green'' rule'
+  - DE-03 storytelling remains minimal -- no visual hierarchy or narrative device
+    beyond the correct encoding itself; a barcode's nature limits how much can be
+    done here without compromising function
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "barcode-ean13 · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. Digit labels ("5 9 0 1 2 3 4" under the left half, "1 2 3 4 5 7" under the right half) in small dark monospace font below the bars, correctly aligned under their digit blocks including the lone "5" sitting in the left quiet zone outside the start guard. No axis lines, ticks, or legend (correctly omitted for a single-series barcode).
-      Data: Solid black vertical bars of varying widths (1-4 modules), separated by quiet-zone whitespace at both edges and a visibly wider ungapped section in the middle representing the center guard. Bars render in the theme ink color rather than the Imprint categorical palette (see weaknesses).
-      Legibility verdict: PASS at full resolution. At the 400px mobile thumbnail (plot-light_400.png) the digit labels shrink to near-illegible specks -- FAIL for mobile digit-label legibility specifically (title remains readable).
+      Chrome: Title "barcode-ean13 · javascript · muix · anyplot.ai" centered at top in dark ink, clearly legible. No axis lines/ticks/legend (correctly omitted).
+      Data: Solid black vertical bars of varying widths (1-4 modules), quiet-zone whitespace at both edges, wider ungapped gap in the middle for the center guard. Bold monospace digit labels ("5 9 0 1 2 3 4" / "1 2 3 4 5 7") below the bars, correctly centered under their digit blocks, including the lone "5" in the left quiet zone.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title and digit labels rendered in light ink, clearly readable against the dark background -- no dark-on-dark failures observed.
-      Data: Bar positions and digit values are identical to the light render (same 13-digit sequence, same guard/quiet-zone structure); only the ink color flips from dark to light along with the background, which is the expected theme-adaptive behavior for a barcode's dark-on-light / light-on-dark rendering.
-      Legibility verdict: PASS at full resolution. Same mobile-scale digit-label legibility issue reproduces at 400px (plot-dark_400.png) -- FAIL for mobile digit-label legibility specifically.
+      Chrome: Title and digit labels flip to light ink, clearly readable -- no dark-on-dark failures.
+      Data: Bar positions and digit values identical to the light render (same 13-digit sequence "5901234123457", same guard/quiet-zone structure); only the ink color flips with theme, as expected.
+      Legibility verdict: PASS
+
+    Mobile thumbnail check (plot-light_400.png / plot-dark_400.png):
+      The previously-flagged attempt-1 issue (digit labels illegible at 400px) is now fixed. After bumping tickLabelStyle fontSize 16->22 CSS px and adding fontWeight: 700, digit labels remain clearly readable at 400px in both themes.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Title and digit labels fully legible at full 3200x1800 resolution
-          in both themes, but digit labels (fontSize 16 CSS monospace) collapse to
-          near-illegible specks at the 400px mobile thumbnail scale in both plot-light_400.png
-          and plot-dark_400.png
+        passed: true
+        comment: 'Fixed: digit labels legible at full resolution AND at 400px mobile
+          srcset in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between digit labels, bars, or title
+        comment: No collisions between text, bars, or labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are prominent and clearly distinguishable from background in
-          both themes
+        comment: Bars clearly visible at all widths
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome ink-on-surface contrast is very high in both themes; no
-          red-green or CVD-relevant issue
+        comment: High-contrast monochrome ink on theme background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, generous margins, nothing clipped or overflowing
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format exactly matches spec; no axis labels needed for a barcode
+        comment: Descriptive mandated title present
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Bars use theme ink instead of Imprint brand green #009E73 for the
-          only data series -- a documented real-world-fidelity call for barcode authenticity,
-          but a deviation from the hard first-series-is-green rule; backgrounds and
-          chrome are theme-correct'
+        comment: Bars use theme ink, not Imprint brand green -- defensible real-world-fidelity
+          exception, still a deviation
     design_excellence:
       score: 12
       max: 20
@@ -128,22 +113,19 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Professional, precise rendering with intentional hierarchy, though
-          it uses no custom Imprint palette (monochrome by design)
+        comment: Polished and precise, but monochrome by design
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Axis line, ticks, and legend all removed; generous whitespace; nothing
-          competes with the bars
+        comment: Axis line/ticks/legend removed, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Literal, functional barcode rendering with no additional emphasis,
-          hierarchy, or narrative device beyond the correct encoding itself
+        comment: Literal functional rendering, no extra hierarchy or narrative device
     spec_compliance:
       score: 15
       max: 15
@@ -153,29 +135,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 barcode structure with accurate L/G/R encoding tables
-          and parity selection
+        comment: Correct EAN-13 barcode
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones, start/center/end guards, variable module widths, and
-          human-readable digits all present
+        comment: Quiet zones, guards, digits all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Module positions map faithfully to bar presence/absence and to digit
-          placement
+        comment: Modules correctly mapped to bar heights
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly "barcode-ean13 · javascript · muix · anyplot.ai";
-          legend correctly omitted for single series
+        comment: Title matches mandated format exactly
     data_quality:
       score: 15
       max: 15
@@ -185,21 +163,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows quiet zones, all three guard patterns, variable bar widths,
-          and computed check digit -- full feature coverage
+        comment: Shows all aspects of EAN-13 encoding
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Encoded value 5901234123457 matches the spec's own real-world Polish-product
-          example and is neutral
+        comment: Valid, realistic product code matching spec example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Standard 13-digit EAN-13 length rendered at appropriate proportions
+        comment: 13-digit code, standard module counts
     code_quality:
       score: 9
       max: 10
@@ -209,34 +185,31 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A few small pure helper functions (complement, reverse, checkDigit)
-          are necessary for correct EAN-13 checksum/parity logic, not over-engineering
+        comment: No classes, minor helper functions for encoding logic
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded input digits, computed (not hardcoded)
-          check digit
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart, Box, Typography imported, all used
+        comment: Only BarChart, Box, Typography imported
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, well-commented encoding logic; no fake functionality
+        comment: No fake UI, real encoding logic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct harness contract: default export, skipAnimation, sized to
-          ANYPLOT_SIZE'
+        comment: Harness mount-node contract followed correctly
     library_mastery:
       score: 7
       max: 10
@@ -246,16 +219,14 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct, idiomatic use of MUI X's band-scale BarChart API repurposed
-          for barcode module rendering
+        comment: Correct BarChart band-scale usage with tickLabelInterval/valueFormatter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Creative use of tickLabelInterval + valueFormatter for selective
-          digit labeling and zero-gap bars for true module-width fidelity
-  verdict: REJECTED
+        passed: false
+        comment: Creative but scoped to a single technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
