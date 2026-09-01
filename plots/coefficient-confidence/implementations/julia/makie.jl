@@ -6,6 +6,7 @@
 using CairoMakie
 using Colors
 using Random
+using Printf
 
 Random.seed!(42)
 
@@ -20,7 +21,7 @@ BRAND     = colorant"#009E73"  # Imprint palette position 1 — significant coef
 # Data — coefficients from a multiple linear regression predicting housing sale
 # price (thousands of USD), controlling for all other predictors.
 variables = [
-    "Square Footage", "Distance to Downtown (mi)", "Bathrooms", "School Rating",
+    "Square Footage (per 100 sq ft)", "Distance to Downtown (mi)", "Bathrooms", "School Rating",
     "Garage Spaces", "Renovated (Y/N)", "Lot Size (acres)", "Bedrooms", "Age (years)",
 ]
 coefficients = [45.2, -12.6, 18.7, 15.3, 9.8, 8.1, 6.4, -3.2, -2.1]
@@ -51,7 +52,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title             = "coefficient-confidence · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 24,
     titlecolor        = INK,
     xlabel            = "Coefficient Estimate (Δ Sale Price, \$ thousands)",
     xlabelsize        = 16,
@@ -73,14 +74,33 @@ ax = Axis(
 
 vlines!(ax, [0.0]; color = INK_SOFT, linestyle = :dash, linewidth = 2)
 
-errorbars!(
-    ax, coefficients, y_positions,
-    coefficients .- ci_lower, ci_upper .- coefficients;
+# rangebars! draws directly from ci_lower to ci_upper (no manual delta math
+# needed, unlike errorbars!'s relative-offset API) — the more idiomatic Makie
+# primitive for plotting precomputed interval bounds.
+rangebars!(
+    ax, y_positions, ci_lower, ci_upper;
     direction = :x, color = point_colors, whiskerwidth = 14, linewidth = 3,
 )
 scatter!(
     ax, coefficients, y_positions;
     color = point_colors, markersize = 22, strokewidth = 1.5, strokecolor = PAGE_BG,
+)
+
+# Compact value labels next to each point estimate, colored to match
+# significance, so exact magnitudes don't require reading off the axis.
+# Anchored on the outward side of the CI (away from the zero line) so labels
+# for negative coefficients never collide with the dashed reference line.
+pos_mask = coefficients .>= 0
+neg_mask = .!pos_mask
+text!(
+    ax, ci_upper[pos_mask] .+ 1.5, y_positions[pos_mask];
+    text = [@sprintf("%+.1f", c) for c in coefficients[pos_mask]],
+    color = point_colors[pos_mask], fontsize = 13, align = (:left, :center),
+)
+text!(
+    ax, ci_lower[neg_mask] .- 1.5, y_positions[neg_mask];
+    text = [@sprintf("%+.1f", c) for c in coefficients[neg_mask]],
+    color = point_colors[neg_mask], fontsize = 13, align = (:right, :center),
 )
 
 # Legend — semantic mapping must be explicit per style guide
@@ -93,7 +113,7 @@ axislegend(
     framevisible = false,
 )
 
-xlims!(ax, minimum(ci_lower) - 3, maximum(ci_upper) + 3)
+xlims!(ax, minimum(ci_lower) - 8, maximum(ci_upper) + 9)
 
 # Save
 save("plot-$(THEME).png", fig; px_per_unit = 2)
