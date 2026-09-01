@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: chessboard-pieces
 created: '2026-09-01T23:17:06Z'
-updated: '2026-09-01T23:23:02Z'
+updated: '2026-09-01T23:36:03Z'
 generated_by: claude-sonnet
 workflow_run: 33569849539
 issue: 3350
@@ -12,56 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
   - Renders a historically accurate Scholar's Mate final position (verified piece-by-piece
     against the real game) instead of an arbitrary/abstract arrangement
-  - 'Correct chess board convention: light square algorithmically placed at h1 (col+row
-    parity check)'
+  - 'Theme-inversion bug from attempt 1 is correctly fixed: explicit per-theme board
+    tones now guarantee the light square is always the higher-luminance one in both
+    light and dark renders, matching the spec''s ''light square at h1'' chess convention'
   - Piece glyphs use a fill+stroke pairing (light fill/dark stroke for white, dark
     fill/light stroke for black) so identity reads clearly regardless of underlying
-    square color or theme — a thoughtful CVD-safe touch
+    square color or theme
   - Dynamic title fontsize formula keeps the long mandated title comfortably within
     the canvas in both themes
   - Contextual subtitle (opening moves) adds data storytelling beyond a bare diagram
-  - 'Clean idiomatic D3 usage: single data-join builds all 64 squares, second join
-    places pieces, no manual per-piece markup'
+  - 'Clean idiomatic D3 usage: d3.scaleBand for grid placement, single data-join builds
+    all 64 squares, second join places pieces'
   - KISS code structure with zero external dependencies beyond the d3 global; fully
     deterministic, hardcoded position
   weaknesses:
-  - 'Dark-theme board squares invert relative to light theme: darkSquare = d3.interpolateRgb(t.pageBg,
-    t.ink)(0.22) while light squares use t.elevatedBg. In light theme this yields
-    elevatedBg #FFFDF6 (light) vs interpolated #C9C7C1 (light-gray) — light square
-    correctly lighter. In dark theme it yields elevatedBg #242420 (dark) vs interpolated
-    #494945 (medium-gray) — the ''light'' square is now DARKER than the ''dark'' square.
-    Net effect: h1, which must read as the light square ''per chess standards'' (spec
-    requirement), renders as the visually darker of the two shades in dark mode —
-    a real chess-board convention gets inverted, not just a subtle contrast tweak.
-    Fix: derive board-square colors so the light square is always the higher-luminance
-    one in both themes (e.g. two fixed board tones per theme, or flip the interpolation
-    factor''s direction based on ANYPLOT_THEME instead of always blending toward t.ink).'
-  - 'Library Mastery is fairly generic for D3: no use of d3-scale/d3-axis or another
-    module beyond a single d3.interpolateRgb call and two selection.data().join()
-    calls — a capable but not especially distinctive use of the library''s toolkit.'
-  - Board-square color scheme relies entirely on the general-purpose pageBg/ink interpolation
-    rather than distinct, purpose-built board tones — visually pleasant but generic
-    rather than a deliberately designed board palette (limits Design Excellence upside).
+  - Library Mastery is still fairly generic for D3 beyond the new scaleBand usage
+    — no axes, shape generators, or other distinctive modules
+  - The board is a plain two-tone checkerboard with no visual emphasis on the checkmating
+    square/piece (f7), leaving some data-storytelling upside on the table
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1-consistent) canvas surrounding an 8x8 board. Board squares alternate between a near-white tone (#FFFDF6-ish, "light" squares) and a light warm gray (~#C9C7C1, "dark" squares) — h1 (bottom-right) correctly reads as the lighter of the two, matching standard chess convention.
+      Background: Warm off-white (#FAF8F1-consistent) canvas surrounding a centered 8x8 board.
       Chrome: Bold dark title "Scholar's Mate, Move 4 · chessboard-pieces · javascript · d3 · anyplot.ai" and a lighter dark-gray subtitle "White delivers checkmate: 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#" both sit clearly above the board, fully readable against the cream background. File letters (a-h) below the board and rank numbers (1-8) to its left are legible mid-gray text.
-      Data: Unicode chess glyphs — white pieces rendered as light glyphs with a dark outline, black pieces as dark glyphs with a light outline — both read clearly against either square shade. Position matches the real Scholar's Mate checkmate (Ke1, Ra1/Rh1, Bc1, Bc4, Nb1/Ng1, Qf7 for white; Ke8, Qd8, Ra8/Rh8, Bc8/Bf8, Nc6/Nf6, pawns for black).
+      Data: Board squares alternate between a near-white tone (elevatedBg, "light" squares) and a light warm gray (~#C9C7C1, "dark" squares) — h1 (bottom-right) correctly reads as the lighter of the two, matching standard chess convention. White pieces render as cream-filled glyphs with a thin dark outline, black pieces as dark-filled glyphs with a thin cream outline — both read clearly against either square shade. Position matches the real Scholar's Mate checkmate (Ke1, Ra1/Rh1, Bc1, Bc4, Nb1/Ng1, Qf7 for white; Ke8, Qd8, Ra8/Rh8, Bc8/Bf8, Nc6/Nf6, pawns for black).
       Legibility verdict: PASS — all text and pieces clearly readable, no overlap, no clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17-consistent) canvas. Board squares alternate between a dark charcoal tone (#242420-ish) and a medium warm gray (~#494945). Critically, the squares assigned "light" in the data model (e.g. h1) render as the DARKER of the two shades here — inverted from the light render and from real chess-board convention (see weaknesses).
+      Background: Warm near-black (#1A1A17-consistent) canvas.
       Chrome: Title and subtitle render in light cream / soft light-gray text, fully readable against the near-black background — no dark-on-dark failures. File/rank labels remain legible light-gray text.
-      Data: Piece colors are identical to the light render (light-fill/dark-stroke for white, dark-fill/light-stroke for black) — pieces keep their identity and are clearly distinguishable from both square shades.
-      Legibility verdict: PASS for text/piece legibility — no readability failure — but the square-shade inversion described above is a real domain-accuracy defect specific to this render.
+      Data: Board squares now alternate between a medium warm-gray tone (~#403F38, "light" squares) and a very dark charcoal tone (~elevatedBg/#242420, "dark" squares) — h1 (bottom-right) is still the visually lighter of the two here, so the light/dark square identity no longer inverts between themes (this was the exact defect flagged in attempt 1, now confirmed fixed). Piece colors keep the same fill/stroke structure as the light render (by piece color, not by theme): black pieces read as hollow cream-outlined silhouettes, white pieces as solid cream shapes — both clearly distinguishable from the dark board and from each other.
+      Legibility verdict: PASS — no readability failure, and the previously-flagged square-shade inversion is fixed.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -69,9 +57,8 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (dynamic title formula, 18px subtitle,
-          20px file/rank labels, cell*0.72 pieces); fully readable in both themes
-          with no overflow
+        comment: All font sizes explicit (dynamic title formula, 18px subtitle, 20px
+          file/rank labels, cell*0.72 pieces); fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -83,8 +70,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Pieces sized at cell*0.72 with outline strokes for contrast — clearly
-          visible on any square/theme
+        comment: Pieces sized at cell*0.72 with outline strokes for contrast; sparse
+          data (32 pieces) sized prominently
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -97,24 +84,24 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Board fills the large majority of the 2400x2400 canvas with balanced
-          margins; title/subtitle well-positioned
+        comment: Canvas gate passed (2400x2400); board fills the large majority of
+          the canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: File/rank labels are the correct chess notation; title/subtitle descriptive
+        comment: File/rank labels are correct chess notation; title/subtitle descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds are theme-correct #FAF8F1/#1A1A17 and chrome text is
-          theme-correct, but the board-square shading interpolation inverts light/dark
-          square identity between themes'
+        passed: true
+        comment: 'Fixed: explicit per-theme board tones keep the light square the
+          higher-luminance one in both themes; backgrounds and chrome are theme-correct
+          in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -122,24 +109,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful outline-stroke piece styling and a computed board palette
-          go clearly above library defaults
+        comment: Thoughtful fill+stroke piece styling by piece color goes above library
+          defaults, but the board is a plain two-tone checkerboard with no additional
+          flourish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
         comment: Generous whitespace, subtle single-stroke board frame, clean composition;
-          the theme-inversion bug and generic board palette cap it below perfect
+          theme-inversion bug fixed and board tones are now purpose-built per theme
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Contextual subtitle narrates the opening moves leading to the position,
-          giving the diagram a clear focal point and story
+        comment: Contextual subtitle narrates the opening moves; would score higher
+          with a visual callout on the mating square/piece
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,13 +138,12 @@ review:
         comment: Correct chessboard-with-pieces diagram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
         comment: Dict-mapped pieces, Unicode glyphs, white-at-bottom orientation,
-          centered non-edge-touching pieces all present; the 'light square at h1'
-          convention is algorithmically correct but visually inverted in the dark
-          render
+          centered pieces, and light-square-at-h1 convention all correctly visualized
+          in both themes
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -194,7 +181,6 @@ review:
         max: 4
         passed: true
         comment: Every piece placement matches the true Scholar's Mate final position
-          (verified against 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#)
     code_quality:
       score: 10
       max: 10
@@ -230,24 +216,25 @@ review:
         passed: true
         comment: Correct mount-node contract, current D3 v7 join API, animation-free
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Idiomatic data-join pattern (selection.data().join()) for both squares
-          and pieces
+        comment: Now uses d3.scaleBand for grid layout alongside the idiomatic selection.data().join()
+          pattern for both squares and pieces
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses d3.interpolateRgb for a computed board tone, but doesn't otherwise
-          reach for D3-unique modules like scales/axes/hierarchy
-  verdict: REJECTED
+        comment: Repurposing scaleBand for an 8x8 grid is a reasonable trick, but
+          doesn't otherwise reach for other D3-unique modules (axes, shape generators,
+          hierarchy)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
