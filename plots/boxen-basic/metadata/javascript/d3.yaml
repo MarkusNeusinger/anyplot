@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: boxen-basic
+created: '2026-09-01T18:43:50Z'
+updated: '2026-09-01T19:06:17Z'
+generated_by: claude-sonnet
+workflow_run: 33544512780
+issue: 3414
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Statistically accurate letter-value computation (legend coverage percentages match
+    the actual pLow/pHigh quantile math exactly)
+  - 'Pixel-verified theme-correct chrome: light background #FAF8F1, dark background
+    #1A1A17, identical data colors across both renders'
+  - Dynamic title auto-fit via getComputedTextLength() avoids both clipping and cramped
+    sizing for the long mandated title string
+  - '"Widest spread ▲" callout plus a bolder median line gives the plot a clear, immediate
+    focal point without simulating fake interactivity'
+  weaknesses:
+  - Helper functions (letterValueDepth, letterValueStats, randNormal) push the script
+    away from a flat KISS structure -- could be inlined or simplified, though the
+    math genuinely needs them
+  - All four service distributions share the same log-normal shape (varying only in
+    scale/spread); a differently-shaped distribution for one group would demonstrate
+    more of the letter-value plot's diagnostic power
+  - Nested boxes are drawn with a manual .append() loop per level rather than a .data(levels).join("rect")
+    pattern -- functionally fine but slightly less idiomatic D3
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, measured pixel-exact at #FAF8F1 -- matches spec.
+      Chrome: Title "API Latency by Service · boxen-basic · javascript · d3 · anyplot.ai" in dark ink, auto-fit to width; axis labels "Response Time (ms)" and "Service Endpoint" both descriptive with units/context; tick labels and two-part legend (service colors + letter-value depth coverage) all clearly readable in dark text against the light background.
+      Data: Four boxen groups (Auth API green #009E73, Search API lavender, Payment API blue, Notify API ochre) -- canonical Imprint order, first series is brand green. Nested translucent boxes narrow and lighten with quantile depth; outlier dots and a dark median line per group; a "Widest spread ▲" callout above Search API.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, measured pixel-exact at #1A1A17 -- matches spec.
+      Chrome: Title, axis labels, tick labels, and legend all render in light ink and are fully legible; median lines switch to white for contrast; gridlines remain subtle but visible. No dark-on-dark failures found.
+      Data: Confirmed identical to light render -- same green/lavender/blue/ochre hues and box structure, only chrome (background, text, grid) flips.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (px); title auto-fit via getComputedTextLength();
+          legible in both themes and at 400px thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend, callout, axes, boxes all well separated in both renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boxen widths/opacities scale cleanly with depth; outlier markers
+          visible without clutter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Depth-based alpha blending plus distinct hues; no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area and legend balanced within canvas, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Response Time (ms)" and "Service Endpoint" descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical Imprint order; backgrounds pixel-exact
+          #FAF8F1/#1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Depth-based opacity encoding, fitted title, storytelling callout
+          go beyond a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle y-only gridlines, restrained axis chrome, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: '"Widest spread ▲" callout plus bolder median line creates an immediate
+          focal point'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct boxen/letter-value plot with nested quantile boxes
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nested narrowing boxes, contrasting opacity per level, outliers as
+          individual points, clear axis labels + legend all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = service category, Y = response time; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match service names
+          and depth coverage
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Outliers and differing spreads shown; all groups share the same log-normal
+          shape rather than varying shape
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: API latency by service endpoint is realistic, neutral, technical
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Median latencies (~90-235ms) with right-skewed tails and plausible
+          outliers
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses several small helper functions for letter-value math rather
+          than a flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current D3 v7 API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good scale/axis usage and data-join for outliers; nested boxes drawn
+          via append loop instead of data-join
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: getComputedTextLength()-driven title auto-fit and d3.quantileSorted-based
+          letter-value stats
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - quantile-computation
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - publication-ready
