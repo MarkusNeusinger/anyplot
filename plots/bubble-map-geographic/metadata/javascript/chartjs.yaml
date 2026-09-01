@@ -1,0 +1,253 @@
+library: chartjs
+language: javascript
+specification_id: bubble-map-geographic
+created: '2026-09-01T18:39:52Z'
+updated: '2026-09-01T18:45:32Z'
+generated_by: claude-sonnet
+workflow_run: 33544359150
+issue: 3625
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/javascript/chartjs/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - 'All spec-required features present: bubble-area size legend, alpha (0.6) blending
+    for overlapping bubbles, geographic basemap context, minimum bubble radius floor,
+    and hover tooltips with exact values'
+  - Realistic, factually accurate data — real US cities with plausible population
+    figures and correct latitude/longitude coordinates, grouped into sensible regional
+    categories
+  - Custom Chart.js plugins (beforeDatasetsDraw basemap outline, afterDraw size-legend)
+    go beyond basic chart configuration and demonstrate genuine library mastery of
+    the plugin architecture
+  - 'Full Imprint palette compliance: first categorical series (Northeast) is brand
+    green #009E73, remaining regions use canonical palette order, theme-correct chrome
+    (background, text, grid) in both light and dark renders'
+  - Clean, deterministic, single-file implementation with no fake UI elements and
+    explicit font sizing throughout
+  weaknesses:
+  - In the dense Northeast cluster, the New York and Philadelphia bubbles overlap
+    heavily and their shared border strokes blend together, making the two circles
+    slightly harder to tell apart at a glance — a marginally higher border contrast
+    or z-ordering by size would help
+  - The size-legend reference labels (500K/3M/8M, ~13px) are noticeably smaller than
+    the rest of the chrome (axis ticks are 14px, legend 16px) — bump to ~14-15px for
+    visual consistency
+  - The basemap outline is a deliberately rough approximation (per code comment) rather
+    than an accurate coastline — acceptable for context but a more detailed outline
+    would raise aesthetic polish further
+  - No annotation or emphasis calls out the standout data point (New York, largest
+    bubble by a wide margin) — a subtle callout would strengthen the data storytelling
+    beyond size/color encoding alone
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Title "bubble-map-geographic · javascript · chartjs · anyplot.ai" in bold dark ink, top legend with four circular swatches (Northeast/South/Midwest/West), axis titles "Longitude" and "Latitude" with degree-formatted tick labels (e.g. "120°W", "40°N"), subtle 10-degree gridlines, and a bottom-left "Population" size-legend with three reference circles (500K/3M/8M). All text is dark on the light surface and clearly legible.
+      Data: A simplified, lightly-filled continental-US outline sits behind the bubbles. Bubbles are sized by population (area-proportional) and colored by region: green (Northeast) clustered tightly in the mid-Atlantic/New England, lavender (South) across Texas/Southeast, blue (Midwest) around the Great Lakes, ochre (West) along the Pacific coast and interior. The first series (Northeast) correctly renders in brand green #009E73. Overlapping bubbles (e.g. NYC/Philadelphia) show alpha-blended fill.
+      Legibility verdict: PASS — no text is unreadable, no clipping at canvas edges (verified via zoomed crops of all four borders).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Same title, legend, axis titles and tick labels now rendered in light ink against the dark surface, fully legible with no dark-on-dark text. Gridlines are faint but visible. The basemap outline and size-legend circles use light-toned strokes appropriate for the dark surface.
+      Data: Bubble colors are pixel-identical to the light render (green/lavender/blue/ochre) — only chrome (background, text, grid, outline strokes) flipped, confirming theme-adaptive tokens were used correctly for all non-data elements.
+      Legibility verdict: PASS — all text reads clearly against the dark background; no dark-on-dark or light-on-light failures found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes; size-legend
+          labels slightly small relative to other chrome
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; bubble overlap is expected geographic overlap handled
+          with alpha, not a text issue
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bubble sizes well-adapted to data density with a sensible minimum
+          radius floor
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 categories, CVD-safe Imprint hues, bordered markers add definition
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills most of the canvas, legend near the
+          plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive Longitude/Latitude axis titles with degree-formatted
+          ticks
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order thereafter, theme-correct
+          chrome and backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom basemap + size-legend plugins show thoughtful design, above
+          library defaults; basemap outline is intentionally rough
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, matched legend point styles, generous whitespace; minor
+          polish gaps in legend text sizing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size + color + basemap clustering conveys the Northeast megalopolis
+          clearly; no explicit annotation calling out the extreme
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bubble-map type via Chart.js bubble chart + basemap
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Size legend, alpha blending, basemap, minimum bubble size, hover
+          tooltips all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon/lat correctly mapped to x/y, all points visible within axis range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact mandated title format; legend labels match region categories
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide size range (430K-8.8M), dense and sparse spatial regions, multiple
+          categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real US cities, population data, neutral civic/business context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population and coordinate values match real-world figures for these
+          cities
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports/Data/Plugins/Chart flow, small deterministic helper functions
+          only
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses global Chart per mount-node contract
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex for basemap + size legend, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows mount-node contract, animation:false set, current Chart.js
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Native bubble chart type, linear scales, tooltip callbacks used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom plugin hooks (beforeDatasetsDraw/afterDraw) for basemap and
+          size legend are distinctive to Chart.js's plugin architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
