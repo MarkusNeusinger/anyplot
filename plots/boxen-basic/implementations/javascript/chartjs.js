@@ -1,7 +1,7 @@
 // anyplot.ai
 // boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-01
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-01
 
 const t = window.ANYPLOT_TOKENS;
 
