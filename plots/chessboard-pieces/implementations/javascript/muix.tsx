@@ -1,7 +1,3 @@
-// anyplot.ai
-// chessboard-pieces: Chess Board with Pieces for Position Diagrams
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-01
 //# anyplot-orientation: square
 // anyplot.ai
 // chessboard-pieces: Chess Board with Pieces for Position Diagrams
@@ -32,6 +28,10 @@ const GLYPHS = {
   K: "♔", Q: "♕", R: "♖", B: "♗", N: "♘", P: "♙",
   k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟",
 };
+
+// The mating queen (f7) and the checkmated king (e8) — highlighted on the
+// board itself so the "Scholar's Mate" title has a visual anchor.
+const MATE_SQUARES = new Set(["f7", "e8"]);
 
 // Every square, so the checkerboard pattern renders as one scatter series.
 const squarePoints = FILES.flatMap((file) =>
@@ -65,11 +65,24 @@ function BoardMark(props) {
           const dark = (fileIdx + rankIdx) % 2 === 0;
           const cx = xScale(pt.x) ?? 0;
           const cy = yScale(pt.y) ?? 0;
+          const isMateSquare = MATE_SQUARES.has(`${pt.x}${pt.y}`);
           return (
             <g key={pt.id}>
               <rect x={cx} y={cy} width={cellW} height={cellH} fill={t.elevatedBg} />
               {dark && (
                 <rect x={cx} y={cy} width={cellW} height={cellH} fill={t.ink} fillOpacity={0.22} />
+              )}
+              {isMateSquare && (
+                <rect
+                  x={cx + 2}
+                  y={cy + 2}
+                  width={cellW - 4}
+                  height={cellH - 4}
+                  fill={t.amber}
+                  fillOpacity={0.22}
+                  stroke={t.amber}
+                  strokeWidth={2}
+                />
               )}
             </g>
           );
@@ -135,7 +148,7 @@ export default function Chart() {
       <Typography
         sx={{
           color: t.ink,
-          fontSize: 22,
+          fontSize: 24,
           fontWeight: 500,
           textAlign: "center",
           lineHeight: 1.2,
@@ -162,7 +175,7 @@ export default function Chart() {
               scaleType: "band",
               data: FILES,
               categoryGapRatio: 0,
-              tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
+              tickLabelStyle: { fontSize: 19, fill: t.inkSoft },
               disableTicks: true,
               disableLine: true,
             },
@@ -173,7 +186,7 @@ export default function Chart() {
               scaleType: "band",
               data: RANKS,
               categoryGapRatio: 0,
-              tickLabelStyle: { fontSize: 16, fill: t.inkSoft },
+              tickLabelStyle: { fontSize: 19, fill: t.inkSoft },
               disableTicks: true,
               disableLine: true,
             },
