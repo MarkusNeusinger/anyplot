@@ -1,0 +1,260 @@
+library: d3
+language: javascript
+specification_id: windbarb-basic
+created: '2026-09-02T10:35:15Z'
+updated: '2026-09-02T10:50:16Z'
+generated_by: claude-sonnet
+workflow_run: 33619476699
+issue: 3694
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/d3/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - All four wind-speed notations (calm circle, half barb, full barb, pennant) are
+    present and correctly rendered via a single reusable drawBarb() routine shared
+    between the map glyphs and the legend key.
+  - Synthetic data uses a physically motivated Rankine combined vortex (solid-body
+    rotation inside the core radius, irrotational decay outside) around a synthetic
+    low-pressure center, producing a realistic cyclonic swirl with a calm eye — a
+    strong, deliberate data-storytelling choice.
+  - 'Colors are pixel-identical between themes (#009E73 barbs, #FAF8F1 light / #1A1A17
+    dark background), and both renders are fully legible with no dark-on-dark or light-on-light
+    chrome failures.'
+  - 'Legend is self-contained, upright, and legible: reusing drawBarb() with u=0 to
+    force theta=0 for the legend glyphs is a clean, elegant reuse of the map-drawing
+    code.'
+  weaknesses:
+  - 'Boundary-row wind barbs bleed past the plot''s coordinate domain and cross the
+    x-axis line: the barb glyph at the bottom-right station (18°E, 45°N) visually
+    overlaps the ''18°E'' tick label — its pennant sits directly on top of the leading
+    digit. This happens because yScale.domain([44.5, 51.5]) only leaves a 0.5° buffer
+    below the southernmost data row (45°N), which is not enough room for a 68px staff
+    plus barb/pennant geometry when the local wind vector points toward the bottom
+    edge. Fix: widen the y-domain padding at the bottom (e.g. to ~1.0–1.2°) or shrink
+    MAP_SIZES for edge rows so barbs stay clear of the axis line and tick labels.'
+  - Several other bottom-row barbs (e.g. near 16°E, 17°E) also cross through the x-axis
+    domain line into the margin before the deeper 18°E collision — a systematic containment
+    issue at the south edge of the plot rather than an isolated one-off.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled exactly #FAF8F1 — not pure white, not dark.
+      Chrome: Title "windbarb-basic · javascript · d3 · anyplot.ai" (bold, dark ink) and subtitle "Surface wind observations around a low-pressure system" are both crisp and centered at the top. "Longitude"/"Latitude" axis titles and °E/°N tick labels render in soft dark gray, fully legible. A boxed "Wind speed key" legend sits at the right with a calm circle, half barb, full barb, and pennant glyph, each with a label.
+      Data: A 9×7 grid of green (#009E73) wind barb glyphs forms a clear cyclonic (counter-clockwise) swirl around a low near (14°E, 48°N), including an open calm circle exactly at the vortex center and pennants (50 kt) at the outer, highest-speed ring. Station dots, staffs, and barbs are all the same single Imprint green.
+      Legibility verdict: PASS overall, with one localized exception — the bottom-right station's pennant glyph crosses the x-axis line and visually overlaps the "18°E" tick label (sits on top of the leading digit). All other text (title, subtitle, axis titles, remaining tick labels, legend) is cleanly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled exactly #1A1A17 — not pure black, not light.
+      Chrome: Title, subtitle, axis titles, and tick labels all flip to light ink and remain fully readable against the dark background — no dark-on-dark failures observed. The legend box uses a slightly lighter dark panel with a visible border, keeping its white heading and gray entry labels legible.
+      Data: Identical green (#009E73) barb geometry and layout to the light render — same vortex pattern, same calm-eye circle, same pennants at the outer ring. Confirmed pixel-identical to the light render's data color.
+      Legibility verdict: PASS overall, with the same single exception as the light render — the bottom-right (18°E) pennant crosses the axis line and overlaps the tick label digit. No theme-specific readability regression versus the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, subtitle, axis titles, most tick labels, and legend text are
+          all readable in both themes; the '18°E' tick label is partly obscured by
+          an overlapping pennant glyph.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Bottom-row barb glyphs (16°E, 17°E, 18°E) cross the x-axis domain
+          line; the 18°E pennant directly overlaps its own tick label digit.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 63 barbs at a sensible size/stroke-width for the density; staffs,
+          barbs, pennants, and the calm circle are all clearly distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue monochrome glyphs on high-contrast warm backgrounds in
+          both themes; no red-green reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 exact); title/legend proportions are
+          good, but the y-domain padding at the bottom is too tight, letting glyphs
+          bleed past the axis boundary.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude axis titles with °E/°N units; title matches required
+          format exactly.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Sampled pixels confirm #009E73 data color and #FAF8F1/#1A1A17 backgrounds
+          exactly, identical data color across themes.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean single-color glyph system and boxed legend read as polished,
+          but the axis-boundary bleed slightly undercuts the overall finish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No gridlines/top-right spines, generous whitespace, restrained typography
+          hierarchy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: The Rankine-vortex swirl with a calm eye gives the chart a clear,
+          physically legible focal point.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct wind barb plot with standard meteorological glyphs.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Calm circle, half barb, full barb, pennant, staff-points-from-direction
+          convention, and left-side barb placement are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y map to longitude/latitude; u/v map to barb direction and speed;
+          axes cover the full data extent.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'windbarb-basic · javascript · d3 · anyplot.ai';
+          legend labels match the knot thresholds used in the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All speed categories (calm through pennant) appear across the 63-station
+          grid, within the spec's 20-200 recommended range.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Rankine combined vortex around a synthetic low-pressure system is
+          physically plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds (0-55 kt) and coordinate ranges are realistic for a synoptic
+          surface observation network.
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: drawBarb/barbTip helpers are justified by the reused glyph logic
+          (map + legend), not gratuitous abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used; no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: The y-domain padding bug that lets barbs cross the axis boundary
+          is a real containment defect in the layout math.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Builds the svg from window.ANYPLOT_SIZE into #container, no animation,
+          current D3 v7 API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of d3.scaleLinear/axisBottom/axisLeft and token-driven
+          theming; hand-rolled loops instead of a .data().join() pattern for the glyphs
+          is a minor departure.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Builds a fully custom, trigonometry-driven glyph system (staff +
+          barbs + pennants) reused across map and legend — a genuinely distinctive
+          use of low-level D3 primitives.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

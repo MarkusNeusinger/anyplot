@@ -1,0 +1,251 @@
+library: highcharts
+language: javascript
+specification_id: voronoi-basic
+created: '2026-09-02T10:34:59Z'
+updated: '2026-09-02T10:49:27Z'
+generated_by: claude-sonnet
+workflow_run: 33619499016
+issue: 3415
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Custom Voronoi diagram built from scratch via half-plane intersection + Sutherland-Hodgman
+    polygon clipping, correctly avoiding the forbidden highcharts-more/modules add-ons
+    that aren't vendored
+  - Adjacency-aware greedy graph coloring ensures no two neighboring cells share a
+    color, meaningfully improving cell distinguishability beyond a flat index-mod-palette
+    cycle
+  - Data colors (cell fills, seed markers) are pixel-identical between light and dark
+    renders; only chrome (background, text, strokes) adapts to theme
+  - Seed points are inset from the bounding-box edges (SITE_MARGIN) so data labels
+    never collide with the plot border, and pageBg-colored cell strokes give crisp
+    separation between regions
+  - Descriptive, unit-bearing axis titles ('Distance east/north (km)') and correctly
+    formatted spec title
+  weaknesses:
+  - The 'Riverside' data label overlaps the neighboring 'Maple Grove' seed marker
+    in both themes (the 'R' glyph is partially covered by the marker's white stroke)
+    because the two sites sit close together and the fixed y:-14 label offset isn't
+    enough to clear a nearby marker — add pairwise-distance-aware label placement
+    (flip offset direction, or set dataLabels.allowOverlap:false with collision avoidance)
+    for closely spaced sites
+  - The central cluster (Maple Grove/Riverside/Cedar Park/Northgate/Meadowbrook/Summit/Hillcrest)
+    is dense with 7 of the 16 sites in a small area; still readable but has little
+    margin — consider a slightly smaller marker radius or label font in dense regions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, measured RGB (250,248,241) = #FAF8F1 exactly, matches spec.
+      Chrome: title "voronoi-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible; axis titles "Distance east (km)" / "Distance north (km)" and tick labels in soft dark gray, all fully legible against the light background; grid lines disabled (gridLineWidth:0), which is fine since cell boundaries already provide structure.
+      Data: 16 Voronoi cells fill the plot in pastel tints drawn from the Imprint palette at 0.4 opacity, separated by warm-off-white (#FAF8F1) strokes; 16 dark (ink-colored) seed markers with white outlines mark store locations, each labeled with its store name. Adjacent cells never share the same hue (confirmed via the code's greedy graph-coloring pass).
+      Legibility verdict: PASS, with one localized exception — the "Riverside" data label partially overlaps the "Maple Grove" marker (see weaknesses).
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, measured RGB (26,26,23) = #1A1A17 exactly, matches spec.
+      Chrome: title, axis titles, and tick labels render in light cream text, clearly legible against the dark background — no dark-on-dark failures observed. Cell strokes flip to the dark pageBg color, keeping separation crisp.
+      Data: identical cell colors and identical seed-marker positions/labels as the light render — only the chrome (background, text, strokes) adapted; the underlying data hues (teal-green, blue-gray, purple, tan/brown) are unchanged between themes, confirming palette compliance.
+      Legibility verdict: PASS, same isolated "Riverside"/"Maple Grove" marker overlap as in the light render (consistent, not theme-specific).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 22px, axis titles 16px, ticks 14px, data
+          labels 13px); readable in both themes with no dark-on-dark or light-on-light
+          failures
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: '''Riverside'' data label partially overlaps the ''Maple Grove''
+          seed marker in both renders (confirmed via pixel crop); otherwise clean'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers (radius 9, white stroke) clearly visible on all cell colors;
+          central cluster of 7 sites is dense but still distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Adjacency-aware graph coloring avoids same-hue neighboring cells;
+          no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400 exact); title ~65% width; nothing clipped
+          or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Distance east (km)'' / ''Distance north (km)'' are descriptive
+          with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Cell fills drawn from Imprint palette; backgrounds measured exactly
+          #FAF8F1 / #1A1A17; data colors identical between themes'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom half-plane-intersection Voronoi + Sutherland-Hodgman clipping
+          written from scratch since core Highcharts has no polygon/voronoi series;
+          well beyond default styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid disabled, generous margin via SITE_MARGIN inset, clean pageBg-colored
+          cell strokes
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Dark seed markers pop against pastel cells; graph coloring itself
+          aids at-a-glance region distinction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Voronoi diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cells clipped to bbox, visually distinguishable, seed points marked,
+          palette differentiates adjacent regions
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped over full 0-100 bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed given per-site labels
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 16 seed points within spec's 10-50 range, all cells rendered with
+          labels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Retail store service-area scenario, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-100 km grid is a sensible city-scale distance range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small functions used, but justified by genuine algorithmic
+          need (polygon clipping, adjacency detection) absent from Highcharts core
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses global Highcharts only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear comments explaining why a custom polygon approach was needed;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled on chart and series
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly falls back to renderer.path for polygons since core Highcharts
+          has no voronoi/polygon series, as the library rules document anticipates
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom SVG renderer group, adjacency-aware graph coloring, interactive
+          tooltip/dataLabels
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
