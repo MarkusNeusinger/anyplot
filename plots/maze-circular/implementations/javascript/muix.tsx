@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 84/100 | Created: 2026-09-02
 //# anyplot-orientation: square
-// anyplot.ai
-// maze-circular: Circular Maze Puzzle
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -43,6 +38,18 @@ const RINGS = 7;
 const SECTORS = 12;
 const ENTRY_SECTOR = 0;
 
+// Spec's difficulty parameter — "7 rings with medium difficulty" is the
+// spec's own example, so that's the tier demonstrated here. Difficulty biases
+// how the spanning tree grows: a high CONTINUE_BIAS keeps extending the most
+// recently carved passage (long, winding corridors with few branch points —
+// harder to trace by eye), while a low bias favors a uniformly random
+// frontier pick (many short branches, more decision points — easier). The
+// carve is still a spanning tree either way, so "exactly one solution" always
+// holds; only the corridor character (the spec's "passage density" feel)
+// changes with difficulty.
+const DIFFICULTY = "medium";
+const CONTINUE_BIAS = { easy: 0.15, medium: 0.55, hard: 0.85 }[DIFFICULTY];
+
 const adjacency = new Map();
 function addEdge(a, b) {
   const key = a < b ? `${a}|${b}` : `${b}|${a}`;
@@ -60,22 +67,25 @@ for (let r = 1; r < RINGS; r++) {
   for (let s = 0; s < SECTORS; s++) addEdge(`${r}-${s}`, `${r + 1}-${s}`);
 }
 
-// Randomized Prim's algorithm carves a spanning tree over the cell graph.
-// A spanning tree has no cycles, so there is exactly one path between the
-// hub and any cell — including the entry — which is what "exactly one
-// solvable path" requires.
+// Randomized Prim's algorithm, biased by difficulty, carves a spanning tree
+// over the cell graph. A spanning tree has no cycles, so there is exactly one
+// path between the hub and any cell — including the entry — which is what
+// "exactly one solvable path" requires, regardless of the bias.
 const passageKeys = new Set();
 const visited = new Set(["hub"]);
-let frontier = adjacency.get("hub").slice();
+let frontier = adjacency.get("hub").map((edge) => ({ ...edge, from: "hub" }));
+let lastAdded = "hub";
 while (frontier.length > 0) {
-  const idx = Math.floor(rand() * frontier.length);
-  const edge = frontier[idx];
-  frontier.splice(idx, 1);
+  const continuing = rand() < CONTINUE_BIAS ? frontier.filter((edge) => edge.from === lastAdded) : [];
+  const pool = continuing.length > 0 ? continuing : frontier;
+  const edge = pool[Math.floor(rand() * pool.length)];
+  frontier.splice(frontier.indexOf(edge), 1);
   if (visited.has(edge.to)) continue;
   visited.add(edge.to);
+  lastAdded = edge.to;
   passageKeys.add(edge.key);
   adjacency.get(edge.to).forEach((next) => {
-    if (!visited.has(next.to)) frontier.push(next);
+    if (!visited.has(next.to)) frontier.push({ ...next, from: edge.to });
   });
 }
 
@@ -153,7 +163,17 @@ function MazeMark() {
 
   return (
     <g>
-      <rect x={left} y={top} width={width} height={height} fill={PAPER} stroke={INK} strokeWidth={2} />
+      <rect
+        x={left}
+        y={top}
+        width={width}
+        height={height}
+        rx={20}
+        ry={20}
+        fill={PAPER}
+        stroke={INK}
+        strokeWidth={1.5}
+      />
       {walls.map((d, i) => (
         <path key={i} d={d} fill="none" stroke={INK} strokeWidth={3.5} strokeLinecap="round" />
       ))}
@@ -162,6 +182,9 @@ function MazeMark() {
         START
       </text>
       <circle cx={cx} cy={cy} r={scale * HUB_R * 0.6} fill={GOAL_GREEN} stroke={PAPER} strokeWidth={2} />
+      <text x={left + 16} y={top + height - 16} fontSize={14} fill={INK} fillOpacity={0.65} textAnchor="start">
+        {RINGS} rings · {DIFFICULTY} difficulty
+      </text>
     </g>
   );
 }
