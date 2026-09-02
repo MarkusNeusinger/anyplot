@@ -1,8 +1,7 @@
 // anyplot.ai
 // map-marker-clustered: Clustered Marker Map
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
+// Quality: 80/100 | Created: 2026-09-02
 
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
