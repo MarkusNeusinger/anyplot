@@ -52,12 +52,21 @@ const calibrationPoints = [];
 const bubbleSizes = [];
 const histCounts = [];
 const binLabels = [];
+let worstGapIndex = -1;
+let worstGap = 0;
 for (let b = 0; b < binCount; b++) {
   binLabels.push((b / binCount).toFixed(1));
   histCounts.push(binN[b]);
   if (binN[b] > 0) {
-    calibrationPoints.push([binSumProb[b] / binN[b], binSumPos[b] / binN[b]]);
+    const meanPred = binSumProb[b] / binN[b];
+    const fracPos = binSumPos[b] / binN[b];
+    calibrationPoints.push([meanPred, fracPos]);
     bubbleSizes.push(Math.round(8 + 22 * Math.sqrt(binN[b] / sampleCount)));
+    const gap = fracPos - meanPred;
+    if (Math.abs(gap) > Math.abs(worstGap)) {
+      worstGap = gap;
+      worstGapIndex = calibrationPoints.length - 1;
+    }
   }
 }
 
@@ -151,7 +160,7 @@ chart.setOption({
       name: "Count",
       nameLocation: "middle",
       nameGap: 45,
-      nameTextStyle: { color: t.inkSoft, fontSize: 13 },
+      nameTextStyle: { color: t.ink, fontSize: 14 },
       axisLabel: { color: t.inkSoft, fontSize: 12 },
       axisLine: { show: false },
       axisTick: { show: false },
@@ -182,6 +191,21 @@ chart.setOption({
       symbolSize: (val, params) => bubbleSizes[params.dataIndex],
       lineStyle: { color: t.palette[0], width: 3 },
       itemStyle: { color: t.palette[0], borderColor: t.pageBg, borderWidth: 1.5 },
+      markPoint: {
+        symbol: "pin",
+        symbolSize: 46,
+        itemStyle: { color: t.amber },
+        label: {
+          color: t.pageBg,
+          fontSize: 11,
+          fontWeight: 600,
+          formatter: () => (worstGap >= 0 ? "+" : "") + worstGap.toFixed(2),
+        },
+        data:
+          worstGapIndex >= 0
+            ? [{ name: "Largest gap", coord: calibrationPoints[worstGapIndex], value: worstGap }]
+            : [],
+      },
       z: 2,
     },
     {
