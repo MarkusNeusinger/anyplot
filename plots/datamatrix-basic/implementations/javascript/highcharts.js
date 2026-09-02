@@ -37,7 +37,9 @@ const TITLE = "datamatrix-basic · javascript · highcharts · anyplot.ai";
 
 // Module colors: dark ink on cream (light) / near-white on near-black (dark)
 const MODULE_COLOR = t.ink;
-const DM_BG = t.pageBg;
+// Elevated (not page) background so the quiet zone reads as a distinct
+// region against the page in both themes, not just in light mode.
+const DM_BG = t.elevatedBg;
 
 // Chart — square, transparent background, no axes
 const chart = Highcharts.chart("container", {
