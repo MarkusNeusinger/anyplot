@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: chernoff-basic
+created: '2026-09-02T14:56:41Z'
+updated: '2026-09-02T15:01:19Z'
+generated_by: claude-sonnet
+workflow_run: 33644504015
+issue: 3003
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
+review:
+  strengths:
+  - Fully custom Chernoff-face geometry (outline, eyes, pupils, eyebrows, nose, mouth)
+    is built natively in ggplot2 via geom_polygon/geom_segment/geom_path/geom_point
+    — no external Chernoff-face package, genuinely idiomatic grammar-of-graphics composition
+    for a glyph plot ggplot2 has no built-in geom for.
+  - All seven recommended facial-feature mappings from the spec are implemented (face
+    width, eye size, eye spacing, eyebrow slant, nose length, mouth curvature, mouth
+    width), each driven by a distinct mtcars performance variable (mpg, qsec, hp,
+    wt, disp, drat, carb).
+  - 'Colorization by group membership (per the spec''s ''consider colorizing faces
+    by group'' note) uses the cylinder count with the correct Imprint palette order
+    — first series (4 cyl) is brand green #009E73.'
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    borders, text) flips correctly per theme.
+  - facet_wrap grid layout with a wrapped two-line labeller (label_wrap_gen) cleanly
+    avoids any label collisions across all 15 faces, including long names like 'Cadillac
+    Fleetwood'.
+  - Dynamic title-fontsize formula (round(12 * min(1, 67 / nchar(title_text)))) sensibly
+    compresses the long mandated title instead of letting it overflow.
+  weaknesses:
+  - Noticeable empty margin below the legend (~13% of canvas height) is unbalanced
+    relative to the ~9% top margin — tighten plot.margin bottom or grow panel.spacing/face
+    size slightly to fill the square canvas more evenly.
+  - Per-face geometry is built with a for-loop over row indices appending into pre-allocated
+    lists rather than a vectorized/tidy approach (e.g. purrr::pmap_dfr) — functional
+    and correct, but not the leanest KISS structure.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Car Performance Profiles · chernoff-basic · r · ggplot2 · anyplot.ai" in dark ink at top, clearly readable. 15 car-name labels above each face (some wrapped to two lines, e.g. "Hornet Sportabout", "Cadillac Fleetwood") in a slightly softer dark gray — all legible against the light background. A "Cylinders" legend at the bottom with three colored square swatches and text labels ("4 cyl", "6 cyl", "8 cyl") is fully readable.
+      Data: 15 Chernoff faces arranged in a 5-column x 3-row facet grid, each face colored by cylinder-count group — green (#009E73, first series) for 4-cyl cars, lavender/purple for 6-cyl, blue for 8-cyl. Each face has an outline, two eyes with pupils, eyebrows at varying slants, a nose stroke, and a mouth curve that varies from frowning to smiling based on mapped car metrics.
+      Legibility verdict: PASS — all title, label, and legend text is clearly readable against the light surface with no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title now rendered in light ink, fully readable. Car-name labels are light gray, legible against the dark background. Legend text and "Cylinders" label are light-colored and clearly visible. Face outlines and eye borders flip to light strokes so features remain distinguishable against the dark canvas.
+      Data: Face fill colors are identical to the light render — same green, lavender, and blue for the three cylinder groups — confirming only chrome (not data color) changed between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and facial-feature strokes remain clearly visible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, car-name labels, and legend all read clearly in both themes
+          with no dark-on-dark or light-on-light issues.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Two-line wrapped labels (label_wrap_gen) prevent any collision across
+          the 15-face grid.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Facial features (eyes, brows, nose, mouth) sized appropriately for
+          15 faces at this canvas size.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three distinguishable hues (green/lavender/blue), not red-green as
+          sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas gate passed at 2400x2400; noticeable empty margin below the
+          legend (~13%) vs ~9% top margin is a mild imbalance.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''Car Performance Profiles · chernoff-basic
+          · r · ggplot2 · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73 (4 cyl); backgrounds correct
+          for both themes.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Fully custom Chernoff-face rendering built from primitive geoms —
+          a substantial, polished piece of engineering rare among ggplot2 implementations.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all chrome, generous panel.spacing between faces;
+          slight deduction for bottom-margin imbalance.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Faces visibly differ in expression (frowning 8-cyl muscle cars vs
+          smiling economical 4-cyl cars) and are color-grouped, guiding cross-observation
+          comparison.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implements Chernoff faces natively in ggplot2.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 7 spec-recommended facial-feature mappings implemented, plus
+          group colorization and grid layout.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Each variable rescaled onto its own sensible facial-feature range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches spec; legend labels ('4 cyl'/'6 cyl'/'8 cyl')
+          match the data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 7 distinct mtcars metrics mapped across all facial features.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral, well-known mtcars dataset with real car model names.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Rescale ranges per feature are sensible and produce visually distinct
+          faces.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions plus a for-loop build per-face geometry
+          — justified by the task's complexity but not the leanest structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: dplyr, tibble, scales, ragg all actually used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality; complexity matches the task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics composition (geom_polygon/segment/path/point
+          layered) — the idiomatic way to build a custom glyph plot in ggplot2.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: facet_wrap with a custom label_wrap_gen labeller is a distinctive
+          ggplot2 feature, well applied.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - layer-composition
+  patterns:
+  - iteration-over-groups
+  - dataset-loading
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
