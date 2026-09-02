@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 89/100 | Created: 2026-09-02
 
+import * as React from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { LinePlot } from "@mui/x-charts/LineChart";
 import { ScatterPlot } from "@mui/x-charts/ScatterChart";
@@ -12,6 +13,7 @@ import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { ChartsTooltip } from "@mui/x-charts/ChartsTooltip";
+import { useDrawingArea, useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -92,6 +94,112 @@ const STRESS_TICKS = [400, 500, 600, 700, 800];
 
 const TITLE = "sn-curve-basic · javascript · muix · anyplot.ai";
 
+// --- Fatigue life regions, called out in the spec notes: low-cycle (plastic),
+// high-cycle (elastic), and infinite-life (below the endurance limit) ---------
+const LOW_HIGH_BOUNDARY = 1e4; // conventional low-cycle / high-cycle divide
+const REGIONS = [
+  { label: "LOW-CYCLE FATIGUE", xMin: X_MIN, xMax: LOW_HIGH_BOUNDARY },
+  { label: "HIGH-CYCLE FATIGUE", xMin: LOW_HIGH_BOUNDARY, xMax: N_KNEE },
+  { label: "INFINITE LIFE", xMin: N_KNEE, xMax: X_MAX },
+];
+
+// Translucent band below the endurance limit — the "safe for infinite life"
+// stress range — plus a thicker, amber-colored endurance-limit stroke so it
+// stays visually distinct from the purple fit line where the two coincide.
+function SafeZoneBand() {
+  const { left, top, width, height } = useDrawingArea();
+  const yScale = useYScale("stress") as ((v: number) => number) | undefined;
+  if (!yScale) return null;
+  const yTop = yScale(ENDURANCE_LIMIT);
+  const yBottom = top + height;
+  return (
+    <g>
+      <rect
+        x={left}
+        y={yTop}
+        width={width}
+        height={Math.max(yBottom - yTop, 1)}
+        fill={t.palette[0]}
+        opacity={0.07}
+      />
+      <text
+        x={left + width - 10}
+        y={yTop + (yBottom - yTop) / 2}
+        textAnchor="end"
+        dominantBaseline="middle"
+        fontSize={11}
+        fontStyle="italic"
+        fill={t.inkSoft}
+        opacity={0.75}
+      >
+        Safe zone — infinite life below endurance limit
+      </text>
+    </g>
+  );
+}
+
+// Region labels + boundary ticks placed under the x-axis, calling out the
+// three fatigue regions described in the spec (low-cycle / high-cycle /
+// infinite-life) so the story reads without parsing the reference-line labels.
+function FatigueRegionLabels() {
+  const { left, top, width, height } = useDrawingArea();
+  const xScale = useXScale("cycles") as ((v: number) => number) | undefined;
+  if (!xScale) return null;
+  const lineY = top + height + 62;
+  const textY = lineY + 15;
+  return (
+    <g>
+      {REGIONS.map((r) => {
+        const x0 = xScale(Math.max(r.xMin, X_MIN));
+        const x1 = xScale(Math.min(r.xMax, X_MAX));
+        const xMid = (x0 + x1) / 2;
+        return (
+          <React.Fragment key={r.label}>
+            <line
+              x1={x0 + 4}
+              y1={lineY}
+              x2={x1 - 4}
+              y2={lineY}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+              opacity={0.35}
+            />
+            <line
+              x1={x0 + 4}
+              y1={lineY - 4}
+              x2={x0 + 4}
+              y2={lineY + 4}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+              opacity={0.35}
+            />
+            <line
+              x1={x1 - 4}
+              y1={lineY - 4}
+              x2={x1 - 4}
+              y2={lineY + 4}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+              opacity={0.35}
+            />
+            <text
+              x={xMid}
+              y={textY}
+              textAnchor="middle"
+              fontSize={11}
+              letterSpacing={0.6}
+              fill={t.inkSoft}
+              opacity={0.85}
+            >
+              {r.label}
+            </text>
+          </React.Fragment>
+        );
+      })}
+    </g>
+  );
+}
+
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
   const TITLE_H = 56;
@@ -122,7 +230,7 @@ export default function Chart() {
       <ChartContainer
         width={width}
         height={chartH}
-        margin={{ top: 28, right: 48, bottom: 84, left: 108 }}
+        margin={{ top: 28, right: 48, bottom: 132, left: 108 }}
         sx={{
           ".MuiLineElement-series-fit": { strokeWidth: 3.5 },
           "& circle": { stroke: t.pageBg, strokeWidth: 2 },
@@ -178,6 +286,7 @@ export default function Chart() {
         ]}
       >
         <ChartsGrid horizontal />
+        <SafeZoneBand />
         <LinePlot skipAnimation />
         <ScatterPlot skipAnimation />
         <ChartsReferenceLine
@@ -187,10 +296,10 @@ export default function Chart() {
           labelAlign="start"
           labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
           lineStyle={{
-            stroke: t.ink,
+            stroke: t.amber,
             strokeDasharray: "2 4",
             strokeWidth: 1.5,
-            opacity: 0.6,
+            opacity: 0.85,
           }}
         />
         <ChartsReferenceLine
@@ -200,10 +309,10 @@ export default function Chart() {
           labelAlign="start"
           labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
           lineStyle={{
-            stroke: t.ink,
+            stroke: t.amber,
             strokeDasharray: "6 4",
             strokeWidth: 1.5,
-            opacity: 0.6,
+            opacity: 0.85,
           }}
         />
         <ChartsReferenceLine
@@ -213,10 +322,10 @@ export default function Chart() {
           labelAlign="start"
           labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
           lineStyle={{
-            stroke: t.ink,
-            strokeDasharray: "10 4",
-            strokeWidth: 1.5,
-            opacity: 0.6,
+            stroke: t.amber,
+            strokeDasharray: "3 5",
+            strokeWidth: 5,
+            opacity: 0.85,
           }}
         />
         <ChartsXAxis axisId="cycles" />
@@ -234,6 +343,7 @@ export default function Chart() {
           }}
         />
         <ChartsTooltip trigger="item" />
+        <FatigueRegionLabels />
       </ChartContainer>
     </Box>
   );
