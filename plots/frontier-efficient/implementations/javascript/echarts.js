@@ -188,8 +188,8 @@ chart.setOption({
       name: "Random Portfolios",
       type: "scatter",
       data: randomPortfolios,
-      symbolSize: 9,
-      itemStyle: { opacity: 0.55 },
+      symbolSize: 7,
+      itemStyle: { opacity: 0.45 },
     },
     {
       name: "Efficient Frontier",
@@ -198,6 +198,7 @@ chart.setOption({
       showSymbol: false,
       smooth: true,
       lineStyle: { color: t.ink, width: 4 },
+      itemStyle: { color: t.ink },
       z: 3,
     },
     {
@@ -205,7 +206,8 @@ chart.setOption({
       type: "line",
       data: capitalMarketLine,
       showSymbol: false,
-      lineStyle: { color: t.amber, width: 2.5, type: "dashed" },
+      lineStyle: { color: t.ink, width: 2.5, type: "dashed" },
+      itemStyle: { color: t.ink },
       z: 2,
     },
     {
