@@ -48,18 +48,24 @@ const clusters = [
   { a: 0.12, b: 0.55, c: 0.33, n: 250, sigma: 0.045 }, // silty clay loam
   { a: 0.2, b: 0.15, c: 0.65, n: 150, sigma: 0.05 }, // clay-rich
 ];
-const samples = [];
-clusters.forEach((cl) => {
+const samplesByCluster = clusters.map((cl) => {
   const [cx, cy] = baryToCart(cl.a, cl.b, cl.c);
+  const pts = [];
   for (let i = 0; i < cl.n; i++) {
     const x = cx + gaussian() * cl.sigma;
     const y = cy + gaussian() * cl.sigma;
     const [a, b, c] = clipToSimplex(...cartToBary(x, y));
-    samples.push(baryToCart(a, b, c));
+    pts.push(baryToCart(a, b, c));
   }
+  return pts;
 });
 
 // --- Kernel density estimate on a fine grid, clipped to the triangle -------
+// Density is estimated per cluster and each field is normalized to its own
+// peak before combining (max across clusters), so all three modes read with
+// comparable visual weight regardless of their sample count — the plot's
+// purpose is revealing every mode, not weighting shade by how many points
+// happened to be drawn from it.
 const nx = 68;
 const dx = 1 / nx;
 const dy = dx;
@@ -67,24 +73,38 @@ const ny = Math.ceil(H / dy);
 const bandwidth = 0.05;
 const twoH2 = 2 * bandwidth * bandwidth;
 const cells = [];
-let maxDensity = 0;
+const clusterPeaks = samplesByCluster.map(() => 0);
+const cellRows = [];
 for (let iy = 0; iy < ny; iy++) {
   const cy = (iy + 0.5) * dy;
   for (let ix = 0; ix < nx; ix++) {
     const cx = (ix + 0.5) * dx;
     const [a, b, c] = cartToBary(cx, cy);
     if (a < -1e-6 || b < -1e-6 || c < -1e-6) continue;
-    let density = 0;
-    for (let k = 0; k < samples.length; k++) {
-      const ddx = cx - samples[k][0];
-      const ddy = cy - samples[k][1];
-      density += Math.exp(-(ddx * ddx + ddy * ddy) / twoH2);
-    }
-    density /= samples.length;
-    if (density > maxDensity) maxDensity = density;
-    cells.push([cx, cy, density]);
+    const clusterDensities = samplesByCluster.map((pts, ci) => {
+      let density = 0;
+      for (let k = 0; k < pts.length; k++) {
+        const ddx = cx - pts[k][0];
+        const ddy = cy - pts[k][1];
+        density += Math.exp(-(ddx * ddx + ddy * ddy) / twoH2);
+      }
+      density /= pts.length;
+      if (density > clusterPeaks[ci]) clusterPeaks[ci] = density;
+      return density;
+    });
+    cellRows.push([cx, cy, clusterDensities]);
   }
 }
+let maxDensity = 0;
+cellRows.forEach(([cx, cy, clusterDensities]) => {
+  let density = 0;
+  clusterDensities.forEach((d, ci) => {
+    const norm = d / clusterPeaks[ci];
+    if (norm > density) density = norm;
+  });
+  if (density > maxDensity) maxDensity = density;
+  cells.push([cx, cy, density]);
+});
 
 // --- Ternary grid lines (20% intervals), drawn beneath the density layer ---
 const gridFractions = [0.2, 0.4, 0.6, 0.8];
