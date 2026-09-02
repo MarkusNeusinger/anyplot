@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: flowmap-origin-destination
 created: '2026-09-02T00:46:35Z'
-updated: '2026-09-02T00:52:43Z'
+updated: '2026-09-02T01:01:30Z'
 generated_by: claude-sonnet
 workflow_run: 33575835663
 issue: 3765
@@ -12,69 +12,64 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/d3/plot-dark.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Direction is encoded twice — a per-arc SVG linear gradient (brand green origin
-    fading to blue destination) plus an arrowhead — while magnitude is encoded independently
-    via stroke width and opacity, so direction and volume never fight for the same
-    visual channel.
+  - 'The arrowhead-ballooning defect flagged in attempt 1 is fully fixed: markerUnits
+    is now userSpaceOnUse with a fixed 8x8 px size independent of arcWidth(d.flow),
+    so even the thickest arcs (Mexico City to Washington D.C. at flow=480) terminate
+    in a small, consistent arrowhead instead of a wedge covering the destination city
+    circle.'
+  - Direction is encoded twice (per-arc SVG linear gradient from brand green origin
+    to blue destination, plus the now-correctly-sized arrowhead) while magnitude is
+    encoded independently via stroke width and opacity, so direction and volume never
+    compete for the same visual channel.
   - Washington, D.C. reads immediately as a hub thanks to multiple thick converging
-    arcs, and asymmetric pairs (São Paulo↔Buenos Aires, Delhi↔Dhaka) clearly show
-    directional imbalance — the plot delivers on the spec's core promise of revealing
-    corridors and imbalances.
+    arcs, and asymmetric pairs (Sao Paulo <-> Buenos Aires, Delhi <-> Dhaka) clearly
+    show directional imbalance.
   - Real hover interactivity (mouseenter/mousemove/mouseleave with a genuine tooltip
-    div showing city names and flow value) — not a static-library fake, appropriately
-    leverages the interactive-library allowance.
-  - City markers sized by total connected volume via a sqrt scale, with a greedy getBBox()-based
-    label-collision pass that nudges only the top-8 city labels down when they'd overlap
-    — a genuinely D3-specific technique.
+    div showing city names and flow value) on both arcs and city markers, not a static-library
+    fake.
+  - City markers sized by total connected volume via a sqrt scale (now tightened to
+    a 6-12 px range), with a greedy getBBox()-based label-collision pass that nudges
+    only the top-8 city labels down when they would overlap.
   - 'First categorical series is #009E73, gradient stops and node fill are identical
     between light/dark renders, and both plot backgrounds/chrome match the theme tokens
-    correctly — full Imprint palette compliance.'
-  - Deterministic, hardcoded, in-memory data (no network fetch, no RNG) with a plausible
+    correctly.'
+  - Deterministic, hardcoded, in-memory data (no network fetch, no RNG) with a plausible,
     non-controversial migration/travel scenario.
   weaknesses:
-  - 'Oversized arrowhead markers on high-flow arcs: the <marker> uses the SVG default
-    markerUnits="strokeWidth", so markerWidth=6/markerHeight=6 scales with each arc''s
-    own stroke-width. On the thickest arcs (Mexico City→Washington flow=480, Washington→London
-    flow=210, Toronto→Washington flow=150, stroke-width near the 6px max) the arrowhead
-    balloons into a large solid blue wedge that partly covers the destination city
-    circle (visible at Washington, D.C., London, Berlin, and the Delhi/Dhaka pair
-    in both renders). Fix: set marker markerUnits="userSpaceOnUse" with a small fixed
-    pixel size (e.g. 8-10px) independent of arcWidth(d.flow), or clamp the marker''s
-    own scale so it doesn''t grow past ~2x the thinnest-line reference.'
-  - City node circles overlap at several close-together pairs — most visibly London/Paris
-    and Washington, D.C./Toronto — where the sqrt radius scale (7-17px) plus real-world
-    geographic proximity makes one marker partially cover the other. Reduce the max
-    node radius, or add a thin contrasting stroke / slight offset so overlapping markers
-    stay individually legible.
-  - The five hand-authored landmass polygons are very coarse (blocky, low-vertex-count
-    blobs) and read more as an abstract backdrop than recognizable continents (e.g.
-    the Eurasia+Africa shapes visually fuse into one undifferentiated grey mass).
-    This is an understandable compromise given the no-network-fetch constraint, but
-    a few more control points per ring (or lower fill-opacity, currently 0.22) would
-    make the geographic context read more clearly without adding real-world coastline
-    data.
-  - 'Design Excellence is capped by the above: the arrow/marker glitch and the node
-    overlaps are the kind of ''every detail polished'' misses that keep this from
-    publication-ready polish despite the strong overall concept (gradient legend,
-    hub storytelling, sizing).'
+  - 'City node circles still overlap at the closest geographic pairs even after the
+    max node radius was reduced from 7-17px to 6-12px: London/Paris and Washington,
+    D.C./Toronto circles still touch and partially overlap in both renders. The existing
+    pageBg-colored stroke keeps each circle individually distinguishable, but a small
+    positional nudge (or drawing overlapping nodes back-to-front by radius) would
+    fully resolve it.'
+  - The five hand-authored landmass polygons remain very coarse (blocky, low-vertex-count
+    blobs) and read more as an abstract grey backdrop than recognizable continents;
+    the Eurasia+Africa shapes still visually fuse into one undifferentiated mass.
+    A few more control points per ring would make the geographic context read more
+    clearly without needing real coastline data.
+  - Only the top 8 by connected volume are labeled, so 10 of 18 cities (e.g. Toronto,
+    Sao Paulo, Buenos Aires, Lagos, Nairobi, Jakarta, Manila, Sydney) are visible
+    only as unlabeled dots in the static PNG - a reasonable clarity tradeoff, but
+    worth a footnote or smaller-caption acknowledgment since the spec lists origin_name/dest_name
+    as available fields.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches the Imprint light surface — not pure white.
-      Chrome: Title "flowmap-origin-destination · javascript · d3 · anyplot.ai" (bold, dark ink) and subtitle "Population movement between major world cities (thousands per year)" both render crisply centered at top; a light graticule grid (20° lon/lat) sits under five coarse grey landmass silhouettes; city name labels (dark ink) are placed below their markers for the 8 top-volume cities; a right-side legend panel ("Direction" gradient bar, "Flow volume" width key, "City, sized by..." key) is fully visible and clearly attached to the plot. All text is readable against the light background.
-      Data: 18 green (#009E73) city circles sized by total connected volume, connected by 26 curved (quadratic-Bezier) arcs whose stroke fades from brand green (origin) to blue (#4467A3, destination) and whose width/opacity scale with flow magnitude. Washington, D.C. is visibly the busiest hub (multiple thick converging arcs). A clear defect: on the thickest arcs (into Washington, D.C., London, Berlin, and one of the Delhi/Dhaka arcs) the blue arrowhead marker balloons far larger than the arc it terminates, forming a chunky wedge that partially overlaps the destination city circle. London/Paris and Washington/Toronto node circles also overlap each other due to real-world geographic proximity at this scale.
-      Legibility verdict: PASS (all text legible; the arrowhead/overlap issue is a visual-polish defect, not a legibility failure).
+      Background: Warm off-white (#FAF8F1), matches the Imprint light surface -- not pure white, not dark.
+      Chrome: Title "flowmap-origin-destination · javascript · d3 · anyplot.ai" (bold, dark ink) and subtitle "Population movement between major world cities (thousands per year)" render crisply centered at top; a subtle 20-degree graticule grid sits under five coarse grey landmass silhouettes; dark-ink city name labels are placed below their markers for the 8 top-volume cities; a fully visible right-side legend ("Direction" gradient bar, "Flow volume" width key, "City, sized by..." key) sits attached to the plot. All text is clearly readable against the light background; no light-on-light failures.
+      Data: 18 green (#009E73) city circles sized by total connected volume, connected by 26 curved (quadratic-Bezier) arcs whose stroke fades from brand green (origin) to blue (#4467A3, destination) and whose width/opacity scale with flow magnitude. Washington, D.C. is visibly the busiest hub (multiple thick converging arcs). The previously reported oversized-arrowhead defect is fixed: every arrowhead is now a small, fixed 8x8px wedge regardless of the arc's stroke width, including on the thickest Mexico City -> Washington D.C. arc. A residual, minor overlap remains between the London/Paris node pair and the Washington, D.C./Toronto node pair, though the pageBg-colored stroke around each circle keeps them individually distinguishable.
+      Legibility verdict: PASS (all text legible; only cosmetic node-overlap remains, not a legibility failure).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches the Imprint dark surface — not pure black.
-      Chrome: Title and subtitle render in light ink (#F0EFE8 / #B8B7B0-ish), fully legible against the dark background; landmass silhouettes and graticule remain visible at reduced contrast; city labels and the right-side legend text are all light-colored and readable; no dark-on-dark text anywhere.
-      Data: Identical green (#009E73) → blue (#4467A3) gradient arcs and node fills as the light render — the Imprint data colors are unchanged between themes, confirming only chrome flips. The same oversized-arrowhead and node-overlap issues reproduce identically in this render (confirmed via a cropped close-up of the Delhi/Dhaka pair), so this is a code-level marker/scale issue, not a theme-specific regression.
+      Background: Warm near-black (#1A1A17), matches the Imprint dark surface -- not pure black, not light.
+      Chrome: Title and subtitle render in light ink, fully legible against the dark background; landmass silhouettes and graticule remain visible at reduced contrast; city labels and the right-side legend text are all light-colored and clearly readable. No dark-on-dark text anywhere.
+      Data: Identical green (#009E73) -> blue (#4467A3) gradient arcs and node fills as the light render, confirming only chrome flips between themes. The fixed-size arrowheads and the same minor London/Paris and Washington/Toronto node overlaps reproduce identically here, confirming this is a code-level geometry issue rather than a theme-specific regression.
       Legibility verdict: PASS (all text legible in both themes; no dark-on-dark or light-on-light failures).
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -86,20 +81,20 @@ review:
           13-16px); all readable in both themes; title fits comfortably without overflow
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: Oversized arrowhead wedges overlap destination city circles on high-flow
-          arcs (Washington D.C., London, Berlin, Delhi/Dhaka); London/Paris and Washington/Toronto
-          node circles overlap each other
-      - id: VQ-03
-        name: Element Visibility
         score: 4
         max: 6
         passed: true
-        comment: Arc width/opacity scale correctly with flow magnitude and node radius
-          scales with volume, but the disproportionate arrowhead marker size undermines
-          otherwise good element sizing
+        comment: Arrowhead-vs-node overlap from attempt 1 is fixed; residual node-vs-node
+          overlap remains at London/Paris and Washington/Toronto, mitigated by the
+          contrasting pageBg stroke that keeps each circle individually legible
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Arc width/opacity scale correctly with flow magnitude, node radius
+          scales with volume, and the fixed-size arrowhead marker no longer distorts
+          element proportions
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -109,12 +104,12 @@ review:
           no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Map fills the majority of the canvas, legend sits attached at the
-          right, no clipping; docked slightly for the arrowhead clutter reading as
-          a layout defect
+        comment: Map fills the majority of the canvas, legend sits cleanly attached
+          at the right, no clipping; the arrowhead-driven layout defect from attempt
+          1 is resolved
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -127,30 +122,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, gradient stops identical across themes, backgrounds
+        comment: 'First series #009E73, gradient stops (palette[0] to palette[2],
+          matching imprint_seq values exactly) identical across themes, backgrounds
           #FAF8F1/#1A1A17, all chrome theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Thoughtful gradient-direction encoding and clean legend design, above
-          a configured default, but the arrowhead glitch and crude landmass blobs
-          keep it short of publication-ready
+        passed: true
+        comment: Thoughtful direction-gradient encoding, clean legend design, and
+          the fixed arrowhead push this closer to publication-ready; crude landmass
+          blobs still cap it below full marks
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Subtle grid, generous whitespace and a well-organized legend, but
-          the oversized arrow wedges and overlapping node circles are exactly the
-          kind of un-polished detail this criterion penalizes
+        passed: true
+        comment: Subtle grid, generous whitespace, well-organized legend; residual
+          node-circle overlap at two pairs is the remaining un-polished detail
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
+        passed: true
         comment: Washington, D.C. reads as an obvious hub and directional/magnitude
           imbalances are visible at a glance via color gradient + width; visual hierarchy
           present without needing annotations
@@ -162,11 +160,13 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct origin-destination flow map with curved arcs over a map
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
+        passed: true
         comment: Curved (Bezier) arcs, width proportional to flow, alpha transparency,
           direction color gradient, basemap context, and real hover tooltips are all
           present
@@ -174,12 +174,14 @@ review:
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Lon/lat correctly projected to x/y for both origin and destination,
           all 18 cities and 26 flows visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title matches the mandated format exactly; legend labels (Direction,
           Flow volume, City size) match the encodings used
     data_quality:
@@ -190,20 +192,23 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
+        passed: true
         comment: Shows hub concentration, asymmetric bidirectional pairs, and a wide
-          magnitude range (40-480); could use one more clearly reciprocal pair to
-          emphasize imbalance further
+          magnitude range (40-480k/yr)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, real-world city-to-city population movement scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
+        passed: true
         comment: Values are plausible and internally consistent but on the high side
-          for single metro-to-metro annual migration corridors; labeled as illustrative/synthetic
+          for single metro-to-metro annual migration corridors; clearly labeled as
+          illustrative/synthetic
     code_quality:
       score: 9
       max: 10
@@ -212,29 +217,34 @@ review:
         name: KISS Structure
         score: 2
         max: 3
+        passed: true
         comment: A few small pure helper functions (arcPath, landmass, overlaps) are
-          used beyond plain top-to-bottom script structure, but are appropriately
-          scoped for a geo flow map
+          used beyond a plain top-to-bottom script, appropriately scoped for a geo
+          flow map
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Fully deterministic hardcoded data, no RNG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: Only the global d3 bundle is used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: No fake functionality; complexity is proportionate to a flow map
           with legend, tooltips, and label placement
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Correct mount-node contract, no animation added, current d3 7.9 API
           usage
     library_mastery:
@@ -245,16 +255,18 @@ review:
         name: Idiomatic Usage
         score: 5
         max: 5
+        passed: true
         comment: Proper d3-geo projection/path pipeline, d3-scale (scaleLinear/scaleSqrt),
           and .data().join() data-driven rendering throughout
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
+        passed: true
         comment: Per-arc dynamically-generated SVG gradients keyed to each datum,
-          plus a real getBBox()-based label-collision resolver, are genuinely D3-specific
-          and hard to replicate simply in another library
-  verdict: REJECTED
+          a real getBBox()-based label-collision resolver, and a fixed-pixel marker
+          via markerUnits=userSpaceOnUse are genuinely D3-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
