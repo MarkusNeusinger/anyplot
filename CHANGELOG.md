@@ -36,9 +36,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   exactly how it sat red for ten consecutive nights unnoticed — caused by the other half of
   this change: hard-coded expectations. The swept routes now come from the
   `@router.get("/seo-proxy/…")` decorators in `api/routers/seo.py` — read off the parsed
-  AST, so a decorator in single quotes, wrapped over two lines or carrying kwargs is not
-  silently skipped the way a regex skips it (10 routes today, and a new bot page is covered
-  the moment it lands) — and the expected spec title from
+  AST, so a decorator in single quotes, wrapped over two lines, carrying kwargs or passing
+  its path as `path=` is not silently skipped the way a regex skips it, and a path that is
+  no string literal at all fails the run rather than disappearing (10 routes today, and a
+  new bot page is covered the moment it lands) — and the expected spec title from
   `plots/<spec>/specification.yaml`, so a copy change can no longer make the alarm lie. The
   per-route assertion is the generated `<link rel="canonical">` — the SPA shell carries none
   at all and the href names the route, so one match proves both that the bot hop ran and

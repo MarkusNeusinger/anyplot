@@ -129,7 +129,7 @@ jobs:
           import ast
 
           SRC = "api/routers/seo.py"
-          static, templated = set(), 0
+          static, templated, unresolved = set(), 0, 0
           for node in ast.walk(ast.parse(open(SRC, encoding="utf-8").read())):
               for dec in getattr(node, "decorator_list", []):
                   if not isinstance(dec, ast.Call):
@@ -139,10 +139,18 @@ jobs:
                       continue
                   if not (isinstance(fn.value, ast.Name) and fn.value.id == "router"):
                       continue
-                  if not dec.args or not isinstance(dec.args[0], ast.Constant):
+                  # FastAPI takes the path positionally OR as `path=`. Anything
+                  # else — a variable, an f-string, a constant folded elsewhere —
+                  # is a route this cannot reason about, and staying silent about
+                  # it is how a bot page would drop out of the sweep unnoticed.
+                  arg = dec.args[0] if dec.args else next(
+                      (kw.value for kw in dec.keywords if kw.arg == "path"), None
+                  )
+                  if not isinstance(arg, ast.Constant) or not isinstance(arg.value, str):
+                      unresolved += 1
                       continue
-                  path = dec.args[0].value
-                  if not isinstance(path, str) or not path.startswith("/seo-proxy"):
+                  path = arg.value
+                  if not path.startswith("/seo-proxy"):
                       continue
                   if "{" in path:
                       templated += 1
@@ -151,10 +159,12 @@ jobs:
           for route in sorted(static):
               print("route " + route)
           print("templated %d" % templated)
+          print("unresolved %d" % unresolved)
           PY
           )
           routes=$(printf '%s\n' "$seo_decorators" | sed -n 's/^route //p')
           templated=$(printf '%s\n' "$seo_decorators" | sed -n 's/^templated //p')
+          unresolved=$(printf '%s\n' "$seo_decorators" | sed -n 's/^unresolved //p')
 
           swept=0
           while IFS= read -r route; do
@@ -178,6 +188,14 @@ jobs:
           # number only together with a new probe for the new route.
           if [ "$templated" != "3" ]; then
             echo "::error::api/routers/seo.py has $templated parameterised /seo-proxy route(s); this monitor probes 3 by hand — add a probe for the new one and update this guard"
+            fail=1
+          fi
+
+          # A router.get whose path is not a string literal cannot be classified
+          # at all, and a route this cannot see is a route it cannot promise to
+          # cover. Loud, not silent.
+          if [ "$unresolved" != "0" ]; then
+            echo "::error::$unresolved router.get decorator(s) in api/routers/seo.py carry a path this monitor cannot resolve — it may be skipping a bot page"
             fail=1
           fi
 
