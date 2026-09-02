@@ -108,6 +108,13 @@ def _looks_like_path(token: str) -> bool:
         return False
     if token in _KNOWN_ABSENT:
         return False
+    # A `../`-relative fragment is a claim about a location relative to
+    # something else in the same span — the symlink target in `.claude/commands/
+    # → ../agentic/commands/` — and resolving it against the repository root
+    # would be wrong. `test_the_commands_symlink_points_where_it_says` pins that
+    # one properly, by following the link rather than by matching its text.
+    if token.split("/")[0] in {".", ".."}:
+        return False
     normalised = token.strip("/")
     if "/" not in normalised:
         return False
@@ -117,7 +124,16 @@ def _looks_like_path(token: str) -> bool:
 
 
 def _candidate_paths(text: str) -> set[str]:
-    return {tok for tok in _BACKTICKED.findall(text) if _looks_like_path(tok)}
+    """Every repo path claimed inside a code span.
+
+    A span is split on whitespace before the shape test, because a span is not
+    always one path: `` `.claude/commands/ → ../agentic/commands/` `` is a
+    sentence about two of them, and treating it as a single token let the whole
+    claim through unchecked (Copilot review). Fragments that are not
+    path-shaped — the arrow, a command word, a flag — fail the test and drop
+    out, which is what makes the split safe.
+    """
+    return {fragment for span in _BACKTICKED.findall(text) for fragment in span.split() if _looks_like_path(fragment)}
 
 
 def _headings(text: str) -> set[str]:
@@ -197,6 +213,22 @@ def test_markdown_links_resolve(agent_file: Path) -> None:
             broken.append(target)
 
     assert not broken, f"{agent_file.name} links to targets that do not exist: {broken}"
+
+
+def test_the_commands_symlink_points_where_it_says() -> None:
+    """CLAUDE.md documents `.claude/commands/ → ../agentic/commands/` as what
+    makes slash-command resolution work, and tells agents not to write commands
+    into `.claude/commands/` directly.
+
+    The path pin only proves both ends exist. This follows the link, because
+    the failure worth catching is the one where somebody replaces the symlink
+    with a real directory: both paths still resolve, the guide still reads
+    true, and every command written on either side quietly stops matching the
+    other.
+    """
+    link = REPO_ROOT / ".claude" / "commands"
+    assert link.is_symlink(), f"{link} is documented as a symlink"
+    assert link.resolve() == (REPO_ROOT / "agentic" / "commands").resolve()
 
 
 def test_every_named_skill_exists() -> None:
