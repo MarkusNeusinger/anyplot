@@ -14,9 +14,11 @@
 #   [slots]      drivers in flight at once (default 2; 4 only with the user's OK)
 # Env: MODEL (default sonnet), DEADLINE (epoch seconds; no launches after it),
 #      STAGGER (s between launches, 90), THROTTLE_WAIT (s, 900), ANYPLOT_REPO.
-# Run it detached — `setsid nohup run_queue.sh <dir> 2 > <dir>/queue.out &` —
-# so it survives the session; stop it with `pkill -f run_queue.sh` (drivers
-# keep running: after their dispatches they only watch).
+# Run it detached so it survives the session, with both streams captured
+# (the second positional argument is the slot count, not a redirect):
+#   setsid nohup run_queue.sh agentic/runs/<run> 2 > agentic/runs/<run>/queue.out 2>&1 &
+# Stop it with `pkill -f run_queue.sh`; drivers keep running (after their
+# dispatches they only watch).
 set -uo pipefail
 
 usage() {
@@ -86,8 +88,11 @@ missing_libs() {
 
 # Distinct specs with a driver process (the `bash -c "sleep N; ... run_spec.sh"`
 # wrapper and the script itself both match, so count spec names, not PIDs).
+# The scheduler's own command line never contains `run_spec.sh `, so no
+# self-exclusion is needed — and a PID-substring filter would drop unrelated
+# lines.
 running() {
-  pgrep -af 'run_spec\.sh ' | grep -v "$$" | grep -oE 'run_spec\.sh [a-z0-9-]+' | sort -u | wc -l
+  pgrep -af 'run_spec\.sh ' | grep -oE 'run_spec\.sh [a-z0-9-]+' | sort -u | wc -l
 }
 driver_for() { pgrep -f "run_spec\.sh $1 " >/dev/null; }
 
@@ -121,8 +126,10 @@ throttle_reason() {
       [ -z "$id" ] && continue
       grep -qx "$id" "$SEEN" && continue
       echo "$id" >> "$SEEN"
+      # POSIX ERE has no `\b`; the digit-boundary groups keep 429/529 from
+      # matching inside run ids or timestamps.
       sig=$(gh run view "$id" --log-failed 2>/dev/null \
-        | grep -iEo 'rate.?limit[^"]{0,60}|\b429\b|\b529\b|overloaded[^"]{0,40}|too many requests|usage limit[^"]{0,40}' \
+        | grep -iEo 'rate.?limit[^"]{0,60}|(^|[^0-9])(429|529)([^0-9]|$)|overloaded[^"]{0,40}|too many requests|usage limit[^"]{0,40}' \
         | head -1)
       if [ -n "$sig" ]; then echo "rate-limit signature in $wf run $id: $sig"; return; fi
     done < <(gh run list --workflow=$wf.yml --limit 100 --json databaseId,conclusion,updatedAt \

@@ -162,8 +162,9 @@ never cancel runs that already spent Claude time.
 
 **For an unattended queue use the scheduler** —
 `.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,
-started detached (`setsid nohup ... > <queue-dir>/queue.out &`) so it
-survives the session. It keeps `[slots]` drivers in flight over
+started detached so it survives the session, both streams captured
+(`setsid nohup .../run_queue.sh agentic/runs/<run> 2 >
+agentic/runs/<run>/queue.out 2>&1 &` — the `2` is the slot count). It keeps `[slots]` drivers in flight over
 `<queue-dir>/full_queue.txt`, skips libraries already on main and
 pairs recorded as `CONFIRMED GAP` in `deferred.log`, harvests every
 driver's `RESULT=` line into `done.log` / `deferred.log`, and holds
