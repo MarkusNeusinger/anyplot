@@ -63,28 +63,57 @@ const clusters = [
 ];
 
 // --- Chart -------------------------------------------------------------------
-const series = clusters.map((cluster, i) => ({
+// "Data & scientific" is the featured cluster (brand green, drawn first): a
+// low-opacity halo behind it gives the chart one focal point instead of five
+// visually equal groups. Series order controls z-order, so declaring the
+// halo series first keeps it beneath every text label.
+const focusHalo = {
   type: "scatter",
-  name: cluster.name,
-  color: t.palette[i],
-  data: cluster.points,
-  marker: { enabled: false, states: { hover: { enabled: false } } },
-  dataLabels: {
+  name: "focus-halo",
+  showInLegend: false,
+  enableMouseTracking: false,
+  dataLabels: { enabled: false },
+  data: [{ x: 2.32, y: 5.36 }],
+  marker: {
     enabled: true,
-    format: "{point.name}",
-    allowOverlap: false,
-    crop: false,
-    overflow: "allow",
-    align: "center",
-    verticalAlign: "middle",
-    style: {
-      color: t.palette[i],
-      fontSize: "15px",
-      fontWeight: "600",
-      textOutline: `1px ${t.pageBg}`,
-    },
+    radius: 130,
+    fillColor: "rgba(0, 158, 115, 0.1)",
+    lineWidth: 0,
+    states: { hover: { enabled: false } },
   },
-}));
+};
+
+const clusterSeries = clusters.map((cluster, i) => {
+  // Matte red ("Scripting & ops") sits close to the WCAG contrast floor on the
+  // near-black dark background; a theme-adaptive ink-colored outline lifts it
+  // above the floor there. Every other cluster/theme keeps the page-background
+  // outline so it stays invisible, as before.
+  const outlineColor = i === 4 && t.theme === "dark" ? t.ink : t.pageBg;
+  return {
+    type: "scatter",
+    name: cluster.name,
+    color: t.palette[i],
+    data: cluster.points,
+    marker: { enabled: false, states: { hover: { enabled: false } } },
+    dataLabels: {
+      enabled: true,
+      format: "{point.name}",
+      allowOverlap: false,
+      crop: false,
+      overflow: "allow",
+      align: "center",
+      verticalAlign: "middle",
+      style: {
+        color: t.palette[i],
+        fontSize: "15px",
+        fontWeight: "600",
+        textOutline: `1px ${outlineColor}`,
+      },
+    },
+  };
+});
+
+const series = [focusHalo, ...clusterSeries];
 
 Highcharts.chart("container", {
   chart: {
