@@ -42,15 +42,9 @@ for (i, (base, spread)) in enumerate(zip(BASELINE_MS, SPREAD_MS))
     append!(dose_idx, fill(i, N_PER_GROUP))
 end
 
-# Gaussian KDE with Silverman's rule bandwidth — approximates the same
-# density curve Makie's violin! draws, so the swarm's allowed spread can be
-# tied to the violin's actual local width instead of raw histogram counts.
-function kde_bandwidth(values)
-    n     = length(values)
-    sigma = min(std(values), (quantile(values, 0.75) - quantile(values, 0.25)) / 1.34)
-    return 0.9 * sigma * n^(-0.2)
-end
-
+# Gaussian KDE — approximates the same density curve Makie's violin! draws,
+# so the swarm's allowed spread can be tied to the violin's actual local
+# width instead of raw histogram counts.
 function kde_density(values, x, bandwidth)
     z = (x .- values) ./ bandwidth
     return sum(exp.(-0.5 .* z .^ 2)) / (length(values) * bandwidth * sqrt(2π))
@@ -64,7 +58,9 @@ end
 function beeswarm_offsets(values, max_half_width, n_bins)
     n      = length(values)
     lo, hi = minimum(values), maximum(values)
-    bw     = kde_bandwidth(values)
+    # Silverman's rule of thumb bandwidth, inlined (single call site).
+    sigma  = min(std(values), (quantile(values, 0.75) - quantile(values, 0.25)) / 1.34)
+    bw     = 0.9 * sigma * n^(-0.2)
 
     bin_edges   = range(lo, hi, length = n_bins + 1)
     bin_centers = (bin_edges[1:(end - 1)] .+ bin_edges[2:end]) ./ 2
@@ -89,7 +85,7 @@ end
 
 const VIOLIN_WIDTH     = 0.8
 const SWARM_HALF_WIDTH = 0.32
-const N_BINS           = 30
+const N_BINS           = 40
 
 swarm_offset = zeros(Float64, length(reaction_time_ms))
 for i in eachindex(DOSE_LABELS)
@@ -136,21 +132,35 @@ ax = Axis(
     xticks            = (1:length(DOSE_LABELS), DOSE_LABELS),
 )
 
-# Translucent violins (alpha 0.4) so the swarm underneath stays legible
+# Translucent violins (alpha 0.4) so the swarm underneath stays legible.
+# show_median draws Makie's native per-violin median line — a built-in
+# violin! feature (not a manual overlay) that anchors each group's center.
 for (i, col) in enumerate(IMPRINT_PALETTE)
     mask = dose_idx .== i
     violin!(ax, dose_idx[mask], reaction_time_ms[mask];
-        color       = (col, 0.4),
-        strokewidth = 1.5,
-        strokecolor = col,
-        width       = VIOLIN_WIDTH,
+        color           = (col, 0.4),
+        strokewidth     = 1.5,
+        strokecolor     = col,
+        width           = VIOLIN_WIDTH,
+        show_median     = true,
+        mediancolor     = INK,
+        medianlinewidth = 2.0,
     )
 end
+
+# Dashed trend line through each group's median sharpens the inverted-U
+# dose-response story (reaction time drops, then rises again at 300 mg).
+medians_ms = [median(reaction_time_ms[dose_idx .== i]) for i in eachindex(DOSE_LABELS)]
+lines!(ax, 1:length(DOSE_LABELS), medians_ms;
+    color     = INK_SOFT,
+    linewidth = 1.5,
+    linestyle = :dash,
+)
 
 # Ink-colored swarm points contrast against every translucent violin hue
 scatter!(ax, swarm_x, reaction_time_ms;
     color       = INK,
-    markersize  = 7,
+    markersize  = 6,
     strokewidth = 0.5,
     strokecolor = PAGE_BG,
 )
