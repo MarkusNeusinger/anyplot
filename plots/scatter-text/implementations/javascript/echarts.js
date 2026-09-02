@@ -63,6 +63,17 @@ const REGIONS = [
   },
 ];
 
+// Pixel offsets [dx, dy] for labels that would otherwise collide with a
+// neighbor or sit on the y=0 gridline (screen y grows downward).
+const LABEL_OFFSETS = {
+  Nairobi: [20, -18],
+  Perth: [-20, 18],
+  Berlin: [-20, 0],
+  London: [20, 0],
+  Lima: [0, -22],
+  Cairo: [0, -22],
+};
+
 // --- Init -------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -123,10 +134,14 @@ chart.setOption({
     type: "scatter",
     symbol: "circle",
     symbolSize: 0,
-    data: region.cities.map(([city, temp, rain]) => ({
-      name: city,
-      value: [temp, rain],
-    })),
+    data: region.cities.map(([city, temp, rain]) => {
+      const offset = LABEL_OFFSETS[city];
+      return {
+        name: city,
+        value: [temp, rain],
+        ...(offset ? { label: { position: offset } } : {}),
+      };
+    }),
     label: {
       show: true,
       formatter: "{b}",
