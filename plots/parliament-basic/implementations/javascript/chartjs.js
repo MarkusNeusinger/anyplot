@@ -1,7 +1,7 @@
 // anyplot.ai
 // parliament-basic: Parliament Seat Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-02
+// Quality: 88/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
