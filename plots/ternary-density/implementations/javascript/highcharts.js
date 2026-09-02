@@ -69,7 +69,7 @@ CLUSTERS.forEach(({ fa, fb, fc, n, spread }) => {
 });
 
 // --- Kernel density estimate over a regular grid covering the triangle -----
-const NX = 64;
+const NX = 96;
 const dx = 1 / NX;
 const NY = Math.ceil(H_UNIT / dx);
 const gx = Array.from({ length: NX + 1 }, (_, i) => i * dx);
@@ -100,7 +100,9 @@ for (let i = 0; i <= NX; i++) {
 const normDensity = density.map((col) => col.map((v) => v / maxDensity));
 
 // --- Filled density cells (only where all 4 corners lie inside the triangle) -
-const N_BANDS = 6;
+// Color/opacity interpolate continuously with the cell's average density
+// (rather than quantizing into discrete bands) so adjacent cells blend into
+// a smooth gradient instead of showing stair-stepped edges.
 const CUTOFF = 0.035;
 const cells = [];
 for (let i = 0; i < NX; i++) {
@@ -112,8 +114,7 @@ for (let i = 0; i < NX; i++) {
     if (!insideAt(x0, y0) || !insideAt(x1, y0) || !insideAt(x0, y1) || !insideAt(x1, y1)) continue;
     const avg = (normDensity[i][j] + normDensity[i + 1][j] + normDensity[i][j + 1] + normDensity[i + 1][j + 1]) / 4;
     if (avg < CUTOFF) continue;
-    const band = Math.min(N_BANDS - 1, Math.floor(avg * N_BANDS));
-    cells.push({ x0, y0, x1, y1, band });
+    cells.push({ x0, y0, x1, y1, avg });
   }
 }
 
@@ -188,11 +189,11 @@ function lerpColor(c1, c2, tt) {
       .join('')
   );
 }
-function bandColor(band) {
-  return lerpColor(t.seq[0], t.seq[1], band / (N_BANDS - 1));
+function cellColor(v) {
+  return lerpColor(t.seq[0], t.seq[1], v);
 }
-function bandAlpha(band) {
-  return 0.32 + 0.6 * (band / (N_BANDS - 1));
+function cellAlpha(v) {
+  return 0.32 + 0.6 * v;
 }
 
 // --- Sparse hover layer (native Highcharts tooltip) — subsample the fine ---
@@ -261,15 +262,15 @@ function drawTernary() {
   });
   drawn.push(gridGroup);
 
-  // Filled density cells (KDE heatmap overlay, banded for a contour-like look).
+  // Filled density cells (KDE heatmap overlay, continuous color per cell).
   const cellGroup = r.g('density-cells').add();
-  cells.forEach(({ x0, y0, x1, y1, band }) => {
+  cells.forEach(({ x0, y0, x1, y1, avg }) => {
     const [px0] = toPx(x0, 0);
     const [px1] = toPx(x1, 0);
     const [, py0] = toPx(0, y0);
     const [, py1] = toPx(0, y1);
     r.rect(Math.min(px0, px1), Math.min(py0, py1), Math.abs(px1 - px0), Math.abs(py1 - py0))
-      .attr({ fill: bandColor(band), opacity: bandAlpha(band) })
+      .attr({ fill: cellColor(avg), opacity: cellAlpha(avg) })
       .add(cellGroup);
   });
   drawn.push(cellGroup);
