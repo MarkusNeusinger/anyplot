@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: scatter-map-geographic
 created: '2026-09-02T06:06:04Z'
-updated: '2026-09-02T06:11:02Z'
+updated: '2026-09-02T06:29:26Z'
 generated_by: claude-sonnet
 workflow_run: 33596757842
 issue: 3617
@@ -12,62 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 93
 review:
   strengths:
-  - 'Correct dual-encoding: point size maps to magnitude (Gutenberg-Richter-like skew,
-    realistic) and point color maps to depth via the imprint_seq gradient (#009E73
-    -> #4467A3) — matches the spec''s optional size/value encoding requirements.'
-  - The manual dummy-series legend cleanly explains both encodings (depth bins and
-    magnitude bins) without requiring the forbidden highmaps/highcharts-more modules
-    — a legitimate documented workaround.
-  - 'Deterministic, seeded (LCG) data generation traced along a geologically accurate
-    path (Alpide seismic belt: Iberia -> Anatolia -> Himalaya -> Sunda arc), giving
-    strong DQ-02/DQ-03 factual grounding.'
-  - Theme-adaptive chrome (title/axis/tick/legend/tooltip colors) is threaded correctly
-    through window.ANYPLOT_TOKENS and holds up in both light and dark renders; text
-    stays readable in both themes.
-  - 'zooming: { type: ''xy'' } satisfies the spec''s ''enable zoom and pan to explore
-    point clusters'' recommendation for interactive libraries.'
-  - Alpha-blended markers (fillColor alpha 0.78) handle the overlapping points in
-    the dense Java-Banda cluster reasonably well.
+  - 'Directly resolved the attempt-1 gap: a lightweight coastline/landmass silhouette
+    is now drawn via SVGRenderer + chart.events.render + xAxis/yAxis.toPixels() re-projection,
+    giving genuine geographic orientation without the forbidden highmaps module.'
+  - Depth-legend swatches were pushed to the extremes of each bin (10 km / 145 km
+    / 295 km instead of bin midpoints), so the three depth categories are now visually
+    distinct along the imprint_seq gradient instead of blurring together.
+  - The translucent seismic-belt corridor ribbon plus the 'Java–Banda cluster' callout
+    give the plot a clear focal point and orientation aid that attempt 1 lacked, without
+    resorting to fake interactivity.
+  - The dense Java–Banda sub-cluster now gets shrunk + lightened markers (DENSE_ZONE
+    logic), keeping individual epicenters distinguishable where attempt 1 blurred
+    into a blob.
+  - Dual size/color encoding (Gutenberg-Richter-skewed magnitude → size, depth → imprint_seq
+    color), seeded LCG data generation, and theme-adaptive chrome all continue to
+    work correctly in both renders.
+  - 'Data colors (green→blue depth ramp, brand-green magnitude swatches) are pixel-identical
+    between light and dark renders; only chrome flips, confirmed at (10,10) = #FAF8F1
+    light / #1A1A17 dark.'
   weaknesses:
-  - 'No basemap or geographic context at all: the spec explicitly asks for country
-    boundaries, coastlines, or terrain, but the implementation only draws a plain
-    longitude/latitude graticule (grid). Since the highmaps module is forbidden for
-    this library, add a lightweight static world/coastline outline (e.g. a simplified
-    path array rendered via the Highcharts SVGRenderer in a chart.events.render callback)
-    so the epicenters have visible landmass context instead of floating on a bare
-    grid.'
-  - The three depth-legend swatches ('Depth 5-80 km', 'Depth 80-150 km', 'Depth 150-300
-    km') are visually very close in hue (green -> teal) because the represented bin
-    midpoints (42.5/115/225 km) only span a modest fraction of the 5-300 km imprint_seq
-    range — widen the perceptual spread (e.g. pick more extreme representative depths
-    for the legend swatches, or push the interpolation fraction with a mild curve)
-    so the color-depth relationship reads clearly at a glance.
-  - 'Design Excellence is at the ''well-configured default'' level: it''s a standard
-    grid + circles scatter with no distinguishing visual treatment (e.g. a subtle
-    shaded band tracing the seismic-belt corridor, or a text callout labeling a notable
-    cluster like the Sunda arc) that would elevate it beyond a generic scatter.'
-  - 'Library Mastery is generic: the same visual result could be produced with near-identical
-    code in D3 or ECharts. Consider leaning into a Highcharts-specific capability
-    (e.g. chart.events.selection for the drag-zoom, or SVGRenderer-based annotations)
-    to differentiate the implementation.'
-  - In the densest cluster (~110°E, 0°N, Java-Banda), overlapping circles blur into
-    a single blob even with alpha 0.78 — slightly smaller markers or a touch more
-    transparency in that region would keep individual epicenters distinguishable.
+  - In the Zagros/Hindu Kush/Himalaya stretch (roughly 45–75°E), several mid-size
+    circles still overlap tightly enough to partially fuse into a blob — the DENSE_ZONE
+    treatment only covers the Java–Banda box; consider widening the density-aware
+    shrink/lighten logic to any locally dense sub-region, not just one hardcoded box.
+  - The hand-drawn landmass polygons are deliberately coarse (explicitly noted in
+    the code comments) — they read as generic gray blobs rather than recognizable
+    coastlines/country shapes at a glance; a slightly higher-fidelity simplified outline
+    would strengthen the geographic storytelling further.
+  - Only one annotation callout is used; a second small label near another notable
+    anchor (e.g. Himalaya or Anatolia) would reinforce the geographic narrative the
+    belt-corridor ribbon is already hinting at.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matching #FAF8F1 — not pure white.
-      Chrome: Title "scatter-map-geographic · javascript · highcharts · anyplot.ai" in bold dark ink at top center, subtitle "Alpide seismic belt · synthetic epicenters, magnitude >= 4.0" in soft gray below it. X-axis "Longitude (°E)" and Y-axis "Latitude (°N)" labels present with degree-formatted tick labels. Subtle light gridlines on both axes. A two-row legend at the bottom lists three depth bins (green-to-teal swatches) and three magnitude bins (green swatches of increasing size).
-      Data: ~170 circular markers form a clear diagonal arc from the upper-left (~-8°E, 40°N, Iberia) sweeping down to the lower-right (~135°E, -5°N, Banda region), tracing the real-world Alpide seismic belt. Marker size visibly grows with magnitude; marker color shifts subtly from green toward teal/blue with depth. No basemap, coastline, or country outline is present — only the plain lon/lat grid.
-      Legibility verdict: PASS — title, subtitle, axis labels, tick labels, and legend text are all clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white, sampled pixel (10,10) = RGB(250,248,241) = #FAF8F1 exactly. Matches spec.
+      Chrome: Bold dark title "scatter-map-geographic · javascript · highcharts · anyplot.ai" and gray subtitle "Alpide seismic belt · synthetic epicenters, magnitude ≥ 4.0" both fully visible, not clipped. X-axis "Longitude (°E)" / Y-axis "Latitude (°N)" with degree-formatted tick labels, subtle gridlines on both axes. New in this attempt: pale gray simplified landmass silhouettes (S. Europe/N. Africa, Middle East, India, mainland SE Asia, Sumatra, Java) drawn with SVGRenderer, clipped to the plot area and re-projected from lon/lat via toPixels(). A soft translucent green ribbon traces the seismic-belt corridor, and an italic "Java–Banda cluster" callout labels the densest sub-cluster in open space (no overlap with markers or other text). Bottom legend (single row) shows three depth-color swatches (green → teal → indigo, now visually distinct — previously too close in hue) and three magnitude-size swatches (all brand green, sizes scaling correctly). All text is clearly readable against the light background.
+      Data: ~170 circular epicenters trace the Alpide belt from Iberia to the Banda arc. Marker radius scales with magnitude (Gutenberg-Richter skew: many small, few large). Marker fill color is an imprint_seq (#009E73 → #4467A3) gradient by depth. First/primary series correctly renders in brand green #009E73 at shallow depth. The previously blob-like Java–Banda dense sub-cluster now shows individually distinguishable, smaller/lighter markers.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matching #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/axis-label/legend layout as the light render, now rendered in light ink/gray tones. Gridlines are faint but visible against the dark surface.
-      Data: Identical marker positions, sizes, and colors to the light render (green-to-teal-blue depth gradient, magnitude-scaled radii) — confirms the data palette is unchanged between themes, only chrome flipped. Still no basemap/coastline present.
-      Legibility verdict: PASS — title, subtitle, axis labels, tick labels, and legend text are all clearly readable against the dark background; no dark-on-dark failures observed, and the teal/green markers remain clearly visible against the near-black surface.
+      Background: Warm near-black, matches #1A1A17 (sampled and confirmed via pixel value RGB(26,26,23)).
+      Chrome: Title, subtitle, axis titles/ticks, and legend all flip to light ink tones and remain fully readable; landmass silhouettes flip to dark gray fills with light-gray strokes, still visible against the near-black background; the belt-corridor ribbon is present but much fainter here (expected — translucent green over near-black reads as a subtle glow rather than a pastel band, consistent with the same underlying stroke-opacity value, not a bug). "Java–Banda cluster" callout remains clearly legible in light italic text.
+      Data: Marker positions, sizes, and colors are pixel-identical to the light render — confirmed the green→blue depth gradient and magnitude sizing hold constant across themes; no dark-on-dark or light-on-light failures anywhere.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -78,36 +67,36 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (22px title, 16px axis titles, 14px
-          ticks/legend/tooltip); readable in both themes, title fits well without
-          clipping
+        comment: Explicit font sizes throughout, all readable in both themes, title
+          ~58 chars fits comfortably without overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or the legend row
+        comment: No text/label overlap; callout text placed in open space clear of
+          markers and other text
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers sized well for magnitude range and alpha-blended for overlap,
-          but the densest Java-Banda cluster still blurs into a blob
+        comment: Java-Banda dense zone now handled well (shrink+lighten), but the
+          Zagros/Himalaya stretch still has some tightly overlapping circles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green-to-blue depth encoding, not red-green sole signal,
-          adequate contrast
+        comment: White/page-bg marker edges give separation; imprint_seq ramp is CVD-safe;
+          no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Plot fills a large majority of the canvas, legend sits directly below
+          the plot, no cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -119,36 +108,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Continuous depth encoding correctly uses imprint_seq (t.seq[0]->t.seq[1]);
-          magnitude-legend swatches use palette[0] (#009E73); theme-correct backgrounds
-          in both renders
+        comment: 'imprint_seq for depth (#009E73→#4467A3), brand green #009E73 for
+          magnitude-only swatches, both backgrounds pixel-exact to spec'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured library default: standard grid + circles, no distinguishing
-          visual treatment beyond the dual color/size encoding'
+        passed: true
+        comment: Custom cartographic overlay, belt-corridor shading, and widened legend
+          contrast lift this clearly above a configured default
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, minimal chrome, no legend box frame, generous whitespace
-          — some refinement visible
+        comment: Subtle landmass fill/stroke opacity, generous whitespace, clean single-row
+          legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The diagonal seismic-belt arc plus size/color dual-encoding gives
-          visual hierarchy, but no explicit emphasis or callout on the insight
+        comment: Belt-corridor ribbon + explicit 'Java–Banda cluster' callout give
+          a clear focal point and reading path through the data
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -156,27 +144,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter-by-coordinate plot type
+        comment: Correct geographic scatter map
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Size + color legends and zoom/pan present, but no basemap/country-boundary/coastline
-          context at all — spec explicitly requests this
+        passed: true
+        comment: Geographic context (landmass silhouettes) now present, resolving
+          attempt 1's rejection reason, alongside size+color legends, zoom/pan, and
+          alpha for density
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude correctly assigned and labeled
+        comment: Longitude/latitude correctly mapped to X/Y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels accurately describe depth and
-          magnitude bins
+        comment: Title format exact; legend labels match depth/magnitude bins
     data_quality:
       score: 14
       max: 15
@@ -186,22 +174,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows full magnitude range (4.0-7.8) with realistic skew and full
-          depth range (5-300 km)
+        comment: Shows spatial clustering, magnitude skew, and depth variation; all
+          optional spec fields (size, value/color, label via tooltip) are used
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, scientifically grounded scenario tracing the real Alpide
-          seismic belt
+        comment: Geologically grounded Alpide seismic belt, neutral scientific topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Magnitude and depth ranges and geographic anchor points match real-world
-          earthquake data
+        comment: Magnitude 4.0-7.8 and depth 5-300 km are realistic real-world earthquake
+          ranges
     code_quality:
       score: 10
       max: 10
@@ -211,60 +198,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script; small pure helper functions justified by the color/size
-          math
+        comment: Linear imports/data/chart flow; helper functions are justified by
+          the data-gen and geo-overlay complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed=42)
+        comment: Deterministic seeded LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the global Highcharts
+        comment: No unused imports/dependencies beyond the Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity for working around the highmaps restriction;
+          no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart('container', ...) with animation disabled, mount-node
-          contract respected
+        comment: Mount-node contract respected, animation disabled on chart and series
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: chart.events.render, SVGRenderer, dummy-series legend, and pointFormatter
+          are all idiomatic Highcharts patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of plotOptions, per-point marker overrides, and the
-          standard Highcharts dummy-series legend technique
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses zooming:{type:'xy'} drag-zoom and custom tooltip pointFormatter,
-          but nothing that couldn't be replicated easily in another JS library
-  verdict: REJECTED
+        comment: Axis-synced SVGRenderer overlay (toPixels re-projection on every
+          render/zoom event) is a genuinely Highcharts-native technique, directly
+          answering attempt 1's feedback
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
+  - patches
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - interpolation
   styling:
   - custom-colormap
   - alpha-blending
+  - edge-highlighting

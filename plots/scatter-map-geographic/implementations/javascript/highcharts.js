@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-map-geographic: Scatter Map with Geographic Points
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 85/100 | Created: 2026-09-02
+// Quality: 93/100 | Created: 2026-09-02
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
