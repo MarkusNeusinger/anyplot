@@ -7,7 +7,9 @@ Guide for setting up a local development environment.
 ## Prerequisites
 
 - **Python 3.13+**
-- **Node.js 20+** and yarn
+- **Node.js 22.12+** and yarn — `app/.nvmrc` names the version to use (`nvm use` in `app/`),
+  and `app/package.json` refuses anything older. Take the latest 22.x: the build toolchain
+  needs 22.12, and the dev-only test stack (jsdom) currently wants 22.22.
 - **PostgreSQL** (or access to Cloud SQL)
 - **uv** - Fast Python package manager
 

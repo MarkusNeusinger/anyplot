@@ -1,6 +1,6 @@
 # Project Guide for AI Agents
 
-This document contains comprehensive project documentation for AI agents working on the anyplot codebase. For critical rules that must always be visible, see [CLAUDE.md](/CLAUDE.md).
+This document contains comprehensive project documentation for AI agents working on the anyplot codebase. For critical rules that must always be visible, see [CLAUDE.md](../../CLAUDE.md).
 
 ## Project Overview
 

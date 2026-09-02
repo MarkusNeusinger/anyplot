@@ -63,6 +63,25 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   any inbound one first so a caller cannot supply it. The pre-traffic smoke reads the secret
   at run time and sends it, accepting `off`/`off-seen` so the pipeline keeps working before
   the gate is armed and after a rollback. (#11208)
+- **The agent instructions are pinned by a test, and the drift it found is fixed** — `CLAUDE.md`
+  and `.github/copilot-instructions.md` both open with the claim that they stay in sync, and both
+  are read as binding shorthand, but nothing checked either claim. `tests/unit/test_agent_instructions.py`
+  adds four cheap pins with no database, network, or fixtures: every backticked repo path resolves
+  (57 across the four agent-facing files), every relative link and same-page anchor resolves, every
+  skill the routing table names exists as `.claude/skills/<name>/SKILL.md` (8 of them; the harness
+  skill `/update-config` is excluded by name), and seven rules that must reach both audiences are
+  present on both sides. The mirroring pin is keywords rather than a text diff, because the two
+  files address different readers and paraphrase each other — and the keywords carry the
+  prohibition, not just its subject, so a rule cannot be reversed while its pin stays green.
+  Anchors are matched against real headings only: fenced blocks are stripped first, since these
+  guides are full of shell snippets whose `#` comments would otherwise pass as headings. It found
+  one real gap and one dead link, both fixed here: `copilot-instructions.md` described the
+  pipeline's lifecycle but never stated the repository's most consequential rule — never merge a
+  spec or implementation PR by hand, never write the pipeline's files by hand, and put the
+  `approved` label on the issue rather than the PR — which is exactly the rule an agent that opens
+  and edits PRs is most able to break; and `agentic/docs/project-guide.md` linked to `/CLAUDE.md`,
+  which GitHub resolves as a site-root URL and answers with a 404. Same pin as the sibling repo
+  kurrentschrift. (#11210)
 - **The bot-serving monitor now raises an alarm instead of only turning a tab red, and
   derives what it asserts from the repo** — `bot-serving-check.yml` gained `issues: write`:
   a failing run opens the fixed-title issue **Bot serving check is red** (or comments on it,
@@ -290,6 +309,28 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   only simultaneously possible with the counter inside CORS. The cache-header middleware
   stays outside CORS, where its `setdefault` for the /og/ cards depends on being. `api/main.py`
   now carries the stack order and the reason for each position. (#11208)
+- **The frontend declares the Node version it is actually built with, and something
+  enforces it** — `app/package.json` asked for `node >=20` while the image that produces
+  the deployed bundle builds on Node 22 and CI tests on Node 24, so the only version the
+  manifest still admitted was the one nothing tests and that reached end of life in April
+  2026. The floor moves to `>=22.12.0` — the version the build path actually requires
+  (Vite and rolldown declare `^20.19.0 || >=22.12.0`, so `>=22` would have advertised
+  22.0–22.11 as supported and let Vite's own engine check reject them instead) — `app/.nvmrc`
+  names 22 for `nvm use` and `setup-node`, and `app/.npmrc` sets `engine-strict=true` so an
+  npm install in `app/` refuses an unsupported runtime at install time rather than failing
+  later inside the build with a message that never mentions the version (yarn 1, the app's
+  package manager, checks `engines` itself). `docs/development.md` said "Node.js 20+" and now
+  matches. Same pin as the sibling repo kurrentschrift. (#11206)
+
+### Security
+
+- **`click` 8.3.1 → 8.3.3 closes PYSEC-2026-2132** — the only advisory `pip-audit`
+  reports against the resolved runtime dependency set (`uv export --no-dev`), which now
+  comes back clean. A transitive dependency, so the fix is a lock-file bump with no
+  `pyproject.toml` constraint, per the repository's dependency rule. The bump is the
+  minimal one that clears the advisory; `click` 8.5.0 exists and is left to Dependabot,
+  where a minor bump of the library behind every console script gets its own PR and its
+  own CI run. (#11206)
 
 ## [3.2.0] — 2026-08-29 — Findable by assistants
 
