@@ -1153,8 +1153,11 @@ jobs:
               # capability verdict either; the next backfill dispatch picks it
               # up with a clean budget once the markers age out.
               echo "::warning::Parking $LIBRARY/$SPEC_ID after ${INFRA_ATTEMPT} infrastructure failures in the last ${CAMPAIGN_WINDOW_H}h (cap: ${INFRA_WINDOW_CAP}) — not marked failed, no auto-retry"
-              gh issue edit "$ISSUE" \
-                --remove-label "generate:${LIBRARY},impl:${LIBRARY}:pending" 2>/dev/null || true
+              # One label per call: a name `gh` cannot resolve fails a whole
+              # comma-separated edit and would leave both labels in place.
+              for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+                gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+              done
               gh issue comment "$ISSUE" --body "${MARKER}
           ${INFRA_TAG}
           ## :pause_button: ${LIBRARY} Paused (infrastructure failures)
@@ -1212,10 +1215,13 @@ jobs:
             gh label create "impl:${LIBRARY}:failed" --color "d73a4a" \
               --description "${LIBRARY} implementation failed" 2>/dev/null || true
 
-            # Remove stale labels and add failed
-            gh issue edit "$ISSUE" \
-              --remove-label "generate:${LIBRARY},impl:${LIBRARY}:pending" \
-              --add-label "impl:${LIBRARY}:failed" 2>/dev/null || true
+            # Add failed first, then drop the stale labels one per call: a
+            # name `gh` cannot resolve fails a whole comma-separated edit, and
+            # the old single call could leave the pair marked pending forever.
+            gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:failed" 2>/dev/null || true
+            for stale in "generate:${LIBRARY}" "impl:${LIBRARY}:pending"; do
+              gh issue edit "$ISSUE" --remove-label "$stale" 2>/dev/null || true
+            done
 
             # Post final failure comment with marker
             gh issue comment "$ISSUE" --body "${MARKER}
