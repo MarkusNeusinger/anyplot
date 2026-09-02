@@ -1,0 +1,266 @@
+library: muix
+language: javascript
+specification_id: contour-map-geographic
+created: '2026-09-01T23:47:05Z'
+updated: '2026-09-02T00:05:27Z'
+generated_by: claude-sonnet
+workflow_run: 33571482544
+issue: 3772
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Custom marching-squares isoline extraction (with saddle-cell resolution) is a
+    genuinely impressive from-scratch implementation for a spec type MUI X has no
+    native chart for
+  - 'Real-world, factually accurate geography: actual Cascade volcano coordinates
+    and summit heights (Rainier 4392m, Adams 3743m, St. Helens 2549m), plus a hand-traced
+    Columbia River polyline for spatial anchoring'
+  - Correct use of the Imprint sequential colormap (green→blue) for the single-polarity
+    elevation field, identical data colors across both themes, theme-correct chrome
+    (background, ink, contour stroke color) in both renders
+  - Index/intermediate contour convention (800m labeled, 400m unlabeled) is a real
+    topographic-map idiom, and contour labels dynamically dodge the peak-name label
+    boxes instead of colliding with them
+  - Clean composition-API usage of MUI X (ChartContainer + useDrawingArea) to sync
+    a fully custom SVG raster/contour layer to the real axis coordinate system — a
+    legitimate, idiomatic way to express a chart type the community package doesn't
+    ship natively
+  - Deterministic, seed-free data generation; clean imports; no fake interactivity
+  weaknesses:
+  - Faint vertical hairline seams are visible across almost the entire filled raster
+    in both renders — the page background shows through at column boundaries between
+    adjacent <rect> cells in the CELLS grid, producing a subtle pinstripe artifact
+    over ~80% of the canvas. Fix by extending each rect's width/height by a fraction
+    of a pixel so neighboring cells overlap slightly (or by drawing each row as a
+    single horizontal <path>/<rect> run instead of one <rect> per cell) so there's
+    no sub-pixel gap for the background to leak through.
+  - The filled raster is solid brand-green across the entire lowland baseline (roughly
+    80% of the map area), which is geographically accurate but visually monotonous
+    — consider a slightly wider low end of the imprint_seq ramp or a subtle baseline
+    vignette so the lowland fill reads as more than a flat color field.
+  - Axis titles ('Longitude' / 'Latitude') don't carry an explicit unit suffix in
+    the label text itself — units are only conveyed via the tick formatter (°W / °N);
+    consider labeling the axis titles as 'Longitude (°W)' / 'Latitude (°N)' for full
+    self-containment.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent) surface, not pure white.
+      Chrome: Dark charcoal title "Cascade Range Elevation Contours · contour-map-geographic · javascript · muix · anyplot.ai" and subtitle are fully readable at top-center; axis tick labels ("47.3°N" ... "123.6°W" ...) and axis titles "Longitude"/"Latitude" render in dark/soft-dark ink, all legible; colorbar title "Elevation (m)" and its tick values (460 to 4899) are dark and legible against the cream background.
+      Data: Brand-green (#009E73) fill dominates the lowland baseline, gradually shifting to blue (#4467A3, Imprint sequential ramp) toward the three summits; black isolines (heavier/darker for 800m index contours, thinner/lighter for 400m intermediate contours) trace the elevation rings; contour value labels (e.g. "4800 m", "3200 m") sit in light pill boxes with dark text; peak-name labels ("Mount Rainier", "Mount Adams", "Mount St. Helens") sit in similar pills above each summit; a muted purple/blue river line with an italic "Columbia River" label crosses the bottom of the map.
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent) surface, not pure black.
+      Chrome: Title, subtitle, axis tick labels, axis titles, and colorbar title/ticks all render in light/off-white ink, clearly legible against the dark background. No dark-on-dark text was found anywhere on the canvas.
+      Data: The green→blue elevation fill and contour line colors are visually identical to the light render (same brand green low end, same blue high end) — only the chrome (background, text ink, contour-line color, label-pill fill) flips to the dark-theme tokens. Contour lines render as light gray/white in dark mode with matching-theme label pills (dark fill, light text) that stay legible. The Columbia River line and label remain visible and theme-adapted.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+
+    Additional note (both renders): a faint vertical hairline/pinstripe pattern is visible across most of the filled raster area in both themes — a sub-pixel seam artifact between adjacent raster <rect> cells, not a legibility failure but a visual-polish issue flagged in weaknesses.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; title dynamically
+          shrunk via length-based formula so it doesn't overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/label collisions; contour labels actively dodge peak-name
+          pill boxes
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Contours and labels clearly visible, but a faint vertical seam/pinstripe
+          artifact runs through the raster fill across most of the canvas
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green→blue ramp plus redundant contour-line/label encoding,
+          not red-green
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with unit-bearing tick formatting (°W/°N)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used correctly for single-polarity elevation data, water
+          semantically mapped to the blue palette slot, theme-correct chrome in both
+          renders, data colors identical across themes
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful custom composition (raster + isolines + labeled peaks
+          + river), clearly above a library default look
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean spines, no grid clutter, generous whitespace; the raster seam
+          artifact keeps it from full marks
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Named, labeled volcanic peaks and index-contour hierarchy immediately
+          orient the viewer to the region's terrain story
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct contour-on-geographic-basemap type with both filled and line
+          contours
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Isolines, value labels, geographic anchor (river), colorbar, meaningful
+          400/800m intervals all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on X, latitude on Y, full domain shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; colorbar legend
+          labeled and ticked correctly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Filled raster, isolines, index labels, peak labels, and geographic
+          feature all shown together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral geographic/scientific scenario (Cascade Range topography)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak heights and coordinates match real-world values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Well-organized single file; helper functions are appropriate for
+          a React/SVG composition, not over-engineered
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used @mui/x-charts imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a custom contour algorithm, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct harness contract: default export, skipAnimation, ANYPLOT_SIZE
+          sizing'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of ChartContainer + real axis components; series left
+          empty by necessity since contour maps aren't a native MUI X chart type
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useDrawingArea composition hook to sync fully custom SVG marks to
+          MUI X's own coordinate system is a genuinely library-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - interpolation
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
