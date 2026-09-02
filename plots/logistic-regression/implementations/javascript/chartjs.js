@@ -23,24 +23,66 @@ function sigmoid(x) {
 
 const classZero = [];
 const classOne = [];
+const samples = [];
 const n = 150;
 for (let i = 0; i < n; i++) {
   const glucose = X_MIN + rand() * (X_MAX - X_MIN);
   const trueProbability = sigmoid(glucose);
-  if (rand() < trueProbability) {
+  const label = rand() < trueProbability ? 1 : 0;
+  samples.push({ x: glucose, label });
+  if (label === 1) {
     classOne.push({ x: glucose, y: 0.94 + rand() * 0.06 });
   } else {
     classZero.push({ x: glucose, y: rand() * 0.06 });
   }
 }
 
+// --- Fit: gradient-descent logistic regression on the plotted points -------
+// (fit on standardized x for stable convergence, then rescale coefficients
+// back to the original glucose units)
+function fitLogisticRegression(points) {
+  const xMean = points.reduce((sum, p) => sum + p.x, 0) / points.length;
+  const xStd = Math.sqrt(points.reduce((sum, p) => sum + (p.x - xMean) ** 2, 0) / points.length);
+
+  let b0 = 0;
+  let b1 = 0;
+  const learningRate = 0.5;
+  const epochs = 1500;
+  for (let epoch = 0; epoch < epochs; epoch++) {
+    let grad0 = 0;
+    let grad1 = 0;
+    for (const p of points) {
+      const xStd_ = (p.x - xMean) / xStd;
+      const pred = 1 / (1 + Math.exp(-(b0 + b1 * xStd_)));
+      const err = pred - p.label;
+      grad0 += err;
+      grad1 += err * xStd_;
+    }
+    b0 -= (learningRate * grad0) / points.length;
+    b1 -= (learningRate * grad1) / points.length;
+  }
+
+  const slope = b1 / xStd;
+  const intercept = b0 - (b1 * xMean) / xStd;
+  return { slope, intercept };
+}
+
+const fit = fitLogisticRegression(samples);
+function fittedSigmoid(x) {
+  return 1 / (1 + Math.exp(-(fit.intercept + fit.slope * x)));
+}
+
+const correct = samples.filter((p) => (fittedSigmoid(p.x) >= 0.5 ? 1 : 0) === p.label).length;
+const accuracyPct = Math.round((100 * correct) / samples.length);
+const fittedMidpoint = -fit.intercept / fit.slope;
+
 const curvePoints = [];
 const bandUpperPoints = [];
 const bandLowerPoints = [];
 const halfRange = (X_MAX - X_MIN) / 2;
 for (let glucose = X_MIN; glucose <= X_MAX; glucose += 2) {
-  const p = sigmoid(glucose);
-  const width = 0.04 + 0.16 * (Math.abs(glucose - MIDPOINT) / halfRange);
+  const p = fittedSigmoid(glucose);
+  const width = 0.04 + 0.16 * (Math.abs(glucose - fittedMidpoint) / halfRange);
   curvePoints.push({ x: glucose, y: p });
   bandUpperPoints.push({ x: glucose, y: Math.min(1, p + width) });
   bandLowerPoints.push({ x: glucose, y: Math.max(0, p - width) });
@@ -138,6 +180,13 @@ new Chart(canvas, {
         text: "logistic-regression · javascript · chartjs · anyplot.ai",
         color: t.ink,
         font: { size: 22 },
+      },
+      subtitle: {
+        display: true,
+        text: `Fitted model: p = sigmoid(${fit.intercept.toFixed(2)} + ${fit.slope.toFixed(3)} · glucose) · Accuracy: ${accuracyPct}%`,
+        color: t.inkSoft,
+        font: { size: 14 },
+        padding: { bottom: 10 },
       },
       legend: {
         labels: {
