@@ -1,0 +1,255 @@
+library: muix
+language: javascript
+specification_id: indicator-sma
+created: '2026-09-02T01:59:51Z'
+updated: '2026-09-02T02:16:43Z'
+generated_by: claude-sonnet
+workflow_run: 33581295181
+issue: 3651
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - New ChartsReferenceLine annotations mark the Death Cross / Golden Cross moments
+    the synthetic data already encodes, directly answering attempt 1's DE-03 feedback
+    and the spec's Applications section — a real, native MUI X feature, not a simulated
+    tooltip.
+  - Title fontSize increased from 22px to 28px, giving the descriptive "AURA" prefix
+    more visual weight per attempt 1's VQ-01/DE-01 feedback.
+  - Canonical Imprint palette correctly applied — AURA Close is brand green (#009E73),
+    SMA overlays use the next palette positions in canonical order — fully identical
+    between light and dark renders, only chrome flips.
+  - 'Longer SMA windows correctly show delayed onset (connectNulls: false); SMA 200
+    visibly only starts around March, matching the spec''s note about initial null
+    values.'
+  - 4-series differentiation via color AND linestyle (dashed/dotted/solid) plus a
+    thicker Close stroke — CVD-safe redundant encoding at this series count.
+  - Deterministic, seeded synthetic data tells a real three-regime story (uptrend
+    -> pullback/death-cross -> recovery/golden-cross) that the new annotations now
+    explicitly label.
+  weaknesses:
+  - Title still occupies only ~43% of canvas width (up from ~33% at fontSize 22, still
+    short of the ~50-70% target for a custom-prefixed title) — a further fontSize
+    nudge (e.g. 30-32px) could close the remaining gap, though this is a minor, non-blocking
+    deduction.
+  - DE-02 visual refinement (grid styling, spine/frame treatment) is unchanged from
+    attempt 1 — still reads close to a well-configured default rather than fully art-directed.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "AURA · indicator-sma · javascript · muix · anyplot.ai" in bold dark ink, top-left, larger (28px) than attempt 1. Legend (SMA 200 / SMA 50 / SMA 20 / AURA Close) centered top with color swatches. Y-axis "Price (USD)" with $-formatted ticks ($66-$90), X-axis "Trading Date" with monthly ticks (Jun 1-Aug 1). Subtle horizontal gridlines only. New: two vertical dashed reference lines labeled "Death Cross" and "Golden Cross" in muted ink-soft gray text, positioned at the SMA 20/50 crossover dates. All chrome text is dark and clearly readable against the light background; no clipping at any edge.
+      Data: AURA Close is a thick solid brand-green (#009E73) line. SMA 20 is dashed lavender, SMA 50 dotted blue, SMA 200 solid ochre starting around March (correctly delayed by its 200-period window). Lines are clearly distinguishable via both color and dash pattern.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, axis, and crossover-annotation structure as the light render, now rendered in light/off-white ink. No dark-on-dark text observed anywhere — title, axis labels, tick labels, legend text, and the "Death Cross"/"Golden Cross" annotation labels are all clearly legible against the dark background.
+      Data: Line colors are pixel-identical to the light render (brand green, lavender, blue, ochre) — only chrome (background, text, gridlines, annotation-line color) flipped, as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 28px, labels 16px, ticks/legend
+          14px), fully readable in both themes; title proportion improved to ~43%
+          width (up from ~33%) but still short of the 50-70% target
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend, title, axes, and the new crossover annotation
+          labels are all clear of each other and the data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 'showMark: false for 300-point dense series is correct; line widths
+          and dash styles keep all four series visible without clutter'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant linestyle encoding (solid/dashed/dotted + stroke-width
+          hierarchy) on top of color for a 4-series chart is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, no canvas-gate flag; balanced margins,
+          plot fills a good majority of the canvas, legend sits close to the chart
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Price (USD)" and "Trading Date" are descriptive with units where
+          applicable'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Primary Close series is #009E73; SMA overlays use canonical Imprint
+          positions 2-4; backgrounds and chrome are theme-correct in both renders,
+          data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Larger title (28px, up from 22px) gives more visual weight; still
+          reads as a well-configured chart rather than fully art-directed
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle horizontal-only grid and generous margins carried over unchanged
+          from attempt 1
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: false
+        comment: New Death Cross / Golden Cross reference-line annotations now explicitly
+          call out the crossover moments the spec's Applications section describes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct multi-line SMA indicator overlay chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec fields present: close, sma_short/medium/long, y-axis grid,
+          legend with period labels, 300 periods'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, price on Y, explicit yMin/yMax padding shows all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec-id . language . library . anyplot.ai
+          with a descriptive prefix; legend labels match spec wording
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows uptrend, pullback/death-cross, and recovery/golden-cross regimes,
+          plus correct delayed-start nulls for longer SMAs
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral fictional stock ticker (AURA) with plausible daily price
+          action
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ($65-$90) and daily volatility percentages are realistic
+          for a mid-cap equity
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: data generation, SMA calc, then a single Chart component'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart, ChartsReferenceLine, Box, Typography imported, all
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a financial time-series indicator with
+          crossover annotations, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exported component, skipAnimation set, current MUI X API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Time xAxis scale, valueFormatter, slotProps.legend, ChartsReferenceLine,
+          per-series color/curve/connectNulls — solid high-level API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: ChartsReferenceLine is a genuine MUI X-specific declarative annotation
+          component, used correctly for the crossover callouts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - grid-styling

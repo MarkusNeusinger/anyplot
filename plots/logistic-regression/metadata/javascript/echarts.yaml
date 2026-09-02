@@ -1,0 +1,251 @@
+library: echarts
+language: javascript
+specification_id: logistic-regression
+created: '2026-09-02T02:08:28Z'
+updated: '2026-09-02T02:23:54Z'
+generated_by: claude-sonnet
+workflow_run: 33581568965
+issue: 3550
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/echarts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Real logistic regression fitted in-browser via full-batch gradient descent, with
+    the 95% confidence band derived analytically from the inverted Fisher information
+    matrix (not a decorative approximation)
+  - Confidence band implemented with the idiomatic ECharts stacked-area trick (invisible
+    lower series + visible band-height series) — a genuinely library-specific technique,
+    not a generic fill
+  - Threshold crossing (p = 0.5) is both drawn (dashed markLine) and located (markPoint
+    with an 'x ≈ 10.4' label), and the fitted equation plus accuracy are surfaced
+    in the subtitle exactly as the spec's 'consider displaying coefficients/accuracy'
+    note suggests
+  - Data points are y-jittered around 0/1 with alpha 0.6 exactly as specified, and
+    both classes read clearly against the Imprint palette with the first series correctly
+    on brand green
+  - 'Both light and dark renders are theme-correct: identical data colors, correct
+    backgrounds, fully legible chrome with no dark-on-dark or light-on-light failures'
+  weaknesses:
+  - xAxis.axisLine renders at the y=0 crossing (ECharts' default onZero:true for a
+    value/value grid) instead of at the bottom of the grid, so a solid inkSoft-colored
+    line cuts straight through the 'Not Converted' scatter cluster in both renders
+    — set xAxis.axisLine.onZero = false to keep the line pinned to the grid's bottom
+    edge and remove the chrome/data collision.
+  - The two classes are distinguished by color alone (both use the same circle symbol)
+    — acceptable given the strong hue contrast on the Imprint palette, but a differing
+    symbol (e.g. triangle vs circle) would add a redundant non-color channel for full
+    CVD robustness.
+  - 'Only cosmetic: legend swatch line icon for ''Fitted Probability'' includes a
+    symbol dot even though the series itself uses symbol:''none'' on the curve, a
+    minor inconsistency between legend and rendered series.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches spec.
+      Chrome: Title "Marketing Conversion · logistic-regression · javascript · echarts · anyplot.ai" in dark ink, subtitle with fitted equation and accuracy in softer ink, legend with three entries (Not Converted, Converted, Fitted Probability) all in dark ink. Axis names ("Ad Exposures per Week", "Probability") and tick labels are dark/soft-ink and clearly legible. Gridlines are light and subtle.
+      Data: Green (#009E73) "Not Converted" points jittered around y≈0, purple/lavender "Converted" points jittered around y≈1, both at alpha 0.6. A steel-blue sigmoid curve (palette[2]) rises from lower-left to upper-right with a light blue-gray 95% confidence band around it, widest at the extremes and narrowest near the midpoint. A black dashed horizontal line marks p = 0.5, and a marked point with label "x ≈ 10.4" shows where the curve crosses the threshold.
+      Legibility verdict: PASS — all text is clearly readable against the light background; only artifact is the x-axis line rendered at y=0 crossing through the green scatter cluster, which is a layout choice, not a legibility failure.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches spec.
+      Chrome: Same title/subtitle/legend text now rendered in light ink, fully legible against the dark background. Axis names and tick labels use a lighter soft-ink tone with good contrast. Gridlines are dark gray, subtle but visible.
+      Data: Data colors (green, purple, steel-blue curve, confidence band) are identical to the light render — only the chrome (background, text, grid, axis lines) flips to dark-theme tokens, band takes on a darker navy tint appropriate to the dark surface.
+      Legibility verdict: PASS — no dark-on-dark text; all title/axis/tick/legend/annotation text remains clearly visible. Same y=0 axis-line-through-data artifact present in both renders (a onZero default, not a theme bug).
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; title fontsize correctly scaled
+          down for the long descriptive+mandated title
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text overlap; xAxis onZero line crosses the 'Not Converted'
+          scatter cluster (chrome/data collision, not text)
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers sized appropriately for 180 points at alpha 0.6; curve and
+          band clearly visible, slightly muddied by the stray axis line near y=0
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple pairing has strong contrast and is not a red-green-only
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good proportions, no clipping/overflow; onZero axis line is a minor
+          layout blemish
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis names, mandated title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73, Imprint palette used throughout,
+          correct theme backgrounds in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Subtitle with fitted equation/accuracy, markPoint/markLine annotations
+          go well beyond generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines, subtle grid, generous whitespace; onZero axis line through
+          data cluster is a refinement flaw
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point on the sigmoid curve and threshold crossing, coefficients
+          contextualize the fit
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct sigmoid logistic regression curve
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jittered points, CI band, threshold line, distinct class colors,
+          coefficient annotation all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y mapping correct, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix, legend labels
+          match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Points, curve, CI band, threshold all shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Marketing conversion vs ad exposures is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: N=180 within recommended range, plausible exposure/accuracy values
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, only the necessary LCG/sigmoid helper functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Genuine gradient-descent fit and Fisher-information CI, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct mount/init pattern; onZero axis-line default left unhandled
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Stacked invisible-lower + band-height series for the confidence band,
+          markLine + markPoint combo
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - regression
+  - normalization
+  styling:
+  - alpha-blending
