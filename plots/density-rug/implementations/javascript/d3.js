@@ -53,6 +53,17 @@ const density = kernelDensityEstimator(kernelGaussian(bandwidth), x.ticks(300))(
 
 const y = d3.scaleLinear().domain([0, d3.max(density, (d) => d[1]) * 1.12]).range([ih, 0]);
 
+// The two reaction-time regimes (fast vs. slow trials) each carve out a local
+// maximum in the KDE; find them so the chart can call them out directly
+// instead of leaving the bimodality as a shape the viewer has to notice alone.
+function findTwoPeaks(points, minSeparation) {
+  const byDensity = points.slice().sort((a, b) => b[1] - a[1]);
+  const first = byDensity[0];
+  const second = byDensity.find((d) => Math.abs(d[0] - first[0]) > minSeparation);
+  return [first, second].sort((a, b) => a[0] - b[0]);
+}
+const [fastPeak, slowPeak] = findTwoPeaks(density, (dataMax - dataMin) * 0.15);
+
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
@@ -76,7 +87,21 @@ g.append("g")
   .call((sel) => sel.select(".domain").remove())
   .call((sel) => sel.selectAll("line").attr("stroke", t.grid));
 
-// --- KDE curve: filled area + line -------------------------------------------
+// --- KDE curve: gradient-filled area + line ----------------------------------
+// A vertical fade (denser green at the baseline, airier near the peak) gives
+// the fill more depth than a single flat fill-opacity, within the Imprint hue.
+const gradientId = "density-fill-gradient";
+svg
+  .append("defs")
+  .append("linearGradient")
+  .attr("id", gradientId)
+  .attr("x1", "0")
+  .attr("x2", "0")
+  .attr("y1", "0")
+  .attr("y2", "1")
+  .call((grad) => grad.append("stop").attr("offset", "0%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.08))
+  .call((grad) => grad.append("stop").attr("offset", "100%").attr("stop-color", t.palette[0]).attr("stop-opacity", 0.4));
+
 const area = d3
   .area()
   .x((d) => x(d[0]))
@@ -89,7 +114,7 @@ const line = d3
   .y((d) => y(d[1]))
   .curve(d3.curveBasis);
 
-g.append("path").datum(density).attr("d", area).attr("fill", t.palette[0]).attr("fill-opacity", 0.28);
+g.append("path").datum(density).attr("d", area).attr("fill", `url(#${gradientId})`);
 g.append("path")
   .datum(density)
   .attr("d", line)
@@ -97,19 +122,51 @@ g.append("path")
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 3.5);
 
+// --- Peak annotations: name the two reaction-time regimes --------------------
+const peakLabels = [
+  { peak: fastPeak, text: "Fast trials" },
+  { peak: slowPeak, text: "Slow trials" },
+];
+g.selectAll(".peak-marker")
+  .data(peakLabels)
+  .join("circle")
+  .attr("class", "peak-marker")
+  .attr("cx", (d) => x(d.peak[0]))
+  .attr("cy", (d) => y(d.peak[1]))
+  .attr("r", 4.5)
+  .attr("fill", t.palette[0]);
+g.selectAll(".peak-label")
+  .data(peakLabels)
+  .join("text")
+  .attr("class", "peak-label")
+  .attr("x", (d) => x(d.peak[0]))
+  .attr("y", (d) => y(d.peak[1]) - 16)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "15px")
+  .style("font-style", "italic")
+  .text((d) => d.text);
+
 // --- Rug marks: exact observation locations along the x-axis -----------------
-const rugHeight = 20;
+// Short ticks placed at a deterministically jittered vertical position within
+// the rug band (the spec's own suggestion) instead of one line per point
+// spanning the full band — this staggers observations that share nearly the
+// same x pixel so they read as distinct marks instead of a solid dark block.
+const rugBandHeight = 22;
+const tickLength = 6;
+const jitterRng = lcg(7);
+const rugData = reactionTimes.map((value) => ({ value, jitter: jitterRng() }));
 g.append("g")
   .selectAll("line")
-  .data(reactionTimes)
+  .data(rugData)
   .join("line")
-  .attr("x1", (d) => x(d))
-  .attr("x2", (d) => x(d))
-  .attr("y1", ih)
-  .attr("y2", ih - rugHeight)
+  .attr("x1", (d) => x(d.value))
+  .attr("x2", (d) => x(d.value))
+  .attr("y1", (d) => ih - d.jitter * (rugBandHeight - tickLength))
+  .attr("y2", (d) => ih - d.jitter * (rugBandHeight - tickLength) - tickLength)
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 1.5)
-  .attr("stroke-opacity", 0.35);
+  .attr("stroke-opacity", 0.4);
 
 // --- Axis labels --------------------------------------------------------------
 svg
@@ -138,6 +195,6 @@ svg
   .attr("y", 48)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "26px")
+  .style("font-size", "28px")
   .style("font-weight", "600")
   .text("density-rug · javascript · d3 · anyplot.ai");
