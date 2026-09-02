@@ -254,10 +254,19 @@ def test_every_named_skill_exists() -> None:
 # Rules that must reach BOTH audiences. Each entry is a human-readable name
 # plus the keywords that identify the rule in either file's own wording; a rule
 # counts as present when every keyword appears (case-insensitively).
+#
+# Every entry's keywords have to carry the rule's OBLIGATION, not only its
+# subject. A pin on the topic alone stays green while the guides are rewritten
+# to say the opposite, which is worse than no pin: the suite then reports that
+# a rule is mirrored when what is mirrored is its subject matter (Copilot
+# review, twice — the pipeline rule and the changelog rule).
 MIRRORED_RULES = {
     "output is always English": ["always write in english"],
-    "prose follows the Google style guide": ["google style", "docs/reference/style-guide.md"],
-    "every PR updates the changelog": ["[unreleased]", "keep-a-changelog"],
+    "prose follows the Google style guide": [
+        "prose follows the google developer documentation style guide",
+        "docs/reference/style-guide.md",
+    ],
+    "every PR updates the changelog": ["every pr updates", "[unreleased]", "keep-a-changelog"],
     "a release is condensed, never copied": ["condensed, never copied", "agentic/commands/release.md"],
     "never echo secret values": ["never echo secret"],
     "structural fix over symptomatic fix": ["structural fix over symptomatic fix"],
