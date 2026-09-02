@@ -12,10 +12,10 @@ Random.seed!(42)
 # --- Theme tokens -------------------------------------------------------
 THEME       = get(ENV, "ANYPLOT_THEME", "light")
 PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
+ELEVATED_BG = THEME == "light" ? colorant"#F2ECDD" : colorant"#2F2F29"
 INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-LAND_FILL   = THEME == "light" ? colorant"#EFEADA" : colorant"#242017"
+LAND_FILL   = THEME == "light" ? colorant"#EFEADA" : colorant"#332C1F"
 
 IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
 
@@ -121,6 +121,9 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xminorgridvisible  = false,
     yminorgridvisible  = false,
+    # Plate-carree/equirectangular (raw lon/lat with DataAspect()), not a true
+    # Natural-Earth/Robinson projection — CairoMakie has no GeoMakie projection
+    # support installed, so this is an intentional, documented simplification.
     aspect             = DataAspect(),
 )
 xlims!(ax, -180, 180)
@@ -164,7 +167,9 @@ Legend(
     valign          = :bottom,
     margin          = (10, 10, 10, 10),
     backgroundcolor = ELEVATED_BG,
-    framevisible    = false,
+    framevisible    = true,
+    framecolor      = RGBAf(INK_SOFT.r, INK_SOFT.g, INK_SOFT.b, 0.35),
+    framewidth      = 1,
     labelcolor      = INK_SOFT,
     titlecolor      = INK,
     labelsize       = 12,
