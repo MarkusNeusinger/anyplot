@@ -1,0 +1,264 @@
+library: makie
+language: julia
+specification_id: choropleth-basic
+created: '2026-09-02T15:32:19Z'
+updated: '2026-09-02T15:54:28Z'
+generated_by: claude-sonnet
+workflow_run: 33647690284
+issue: 3069
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - 'Critical dark-theme contrast bug from attempt 1 is fixed: per-tile state labels
+    now use a fixed, theme-invariant DATA_TILE_INK (#FFFDF6) instead of the theme-flipping
+    ELEVATED token, so labels stay legible on the unchanging data-tile fills in both
+    light and dark renders.'
+  - Regional bias added to the synthetic renewable-share data (Pacific/Mountain/Plains
+    states lean higher, coal-belt Southeast/Midwest states lean lower), giving the
+    map a plausible spatial pattern instead of pure random noise.
+  - Code comment clarifies the state values are illustrative/synthetic rather than
+    sourced real statistics, avoiding a factual-claim misread.
+  - Well-engineered, clearly documented tile-grid workaround for CairoMakie's lack
+    of native geographic-projection support (a legitimate NPR-style tile-grid-map
+    technique, not a fake/simulated fallback).
+  - Correct imprint_seq sequential colormap for single-polarity continuous data, unchanged
+    between themes; correct 3200x1800 canvas; correct title format; reproducible via
+    Random.seed!(42).
+  weaknesses:
+  - 'White tile-label text (#FFFDF6) on the most saturated green end of the imprint_seq
+    colormap (near #009E73, e.g. OH, LA, OK, MS, GA) computes to roughly 3.3:1 luminance
+    contrast -- below the WCAG AA normal-text threshold (4.5:1), though it clears
+    the large/bold-text minimum (3:1). Contrast is comfortably above 5:1 on the blue
+    end of the gradient, so the issue is specific to the greenest tiles. Consider
+    a subtle dark stroke/outline on the label text, or raising the colormap''s low-end
+    luminance floor slightly, to bring the whole range above 4.5:1.'
+  - Tile-grid layout remains a schematic substitute for true geographic polygon boundaries
+    / map projection (Robinson, Albers) mentioned in the spec's Notes -- a legitimate,
+    documented CairoMakie limitation, not something to rework, but it caps SC-01 below
+    full marks.
+  - The regional bias is a coarse +-10/+15 additive shift on top of uniform random
+    noise; the spatial pattern is present and correct in direction but still fairly
+    subtle to spot at a glance -- a stronger differential would sharpen the story
+    further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "choropleth-basic · julia · makie · anyplot.ai" in bold dark ink, clearly readable. Colorbar label "Renewable Energy Share (%)" and its tick labels (20/40/60/80-ish) render in dark/soft-dark ink on the light background, clearly readable.
+      Data: Schematic US state tile-grid map, ~50 tiles positioned by approximate geography, filled via the imprint_seq colormap (#009E73 green -> #4467A3 blue) mapped to each state's value. Three tiles (MT, WY, SD) render as solid muted-gray "no data" tiles with dark ink labels. All ~47 data-tile state-abbreviation labels render in a fixed light/cream ink (#FFFDF6) and are readable against every tile color, including the greenest tiles, though contrast there is comparatively tighter (~3.3:1) than on the blue tiles (~5.5:1).
+      Legibility verdict: PASS (all text readable; green-tile label contrast is tight but not a failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Title and colorbar label/ticks render in light ink, clearly readable against the dark background.
+      Data: Identical tile-fill colors to the light render (green->blue gradient unchanged, confirming data-color consistency across themes). The "no data" tiles (MT, WY, SD) now render as a lighter gray fill with dark ink labels -- correctly flipped and still legible against the lighter gray tile background. The ~47 data-tile labels use the same fixed light ink as the light render (not theme-flipped), so there is no dark-on-color repeat of the attempt-1 bug -- confirmed fixed.
+      Legibility verdict: PASS (no dark-on-dark or dark-on-color failures found; same tight-but-acceptable green-tile contrast as the light render).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicit (titlesize=20, tile fontsize=13, colorbar
+          labelsize=14/ticklabelsize=12); the attempt-1 dark-on-color bug is fixed
+          via fixed DATA_TILE_INK, but white labels on the greenest tiles compute
+          to only ~3.3:1 contrast.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Generous 0.14-unit tile gaps keep every label clear of neighbors
+          and the colorbar.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Uniform tile sizing with clear colormap steps; all ~50 tiles distinguishable.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: No red-green-only signal, but the borderline ~3.3:1 contrast on the
+          greenest tiles keeps this from a perfect score.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas (gate passed); tile grid plus colorbar fill
+          the frame with balanced margins, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Colorbar label includes units: ''Renewable Energy Share (%)''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct imprint_seq colormap (#009E73 -> #4467A3), correct theme
+          backgrounds, chrome and data-tile labels are now theme-correct in both renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Genuinely bespoke tile-grid solution (no built-in Makie choropleth
+          recipe) with a clean sequential gradient and colorbar -- clearly above a
+          configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: hidedecorations!/hidespines!, restrained colorbar placement, generous
+          tile seams; minor deduction tied to the residual contrast tightness.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Regional bias (Pacific/Mountain/Plains higher, coal-belt lower) now
+          gives the map a real, spottable spatial pattern -- up from pure noise in
+          attempt 1, though the differential is still fairly subtle.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct choropleth concept (regional color-encoded values + legend)
+          via a documented tile-grid substitute, but misses the spec's suggested true
+          geographic-projection variant (library limitation).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color legend and explicit missing-data handling (gray tiles for MT/WY/SD)
+          both present exactly as the spec requests.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: region_id -> tile position, value -> fill color, correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; colorbar label matches the data with units.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full value range (~15-85%) plus explicit missing-data tiles shown.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Renewable-energy share by U.S. state is a real, neutral, comprehensible
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Regional bias now aligns plausible ranges with known renewable leaders
+          (WA/OR/ID hydro-wind, IA/KS wind, VT/ME/NH hydro) and known coal-dependent
+          low states (WV/KY/IN/OH/MS/AL/LA).
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports -> theme tokens -> data -> plot -> save, no functions/classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, ColorSchemes (cgrad), Random -- all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for a bespoke tile-grid renderer.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic poly!/text!/Colorbar/DataAspect usage, appropriate given
+          no dedicated choropleth recipe exists in CairoMakie.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom cgrad-indexed poly fills plus DataAspect tile-grid is a creative
+          use of Makie's low-level primitives, though not a feature wholly unique
+          to Makie.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - custom-colormap
+  - edge-highlighting
