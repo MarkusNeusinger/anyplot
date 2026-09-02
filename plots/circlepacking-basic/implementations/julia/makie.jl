@@ -229,7 +229,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title = "circlepacking-basic · julia · makie · anyplot.ai",
-    titlesize = 26,
+    titlesize = 30,
     titlecolor = INK,
     aspect = DataAspect(),
     backgroundcolor = PAGE_BG,
@@ -251,14 +251,19 @@ for depth in 1:3
     end
 end
 
-# Labels: categories near the top edge (clear of the child cluster below);
-# subcategories at their own center, only when large enough to hold text.
-subcat_label_floor = 0.10 * root.r
+# Labels: categories placed just below the actual bottom of their own child
+# cluster (not a fixed fraction of the category radius, which can collide
+# with a child that happens to sit near the category's edge); subcategories
+# at their own center, only when large relative to their own category (not
+# the global root) so every category gets comparable coverage.
+category_r = Dict(node.category_idx => node.r for node in all_nodes if node.depth == 1)
+label_margin = 0.05 * root.r
 for node in all_nodes
     if node.depth == 1
-        text!(ax, node.abs_x, node.abs_y - 0.80 * node.r; text = node.label,
+        child_bottom = minimum(c.abs_y - c.r for c in node.children)
+        text!(ax, node.abs_x, child_bottom - label_margin; text = node.label,
             align = (:center, :center), fontsize = 20, color = INK, font = :bold)
-    elseif node.depth == 2 && node.r >= subcat_label_floor
+    elseif node.depth == 2 && node.r >= 0.18 * category_r[node.category_idx]
         text!(ax, node.abs_x, node.abs_y; text = node.label, align = (:center, :center),
             fontsize = 13, color = INK)
     end
