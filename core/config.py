@@ -175,9 +175,11 @@ class Settings(BaseSettings):
 
     UNSET MEANS OFF, and that is the rollback: remove the variable from the
     Cloud Run service, promote the resulting revision, and the gate is gone.
-    Local dev and the test suite never set it. `/health`, `/seo-proxy/…` and
-    `/debug/cache/invalidate` stay exempt even when it is set — see
-    `api/origin_gate.py` for why each one has to be."""
+    Local dev and the test suite never set it. Exactly two paths stay exempt
+    when it is set — `/health` and `/debug/cache/invalidate`; the prerendered
+    `/seo-proxy/…` pages are NOT among them, since the site's nginx fetches
+    them through the edge and so carries the header. See `api/origin_gate.py`
+    for why each of the two has to be, and why the third is not."""
 
     @field_validator(
         "database_url",
