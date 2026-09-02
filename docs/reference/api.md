@@ -548,12 +548,38 @@ gcloud run services describe "$SERVICE" $LOC --format="value(status.traffic)"
 )
 ```
 
-**Rolling back** is the same block with `--remove-secrets=ORIGIN_SECRET` in
-place of `--update-secrets` (step 2 then has nothing to resolve) and a
-`disarm-` suffix. It must stay executable in the worst state the service can be
-in, which is why step 1 warns rather than refuses — and when the gate is causing
-an outage, step 0's wait is the wrong trade: skip it, disarm, and re-check
-afterwards.
+**Rolling back** is its own block, not the one above with a flag swapped. It has
+to run in the worst state the service can be in — which includes the secret
+having been disabled or deleted during the incident, so it must not look the
+secret up at all. Nothing here depends on anything but the currently serving
+revision:
+
+```bash
+(
+set -euo pipefail
+SERVICE=anyplot-api
+LOC="--project=anyplot --region=europe-west4"
+
+# No in-flight check and no secret lookup: when the gate is the outage, waiting
+# for a build is the wrong trade, and step 2 above would abort here on a
+# disabled version — leaving the gate armed at the moment it must come off.
+SERVING=$(gcloud run services describe "$SERVICE" $LOC --format=json \
+  | python3 -c "import json,sys; d=json.load(sys.stdin); \
+      print(next(x['revisionName'] for x in d['status']['traffic'] if x.get('percent')==100))")
+IMAGE=$(gcloud run revisions describe "$SERVING" $LOC --format="value(spec.containers[0].image)")
+test -n "$IMAGE" || { echo "could not resolve the serving image"; exit 1; }
+
+SUFFIX="disarm-$(date -u +%Y%m%d%H%M)"
+gcloud run services update "$SERVICE" $LOC --image="$IMAGE" \
+  --remove-secrets=ORIGIN_SECRET --revision-suffix="$SUFFIX"
+gcloud run services update-traffic "$SERVICE" $LOC --to-revisions="$SERVICE-$SUFFIX=100"
+
+curl -s "https://api.anyplot.ai/health"   # expect "off" or "off-seen"
+)
+```
+
+Removing the Worker's binding is **not** a rollback — while the service is armed
+that takes the apex route down rather than freeing it. Roll back here first.
 
 **Rotating the secret** means changing two sides that must agree, and the gate
 accepts exactly one value — so there is no overlap window. Roll back first,
