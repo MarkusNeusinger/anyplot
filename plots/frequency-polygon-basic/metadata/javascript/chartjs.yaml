@@ -1,0 +1,247 @@
+library: chartjs
+language: javascript
+specification_id: frequency-polygon-basic
+created: '2026-09-02T00:42:47Z'
+updated: '2026-09-02T00:55:28Z'
+generated_by: claude-sonnet
+workflow_run: 33576145636
+issue: 3418
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - X-axis now tightly ranged to the actual data span (287.5-812.5), eliminating the
+    empty right-third of the canvas flagged in attempt 1.
+  - 'Grid is now y-axis-only (scales.x.grid.display: false), matching the style guide''s
+    line-chart grid guidance.'
+  - 'Point markers bumped from 2.5px to 4px, making the ~20-24 bin vertices per polygon
+    clearly visible while zero-closure endpoints stay hidden (pointRadius: 0).'
+  - 'Correct frequency-polygon construction: shared bin edges across all three groups,
+    midpoints connected, each polygon explicitly closed to zero at both ends per spec.'
+  - Triple redundant encoding (color + line dash style + point placement) for the
+    three groups, exceeding the style guide's recommendation for n=3-4 series.
+  - Deterministic LCG-seeded Box-Muller sampling — fully reproducible, no external
+    RNG.
+  - Theme tokens correctly threaded through all chrome; both renders pass the readability
+    checklist with no dark-on-dark or light-on-light failures.
+  weaknesses:
+  - Aesthetic Sophistication is still mostly functional styling (dash patterns, alpha
+    fills, themed point borders) rather than distinctive custom typography or layout
+    choices.
+  - Legend swatches and canvas framing remain close to Chart.js defaults; no additional
+    visual-refinement touches (e.g. subtle canvas border treatment) beyond the grid
+    fix.
+  - Fill overlap in the densest ~440-500ms band still reads slightly muddy where three
+    semi-transparent fills stack, though line strokes stay legible on top.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "frequency-polygon-basic · javascript · chartjs · anyplot.ai" centered at top; legend below with three colored point swatches (Control green, Caffeine lavender/dashed, Sleep-deprived blue/dotted); axis titles "Reaction Time (ms)" / "Frequency (count)" and tick labels all dark-on-light. X-axis now ranges tightly from 287.5 to 812.5, matching the actual data span with no wasted canvas. Grid is y-axis-only (horizontal lines), x-axis grid disabled.
+      Data: First series (Control) is the brand green #009E73 solid line; Caffeine is a lavender dashed line (left-shifted, peak ~54 near 415ms — faster reactions); Sleep-deprived is a blue dotted line (broader, right-shifted, peak ~41 near 540ms — slower reactions). Each polygon has a matching semi-transparent fill and is explicitly closed to zero at both ends. Point markers (~4px) are clearly visible at each bin midpoint, invisible at the zero-closure endpoints.
+      Legibility verdict: PASS — all title, legend, and axis text is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, legend, and axis chrome now rendered in light/off-white ink, fully legible. Same tightened x-axis range and y-axis-only grid as the light render.
+      Data: The three polygons are shape- and color-identical to the light render (green/lavender/blue data colors unchanged) — confirms only chrome flipped as required. Fill overlap in the ~440-500ms band where all three semi-transparent fills stack reads slightly muddier on the dark surface, but line strokes remain clearly visible on top and each series stays distinguishable via its dash pattern.
+      Legibility verdict: PASS — all title, legend, and axis text is clearly readable against the dark background; no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes; readable in both themes; slightly small at 400px
+          thumbnail scale like most catalog entries
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions despite three overlapping polygons
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Point markers now 4px (up from 2.5px), clearly visible at each of
+          the ~20-24 bin vertices per line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct dash patterns (solid/dashed/dotted) back up color so groups
+          aren't distinguished by hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: X-axis range tightened to 287.5-812.5, fixing the previously flagged
+          empty right-third of canvas; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes have descriptive titles with units (ms, count)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green #009E73; multi-series follows t.palette
+          order; backgrounds correct in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Dash-pattern/fill/point styling is above generic defaults, but no
+          further custom typography or layout beyond that
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid is now y-axis-only (fixed from attempt 1's both-axis grid);
+          otherwise still close to Chart.js defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Overlapping shapes clearly communicate the caffeine/control/sleep-deprived
+          shift in central tendency and spread
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct frequency polygon: midpoints connected, closed to zero at
+          both ends'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors+styles, legend, markers, zero-closure, aligned bins,
+          semi-transparent fill — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction time, Y = frequency count; correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match group names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows differences in central tendency, spread, and skew across three
+          groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral reaction-time psychology dataset
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times (287-812ms) and group means/spreads are sensible for
+          the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions for LCG/normal-sampling/binning, justified
+          but adds structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses global Chart
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set; mount-node contract respected
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Linear x-scale with {x,y} point data and parsing:false is the idiomatic
+          Chart.js pattern for this use case
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Per-point pointRadius array to hide zero-endpoints, borderDash patterns,
+          themed point border color
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - binning
+  styling:
+  - alpha-blending
