@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: windbarb-basic
 created: '2026-09-02T10:29:06Z'
-updated: '2026-09-02T10:34:27Z'
+updated: '2026-09-02T10:48:00Z'
 generated_by: claude-sonnet
 workflow_run: 33619040962
 issue: 3694
@@ -12,56 +12,66 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 75
 review:
   strengths:
-  - 'Full wind-barb vocabulary demonstrated: half barbs (5kt), full barbs (10kt),
-    a triangular pennant (50kt), and an open calm circle all appear, with the gale/calm
-    stations explicitly guaranteed via code so the reviewer always sees the complete
-    notation set.'
-  - Data is a physically coherent Rankine-vortex wind field around a low-pressure
-    center, giving the barb field a genuine cyclonic circulation pattern rather than
-    random noise — a clear, real-world meteorological scenario.
-  - Theme-adaptive chrome is correctly threaded through Axis kwargs (titlecolor, xlabelcolor,
-    ticklabelcolor, spinecolor) and both renders keep the brand-green `#009E73` barbs
-    identical while backgrounds correctly flip between `#FAF8F1` and `#1A1A17`.
-  - 'Efficient, idiomatic Makie usage: batches all staffs and barb ticks into single
-    `linesegments!` calls and all pennants into one `poly!` call instead of looping
-    per-primitive draw calls.'
-  - Clean KISS structure with explicit Random.seed!(42), only used imports (CairoMakie,
-    Colors, Random), and no fake interactive elements.
+  - 'Full wind-barb vocabulary is genuinely present and verified pixel-by-pixel: half
+    barbs, full barbs, a filled triangular pennant (confirmed via crop around the
+    gale station), and an open calm-circle marker without a staff all render correctly.'
+  - Data is a physically coherent Rankine-vortex wind field with a guaranteed calm
+    eye and a guaranteed gale-force station, so the barb field forms a genuine, readable
+    cyclonic swirl rather than random noise.
+  - 'Theme-adaptive chrome is correctly threaded through Axis kwargs (titlecolor,
+    xlabelcolor/ylabelcolor, ticklabelcolor, spinecolor); backgrounds correctly flip
+    between #FAF8F1 and #1A1A17 while the brand-green #009E73 barbs stay pixel-identical
+    between renders.'
+  - 'Current source (HEAD, commit ed6f490a5) shows real library-mastery work beyond
+    attempt 1: per-station RGBAf color arrays (speed-keyed alpha) passed directly
+    into the batched linesegments!/poly! calls, plus a dashed reference ring + crosshair
+    at the vortex center and a reframed ''vortex center'' axis-label wording — all
+    directly responsive to the prior review''s DE-03/DQ-03/LM-02 feedback.'
+  - 'Clean KISS structure: explicit Random.seed!(42), only used imports (CairoMakie,
+    Colors, Random), no fake interactive elements, canonical save("plot-$(THEME).png",
+    fig; px_per_unit=2) call, and the saved canvas measures exactly 3200×1800.'
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: the plot is entirely
-    monochrome (single brand-green hue, no grid, no reference elements) which is domain-appropriate
-    but reads as plain — consider a very subtle radial guide ring or faint low-opacity
-    marker at the vortex center to reinforce the ''low-pressure center'' framing without
-    adding a second data color.'
-  - No visual cue marks the low-pressure center itself (station_x=5.0, station_y=3.0)
-    — a small crosshair or dashed reference circle at that point would let the viewer
-    immediately see the circulation pattern the data was designed to show, rather
-    than requiring them to infer it from barb orientation alone.
-  - The vortex domain (~10km × 6km, radius_max=1.6km) reads as unusually small to
-    be labeled a generic 'low-pressure center' on synoptic axis labels — real synoptic
-    lows span tens to hundreds of km. Either scale the domain up, or reframe the labeling
-    toward a mesocyclone/local-vortex scale to match the ~1.6km circulation radius
-    used in the data.
-  - 'Library Mastery is solid but generic: `linesegments!`/`poly!` batching is a good
-    idiomatic choice but not something unique to Makie (matplotlib''s LineCollection/PatchCollection
-    do the same); consider leveraging a more distinctive Makie capability (e.g. a
-    custom `@recipe` for `windbarb!`, or an interpolated per-station alpha keyed to
-    wind speed) to make library mastery stand out more.'
+  - 'CRITICAL — stale render pipeline mismatch: plot-light.png/plot-dark.png in this
+    review do not reflect the current implementation (HEAD commit ed6f490a5, the ''fix(makie):
+    address review feedback'' commit). The rendered axis labels still read ''Distance
+    east/north of low-pressure center (km)'' and no reference ring or crosshair is
+    visible anywhere near the vortex center — but the current .jl source already renamed
+    the labels to ''Distance east/north of vortex center (km)'' (lines 141-142) and
+    already adds a dashed reference ring + crosshair at (center_x, center_y) with
+    radius_max=1.6 (lines 162-171). Verified with pixel-level scans: zero pixels matching
+    the expected INK_SOFT-at-alpha-0.35 blend color exist anywhere within a 900x700px
+    box centered on the vortex, in either theme. These images appear to be carried
+    over from the pre-repair attempt rather than freshly rendered from current HEAD.
+    Action needed: regenerate plot-light.png/plot-dark.png from the current commit
+    before the next review — do NOT ask the implementation to re-add the ring/crosshair
+    or re-word the axis labels, since commit ed6f490a5 already did both; only the
+    render artifact is out of date.'
+  - Because the reviewed artifact is stale, VQ-05/DE-03/DQ-03 could not be visually
+    re-verified against the intended fixes (reference ring for the vortex-center callout,
+    and the reframed 'vortex center' domain-scale wording) — score is capped pending
+    a fresh render.
+  - 'As literally rendered: Design Excellence still reads as ''well-configured default''
+    — a single monochrome hue with no visible reference mark at the vortex center,
+    so the cyclonic pattern still requires the viewer to infer the center from barb
+    orientation alone rather than seeing it called out directly (this is exactly what
+    the current source''s ring/crosshair addition is meant to fix, once re-rendered).'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "windbarb-basic · julia · makie · anyplot.ai" in bold dark ink, clearly legible; axis titles "Distance east of low-pressure center (km)" and "Distance north of low-pressure center (km)" in matching dark ink; tick labels (0, 5, 10 on x; 0.0, 2.5, 5.0 on y) in a softer gray, all fully visible with no clipping at the canvas edges. Only left/bottom spines are present (top/right removed), no grid lines.
-      Data: All barbs, feathers, the pennant triangle, and the open calm-circle marker render in brand green #009E73. The staffs point toward the grid center in a clear cyclonic (counterclockwise) swirl consistent with the Rankine-vortex wind field, with barb density (number of feathers) increasing toward the mid-radius band and a lone open circle marking the calm "eye" station near (4, 3.5).
+      Chrome: Title "windbarb-basic · julia · makie · anyplot.ai" in bold dark ink, clearly legible. Axis labels read "Distance east of low-pressure center (km)" / "Distance north of low-pressure center (km)" in matching dark ink; tick labels (0, 5, 10 on x; 0.0, 2.5, 5.0 on y) in softer gray, all fully visible, nothing clipped. Only left/bottom spines present, no grid lines.
+      Data: All ~48 stations render in brand green #009E73 — staffs, feathers, one filled triangular pennant (confirmed via pixel crop near the gale station), and one open calm-circle marker with no staff. Barb orientation forms a clear cyclonic (counterclockwise) swirl. NO dashed reference ring or crosshair is visible anywhere near the apparent vortex center, despite the current source code (HEAD) containing code to draw one.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Note: axis-label wording ("low-pressure center") and the missing ring/crosshair do NOT match the current .jl source, which already renames the labels to "vortex center" and adds the ring/crosshair. This render appears stale (pre-dates commit ed6f490a5).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and axis labels now rendered in light ink (#F0EFE8-equivalent), tick labels in a lighter soft gray — all clearly legible against the dark surface, with no dark-on-dark failures observed. Spines and absence of gridlines match the light render's structure.
-      Data: Barb geometry, pennant, and calm-circle marker are rendered in the identical brand green #009E73 as the light render — confirmed unchanged between themes; only the chrome (background + text) flipped.
+      Chrome: Same title and axis-label text (still "low-pressure center") now in light ink, tick labels in lighter gray — all clearly legible against the dark surface, no dark-on-dark failures.
+      Data: Barb geometry, pennant, and calm-circle marker render in the identical brand green #009E73 as the light render — confirmed unchanged between themes; only chrome flipped. Same as the light render, no reference ring/crosshair is visible near the vortex center.
       Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures.
+      Note: same staleness concern as the light render — this PNG does not reflect the ring/crosshair or label-wording changes present in the current source.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -72,23 +82,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via titlesize/xlabelsize/ylabelsize/ticklabelsize;
-          readable in both themes; title occupies ~40% of width which is on the smaller
-          side for a short mandated title but not overflowing or clipped.
+        comment: Explicit titlesize=20/xlabelsize=14/ylabelsize=14/ticklabelsize=12;
+          readable in both themes. Title occupies ~35-40% of width — comfortably within
+          bounds, no overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Grid spacing with jitter keeps all barbs, ticks, and labels clear
-          of one another; no collisions.
+        comment: Jittered grid keeps all ~48 barbs, ticks, and labels clear of one
+          another; no collisions in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=2.2 and markersize=18 for the calm circle are well-scaled
-          for the ~48-point sparse dataset.
+        comment: linewidth=2.2 and calm-circle markersize=18 are well-scaled for this
+          sparse (~48-point) dataset.
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -101,14 +111,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          nothing is cut off.
+        comment: Canvas measures exactly 3200x1800 (canvas gate passed). Plot area
+          fills the canvas with balanced margins, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels are descriptive and include units (km).
+        comment: Both axis labels descriptive with units (km); title matches the mandated
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -124,24 +135,27 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        comment: 'Looks like a well-configured, domain-appropriate default: clean
-          single-hue barb field, but no additional palette or hierarchy elements beyond
-          that.'
+        passed: false
+        comment: 'As rendered: clean single-hue barb field reads as a well-configured,
+          domain-appropriate default. Current source adds a per-station speed-keyed
+          alpha gradient which is not confirmable in this stale render.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Top/right spines removed, no grid clutter, generous whitespace —
-          some refinement visible but no further polish (e.g. reference marks) beyond
-          that.
+        passed: false
+        comment: Top/right spines removed, no grid clutter, generous whitespace. No
+          further polish (reference marks) visible in the rendered artifact.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: The Rankine-vortex data intentionally produces a visible cyclonic
-          swirl with a guaranteed calm eye and gale extremity, giving real visual
-          hierarchy — though nothing explicitly labels the low-pressure center itself,
-          so the story requires the viewer to infer the pattern.
+        passed: false
+        comment: Rankine-vortex data produces a genuine visible cyclonic swirl with
+          a guaranteed calm eye and gale extremity — real hierarchy, but as rendered
+          nothing marks the vortex center itself, so the pattern still requires inference.
+          Current source's ring/crosshair addition targets exactly this gap but isn't
+          visible in this stale render.
     spec_compliance:
       score: 15
       max: 15
@@ -150,26 +164,31 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: 'Genuine wind barb notation: staff + feathers + pennant + calm circle,
+        passed: true
+        comment: 'Genuine wind-barb notation: staff + feathers + pennant + calm circle,
           matching the spec exactly.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        comment: Half barb, full barb, pennant, and calm-circle all present and guaranteed
-          by construction.
+        passed: true
+        comment: Half barb, full barb, one filled pennant (verified via pixel crop),
+          and calm-circle all present and guaranteed by construction (eye_index /
+          gale_index).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: x/y station coordinates and u/v wind components correctly drive position
-          and barb direction/speed.
+        passed: true
+        comment: x/y station coordinates and u/v wind components correctly drive barb
+          position, heading, and feather count.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format exactly; single-series plot correctly
-          omits a redundant legend.
+        passed: true
+        comment: Title matches the mandated 'windbarb-basic · julia · makie · anyplot.ai'
+          format exactly; single-series plot correctly omits a redundant legend.
     data_quality:
       score: 14
       max: 15
@@ -178,21 +197,25 @@ review:
         name: Feature Coverage
         score: 6
         max: 6
+        passed: true
         comment: All barb-notation classes (half, full, pennant, calm) are present
           by explicit construction, not left to chance.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Neutral, real meteorological scenario — surface wind observations
-          around a low-pressure center.
+        passed: true
+        comment: Neutral, physically coherent meteorological scenario — surface wind
+          observations around a vortex.
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
-        comment: Wind speeds (0-55kt) are realistic, but the ~10km x 6km domain with
-          a 1.6km vortex radius reads as unusually small for a generic 'low-pressure
-          center' label — more consistent with a mesocyclone than a synoptic low.
+        passed: false
+        comment: As rendered, the ~10km x 6km domain with a 1.6km circulation radius
+          still carries the 'low-pressure center' label wording, which reads as unusually
+          small for a synoptic low. Current source already renamed this to 'vortex
+          center' framing, but that fix isn't visible in this stale render.
     code_quality:
       score: 10
       max: 10
@@ -201,55 +224,65 @@ review:
         name: KISS Structure
         score: 3
         max: 3
+        passed: true
         comment: Imports -> data -> geometry -> plot -> save, no functions/classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Random.seed!(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: CairoMakie, Colors, Random all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: Appropriately complex for custom barb geometry; no over-engineering
           or fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches the required
-          naming convention.
+          naming convention; canvas gate confirms 3200x1800 output.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
+        passed: true
         comment: Batches all staffs/ticks into single linesegments! calls and pennants
-          into one poly! call — a good idiomatic Makie pattern beyond naive per-element
-          draw calls.
+          into one poly! call, each with a matching per-primitive RGBAf color array
+          — idiomatic, efficient Makie usage.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Batched linesegments!/poly! is a reasonable Makie idiom, but similar
-          batching (LineCollection/PatchCollection) exists in other libraries, so
-          it isn't strongly Makie-unique.
+        passed: true
+        comment: Per-station speed-keyed alpha via RGBAf color arrays passed directly
+          to linesegments!/poly! is a genuinely Makie-native technique (native per-vertex/per-primitive
+          color attributes) directly responsive to the prior review's 'not Makie-unique'
+          critique — a real improvement, though not yet at custom-@recipe level.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - vector-field
+  - annotations
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
   - publication-ready
+  - alpha-blending
