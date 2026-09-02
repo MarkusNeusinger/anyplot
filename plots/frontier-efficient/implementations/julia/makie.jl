@@ -84,8 +84,17 @@ cml_return = risk_free_rate .+ (tangency_return - risk_free_rate) / tangency_ris
 # --- Plot --------------------------------------------------------------------
 pct_format(values) = [string(round(Int, v * 100), "%") for v in values]
 
+# Explicit round-number tick steps (2 pp) so labels land on clean integers
+# instead of rounding arbitrary auto-ticks to the nearest percent.
+xtick_step = 0.02
+ytick_step = 0.02
+xtick_vals = 0:xtick_step:(ceil(max_risk_axis / xtick_step) * xtick_step)
+ytick_lo = floor(min_var_return / ytick_step) * ytick_step
+ytick_hi = ceil(maximum(frontier_return) / ytick_step) * ytick_step
+ytick_vals = ytick_lo:ytick_step:ytick_hi
+
 fig = Figure(
-    resolution      = (1600, 900),
+    size            = (1600, 900),
     fontsize        = 14,
     backgroundcolor = PAGE_BG,
 )
@@ -107,6 +116,8 @@ ax = Axis(
     yticklabelcolor    = INK_SOFT,
     xtickcolor         = INK_SOFT,
     ytickcolor         = INK_SOFT,
+    xticks             = xtick_vals,
+    yticks             = ytick_vals,
     xtickformat        = pct_format,
     ytickformat        = pct_format,
     backgroundcolor    = PAGE_BG,
@@ -140,6 +151,19 @@ scatter!(
     ax, [tangency_risk], [tangency_return];
     color = IMPRINT_PALETTE[3], marker = :star5, markersize = 26,
     strokewidth = 1.5, strokecolor = PAGE_BG, label = "Max Sharpe (tangency) portfolio",
+)
+
+# Small callouts so the two key portfolios' return/risk are legible at a glance
+callout(v) = string(round(v * 100, digits = 1), "%")
+text!(
+    ax, min_var_risk, min_var_return;
+    text = "Min variance\n$(callout(min_var_return)) / $(callout(min_var_risk))",
+    color = INK_SOFT, fontsize = 11, align = (:left, :top), offset = (10, -10),
+)
+text!(
+    ax, tangency_risk, tangency_return;
+    text = "Tangency\n$(callout(tangency_return)) / $(callout(tangency_risk))",
+    color = INK_SOFT, fontsize = 11, align = (:left, :bottom), offset = (10, 10),
 )
 
 Colorbar(
