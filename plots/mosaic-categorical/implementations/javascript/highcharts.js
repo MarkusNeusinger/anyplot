@@ -1,11 +1,10 @@
 // anyplot.ai
 // mosaic-categorical: Mosaic Plot for Categorical Association Analysis
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
+// License: Highcharts — commercial license, free for non-commercial use (highcharts.com/license)
 // Quality: 88/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
-const W = window.ANYPLOT_SIZE.width;
-const H = window.ANYPLOT_SIZE.height;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Contingency table: performance rating counts by department.
@@ -21,34 +20,41 @@ const counts = [
 const colTotals = counts.map((row) => row.reduce((a, b) => a + b, 0));
 const grandTotal = colTotals.reduce((a, b) => a + b, 0);
 
-// --- Layout (custom drawing area — Highcharts core has no mosaic series) ----
-const marginLeft = 70;
-const marginRight = 200;
-const marginTop = 96;
-const marginBottom = 76;
-const plotWidth = W - marginLeft - marginRight;
-const plotHeight = H - marginTop - marginBottom;
-const colGap = 6;
-const rowGap = 3;
-
-const availableWidth = plotWidth - (departments.length - 1) * colGap;
-let cursorX = marginLeft;
-const colX = [];
-const colWidth = [];
-departments.forEach((_, i) => {
-  const w = (colTotals[i] / grandTotal) * availableWidth;
-  colX.push(cursorX);
-  colWidth.push(w);
-  cursorX += w + colGap;
+// Column boundaries in raw-count data units — these back the real xAxis scale
+// (0..grandTotal) so tick centers and column widths both derive from it.
+let cum = 0;
+const colStart = [];
+const colEnd = [];
+colTotals.forEach((ct) => {
+  colStart.push(cum);
+  cum += ct;
+  colEnd.push(cum);
 });
+const colCenters = colStart.map((s, i) => (s + colEnd[i]) / 2);
 
-function textColorFor(hex) {
+// Precomputed luminance-based text color per rating (a lookup, not a per-cell helper call).
+function luminance(hex) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-  return luminance > 0.6 ? "#1A1A17" : "#FFFFFF";
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
+const textColors = ratings.map((_, j) => (luminance(t.palette[j]) > 0.6 ? "#1A1A17" : "#FFFFFF"));
+
+// Standout cell for storytelling emphasis: department with the highest "Below" share.
+const belowIdx = ratings.length - 1;
+let standoutIdx = 0;
+let standoutRatio = -1;
+counts.forEach((row, i) => {
+  const ratio = row[belowIdx] / colTotals[i];
+  if (ratio > standoutRatio) {
+    standoutRatio = ratio;
+    standoutIdx = i;
+  }
+});
+
+const colGap = 6;
+const rowGap = 3;
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -56,82 +62,120 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
-    spacing: [0, 0, 0, 0],
     events: {
       load() {
         const r = this.renderer;
 
-        // Percentage gridlines + axis title (shared conditional-share scale)
-        [0, 25, 50, 75, 100].forEach((pct) => {
-          const y = marginTop + plotHeight * (1 - pct / 100);
-          r.path(["M", marginLeft, y, "L", marginLeft + plotWidth, y])
-            .attr({ stroke: t.grid, "stroke-width": 1 })
-            .add();
-          r.text(`${pct}%`, marginLeft - 12, y + 5)
-            .attr({ align: "right" })
-            .css({ color: t.inkSoft, fontSize: "14px" })
-            .add();
-        });
-        r.text("Rating share within department", 24, marginTop + plotHeight / 2)
-          .attr({ align: "center", rotation: -90 })
-          .css({ color: t.inkSoft, fontSize: "16px" })
-          .add();
+        // Draw on top of the real xAxis/yAxis coordinate system: Highcharts has
+        // already reserved space for the title, subtitle, axis titles/labels and
+        // legend, so this box is the actual plot area, not a hand-picked margin.
+        const plotLeftPx = this.plotLeft;
+        const plotTopPx = this.plotTop;
+        const plotWidthPx = this.plotWidth;
+        const plotHeightPx = this.plotHeight;
 
-        // Mosaic rectangles: column width ∝ department share, row height ∝ rating share
+        // Column x-boundaries: width proportional to department headcount share.
+        const availableWidth = plotWidthPx - (departments.length - 1) * colGap;
+        let cursorX = plotLeftPx;
+        const colX = [];
+        const colWidth = [];
+        departments.forEach((_, i) => {
+          const w = (colTotals[i] / grandTotal) * availableWidth;
+          colX.push(cursorX);
+          colWidth.push(w);
+          cursorX += w + colGap;
+        });
+
+        // Mosaic rectangles: column width ∝ department share, row height ∝ rating share.
         departments.forEach((dept, i) => {
-          const availableHeight = plotHeight - (ratings.length - 1) * rowGap;
-          let cursorY = marginTop;
+          const availableHeight = plotHeightPx - (ratings.length - 1) * rowGap;
+          let cursorY = plotTopPx;
           ratings.forEach((rating, j) => {
             const cellHeight = (counts[i][j] / colTotals[i]) * availableHeight;
-            const fill = t.palette[j];
+            const isStandout = i === standoutIdx && j === belowIdx;
             r.rect(colX[i], cursorY, colWidth[i], cellHeight, 2)
-              .attr({ fill, stroke: t.pageBg, "stroke-width": 2 })
+              .attr({
+                fill: t.palette[j],
+                stroke: isStandout ? t.amber : t.pageBg,
+                "stroke-width": isStandout ? 3 : 2,
+              })
               .add();
 
             if (colWidth[i] > 46 && cellHeight > 28) {
               r.text(String(counts[i][j]), colX[i] + colWidth[i] / 2, cursorY + cellHeight / 2 + 5)
                 .attr({ align: "center" })
-                .css({ color: textColorFor(fill), fontSize: "14px", fontWeight: "600" })
+                .css({ color: textColors[j], fontSize: "14px", fontWeight: "600" })
                 .add();
             }
             cursorY += cellHeight + rowGap;
           });
-
-          // Column label (first categorical variable)
-          r.text(dept, colX[i] + colWidth[i] / 2, marginTop + plotHeight + 26)
-            .attr({ align: "center" })
-            .css({ color: t.inkSoft, fontSize: "14px" })
-            .add();
         });
-        r.text("Department  ·  column width ∝ headcount", marginLeft + plotWidth / 2, H - 14)
-          .attr({ align: "center" })
-          .css({ color: t.inkSoft, fontSize: "16px" })
-          .add();
-
-        // Legend (second categorical variable)
-        const legendX = marginLeft + plotWidth + 28;
-        ratings.forEach((rating, j) => {
-          const legendY = marginTop + j * 30;
-          r.rect(legendX, legendY, 16, 16, 2).attr({ fill: t.palette[j] }).add();
-          r.text(rating, legendX + 24, legendY + 13)
-            .css({ color: t.inkSoft, fontSize: "14px" })
-            .add();
-        });
-        r.text("Performance rating", legendX, marginTop - 24)
-          .css({ color: t.inkSoft, fontSize: "14px", fontWeight: "600" })
-          .add();
       },
     },
   },
   credits: { enabled: false },
+  colors: t.palette,
   title: {
     text: "mosaic-categorical · javascript · highcharts · anyplot.ai",
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
-  xAxis: { visible: false },
-  yAxis: { visible: false },
-  legend: { enabled: false },
+  subtitle: {
+    text: `${departments[standoutIdx]} has the highest 'Below' share, at ${Math.round(standoutRatio * 100)}%`,
+    style: { color: t.inkSoft, fontSize: "14px" },
+  },
+  xAxis: {
+    type: "linear",
+    min: 0,
+    max: grandTotal,
+    tickPositions: colCenters,
+    lineWidth: 0,
+    tickLength: 0,
+    gridLineWidth: 0,
+    labels: {
+      formatter() {
+        return departments[colCenters.indexOf(this.value)] ?? "";
+      },
+      style: { color: t.inkSoft, fontSize: "14px" },
+    },
+    title: {
+      text: "Department  ·  column width ∝ headcount",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
+  },
+  yAxis: {
+    type: "linear",
+    min: 0,
+    max: 100,
+    tickPositions: [0, 25, 50, 75, 100],
+    lineWidth: 0,
+    gridLineColor: t.grid,
+    labels: {
+      formatter() {
+        return `${this.value}%`;
+      },
+      style: { color: t.inkSoft, fontSize: "14px" },
+    },
+    title: {
+      text: "Rating share within department",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
+  },
+  legend: {
+    enabled: true,
+    align: "right",
+    verticalAlign: "middle",
+    layout: "vertical",
+    title: { text: "Performance rating", style: { color: t.inkSoft, fontSize: "14px", fontWeight: "600" } },
+    itemStyle: { color: t.inkSoft, fontSize: "14px" },
+    itemHoverStyle: { color: t.ink },
+    symbolRadius: 2,
+  },
   tooltip: { enabled: false },
-  plotOptions: { series: { animation: false } },
-  series: [],
+  plotOptions: { series: { animation: false, enableMouseTracking: false } },
+  series: ratings.map((rating, j) => ({
+    type: "column",
+    name: rating,
+    data: [],
+    color: t.palette[j],
+  })),
 });
