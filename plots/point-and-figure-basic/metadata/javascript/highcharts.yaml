@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: point-and-figure-basic
 created: '2026-09-02T05:18:11Z'
-updated: '2026-09-02T05:23:11Z'
+updated: '2026-09-02T05:43:46Z'
 generated_by: claude-sonnet
 workflow_run: 33593446115
 issue: 3755
@@ -12,68 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 95
 review:
   strengths:
-  - Faithfully implements the classic close-only 1-box / 3-box-reversal Point-and-Figure
-    algorithm, correctly starting a new column only after a reversal of the configured
-    box count
-  - Each column contains only X's or only O's, never mixed, matching the spec's core
-    P&F rule
-  - Semantic green/red X/O coloring is correctly anchored to the Imprint palette (brand
-    green position 1 for Rising, matte-red semantic anchor position 5 for Falling)
-    and documented in-code as an intentional finance semantic exception rather than
-    an arbitrary custom hex
-  - 45-degree, one-box-per-column support/resistance trend-line projections are drawn
-    from the extreme pivot columns — a genuine idiomatic P&F concept from the spec
-    notes, not just decoration
-  - X-axis is explicitly labeled 'Column (price reversals — not time)', directly educating
-    the reader about the chart's defining feature versus time-based charts
-  - Deterministic LCG-seeded synthetic data with alternating-direction legs produces
-    a rich zigzag with many genuine reversals, giving good feature coverage
-  - Uses Highcharts scatter series with disabled markers and dataLabels-as-glyph as
-    a creative, idiomatic workaround since Highcharts core has no native P&F series
-    type
-  - Fully theme-adaptive chrome — both light and dark renders are legible with correctly
-    flipped background/text/grid tokens while data colors stay identical
-  - X vs O glyph shape provides redundant encoding alongside color, so the series
-    distinction does not rely on hue alone (CVD-safe)
+  - Faithfully implements the classic close-only 1-box / 3-box-reversal point-and-figure
+    algorithm; each column contains only X's or only O's, never mixed
+  - 'Directly resolves all three Attempt-1 weaknesses: added light zebra row-shading
+    at box intervals (fixes the dense-column near-solid-block legibility issue), added
+    an xAxis.plotBands reversal-zone highlight on the active column, and added a yAxis.plotLines
+    price-target annotation from the classic vertical count method'
+  - 'Semantic green/red X/O coloring is correctly anchored to the Imprint palette
+    (brand green #009E73 + matte-red semantic anchor #AE3030), documented in-code
+    as an intentional finance semantic exception per the style guide'
+  - 45-degree, one-box-per-column support/resistance trend-line projections from the
+    extreme pivot columns — a genuine idiomatic P&F concept, not decoration
+  - X-axis explicitly labeled "Column (price reversals — not time)", educating the
+    reader about the chart's defining feature
+  - Deterministic LCG-seeded data with 20 alternating-direction legs produces a rich
+    zigzag with many genuine reversals across a plausible ~230-day synthetic price
+    series
+  - Price-target plotLine and reversal-zone plotBand are genuinely distinctive Highcharts-only
+    capabilities layered on top of the scatter+dataLabels-as-glyph workaround, giving
+    the chart a clear focal point and trading-signal narrative
+  - Fully theme-adaptive chrome; both renders pass legibility with no clipping, overflow,
+    or dark-on-dark/light-on-light failures
+  - X vs O glyph shape gives redundant encoding alongside color (CVD-safe)
   weaknesses:
-  - 'Design Excellence is still close to a well-configured default: beyond the semantic
-    color and trend lines, there is little additional intentional polish (e.g. no
-    price-target annotation from the count method mentioned in the spec''s Applications,
-    no subtle shading/callout marking the current reversal zone) — add one more deliberate
-    storytelling element to push past ''good but generic'''
-  - In the densely packed columns (roughly columns 8-12, spanning price ~160-186),
-    consecutive X/O data-label glyphs at 16px stack very tightly at the $2 box spacing
-    and start to read as a solid colored block rather than discrete symbols — consider
-    a touch more vertical breathing room (slightly smaller font in dense regions,
-    or a light row-shading every other box) so the densest columns stay as legible
-    as the sparse ones
-  - The scatter + dataLabels-as-glyph technique is a solid response to the missing
-    native series type, but doesn't yet layer in a more distinctive Highcharts-only
-    capability (e.g. xAxis.plotBands to shade the active reversal zone, or chart-level
-    annotations) that would clearly differentiate this from a generic 'scatter with
-    text labels' implementation replicable in most other libraries
-  - Verify legend item text ('Rising (X)' / 'Falling (O)') renders in the intended
-    inkSoft gray in both themes — the render shows the legend row directly beneath
-    colored data columns, so double-check the itemStyle color isn't being visually
-    confused with or overridden by the adjacent series accent colors
+  - Legend items ('Rising (X)' / 'Falling (O)') render in neutral inkSoft gray with
+    no color swatch tied to the series accent color, since marker.enabled=false suppresses
+    the scatter legend symbol — the text labels alone carry the distinction, which
+    is minor since the in-plot X/O glyphs are already color-coded, but a small missed
+    opportunity for legend polish
+  - Aesthetic polish is strong but still shy of full publication-level refinement
+    in the busiest columns (~8-12) — zebra shading resolves legibility, but there
+    is still room for an even more deliberate typographic hierarchy between title/subtitle
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "point-and-figure-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top, fully visible and not clipped. Subtitle "Box size $2 · 3-box reversal" in lighter gray beneath it. Y-axis title "Price ($)" and X-axis title "Column (price reversals — not time)" both dark-gray, readable. Y-axis tick labels run 130-190 in steps of 2 (matching box size), fully visible with no clipped digits. X-axis tick labels run 0-18 in steps of 2, fully visible. Legend "Rising (X)" / "Falling (O)" sits centered below the X-axis title.
-      Data: Columns of X (teal-green, #009E73) and O (matte red, #AE3030) glyphs, one symbol type per column, spanning roughly price 134-186 across 19 columns. A dashed gray support line rises 1 box/column from the lowest pivot column; a dashed gray resistance line descends 1 box/column from the highest pivot column. First series color confirmed as brand green #009E73.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light failures observed.
+      Chrome: Bold dark title "point-and-figure-basic · javascript · highcharts · anyplot.ai" and gray subtitle "Box size $2 · 3-box reversal" are both fully visible, centered, and not clipped at any edge. Y-axis "Price ($)" (130-190, step 2) and X-axis "Column (price reversals — not time)" (0-18, step 2) tick labels are complete with no missing digits. Legend ("Rising (X)" / "Falling (O)") renders in neutral gray at the bottom, fully legible.
+      Data: Columns of teal-green X glyphs (#009E73, Rising) and matte-red O glyphs (#AE3030, Falling) alternate across ~20 columns, each column single-symbol only. New in this attempt: light gray zebra shading alternates every 2 price boxes, keeping the densest columns (8-12) reading as discrete rows instead of a solid block; a pink-tinted plotBand highlights the current (rightmost) reversal column; a dashed amber plotLine with the label "Price target (vertical count): $132" marks the projected target; dashed gray 45-degree support/resistance trend lines rise/fall 1 box per column from the extreme pivot columns.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title/subtitle/axis-title/tick-label layout as the light render, all rendered in light gray/off-white ink, fully legible against the dark surface. No clipped digits on tick labels. Legend text sits in the same position, readable.
-      Data: X and O glyph colors are visually identical to the light render (same #009E73 green, same #AE3030 red) — only the chrome (background, text, grid, dashed trend-line color) flips to the dark-theme tokens. Grid lines are subtle and visible without competing with the data.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text remains clearly visible against the near-black background, and brand green plus matte red both read well on the dark surface.
+      Chrome: Same title/subtitle/axis-title/tick-label layout, now rendered in light gray/off-white ink, fully legible. Legend text renders in the same neutral light-gray ink, matching the light render's relative tone.
+      Data: Data colors are pixel-identical to the light render — brand green #009E73 and matte red #AE3030 — confirming only chrome flips. Zebra shading, reversal-zone plotBand, and price-target plotLine all carry over correctly with theme-appropriate opacity.
+      Legibility verdict: PASS — all text remains clearly visible against the dark background; no dark-on-dark failures observed (checked tick labels, axis titles, legend, and the price-target label specifically).
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -81,78 +68,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, subtitle 14px, axis titles
-          16px, ticks/legend 14px, data labels 16px bold); readable and well-proportioned
-          in both themes, title fits comfortably without clipping
+        comment: All font sizes explicitly set, readable and well-proportioned in
+          both themes; no clipping or overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; columns are cleanly separated on the X axis
-          and box rows spaced enough vertically
+        comment: Columns and box rows cleanly separated, zebra shading reinforces
+          row boundaries
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Glyphs are visible and appropriately sized, but the densest columns
-          (~8-12) pack tightly enough at the box spacing to read as a near-solid block
+        comment: New zebra row-shading resolves the Attempt-1 dense-column near-solid-block
+          issue; individual X/O glyphs stay crisp even in columns 8-12
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: X vs O glyph shape gives redundant encoding alongside color; not
-          relying on hue alone
+          red-green-as-sole-signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a good majority of the canvas with balanced margins and
-          a legend placed close to the plot
+        comment: Plot fills a good majority of the canvas with balanced margins; new
+          price-target label and reversal-zone band stay fully within bounds
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units ('Price ($)'); X-axis title is descriptive and explains
-          the P&F-specific column concept
+        comment: Y-axis has units ($), X-axis title explains the P&F-specific column
+          concept
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is Imprint brand green #009E73; Falling series correctly
-          uses the matte-red semantic anchor for a documented finance exception; backgrounds
-          and chrome are theme-correct in both renders'
+        comment: First series is Imprint brand green; Falling series uses the documented
+          matte-red semantic anchor; theme-correct chrome in both renders
     design_excellence:
-      score: 13
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Thoughtful semantic color choice and trend-line concept lift it above
-          a plain default, but overall polish is still moderate rather than publication-level
+        passed: true
+        comment: Price-target annotation and reversal-zone highlight are exactly the
+          deliberate design elements Attempt 1 asked for; polish is now close to publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: X-axis grid disabled, subtle Y-axis grid only, generous whitespace,
-          no chart borders — good refinement but not maximally polished (dense-column
-          crowding, see VQ-03)
+        passed: true
+        comment: Zebra shading replaces a plain grid with a more refined, subtle row
+          cue; whitespace generous, spines removed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Support/resistance trend lines and the alternating zigzag data give
-          the chart a visible trend narrative and hierarchy beyond a raw data dump
+        passed: true
+        comment: Reversal-zone highlight plus price-target line create a clear focal
+          point on the current trading signal, alongside the trend-line narrative
     spec_compliance:
       score: 15
       max: 15
@@ -162,28 +146,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Point-and-Figure chart via scatter+dataLabels glyph technique
+        comment: Correct P&F chart via scatter+dataLabels glyph technique
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Box size, reversal amount, single-symbol columns, price-scale gridlines
-          at box intervals, and 45-degree trend lines are all present
+        comment: Box size, reversal amount, single-symbol columns, box-interval gridlines
+          (now zebra-shaded), 45° trend lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis correctly represents columns (not time), Y-axis correctly
-          represents price; all data visible
+        comment: X = column (not time), Y = price, correctly mapped and fully shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend labels 'Rising
-          (X)' / 'Falling (O)' correctly match the data
+        comment: Title matches the mandated format exactly; legend labels match series
+          naming
     data_quality:
       score: 15
       max: 15
@@ -194,21 +177,20 @@ review:
         max: 6
         passed: true
         comment: 20 alternating legs produce many genuine reversals with varied column
-          widths, showing bullish and bearish patterns
+          widths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible synthetic stock-price scenario, not tied to any
-          real or controversial entity
+        comment: Neutral, plausible synthetic stock-price scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~$130-190 with $2 box size and realistic daily drift/volatility
-          values are all sensible for a stock
+        comment: Price range, box size, and daily drift/volatility are all sensible;
+          ~230 observations within the spec's 200-500 range
     code_quality:
       score: 9
       max: 10
@@ -218,28 +200,26 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses small helper functions (lcg, boxOf, buildColumns) — reasonable
-          given the inherently stateful box/reversal algorithm, but deviates from
-          a flat script
+        comment: Small helper functions (lcg, boxOf, buildColumns) remain, reasonable
+          given the inherently stateful box/reversal algorithm
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic fixed-seed LCG (seed 42)
+        comment: Deterministic fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the global Highcharts object
+        comment: No unused imports; uses global Highcharts
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the algorithm required, no fake UI or simulated
-          interactivity
+        comment: Appropriately complex, no fake functionality, well-commented rationale
       - id: CQ-05
         name: Output & API
         score: 1
@@ -248,7 +228,7 @@ review:
         comment: Correct mount-node contract, animation disabled on chart and series,
           credits disabled
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -256,26 +236,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Creative, correct use of Highcharts scatter + dataLabels as a workaround
-          for the missing native P&F series type
+        comment: Creative, correct use of Highcharts scatter + dataLabels as workaround
+          for the missing native P&F series
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: The dataLabels-as-glyph trick is somewhat distinctive to Highcharts'
-          dataLabels API, but doesn't yet reach for a harder-to-replicate feature
-          like plotBands or annotations
-  verdict: REJECTED
+        passed: true
+        comment: 'Fully addresses Attempt-1 feedback: layers in xAxis.plotBands (zebra
+          shading + reversal-zone highlight) and yAxis.plotLines with a custom label
+          (price target) — genuinely distinctive Highcharts-only capabilities'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - binning
   styling:
-  - grid-styling
+  - alpha-blending
+  - publication-ready
