@@ -112,9 +112,11 @@ chart.setOption({
   backgroundColor: "transparent",
   title: {
     text: "network-hierarchical · javascript · echarts · anyplot.ai",
+    subtext: "Node color and size encode organizational depth: CEO → VP → Director → IC",
     left: "center",
     top: 20,
-    textStyle: { color: t.ink, fontSize: 22 },
+    textStyle: { color: t.ink, fontSize: 27 },
+    subtextStyle: { color: t.inkSoft, fontSize: 14 },
   },
   series: [
     {
