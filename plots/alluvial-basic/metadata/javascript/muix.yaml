@@ -1,0 +1,285 @@
+library: muix
+language: javascript
+specification_id: alluvial-basic
+created: '2026-09-02T11:24:54Z'
+updated: '2026-09-02T11:41:34Z'
+generated_by: claude-sonnet
+workflow_run: 33622885629
+issue: 1878
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/muix/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Genuinely idiomatic advanced MUI X usage: composes ChartContainer purely as a
+    scale/layout engine (useXScale, useYScale, useDrawingArea) to build a custom alluvial
+    diagram that the library has no built-in chart type for, rather than faking the
+    chart type or bailing out to NOT_FEASIBLE.'
+  - Data model is a proper Markov transition matrix (TRANSITION) driving population
+    + flow values by construction, so node totals and flow totals stay perfectly consistent
+    without separate bookkeeping - deterministic and reproducible with no RNG.
+  - 'Correct Imprint palette usage: first category (Free) is brand green #009E73,
+    Churned uses the semantic loss-red exception, and colors are identical between
+    light/dark renders with only chrome flipping.'
+  - 'Thoughtful visual hierarchy: STACK_ORDER puts premium tiers at the top and churn
+    at the bottom of every column, band width is proportional to transition volume,
+    and alpha-blended ribbons (fillOpacity 0.55) keep overlapping flows readable.'
+  - 'Both themes are fully legible: title, subtitle, legend, top axis time-point headers,
+    and edge node value labels (e.g. ''Free · 500'') render with correct contrast
+    on both #FAF8F1 and #1A1A17 backgrounds with no dark-on-dark/light-on-light failures.'
+  - Canvas gate passed (no drift), no AR-08/AR-09 violations - no clipped text at
+    any canvas edge in either render.
+  weaknesses:
+  - The mid-column category labels never actually render. AlluvialNodes computes showMidLabel
+    = !isFirst && !isLast && segmentH >= MID_LABEL_MIN_HEIGHT (16 CSS px) and draws
+    a rounded pageBg pill + CATEGORY_ABBR text for every Q2/Q3 segment, but a pixel-level
+    inspection of both plot-light.png and plot-dark.png (cropped tight around the
+    full Q2 and Q3 node columns) shows every segment as solid, unbroken color with
+    zero pill or text overlay anywhere - including tall segments like Q2 'Pro' (~185/1000
+    of the value range, far above the 16px threshold). This ~40-line code path (CATEGORY_ABBR,
+    MID_LABEL_MIN_HEIGHT, MID_LABEL_FONT, the pill rect + text JSX) is effectively
+    dead in the rendered output. Debug by checking whether the pill/text JSX is actually
+    reached (e.g. temporarily removing the height gate or logging segmentH) and whether
+    xScale/yScale return the same coordinate space inside AlluvialNodes as they do
+    for the sibling node <rect> that DOES render correctly at the same cx/yTop/yBottom.
+  - 'Because of the bug above, only the first (Q1) and last (Q4) columns carry any
+    text identifying which category a segment is - the two middle columns rely entirely
+    on cross-referencing the legend swatches by color, which is a real gap against
+    the spec''s explicit note: ''Labels should clearly identify both time points (column
+    headers) and categories (node labels).'' Time points are labeled (top axis headers);
+    categories are not labeled at every stage as apparently intended.'
+  - At flow-ribbon boundaries where multiple bezier bands meet the same node edge,
+    thin gap slivers show through to the page background - cream slivers in the light
+    render, but distinctly black slivers cutting across colored bands in the dark
+    render (visible in the Q2/Q3 region, e.g. between the Pro and Basic bands). These
+    read as small rendering glitches/holes rather than intentional separators, most
+    noticeable in dark mode.
+  - Value-axis title ('Customers', rotated, fontSize 13) is quite small and easy to
+    miss relative to the rest of the chrome - could be bumped closer to the other
+    14-15px chrome text for better balance.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "alluvial-basic · javascript · muix · anyplot.ai" in dark ink top-left, italic subtitle below it, a horizontal legend row (Enterprise/Pro/Basic/Free/Churned swatches + "Band width ∝ transition volume" note) all in dark ink/inkSoft - all clearly readable. Top axis shows bold "Q1 2024" / "Q2 2024" / "Q3 2024" / "Q4 2024" column headers in dark text. Left/right edge node labels ("Free · 500", "Enterprise · 136", etc.) are dark text on the cream background and fully legible, not clipped at the canvas edges.
+      Data: Five stacked node columns per time point (narrow vertical bars) connected by wide bezier-curved flow ribbons, band width proportional to transition volume, alpha-blended (0.55) so overlaps stay readable. First category (Free) is Imprint brand green #009E73; Basic/Pro/Enterprise use the next Imprint palette slots; Churned uses the semantic loss-red. The two middle columns (Q2, Q3) have solid-color node bars with no text/label identifying which segment is which category - only the legend and the two end columns provide that identification (see weaknesses).
+      Legibility verdict: PASS (all rendered text is clearly readable against the light background; the missing mid-column labels are a feature-completeness gap, not a legibility/contrast failure).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title/subtitle/legend/axis-header/edge-label text, now in light ink, clearly readable against the dark background - no dark-on-dark failures anywhere (title, legend labels, axis headers, and edge value labels all pass contrast).
+      Data: Identical data colors to the light render (green Free, semantic red Churned, etc.) - only the chrome (background, text) flipped, confirming palette consistency across themes. Same absence of mid-column (Q2/Q3) category labels as the light render. Flow-ribbon overlap seams show as thin black slivers cutting across the colored bands (more visually noticeable than the cream slivers in the light render).
+      Legibility verdict: PASS (no dark-on-dark text issues; the black ribbon-seam slivers are a minor visual-polish weakness, not a legibility failure).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All rendered chrome (title, subtitle, legend, axis headers, edge
+          value labels) reads clearly in both themes; docked slightly because the
+          intended mid-column category labels never render at all, leaving Q2/Q3 with
+          no in-place identification.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/data collisions, but thin gap slivers (cream in light, black
+          in dark) appear at flow-ribbon boundaries within the same node.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Ribbons and nodes are clearly visible with appropriate alpha for
+          overlap; dark-mode seam slivers read as minor artifacts.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues, adequate contrast, no red-green-only signal (green
+          vs. red are paired with position/legend, not the sole differentiator).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; proportions, title width, and margins
+          are all well balanced; nothing overflows the canvas.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Time-point headers and a 'Customers' value-axis title are present
+          and descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Free) is #009E73; Churned uses the documented semantic
+          loss-red exception; backgrounds are theme-correct and data colors match
+          between renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built alluvial diagram with a deliberate stack order and semantic
+          color exception shows real design intent, above generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome (no axis lines/ticks/grid), generous whitespace, subtle
+          legend row.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear premium-to-churn visual hierarchy and band-width-encodes-magnitude
+          convention guide the reader.
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Strict vertical stage ordering with bands connecting segments across
+          time points matches the alluvial-diagram definition.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: Spec requires labels that 'clearly identify both time points (column
+          headers) and categories (node labels)' - time points are labeled, but categories
+          are only labeled at the first/last columns; the coded mid-column labels
+          never render.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = time points, Y = stacked category value; all categories/time
+          points represented.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          five categories.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers nodes, proportional flows, churn, and a small win-back rate;
+          docked slightly for the same missing mid-column category identification.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral SaaS subscription-tier migration scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Customer counts and transition rates are sensible for the domain.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Functional React components are the expected structure for muix;
+          no unnecessary classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic Markov-chain data generation, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only React and used @mui/x-charts subpaths are imported.
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: ~40 lines of mid-label pill/text logic (CATEGORY_ABBR, MID_LABEL_MIN_HEIGHT/FONT,
+          showMidLabel) is dead code that never renders in either output.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default export, skipAnimation set, sized from window.ANYPLOT_SIZE.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ChartContainer purely as a scale/layout engine via useXScale/useYScale/useDrawingArea
+          - an advanced, idiomatic composition pattern.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Building a fully custom alluvial diagram on top of MUI X's scale
+          hooks is genuinely distinctive for this library; docked slightly since the
+          mid-label rendering bug undercuts the polish of that technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - minimal-chrome

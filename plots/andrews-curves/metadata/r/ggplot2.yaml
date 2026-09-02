@@ -1,0 +1,258 @@
+library: ggplot2
+language: r
+specification_id: andrews-curves
+created: '2026-09-02T11:08:31Z'
+updated: '2026-09-02T11:29:43Z'
+generated_by: claude-sonnet
+workflow_run: 33622758364
+issue: 2859
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - facet_wrap(~species) now actually renders as three side-by-side panels in both
+    plot-light.png and plot-dark.png, resolving the critical mismatch flagged in the
+    prior review attempt — setosa's distinct double-hump shape is now clearly separated
+    from versicolor's and virginica's more overlapping patterns.
+  - Correct Andrews-curves Fourier basis construction (x1/sqrt(2), sin/cos harmonics
+    via basis matrix multiplication), matching the specification's math exactly.
+  - Variables are z-score normalized (scale()) before the Fourier expansion, exactly
+    as the specification's Notes section requires to avoid one dimension dominating.
+  - Theme-adaptive chrome (title, axis text, tick text, grid, strip labels, legend)
+    is threaded through consistently; both renders pass the legibility check with
+    no dark-on-dark or light-on-light failures.
+  - 'Imprint palette correctly applied — setosa (first factor level) gets #009E73,
+    and light/dark renders share identical data colors with only chrome flipping between
+    #FAF8F1 and #1A1A17.'
+  - Clean idiomatic tidyverse pipeline (pivot_longer, dplyr chain) and correct ragg::agg_png
+    save at the mandated 8x4.5in/400dpi landscape canvas.
+  weaknesses:
+  - The versicolor and virginica facet panels remain fairly dense (many crossing curves),
+    so individual-curve tracing is still hard there even with facets and alpha=0.3
+    — a minor residual of the density the faceting fix was meant to address; consider
+    a touch more transparency (alpha ~0.25) or slightly thinner lines in those denser
+    panels.
+  - Design execution stays close to theme_minimal defaults with straightforward overrides
+    — no additional refinement like a y-axis-only grid or more distinctive strip-label
+    treatment was attempted beyond what facet_wrap itself provides.
+  - Axis labels 't' and 'f(t)' are the correct domain-standard notation for Andrews
+    curves but offer no hint to unfamiliar readers of what the transform represents;
+    an optional one-line subtitle could aid comprehension (not required by spec, so
+    not scored down elsewhere).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — correct, not pure white, not dark.
+      Chrome: Title "andrews-curves · r · ggplot2 · anyplot.ai" in dark ink top-left. Three facet panels side by side, each with a bold strip label ("setosa", "versicolor", "virginica") above it. X-axis labeled "t" with tick labels -π, -π/2, 0, π/2, π repeated under each panel; y-axis labeled "f(t)" with ticks -5.0 to 5.0 shown once on the shared left axis. A "Species" legend sits to the right of the panels, listing setosa/versicolor/virginica with matching line-color swatches. All chrome text is dark ink on the light surface and clearly readable. Grid lines are subtle, faint horizontal/vertical rules that don't compete with the data.
+      Data: ~150 semi-transparent curves (alpha≈0.3) split across the three facet panels by species — setosa green (#009E73) showing a distinct double-hump shape with a tight, well-separated bundle; versicolor lavender (#C475FD) showing a flatter, more overlapping bundle; virginica blue (#4467A3) showing the tallest peak with more density/crossing than the other two. First categorical series is confirmed brand green.
+      Legibility verdict: PASS (all chrome text readable in both facet strips and axes; no light-on-light failures).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — correct, not pure black, not light.
+      Chrome: Identical layout to the light render — title, three facet strip labels, axis labels/ticks, and the "Species" legend — now rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary) against the dark surface. Strip labels and tick labels are clearly legible; no dark-on-dark failures observed anywhere (title, axis text, tick text, legend text all contrast well against #1A1A17).
+      Data: Same green/lavender/blue curve colors and same per-species shapes as the light render, confirming data colors are held constant across themes — only chrome (background, text, grid) flipped, as required.
+      Legibility verdict: PASS (all chrome text readable; no dark-on-dark failures).
+
+    Cross-render note: facet_wrap(~species, nrow = 1) now renders correctly in BOTH images as three genuine side-by-side panels — this resolves the critical mismatch flagged in the previous (attempt 2) review, where the shipped PNGs showed a single overlaid panel despite facet_wrap being present in the source code. The per-species cluster-legibility fix the previous review requested has now actually landed in the rendered output.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes, including
+          per-facet strip labels
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; facets now split the curve overlap by species
+          as intended
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Alpha=0.3 works well with facets; versicolor/virginica panels are
+          still fairly dense but individually legible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, CVD-safe hues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; panel spacing gives clean separation, no clipping
+          or overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: t / f(t) are the correct domain-standard labels; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First species = brand green; correct theme-adaptive backgrounds in
+          both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Working small-multiples layout is a genuine design choice, but styling
+          beyond that stays close to theme_minimal defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Blank panel border, subtle grid, generous panel spacing (1.2 lines),
+          bold strip labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Facets now create a clear per-species focal point, revealing setosa's
+          distinct double-hump vs versicolor/virginica's overlapping shapes
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Andrews-curves Fourier construction
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalization, alpha<0.5, category coloring, t in [-pi,pi], and the
+          cluster-separation facet aid all present and rendering
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: t vs f(t) correctly mapped, full domain shown per panel
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match species
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4-dimensional iris data, all 3 species shown, full technique coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Classic neutral real-world dataset, matches spec's own example
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150 observations, 4 dimensions within spec's recommended range; normalized
+          before transform
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; code now matches what it claims and what renders
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports (ggplot2, dplyr, tidyr, scales, ragg) used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: facet_wrap comment now accurately describes the shipped render's
+          behavior
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic tidyverse pivot_longer/dplyr chain, scale_x_continuous
+          custom breaks
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: facet_wrap small-multiples is a genuinely working, well-chosen distinctive
+          feature for this plot type
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - manual-ticks
+  patterns:
+  - dataset-loading
+  - matrix-construction
+  - wide-to-long
+  dataprep:
+  - normalization
+  - fourier-series
+  styling:
+  - alpha-blending
+  - grid-styling

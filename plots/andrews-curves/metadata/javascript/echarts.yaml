@@ -1,0 +1,232 @@
+library: echarts
+language: javascript
+specification_id: andrews-curves
+created: '2026-09-02T11:27:19Z'
+updated: '2026-09-02T11:38:55Z'
+generated_by: claude-sonnet
+workflow_run: 33623634120
+issue: 2859
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/echarts/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - 'Fixed the attempt-1 palette-order issue: setosa/versicolor/virginica now map
+    cleanly to palette[0]/[1]/[2]'
+  - Raised feature dimensionality from 4 to 6 (added derived sepal-area, petal-area)
+    per the attempt-1 feedback, better showcasing the technique
+  - New representative-curve-per-cluster technique (closest-to-centroid curve drawn
+    bolder, more opaque, and on top via z) meaningfully sharpens cluster storytelling
+    amid 45 overplotted curves
+  - Curve opacity tuned to 0.42 for non-representative curves, within the spec's alpha<0.5
+    recommendation
+  - Correct Andrews curve math with z-score standardization per variable
+  - Custom pi/pi-2 axis-tick formatter improves readability over raw radians
+  - Deterministic seeded PRNG (mulberry32, seed 42)
+  - Both renders fully legible with correct theme backgrounds and identical data colors
+    between themes
+  weaknesses:
+  - Beyond the representative-curve emphasis and pi-tick formatter, styling still
+    relies on largely default line/grid treatment - limited further visual sophistication
+  - 'ECharts-distinctive feature usage remains modest: only z-ordering and a custom
+    axisLabel.formatter go beyond baseline API; the interactive HTML view isn''t used
+    to add any distinctive tooltip/highlight behavior'
+  - 'Considerable vertical whitespace between title and legend (top: 30 vs top: 90)
+    could be tightened slightly for a more compact plot-area proportion'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1
+      Chrome: Title "Iris Species Clustering · andrews-curves · javascript · echarts · anyplot.ai", legend (setosa, versicolor, virginica), axis titles "t (Fourier parameter)" / "f(t)", and pi-formatted tick labels are all dark and clearly legible
+      Data: 45 translucent Andrews curves in green (setosa, palette[0]), magenta (versicolor, palette[1]), and blue (virginica, palette[2]); one bolder representative curve per species drawn on top
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17
+      Chrome: Title, legend, and axis text render in light tones, clearly legible; no dark-on-dark issues; grid lines subtle but visible
+      Data: Colors identical to light render (green/magenta/blue, including representative curves), confirming only chrome flipped
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Representative curves emphasized, alpha tuned for 45-curve overplot
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three distinct, CVD-safe hues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed canonical palette order from attempt 1
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Representative-curve emphasis is a genuine design idea; rest is standard
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid and tuned alpha, limited further refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Representative curves plus color-by-species give clear focal points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Andrews curves
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalization, alpha<0.5, color-by-category all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: t on x, f(t) on y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches, legend labels match species
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 6 dimensions now used, up from 4
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic iris-like synthetic data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standardized z-scores
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No unnecessary classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded PRNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation false
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ECharts patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Only z-ordering and custom axisLabel formatter go beyond baseline
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
