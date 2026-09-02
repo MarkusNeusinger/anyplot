@@ -1,7 +1,7 @@
 // anyplot.ai
 // datamatrix-basic: Basic Data Matrix 2D Barcode
-// Library: d3 7.9.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: d3 7.9.0 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 
 const t = window.ANYPLOT_TOKENS;
