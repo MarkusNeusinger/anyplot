@@ -1026,6 +1026,16 @@ gcloud builds submit --config=app/cloudbuild.yaml --project=YOUR_PROJECT_ID
 - **`app/cloudbuild.yaml`**: Frontend build + deploy
 - **`app/Dockerfile`**: Multi-stage build (Node -> nginx)
 
+Both cloudbuild files deploy through a **candidate revision**: `gcloud run deploy
+--no-traffic --tag=candidate --revision-suffix=b$BUILD_ID`, a smoke step against the
+candidate's tag URL, then `gcloud run services update-traffic --to-revisions=…=100`. A
+revision that fails its smoke therefore never serves a request, and `:latest` is pushed
+only after the promotion, so the tag always names an image that did serve. The app's
+smoke covers both halves of the crawler split (browser UA -> SPA shell, Googlebot ->
+prerendered page via `@seo_proxy`) plus the `location =` bypasses for `robots.txt` and
+`llms.txt`; the API's covers `/health`, the public read paths and the fail-closed admin
+gate.
+
 ## Debugging Tips
 
 ### Database Connection Issues

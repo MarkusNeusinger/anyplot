@@ -1,4 +1,17 @@
 # Cloud Build configuration for anyplot Frontend
+#
+# Since the candidate chain below, this file mirrors api/cloudbuild.yaml step
+# for step: build -> push -> deploy --no-traffic -> smoke -> promote ->
+# push latest.
+#
+# Why this service deserves the same care as the API: it serves the public
+# website AND carries the whole crawler path in app/nginx.conf (the `$is_bot`
+# map, the `location =` bypasses for robots/llms/sitemap/og, the `@seo_proxy`
+# upstream). That is the very file whose breakage served every bot an HTTP 502
+# for four weeks between 2026-06-12 and 2026-07-09 — a `proxy_ssl_verify_depth`
+# default against a 4-deep chain — while humans, Plausible and CI all saw a
+# healthy site. Until now a typo in it went live unchecked and the daily
+# bot-serving monitor was the only net, a night later.
 substitutions:
   _REGION: 'europe-west4'
   _SERVICE_NAME: 'anyplot-app'
@@ -28,10 +41,18 @@ steps:
         'app/Dockerfile',
         'app',
       ]
+    id: 'build-image'
 
-  # Push the container image to Artifact Registry
+  # Only the build-specific tag goes up here — it is the one the deploy pulls.
+  # `:latest` waits for the promote step (see push-latest at the bottom): a
+  # `--all-tags` push before the rollout means `:latest` names an image that
+  # may never have served a request.
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', '--all-tags', 'europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}']
+    args:
+      - 'push'
+      - 'europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:$BUILD_ID'
+    id: 'push-image'
+    waitFor: ['build-image']
 
   # Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -69,6 +90,113 @@ steps:
       - '--cpu-throttling'
       - '--concurrency'
       - '15'
+      # Deploy WITHOUT routing traffic: the smoke step probes this revision on
+      # its tag URL first, and only the promote step below shifts traffic — so
+      # a broken nginx.conf never serves visitors or crawlers, not even between
+      # deploy and a failing smoke. The `candidate` tag moves to each new
+      # revision, and the deterministic revision suffix lets promote target
+      # EXACTLY the revision this build smoked (never a concurrent build's
+      # newer one). `b` prefix: Cloud Run requires the suffix to start with a
+      # lowercase letter, and $BUILD_ID is a UUID that usually starts with a
+      # digit.
+      - '--no-traffic'
+      - '--tag=candidate'
+      - '--revision-suffix=b$BUILD_ID'
+    id: 'deploy'
+    waitFor: ['push-image']
+
+  # Pre-traffic smoke against the CANDIDATE revision (tag URL, serving no
+  # traffic yet). Both halves of the split matter and only one of them is
+  # visible to a human: the SPA shell for a browser, and the prerendered page
+  # for a mapped crawler UA — the `$is_bot` map plus the `@seo_proxy` upstream,
+  # which is exactly the hop that can break silently.
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-ceu'
+      - |
+        # Resolve the candidate tag's URL AND assert it still points at THIS
+        # build's revision (deterministic --revision-suffix) — a concurrent
+        # build re-tagging `candidate` must fail this build, not get smoked
+        # on its behalf.
+        read -r URL REV <<< "$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
+          | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['url'], c['revisionName'])")"
+        test "$$REV" = "${_SERVICE_NAME}-b$BUILD_ID" || { echo "candidate tag moved to $$REV (expected ${_SERVICE_NAME}-b$BUILD_ID)"; exit 1; }
+        echo "smoke against candidate $$URL ($$REV)"
+        # Retry EVERY probe: this service runs at min-instances 0, so the
+        # candidate is ALWAYS cold, and the crawler probes additionally wait on
+        # the first upstream call to api.anyplot.ai.
+        RETRY="--retry 5 --retry-delay 5 --retry-all-errors"
+        HUMAN="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
+        GOOGLEBOT="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+        # `expect <ua> <path> <needle> <what-it-means>`: fetch to a file rather
+        # than piping into `grep -q`. `grep -q` exits at the first match and
+        # SIGPIPEs curl, so the pipe form only ever passes because `-ceu`
+        # carries no `pipefail` — a later hardening pass that adds it would red
+        # every deploy. Writing the body out also lets each failure say which
+        # probe failed and what was expected, which is the whole value of a log
+        # someone reads while a deploy is blocked.
+        expect() {
+          curl -fsS $$RETRY -A "$$1" -o body.out "$$URL$$2" \
+            || { echo "candidate did not serve $$2 to UA '$$1'"; exit 1; }
+          grep -qF "$$3" body.out || { echo "$$4 ($$2 is missing: $$3)"; exit 1; }
+          echo "OK: $$2"
+        }
+        # Humans get the SPA shell.
+        expect "$$HUMAN" "/" '<div id="root">' "a browser did not get the SPA shell"
+        # Crawlers get the prerendered page through @seo_proxy. The canonical
+        # link is the marker: the SPA shell carries none at all, and its value
+        # names the route, so one grep proves both "the bot hop ran" and "the
+        # right page came back". Probing a deep route as well as the home page
+        # covers `proxy_pass .../seo-proxy$$request_uri` — a home-only check
+        # would pass with the request URI dropped. (`$$` is Cloud Build's
+        # escape for a literal `$`; an unescaped one is read as a substitution
+        # and fails the build before a single step runs.)
+        expect "$$GOOGLEBOT" "/" '<link rel="canonical" href="https://anyplot.ai/" />' \
+          "a crawler did not get the prerendered home page"
+        expect "$$GOOGLEBOT" "/scatter-basic" '<link rel="canonical" href="https://anyplot.ai/scatter-basic" />' \
+          "a crawler did not get the prerendered page for this route"
+        # The machine files must come from the `location =` bypasses, not the
+        # proxy — and llms.txt carries UTF-8 punctuation that needs the charset.
+        expect "$$GOOGLEBOT" "/robots.txt" 'User-agent: Bytespider' \
+          "robots.txt did not come from the location = bypass"
+        expect "$$GOOGLEBOT" "/llms.txt" '# anyplot' \
+          "llms.txt did not come from the location = bypass"
+        ct=$$(curl -fsS $$RETRY -A "$$GOOGLEBOT" -o /dev/null -w '%{content_type}' "$$URL/llms.txt")
+        case "$$ct" in
+          *charset=utf-8*) ;;
+          *) echo "llms.txt served as '$$ct' (expected a utf-8 charset)"; exit 1 ;;
+        esac
+        echo "smoke OK"
+    id: 'smoke'
+    waitFor: ['deploy']
+
+  # Smoke passed — route 100% of traffic to EXACTLY the revision this build
+  # deployed and smoked (deterministic name via --revision-suffix), never
+  # `--to-latest`, which could promote a concurrent build's unsmoked revision.
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'services'
+      - 'update-traffic'
+      - '${_SERVICE_NAME}'
+      - '--region'
+      - '${_REGION}'
+      - '--platform'
+      - 'managed'
+      - '--to-revisions=${_SERVICE_NAME}-b$BUILD_ID=100'
+    id: 'promote'
+    waitFor: ['smoke']
+
+  # `:latest` means "the image currently serving", so it moves only after the
+  # promote step.
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'europe-west4-docker.pkg.dev/$PROJECT_ID/anyplot/${_SERVICE_NAME}:latest'
+    id: 'push-latest'
+    waitFor: ['promote']
 
 # Store images in Artifact Registry
 images:
@@ -77,3 +205,7 @@ images:
 
 options:
   logging: CLOUD_LOGGING_ONLY
+
+# The chain is now deploy -> smoke (cold start + a first upstream call) ->
+# promote; the default 10 min left no room for a retrying probe.
+timeout: '1200s'
