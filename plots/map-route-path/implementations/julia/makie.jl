@@ -141,13 +141,14 @@ for (i, r) in enumerate(ring_radii)
             color     = INK_SOFT,
             align     = (:center, :bottom),
             offset    = (0, 2),
+            space     = :data,
         )
     end
 end
 
 # Summit marker: the peak the contour rings and elevation gradient center on
 scatter!(ax, [LON_C], [LAT_C];
-    marker      = :star5,
+    marker      = :diamond,
     markersize  = 12,
     color       = INK_SOFT,
     strokewidth = 0,
@@ -158,6 +159,7 @@ text!(ax, LON_C, LAT_C;
     color     = INK_SOFT,
     align     = (:center, :top),
     offset    = (0, -8),
+    space     = :data,
 )
 
 # Trail stat callout: total elevation gain along the recorded track
