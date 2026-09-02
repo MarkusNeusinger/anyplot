@@ -1,7 +1,7 @@
 // anyplot.ai
 // frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 82/100 | Created: 2026-09-02
+// Quality: pending | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -50,13 +50,18 @@ function frequencyPolygon(mean, sd, n) {
   return midpoints.map((x, i) => [x, values[i]]);
 }
 
+// Redundant color+style encoding (spec: "distinct line colors and/or styles")
+// so overlapping fills near ~530-590ms remain distinguishable by stroke alone.
+const DASH_STYLES = ["Solid", "ShortDash", "ShortDot"];
+
 const series = groups.map((g, i) => ({
   name: g.name,
   data: frequencyPolygon(g.mean, g.sd, g.n),
   color: t.palette[i],
   lineWidth: 3,
-  marker: { enabled: false },
-  fillOpacity: 0.12,
+  dashStyle: DASH_STYLES[i],
+  marker: { enabled: true, radius: 4, symbol: "circle", fillColor: t.palette[i], lineWidth: 0 },
+  fillOpacity: 0.08,
 }));
 
 // --- Chart -------------------------------------------------------------------
@@ -81,6 +86,22 @@ Highcharts.chart("container", {
     min: BIN_MIN - BIN_WIDTH,
     max: BIN_MAX + BIN_WIDTH,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    // Distinctive Highcharts touch: mark each group's mean reaction time.
+    plotLines: groups.map((g, i) => ({
+      value: g.mean,
+      color: t.palette[i],
+      dashStyle: "Dot",
+      width: 1.5,
+      zIndex: 5,
+      label: {
+        text: `${g.name} mean`,
+        rotation: 90,
+        align: "left",
+        x: 4,
+        y: 8,
+        style: { color: t.inkSoft, fontSize: "11px" },
+      },
+    })),
   },
   yAxis: {
     title: { text: "Frequency", style: { color: t.inkSoft, fontSize: "16px" } },
@@ -94,7 +115,7 @@ Highcharts.chart("container", {
   },
   plotOptions: {
     series: { animation: false },
-    area: { marker: { enabled: false }, lineWidth: 3, fillOpacity: 0.12 },
+    area: { marker: { enabled: true, radius: 4 }, lineWidth: 3, fillOpacity: 0.08 },
   },
   tooltip: { enabled: false },
   series,
