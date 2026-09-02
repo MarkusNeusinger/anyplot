@@ -41,9 +41,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   per-route assertion is the generated `<link rel="canonical">` — the SPA shell carries none
   at all and the href names the route, so one match proves both that the bot hop ran and
   that the right page came back. A watchdog fails the run if the sweep found no routes or
-  the spec file no title, so an empty sweep can never pass by asserting nothing. Timeout
-  recomputed to 62 min by the file's own formula (36 checks x 90 s + four non-retried
-  probes).
+  the spec file no title, so an empty sweep can never pass by asserting nothing. The
+  consolidated middle tier `/{spec}/{language}` gained a probe of its own — it must 301 to
+  the hub, and a target still carrying `/seo-proxy` is the redirect loop that once cost 48
+  Googlebot "Redirect error" URLs. A `concurrency` group keeps a manual dispatch from racing
+  the nightly run over the same issue. Timeout recomputed to 62 min by the file's own
+  formula (36 checks x 90 s + five non-retried probes). (#11209)
 
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public

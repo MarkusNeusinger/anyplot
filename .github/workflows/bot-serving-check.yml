@@ -32,6 +32,16 @@ on:
     - cron: "23 6 * * *" # daily 06:23 UTC
   workflow_dispatch:
 
+# One run at a time, and the newest wins. Two overlapping runs — a manual
+# dispatch during the nightly one, which can take up to the timeout below —
+# would both mutate the same alarm issue: two failures could open it twice, and
+# an older run finishing last could close a newer failure or reopen an alarm
+# after a newer success. Cancelling the superseded run means only the latest
+# result ever touches the issue.
+concurrency:
+  group: bot-serving-check-${{ github.ref }}
+  cancel-in-progress: true
+
 # issues: write is the alarm path. Without it the job could only go red in a
 # tab nobody subscribes to — which is how those ten red nights stayed unnoticed.
 # The failure step opens (or comments on) one fixed-title issue and the success
@@ -46,8 +56,9 @@ jobs:
     # 36 check() calls (10 derived bot routes + spec page + impl page +
     # ClaudeBot + 15 crawler UAs + 404 + robots + sitemap + 3 llms + 2 human
     # controls) x (--retry 2 -> up to 3 attempts x --max-time 30) can reach
-    # ~54 min worst-case, plus four non-retried probes (llms.txt charset,
-    # trailing slash, og-image, .well-known redirect — 30s each); 62 leaves
+    # ~54 min worst-case, plus five non-retried probes (llms.txt charset,
+    # trailing slash, og-image, .well-known redirect, the /{spec}/{language}
+    # 301 — 30s each); 62 leaves
     # room to report a clean failure rather than dying to the job timeout,
     # which reports nothing useful. Recompute this when adding checks: the
     # ceiling is check() calls x 90s, plus margin. The route sweep grows with
@@ -97,9 +108,9 @@ jobs:
           # `@router.get("/seo-proxy/<literal>")` in api/routers/seo.py is a page
           # a crawler must be able to reach. Reading them from the source means
           # a page added there is swept the moment it lands, and no list here can
-          # go stale. (The two parameterised decorators, /{spec_id} and
-          # /{spec_id}/{language}/{library}, are excluded by the `[^"{]` class
-          # and probed separately below.)
+          # go stale. (The three parameterised decorators — /{spec_id},
+          # /{spec_id}/{language} and /{spec_id}/{language}/{library} — are
+          # excluded by the `[^"{]` class and each probed separately below.)
           #
           # The assertion is the canonical link, not a title: it is GENERATED
           # from the route, so it can never drift on a copy change, and it
@@ -146,6 +157,24 @@ jobs:
           # apart.
           check "$TWITTERBOT" "$ORIGIN/$SPEC/python/matplotlib" \
             "<link rel=\"canonical\" href=\"https://anyplot.ai/$SPEC/python/matplotlib\" />"
+
+          # The middle tier, /{spec}/{language}, was consolidated onto the hub
+          # and must answer 301 -> /{spec}. Its own docstring records why it is
+          # worth a probe: a Location of /seo-proxy/{spec} is re-prefixed by
+          # nginx, arrives back at this route and redirects forever — Googlebot
+          # logged 48 "Redirect error" URLs before the target was sanitised. The
+          # loop signature is a target that still carries /seo-proxy.
+          lang_target=$(curl -sS --max-time 30 -o /dev/null -A "$GOOGLEBOT" \
+            -w '%{redirect_url}' "$ORIGIN/$SPEC/python")
+          case "$lang_target" in
+            *"/seo-proxy"*)
+              echo "::error::/$SPEC/python redirects into the internal proxy path: $lang_target"
+              fail=1 ;;
+            "$ORIGIN/$SPEC") echo "OK: /$SPEC/python -> $lang_target" ;;
+            *)
+              echo "::error::/$SPEC/python should 301 to $ORIGIN/$SPEC, got '$lang_target'"
+              fail=1 ;;
+          esac
 
           # AI assistants take the same prerendered path (nginx $is_bot). These
           # checks hit the ORIGIN, so they verify the nginx map independently of
