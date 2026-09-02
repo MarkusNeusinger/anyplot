@@ -63,7 +63,7 @@ title_fontsize <- max(8, round(12 * 67 / nchar(plot_title)))
 p <- ggplot(spine_df) +
   geom_rect(
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax, fill = status),
-    color = PAGE_BG, linewidth = 0.8
+    color = NA
   ) +
   geom_text(
     data = filter(spine_df, prop > 0.06),
