@@ -57,12 +57,42 @@ const pricePad = (priceMax - priceMin) * 0.12;
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
-// --- Open/close tick plugin ---------------------------------------------------
-// Draws the left (open) and right (close) horizontal ticks per bar directly on
-// the canvas via a core Chart.js plugin hook — no external financial plugin.
-const tickHalfWidth = 7;
+// --- Open/close tick + storytelling plugin -------------------------------------
+// Draws the left (open) and right (close) horizontal ticks per bar, a small
+// direction glyph (redundant to color, for CVD readers), and dashed period
+// high/low reference lines — all directly on the canvas via core Chart.js
+// plugin hooks. No external financial plugin.
+const tickHalfWidth = 8;
 const ohlcTicksPlugin = {
   id: "ohlcTicks",
+  beforeDatasetsDraw(chart) {
+    const { ctx, chartArea, scales } = chart;
+    const highY = scales.y.getPixelForValue(priceMax);
+    const lowY = scales.y.getPixelForValue(priceMin);
+
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = t.inkSoft;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, highY);
+    ctx.lineTo(chartArea.right, highY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(chartArea.left, lowY);
+    ctx.lineTo(chartArea.right, lowY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = t.inkSoft;
+    ctx.font = "13px sans-serif";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "bottom";
+    ctx.fillText(`Period high: $${priceMax.toFixed(2)}`, chartArea.right - 6, highY - 4);
+    ctx.textBaseline = "top";
+    ctx.fillText(`Period low: $${priceMin.toFixed(2)}`, chartArea.right - 6, lowY + 4);
+    ctx.restore();
+  },
   afterDatasetsDraw(chart) {
     const { ctx, scales } = chart;
     ctx.save();
@@ -71,6 +101,9 @@ const ohlcTicksPlugin = {
       const x = scales.x.getPixelForValue(i);
       const openY = scales.y.getPixelForValue(opens[i]);
       const closeY = scales.y.getPixelForValue(closes[i]);
+      const highY = scales.y.getPixelForValue(highs[i]);
+      const lowY = scales.y.getPixelForValue(lows[i]);
+      const isUp = closes[i] >= opens[i];
       ctx.strokeStyle = barColors[i];
 
       ctx.beginPath();
@@ -81,6 +114,24 @@ const ohlcTicksPlugin = {
       ctx.beginPath();
       ctx.moveTo(x, closeY);
       ctx.lineTo(x + tickHalfWidth, closeY);
+      ctx.stroke();
+
+      // Direction glyph — redundant (non-color) cue for CVD readers: a small
+      // triangle above the high (up days) or below the low (down days),
+      // pointing in the direction of the move.
+      const glyphHalfWidth = 4;
+      const glyphHeight = 7;
+      const baseY = isUp ? highY - 4 : lowY + 4;
+      const apexY = isUp ? baseY - glyphHeight : baseY + glyphHeight;
+      ctx.beginPath();
+      ctx.moveTo(x, apexY);
+      ctx.lineTo(x - glyphHalfWidth, baseY);
+      ctx.lineTo(x + glyphHalfWidth, baseY);
+      ctx.closePath();
+      ctx.fillStyle = barColors[i];
+      ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = t.ink;
       ctx.stroke();
     }
     ctx.restore();
@@ -123,8 +174,8 @@ new Chart(canvas, {
           color: t.ink,
           font: { size: 16 },
           generateLabels: () => [
-            { text: "Up (close ≥ open)", fillStyle: t.palette[0], strokeStyle: t.palette[0], lineWidth: 0 },
-            { text: "Down (close < open)", fillStyle: t.palette[4], strokeStyle: t.palette[4], lineWidth: 0 },
+            { text: "Up ▲ (close ≥ open)", fillStyle: t.palette[0], strokeStyle: t.ink, lineWidth: 1 },
+            { text: "Down ▼ (close < open)", fillStyle: t.palette[4], strokeStyle: t.ink, lineWidth: 1 },
           ],
         },
         onClick: () => {},
