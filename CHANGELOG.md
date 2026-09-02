@@ -178,11 +178,14 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   enforces it** — `app/package.json` asked for `node >=20` while the image that produces
   the deployed bundle builds on Node 22 and CI tests on Node 24, so the only version the
   manifest still admitted was the one nothing tests and that reached end of life in April
-  2026. The floor moves to `>=22`, `app/.nvmrc` names 22 for `nvm use` and `setup-node`,
-  and `app/.npmrc` sets `engine-strict=true` so an npm install in `app/` refuses an
-  unsupported runtime at install time rather than failing later inside the build with a
-  message that never mentions the version (yarn 1, the app's package manager, checks
-  `engines` itself). Same pin as the sibling repo kurrentschrift.
+  2026. The floor moves to `>=22.12.0` — the version the build path actually requires
+  (Vite and rolldown declare `^20.19.0 || >=22.12.0`, so `>=22` would have advertised
+  22.0–22.11 as supported and let Vite's own engine check reject them instead) — `app/.nvmrc`
+  names 22 for `nvm use` and `setup-node`, and `app/.npmrc` sets `engine-strict=true` so an
+  npm install in `app/` refuses an unsupported runtime at install time rather than failing
+  later inside the build with a message that never mentions the version (yarn 1, the app's
+  package manager, checks `engines` itself). `docs/development.md` said "Node.js 20+" and now
+  matches. Same pin as the sibling repo kurrentschrift. (#11206)
 
 ### Security
 
@@ -192,7 +195,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `pyproject.toml` constraint, per the repository's dependency rule. The bump is the
   minimal one that clears the advisory; `click` 8.5.0 exists and is left to Dependabot,
   where a minor bump of the library behind every console script gets its own PR and its
-  own CI run.
+  own CI run. (#11206)
 
 ## [3.2.0] — 2026-08-29 — Findable by assistants
 
