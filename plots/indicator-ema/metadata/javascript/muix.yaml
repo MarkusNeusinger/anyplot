@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: indicator-ema
 created: '2026-09-02T01:54:01Z'
-updated: '2026-09-02T01:57:50Z'
+updated: '2026-09-02T02:09:02Z'
 generated_by: claude-sonnet
 workflow_run: 33580807677
 issue: 3652
@@ -12,90 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/muix/plot-dark.html
-quality_score: 49
+quality_score: 88
 review:
   strengths:
+  - 'The CRITICAL y-axis title / tick-label overlap flagged in the previous review
+    is fully fixed: a dedicated column now renders the rotated "Price (USD)" title
+    well clear of the $-formatted tick labels, verified via zoomed crops of both the
+    light and dark renders around the former collision point ($158).'
   - 'Correct Imprint palette usage: Close Price uses brand green #009E73 (position
     1), EMA (12-day) and EMA (26-day) use canonical positions 2 and 3 (lavender, blue),
-    and the crossover markers use the semantic exception well (green for the bullish
-    Golden cross, matte red for the bearish Death cross).'
-  - 'Idiomatic MUI X usage: ChartsReferenceLine used for crossover annotations, per-series
-    sx targeting differentiates line weights (close price 3.5px vs EMA 2px), matching
-    the spec''s ''EMA lines should be slightly thinner'' requirement.'
-  - Deterministic LCG-seeded random walk produces a realistic 120-day price series;
-    crossover detection caps the highlighted signals to 4 with a MIN_GAP_DAYS spacing
-    rule so labels never collide with each other.
-  - Theme-adaptive chrome and backgrounds are correct and identical in structure between
-    light (#FAF8F1) and dark (#1A1A17) renders; data colors are identical across themes.
+    and the crossover reference lines correctly apply the semantic exception (green
+    for bullish "Golden cross", matte red for bearish "Death cross"), each reinforced
+    with a text label so meaning isn''t color-alone.'
+  - Idiomatic use of ChartsReferenceLine for crossover annotations with a sensible
+    cap (max 4 highlighted crossovers) and a minimum day-gap rule so neighboring crossover
+    labels never collide with each other.
+  - Deterministic LCG-seeded random-walk price series plus a correctly implemented
+    recursive EMA produce a realistic, feature-complete technical-indicator dataset
+    showing both a bearish (death cross) and bullish (golden cross) signal.
+  - 'Line-weight hierarchy matches the spec: Close Price at 3.5px is visually prominent
+    while both EMA lines are thinner at 2px.'
   weaknesses:
-  - 'CRITICAL (both renders): the rotated Y-axis title ''Price (USD)'' directly overlaps
-    the ''$158'' tick label — verified by cropping both plot-light.png and plot-dark.png
-    around that gridline. The axis-label glyphs visually cross through the ''1'' and
-    ''5'' of ''158'', making both the axis title and that tick value illegible at
-    that point. Root cause: the LineChart''s left padding (padding.left = 44 in the
-    outer Box) does not reserve enough horizontal room for the rotated axis label
-    lane once it sits directly adjacent to 4-character dollar-formatted tick labels
-    ($160, $158, etc.). Fix: increase the left margin reserved for the y-axis (e.g.
-    raise padding.left and/or pass an explicit `margin` prop to `<LineChart>` with
-    a larger `left` value, or add spacing via the yAxis label offset) so the rotated
-    ''Price (USD)'' title clears the tick-label column entirely in both themes.'
-  - This is the kind of overlap that costs points twice — it is both a legibility
-    failure (a tick value becomes unreadable) and a layout/margin miscalculation,
-    not just a cosmetic proximity issue.
+  - The y-axis title is rendered via a hand-rolled column outside <LineChart> rather
+    than MUI X's built-in yAxis label prop — a functional and well-reasoned workaround
+    for the library's fixed label-offset behavior, but non-idiomatic; also the y-axis
+    uses 20 one-dollar gridlines over a $19 range, which is denser than needed — coarser
+    $2 ticks would read cleaner.
+  - 'Design polish is solid but stays close to a well-configured default: grid/spine
+    treatment and typography don''t go much beyond the baseline. More visual hierarchy
+    (e.g. a subtle shaded band around the EMA pair, or de-emphasizing the noisiest
+    early stretch) would strengthen Design Excellence further.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct, not pure white.
-      Chrome: Title "indicator-ema · javascript · muix · anyplot.ai" in bold dark ink, top-left, clearly readable. X-axis "Trading Date" and Y-axis "Price (USD)" labels present with units. Horizontal-only grid lines, subtle gray, non-competing with data. Legend row (Close Price / EMA 12-day / EMA 26-day) at top, all readable with correct color swatches.
-      Data: Close Price line in brand green (#009E73), EMA (12-day) in lavender (#C475FD), EMA (26-day) in blue (#4467A3) — thick green close line, thinner EMA lines as required by spec. Two dashed vertical reference lines labeled "Death cross" (red) and "Golden cross" (green) mark EMA crossovers, correctly colored per bearish/bullish semantics.
-      CRITICAL ISSUE FOUND: cropping the region around the "$158" y-axis gridline shows the rotated "Price (USD)" axis title text directly overlapping and crossing through the "$158" tick label — both texts become illegible at that intersection point. This is a genuine overlap, not a proximity effect (confirmed via 3x-zoomed crop).
-      Legibility verdict: FAIL (axis-label/tick-label overlap at "$158")
+      Background: Warm off-white, consistent with #FAF8F1 - correct, not pure white.
+      Chrome: Title "indicator-ema · javascript · muix · anyplot.ai" in bold dark ink, top-left, clearly readable, occupying well under half the canvas width. X-axis "Trading Date" and Y-axis "Price (USD)" labels present with units; the y-axis title now sits in its own column, fully clear of the $-formatted tick labels (verified via a zoomed crop around the former $158 collision point - no overlap). Horizontal-only grid lines, subtle gray, non-competing with data. Legend row (Close Price / EMA 12-day / EMA 26-day) at top with correct color swatches, followed by "Death cross" (red) and "Golden cross" (green) labels tied to dashed vertical reference lines - no collision between legend and crossover labels.
+      Data: Close Price line in brand green (#009E73, thick 3.5px), EMA (12-day) in lavender (#C475FD, 2px), EMA (26-day) in blue (#4467A3, 2px) - thickness hierarchy matches the spec's "EMA lines should be slightly thinner" requirement. Crossover reference lines correctly colored per bearish/bullish semantics.
+      Legibility verdict: PASS (previous critical overlap is resolved; all text readable)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct, not pure black.
-      Chrome: Title in light ink (near-white), fully readable against the dark background. Axis labels and tick labels rendered in light ink, all legible elsewhere. Grid lines subtle light gray. Legend text legible with same color swatches as light render.
-      Data: Confirmed identical data colors to the light render (brand green, lavender, blue) — only chrome flipped as required. Crossover reference lines and labels also correctly colored and positioned identically to the light render.
-      CRITICAL ISSUE FOUND: the same "Price (USD)" / "$158" overlap reproduces identically in the dark render (confirmed via 3x-zoomed crop) — same root cause, same severity.
-      Legibility verdict: FAIL (axis-label/tick-label overlap at "$158", same as light render)
+      Background: Warm near-black, consistent with #1A1A17 - correct, not pure black.
+      Chrome: Title in light ink (near-white), fully readable. Axis labels and tick labels rendered in light ink, all legible; the y-axis title/tick-label separation holds identically to the light render - re-verified via the same zoomed crop, no dark-on-dark or overlap issues. Grid lines subtle light gray. Legend and crossover labels legible with the same layout as the light render.
+      Data: Confirmed identical data colors to the light render (brand green, lavender, blue) - only chrome flipped as required. Crossover lines and labels correctly colored and positioned identically to the light render.
+      Legibility verdict: PASS (all text readable, no dark-on-dark failures)
   criteria_checklist:
     visual_quality:
-      score: 16
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 7
         max: 8
-        passed: false
-        comment: Y-axis title 'Price (USD)' overlaps and obscures the '$158' tick
-          label in both themes
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis label 16px, tick/legend
+          14px); previous critical y-axis-title/tick overlap is fixed; readable in
+          both themes
       - id: VQ-02
         name: No Overlap
-        score: 0
+        score: 6
         max: 6
-        passed: false
-        comment: Severe text-on-text overlap between rotated axis title and a tick
-          label, confirmed by zoomed crop in both renders
+        passed: true
+        comment: No text-on-text or text-on-data overlap in either render; the axis-title/tick
+          collision from the prior review is resolved
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines clearly distinguishable, line-weight hierarchy matches spec
-          (close price thicker than EMAs)
+        comment: Close price line clearly dominant at 3.5px; EMA lines at 2px are
+          distinguishable by color even where they run close together
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Imprint hues, semantic red/green for bearish/bullish crossovers
-          reinforces meaning beyond color alone via labeled reference lines
+        comment: CVD-safe Imprint hues; crossover semantics reinforced with text labels,
+          not color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Left margin/padding miscalculated: insufficient room reserved for
-          rotated y-axis label next to tick labels'
+        passed: true
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,7 +109,7 @@ review:
         comment: First series brand green, canonical order for EMAs, correct semantic
           exception for crossovers, correct theme backgrounds in both renders
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -119,20 +118,21 @@ review:
         max: 8
         passed: true
         comment: Thoughtful semantic color use for crossover events beyond generic
-          defaults
+          defaults, but overall styling stays close to a well-configured default
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines minimal (L-shape), subtle horizontal-only grid, generous whitespace
+        comment: Minimal spines, subtle horizontal-only grid, generous whitespace;
+          dense one-dollar y-tick spacing keeps it from feeling fully refined
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Crossover annotations create clear focal points highlighting trading
-          signals
+        comment: Crossover annotations create clear focal points highlighting the
+          two trading signals
     spec_compliance:
       score: 15
       max: 15
@@ -171,19 +171,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Close price, both EMAs, and crossovers all shown
+        comment: Close price, both EMAs, and both bullish and bearish crossovers all
+          shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible stock-price range ($148-$166), neutral synthetic data
+        comment: Plausible stock-price range ($148-$167), neutral synthetic data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 trading days, sensible EMA periods (12/26)
+        comment: 120 trading days, sensible EMA periods (12/26), realistic day-to-day
+          volatility
     code_quality:
       score: 10
       max: 10
@@ -211,13 +213,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity
+        comment: No fake UI/interactivity, clear comments explaining the y-axis workaround
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows harness contract, skipAnimation set
+        comment: Follows the harness contract, skipAnimation set
     library_mastery:
       score: 7
       max: 10
@@ -227,7 +229,9 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ChartsReferenceLine, slotProps.legend, sx-based series targeting
+        comment: ChartsReferenceLine, slotProps.legend, sx-based series targeting;
+          the hand-rolled y-axis-label column is a deliberate, documented workaround
+          rather than idiomatic API usage
       - id: LM-02
         name: Distinctive Features
         score: 3
@@ -235,7 +239,7 @@ review:
         passed: true
         comment: ChartsReferenceLine crossover annotations are a distinctive MUI X
           feature, well applied
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
