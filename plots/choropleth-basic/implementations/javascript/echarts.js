@@ -1,7 +1,7 @@
 // anyplot.ai
 // choropleth-basic: Choropleth Map with Regional Coloring
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-02
+// Quality: 89/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
