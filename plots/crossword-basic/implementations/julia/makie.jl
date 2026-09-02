@@ -7,11 +7,17 @@ using CairoMakie
 using Colors
 
 # --- Theme tokens -------------------------------------------------------------
-const THEME       = get(ENV, "ANYPLOT_THEME", "light")
-const PAGE_BG     = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
-const ELEVATED_BG = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
-const INK         = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
-const INK_SOFT    = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+const THEME    = get(ENV, "ANYPLOT_THEME", "light")
+const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
+const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
+const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
+
+# Fixed, theme-invariant data-encoding colors for the grid itself. The
+# black/white cell pattern IS the plot's data (newspaper-crossword
+# convention), so it must render identically in both themes — unlike the
+# chrome tokens above, which are meant to flip.
+const CELL_BLOCKED = colorant"#1A1A17"
+const CELL_ENTRY   = colorant"#FFFDF6"
 
 # --- Data ----------------------------------------------------------------------
 # 15x15 grid; blocking cells carry traditional 180-degree rotational symmetry.
@@ -69,10 +75,11 @@ hidespines!(ax)
 xlims!(ax, -0.4, N + 0.4)
 ylims!(ax, -0.4, N + 0.4)
 
-# Entry cells (white, for letters) vs. blocking cells (black) — kept
-# monochrome per the spec's print-style convention, theme-adaptive chrome only.
+# Entry cells (white, for letters) vs. blocking cells (black) — this is the
+# plot's data, so both colors are fixed constants that never flip with
+# ANYPLOT_THEME (only the surrounding chrome does).
 cell_rects = [Rect2f(Float32(c - 1), Float32(N - r), 1.0f0, 1.0f0) for r in 1:N for c in 1:N]
-cell_colors = [blocked[r, c] ? INK : ELEVATED_BG for r in 1:N for c in 1:N]
+cell_colors = [blocked[r, c] ? CELL_BLOCKED : CELL_ENTRY for r in 1:N for c in 1:N]
 poly!(ax, cell_rects; color = cell_colors, strokewidth = 0)
 
 # Grid lines separating every cell
@@ -122,7 +129,9 @@ for r in 1:N, c in 1:N
 end
 
 # Subtitle: across/down entry counts add a touch of data storytelling below
-# the grid via a second Figure row (Label), beyond the plain grid alone.
+# the grid via a second Figure row (Label), beyond the plain grid alone. The
+# row needs an explicit fixed height — otherwise the DataAspect()-constrained
+# Axis above claims the whole figure and squeezes this row to invisibility.
 Label(
     fig[2, 1],
     "$(N) × $(N) grid · $(n_across[]) across · $(n_down[]) down";
@@ -131,6 +140,7 @@ Label(
     tellwidth = false,
     padding = (0, 0, 0, 14),
 )
+rowsize!(fig.layout, 2, Fixed(50))
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
