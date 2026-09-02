@@ -1,7 +1,7 @@
 // anyplot.ai
 // point-and-figure-basic: Point and Figure Chart
 // Library: echarts 6.1.0 | JavaScript 22.23.2
-// Quality: 80/100 | Created: 2026-09-02
+// Quality: 91/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
