@@ -44,8 +44,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 - **The IndexNow workflow no longer waits eight minutes behind an edge 403** — its
   key-file readiness loop treated every non-200 as "not deployed yet"; a GitHub runner
   that Cloudflare's bot management answers with 403 would have slept the full budget on
-  every run. A 403 now counts as deployed (Bing's own fetch is not subject to that
-  block), and the final warning names the last status seen. The submission body goes
+  every run. A 403 now ends the wait without claiming anything about the deploy (the
+  edge answers before the origin is asked, so it is inconclusive either way; IndexNow's
+  own key fetch is the authoritative check), and the final warning names the last
+  status seen. The submission body goes
   through a file (a full-sitemap batch is ~260 KB, above the 128 KB command-line
   argument cap that made the first sitemap-scope run report HTTP 000), and a first-use
   `403 SiteVerificationNotCompleted` from IndexNow is retried for up to ten minutes

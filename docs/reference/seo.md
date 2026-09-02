@@ -524,9 +524,10 @@ The engines answer `200` or `202` for an accepted batch; `4xx` means a key or
 payload problem and fails the run so it is visible. One `4xx` is transient by
 nature: after a rollout or a key rotation IndexNow verifies the key file
 asynchronously and answers `403 SiteVerificationNotCompleted` for a while, so
-the workflow retries that case once a minute for up to ten minutes before it
-fails — a `changed` run must not report success without its URLs accepted,
-because later pushes submit only their own diffs. Bing Webmaster Tools shows
+the workflow retries that case once a minute until a ten-minute deadline has
+passed (elapsed time, so slow responses cannot stretch it) and then fails — a
+`changed` run must not report success without its URLs accepted, because later
+pushes submit only their own diffs. Bing Webmaster Tools shows
 the received submissions under *IndexNow*.
 
 ## Discoverability for assistants

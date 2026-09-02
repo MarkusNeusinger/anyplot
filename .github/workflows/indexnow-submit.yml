@@ -51,9 +51,10 @@ env:
 jobs:
   submit:
     runs-on: ubuntu-latest
-    # Worst case: 8 min waiting for the key file + 10 min of verification
-    # retries + the curl timeouts, with room to spare.
-    timeout-minutes: 25
+    # Worst case: ~12 min waiting for the key file (16 probes, 15 s timeout,
+    # 30 s apart) + the 10 min verification deadline + one last request with
+    # its retries (up to ~4 min), with room to spare.
+    timeout-minutes: 30
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -130,8 +131,8 @@ jobs:
           # The engines validate a submission by fetching the key file. It is
           # served by the app deploy, which a rollout or a key rotation may
           # still have in flight — wait for it (up to ~8 min), but submit
-          # either way: a runner behind Cloudflare's bot management may see a
-          # 403 that Bing's own fetch does not, and IndexNow verifies itself.
+          # either way: this probe is a courtesy, IndexNow's own key fetch
+          # below is the authoritative check.
           for i in $(seq 1 16); do
             # On a transport failure curl still prints 000 for %{http_code};
             # the fallback is assigned afterwards so nothing is appended.
@@ -139,9 +140,10 @@ jobs:
               "https://${HOST}/${INDEXNOW_KEY}.txt") || status=000
             case "$status" in
               200) echo "::notice::key file reachable"; break ;;
-              # Deployed, but this runner is blocked at the edge: no point in
-              # waiting — Bing's own fetch is not subject to that block.
-              403) echo "::notice::key file answers 403 to this runner (edge bot management); treating as deployed"; break ;;
+              # Cloudflare's bot management answers 403 before the origin is
+              # asked, so this says nothing about the deploy either way, and
+              # waiting cannot change it. Bing's fetch is not subject to it.
+              403) echo "::notice::key file answers 403 to this runner (edge bot management), which cannot confirm the deploy; skipping the wait, IndexNow verifies the key itself"; break ;;
             esac
             if [ "$i" -eq 16 ]; then
               echo "::warning::key file not confirmed reachable after 8 min (last status ${status}); submitting anyway"
@@ -166,11 +168,13 @@ jobs:
             # First use of a key (rollout or rotation): IndexNow verifies the
             # key file asynchronously and answers 403 SiteVerificationNotCompleted
             # until it has — seen minutes after the file went live. Retry that
-            # case for up to ten minutes; if it persists, the run FAILS, so a
-            # `changed` run keeps its URL set and can be re-run — a green
-            # warning would have dropped those URLs for good, because later
-            # pushes submit only their own diffs.
-            for try in $(seq 1 10); do
+            # case once a minute until a ten-minute deadline has passed (an
+            # elapsed deadline, so slow responses cannot stretch it); if it
+            # persists, the run FAILS, so a `changed` run keeps its URL set and
+            # can be re-run — a green warning would have dropped those URLs for
+            # good, because later pushes submit only their own diffs.
+            deadline=$(( $(date +%s) + 600 ))
+            while :; do
               # Bounded: a slow or flaky api.indexnow.org must not burn the job
               # timeout; three retries cover a transient error, and a transport
               # error after them yields code 000 for the branch below instead of
@@ -180,9 +184,10 @@ jobs:
                 -X POST "https://api.indexnow.org/indexnow" \
                 -H "Content-Type: application/json; charset=utf-8" \
                 --data @body.json) || code="000"
-              if [ "$code" = 403 ] && grep -q SiteVerificationNotCompleted response.txt 2>/dev/null; then
-                echo "::notice::IndexNow has not finished verifying the key file yet (try ${try}/10)"
-                [ "$try" -lt 10 ] && sleep 60
+              if [ "$code" = 403 ] && grep -q SiteVerificationNotCompleted response.txt 2>/dev/null \
+                 && [ "$(date +%s)" -lt "$deadline" ]; then
+                echo "::notice::IndexNow has not finished verifying the key file yet; retrying in 60 s"
+                sleep 60
                 continue
               fi
               break
