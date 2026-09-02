@@ -48,12 +48,15 @@ function toPolygon(values) {
   });
   // Extend to zero at both ends so the polygon closes.
   const points = counts.map((c, i) => [midpoints[i], c]);
+  const peakIdx = counts.indexOf(Math.max(...counts));
+  const peak = [midpoints[peakIdx], counts[peakIdx]];
   points.unshift([midpoints[0] - binWidth, 0]);
   points.push([midpoints[midpoints.length - 1] + binWidth, 0]);
-  return points;
+  return { points, peak };
 }
 
 const lineStyles = ["solid", "dashed", "dotted"];
+const polygons = groups.map((g) => toPolygon(g.values));
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -79,6 +82,17 @@ chart.setOption({
     itemWidth: 28,
     itemHeight: 3,
   },
+  tooltip: {
+    trigger: "axis",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink },
+    formatter: (params) =>
+      [
+        `${Math.round(params[0].value[0])} ms`,
+        ...params.map((p) => `${p.marker} ${p.seriesName}: ${p.value[1]}`),
+      ].join("<br/>"),
+  },
   grid: { left: 100, right: 60, top: 150, bottom: 90 },
   xAxis: {
     type: "value",
@@ -87,7 +101,7 @@ chart.setOption({
     nameGap: 45,
     nameTextStyle: { color: t.ink, fontSize: 18 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { show: false },
     splitLine: { show: false },
   },
   yAxis: {
@@ -97,17 +111,32 @@ chart.setOption({
     nameGap: 65,
     nameTextStyle: { color: t.ink, fontSize: 18 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { lineStyle: { color: t.grid, width: 1 } },
     splitLine: { lineStyle: { color: t.grid } },
   },
   series: groups.map((g, i) => ({
     name: g.name,
     type: "line",
-    data: toPolygon(g.values),
+    data: polygons[i].points,
     symbol: "circle",
     symbolSize: 7,
     lineStyle: { width: 3, type: lineStyles[i], color: t.palette[i] },
     itemStyle: { color: t.palette[i] },
     areaStyle: { color: t.palette[i], opacity: 0.12 },
+    emphasis: { focus: "series", lineStyle: { width: 4 } },
+    markPoint: {
+      symbol: "pin",
+      symbolSize: 34,
+      itemStyle: { color: t.palette[i], borderColor: t.pageBg, borderWidth: 2 },
+      label: {
+        color: t.ink,
+        fontSize: 13,
+        fontWeight: 600,
+        position: "top",
+        distance: 6,
+        formatter: () => `${Math.round(polygons[i].peak[0])} ms`,
+      },
+      data: [{ coord: polygons[i].peak }],
+    },
   })),
 });
