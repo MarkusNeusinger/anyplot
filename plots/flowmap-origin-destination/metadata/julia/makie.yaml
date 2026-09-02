@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: flowmap-origin-destination
 created: '2026-09-02T00:35:47Z'
-updated: '2026-09-02T00:40:30Z'
+updated: '2026-09-02T00:54:55Z'
 generated_by: claude-sonnet
 workflow_run: 33575484688
 issue: 3765
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 89
 review:
   strengths:
+  - Top-5 hub cities (London, Los Angeles, Dubai, Delhi, Mumbai) are now labeled directly
+    on the map, letting a viewer identify the major corridors without an external
+    reference -- this directly resolves attempt 1's main weakness
   - Dual-encodes flow magnitude via both arc linewidth and the imprint_seq green-to-blue
     color gradient, so major corridors (Delhi-Dubai, Mexico City-Los Angeles) are
     immediately visible in two dimensions at once
+  - The crowded Middle East / South Asia hub cluster now gets a wider curvature spread
+    and a lower alpha (0.5 vs 0.6) specifically for hub-to-hub arcs, measurably reducing
+    visual tangling in the busiest corridor cluster
   - Node markers sized by total in/out flow highlight hub cities without adding extra
     chrome or a second legend
-  - Custom stylized continent silhouettes give geographic context with no external
-    geodata dependency, alpha-blended tastefully into the theme-adaptive land fill
   - 'Full theme-adaptive chrome: background, ink tokens, and colorbar tick colors
     all flip correctly between light/dark while data colors (brand-green nodes, green-blue
     arc gradient) stay pixel-identical'
   - Canvas lands exactly on 3200x1800 with no clipped or crowded elements; colorbar
     column is proportionally sized via colsize!(fig.layout, 2, Relative(0.05))
   weaknesses:
-  - No city-name labels on origin/destination nodes -- with 24 cities and 30 overlapping
-    arcs, viewers cannot tell which corridor connects which specific cities without
-    an external reference; consider small text labels on just the largest hub nodes
-    to avoid clutter
-  - The cluster of crossing arcs converging over the Middle East / South Asia region
-    is visually dense; widening the curvature spread slightly or lowering alpha a
-    touch further in that region would help disentangle the busiest corridors
+  - The mandated title renders at only ~30% of plot width (smaller than the typical
+    50-70% target) -- not a defect, but there is headroom to size it up slightly for
+    stronger visual presence
+  - The Dubai/Delhi/Mumbai/London hub cluster is still visually dense with many crossing
+    arcs behind the new city labels -- legible, but a further alpha reduction or slightly
+    wider spread in that specific region would help even more
   - Land silhouettes are highly simplified stylized polygons rather than real coastline
     data -- acceptable given the in-code disclaimer, but a minor realism gap
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1), consistent across the full canvas.
-      Chrome: Title "flowmap-origin-destination · julia · makie · anyplot.ai" in bold dark ink, ~50% of plot width, fully visible with generous top margin, no clipping. Colorbar on the right labeled "Flow volume (thousands / year)" in dark ink with gray tick labels (50/100/150/200), all fully inside the canvas with margin to spare. No x/y axis ticks/spines (intentionally hidden, appropriate for a map).
-      Data: Stylized light-gray continent silhouettes with subtle darker outline. Curved arcs connect city nodes, colored on a green (#009E73) to blue (#4467A3) gradient by flow magnitude and widened proportionally to flow (alpha ~0.6). City nodes are solid brand-green (#009E73) circles sized by total connected flow (largest near Delhi/Dubai hub). The thickest, bluest arcs (Delhi-Dubai, Mexico City-Los Angeles) are the two highest-flow corridors and stand out clearly.
-      Legibility verdict: PASS -- all text (title, colorbar label, tick labels) reads clearly against the light background; no light-on-light issues.
+      Chrome: Title "flowmap-origin-destination · julia · makie · anyplot.ai" in bold dark ink, roughly 30% of plot width, fully visible with generous margins, no clipping. Colorbar on the right labeled "Flow volume (thousands / year)" in dark ink with gray tick labels (50/100/150/200), fully inside the canvas. No x/y axis ticks/spines (intentionally hidden, appropriate for a map). Five hub-city labels (London, Los Angeles, Dubai, Delhi, Mumbai) render in bold dark text directly above their nodes.
+      Data: Stylized light-gray continent silhouettes with subtle darker outline. Curved arcs connect city nodes, colored on a green (#009E73) to blue (#4467A3) gradient by flow magnitude and widened proportionally to flow (alpha ~0.5-0.6). City nodes are solid brand-green (#009E73) circles sized by total connected flow (largest at Dubai). The thickest, bluest arcs (Delhi-Dubai, Mexico City-Los Angeles) are the two highest-flow corridors and stand out clearly.
+      Legibility verdict: PASS -- all text (title, colorbar label, tick labels, city labels) reads clearly against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (~#1A1A17), consistent across the full canvas.
-      Chrome: Same title, now in white/light-ink bold text, same size and position, fully visible. Colorbar label and tick labels rendered in light gray/white, fully legible against the dark background. Continent silhouettes render as a slightly lighter charcoal fill with a faint outline, keeping geographic context visible on dark.
+      Chrome: Same title, now in white/light-ink bold text, same size and position, fully visible. Colorbar label and tick labels rendered in light gray/white, fully legible against the dark background. The five hub-city labels render in bold white text, clearly readable. Continent silhouettes render as a slightly lighter charcoal fill with a faint outline, keeping geographic context visible on dark.
       Data: Arc and node colors are pixel-identical to the light render (same green-to-blue gradient, same brand-green nodes) -- only the chrome (background, text, land fill) flipped, exactly as required.
-      Legibility verdict: PASS -- no dark-on-dark failures observed; title, colorbar label, and tick labels are all clearly readable against the near-black background.
+      Legibility verdict: PASS -- no dark-on-dark failures observed; title, colorbar label, tick labels, and city labels are all clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -59,15 +62,16 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes throughout; title/label/tick colors read clearly
-          in both themes
+        comment: Explicit font sizes throughout; title/labels/ticks read clearly in
+          both themes; title is smaller than the usual 50-70% target but not clipped
+          or squeezed
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlap; the busy central arc cluster is dense data overlap,
-          not a legibility failure
+        comment: No text-on-text overlap; the new city labels sit close to the dense
+          central arc cluster but remain fully readable
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -85,8 +89,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas, title ~50% width, colorbar proportionally sized,
-          nothing clipped
+        comment: 3200x1800 canvas, map fills the majority of the frame, colorbar proportionally
+          sized, nothing clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -99,10 +103,10 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Node color = brand green #009E73; arc cmap matches imprint_seq exactly;
-          backgrounds match spec hexes in both themes'
+        comment: 'Node color = brand green #009E73; arc cmap matches imprint_seq exactly
+          (#009E73 to #4467A3); backgrounds match spec hexes in both themes'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -110,22 +114,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Dual encoding of magnitude (width + color) and node sizing by connectivity
-          show intentional hierarchy beyond defaults
+        comment: Dual encoding of magnitude (width + color) plus node sizing by connectivity
+          and now labeled hubs show intentional hierarchy beyond defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
         comment: Spines/decorations hidden, subtle land fill, no unnecessary chrome;
-          some visual crowding in the busy corridor cluster
+          the crowded-hub curvature/alpha tweak helps but the Dubai/Delhi/Mumbai/London
+          cluster is still visually dense
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Thicker/bluer arcs and larger nodes draw the eye to the top corridors
-          and hubs
+        comment: Thicker/bluer arcs, larger hub nodes, and the new city-name labels
+          let the viewer immediately name the top corridors instead of only seeing
+          them
     spec_compliance:
       score: 15
       max: 15
@@ -141,8 +147,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Bezier arcs, flow-proportional linewidth, alpha 0.6 transparency,
-          color gradient by magnitude, basemap all present
+        comment: Bezier arcs, flow-proportional linewidth, alpha transparency, color
+          gradient by magnitude, basemap, and now optional origin/dest labels for
+          the top hubs all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -157,16 +164,16 @@ review:
         passed: true
         comment: Title format exact; colorbar legend clearly labeled with units
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers arcs, dual magnitude encoding, hub sizing, basemap; missing
-          city-name labels limits corridor identification
+        comment: Covers arcs, dual magnitude encoding, hub sizing, basemap, and now
+          named hub labels -- resolves the prior gap in corridor identifiability
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -178,8 +185,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 30 flows across 24 cities, values 15-200k/year, within spec's 20-200
-          flow range
+        comment: 30 flows across 24 cities, values 15-200k/year, within the spec's
+          flow-count and magnitude ranges
     code_quality:
       score: 10
       max: 10
@@ -208,14 +215,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean bezier math, no fake UI or simulated interactivity
+        comment: Clean bezier math and crowded-hub handling, no fake UI or simulated
+          interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2 on current Makie 0.22
-          API
+        comment: Saves plot-$(THEME).png with px_per_unit=2 on current Makie API
     library_mastery:
       score: 7
       max: 10
@@ -240,6 +247,7 @@ impl_tags:
   techniques:
   - colorbar
   - bezier-curves
+  - annotations
   patterns:
   - iteration-over-groups
   dataprep:
