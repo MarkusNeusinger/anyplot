@@ -1,7 +1,7 @@
 // anyplot.ai
 // crossword-basic: Crossword Puzzle Grid
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 85/100 | Created: 2026-09-02
 
 //# anyplot-orientation: square
 
