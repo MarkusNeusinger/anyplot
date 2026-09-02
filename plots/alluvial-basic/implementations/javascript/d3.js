@@ -47,7 +47,7 @@ for (const stageTransitions of transitions) {
 }
 
 // --- Layout -------------------------------------------------------------
-const margin = { top: 130, right: 190, bottom: 40, left: 190 };
+const margin = { top: 130, right: 190, bottom: 70, left: 190 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 const nodePadding = 14;
@@ -98,16 +98,22 @@ const ribbonPath = (x0, y0a, y0b, x1, y1a, y1b) => {
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 
 // --- Ribbons --------------------------------------------------------------
+// Positions are baked into each link already, so re-sorting for the join only
+// changes paint (z-)order, not layout: draw the bulkiest flows first so the
+// rarer, thinner ones paint last and stay traceable on top of the crossings.
 for (const stageLinks of links) {
+  const paintOrder = [...stageLinks].sort((a, b) => b.value - a.value);
   svg
     .append("g")
     .selectAll("path")
-    .data(stageLinks)
+    .data(paintOrder)
     .join("path")
     .attr("d", (d) => ribbonPath(d.x0, d.y0a, d.y0b, d.x1, d.y1a, d.y1b))
     .attr("fill", (d) => color(d.source))
-    .attr("fill-opacity", 0.45)
-    .attr("stroke", "none");
+    .attr("fill-opacity", 0.62)
+    .attr("stroke", t.pageBg)
+    .attr("stroke-width", 0.75)
+    .attr("stroke-opacity", 0.6);
 }
 
 // --- Nodes ------------------------------------------------------------------
@@ -122,6 +128,63 @@ nodes.forEach((stageNodes, s) => {
     .attr("width", nodeWidth)
     .attr("height", (d) => d.y1 - d.y0)
     .attr("fill", (d) => color(d.category));
+});
+
+// --- Compact counts on the middle stages ---------------------------------
+// Semester 1 and Semester 4 already get full "category + count" labels
+// outside the diagram; the two interior stages have no room beside the
+// nodes (ribbons touch both edges), so stamp the count directly on each bar
+// with a haloed label instead — skipped only for slivers too short to hold
+// readable text.
+const MIN_LABEL_HEIGHT = 26;
+for (let s = 1; s < stages.length - 1; s++) {
+  const g = svg.append("g");
+  for (const c of categories) {
+    const { y0, y1 } = nodes[s][c];
+    if (y1 - y0 < MIN_LABEL_HEIGHT) continue;
+    g.append("text")
+      .attr("x", colX[s])
+      .attr("y", (y0 + y1) / 2)
+      .attr("text-anchor", "middle")
+      .attr("dominant-baseline", "central")
+      .attr("fill", "#FFFFFF")
+      .style("font-size", "11px")
+      .style("font-weight", "600")
+      .style("paint-order", "stroke")
+      .style("stroke", "rgba(0,0,0,0.55)")
+      .style("stroke-width", "3px")
+      .style("stroke-linejoin", "round")
+      .text(counts[s][c]);
+  }
+}
+
+// --- Shared legend --------------------------------------------------------
+// Ties each node/ribbon color back to its category name so the two
+// unlabeled interior stages (which only carry counts above) stay
+// self-explanatory without cross-referencing the edge columns.
+const legend = svg.append("g");
+const legendItems = categories.map((c) => {
+  const item = legend.append("g");
+  item.append("rect").attr("width", 14).attr("height", 14).attr("rx", 3).attr("fill", color(c));
+  item
+    .append("text")
+    .attr("x", 20)
+    .attr("y", 7)
+    .attr("dominant-baseline", "central")
+    .attr("fill", t.ink)
+    .style("font-size", "13px")
+    .style("font-weight", "500")
+    .text(c);
+  return item;
+});
+const legendGap = 28;
+const itemWidths = legendItems.map((item) => item.node().getBBox().width);
+const totalWidth = itemWidths.reduce((a, b) => a + b, 0) + legendGap * (legendItems.length - 1);
+let legendX = (width - totalWidth) / 2;
+const legendY = height - 30;
+legendItems.forEach((item, i) => {
+  item.attr("transform", `translate(${legendX},${legendY})`);
+  legendX += itemWidths[i] + legendGap;
 });
 
 // --- Category labels (first and last stage only) -----------------------
