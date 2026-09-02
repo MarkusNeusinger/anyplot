@@ -1,7 +1,7 @@
 // anyplot.ai
-// scatter-map-geographic: Tohoku-Oki Earthquake Epicenters
+// scatter-map-geographic: Scatter Map with Geographic Points
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: pending | Created: 2026-09-02
+// Quality: 85/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
