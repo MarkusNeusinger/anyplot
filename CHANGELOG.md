@@ -52,7 +52,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   bypasses that zone's Transform Rules — so the Worker stamps the header itself, deleting
   any inbound one first so a caller cannot supply it. The pre-traffic smoke reads the secret
   at run time and sends it, accepting `off`/`off-seen` so the pipeline keeps working before
-  the gate is armed and after a rollback. (#11207)
+  the gate is armed and after a rollback. (#11208)
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
   key file (`app/public/<key>.txt`, served by an explicit nginx `location` so crawler UAs
@@ -205,7 +205,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   exactly such a binding — attached by hand to arm the origin gate, removed by hand to roll
   back — and the old flag would have silently disarmed the gate on the next deploy. It
   cannot be listed in the flag instead: Cloud Run refuses a deploy naming a secret that does
-  not exist, which would break every build until the rollout creates it. (#11207)
+  not exist, which would break every build until the rollout creates it. (#11208)
 - **The analytics middleware moves inside `CORSMiddleware`** — a consequence of where the
   origin gate has to sit. The gate belongs inside CORS, so its 403 still carries the headers
   a browser needs to read it as a 403 rather than as an opaque network error, and outside
@@ -214,7 +214,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   on the direct URL could otherwise turn each of its own refusals into one. Those two are
   only simultaneously possible with the counter inside CORS. The cache-header middleware
   stays outside CORS, where its `setdefault` for the /og/ cards depends on being. `api/main.py`
-  now carries the stack order and the reason for each position. (#11207)
+  now carries the stack order and the reason for each position. (#11208)
 
 ## [3.2.0] — 2026-08-29 — Findable by assistants
 
