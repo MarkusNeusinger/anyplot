@@ -107,7 +107,7 @@ json.dump({
     ],
 }, sys.stdout)' | curl --fail-with-body -sS -X PUT \
     "https://api.cloudflare.com/client/v4/accounts/{account}/workers/scripts/anyplot-api-proxy" \
-    -H "Authorization: Bearer $CF_API_TOKEN" \
+    --config <(printf 'header = "Authorization: Bearer %s"\n' "$CF_API_TOKEN") \
     -F 'metadata=<-;type=application/json' \
     -F 'worker.js=@infra/cloudflare/anyplot-api-proxy.js;type=application/javascript+module'
 )
@@ -115,8 +115,19 @@ json.dump({
 
 `pipefail` so a failing `python3` cannot be masked by a succeeding `curl`;
 `--fail-with-body` so an HTTP error is a non-zero exit and still prints
-Cloudflare's JSON reason, which plain `-f` swallows. Then measure before
-trusting it:
+Cloudflare's JSON reason, which plain `-f` swallows.
+
+**The API token goes in through a file descriptor, not `-H`.** `curl`'s argument
+vector is world-readable in `/proc` for as long as the request runs, so
+`-H "Authorization: Bearer $CF_API_TOKEN"` would publish the credential that
+authorises replacing this Worker to every process on the machine — the same
+exposure the `ORIGIN_SECRET` handling above avoids, and the more dangerous of
+the two. `--config <(…)` passes it on `/dev/fd/N` instead, and `printf` is a
+shell builtin, so the token never reaches any argv at all (Copilot review). It
+needs `bash` or `zsh`; under a shell without process substitution, write the
+config line to a `600` temporary file and pass that path.
+
+Then measure before trusting it:
 
 ```bash
 curl -s https://anyplot.ai/api/health   # expect "origin_gate":"ok"
