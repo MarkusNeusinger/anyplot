@@ -1,8 +1,7 @@
 // anyplot.ai
 // range-interval: Range Interval Chart
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-02
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
