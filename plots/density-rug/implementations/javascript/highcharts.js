@@ -57,6 +57,16 @@ const maxDensity = Math.max(...densityCurve.map((p) => p[1]));
 const tickHeight = maxDensity * 0.12;
 const rugColor = `${t.palette[0]}73`; // brand green, ~45% opacity (overlap-friendly)
 
+// Nice round y-axis tick interval (1/2/5 * 10^k) so labeled ticks are spaced
+// far enough apart to stay visually distinct after rounding.
+const niceStep = (rough) => {
+  const exp = Math.floor(Math.log10(rough));
+  const base = rough / 10 ** exp;
+  const niceBase = base < 1.5 ? 1 : base < 3 ? 2 : base < 7 ? 5 : 10;
+  return niceBase * 10 ** exp;
+};
+const yTickInterval = niceStep(maxDensity / 5);
+
 // --- Chart -------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -85,9 +95,10 @@ Highcharts.chart("container", {
     labels: {
       style: { color: t.inkSoft, fontSize: "14px" },
       formatter() {
-        return this.value >= 0 ? this.value.toFixed(3) : "";
+        return this.value >= 0 ? this.value.toFixed(4) : "";
       },
     },
+    tickInterval: yTickInterval,
     min: -tickHeight * 1.4,
     max: maxDensity * 1.15,
     plotLines: [{ value: 0, color: t.inkSoft, width: 1, zIndex: 3 }],
