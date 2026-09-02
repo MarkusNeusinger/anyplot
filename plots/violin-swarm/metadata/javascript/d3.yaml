@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: violin-swarm
 created: '2026-09-02T09:49:50Z'
-updated: '2026-09-02T09:54:02Z'
+updated: '2026-09-02T10:14:00Z'
 generated_by: claude-sonnet
 workflow_run: 33615615405
 issue: 3526
@@ -12,45 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sw
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/d3/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - 'Idiomatic, sophisticated D3 usage: a force-simulation beeswarm clamped to a per-value
+  - 'Repair cleanly addressed both Attempt 1 weaknesses: swarm points now use the
+    neutral t.inkSoft tone instead of the violin''s own hue, giving real contrast
+    between the density layer and the raw observations'
+  - Reduced point radius (4.5 -> 3.6px) and increased forceCollide padding (+0.9)
+    keep individual observations discernible even in the densest bands (Tactile ~350-410ms,
+    Auditory ~260-300ms)
+  - 'Idiomatic, sophisticated D3 usage: a d3-force beeswarm clamped to a per-value
     interpolated violin half-width (halfWidthAt), instead of a fixed rectangular lane'
   - Per-category local density grid (own bandwidth-sized support window per violin)
     avoids the common spurious-tail artifact from sampling a shared global grid
-  - Correct violin fill alpha (0.38) within the spec's 0.3-0.5 guidance, keeping swarm
-    points visible through the fill
   - Exact Imprint canonical palette order (green/lavender/blue/ochre) and correct
-    theme-adaptive chrome in both light and dark renders
+    theme-adaptive chrome verified identical in both light and dark renders
   - Deterministic seeded LCG + Box-Muller normal sampling gives reproducible data
     with no network dependency
   weaknesses:
-  - Swarm points share the same hue as their violin fill, differentiated only by a
-    thin pageBg stroke; the spec suggests a contrasting color for points vs. violin
-    fill for better data/context separation — consider a neutral/ink-toned point fill
-  - In the densest bands (e.g. Tactile ~350-410ms, Auditory ~260-300ms), points pack
-    tightly enough that individual observations partially merge into a solid mass,
-    working against the 'reveal actual observations' goal of the swarm layer — consider
-    a smaller point radius or looser collision padding in high-density categories
-  - Several small helper functions (kernelEpanechnikov, kde, halfWidthAt, rand/randNormal)
-    push the script past a strict linear KISS structure; justified by the KDE/beeswarm
-    math but worth noting for CQ-01
+  - Several small pure helper functions (kernelEpanechnikov, kde, halfWidthAt, rand/randNormal)
+    push the script past a strict linear KISS structure - justified by the KDE/beeswarm
+    math, minor CQ-01 deduction
+  - In the single densest band (Auditory ~260-300ms), swarm points sit nearly edge-to-edge;
+    still individually distinguishable via the light stroke ring, but there is little
+    headroom left before points would start to overlap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm cream off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "violin-swarm · javascript · d3 · anyplot.ai" bold dark ink, centered top. Y-axis title "Reaction Time (ms)" and x-axis title "Stimulus Condition" in dark ink. Tick labels dark and crisp. Horizontal gridlines subtle light-gray, visible but not dominant.
-      Data: Four violins (Visual, Auditory, Tactile, Multimodal) colored green/lavender/blue/ochre in canonical Imprint order; first series is #009E73 green. Each violin has a translucent (~38% opacity) fill with a solid-color outline, and individual swarm dots (same hue as the violin, thin pale stroke) layered inside, confined to the violin's smoothed outline via force-simulation collision.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm cream off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Bold dark title "violin-swarm · javascript · d3 · anyplot.ai" centered at top; y-axis "Reaction Time (ms)" and x-axis "Stimulus Condition" labels dark and fully legible; tick labels dark and readable; subtle horizontal gridlines (y-axis only). No overlap between text elements.
+      Data: Four violins (Visual, Auditory, Tactile, Multimodal) in canonical Imprint order (green #009E73, lavender, blue, ochre), each ~38% opacity KDE outline. Swarm points now render in a neutral dark-gray ink tone (t.inkSoft) with a thin light stroke ring - clearly contrasting against every violin fill color, including the pastel lavender and ochre. Densest bands (Tactile ~350-410ms, Auditory ~260-300ms) show points packed tightly but each remains individually delineated by its stroke ring - no visible fusion into a solid mass.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and both axis titles render in light/off-white ink, fully legible. Tick labels are light and crisp. Gridlines are faint light lines, still visible without overpowering the plot.
-      Data: Same four violins, identical hues and opacity to the light render (green/lavender/blue/ochre) — only the chrome (background, text, grid, axis lines, point stroke color) flips between themes. Swarm dots keep their pageBg-colored stroke, which is now dark, giving a subtle separating halo against the fill in both themes.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title and axis labels render in light ink and remain fully legible; tick labels light and readable; gridlines faint but visible. No dark-on-dark failures anywhere.
+      Data: Same four violins, identical hues/opacity to the light render - only chrome (background, text, grid, point stroke) flipped. Swarm points render in a light gray tone (t.inkSoft dark-theme value) with a dark stroke ring, clearly visible against every violin color including the saturated blue. Same dense-band check as light render: points remain individually distinguishable, no fusion.
+      Legibility verdict: PASS
+
+    Both renders confirmed. Data colors (violin fills, point tone using the theme-adaptive ink) are consistent in identity between themes; only chrome adapted, as required.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,47 +60,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (15/17/22px), fully readable in both themes
+        comment: All font sizes explicitly set (14-22px CSS mount px), readable in
+          both themes and at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions; densest swarm bands (Tactile mid-range, Auditory
-          mid-range) show notable point-on-point overlap
+        comment: Reduced radius + increased collision padding eliminated the prior
+          point-on-point overlap; every dot keeps its stroke ring even in the densest
+          bands
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Point radius (4.5px) is reasonable, but dense clusters partially
-          fuse into a solid mass, reducing individual-observation visibility
+        comment: Points now clearly visible and individually distinguishable; Auditory
+          band is still very tight, just short of 'optimal' spacing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette provides adequate contrast, no red-green-only encoding
+        comment: inkSoft point fill contrasts well against every violin hue in both
+          themes; no red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, title well within bounds, nothing clipped, canvas
-          gate passed
+        comment: Balanced margins, plot fills a healthy majority of the 3200x1800
+          canvas, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (ms)
+        comment: Reaction Time (ms) has units; Stimulus Condition is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, series 2-4 follow canonical Imprint order
-          (lavender/blue/ochre), correct theme backgrounds'
+        comment: 'First series #009E73, canonical Imprint order for series 2-4, correct
+          #FAF8F1/#1A1A17 backgrounds, theme-correct chrome in both renders'
     design_excellence:
       score: 16
       max: 20
@@ -109,23 +114,22 @@ review:
         max: 8
         passed: true
         comment: Custom palette, alpha-blended violins, intentional per-category width
-          fitting — above generic defaults
+          fitting
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines reduced to domain lines, y-axis-only subtle grid, generous
-          whitespace
+        comment: Domain-only spines, y-axis-only subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear cross-condition comparison; Tactile's wider spread and higher
-          values stand out as a focal point
+        comment: Tactile's wider spread and higher values form a clear focal point
+          across the four conditions
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,24 +140,25 @@ review:
         comment: Correct violin + swarm hybrid
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Alpha 0.38 in spec range, points confined to violin boundary; points
-          not contrasting-colored vs. violin fill as suggested
+        comment: Alpha 0.38 within spec's 0.3-0.5 range, points clamped inside violin
+          boundary, and points now use a genuinely contrasting ink tone vs. violin
+          fill per the spec's guidance
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Category on x, value on y, full data range shown
+        comment: Category on x, value on y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; no legend needed, x-axis labels
-          double as category key
+        comment: Title matches required format; x-axis labels double as the category
+          key, no separate legend needed
     data_quality:
       score: 15
       max: 15
@@ -170,7 +175,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Plausible reaction-time experiment, neutral topic
+        comment: Plausible, neutral reaction-time experiment
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -186,8 +191,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several small pure helper functions (KDE, beeswarm interpolation)
-          needed for the technique, deviates from strict linear script
+        comment: Several small pure helper functions needed for the KDE/beeswarm technique
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,7 +209,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for the technique, no fake functionality
+        comment: Appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -228,14 +232,13 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: d3-force beeswarm collision layout clamped via interpolated density
-          width — a genuinely distinctive D3-only technique
+        comment: d3-force beeswarm collision layout clamped via an interpolated per-value
+          density width - a genuinely distinctive D3-only technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - force-simulation-swarm
-  - manual-ticks
+  - force-simulation
   patterns:
   - data-generation
   - iteration-over-groups
@@ -243,4 +246,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - publication-ready
+  - edge-highlighting
