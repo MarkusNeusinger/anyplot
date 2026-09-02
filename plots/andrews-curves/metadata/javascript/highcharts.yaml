@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: andrews-curves
 created: '2026-09-02T11:22:00Z'
-updated: '2026-09-02T11:26:25Z'
+updated: '2026-09-02T11:44:56Z'
 generated_by: claude-sonnet
 workflow_run: 33623851236
 issue: 2859
@@ -12,66 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/andrews-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/andrews-curves/javascript/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 92
 review:
   strengths:
+  - Bold per-cluster centroid curves (lineWidth 3, zIndex 5) now sit on top of the
+    faint individual traces — a deliberate visual anchor that directly fixes the attempt-1
+    'well-configured default' critique and makes Cluster B's separation legible.
+  - Individual-curve density tuned (opacity 0.45→0.3, lineWidth 1.5→1) — the densest
+    overlap band around t≈0 is noticeably easier to trace than attempt 1 while still
+    reading as a texture of density.
+  - Axis titles now carry full descriptive parentheticals ('t (Fourier parameter,
+    -π to π)', 'f(t) (curve value)') instead of bare 't'/'f(t)' notation.
+  - 'Axis lines removed (lineWidth: 0 on both axes) for a cleaner, gridline-anchored
+    look, addressing the attempt-1 ''plain default axis lines'' note.'
+  - 'chart.zoomType: ''x'' added — a genuine Highcharts-distinctive interactive feature
+    for range exploration in the HTML output, directly responding to the LM-02 feedback.'
   - Correct Andrews curve Fourier transform (x1/√2 + x2·sin(t) + x3·cos(t) + x4·sin(2t))
-    with per-column z-score standardization, exactly as the spec's Notes section recommends.
-  - 'First categorical series is brand green #009E73 (Cluster A), with Cluster B/C
-    following the Imprint palette in canonical order.'
-  - 'Both themes render correctly: background, title, subtitle, axis labels, ticks,
-    grid, and legend all use theme-adaptive tokens; data colors are pixel-identical
-    between light and dark renders.'
-  - Title matches the mandated `andrews-curves · javascript · highcharts · anyplot.ai`
-    format exactly; legend labels (Cluster A/B/C) map clearly to the color-coded groups.
-  - Realistic, neutral iris-like flower measurement data (sepal/petal length & width)
-    with plausible real-world ranges and three distinguishable clusters.
-  - Deterministic via a fixed-seed LCG (seed=42) since the browser has no seeded RNG
-    — matches the highcharts.js library guidance.
-  - 'Nice domain-specific touch: custom π-formatted x-axis ticks (-π, -π/2, 0, π/2,
-    π) instead of raw decimals.'
-  - Uses transparency (opacity 0.45) as the spec's Notes section recommends for revealing
-    density patterns among many overlapping curves.
+    with per-column z-score standardization, exactly matching the spec's Notes.
+  - 'First categorical series is brand green #009E73 (Cluster A); Cluster B/C follow
+    the Imprint palette in canonical order, identical across both themes.'
+  - 'Both renders are fully theme-correct: warm off-white / near-black backgrounds,
+    no dark-on-dark or light-on-light failures, all data colors pixel-identical between
+    themes.'
+  - Realistic, neutral iris-like flower measurement data (three clusters, plausible
+    sepal/petal ranges) with a deterministic fixed-seed LCG (seed=42), matching the
+    highcharts.js browser-RNG guidance.
+  - 'Legend deduplicated to only the 3 centroid series (showInLegend: false on the
+    60 individual curves) — avoids legend clutter while still conveying group identity.'
   weaknesses:
-  - Design Excellence reads as a well-configured default rather than a distinctive
-    treatment (DE-01) — consider a deliberate touch such as a bolder/opaque representative
-    (median or centroid) curve per cluster to anchor the eye, or a slightly refined
-    typographic hierarchy between title/subtitle.
-  - Visual refinement is decent but not exceptional (DE-02) — the axis lines/spines
-    are plain default; consider trimming to a cleaner L-shape or removing the axis
-    line entirely since gridlines already anchor the scale.
-  - Data storytelling is only moderate (DE-03) — Cluster B (lavender) overlaps heavily
-    with both other clusters and reads as the least visually distinct group; consider
-    a brief annotation or subtitle callout pointing at where the clusters separate
-    most clearly (e.g. near t≈±π where Cluster A and Cluster C diverge most) to guide
-    the viewer to the insight.
-  - Axis labels 't' and 'f(t)' are minimal/generic (VQ-06) — while these are the conventional
-    Andrews-curve notation, consider a small parenthetical, e.g. 't (Fourier parameter,
-    -π to π)' and 'f(t) (curve value)', to score full marks on descriptiveness.
-  - In the densest overlap band (roughly -π/2 to π/2) the 60 overlapping 1.5px lines
-    at 0.45 opacity braid together and individual curves become hard to trace (VQ-03)
-    — a slightly thinner lineWidth (~1) or marginally lower opacity would improve
-    legibility without losing the density-pattern effect.
-  - Library Mastery usage is solid but generic (LM-02) — the π-tick formatter and
-    selective legend/mouse-tracking dedup are nice touches, but nothing here is uniquely
-    hard to replicate in another charting library; consider a Highcharts-distinctive
-    feature such as chart.zoomType for interactive range exploration (core option,
-    no add-on module needed).
+  - 'Mouse tracking is fully disabled (enableMouseTracking: false) on every series,
+    including the 3 bold centroid curves, and tooltip is off entirely — zoomType is
+    now the only interactive feature left; consider re-enabling tooltip + mouse tracking
+    on just the 3 centroid series for a lightweight hover layer without reintroducing
+    clutter from the 60 individual curves.'
+  - The densest overlap band (t ≈ -π/2..π/2) is improved over attempt 1 but still
+    shows moderate visual crowding among the faint individual curves — inherent to
+    Andrews curves with 60 observations, but a slightly lower opacity (e.g. 0.25)
+    would help further.
+  - Only 4 of the spec's recommended 4-8 dimensions are used (the minimum of the recommended
+    range) — a 5th-6th variable would exercise more of the Fourier expansion and demonstrate
+    deeper feature coverage.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "andrews-curves · javascript · highcharts · anyplot.ai" in bold dark text at top; subtitle "Standardized flower measurements as Fourier curves — similar observations trace similar shapes" in medium-gray below it; x-axis title "t" and y-axis title "f(t)" in gray; tick labels (-π, -π/2, 0, π/2, π on x; -5..5 on y) in gray; subtle horizontal gridlines only; legend with three color swatches (Cluster A/B/C) centered at the bottom. All chrome elements are clearly legible against the light background.
-      Data: Three sets of ~20 overlapping wave-like curves each. Cluster A is brand green (#009E73), Cluster B is lavender/purple (#C475FD), Cluster C is steel blue (#4467A3) — matches Imprint palette positions 1, 2, 3 in canonical order, with the brand green correctly assigned to the first series. Curves braid together most densely in the t≈-π/2..π/2 band and separate more toward the ±π edges.
-      Legibility verdict: PASS — no light-on-light issues, all text and data clearly distinguishable from the background.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "andrews-curves · javascript · highcharts · anyplot.ai" at top, gray subtitle below, gray "t (Fourier parameter, -π to π)" / "f(t) (curve value)" axis titles, gray tick labels (-π, -π/2, 0, π/2, π on x; -5..5 on y), subtle horizontal-only gridlines, bottom-centered legend with three swatches (Cluster A/B/C). All chrome text is clearly readable against the light background.
+      Data: Three families of curves in brand green (#009E73, Cluster A), lavender/magenta (Cluster B), and steel blue (Cluster C). ~60 faint individual curves (opacity 0.3, lineWidth 1) establish a density texture, braiding most heavily near t≈0 and separating cleanly toward ±π; a bold centroid curve per cluster (lineWidth 3) sits on top and is clearly traceable for all three groups, including Cluster B which was hard to distinguish in attempt 1.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/axis-title/tick-label/legend structure, now rendered in light gray/white text against the dark background. Gridlines remain subtle and visible. No dark-on-dark failures observed — every text element (title, subtitle, axis titles, tick labels, legend) is clearly legible.
-      Data: Cluster A/B/C use the identical green/lavender/blue hues as the light render — confirmed pixel-identical data colors, only chrome (background + text) flipped as required. Brand green (#009E73) remains clearly visible against the dark surface.
-      Legibility verdict: PASS — no dark-on-dark failures, all chrome and data elements read clearly.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical structure with all chrome (title, subtitle, axis titles, tick labels, legend) rendered in light gray/white — no dark-on-dark failures anywhere.
+      Data: Data colors (green/lavender/blue, both faint individual curves and bold centroids) are pixel-identical to the light render; only the chrome flipped, as required. Brand green and the bold centroid curves remain clearly visible against the dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -79,78 +74,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
-          14px); readable and well-proportioned in both themes, no overflow or clipping
+        comment: All text readable in both themes; explicit font sizes throughout
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or legend; curve overlap is the
-          intended data pattern, not a text collision
+        comment: No text/data collisions; legend well separated from plot area
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Opacity 0.45 / lineWidth 1.5 works well overall, but the densest
-          overlap band (t ≈ -π/2..π/2) braids into a thick mass where individual curves
-          are hard to trace
+        comment: Opacity/lineWidth reduced from attempt 1, clear improvement; densest
+          band (t≈0) still moderately crowded among faint curves
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three hues (green/lavender/blue) are well-separated and CVD-safe
-          per the Imprint palette design
+        comment: Green/lavender/blue triad is CVD-safe, not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the canvas well with balanced margins; legend sits
-          directly under the plot, not isolated
+        comment: Good proportions, no clipping, title well within bounds
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: '''t'' and ''f(t)'' are the conventional Andrews-curve notation but
-          read as minimal/generic; no units or parenthetical context given'
+        comment: Axis titles now carry full parenthetical descriptions, fixing attempt-1
+          minimalism
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Cluster A) is #009E73; Cluster B/C follow canonical
-          Imprint order; backgrounds and chrome are theme-correct in both renders;
-          data colors identical across themes'
+        comment: 'First series #009E73, Imprint order, correct light/dark backgrounds'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default with correct tokens applied, but
-          no standout customization beyond the required chrome mapping
+        passed: true
+        comment: Bold centroid-over-density layering is a deliberate, non-default
+          visual choice added specifically to address attempt-1 feedback
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid is a good choice, but axis lines/spines
-          are left as plain defaults
+        comment: 'Axis lines removed (lineWidth: 0), subtle horizontal-only grid,
+          generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color-coded clusters plus an explanatory subtitle create some hierarchy,
-          but Cluster B blends heavily with the other two, diluting the separation
-          story
+        comment: Bold centroids create a clear focal point per cluster; Cluster B
+          separation now reads clearly, fixing the attempt-1 blending issue
     spec_compliance:
       score: 15
       max: 15
@@ -160,50 +147,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Andrews-curve Fourier transform
+        comment: Correct Andrews curves via Fourier series transform
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 4 dimensions, 60 observations, z-score normalization, alpha<0.5,
-          category color-coding, t in [-π, π] — all spec requirements met
+        comment: Standardization, alpha transparency, category coloring, t in [-π,
+          π] — all spec Notes satisfied
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=t, y=f(t) correctly mapped, full range shown
+        comment: X=t, Y=f(t), full curve range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches exactly; legend labels (Cluster A/B/C) map to
-          data groups
+        comment: Title matches mandated format exactly; legend labels map to color-coded
+          groups
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Three distinct clusters with different means/variances produce varied,
-          non-identical curve shapes
+        comment: Density (individual curves), clustering (centroids), and outlier-detection
+          texture all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, comprehensible iris-like flower measurement scenario
+        comment: Neutral, plausible iris-like flower measurement data across three
+          clusters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sepal/petal ranges are realistic and consistent with real iris data
+        comment: Z-score standardized values, sensible axis range
     code_quality:
       score: 10
       max: 10
@@ -213,8 +201,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data → transform → chart flow; small helper functions (LCG, normal
-          sampling, Andrews transform) are minimal and necessary, not over-abstracted
+        comment: Small, purposeful helper functions (LCG RNG, curve transform), no
+          classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,22 +214,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the provided Highcharts global
+        comment: No imports needed; uses global Highcharts/tokens only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex, no fake functionality
+        comment: Appropriate complexity, no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Highcharts.chart('container', …) with no explicit width/height; animation
-          disabled on chart and series; credits disabled
+        comment: Correct mount-node contract, animation disabled everywhere
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -249,22 +236,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper options-object API usage, custom labels.formatter for π-ticks,
-          correct colors/plotOptions wiring
+        comment: Idiomatic series/plotOptions/axis formatter usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: π-tick formatter and per-group showInLegend/enableMouseTracking dedup
-          are nice touches but easily replicated in other libraries; no feature unique
-          to Highcharts is showcased
-  verdict: REJECTED
+        passed: true
+        comment: 'zoomType: ''x'' added per attempt-1 feedback, but enableMouseTracking
+          is false on every series (including centroids), leaving tooltips fully off
+          and zoom as the sole interactive feature'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -272,3 +257,4 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
+  - minimal-chrome
