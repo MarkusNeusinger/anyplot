@@ -1,0 +1,246 @@
+library: muix
+language: javascript
+specification_id: box-horizontal
+created: '2026-09-02T13:45:24Z'
+updated: '2026-09-02T14:00:52Z'
+generated_by: claude-sonnet
+workflow_run: 33636446358
+issue: 2548
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'All three weaknesses from Attempt 1 are now fixed: the y-axis carries a descriptive
+    ''Job Title'' label, grid opacity dropped from 0.55 to 0.2 (within the style guide''s
+    10-25% range), and outlier marker radius increased from 5 to 6.5 CSS px for better
+    mobile visibility'
+  - Correctly implements a box-and-whisker overlay from scratch via useXScale/useYScale
+    hooks, cleanly working around the community package's missing BoxPlot component
+    without reaching into Pro/Premium
+  - Deterministic LCG-based data generation with realistic per-role salary distributions
+    and two intentionally injected outliers clearly demonstrates the outlier feature
+    on multiple rows
+  - Categories sorted by descending median, matching the spec's 'consider sorting
+    by median' guidance and creating a clear top-to-bottom narrative
+  - Canonical Imprint palette used in order with correct brand-green first series;
+    both renders are fully theme-correct in backgrounds and chrome
+  - 'Thoughtful visual hierarchy beyond generic defaults: rounded box corners, bolder
+    median line, hollow-donut outlier markers'
+  weaknesses:
+  - Aesthetic Sophistication (DE-01) is still at 'above generic defaults' rather than
+    exceptional — the box overlay is clean but doesn't add further polish beyond the
+    Attempt-1 baseline (e.g. no subtle reference line, no additional emphasis technique)
+  - The series=[] + custom-SVG-overlay pattern is the correct workaround for a missing
+    community BoxPlot component, but it means no actual MUI X series/mark component
+    renders the data — idiomatic usage is slightly below a native chart-component
+    render
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "box-horizontal · javascript · muix · anyplot.ai" top-left in dark ink; x-axis title "Annual Salary ($k)" and tick labels (30-220) in dark ink; y-axis title "Job Title" now present (rotated, left edge) alongside the 7 category labels (job titles, sorted by descending median: Senior Software Engineer, Data Scientist, Product Manager, DevOps Engineer, UX/UI Designer, Marketing Analyst, Customer Success Manager) — all clearly legible. Subtle dotted vertical gridlines at reduced opacity (0.2) compared to Attempt 1.
+      Data: 7 horizontal box-and-whisker plots, one per role, each using a distinct Imprint categorical color in canonical order (green, lavender, blue, ochre, red, cyan, rose) — first series (Senior Software Engineer) is brand green #009E73. Boxes show translucent fills with solid-color strokes, whisker caps, a bold median line, and hollow (background-fill) outlier circles on 4 of 7 rows, now rendered slightly larger (r=6.5px) than Attempt 1.
+      Legibility verdict: PASS — all title, axis, and tick text reads clearly against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles (including the new "Job Title" y-axis label), tick labels, and category labels now in light ink, fully legible against the dark surface. Gridlines flip to a light, low-opacity dotted style.
+      Data: Same 7 box plots in identical position/order. Data colors (stroke hues) are identical to the light render — green/lavender/blue/ochre/red/cyan/rose per role in the same order. Only the chrome (background, text, grid) flips; the translucent box fills appear perceptually richer against the dark backdrop purely from alpha compositing, which is expected and not a color-identity violation.
+      Legibility verdict: PASS — no dark-on-dark failures; all text remains clearly readable, and brand green stays visible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (14-22px), readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Outlier marker radius increased from 5 to 6.5 CSS px, fixing the
+          Attempt-1 weakness; boxes/whiskers clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe palette; row position + labels disambiguate the 7 categories
+          redundantly
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 proportions, canvas gate passed, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis now has descriptive 'Job Title' label alongside the x-axis
+          'Annual Salary ($k)' label with units — Attempt-1 gap closed
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series brand green, canonical order, theme-correct backgrounds
+          both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Rounded box corners, bolder median line, hollow outlier markers —
+          above generic defaults but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Grid opacity reduced from 0.55 to 0.2 (now within the style guide's
+          10-25% range); L-shaped spines, generous left margin for long labels
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending-median sort creates a clear visual narrative top-to-bottom
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal box plot orientation
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median, quartile box, whiskers, outliers all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, values on x-axis, full range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; no legend needed since y-axis labels
+          identify each row
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: All statistical elements shown across 7 roles; outliers demonstrated
+          on 2 rows
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral salary-by-role data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible $k salary range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few helper functions (lcg, randomNormal, quantile), all justified
+          by needing real box-plot statistics
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Legitimate custom-SVG overlay solving a real community-package gap;
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct default-export contract, skipAnimation set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ChartContainer + axis/grid components, community-surface
+          only; series=[] with a custom overlay is the necessary workaround for the
+          missing BoxPlot component
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useYScale-driven custom overlay is a genuinely distinctive
+          technique demonstrating deep API knowledge
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
