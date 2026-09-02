@@ -1,0 +1,241 @@
+library: ggplot2
+language: r
+specification_id: bar-feature-importance
+created: '2026-09-02T12:27:42Z'
+updated: '2026-09-02T12:40:15Z'
+generated_by: claude-sonnet
+workflow_run: 33629745405
+issue: 2276
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Grid-opacity weakness from the previous review is fully resolved -- panel.grid.major.x
+    now uses INK_MUTED (faint, theme-adaptive) instead of full-opacity INK, visibly
+    subtler in both renders
+  - Correctly sorts bars by importance descending (highest, Credit Score, at top)
+    exactly as the spec's Notes require
+  - 'Uses the imprint_seq sequential gradient (#009E73 -> #4467A3) mapped to the continuous
+    importance value, with the fill legend correctly hidden since it''s redundant
+    with bar length'
+  - 'Implements every optional spec feature: error bars from the std column (geom_errorbar)
+    and precise importance value text labels at each bar end (geom_text)'
+  - 'Both themes render correctly and consistently: identical data colors between
+    light/dark, theme-adaptive chrome, exact 3200x1800 canvas, no edge clipping'
+  - Realistic, neutral domain data (loan-default gradient-boosting feature importances)
+    with reproducible generation via set.seed(42) and clean, unused-import-free code
+  weaknesses:
+  - 'Composition is solid but conventional: a color-mapped geom_col + geom_errorbar
+    + geom_text combination without a distinctive ggplot2-specific technique that
+    would lift Library Mastery beyond generic usage'
+  - 'Design tradeoff worth reconsidering: mapping importance to imprint_seq puts the
+    single most important feature (top bar) in blue rather than brand green -- technically
+    correct per the sequential colormap direction, but a viewer''s instinct is often
+    to expect the brand color to mark the standout bar'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly not pure white.
+      Chrome: Title "bar-feature-importance · r · ggplot2 · anyplot.ai" in dark ink at top, comfortably sized (~50% of plot width, no overflow). X-axis title "Feature Importance" below the axis. 15 horizontal bars with feature-name tick labels on the left (Credit Score down to Inquiries (6mo)), sorted by importance descending. Thin vertical gridlines at 0.00/0.10/0.20/0.30 render in a faint muted-ink tone -- subtle, not competing with the data (the previous full-opacity-INK gridline weakness is fixed). All titles, axis labels, and tick labels are clearly legible against the light background.
+      Data: Bars use the imprint_seq sequential gradient, running from brand green (#009E73) for low-importance bars at the bottom to blue (#4467A3) for the top (highest-importance, Credit Score) bar. Grey error-bar whiskers show +/- std, and dark ink text labels give the precise importance value (e.g. "0.221") at the end of each bar/whisker.
+      Legibility verdict: PASS.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly not pure black.
+      Chrome: Same title, axis title, and 15 feature tick labels now rendered in light ink (#F0EFE8 primary / #B8B7B0 secondary tick text) -- fully legible against the dark background, no dark-on-dark failures observed. Vertical gridlines now render in the light ink token at the same faint, subtle prominence as the light render.
+      Data: Bar colors are pixel-identical to the light render (green-to-blue gradient, same positions) -- only the chrome (background, text, grid, error-bar color) flipped as required. Error-bar whiskers use the ink_soft token adapted to dark chrome and remain clearly visible.
+      Legibility verdict: PASS.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 12pt, axis title 10pt, tick
+          text 8-9pt), readable in both themes, title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, bars, error bars, or value labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, error-bar whiskers, and value-label text all clearly visible
+          and appropriately sized for 15 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient is CVD-safe; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Exact 3200x1800 canvas, good proportions, nothing clipped or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive x-axis label; y-axis title correctly omitted since categorical
+          tick labels are self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct imprint_seq (#009E73 -> #4467A3) for single-polarity continuous
+          data; backgrounds match #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Continuous gradient tied to bar value shows intentional polish, but
+          overall composition is fairly conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Previous weakness fixed: panel.grid.major.x now uses INK_MUTED instead
+          of full-opacity INK; spines removed via theme_minimal; generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort plus color intensity creates a clear focal point
+          on the top feature, though it's a conventional technique
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sort by importance, sequential gradient, error bars, and value-label
+          annotations all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=importance, y=feature, all 15 features shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend correctly omitted as redundant
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All three spec fields (feature, importance, std) used
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral loan-default gradient-boosting features
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized importances summing to 1, realistic exponential-like decay
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: geom_col/geom_errorbar/geom_text/scale_fill_gradient used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Continuous fill gradient on a bar chart is a reasonably distinctive
+          but common ggplot2 technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - custom-colormap
