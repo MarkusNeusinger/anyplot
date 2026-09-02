@@ -198,6 +198,8 @@ Highcharts.chart("container", {
     title: { text: null },
     min: -0.5,
     max: groups.length - 0.5,
+    startOnTick: false,
+    endOnTick: false,
     tickPositions: groups.map((_, i) => i),
     gridLineWidth: 0,
     lineColor: t.inkSoft,
