@@ -1,0 +1,272 @@
+library: highcharts
+language: javascript
+specification_id: box-horizontal
+created: '2026-09-02T13:40:11Z'
+updated: '2026-09-02T13:58:07Z'
+generated_by: claude-sonnet
+workflow_run: 33636187250
+issue: 2548
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/highcharts/plot-dark.html
+quality_score: 96
+review:
+  strengths:
+  - 'Elegant technical workaround for the core bundle''s missing boxplot series: two
+    stacked bar series (invisible floor + colored IQR box) plus two null-separated
+    line series for whiskers/median, layered by series order so the median mark sits
+    on top of the box fill.'
+  - Categories sorted by descending median (per the spec's ordering note) with a dashed
+    org-wide median reference line and inline label, giving the chart an immediate,
+    clear insight — which roles sit above/below the typical salary — rather than a
+    flat data dump.
+  - Categorical colors follow the canonical Imprint order exactly (green, lavender,
+    blue, ochre, matte red, cyan, rose) across all 7 categories, identical between
+    light and dark renders; outlier markers reuse each row's series color for visual
+    consistency.
+  - 'Both renders are pixel-verified theme-correct: light background samples exactly
+    #FAF8F1, dark background samples exactly #1A1A17, with no edge clipping on title
+    or axis labels.'
+  - Deterministic LCG-seeded data generation produces realistic, varied salary distributions
+    (different spreads, some categories with outliers and some without) for a neutral,
+    plausible business scenario.
+  - Custom tooltip pointFormatter surfaces the full five-number summary (min/Q1/median/Q3/max)
+    per category — a distinctive, Highcharts-idiomatic touch that adds real value
+    in the HTML detail view.
+  weaknesses:
+  - Minor unused whitespace on the right side of the value axis (data maxes out around
+    $265K but the axis extends to $300K) — a tighter maxPadding or explicit max would
+    tighten canvas utilization slightly.
+  - Several small pure helper functions (lcg, randNormal, quartile, boxStats) sit
+    above the chart config rather than a flatter linear script — necessary for the
+    statistical computation a box plot requires, but a stricter KISS reading would
+    inline more of this.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, sampled exactly #FAF8F1 (250,248,241) in all four corners — matches the light chrome spec.
+      Chrome: Title "box-horizontal · javascript · highcharts · anyplot.ai" in bold dark ink at top, fully visible (first non-background pixel row 22, no top clipping). Seven long job-title category labels ("VP of Engineering" ... "Junior Financial Analyst") run down the left y-axis in dark ink, all fully legible with no truncation or overlap. X-axis is labeled "0K"–"300K" with the axis title "Annual Salary ($K)" below it in medium-gray ink. A dashed vertical reference line reads "Org-wide median: $105K" near the top of the plot, clear of the boxes. Subtle vertical gridlines are visible but unobtrusive.
+      Data: Seven horizontal box-and-whisker rows, one per role, colored in canonical Imprint order top-to-bottom — brand green, lavender, blue, ochre, matte red, cyan, rose — each with a white median tick, thin whisker lines with end caps, and colored outlier dots (radius ~6.5px) with a light outline for contrast (Data Science Team Lead, Senior Software Engineer, and Customer Success Associate each show one or two outliers). First series (VP of Engineering) is #009E73 as required.
+      Legibility verdict: PASS — all text (title, category labels, tick labels, axis title, reference-line annotation) is clearly readable against the light background; no light-on-light text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, sampled exactly #1A1A17 (26,26,23) in all four corners — matches the dark chrome spec.
+      Chrome: Same layout as the light render with all chrome flipped to light-colored ink — white/light-gray title, category labels, tick labels, axis title, and the dashed reference-line label, all clearly legible. Gridlines are subtle light gray, visible but not dominant.
+      Data: Box colors, outlier colors, and box ordering are pixel-identical to the light render (green, lavender, blue, ochre, matte red, cyan, rose in the same canonical order) — only the chrome (background, text, grid) flipped, as required. First series is still #009E73.
+      Legibility verdict: PASS — no dark-on-dark failures found; every text element (title, axis labels, ticks, annotation) reads clearly against the #1A1A17 background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, tick/category
+          labels 14px); every element reads clearly at full size in both themes, long
+          category labels fit without rotation or truncation.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, category labels, tick labels, reference-line
+          annotation, or data marks.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Box widths, whisker caps, median ticks, and outlier markers (radius
+          6.5) are all well-sized for a 7-category, ~10-70 point-per-group dataset.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette is CVD-safe by design; outlier markers use an outline
+          stroke for contrast against both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area uses the large majority of the canvas with balanced margins;
+          minor unused space on the right past the max whisker is a rounding-friendly
+          axis choice, not a layout defect.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Annual Salary ($K)" is descriptive with units; category axis is
+          self-labeling via role names.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; all 7 categories follow canonical Imprint
+          order 1-7; backgrounds sample exactly #FAF8F1/#1A1A17; chrome is theme-correct
+          in both renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful use of color, subtle box border/radius, and a dashed reference
+          annotation — clearly above library defaults, though short of full publication
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle single-axis gridlines, rounded/thin-bordered boxes, generous
+          whitespace; axis lines remain visible, which is appropriate for a value
+          axis that must be read precisely.
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Sorting by descending median plus the org-wide median reference line
+          lets the viewer immediately see which roles pay above/below the org-wide
+          typical salary — a clear, purposeful insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal box plot with all standard statistical elements.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median line, quartile box, whiskers, and outliers all present, plus
+          the spec's suggested median-sort ordering.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, numeric values on x-axis, exactly as the spec
+          requires.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format is exactly correct; no legend needed since colors map
+          1:1 to already-labeled category rows.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Distributions vary in spread across roles, and three categories show
+          genuine outliers, demonstrating the full box-plot feature set.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Job-title salary ranges are a real, neutral business scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Salary levels and ordering (VP > team lead > senior IC > manager
+          > specialist > associate > junior) match real-world compensation hierarchies.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small pure helper functions for LCG/quartile/box-stats are the minimum
+          necessary for computing a box plot's statistics; overall flow is still linear
+          data-then-chart.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed = 7) makes the data fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided Highcharts/tokens globals, as required
+          by the mount-node contract.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or interactivity; the stacked-bar-plus-line-series construction
+          is appropriately complex for the constraint it solves.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Uses Highcharts.chart("container", …) with animation disabled on
+          both chart and series, matching the harness contract.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly works around the core bundle's missing boxplot series using
+          stacking, colorByPoint, and layered line series — exactly the pattern the
+          library docs recommend when highcharts-more isn't available.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom pointFormatter tooltips, plotLines with a positioned label,
+          and reversed/inverted stacked-bar axes are genuinely Highcharts-specific
+          touches.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
