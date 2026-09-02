@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: bar-spine
 created: '2026-09-02T12:57:16Z'
-updated: '2026-09-02T13:03:51Z'
+updated: '2026-09-02T13:14:02Z'
 generated_by: claude-sonnet
 workflow_run: 33631923585
 issue: 5249
@@ -12,51 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-spine/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Correct proportional-width spine-plot construction: bar widths accurately reflect
-    each tier''s marginal share of the customer base, all bars are normalized to the
-    same 100% height, and adjacent bars share a seamless boundary with no gaps.'
-  - 'Both renders are fully theme-correct: brand green (#009E73) for the Retained
-    series and matte red (#AE3030) for Churned stay identical across themes, backgrounds
-    are the correct #FAF8F1 / #1A1A17, and all chrome text flips correctly with no
-    dark-on-dark or light-on-light failures.'
-  - 'Thoughtful composite layout: a single rotated y-axis caption and shared percentage
-    ticks are synchronized across four separate BarChart instances via margin math,
-    with an explanatory italic caption and an ''n ='' sample-size annotation.'
-  - Realistic, neutral SaaS churn scenario with a sensible real-world pattern (churn
-    rate falls from 32% on Free down to ~6% on Enterprise as tier size shrinks).
+  - 'Clever workaround for MUI X''s lack of native variable-width bars: renders one
+    synchronized BarChart per tier, sized proportionally to its marginal count, with
+    the y-axis (ticks/line) shown only on the leftmost panel so the row reads as one
+    continuous spine plot.'
+  - 'Correct, well-justified Imprint palette use: Retained = palette[0] brand green,
+    Churned = palette[4] matte red — exactly the sanctioned semantic exception (bad/loss
+    -> red anchor) rather than an arbitrary ordinal pick.'
+  - Segment percentage labels flip fill color per series (dark text on green, light
+    text on red) and hide themselves below a 22px height threshold, avoiding unreadable
+    squeezed text.
+  - Title fontsize scales down via a length-based formula for the long mandated title,
+    keeping it inside the canvas with no overflow.
+  - Bars are perfectly adjacent with zero gaps, matching the spec's requirement to
+    emphasize a continuous proportion axis.
+  - Deterministic in-memory data, clean single-purpose helpers, no fake UI, current
+    MUI X API usage (skipAnimation, barLabel, slotProps).
+  - 'Compelling story: churn rate visibly and monotonically drops as subscription
+    tier (and bar width) increases, immediately legible in both themes.'
   weaknesses:
-  - 'VQ-04: Retained/Churned are encoded only as green vs. red, the classic red-green
-    colorblind-risk pairing, with no redundant encoding beyond stacking position.
-    Add a thin ink/white stroke on segment edges and/or direct value labels so identity
-    doesn''t rely on hue alone.'
-  - Spec explicitly suggests 'Consider adding percentage labels within segments when
-    space permits' — the Free tier's bar has ample room for both segments. Add direct
-    '68%' / '32%'-style labels inside the segments so the conditional proportions
-    are legible without reading the y-axis gridlines.
-  - 'DE-02: small stray vertical tick marks are visible at the seams between adjacent
-    columns (e.g. between ''Free''/''Basic'' and ''Pro''/''Enterprise'') — an artifact
-    of each column being an independent BarChart with its own x-axis line/ticks. Disable
-    the x-axis ticks and line on every column (not just the y-axis ones) so the composite
-    reads as one continuous axis without the extra blemishes.'
-  - 'LM-02: the multi-BarChart-instance workaround is functional but fairly generic
-    layout plumbing rather than a genuinely MUI X-distinctive technique — consider
-    leaning further into MUI X-specific capabilities (e.g. richer tooltip/valueFormatter
-    configuration, custom bar labels) to make the implementation feel more purpose-built
-    to this library.'
+  - Only 2 fill categories (Churned/Retained) — the spec allows 2-5; a 3rd category
+    (e.g. a 'Downgraded' status) would better showcase the conditional-distribution
+    feature that distinguishes a spine plot from a simple two-color stacked bar.
+  - Category identity leans on green-vs-red hue; stacking order (Churned always on
+    top) and the text/legend labels provide redundant cues, but a thin stroke or hatch
+    on one segment would make the distinction more robust for colorblind viewers.
+  - No gridlines at any percentage interval — for the very wide Free bar, a subtle
+    25/50/75% horizontal rule would help readers gauge the segment boundary without
+    tracing back to the y-axis.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Title "Customer Churn by Subscription Tier · bar-spine · javascript · muix · anyplot.ai" in bold dark ink, clearly readable. Legend swatches (Retained / Churned) and the "n = 10,800 customers" annotation are readable secondary-ink text. Y-axis percentage ticks (0%-100%) and the rotated "Share of customers" caption are legible dark text. X-axis tier labels (Free, Basic, Pro, Enterprise) are centered under each variable-width bar and fully readable. Bottom italic caption is readable.
-      Data: Four adjacent, variable-width, 100%-stacked bars with no gaps between them. Retained segment (bottom, brand green #009E73) and Churned segment (top, matte red #AE3030) are clearly distinguishable. Free tier is widest with the largest red (churn) share (~32%); Enterprise is narrowest with the smallest churn share (~6%).
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the light-theme spec.
+      Chrome: Bold dark title "Customer Churn by Subscription Tier · bar-spine · javascript · muix · anyplot.ai" top-left; legend row below with green "Retained" and red "Churned" swatches plus "n = 10,800 customers" note at top-right; rotated "Share of customers" y-axis label on the far left with 0%-100% ticks shown once on the shared left axis; four x-axis category labels (Free, Basic, Pro, Enterprise) centered under variable-width bars; italic caption at the bottom explaining the width/height encoding. All text renders in dark ink and is clearly legible against the light background.
+      Data: Four adjacent bars with widths proportional to tier size (Free widest, Enterprise narrowest), each a single 100%-stacked column split into a green "Retained" segment (bottom) and a red "Churned" segment (top). Percentage labels (68%/32%, 79%/21%, 88%/12%, 94%/6%) sit inside each segment, colored for contrast against their own fill. First series is the correct brand green #009E73; churned uses the matte-red semantic anchor.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Title, legend text, "n =" annotation, y-axis ticks/caption, x-axis tier labels, and the bottom caption all render in light ink and are clearly readable against the dark background — no dark-on-dark failures found.
-      Data: Same bar geometry and segment proportions as the light render. Retained is still #009E73 brand green and Churned is still #AE3030 matte red — colors are identical to the light render; only the chrome (background, text) flipped.
+      Background: Warm near-black (~#1A1A17), not pure black — matches the dark-theme spec.
+      Chrome: Same title, legend, axis labels, tick labels, and caption, all re-rendered in light ink/off-white tones (title and axis label in light cream, tick/legend/caption text in a softer light-gray) — fully readable against the dark background, no dark-on-dark text anywhere.
+      Data: Identical green/red segment colors and identical percentage values/positions as the light render — confirms data colors are constant and only chrome (text/background) flips between themes.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -68,55 +65,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title scaled via the length formula,
-          axis/legend/caption sizes fixed); readable at full size in both themes with
-          no overflow or clipping.
+        comment: All text readable in both themes; title fontsize scales with title
+          length via the length-based formula
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render; rotated y-axis caption,
-          legend, ticks, and caption all sit clear of each other.
+        comment: No text/data collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked segments are large, fully opaque, and clearly visible at
-          every tier width, including the narrow Enterprise column.
+        comment: Segments are large, high-contrast fills; percentage labels self-hide
+          below a 22px height threshold
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Retained/Churned rely on green vs. red with no stroke or direct labels;
-          mitigated only by consistent top/bottom stacking position, a classic red-green
-          colorblind risk pairing.
+        comment: Retained/Churned rely partly on green-vs-red hue; mitigated by consistent
+          stacking order and text/legend labels but no stroke/hatch redundancy
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills a large majority of the canvas with balanced margins;
-          title, legend, chart, and caption stack cleanly with nothing cut off.
+        comment: No overflow or cut-off elements; generous margins; canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis captioned 'Share of customers' with % units on ticks; x-axis
-          shows the categorical tier names directly.
+        comment: Descriptive y-axis label with % units; title follows the required
+          format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Retained) is Imprint #009E73; Churned uses the semantic-anchor
-          matte red #AE3030 (loss/negative role). Backgrounds and all chrome are theme-correct
-          in both renders, identical data colors across themes.'
+        comment: First series is brand green palette[0]; churned correctly uses the
+          matte-red semantic anchor (palette[4]); backgrounds correct in both themes
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -124,24 +116,22 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Above a bare default call: semantic color mapping, rotated shared
-          axis caption, synchronized multi-column composite, explanatory caption and
-          sample-size annotation.'
+        comment: Multi-panel synchronized-axis technique is a sophisticated solve
+          for MUI X's lack of variable-width bars
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid, minimal spines, generous whitespace; docked one point for
-          small stray x-axis tick marks visible at the seams between adjacent columns.
+        comment: Only one y-axis line kept, no x-axis line, no grid clutter, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Width+height dual-encoding visually shows churn declining with tier
-          size, but the story would land immediately with direct percentage labels
-          on the segments (spec explicitly suggests this).
+        comment: 'Clear focal point: churn visibly drops as tier size shrinks; caption
+          reinforces the encoding'
     spec_compliance:
       score: 15
       max: 15
@@ -151,54 +141,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Genuine spine plot: bar width = marginal frequency, segment height
-          = conditional proportion, all bars normalized to 100%.'
+        comment: 'Correct spine plot: width = marginal frequency, height = conditional
+          proportion'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Variable bar widths, 100%-normalized stacked segments, zero gaps
-          between bars, distinct colors with legend, and centered x-axis labels are
-          all present; the optional 'consider adding percentage labels' enhancement
-          was not taken but is not required.
+        comment: Proportional widths, 100%-stacked segments, zero-gap adjacency, centered
+          x labels, percentage labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = subscription tier, Y = conditional share (0-100%); all data visible.
+        comment: X/Y mapping correct, axes show all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · bar-spine · javascript · muix
-          · anyplot.ai'; legend labels (Retained, Churned) match the data series.
+        comment: Title format compliant; legend labels match series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows clear variation in both marginal width and conditional churn
-          rate across all four tiers.
+        comment: Covers the core spine-plot mechanics but only 2 fill categories (spec
+          allows up to 5) understates the conditional-distribution aspect
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral SaaS subscription-tier churn scenario.
+        comment: Plausible, neutral SaaS churn-by-tier scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Churn decreasing from Free (32%) to Enterprise (~6%) alongside shrinking
-          tier population is a factually plausible SaaS pattern.
+        comment: Realistic customer counts; churn decreasing with tier is a sensible
+          domain pattern
     code_quality:
       score: 10
       max: 10
@@ -208,63 +195,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports, data, layout math, then a single default-exported component
-          — no unnecessary classes.
+        comment: No unnecessary classes; small helpers justified by per-segment label
+          styling
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hard-coded dataset.
+        comment: Fully deterministic, hard-coded in-memory data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only BarChart is imported and used.
+        comment: Only BarChart imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for the variable-width composite; no fake UI
-          or interactivity.
+        comment: No fake UI; complexity matches the technique's requirements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set on every chart, sized from window.ANYPLOT_SIZE,
-          current MUI X community API.
+        comment: Default export, skipAnimation set, current MUI X API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct use of BarChart's xAxis/yAxis/series/stack API, but the variable-width
-          spine effect is built via a manual multi-instance workaround rather than
-          a single idiomatic call.
+        comment: Idiomatic stack/series/xAxis/yAxis config
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses stack + per-axis disableTicks/disableLine/valueFormatter to
-          synchronize a shared axis across instances — a workable MUI X-specific technique,
-          but not a feature unique to the library.
-  verdict: REJECTED
+        comment: barLabel with per-ownerState fill color and height-gated visibility
+          is a distinctive, non-trivial use of the API
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
+  - subplots
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
-  - publication-ready
   - minimal-chrome
