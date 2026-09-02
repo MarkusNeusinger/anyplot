@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: network-transport-static
 created: '2026-09-02T04:39:16Z'
-updated: '2026-09-02T04:46:23Z'
+updated: '2026-09-02T04:59:07Z'
 generated_by: claude-sonnet
 workflow_run: 33590377147
 issue: 3463
@@ -12,64 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - Fully custom hand-built network diagram using Highcharts' SVG renderer API (chart.renderer.path/circle/text)
-    — a smart workaround given the networkgraph module is unavailable, achieving trimmed-to-radius
-    arrows and curve offsetting that no built-in Highcharts series type could do
-  - Route types (Regional/Local/Express) are color-coded with the canonical Imprint
-    palette order and a matching legend
-  - 'Deliberate visual hierarchy: Central Station is rendered as a larger ''hub''
-    node inside a genuine grid+branch layout, not everything radiating from a single
-    point'
-  - Multiple daily services between the same station pair are cleanly separated into
-    curved/offset edges, with the perpendicular direction derived from a canonical
-    sorted pair so reverse-direction routes don't collapse onto the same curve
-  - Deterministic, realistic regional-rail data — sequential departure/arrival times,
-    plausible trip durations, bidirectional service pairs
-  - Theme-adaptive chrome is correct and data colors are identical between light/dark
-    renders; no clipping at the canvas edges
+  - 'Elegant workaround for the missing networkgraph module: Highcharts.chart handles
+    chrome/legend while the core SVG renderer draws genuine curved, arrowed, directed
+    edges and sized nodes.'
+  - Direction-aware node-label placement (per-station dir) keeps all 12 station names
+    clear of that station's own incident edges.
+  - Adaptive title font-size formula prevents the long descriptive+mandated title
+    from overflowing while staying legible.
+  - Correct Imprint palette usage (green first series) and fully consistent theme-adaptive
+    chrome across both renders.
+  - Realistic, internally consistent AM commute schedule (24 services) matching the
+    spec's suggested station/route counts.
   weaknesses:
-  - Edge-label background boxes are missing for ~21 of the 24 route labels. The code
-    draws a bordered elevatedBg rect behind every label via renderer.rect(bbox.x -
-    5, bbox.y - 3, ...) right after label.getBBox(), but pixel inspection of the rendered
-    PNG shows only 3 labels (R101, L301, E401) actually get a visible box — the rest
-    sit directly on the plain page background. This looks like a getBBox()-timing
-    bug (stale/zero-size bbox on most calls in the forEach loop) rather than intentional
-    styling. Fix so every label gets a consistent backing box (or drop the per-label
-    rect entirely if it can't be made reliable) — the current inconsistency reads
-    as broken, not stylistic.
-  - 'On short edges between adjacent stations (NOJ<->SMH, LKS<->APT), the arrowhead
-    triangle is drawn directly on top of the edge-label text: ''R201'' and ''R208''
-    have their leading characters covered by the incoming arrowhead, and ''07:55''/''08:33''
-    have trailing digits partly obscured (confirmed in both light and dark renders).
-    The label offset (LABEL_PERP_STEP/LABEL_ALONG_STEP) doesn''t scale down or push
-    labels away from the arrow-trim point when the station pair is close together.
-    Increase the along-edge offset (or clamp the label away from the trimmed arrival
-    point) specifically when edge length is short.'
-  - No hover/tooltip interactivity on nodes or edges in the HTML detail view — since
-    stations and routes are drawn via the low-level SVG renderer rather than real
-    series/point objects, none of Highcharts' built-in tooltip machinery is wired
-    up, even though the spec calls for 'tooltips (where supported) should show full
-    route details on hover.' Consider overlaying invisible scatter/line series with
-    a custom tooltip formatter so the interactive build delivers the value expected
-    from an interactive library.
+  - 'Edge-label backing boxes are inconsistently visible: some routes (e.g. R101,
+    E401, L301) show a clear bordered box, while parallel siblings on the same station
+    pair (e.g. R102) render as plain text with no visible border, likely because the
+    box border color matches the underlying line color when the box sits directly
+    on the curve.'
+  - The Central Station hub (10 incident edges) is the busiest part of the diagram;
+    increase hub-specific label offset distance or hub radius so labels there are
+    as easy to trace back to their edge as in the sparser parts of the network.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 (sampled page pixels = RGB(250,248,241), exact match).
-      Chrome: Title "Regional Rail Network · network-transport-static · javascript · highcharts · anyplot.ai" in bold dark ink at top, comfortably sized (~40% width), not clipped. Subtitle in lighter gray ink below it. 12 station nodes drawn as white-filled circles with dark 2.5px stroke, station code inside (bold) and full station name outside each node. Legend at bottom center (Regional/Local/Express swatches) sits close to the plot, fully visible, not isolated. All chrome text is dark-on-light and clearly readable.
-      Data: 24 directed routes drawn as curved/offset SVG paths with triangular arrowheads at the target node, colored by route type — Regional = Imprint position 1 (#009E73, brand green), Local = position 2 (#C475FD, lavender), Express = position 3 (#4467A3, blue). Edge labels ("route id | dep→arr") sit near each edge's midpoint. Central Station is rendered as a visibly larger hub node vs. the standard node radius, giving the layout a clear focal point.
-      Legibility verdict: PASS overall, with two confirmed defects — (1) only 3 of 24 edge labels have the intended background box (pixel-sampled: R203's label area is exactly page-background color with no elevatedBg fill, while R101/L301/E401 do show the fill+border), and (2) on short edges (NOJ<->SMH, LKS<->APT) the arrowhead triangle visibly overlaps/covers part of the adjacent label text (e.g. "R201", "R208", "...07:55", "...08:33"). Neither makes the plot unreadable overall, but both are real, reproducible defects, not just tight margins.
+      Background: Warm off-white (#FAF8F1-like), not pure white, not dark.
+      Chrome: Title, subtitle, station names/codes, edge labels, and legend all render in dark ink, clearly readable against the light background. Node fills are a slightly elevated light tone with dark strokes.
+      Data: First legend series (Regional) uses #009E73 green; Local is violet, Express is blue. Curved directed edges with arrowheads, offset per parallel station pair.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 (sampled page pixels = RGB(26,26,23), exact match).
-      Chrome: Same layout as light render. Title/subtitle sampled at RGB(240,239,232) ≈ #F0EFE8 (the dark-theme ink token) — correctly light-on-dark, no dark-on-dark failures found anywhere checked (title, station labels, edge labels, legend).
-      Data: Confirmed identical hex data colors to the light render (green/lavender/blue routes, unchanged) — only chrome (background, node fill, text) flips as required.
-      Legibility verdict: PASS overall, same two defects reproduced identically (missing label boxes on most edges; arrowhead-over-text overlap on the same short edges: R208/R207 confirmed via direct crop comparison).
+      Background: Warm near-black (#1A1A17-like), not pure black, not light.
+      Chrome: Title, subtitle, station names/codes, edge labels, and legend all render in light ink, clearly readable against the dark background. No dark-on-dark text found anywhere, including in the dense Central Station hub area.
+      Data: Route colors (green/violet/blue) and geometry are identical to the light render; only chrome flipped as expected.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -77,159 +57,159 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set and readable in both themes; deducted
-          because arrowheads visually cover part of the label text on several short
-          edges (R201, R208, and their reverse routes)
+        comment: Readable in both themes; hub-area edge labels at 12px are on the
+          small side
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: Confirmed arrowhead-over-label-text overlap on NOJ<->SMH and LKS<->APT
-          edges in both renders; main content still readable but this is a real, reproducible
-          overlap, not just tight margins
+        comment: No hard collisions, but 10-edge hub around Central Station is visually
+          crowded
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node circles, route lines (2.5-4px) and arrowheads are clearly visible
-          and appropriately sized for 24 routes / 12 stations
+        comment: Arrowheads, curves, and hub sizing read clearly; line widths fairly
+          uniform
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three route-type hues (green/lavender/blue) are CVD-safe and clearly
-          distinguishable, no red-green-only encoding
+        comment: Three distinguishable hues, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; legend sits close
-          to the plot; nothing cut off at any edge
+        comment: Good use of space, no clipping; label-box visibility inconsistency
+          reads as unfinished
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for a network diagram (correctly hidden); title is
-          descriptive
+        comment: N/A (network diagram, no axes); title/subtitle descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (verified via pixel sampling with alpha
-          blending), remaining series use Imprint positions 2-3 in canonical order,
-          backgrounds are theme-correct #FAF8F1/#1A1A17 in both renders'
+        comment: 'First series #009E73, Imprint palette, theme-correct backgrounds'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
-        comment: Fully custom-built diagram (curve offsetting, trimmed arrowheads,
-          hub emphasis) clearly above a configured library default, but the label-box
-          bug and arrowhead overlaps keep it short of publication-perfect
+        passed: true
+        comment: Custom curved edges, arrowheads, hub emphasis above generic defaults;
+          hub area adds visual noise
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        comment: Clean whitespace and no spines/grid clutter (appropriate for a network
-          diagram), but the inconsistent label-box rendering undercuts polish
+        passed: true
+        comment: Clean typography and whitespace, undercut by inconsistent edge-label
+          boxes
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Central Station rendered as a visibly larger hub node plus color-coded
-          route types create a real focal point and hierarchy, beyond a flat data
-          dump
+        passed: true
+        comment: Hub-size emphasis and route-type coloring create hierarchy; crowded
+          hub muddies focal point
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct static directed transport network diagram
+        passed: true
+        comment: Correct directed network/route-map diagram
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Labeled nodes, directed arrows, route-id+time edge labels, curved/offset
-          multi-route edges, and x/y-based positioning are all present; deducted for
-          the broken label-box rendering and the complete absence of hover tooltips
-          despite the spec calling for them
+        passed: true
+        comment: Arrows, edge labels with route id + times, curved/offset parallels,
+          coordinate positioning, route-type coloring
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Station x/y correctly drive node placement, all 12 stations and 24
-          routes are shown
+        passed: true
+        comment: All 12 stations and 24 routes plotted from provided coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format with a descriptive prefix; legend
-          labels (Regional/Local/Express) match the data categories
+        passed: true
+        comment: Title format correct; legend labels match route types
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Hub-and-branch topology, bidirectional pairs, multiple route types,
-          and multiple daily services on several pairs are all represented
+        passed: true
+        comment: 'Comprehensive: directed edges, parallel curves, timed labels, route-type
+          coding, hub differentiation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Plausible regional rail network, neutral business/transit scenario
+        passed: true
+        comment: Plausible station names and coherent AM commute schedule; neutral
+          content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Departure/arrival times are sequential and durations (15-25 min)
-          are realistic for regional rail hops
+        passed: true
+        comment: 12 stations / 24 routes, within spec's suggested range
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
-        comment: Flat data -> geometry -> render structure; small geometry helpers
-          are appropriate for this custom-render technique
+        passed: true
+        comment: Helper functions used, justified by geometry complexity
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Fully deterministic hard-coded data, no RNG
+        passed: true
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: No unused imports; only the Highcharts global is used
+        passed: true
+        comment: Only provided globals used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        comment: Deducted for the label-box getBBox()/rect logic that only works for
-          3 of 24 labels — a real functional bug, not just a stylistic choice
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: No explicit chart.width/height, animation disabled, correct mount-node
-          contract
+        passed: true
+        comment: Correct mount-node contract, animation disabled throughout
     library_mastery:
       score: 7
       max: 10
@@ -238,27 +218,26 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Given the networkgraph module is forbidden, using chart.renderer
-          for custom paths/shapes/text inside a Highcharts.chart instance is the correct
-          idiomatic escape hatch and is used well
+        passed: true
+        comment: Correct workaround for unavailable networkgraph module using core
+          renderer API
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        comment: Leverages Highcharts' chart-bound SVG renderer and its automatic
-          zIndex layering, which is fairly Highcharts-specific, though the underlying
-          curve/arrow math itself is portable to any SVG-capable library
-  verdict: REJECTED
+        passed: true
+        comment: Clever canvas text measurement and curve-offset algorithm, but a
+          renderer-level workaround rather than a built-in feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - custom-legend
+  - bezier-curves
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - publication-ready
   - alpha-blending
-  - edge-highlighting
