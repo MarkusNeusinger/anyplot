@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: calibration-curve
 created: '2026-09-02T14:19:13Z'
-updated: '2026-09-02T14:23:10Z'
+updated: '2026-09-02T14:34:20Z'
 generated_by: claude-sonnet
 workflow_run: 33640662379
 issue: 2331
@@ -12,45 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
-  - Dual-grid combo layout (calibration curve on top, prediction-probability histogram
-    below) reads as one coherent figure and gives the histogram real estate without
-    stealing focus from the curve
+  - New markPoint annotation pinpoints the single most miscalibrated bin with a signed
+    gap value, turning the summary metrics into a clear visual focal point -- a direct,
+    effective fix for the prior attempt's flagged storytelling gap
+  - Dual-grid combo layout (calibration curve above, prediction-probability histogram
+    below) reads as one coherent figure without the histogram stealing focus from
+    the curve
   - Bubble marker size scales with per-bin sample count, encoding a third dimension
     (confidence weight) directly on the calibration line without extra chrome
-  - Subtitle surfaces both Brier score and ECE as required summary metrics, tightly
-    integrated with the title block
-  - 'Reference diagonal and model curve are both fully deterministic and correctly
-    theme-adaptive (t.ink flips white/black, t.palette[0] stays #009E73 in both renders)'
+  - Subtitle surfaces both Brier score and ECE, tightly integrated with the title
+    block
+  - 'Fully deterministic, theme-adaptive rendering: reference diagonal flips ink color
+    between renders, t.palette[0] stays #009E73 in both, backgrounds correctly hit
+    #FAF8F1 (light) / #1A1A17 (dark)'
   - 'Clean idiomatic ECharts usage: multi-grid/multi-axis composition, dynamic symbolSize
-    callback, animation disabled per the mount-node contract'
+    callback, custom markPoint pin with formatter, animation disabled per the mount-node
+    contract'
   weaknesses:
-  - Secondary y-axis name ('Count') is set in inkSoft/13px while the primary axis
-    names ('Fraction of Positives', 'Mean Predicted Probability') use ink/16px --
-    a bit more visual hierarchy between primary and secondary axis labels would sharpen
-    the two-panel read, though it is not a legibility failure
-  - 'Palette compliance is a semantic-exception case worth double-checking in future
-    repairs: the reference ''Perfect calibration'' line intentionally uses t.ink rather
-    than a palette color (correct convention for a guide line), so only ''Model calibration''
-    carries the brand green -- keep this pattern if the spec is ever extended to multi-model
-    comparison so the first real data series is still #009E73'
-  - Design excellence is solid but stops at tasteful-default territory (subtle grid,
-    hidden spines, generous whitespace) rather than pushing further into a distinctive
-    visual signature -- e.g. no annotation calling out the most miscalibrated bin,
-    which would sharpen the storytelling
+  - 'The markPoint pin shows a bare signed number (''-0.15'') with no label or unit
+    -- a first-time viewer has to infer this is the calibration gap; a short prefix
+    like ''Gap: -0.15'' or a tooltip-style caption would remove the ambiguity'
+  - Design refinement (DE-02) is unchanged from the prior attempt -- spines hidden
+    and grid subtle, but no additional polish pass beyond the new annotation
+  - The main chart's value x-axis (0, 0.2, 0.4, 0.6, 0.8, 1) sits directly above the
+    histogram's category x-axis (0.0-0.9) at a different granularity -- functional
+    and not overlapping, but the two label rows in quick succession read as slightly
+    redundant since both describe the same probability domain
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
-      Chrome: Title "calibration-curve · javascript · echarts · anyplot.ai" centered in dark ink, subtitle "Fraud-detection classifier · Brier score 0.211 · ECE 0.106" in softer gray beneath it, legend top-right ("Model calibration", "Perfect calibration") in soft ink. Axis titles ("Fraction of Positives", "Mean Predicted Probability", "Count") and tick labels all render in dark/soft-dark text, clearly legible against the light background. No overlap between title, subtitle, legend, or axes.
-      Data: First (and only) real data series "Model calibration" is Imprint brand green (#009E73) with circular markers whose size varies by bin sample count; the diagonal "Perfect calibration" reference line is black dashed (t.ink), a deliberate neutral choice for a guide line rather than a data series. Histogram bars in the lower panel are a muted warm gray, distinguishable from the background and from the green curve above.
+      Background: Warm off-white, consistent with #FAF8F1 -- confirmed via pixel crop, not pure white.
+      Chrome: Title "calibration-curve · javascript · echarts · anyplot.ai" centered in dark ink, subtitle "Fraud-detection classifier · Brier score 0.211 · ECE 0.106" in softer gray beneath it, legend top-right ("Model calibration", "Perfect calibration") in soft ink. Axis titles ("Fraction of Positives", "Mean Predicted Probability", "Count") and tick labels all render in dark/soft-dark text, clearly legible against the light background. No overlap between title, subtitle, legend, or axes; the main chart's value x-axis labels (0-1) and the histogram's category x-axis labels (0.0-0.9) sit in their own row without colliding.
+      Data: The "Model calibration" series is Imprint brand green (#009E73) with circular markers whose size varies by per-bin sample count; the diagonal "Perfect calibration" reference line is black dashed (t.ink), a deliberate neutral choice for a guide line rather than a data series. An amber pin annotation ("-0.15") marks the bin with the largest calibration gap, near x=0.85. Histogram bars in the lower panel are a muted warm gray, clearly distinguishable from both the background and the green curve above.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Same title/subtitle/legend/axis text, all flipped to light ink/soft-light tones. Title and subtitle are clearly white/light-gray against the dark background; axis tick labels and axis names are legible light-gray text. No dark-on-dark text anywhere -- the diagonal reference line correctly flips from black to white dashed, and the histogram bars flip from dark gray to a lighter gray for contrast against the near-black background.
-      Data: Model calibration curve and markers remain the identical #009E73 green as the light render; only chrome (background, text, grid, reference line, histogram fill) adapts to the dark theme.
+      Background: Warm near-black, consistent with #1A1A17 -- confirmed via pixel inspection, not pure black.
+      Chrome: Same title/subtitle/legend/axis text, all flipped to light ink/soft-light tones. Title and subtitle are clearly white/light-gray against the dark background; axis tick labels and axis names are legible light-gray text. No dark-on-dark text anywhere -- the diagonal reference line correctly flips from black to white dashed, and the histogram bars flip from muted gray to a lighter gray for contrast against the near-black background.
+      Data: Model calibration curve, markers, and the amber "-0.15" gap annotation remain visually identical in color to the light render; only chrome (background, text, grid, reference line, histogram fill) adapts to the dark theme.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -62,21 +63,22 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes; secondary-axis
-          label hierarchy could be sharper
+        comment: All text explicitly sized and readable in both themes; markPoint
+          pin label is small (11px) but legible at full size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, subtitle, legend, axes, or data
+        comment: No collisions between title, subtitle, legend, axes, annotation,
+          or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
         comment: Bubble markers sized by bin weight are clearly visible; histogram
-          bars appropriately dense
+          bars appropriately dense for 3000 samples
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -90,7 +92,7 @@ review:
         max: 4
         passed: true
         comment: Two-panel grid well-proportioned, mandated title within expected
-          width, no overflow or clipping
+          width, no overflow or clipping, canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,29 +107,30 @@ review:
         comment: 'First real data series is #009E73; backgrounds correctly theme-adaptive
           in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Bubble-size-by-count encoding and integrated metric subtitle go beyond
-          generic defaults
+        comment: Bubble-size-by-count encoding, integrated metric subtitle, and the
+          new worst-gap pin annotation go beyond generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines hidden, subtle single-line grid, generous whitespace
+        comment: Spines hidden, subtle single-line grid, generous whitespace -- unchanged
+          from prior attempt, no additional refinement pass
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Green curve vs. reference diagonal makes miscalibration immediately
-          visible; histogram adds context without competing for attention
+        comment: New markPoint annotation calling out the most miscalibrated bin gives
+          the chart a clear focal point beyond the curve-vs-diagonal comparison
     spec_compliance:
       score: 15
       max: 15
@@ -168,8 +171,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Binned calibration points, reference line, histogram, and both summary
-          metrics all present
+        comment: Binned calibration points, reference line, histogram, both summary
+          metrics, and worst-gap annotation all present
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -193,7 +196,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with small necessary helper functions, no classes
+        comment: Flat script with small necessary helper functions for seeded RNG,
+          no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -220,7 +224,7 @@ review:
         comment: 'Follows mount-node contract: echarts.init with no explicit size,
           animation: false'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -232,16 +236,17 @@ review:
           are idiomatic, non-trivial ECharts usage
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Combo line+bar dual-grid layout is a genuine ECharts strength, though
-          the feature set otherwise stays within common patterns
+        comment: Combo line+bar dual-grid layout plus a custom markPoint pin with
+          formatter are genuine, non-trivial ECharts-specific features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
+  - annotations
   patterns:
   - data-generation
   dataprep:
