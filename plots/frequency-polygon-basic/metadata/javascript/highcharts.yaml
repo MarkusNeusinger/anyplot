@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: frequency-polygon-basic
 created: '2026-09-02T00:49:37Z'
-updated: '2026-09-02T00:53:53Z'
+updated: '2026-09-02T01:04:08Z'
 generated_by: claude-sonnet
 workflow_run: 33576661392
 issue: 3418
@@ -12,48 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/highcharts/plot-dark.html
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - 'Correct frequency-polygon construction: shared bin edges across all three groups,
-    and zero-value padding on both ends closes the polygon shape as the spec requests'
-  - 'Full Imprint palette compliance: first series is brand green #009E73, remaining
-    two series follow canonical positions 2/3 (lavender, blue), identical data colors
-    between light and dark renders, correct theme-adaptive chrome and page backgrounds'
-  - 'Idiomatic, contract-clean Highcharts usage: area chart type, no explicit chart.width/height,
-    animation disabled on both chart and series, credits disabled, transparent chart
-    background'
-  - Clear, descriptive axis titles with units ("Reaction Time (ms)", "Frequency")
-    and a legend that matches the series names
-  - Realistic, neutral dose-response dataset (Placebo/Low dose/High dose reaction
-    times) with a sensible scale and plausible narrowing/shift pattern across groups
+  - Distinctive Highcharts xAxis.plotLines feature marks each group's mean reaction
+    time directly on the axis, giving the chart a clear storytelling focal point (the
+    dose-response shift).
+  - 'Correct frequency-polygon construction: bin edges are shared across all three
+    groups and each polygon is closed to zero at both ends via padding bins, exactly
+    as the spec requests.'
+  - Redundant color + dashStyle (solid/short-dash/short-dot) encoding keeps the three
+    overlapping groups distinguishable even without color, satisfying the spec's 'distinct
+    line colors and/or styles' note.
+  - Theme-adaptive chrome is correctly threaded through in both renders; Imprint palette
+    applied in canonical order with the brand green first.
+  - Clean, deterministic, appropriately simple code with a seeded LCG generator for
+    reproducibility.
   weaknesses:
-  - No markers at the plotted bin-midpoints (~17 points per series after binning)
-    — the spec explicitly suggests markers for small point counts; adding small markers
-    would improve element visibility per VQ-03 without cluttering the polygon lines
-  - The triple-overlap region (~530-590ms) where all three semi-transparent fills
-    stack becomes visually muddy/dark, momentarily obscuring which group's fill dominates
-    — consider lowering fillOpacity slightly further or relying more on the line strokes
-    than the fills in dense-overlap zones
-  - Groups are differentiated by color only, not by line style (spec allows 'color
-    and/or style') — a subtle dashed/dotted variant on one series would add a redundant
-    encoding, especially useful where fills overlap
-  - Design execution is solid but fairly generic for a Highcharts area chart — no
-    distinctive library feature beyond fillOpacity (e.g. plotLines for group means,
-    or per-series legend markers matching line style) to elevate it above a standard
-    implementation
+  - The 'High dose mean' plotLine label overlaps the High-dose series' own peak marker
+    (~470ms, frequency ≈94) in both light and dark renders — the marker dot sits inside
+    the rotated label text, partially obscuring both. Offset the plotLine label (e.g.
+    increase the y offset further, right-align it past the peak, or move mean labels
+    to the bottom of the axis) so it clears the series' own peak.
+  - The rotated mean-line labels are quite small (11px CSS) relative to the 3200px
+    canvas — a slightly larger size would improve mobile legibility without adding
+    clutter.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface consistent with the #FAF8F1 target, not pure white.
-      Chrome: Title "frequency-polygon-basic · javascript · highcharts · anyplot.ai" is bold dark ink, clearly legible. Axis titles "Reaction Time (ms)" (x) and "Frequency" (y) are dark-grey and readable. Tick labels along both axes are legible dark-grey text. Horizontal grid lines are subtle light-grey, visible but not competing with data. Legend at the bottom ("Placebo", "Low dose", "High dose") uses soft-grey text, easily readable.
-      Data: Three overlapping filled area polygons — green (Placebo, peak ~625ms), lavender/purple (Low dose, peak ~550ms), and blue (High dose, peak ~470ms) — each with a bold ~3px stroke and a light (~12%) fill. First series is the brand green #009E73 as required. All three polygons return to zero at both ends, closing the shape per spec. Where fills overlap (especially the ~530-590ms zone where all three overlap) the combined colors read a bit muddy/dark but the line strokes stay distinguishable.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "frequency-polygon-basic · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible at top. Axis titles "Reaction Time (ms)" and "Frequency" in medium-grey ink, tick labels in the same soft grey, all legible. Horizontal gridlines are thin and subtle. Legend at the bottom shows "Placebo" (green), "Low dose" (purple), "High dose" (blue) with matching marker swatches.
+      Data: Three overlapping frequency polygons with semi-transparent fills. First series (Placebo) is brand green #009E73, solid line; second (Low dose) is lavender/purple, short-dash line; third (High dose) is blue, short-dot line. Three thin vertical dotted "mean" reference lines with small rotated labels mark each group's mean reaction time. All three curves are closed to zero at both ends. Data colors, markers (radius ~4 circles), and shapes are clearly distinguishable from each other and from the background.
+      Legibility verdict: PASS — all text is readable against the light background. One minor legibility nit: the "High dose mean" label text passes directly through/behind that series' own peak marker, which is a mild overlap but does not make either element unreadable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface consistent with the #1A1A17 target, not pure black.
-      Chrome: Title, axis titles, and tick labels all render in light/off-white tones, clearly legible against the dark background — no dark-on-dark failures observed. Grid lines are subtle light-grey at low opacity, still visible. Legend text is light-grey and readable.
-      Data: Same three data colors as the light render — green, lavender/purple, blue — confirming the Imprint palette data colors are identical between themes; only the chrome (background, text, grid) flipped as required. The overlap-region muddiness is present in this render too, slightly less pronounced against the dark surface.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark or light-on-light failures found.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, axis titles, and tick labels rendered in light off-white/soft-grey ink — all clearly legible against the dark background, no dark-on-dark failures observed. Gridlines are faint but visible. Legend text is light-colored and readable.
+      Data: Data colors are identical to the light render (green #009E73, lavender, blue) — only the chrome (background, text, gridlines) flipped as expected. The same three mean-reference dotted lines and rotated labels appear, with the same minor overlap between the "High dose mean" label and its series' own peak marker observed in the light render.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark or light-on-light failures found.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -64,72 +59,76 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; explicit font sizes
-          throughout
+        comment: All font sizes explicitly set (title 22px, axis titles 16px, ticks/legend
+          14px); readable in both themes at full size and proportioned well.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: No text collisions; the triple-fill overlap zone (~530-590ms) is
-          visually muddy but not a text-overlap issue
+        passed: false
+        comment: The 'High dose mean' plotLine label overlaps its own series' peak
+          marker in both renders; main content still readable but this is a real minor
+          collision.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Markers disabled despite ~17 plotted points per series (sparse after
-          binning) — spec suggests markers for small datasets
+        comment: Markers (radius 4) and lines (width 3) are well-sized for ~400-observation-per-group
+          binned data; nothing overplotted.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe; no red-green-only signal
+        comment: Redundant dashStyle + color encoding keeps groups distinguishable
+          without relying on hue alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed; good proportions, nothing clipped
+        comment: Plot fills the canvas well, balanced margins, legend anchored below
+          the plot, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units
+        comment: '''Reaction Time (ms)'' has units; ''Frequency'' is descriptive.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, correct theme backgrounds,
-          identical data colors across themes'
+        comment: 'First series is #009E73, subsequent series follow canonical Imprint
+          order; backgrounds and chrome are theme-correct in both renders.'
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Solid but standard Highcharts area-chart execution, no distinctive
-          polish beyond fillOpacity
+        passed: true
+        comment: Thoughtful use of dashStyle variety, subtle area fills, and mean-marker
+          plotLines lift this clearly above a default configuration.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and clean legend, but the triple-overlap fill zone looks
-          muddy and reduces refinement
+        passed: true
+        comment: Subtle grid, generous whitespace, clean legend; axis lines still
+          present but unobtrusive.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Polygon shapes convey the dose-response shift, but no annotations
-          or emphasis guide the viewer further
+        passed: true
+        comment: The mean-reference lines create a genuine visual hierarchy, letting
+          the viewer immediately see the dose-response shift in central tendency,
+          not just distribution shape.
     spec_compliance:
       score: 15
       max: 15
@@ -139,48 +138,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency polygon via binned line/area chart
+        comment: Correct frequency-polygon construction via area series with closed-to-zero
+          endpoints.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Aligned bin edges, zero-extension closing, legend, distinct colors,
-          semi-transparent fill all present
+        comment: Distinct colors+styles, legend, markers, zero-closure, shared bin
+          edges, and semi-transparent fill are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction time bins, Y = frequency counts, correct
+        comment: X = reaction time, Y = frequency, axes show the full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match group names
+        comment: Title format correct; legend labels ('Placebo', 'Low dose', 'High
+          dose') match the groups.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Binning, zero-extension, multi-group alignment, fill all demonstrated
+        comment: Three groups with distinct means/spreads show the comparison feature
+          well, though each group is individually a simple roughly-normal shape.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral pharma dose-response reaction-time scenario
+        comment: Placebo / low-dose / high-dose reaction-time comparison is a real,
+          neutral psychology/pharma research scenario matching the spec's suggested
+          applications.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reaction times and dose-response shift are sensible for the domain
+        comment: Reaction times (250-850ms) and the dose-dependent mean shift are
+          plausible for a cognitive/psychomotor task.
     code_quality:
       score: 10
       max: 10
@@ -190,34 +195,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Small, justified helper functions only
+        comment: Straightforward data-generation-then-chart structure; helper functions
+          are the minimum needed for binning.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG makes the data deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; relies only on the Highcharts global
+        comment: No unused imports; only the ANYPLOT_TOKENS global is used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI/interactivity
+        comment: Appropriately complex, no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract exactly, animation disabled, credits
-          disabled
+        comment: Uses Highcharts.chart('container', ...) with animation disabled per
+          the mount-node contract.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -225,18 +231,20 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic area-chart configuration with plotOptions.area
+        comment: Idiomatic area/plotLines/marker configuration via the high-level
+          options object.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: No Highcharts-distinctive features beyond standard area fill
+        passed: true
+        comment: xAxis.plotLines with rotated labels marking group means is a genuinely
+          Highcharts-distinctive feature, not trivially replicated elsewhere.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
