@@ -80,24 +80,43 @@ function hexToRgba(hex, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
-// One legend entry per species: only the first curve of each species carries
-// a `label` so the legend doesn't list all 60 individual observations.
-const firstIndexBySpecies = new Map();
-observations.forEach((obs, i) => {
-  if (!firstIndexBySpecies.has(obs.species)) firstIndexBySpecies.set(obs.species, i);
-});
-
+// Individual curves stay unlabeled (60 legend entries would be unreadable);
+// each species instead gets one bold, fully-opaque mean curve below that
+// carries the legend label and doubles as a representative summary line.
 const series = observations.map((obs, i) => {
   const speciesIndex = SPECIES.findIndex((species) => species.name === obs.species);
   return {
     id: `${obs.species}-${i}`,
     data: obs.curve,
-    color: hexToRgba(t.palette[speciesIndex], 0.55),
+    color: hexToRgba(t.palette[speciesIndex], 0.4),
     curve: "natural",
     showMark: false,
-    label: firstIndexBySpecies.get(obs.species) === i ? obs.species : undefined,
   };
 });
+
+// Per-species mean curve: the pointwise average of that species' 20 curves,
+// rendered bold and solid so the cluster's overall shape reads at a glance
+// through the alpha-blended cloud of individual observations.
+const meanSeries = SPECIES.map((species, speciesIndex) => {
+  const curves = observations.filter((obs) => obs.species === species.name).map((obs) => obs.curve);
+  const meanCurve = tGrid.map(
+    (_, k) => curves.reduce((sum, curve) => sum + curve[k], 0) / curves.length,
+  );
+  return {
+    id: `${species.name}-mean`,
+    data: meanCurve,
+    color: t.palette[speciesIndex],
+    curve: "natural",
+    showMark: false,
+    label: species.name,
+  };
+});
+
+// CSS hook selecting only the three bold mean-curve lines, so they render
+// heavier than the alpha-blended individual observations behind them.
+const meanLineSelector = SPECIES.map(
+  (species) => `& .MuiLineElement-series-${species.name}-mean`,
+).join(", ");
 
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
@@ -116,19 +135,29 @@ export default function Chart() {
         height={chartHeight}
         skipAnimation
         grid={{ horizontal: true }}
+        axisHighlight={{ x: "line", y: "none" }}
         xAxis={[
           {
             data: tGrid,
             scaleType: "linear",
             label: "t (Fourier Parameter)",
+            tickMinStep: 0.5,
             valueFormatter: (v) => v.toFixed(2),
           },
         ]}
-        yAxis={[{ label: "f(t)" }]}
-        series={series}
+        yAxis={[
+          {
+            label: "f(t)",
+            valueFormatter: (v, context) =>
+              context.location === "tick" ? v.toFixed(2) : `f(t) = ${v.toFixed(2)}`,
+          },
+        ]}
+        series={[...series, ...meanSeries]}
         margin={{ top: 24, bottom: 110, left: 90, right: 40 }}
         sx={{
           "& .MuiLineElement-root": { strokeWidth: 1.75 },
+          [meanLineSelector]: { strokeWidth: 3 },
+          "& .MuiChartsAxisHighlight-root": { stroke: t.inkSoft, strokeDasharray: "4 3" },
           "& .MuiChartsAxis-tickLabel": { fontSize: "14px" },
           "& .MuiChartsAxis-label": { fontSize: "16px" },
           "& .MuiChartsAxis-line": { stroke: t.grid },
