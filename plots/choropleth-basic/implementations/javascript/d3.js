@@ -50,6 +50,13 @@ for (const region of regions) {
   if (noDataStates.has(region.abbr)) region.value = null;
 }
 
+// Highest/lowest extremes, called out below to sharpen the story beyond the
+// base color encoding and to give the map's empty southwest corner a job.
+const validRegions = regions.filter((d) => d.value != null);
+const maxRegion = validRegions.reduce((a, b) => (b.value > a.value ? b : a));
+const minRegion = validRegions.reduce((a, b) => (b.value < a.value ? b : a));
+const highlightAbbrs = new Set([maxRegion.abbr, minRegion.abbr]);
+
 // --- Layout -------------------------------------------------------------
 const margin = { top: 150, right: 70, bottom: 40, left: 70 };
 const iw = width - margin.left - margin.right;
@@ -87,8 +94,8 @@ tile
   .attr("height", y.bandwidth())
   .attr("rx", 4)
   .attr("fill", (d) => (d.value == null ? MUTED : color(d.value)))
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", 3);
+  .attr("stroke", (d) => (highlightAbbrs.has(d.abbr) ? t.ink : t.pageBg))
+  .attr("stroke-width", (d) => (highlightAbbrs.has(d.abbr) ? 4 : 3));
 
 tile
   .append("text")
@@ -101,9 +108,51 @@ tile
   .attr("fill", (d) => labelInk(d.value == null ? MUTED : color(d.value)))
   .text((d) => d.abbr);
 
+// --- Highest/lowest callout --------------------------------------------------
+// The tile-grid's true US shape leaves cols -1..2 empty below row 5 (nothing
+// west of Texas reaches that far south) — use that void for a data-storytelling
+// callout instead of leaving it dead space, and echo the ink-stroke swatches
+// against the two highlighted tiles above.
+const calloutX = x(-1);
+const calloutRowY = y(5);
+const calloutEntries = [
+  { region: maxRegion, label: "highest" },
+  { region: minRegion, label: "lowest" },
+];
+g.append("text")
+  .attr("x", calloutX)
+  .attr("y", calloutRowY + 14)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Highest & lowest share");
+calloutEntries.forEach((entry, i) => {
+  const rowY = calloutRowY + 40 + i * 30;
+  g.append("rect")
+    .attr("x", calloutX)
+    .attr("y", rowY)
+    .attr("width", 16)
+    .attr("height", 16)
+    .attr("rx", 3)
+    .attr("fill", "none")
+    .attr("stroke", t.ink)
+    .attr("stroke-width", 3);
+  g.append("text")
+    .attr("x", calloutX + 24)
+    .attr("y", rowY + 13)
+    .attr("fill", t.inkSoft)
+    .style("font-size", "14px")
+    .text(`${entry.region.abbr} — ${entry.region.value}% (${entry.label})`);
+});
+
 // --- Title ------------------------------------------------------------------
 const title = "Renewable Electricity Share · choropleth-basic · javascript · d3 · anyplot.ai";
-const titleFontSize = Math.round(22 * Math.min(1, 67 / title.length));
+// Default bumped from the style-guide's 22px baseline: at the formula's 19px
+// result this title measured only ~42% of canvas width (below the ~50-70%
+// comfort range) per AI review — 30px recalibrates for this title's actual
+// rendered character width while the 67-char linear taper still guards long
+// titles from overflow.
+const titleFontSize = Math.round(30 * Math.min(1, 67 / title.length));
 svg
   .append("text")
   .attr("x", width / 2)
