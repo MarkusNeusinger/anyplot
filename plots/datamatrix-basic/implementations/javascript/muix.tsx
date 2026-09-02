@@ -1,7 +1,3 @@
-// anyplot.ai
-// datamatrix-basic: Basic Data Matrix 2D Barcode
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 84/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 // anyplot.ai
 // datamatrix-basic: Basic Data Matrix 2D Barcode
@@ -21,6 +17,8 @@ const QUIET_ZONE = 2; // modules of blank margin (spec requires >= 1)
 const CAPTION = `Encodes "${CONTENT}" · ${MODULE_COUNT}×${MODULE_COUNT} modules · ECC 200`;
 const TITLE_HEIGHT = 64;
 const CAPTION_HEIGHT = 48;
+const OUTER_MARGIN = 40; // page-level breathing room above/below the card, balancing the horizontal margin from centering it in the full-width canvas
+const CARD_PADDING = 32; // uniform inset on all four sides between the card edge and the matrix's own quiet zone
 
 // FNV-1a hash — used only to seed the deterministic filler LCG below.
 function hashString(text) {
@@ -102,7 +100,11 @@ function DataMatrixModules() {
 
 export default function Chart() {
   const size = window.ANYPLOT_SIZE;
-  const squareSide = Math.min(size.width, size.height - TITLE_HEIGHT - CAPTION_HEIGHT);
+  const cardSide = Math.min(
+    size.width,
+    size.height - TITLE_HEIGHT - CAPTION_HEIGHT - OUTER_MARGIN * 2,
+  );
+  const matrixSide = cardSide - CARD_PADDING * 2;
 
   return (
     <div
@@ -133,15 +135,30 @@ export default function Chart() {
           justifyContent: "center",
         }}
       >
-        <ChartContainer
-          width={squareSide}
-          height={squareSide}
-          series={[]}
-          margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-          skipAnimation
+        <div
+          style={{
+            width: cardSide,
+            height: cardSide,
+            boxSizing: "border-box",
+            padding: CARD_PADDING,
+            backgroundColor: t.elevatedBg,
+            border: `1px solid ${t.grid}`,
+            borderRadius: 20,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <DataMatrixModules />
-        </ChartContainer>
+          <ChartContainer
+            width={matrixSide}
+            height={matrixSide}
+            series={[]}
+            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
+            skipAnimation
+          >
+            <DataMatrixModules />
+          </ChartContainer>
+        </div>
       </div>
       <div
         style={{
