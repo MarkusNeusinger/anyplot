@@ -28,6 +28,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **A merged implementation now clears its `impl:<lib>:failed` label and the watchdog's
+  retry marker** — impl-merge removed the stale labels in one comma-separated
+  `gh issue edit`, and `gh` rejects the whole call when any name in the list is not a
+  repository label (`impl:<lib>:pending` only exists on demand), so the fallback added
+  `impl:<lib>:done` and left `impl:<lib>:failed` in place. Issues #3343 and #3650 ended
+  the 2026-09-02 outage rescue with both labels for the same libraries, and every
+  watchdog scan since reported those pairs as "already retried — needs manual
+  attention". The labels are now removed one at a time, each call tolerated, and
+  `watchdog:retried-<lib>` goes with them.
 - **The API image installs `libraqm0`, which is what actually restores text shaping —
   and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
   build-time assertion on `features.check('raqm')` on the understanding that the locked
