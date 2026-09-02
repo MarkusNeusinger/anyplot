@@ -57,7 +57,7 @@ end
 
 # --- Tree layout: leaves get sequential x, parents average their children ----
 const LEAF_SPACING  = 1.0
-const LEVEL_SPACING = 1.3
+const LEVEL_SPACING = 1.6
 
 x_pos = Dict{String,Float64}()
 leaf_nodes = [n for n in nodes if n.level == 3]
@@ -71,8 +71,12 @@ for lvl in (2, 1, 0)
 end
 y_pos = Dict(n.id => -n.level * LEVEL_SPACING for n in nodes)
 
-const BOX_W = 0.82 * LEAF_SPACING
+const BOX_W = 0.87 * LEAF_SPACING
 const BOX_H = 0.42 * LEVEL_SPACING
+
+# Level-coded emphasis: thicker borders at senior levels reinforce the
+# hierarchy beyond color alone (CEO thickest, Manager/IC thinnest)
+const STROKE_WIDTHS = [3.2, 2.8, 2.4, 2.0]
 
 # --- Figure --------------------------------------------------------------
 title_str = "network-hierarchical · julia · makie · anyplot.ai"
@@ -93,43 +97,48 @@ ax = Axis(
 hidedecorations!(ax)
 hidespines!(ax)
 
-# Edges — straight lines from parent box bottom to child box top, drawn first
-edge_xs = Float64[]
-edge_ys = Float64[]
+# Edges — straight lines from parent box bottom to child box top, drawn first.
+# Thinner + more transparent where a parent has many children, so dense
+# fan-outs (e.g. a VP with 3 directors) read less cluttered than single-child
+# edges.
 for n in nodes
-    if n.parent != ""
-        px, py = x_pos[n.parent], y_pos[n.parent]
-        cx, cy = x_pos[n.id], y_pos[n.id]
-        append!(edge_xs, (px, cx, NaN))
-        append!(edge_ys, (py - BOX_H / 2, cy + BOX_H / 2, NaN))
-    end
+    n.parent == "" && continue
+    px, py = x_pos[n.parent], y_pos[n.parent]
+    cx, cy = x_pos[n.id], y_pos[n.id]
+    nsiblings  = length(children[n.parent])
+    edge_alpha = clamp(0.6 - 0.04 * (nsiblings - 1), 0.35, 0.6)
+    edge_width = clamp(1.8 - 0.15 * (nsiblings - 1), 1.1, 1.8)
+    lines!(
+        ax, [px, cx], [py - BOX_H / 2, cy + BOX_H / 2];
+        color = (INK_SOFT, edge_alpha), linewidth = edge_width,
+    )
 end
-lines!(ax, edge_xs, edge_ys; color = (INK_SOFT, 0.55), linewidth = 1.8)
 
-# Nodes — box per employee, border colored by organizational level
+# Nodes — box per employee, border colored by organizational level, with
+# stroke width tapering from CEO (thickest) to Manager/IC (thinnest)
 for n in nodes
     x, y = x_pos[n.id], y_pos[n.id]
     poly!(
         ax, Rect2f(x - BOX_W / 2, y - BOX_H / 2, BOX_W, BOX_H);
         color       = ELEVATED_BG,
         strokecolor = IMPRINT_PALETTE[n.level + 1],
-        strokewidth = 2.5,
+        strokewidth = STROKE_WIDTHS[n.level + 1],
     )
     text!(
         ax, x, y; text = n.label,
-        color = INK, fontsize = 13,
+        color = INK, fontsize = 12,
         align = (:center, :center),
     )
 end
 
 xs, ys = collect(values(x_pos)), collect(values(y_pos))
 xlims!(ax, minimum(xs) - BOX_W / 2 - 0.6, maximum(xs) + BOX_W / 2 + 0.6)
-ylims!(ax, minimum(ys) - BOX_H / 2 - 0.4, maximum(ys) + BOX_H / 2 + 0.6)
+ylims!(ax, minimum(ys) - BOX_H / 2 - 0.2, maximum(ys) + BOX_H / 2 + 0.35)
 
 # Legend — organizational level key
 level_labels = ["CEO", "VP", "Director", "Manager / IC"]
 legend_elems = [
-    PolyElement(color = ELEVATED_BG, strokecolor = IMPRINT_PALETTE[i], strokewidth = 2.5)
+    PolyElement(color = ELEVATED_BG, strokecolor = IMPRINT_PALETTE[i], strokewidth = STROKE_WIDTHS[i])
     for i in 1:4
 ]
 Legend(
