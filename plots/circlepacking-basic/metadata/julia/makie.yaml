@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: circlepacking-basic
 created: '2026-09-02T15:36:20Z'
-updated: '2026-09-02T16:16:15Z'
+updated: '2026-09-02T16:39:04Z'
 generated_by: claude-sonnet
 workflow_run: 33648746263
 issue: 2498
@@ -16,51 +16,50 @@ quality_score: 79
 review:
   strengths:
   - Genuine greedy circle-packing algorithm from scratch (tangent-point placement,
-    bottom-up enclosing-radius sizing) — no NetworkLayout.jl workaround, correctly
-    avoiding the out-of-scope dependency
-  - Leaf circle area (not radius) scales with value via r = sqrt(value), satisfying
+    bottom-up enclosing-radius sizing) with no NetworkLayout.jl workaround
+  - Leaf circle area (not radius) scales with node.value via r = sqrt(value), satisfying
     the spec's area-encoding requirement
-  - Imprint palette applied in canonical order with correctly flipped theme-adaptive
-    chrome and pixel-identical data colors between light/dark
-  - Root circle drawn as a faint bounding container with visible padding, matching
-    the spec note
-  - Depth-based fill alpha (0.16/0.38/0.88) creates a clear three-tier visual hierarchy
-    without extra chrome
+  - Imprint palette applied in canonical order; both renders keep data colors identical
+    and flip only chrome tokens, no dark-on-dark/light-on-light failures
+  - Root circle drawn as a faint outlined container encompassing all children with
+    visible padding, matching the spec note
+  - Depth-based fill alpha (0.16/0.38/0.88) creates a clear, deliberate three-tier
+    visual hierarchy
   - Canvas lands exactly on 2400x2400; title format matches the mandated convention
     exactly
   weaknesses:
-  - 'Confirmed via direct re-execution of the packing algorithm (verbatim source,
-    same seed) and pixel-level inspection of both PNGs: the per-category label-floor
-    fix from attempt 1 does not work — most depth-2 labels that clear the 0.18 * category_r
-    threshold still don''t render, and the pattern doesn''t correlate with the ratio.
-    Actual computed ratios: Code — Frontend=0.375, Backend=0.452, Scripts=0.289, Tests=0.329
-    (all above 0.18) yet 0 of these 4 render (zero ink-colored pixels found in the
-    entire Code cluster region, both themes). System — Cache=0.545 (renders), Logs=0.196,
-    Temp=0.360 (both above 0.18, neither renders). Documents — Spreadsheets=0.300
-    (above 0.18, does not render) while Reports=0.438 and Presentations=0.414 do render.
-    Media is the only category where all 4 subcategories (down to Design Files=0.188)
-    render correctly. This looks like a rendering-side bug in the text!() loop (labels
-    silently dropped), not a threshold-tuning problem. Recommended debugging: (1)
-    verify candidate label coordinates with a temporary scatter! marker; (2) try a
-    single vectorized text!(ax, positions; text = labels, ...) call instead of looping
-    individual text!() calls; (3) verify the fix by inspecting actual rendered pixels
-    per category, not just the computed ratio.'
+  - 'CONFIRMED VIA INDEPENDENT RE-EXECUTION of the exact packing algorithm (same seed,
+    same code) that this is NOT a threshold problem: category_r ratios are Reports=0.438,
+    Spreadsheets=0.300, Presentations=0.414, Photos=0.346, Videos=0.563, Audio=0.198,
+    Design Files=0.188, Frontend=0.375, Backend=0.452, Scripts=0.289, Tests=0.329,
+    Cache=0.545, Logs=0.196, Config=0.097 (correctly excluded), Temp=0.360 -- 13 of
+    14 subcategory nodes clear the 0.18 threshold, yet only 7 actually render as text
+    in the saved PNG (Reports, Presentations, Photos, Videos, Audio, Design Files,
+    Cache). The other 6 that clear the threshold (Spreadsheets, Frontend, Backend,
+    Scripts, Tests, Logs, Temp) are silently missing in BOTH themes.'
+  - This is the exact same drop pattern (Documents 2/3, Media 4/4, Code 0/4, System
+    1/4) as attempt 2, meaning the attempt-2 fix (switching the per-node text!() loop
+    to a single vectorized text!(ax, positions; text=labels, ...) call) did not resolve
+    the underlying defect -- it produced an identical failure signature, so the root
+    cause is not the per-node-vs-vectorized call style.
   - 'CQ-01: the implementation necessarily introduces a mutable struct (PackNode)
     and five helper functions (tangent_points, pack_siblings, pack!, locate!, collect_nodes!)
-    to implement circle packing manually — justified by the plot type but still a
-    real departure from the single flat-script ideal other plot types achieve.'
+    to implement circle packing manually -- justified by the plot type but still a
+    real departure from the single flat-script ideal.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "circlepacking-basic · julia · makie · anyplot.ai" top-center, clearly readable. Thin dark-ink-soft stroke marks the root container circle with generous padding. Four bold category labels ("Documents", "Media", "Code", "System") sit below their clusters in dark ink, all legible.
-      Data: Four Imprint-palette category clusters (green/Documents, lavender/Media, blue/Code, ochre/System) in canonical order, each a low-alpha tinted circle nesting medium-alpha subcategory circles and near-opaque leaf circles (0.16/0.38/0.88 alpha tiers). Subcategory labels render inconsistently: Media 4/4 ("Videos", "Photos", "Audio", "Design Files"); Documents 2/3 ("Reports", "Presentations" render, "Spreadsheets" does not); System 1/4 ("Cache" renders, "Logs"/"Config"/"Temp" do not); Code 0/4 ("Frontend"/"Backend"/"Scripts"/"Tests" all fail to render despite comparable circle sizes to labeled ones elsewhere).
-      Legibility verdict: PASS for rendered text — no light-on-light failures. FAIL on completeness — most subcategory labels across 3 of 4 categories do not render at all (confirmed via zero ink-colored pixels detected in the Code cluster bounding box).
+      Background: warm off-white, matches #FAF8F1, not pure white.
+      Chrome: title "circlepacking-basic · julia · makie · anyplot.ai" bold dark ink, clearly readable; four bold category labels (Documents, Media, Code, System) below their clusters, all legible; a thin ink-soft stroke marks the faint root-container circle.
+      Data: Imprint palette in canonical order -- Documents=green (#009E73), Media=lavender, Code=blue, System=ochre -- with depth-based alpha (0.16/0.38/0.88) giving category/subcategory/leaf tiers. First series is confirmed brand green.
+      Subcategory labels: only 7 of the 13 subcategory circles that clear the 0.18x-category-radius labeling threshold actually show text -- Reports, Presentations, Photos, Videos, Audio, Design Files, Cache render; Spreadsheets, Frontend, Backend, Scripts, Tests, Logs, Temp are silently missing even though their circles are large enough and comparable in size to labeled peers (verified against independently recomputed packing ratios, not just visual estimate).
+      Legibility verdict: PASS for all text that is present; the missing-label defect is a content-completeness bug (scored under SC-02/DE-03/DQ-01/LM-01), not a contrast/theme failure.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, root-circle stroke, and category labels correctly flip to light ink (#F0EFE8) and remain fully readable; no dark-on-dark failures observed.
-      Data: Same four Imprint-palette hues as light render (green/lavender/blue/ochre) — data colors are pixel-identical between themes, only chrome flipped. The exact same subcategory-label gaps persist: 0/4 in Code, 1/4 in System, 2/3 in Documents, 4/4 in Media, independently confirmed via pixel search (zero ink pixels in the Code region in this theme too).
-      Legibility verdict: PASS for rendered text, no dark-on-dark issues. FAIL on completeness — identical label-rendering gaps as the light render.
+      Background: warm near-black, matches #1A1A17, not pure black.
+      Chrome: title, category labels, and root-circle stroke correctly flip to light ink (#F0EFE8) and remain fully readable -- no dark-on-dark failures.
+      Data: identical hues to the light render -- only chrome flipped, as required.
+      Subcategory labels: the exact same 7-of-13 rendered / 6-missing pattern as the light render (Spreadsheets, Frontend, Backend, Scripts, Tests, Logs, Temp missing in both themes) -- confirmed via pixel-level crop inspection of the System and Code clusters at 2x zoom.
+      Legibility verdict: PASS for all text that is present; same completeness defect as light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -71,47 +70,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Everything that renders is legible in both themes; missing-label
-          content gap scored under SC-02/DE-03/DQ-01 instead
+        comment: All rendered text is legible in both themes; missing-label content
+          gap scored under SC-02/DE-03/DQ-01/LM-01 instead
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-text or text-data collisions in either render
+        comment: No collisions between text, circles, or labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~62 nodes at appropriate circle sizes with clear strokes separating
-          depth levels
+        comment: Circle sizes and depth-alpha tiers clearly distinguish hierarchy
+          levels
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint hues distinguishable, no red-green-only encoding
+        comment: Imprint palette, CVD-safe, no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed exactly (2400x2400); no clipping or overflow
+        comment: Canvas gate passed exactly at 2400x2400, no clipping or overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for circle packing; title format matches convention
-          exactly
+        comment: No axes needed for this plot type; title descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Categories mapped to Imprint palette positions 1-4 in canonical order;
-          correct theme-adaptive backgrounds
+        comment: 'First series is #009E73, canonical order, correct theme-adaptive
+          backgrounds in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -121,23 +119,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom packing algorithm and depth-based alpha layering show real
-          design intent
+        comment: Custom greedy tangent-circle packer and depth-based alpha layering
+          show real design intent
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Spines/decorations hidden, generous whitespace, subtle strokes for
-          separation
+        comment: Spines/decorations hidden, generous whitespace, subtle root-circle
+          stroke
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Missing labels leave an entire category (Code) and most of another
-          (System) as undifferentiated same-colored blobs, undercutting the hierarchy
-          storytelling
+        comment: 6 of 13 qualifying subcategory labels are missing, undercutting the
+          chart's core job of showing hierarchy to the viewer -- Code cluster shows
+          0/4 labels
     spec_compliance:
       score: 12
       max: 15
@@ -147,28 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct nested circle-packing chart
+        comment: Correct circle-packing chart
       - id: SC-02
         name: Required Features
         score: 1
         max: 4
         passed: false
-        comment: '''Display labels for larger circles'' fails hard: 0/4 in Code, 1/4
-          in System, 2/3 in Documents despite those circles clearing the code''s own
-          labeling threshold'
+        comment: '"Display labels for larger circles" fails for the majority of circles
+          that pass their own labeling threshold -- same unresolved defect as attempt
+          2'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Leaf circle area = value via r = sqrt(value)
+        comment: Leaf circle area (not radius) scales with value via r = sqrt(value)
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; category color-coding + direct labels substitute
-          for a formal legend
+        comment: Title matches mandated convention exactly
     data_quality:
       score: 12
       max: 15
@@ -178,20 +175,20 @@ review:
         score: 3
         max: 6
         passed: false
-        comment: ~62 nodes across 4 levels within spec range, but most nodes are functionally
-          indistinguishable since labels don't render
+        comment: ~62 nodes across 4 levels is within spec range, but most are functionally
+          indistinguishable since their labels never render
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Disk-storage folder hierarchy is realistic and neutral
+        comment: Disk-storage folder hierarchy, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: MB-range values are sensible for the storage domain
+        comment: Sensible MB-scale values for file sizes
     code_quality:
       score: 8
       max: 10
@@ -200,62 +197,61 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: Struct + 5 helper functions needed to implement packing manually;
-          justified but not flat-script simple
+        passed: false
+        comment: Struct + 5 helper functions justified by the plot type but a real
+          departure from flat-script ideal
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random — all used
+        comment: Only CairoMakie, Colors, Random used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: The label-floor logic doesn't achieve what it's documented to do
-          — a real correctness gap
+        comment: The explicitly-recommended vectorized text!() fix from attempt 2
+          review did not resolve the flagged correctness bug -- a real, still-open
+          correctness gap
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) matches convention
+        comment: Saves plot-{THEME}.png via save() with px_per_unit=2
     library_mastery:
       score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: Correct use of poly!/text!/DataAspect()/hidedecorations!/hidespines!
-          idioms, but the text!() loop silently drops most depth-2 labels
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Hand-rolled tangent-circle packing algorithm is distinctive engineering,
-          capped low pending the label-rendering fix
+        comment: Correct use of poly!/text!/DataAspect()/hidedecorations!/hidespines!,
+          but the vectorized text!() call still silently drops most sub-labels across
+          two different call styles
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hand-rolled tangent-circle packing algorithm remains genuinely distinctive
+          engineering
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - circle-packing
-  - patches
   - annotations
   patterns:
   - data-generation
-  - recursive-algorithm
   - iteration-over-groups
   dataprep: []
   styling:
