@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: flowmap-origin-destination
 created: '2026-09-02T00:48:06Z'
-updated: '2026-09-02T00:52:29Z'
+updated: '2026-09-02T01:03:51Z'
 generated_by: claude-sonnet
 workflow_run: 33576180065
 issue: 3765
@@ -12,143 +12,127 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Hand-built basemap (continent silhouettes via chart.renderer.path with Chaikin-style
+  - Per-pair deterministic curvature jitter (hash-based) now fans arcs apart near
+    busy hubs (Rotterdam, Shanghai, Jebel Ali) instead of bundling them into one bowed
+    band — directly fixes the prior review's convergence complaint.
+  - Top-4 hub ports (Rotterdam, Shanghai, Jebel Ali, Singapore) are now direct-labeled
+    with textOutline for contrast, so major corridors are identifiable in the static
+    PNG without hovering.
+  - 'Axis bounding box removed (xAxis/yAxis lineWidth: 0) while keeping subtle gridlines
+    — the chart now reads as a geographic canvas rather than a generic scatter frame.'
+  - Manual legend font sizes raised to 14-15px, matching the 14px tick-label baseline
+    used elsewhere in the chart.
+  - Hand-built basemap (continent silhouettes via chart.renderer.path with Chaikin
     polygon smoothing) is genuine library mastery given the core bundle has no highmaps
-    module — no forbidden add-on modules used.
-  - Great-arc flow lines are quadratic-Bezier polylines sampled into native `line`
-    series, all bowed with a consistent rotational sense so the whole network reads
-    coherently rather than as random noodles.
+    module.
   - Port bubble radius is sqrt-scaled (area-proportional) against total throughput,
-    which is the correct visual encoding for a magnitude-to-area mapping.
-  - Manually constructed legend (renderer.rect + renderer.path + renderer.text) clearly
-    explains both encodings — arc color/width for flow, bubble size for port throughput
-    — since core Highcharts has no built-in gradient/width legend widget.
-  - 'Imprint palette compliance is correct: port markers use `t.palette[0]` (#009E73)
-    exactly, flow arcs use a `t.seq[0]->t.seq[1]` continuous gradient (correct choice
-    for the continuous flow-magnitude variable), and data colors are identical between
-    light/dark — only chrome (ocean/land basemap colors, backgrounds, text) flips.'
-  - Realistic, neutral dataset (container-shipping TEU volumes between 11 major world
-    ports) with plausible magnitudes and a sensible flow count (22, within the 20-200
-    range).
-  - Hover tooltips correctly surface exact origin→destination flow values and port
-    totals — good use of JS-library interactivity that doesn't need to show up in
-    the static PNG.
+    and flow arc color/width both encode magnitude via a correct imprint_seq gradient
+    — no Imprint palette violations across either theme.
+  - Realistic, neutral container-shipping dataset (22 flows between 11 major world
+    ports) with plausible relative magnitudes and clear hub structure.
   weaknesses:
-  - Manual legend text is undersized relative to the rest of the chrome (13px title,
-    12-13px line labels vs. the 14px tick-label baseline used everywhere else) — bump
-    to at least 13-14px for the labels and 14-15px for the legend title so it doesn't
-    read as an afterthought.
-  - All flow arcs share one fixed CURVATURE (0.16) and rotational sense, so near the
-    busy Rotterdam/Hamburg/Shanghai hubs many arcs converge and overlap almost on
-    top of each other right at the port bubble, making individual corridors hard to
-    trace — vary curvature slightly per-arc (e.g. small deterministic jitter keyed
-    on origin/dest pair) to fan them apart near shared endpoints.
-  - Port names (Shanghai, Rotterdam, etc.) are only revealed on hover; for the static
-    PNG preview that most viewers will see first, add small direct text labels next
-    to the 3-4 largest hub bubbles so the major corridors are identifiable without
-    interaction.
-  - The xAxis/yAxis still render as a full bounding box with visible lineColor and
-    a regular 30° grid, which reads more like a generic scatter-plot frame than a
-    refined geographic canvas — consider a lighter/no axis line box (keep only the
-    subtle gridlines) to lean further into the map-like presentation and lift DE-02.
+  - The thinnest arcs (1.5px, ~58 kTEU flows) are still comparatively faint against
+    the ocean basemap even after the curvature jitter fans them apart from hub clusters
+    — a touch more minimum width or opacity would help.
+  - 'CQ-01 KISS Structure remains modest: multiple helper functions (smoothPolygon,
+    drawContinents, hashStr, curvatureFor, arcPoints, lerpColor, drawLegend) are needed
+    because core Highcharts lacks a highmaps/flow-map module — justified, but still
+    a departure from a flat imports-data-plot script.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) fills the outer chart margin; the plot area itself is overlaid with a light-blue "ocean" basemap color (#CFE3EF) and beige "land" continent silhouettes (#E4E0D2) — this is intentional geographic chrome, not the theme background, and is explicitly exempted from the Imprint palette rule in the code comments.
-      Chrome: Title "flowmap-origin-destination · javascript · highcharts · anyplot.ai" is bold dark text, fully legible. Subtitle in medium-gray is legible. Longitude/Latitude axis titles and tick labels are dark/soft-dark text, clearly readable against the light background. Gridlines at 30° intervals are subtle but visible over both ocean and land. The manual legend box (bottom-left, translucent off-white panel) has fully legible dark text and correctly rendered line-width/color samples.
-      Data: First-drawn categorical series (port bubbles) use #009E73 green exactly. Flow arcs use a continuous green-to-blue gradient keyed to flow magnitude (thinner/lighter = smaller flow, thicker/bluer = larger flow), consistent with imprint_seq usage for continuous data.
+      Background: Warm off-white (#FAF8F1) fills the outer chart margin, as required.
+      Chrome: Plot area is overlaid with a light-blue "ocean" basemap (#CFE3EF) and beige "land" continent silhouettes (#E4E0D2) — intentional geographic chrome, exempt from the Imprint data-color rule per the code's own comment. Title, subtitle, "Longitude (°)"/"Latitude (°)" axis titles, tick labels, and the manually drawn legend box text are all dark and fully legible against both the cream margin and the light-blue ocean. Hub port labels (Rotterdam, Shanghai, Jebel Ali, Singapore) render in dark text with a light text-outline, staying readable over both land and ocean.
+      Data: Port bubbles are solid #009E73 green with a light outline; flow arcs use a continuous green-to-blue gradient (imprint_seq) keyed to flow magnitude, with line width also scaling by magnitude. No light-on-light issues found.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) fills the outer chart margin (visible at edges/behind legend); the plot area is overlaid with a dark navy "ocean" (#16222E) and dark-olive "land" (#33332C) — same intentional basemap-chrome exemption as the light render.
-      Chrome: Title and subtitle flip to light text (white/light-gray), fully legible against both the dark margin and the dark-navy plot area. Axis titles, tick labels, and gridlines flip to light/soft tones and remain clearly readable — no dark-on-dark failures observed. The legend box flips to a dark elevated-surface panel with light text, fully legible.
-      Data: Port bubble green (#009E73) and the flow-arc gradient colors are pixel-identical to the light render — only the basemap and text chrome changed, confirming correct theme-adaptive implementation.
+      Background: Warm near-black (#1A1A17) fills the outer margin, as required.
+      Chrome: Plot area flips to a dark-navy ocean (#16222E) and dark-olive land (#33332C). Title, subtitle, axis titles, tick labels, and the legend all flip to light tones and remain clearly legible against both the near-black margin and the dark-navy plot area. Hub labels keep their dark-background text outline, still legible. No dark-on-dark failures observed anywhere.
+      Data: Port bubble green and the arc color gradient are pixel-identical to the light render — only chrome (background, land/ocean chrome, text) changed between themes, confirming correct theme-adaptive implementation.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes at explicit font sizes; manual legend
-          text (12-13px) is slightly smaller than the 14px tick-label baseline used
-          elsewhere.
+        comment: All font sizes explicitly set; manual legend text raised to 14-15px,
+          now matching the 14px tick-label baseline. Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend box sits over open ocean with no arc/label collisions; title/subtitle/axis
-          text do not collide with data.
+        comment: No text-on-text or text-on-data collisions; hub labels use textOutline
+          for contrast against arcs and basemap.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line widths (1.5-9px) and alpha=0.6 handle overlap reasonably for
-          22 flows; thinnest arcs are a bit faint against busy hub clusters.
+        comment: Curvature jitter fans arcs apart near hub clusters, improving visibility,
+          but the thinnest (~58 kTEU) arcs remain a bit faint against the ocean basemap.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue continuous gradient is CVD-safe; not relying on red-green
-          as sole signal.
+        comment: Sequential gradient + alpha 0.6 gives good separation without relying
+          on hue alone; bubbles have distinct outlines.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas dimension gate passed (no /tmp/anyplot-canvas-gate.txt). Title
-          ~85% width is expected for the mandated title length; no overflow or clipping
-          observed.
+        comment: Canvas dimension gate passed (no gate file present); plot fills the
+          canvas well with balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Longitude (°)'' / ''Latitude (°)'' are descriptive with units.'
+        comment: Longitude (°) / Latitude (°) axis titles with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Port markers = #009E73 exactly; flow arcs correctly use imprint_seq
-          for the continuous flow variable; data colors identical across themes; basemap
-          ocean/land is explicitly non-data chrome.'
+        comment: 'Port markers use #009E73 exactly; flow arcs use imprint_seq (t.seq[0]->t.seq[1])
+          for the continuous flow variable; identical data colors across themes; backgrounds
+          are theme-correct #FAF8F1 / #1A1A17.'
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Custom basemap, gradient-encoded arcs, and area-proportional bubbles
-          show real design effort beyond defaults.
+        comment: Custom hand-drawn basemap, gradient arcs, area-proportional bubbles,
+          and now hub labels — strong, cohesive design beyond a configured default.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Gridlines subtle, whitespace reasonable, but the full axis-line bounding
-          box makes it read partly like a generic scatter frame rather than a refined
-          map canvas.
+        comment: 'Axis bounding box removed (lineWidth: 0) per prior feedback; only
+          subtle gridlines remain, reading as a geographic canvas rather than a scatter
+          frame.'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Bubble size and arc weight/color clearly surface hub ports and major
-          corridors (Shanghai, Rotterdam), but dense arc convergence near hubs dilutes
-          the focal point somewhat.
+        comment: Static hub labels plus fanned-out arcs make the major corridors (Shanghai,
+          Rotterdam, Jebel Ali, Singapore) immediately readable without hovering.
     spec_compliance:
       score: 15
       max: 15
@@ -164,46 +148,48 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Curved arcs, width-by-magnitude, alpha 0.6 transparency, color gradient,
-          basemap, and hover tooltips all present.
+        comment: Curved arcs, magnitude-proportional line width, alpha transparency,
+          color gradient, basemap context, and hover tooltips all present per spec
+          notes.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=longitude, y=latitude correctly mapped; full world extent shown.
+        comment: Longitude on X, latitude on Y, arcs correctly connect origin/destination
+          coordinates.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format exactly; legend correctly explains
-          both visual encodings.
+        comment: Title exactly 'flowmap-origin-destination · javascript · highcharts
+          · anyplot.ai'; manual legend correctly explains both encodings.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Covers arcs, width, color-gradient, and bubble-size encodings; port
-          name labels only on hover, not statically.
+        comment: 22 flows across 11 ports show varied magnitudes, hub concentration,
+          and directional asymmetry; hub names now shown statically.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Container-shipping TEU volumes between real major ports; plausible
-          and neutral.
+        comment: Neutral, plausible container-shipping scenario between real major
+          world ports.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 58-210 thousand TEU/year is a sensible range for major-port trade
-          lanes.
+        comment: Relative TEU magnitudes and hub rankings (Shanghai/Singapore/Rotterdam
+          busiest) align with real-world shipping patterns.
     code_quality:
       score: 9
       max: 10
@@ -213,35 +199,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (smoothPolygon, drawContinents, arcPoints,
-          lerpColor, drawLegend) are used, but each is justified by the lack of a
-          highmaps module.
+        comment: Several helper functions (smoothPolygon, drawContinents, hashStr,
+          curvatureFor, arcPoints, lerpColor, drawLegend), each justified by the missing
+          highmaps module and manual legend.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hard-coded data.
+        comment: 'Fully deterministic: hard-coded data plus a deterministic hash for
+          curvature jitter.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only the global Highcharts is used, no unused imports.
+        comment: No imports beyond the Highcharts global; nothing unused.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch basemap; no fake/simulated
-          interactivity.
+        comment: No fake UI or simulated interactivity; complexity is proportional
+          to the flow-map/basemap requirements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses Highcharts.chart('container', ...) with animation disabled per
-          the mount-node contract.
+        comment: Mount-node contract respected; animation disabled on chart and series.
     library_mastery:
       score: 8
       max: 10
@@ -251,23 +237,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of line/scatter series and chart.renderer for custom
-          drawing within the core-bundle constraint.
+        comment: Idiomatic Highcharts.chart/series/renderer usage throughout.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: renderer.path basemap + Bezier-sampled geodesic arcs + sqrt-scaled
-          bubbles is a genuinely distinctive, well-engineered workaround for the missing
-          highmaps module.
-  verdict: REJECTED
+        comment: chart.renderer.path for a from-scratch basemap and manual legend
+          — features that would require a completely different approach in another
+          library.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - custom-legend
-  - hover-tooltips
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -276,4 +261,3 @@ impl_tags:
   styling:
   - alpha-blending
   - custom-colormap
-  - edge-highlighting
