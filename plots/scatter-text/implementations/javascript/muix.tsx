@@ -34,17 +34,23 @@ const LAYOUT = [
   [-11, -15],
   [11, -15],
 ];
+const MAX_RADIUS = Math.max(...LAYOUT.map(([dx, dy]) => Math.hypot(dx, dy)));
 
 function makeCluster(id, label, color, center, words) {
   const data = words.map((word, i) => {
     const [dx, dy] = LAYOUT[i];
     const jitterX = (rng() - 0.5) * 4;
     const jitterY = (rng() - 0.5) * 4;
+    // Words nearer the cluster centroid render larger — a proximity-to-size
+    // encoding that reads as "how representative of the cluster" and gives
+    // each group a visual anchor instead of eight equal-weight labels.
+    const centrality = 1 - Math.hypot(dx, dy) / MAX_RADIUS;
     return {
       id: `${id}-${word}`,
       x: center[0] + dx + jitterX,
       y: center[1] + dy + jitterY,
       label: word,
+      fontSize: Math.round(14 + 6 * centrality),
     };
   });
   return { id, label, color, data };
@@ -109,13 +115,13 @@ function TextScatter(props) {
           x={xScale(point.x)}
           y={yScale(point.y)}
           fill={color}
-          fontSize={16}
+          fontSize={point.fontSize}
           fontWeight={600}
           textAnchor="middle"
           dominantBaseline="central"
           paintOrder="stroke"
           stroke={t.pageBg}
-          strokeWidth={4}
+          strokeWidth={point.fontSize / 4}
           strokeLinejoin="round"
         >
           {point.label}
@@ -158,6 +164,13 @@ export default function Chart() {
           legend: { position: { vertical: "top", horizontal: "right" }, direction: "row" },
         }}
         margin={{ top: 40, right: 40, bottom: 60, left: 70 }}
+        sx={{
+          // Drop the stock axis frame/ticks for a borderless, custom look —
+          // the gridlines alone are enough reference structure.
+          "& .MuiChartsAxis-line": { stroke: "none" },
+          "& .MuiChartsAxis-tick": { stroke: "none" },
+          "& .MuiChartsGrid-line": { strokeOpacity: 0.5 },
+        }}
       />
     </div>
   );
