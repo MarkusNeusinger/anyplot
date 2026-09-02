@@ -10,20 +10,24 @@ const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
 // --- Data: monthly temperature range for a temperate city (deg C) ----------
+// Range widths vary (4-11 deg) to show volatile shoulder-season swings (Mar/Apr)
+// against calmer winter and mid-summer stretches.
 const months = [
-  { label: "Jan", min: 0, max: 4, mean: 2.1 },
-  { label: "Feb", min: 1, max: 6, mean: 3.3 },
-  { label: "Mar", min: 4, max: 11, mean: 7.2 },
-  { label: "Apr", min: 8, max: 16, mean: 11.9 },
-  { label: "May", min: 12, max: 20, mean: 15.8 },
-  { label: "Jun", min: 15, max: 23, mean: 18.7 },
-  { label: "Jul", min: 17, max: 25, mean: 20.9 },
-  { label: "Aug", min: 17, max: 25, mean: 20.6 },
-  { label: "Sep", min: 13, max: 20, mean: 16.1 },
-  { label: "Oct", min: 8, max: 14, mean: 10.8 },
-  { label: "Nov", min: 4, max: 8, mean: 5.9 },
-  { label: "Dec", min: 1, max: 5, mean: 2.7 },
+  { label: "Jan", min: -2, max: 2, mean: 0.3 },
+  { label: "Feb", min: -1, max: 5, mean: 2.4 },
+  { label: "Mar", min: 2, max: 12, mean: 7.6 },
+  { label: "Apr", min: 6, max: 17, mean: 12.3 },
+  { label: "May", min: 11, max: 20, mean: 16.2 },
+  { label: "Jun", min: 15, max: 23, mean: 19.4 },
+  { label: "Jul", min: 18, max: 26, mean: 22.3 },
+  { label: "Aug", min: 18, max: 25, mean: 21.8 },
+  { label: "Sep", min: 13, max: 20, mean: 16.6 },
+  { label: "Oct", min: 7, max: 14, mean: 10.9 },
+  { label: "Nov", min: 2, max: 8, mean: 5.3 },
+  { label: "Dec", min: -1, max: 3, mean: 1.1 },
 ];
+const coldest = months.reduce((a, b) => (b.min < a.min ? b : a));
+const warmest = months.reduce((a, b) => (b.max > a.max ? b : a));
 
 // --- SVG mount ---------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -33,7 +37,7 @@ const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.t
 const x = d3.scaleBand().domain(months.map((d) => d.label)).range([0, iw]).padding(0.35);
 const y = d3
   .scaleLinear()
-  .domain([0, d3.max(months, (d) => d.max)])
+  .domain([d3.min(months, (d) => d.min), d3.max(months, (d) => d.max)])
   .nice()
   .range([ih, 0]);
 
@@ -44,6 +48,22 @@ g.append("g")
   .call((sel) => sel.select(".domain").remove())
   .selectAll("line")
   .attr("stroke", t.grid);
+
+// --- Mean trend curve (smoothed d3-shape overlay linking monthly means) --------
+const meanLine = d3
+  .line()
+  .x((d) => x(d.label) + x.bandwidth() / 2)
+  .y((d) => y(d.mean))
+  .curve(d3.curveCatmullRom.alpha(0.5));
+
+g.append("path")
+  .datum(months)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 2)
+  .attr("stroke-dasharray", "2,5")
+  .attr("stroke-opacity", 0.3)
+  .attr("d", meanLine);
 
 // --- Range bars -----------------------------------------------------------------
 g.selectAll("rect.range")
@@ -72,6 +92,31 @@ for (const key of ["min", "max"]) {
     .attr("fill", t.palette[0])
     .attr("stroke", t.pageBg)
     .attr("stroke-width", 2.5);
+}
+
+// --- Extreme-month emphasis (coldest & warmest, sharpens the seasonal story) ----
+for (const [d, key, label] of [
+  [coldest, "min", "Coldest"],
+  [warmest, "max", "Warmest"],
+]) {
+  const cx = x(d.label) + x.bandwidth() / 2;
+  const cy = y(d[key]);
+  g.append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 11)
+    .attr("fill", "none")
+    .attr("stroke", t.palette[0])
+    .attr("stroke-width", 2)
+    .attr("stroke-opacity", 0.6);
+  g.append("text")
+    .attr("x", cx)
+    .attr("y", cy - 20)
+    .attr("text-anchor", "middle")
+    .attr("fill", t.inkSoft)
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text(label);
 }
 
 // --- Midpoint reference tick -----------------------------------------------------
