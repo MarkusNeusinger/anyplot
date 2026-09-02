@@ -149,10 +149,14 @@ chart.setOption({
     hoverLink: false,
   },
   grid: { left: 100, right: 150, top: 190, bottom: 110, containLabel: true },
+  dataZoom: [
+    { type: "inside", xAxisIndex: 0, filterMode: "none" },
+    { type: "inside", yAxisIndex: 0, filterMode: "none" },
+  ],
   xAxis: {
     type: "value",
     min: -128,
-    max: -66,
+    max: -68,
     interval: 10,
     name: "Longitude",
     nameLocation: "middle",
