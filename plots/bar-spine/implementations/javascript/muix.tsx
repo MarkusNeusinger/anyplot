@@ -8,6 +8,18 @@ const t = window.ANYPLOT_TOKENS;
 const size = window.ANYPLOT_SIZE;
 const INK_MUTED = window.ANYPLOT_THEME === "light" ? "#6B6A63" : "#A8A79F";
 
+// Segment labels: a redundant text cue on top of stacking position so the
+// Retained/Churned split doesn't rely on the green/red hue alone. Fixed
+// (theme-independent) fill colors are picked per series for contrast against
+// that series' fixed data color, not the page theme.
+const MIN_LABEL_HEIGHT = 22; // px; hide the label if a segment can't fit one line of text
+const segmentLabel = (item, context) =>
+  context.bar.height < MIN_LABEL_HEIGHT ? null : `${item.value}%`;
+const LABEL_FILL = { retained: "#1A1A17", churned: "#FAF8F1" };
+const labelSlotProps = (ownerState) => ({
+  style: { fill: LABEL_FILL[ownerState.seriesId], fontSize: 12, fontWeight: 600 },
+});
+
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Customer counts per subscription tier, split into churned vs. retained.
 // Bar WIDTH encodes each tier's marginal share of the customer base; segment
@@ -120,6 +132,8 @@ export default function Chart() {
                 data: [tier.name],
                 categoryGapRatio: 0,
                 tickLabelStyle: { fontSize: 13 },
+                disableTicks: true,
+                disableLine: true,
               },
             ]}
             yAxis={[
@@ -133,10 +147,23 @@ export default function Chart() {
               },
             ]}
             series={[
-              { data: [retainPct[i]], label: "Retained", stack: "total", color: t.palette[0] },
-              { data: [churnPct[i]], label: "Churned", stack: "total", color: t.palette[4] },
+              {
+                id: "retained",
+                data: [retainPct[i]],
+                label: "Retained",
+                stack: "total",
+                color: t.palette[0],
+              },
+              {
+                id: "churned",
+                data: [churnPct[i]],
+                label: "Churned",
+                stack: "total",
+                color: t.palette[4],
+              },
             ]}
-            slotProps={{ legend: { hidden: true } }}
+            barLabel={segmentLabel}
+            slotProps={{ legend: { hidden: true }, barLabel: labelSlotProps }}
           />
         ))}
       </div>
