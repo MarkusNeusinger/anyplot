@@ -3,11 +3,6 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-02
 //# anyplot-orientation: square
-// anyplot.ai
-// crossword-basic: Crossword Puzzle Grid
-// Library: MUI X Charts | React | Node 22
-// License: @mui/x-charts — MIT (community). Pro/Premium are out of scope.
-// Quality: pending | Created: 2026-09-02
 
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -102,7 +97,8 @@ function GridMark(props) {
               <text
                 x={cx + cellW * 0.1}
                 y={cy + cellH * 0.32}
-                fontSize={cellW * 0.26}
+                fontSize={cellW * 0.32}
+                fontWeight={600}
                 fill={GRID_INK}
                 textAnchor="start"
                 dominantBaseline="middle"
@@ -145,7 +141,7 @@ export default function Chart() {
       <Typography
         sx={{
           color: t.ink,
-          fontSize: 26,
+          fontSize: 30,
           fontWeight: 500,
           textAlign: "center",
           lineHeight: 1.2,
