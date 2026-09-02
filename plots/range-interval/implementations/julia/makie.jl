@@ -37,6 +37,9 @@ min_salary = Float64.(min_salary[order])
 max_salary = Float64.(max_salary[order])
 positions = 1:length(job_titles)
 
+spread = max_salary .- min_salary
+widest_idx = argmax(spread)
+
 # --- Title (scales fontsize to length; 67 chars is the style-guide baseline) --
 title_text = "Salary Ranges by Job Title · range-interval · julia · makie · anyplot.ai"
 ratio = length(title_text) > 67 ? 67 / length(title_text) : 1.0
@@ -74,7 +77,12 @@ ax = Axis(
     bottomspinecolor   = INK_SOFT,
     xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
     ygridvisible       = false,
+    xautolimitmargin   = (0.03, 0.22),
 )
+
+# Alternating row bands (every other category) for scan-ability across 12 rows.
+band_rows = collect(positions)[2:2:end]
+hspan!(ax, band_rows .- 0.5, band_rows .+ 0.5; color = (INK_SOFT, 0.07))
 
 rangebars!(
     ax, positions, min_salary, max_salary;
@@ -86,6 +94,14 @@ rangebars!(
 
 scatter!(ax, min_salary, positions; color = BRAND, markersize = 14, strokewidth = 1.5, strokecolor = PAGE_BG)
 scatter!(ax, max_salary, positions; color = BRAND, markersize = 14, strokewidth = 1.5, strokecolor = PAGE_BG)
+
+# Callout on the widest-range category to give readers an immediate takeaway
+# beyond the sort order alone.
+text!(
+    ax, max_salary[widest_idx] + 6, positions[widest_idx];
+    text = "Widest range: \$$(round(Int, spread[widest_idx]))K spread",
+    color = INK, fontsize = 12, align = (:left, :center),
+)
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
