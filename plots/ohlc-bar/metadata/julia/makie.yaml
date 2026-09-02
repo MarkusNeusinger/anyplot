@@ -1,0 +1,237 @@
+library: makie
+language: julia
+specification_id: ohlc-bar
+created: '2026-09-02T04:42:57Z'
+updated: '2026-09-02T05:03:22Z'
+generated_by: claude-sonnet
+workflow_run: 33591163565
+issue: 3293
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Correct, idiomatic OHLC construction: rangebars! for the high-low range plus
+    linesegments! for the left-open / right-close ticks — exactly the right Makie
+    primitives for this chart type.'
+  - 'Color choice follows the Imprint palette rationale precisely: brand green (#009E73)
+    for up, the matte-red semantic anchor (#AE3030) for down; with n=2 series this
+    is explicitly CVD-safe per the style guide (no redundant encoding required).'
+  - 'Clean theme-adaptive chrome: top/right spines removed, subtle horizontal-only
+    grid, frameless legend, all consistent between light and dark renders.'
+  - Realistic synthetic data with volatility clustering (simulated earnings-reaction
+    stretch, sessions 20-27) and correctly enforced OHLC invariants (high >= max(open,
+    close), low <= min(open, close)).
+  weaknesses:
+  - Bars are moderately cramped in the dense mid-March stretch (sessions 15-27) at
+    tick_width=0.32 with linewidth=2.5 -- consider slightly more horizontal spacing
+    or a thinner tick width for better legibility at smaller display sizes.
+  - Data storytelling relies on only two point annotations (swing high/low); a subtle
+    shaded band over the earnings-reaction stretch (sessions 20-27, where vol_mult=2.6)
+    would tie the visible volatility spike more directly to the narrative and strengthen
+    DE-03.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "ohlc-bar · julia · makie · anyplot.ai" is bold dark ink, centered, clearly readable. Axis labels "2024 Trading Sessions" / "SLRA Share Price (USD)" are dark and legible. X tick labels ("Mar 01", "Mar 08", ... "Apr 26") are rotated ~30deg in soft dark-gray ink, fully readable. Y tick labels (170-200) are dark and legible. Grid is a subtle horizontal-only light-gray line at each major y-tick. Legend (top-left, frameless) reads "Up (close >= open)" / "Down (close < open)" in soft ink, clearly legible against the cream background. "Swing high" / "Swing low" annotations in soft gray are readable and sit clear of any bar.
+      Data: 45 OHLC bars -- thin vertical high-low range line with a left tick (open) and right tick (close). First/up series renders in the Imprint brand green (#009E73); down bars render in the matte-red semantic anchor (#AE3030). Colors are clearly distinguishable from the cream background and from each other.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black, not light.
+      Chrome: Title, axis labels, and tick labels flip to light/off-white ink and remain clearly readable against the dark background -- no dark-on-dark failures observed anywhere (title, axis titles, tick labels, legend text, and "Swing high"/"Swing low" annotations are all legible). Grid remains subtle and horizontal-only.
+      Data: Bar colors are pixel-identical to the light render -- green (#009E73) for up, matte red (#AE3030) for down -- confirming only chrome (not data colors) flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, annotations, or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Bars are readable but moderately cramped in the dense mid-March stretch
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: n=2 series (green/matte-red semantic anchor) is explicitly CVD-safe
+          per the Imprint palette rationale; no redundant encoding required at n=2
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); no clipping, good proportions, balanced
+          axis labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (USD)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, down uses matte-red semantic anchor #AE3030;
+          backgrounds correct in both themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom OHLC tick construction, thoughtful semantic color use, no
+          generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle horizontal-only grid, frameless legend, generous
+          whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Swing high/low annotations create focal points, but the earnings-reaction
+          volatility stretch itself isn't visually called out
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct OHLC bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: High-low line, left open tick, right close tick, up/down color, date
+          formatting, grid all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=date, Y=price, all OHLC fields represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels match up/down convention
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 45 sessions with uptrend, downtrend, and a simulated volatility spike
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fictional robotics stock (SLRA), plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ($170-205) sensible for a mid-cap equity
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, straightforward flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Dates, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current Makie API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/Figure configuration and theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: rangebars! + linesegments! combination is a genuinely Makie-specific
+          technique for OHLC construction
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - grid-styling
