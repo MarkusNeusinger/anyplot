@@ -19,12 +19,35 @@ const realEstate = [150, 155, 160, 165, 175, 180, 185, 190, 195, 200, 205, 210];
 const commodities = [90, 95, 100, 105, 115, 120, 115, 110, 105, 100, 95, 90];
 const cash = [110, 105, 95, 85, 80, 75, 70, 65, 60, 55, 50, 45];
 
+// Highlight the equities-share growth story: mark the final quarter with a
+// small anchor point and its exact share, using Highcharts' native
+// per-point dataLabels/marker override (percentage comes from the
+// stacking:"percent" engine via `point.percentage`).
+const lastIndex = quarters.length - 1;
+const equitiesData = equities.map((y, i) =>
+  i === lastIndex
+    ? {
+        y,
+        marker: { enabled: true, radius: 5, fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 2 },
+        dataLabels: {
+          enabled: true,
+          format: "{point.percentage:.0f}%",
+          align: "right",
+          verticalAlign: "middle",
+          x: -10,
+          style: { color: t.ink, fontSize: "16px", fontWeight: "700", textOutline: "none" },
+        },
+      }
+    : y
+);
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
     type: "area",
     backgroundColor: "transparent",
     animation: false,
+    spacingRight: 20,
     style: { fontFamily: "inherit" },
   },
   credits: { enabled: false },
@@ -66,7 +89,7 @@ Highcharts.chart("container", {
     },
   },
   series: [
-    { name: "Equities", data: equities },
+    { name: "Equities", data: equitiesData, lineWidth: 2.5 },
     { name: "Bonds", data: bonds },
     { name: "Real estate", data: realEstate },
     { name: "Commodities", data: commodities },
