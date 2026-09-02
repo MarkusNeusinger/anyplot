@@ -1,7 +1,7 @@
 // anyplot.ai
 // alluvial-basic: Basic Alluvial Diagram
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 86/100 | Created: 2026-09-02
+// Quality: 92/100 | Created: 2026-09-02
 
 // The Sankey/alluvial series type lives in a Highcharts add-on module
 // (modules/sankey) that isn't vendored here — only the core bundle is loaded
