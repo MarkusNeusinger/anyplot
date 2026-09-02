@@ -26,20 +26,34 @@ const randNormal = (mean, sd) => {
   return mean + z * sd;
 };
 
+// High Load carries a secondary bump: under sustained load a fraction of
+// requests hit retry/timeout queues, producing a long, right-skewed tail
+// on top of the base slowdown — a shape difference plain mean/sd shift
+// can't show, which is exactly what a frequency polygon is good at revealing.
 const groups = [
   { name: "Control", mean: 450, sd: 55, n: 500, dash: "0" },
   { name: "Low Load", mean: 520, sd: 65, n: 500, dash: "9,5" },
-  { name: "High Load", mean: 610, sd: 85, n: 500, dash: "2,4" },
+  {
+    name: "High Load",
+    mean: 590,
+    sd: 70,
+    n: 500,
+    dash: "2,4",
+    bump: { mean: 800, sd: 45, weight: 0.22 },
+    focal: true,
+  },
 ];
 
 const binMin = 250;
-const binMax = 900;
+const binMax = 950;
 const binWidth = 25;
 const thresholds = d3.range(binMin, binMax + binWidth, binWidth);
 const bin = d3.bin().domain([binMin, binMax]).thresholds(thresholds);
 
+const sampleValue = (g) => (g.bump && rng() < g.bump.weight ? randNormal(g.bump.mean, g.bump.sd) : randNormal(g.mean, g.sd));
+
 const series = groups.map((g, i) => {
-  const values = Array.from({ length: g.n }, () => randNormal(g.mean, g.sd)).filter(
+  const values = Array.from({ length: g.n }, () => sampleValue(g)).filter(
     (v) => v > binMin && v < binMax,
   );
   const bins = bin(values);
@@ -88,7 +102,11 @@ const line = d3
   .curve(d3.curveLinear);
 
 for (const s of series) {
-  g.append("path").datum(s.points).attr("d", area).attr("fill", s.color).attr("fill-opacity", 0.12);
+  g.append("path")
+    .datum(s.points)
+    .attr("d", area)
+    .attr("fill", s.color)
+    .attr("fill-opacity", s.focal ? 0.2 : 0.12);
 }
 for (const s of series) {
   g.append("path")
@@ -96,7 +114,7 @@ for (const s of series) {
     .attr("d", line)
     .attr("fill", "none")
     .attr("stroke", s.color)
-    .attr("stroke-width", 3.5)
+    .attr("stroke-width", s.focal ? 4.5 : 3.5)
     .attr("stroke-dasharray", s.dash)
     .attr("stroke-linejoin", "round");
   g.selectAll(`.marker-${s.name.replace(/\s+/g, "")}`)
@@ -104,10 +122,42 @@ for (const s of series) {
     .join("circle")
     .attr("cx", (d) => x(d.x))
     .attr("cy", (d) => y(d.y))
-    .attr("r", 4.5)
+    .attr("r", 5.5)
     .attr("fill", s.color)
     .attr("stroke", t.pageBg)
-    .attr("stroke-width", 1.2);
+    .attr("stroke-width", 1.3);
+}
+
+// --- Insight callout on the High Load tail bump (d3.greatest, d3-array) ------------
+// A distinctive, non-generic use of d3 beyond bin/area/line: locate the
+// secondary-bump peak precisely instead of hard-coding its screen position.
+const highLoad = series.find((s) => s.name === "High Load");
+const tailPeak = d3.greatest(
+  highLoad.midpoints.filter((d) => d.x > 700 && d.y > 0),
+  (d) => d.y,
+);
+if (tailPeak) {
+  const px = x(tailPeak.x);
+  const py = y(tailPeak.y);
+  const lx = px + 18;
+  const ly = py - 68;
+  g.append("line")
+    .attr("x1", px)
+    .attr("y1", py - 8)
+    .attr("x2", lx + 4)
+    .attr("y2", ly + 14)
+    .attr("stroke", t.inkSoft)
+    .attr("stroke-width", 1);
+  g.append("text")
+    .attr("x", lx)
+    .attr("y", ly)
+    .attr("fill", t.inkSoft)
+    .style("font-size", "13.5px")
+    .text("High Load: timeout-prone tail")
+    .append("tspan")
+    .attr("x", lx)
+    .attr("dy", "1.3em")
+    .text("stretches response times far past the norm");
 }
 
 // --- Axes -----------------------------------------------------------------------
@@ -170,5 +220,6 @@ svg
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "22px")
-  .style("font-weight", "600")
+  .style("font-weight", "700")
+  .style("letter-spacing", "0.4px")
   .text("frequency-polygon-basic · javascript · d3 · anyplot.ai");
