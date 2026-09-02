@@ -1029,12 +1029,18 @@ gcloud builds submit --config=app/cloudbuild.yaml --project=YOUR_PROJECT_ID
 Both cloudbuild files deploy through a **candidate revision**: `gcloud run deploy
 --no-traffic --tag=candidate --revision-suffix=b$BUILD_ID`, a smoke step against the
 candidate's tag URL, then `gcloud run services update-traffic --to-revisions=…=100`. A
-revision that fails its smoke therefore never serves a request, and `:latest` is pushed
-only after the promotion, so the tag always names an image that did serve. The app's
-smoke covers both halves of the crawler split (browser UA -> SPA shell, Googlebot ->
+revision that fails its smoke therefore never takes **live traffic** — the only requests
+it ever answers are the smoke's own, sent deliberately to its tag URL. The app's smoke
+covers both halves of the crawler split (browser UA -> SPA shell, Googlebot ->
 prerendered page via `@seo_proxy`) plus the `location =` bypasses for `robots.txt` and
 `llms.txt`; the API's covers `/health`, the public read paths and the fail-closed admin
 gate.
+
+The two chains differ in one step: `app/cloudbuild.yaml` pushes `:latest` only after the
+promotion, so the tag cannot name an image that was never rolled out, while
+`api/cloudbuild.yaml` still pushes it alongside the deploy. Neither pipeline reads
+`:latest` — both deploy `:$BUILD_ID` — so the tag is a convenience for humans, and with
+two overlapping builds the later push wins regardless.
 
 ## Debugging Tips
 
