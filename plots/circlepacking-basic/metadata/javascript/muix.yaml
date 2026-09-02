@@ -1,0 +1,273 @@
+library: muix
+language: javascript
+specification_id: circlepacking-basic
+created: '2026-09-02T15:58:48Z'
+updated: '2026-09-02T16:15:19Z'
+generated_by: claude-sonnet
+workflow_run: 33650517579
+issue: 2498
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/muix/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Truncation weakness from attempt 1 is fully fixed: wrapLabel() balances long
+    leaf names onto two lines via MUI X''s own ChartsText primitive, so every leaf
+    circle now shows its full label (''Corporate Bonds'', ''Government Bonds'', ''Int''l
+    Developed'', ''Treasury Bills'', etc.) instead of ellipsis-truncating mid-word'
+  - 'Correct Imprint palette usage: first branch #009E73, remaining branches in canonical
+    order, identical data colors between light/dark renders, theme-correct chrome
+    (background, ink, grid) in both'
+  - Genuinely custom circle-packing layout (seeded force simulation, seed=42) since
+    the community MUI X package has no built-in packing layout -- real engineering,
+    fully deterministic and reproducible
+  - Luminance-based text color switching keeps every leaf label high-contrast regardless
+    of the branch's fill tint or the page theme
+  - Clean, correctly-sized square canvas with no overlap, no clipping, and correct
+    use of ChartContainer/useDrawingArea/ChartsText per the harness contract (skipAnimation,
+    ANYPLOT_SIZE sizing)
+  weaknesses:
+  - 'The file header is duplicated/corrupted: lines 1-10 contain two overlapping ''//
+    anyplot.ai'' comment blocks (one with ''Library: muix 7.29.1 | JavaScript 22.23.2''
+    and ''Quality: 87/100'', another with ''Library: MUI X Charts | React | Node 22''
+    and ''Quality: pending'') -- collapse this into a single clean header block.'
+  - MUI X is still used mostly as an SVG canvas (ChartContainer + useDrawingArea +
+    ChartsText) with series=[] -- no actual MUI X chart component (e.g. PieChart,
+    ScatterChart) or MUI X-specific tooltip/legend primitive is exercised, so Library
+    Mastery stays capped; this may be an inherent limit of circle-packing on the community
+    package rather than something fixable.
+  - Dataset still sits at the floor of the spec's size range (20 nodes / 3 levels),
+    unchanged from attempt 1 -- a fourth hierarchy level or more leaf nodes per branch
+    would better demonstrate the plot type's ability to show deep nesting.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white cream matching #FAF8F1, not pure white.
+      Chrome: Title "circlepacking-basic · javascript · muix · anyplot.ai" in bold dark ink, fully legible. Subtitle "Investment portfolio by asset class and holding · circle area proportional to market value ($K)" in softer gray ink, legible. Legend row (5 color-dot + label pairs: Equities, Fixed Income, Real Estate, Alternatives, Cash & Equivalents) fully legible dark-on-cream. Root circle outlined in a subtle light-gray stroke.
+      Data: Branch circles use light-tinted fills with a 2px colored stroke matching their legend swatch (green, lavender, blue, ochre, red -- canonical Imprint order, first branch #009E73). Leaf circles are white-mixed tints of their branch color scaled by relative value, each labeled in bold dark or white text chosen by relative luminance. Every leaf now shows its FULL label on one or two wrapped lines (e.g. "Direct Property", "Corporate Bonds", "Government Bonds", "Int'l Developed", "Treasury Bills", "Money Market", "Emerging Markets", "Municipal Bonds") -- no ellipsis truncation anywhere, fixing the attempt-1 weakness.
+      Legibility verdict: PASS (all title/subtitle/legend/leaf text readable against the light background; no light-on-light failures)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17, not pure black.
+      Chrome: Title and subtitle rendered in light/off-white ink, fully legible against the dark background. Legend text is light-colored and legible. Root circle stroke rendered in light gray, visible against the dark background.
+      Data: Branch and leaf circle colors are visually identical to the light render (green, lavender, blue, ochre, red branches; same value-scaled tints and same wrapped full-text labels) -- only the chrome (background, title/subtitle/legend text, root stroke) flipped to light tones as expected. No dark-on-dark failures: leaf/branch labels stay legible because the text-color logic is luminance-based on the fill color itself, independent of the page theme.
+      Legibility verdict: PASS (all title/subtitle/legend/leaf text readable against the dark background; no dark-on-dark failures)
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'Attempt-1 mid-word truncation is fully resolved: wrapLabel() balances
+          long names onto two lines via ChartsText''s native line-splitting. Every
+          leaf label (including ''Corporate Bonds'' $180K, ''Government Bonds'' $260K,
+          ''Int''l Developed'' $210K) now renders in full, in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or shapes in either render; two-line wrapped
+          labels stay within their circles with sensible name/value vertical stacking.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Circle sizes cleanly scale with value; force-simulation packing avoids
+          overlap while keeping siblings tightly grouped.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance-based text color switching (dark ink on light tints, cream
+          on saturated fills) keeps every label high-contrast; palette itself is CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Root circle fills the square canvas with balanced margins; legend
+          sits directly above the packing area; no overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Subtitle explicitly states the value unit ($K) and the size-encoding
+          rule.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First branch is #009E73, remaining branches follow canonical Imprint
+          order; backgrounds and chrome are theme-correct in both renders; data colors
+          identical across themes.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful value-scaled tinting per branch, hand-rolled packing geometry,
+          luminance-adaptive text -- clearly above a configured default, though legend
+          styling stays simple.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean whitespace, subtle root/branch strokes, no grid clutter; the
+          truncated-label rough edge from attempt 1 is gone now that every label wraps
+          cleanly.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color groups by asset class and tint intensity within a class both
+          encode meaningful structure (hue = category, shade = relative size).
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: True nested circle packing (root -> branch -> leaf), matching the
+          spec's plot type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Color by category, labels on larger circles with hover-title tooltips
+          on smaller ones, root circle with padding around all children.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: id/parent/value/label fields all correctly consumed; value aggregates
+          bottom-up for branch/root sizing.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          branch names shown in the chart.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Still 20 nodes across 3 levels -- the floor of the spec's 20-200/2-4
+          range, unchanged from attempt 1; a deeper or larger dataset would better
+          showcase the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Investment portfolio composition is realistic, comprehensible, and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Asset-class dollar values and relative proportions are plausible
+          for a diversified portfolio.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Necessarily uses several helper functions since MUI X has no native
+          packing layout -- justified. Also has a duplicated/malformed file header
+          (two overlapping '// anyplot.ai' comment blocks) that should be cleaned
+          up to a single block.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Custom seeded LCG (seed=42) makes the packing simulation fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only imports ChartContainer, useDrawingArea, and ChartsText from
+          @mui/x-charts, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; geometry code is appropriately
+          complex for a chart type the library doesn't natively support.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Default-exports the component, sizes to window.ANYPLOT_SIZE, sets
+          skipAnimation.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ChartContainer + useDrawingArea + ChartsText (three genuine
+          MUI X primitives) for layout and text rendering, but still no actual MUI
+          X chart component (series=[]).
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: ChartsText's native '\n' line-splitting is used deliberately for
+          balanced two-line label wrapping, and useDrawingArea ties the custom geometry
+          into MUI X's own DrawingProvider margin system -- distinctive but not chart-type-specific
+          since packing is entirely hand-rolled.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting

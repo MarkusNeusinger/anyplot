@@ -1,13 +1,16 @@
 name: "Watchdog: Stuck Jobs"
 run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manual)' || '(cron)' }}"
 
-# Periodic safety net for the impl pipeline. Catches four failure modes
+# Periodic safety net for the impl pipeline. Catches the failure modes
 # the regular workflows miss:
 #   1. PRs labeled `ai-review-failed` without `ai-review-rescued`
 #      (impl-review-retry.yml normally handles these; watchdog covers
 #      the case where that listener missed the labeled event).
 #   2. PRs with `ai-attempt-N` + `quality:*` but no decision label
 #      (review handed off to repair, repair crashed, nothing else fired).
+#   2b. PRs with `ai-rejected` + `ai-attempt-N`: the review rejected and
+#      dispatched a repair that then crashed (its own crash-retry
+#      exhausted). Neither 2 nor 4 matched this state before 2026-09-02.
 #   3. spec-ready issues with `generate:<lib>` or `impl:<lib>:failed` and
 #      no open PR for that (spec, lib) pair after the staleness window.
 #   4. daily-regen's cron silently starved by GitHub's scheduler (no run
@@ -17,8 +20,11 @@ run-name: "Watchdog: scan ${{ github.event_name == 'workflow_dispatch' && '(manu
 #   - `ai-review-rescued`            (review failures)
 #   - `watchdog:repair-rescued-<N>`  (repair failures, one per attempt#)
 #   - `watchdog:retried-<lib>`       (per-library generation failures)
-# When a marker is already present, the watchdog skips and emits a
-# warning so a human can pick the case up.
+# A marker is set only after the rescue dispatch succeeded (and, for
+# generation retries, after the run is visible), so a lost dispatch is
+# retried on the next scan instead of being recorded as done. When a
+# marker is already present, the watchdog skips and emits a warning so
+# a human can pick the case up.
 
 on:
   schedule:
@@ -64,14 +70,53 @@ jobs:
           STALE_SEC=$(( STALE_HOURS * 3600 ))
           NOW=$(date -u +%s)
 
+          # Reports the outcome AFTER the attempt and returns non-zero on
+          # failure instead of aborting the scan: the previous form printed
+          # "→ dispatching" first and then let one failed `gh workflow run`
+          # kill the whole run under `set -e`, so every PR after it went
+          # unscanned while the log claimed a rescue that never happened.
           dispatch() {
             local label="$1"; shift
             if [[ "$DRY_RUN" == "true" ]]; then
               echo "::notice::[dry-run] $label → gh workflow run $*"
-            else
-              echo "::notice::$label → dispatching"
-              gh workflow run "$@"
+              return 0
             fi
+            if gh workflow run "$@"; then
+              echo "::notice::$label → dispatched"
+            else
+              echo "::warning::$label → dispatch FAILED (gh workflow run $*)"
+              return 1
+            fi
+          }
+
+          # Re-dispatch one (spec, library) pair straight to impl-generate.yml,
+          # NOT via bulk-generate.yml: that workflow serialises on one global
+          # concurrency group, and GitHub keeps at most one pending run per
+          # group — each newer dispatch cancels the older pending one. Nine
+          # rescues fired 5 s apart on 2026-09-02 produced two runs (the first
+          # and the last) and seven silent `cancelled`s, while every pair had
+          # already been labelled `watchdog:retried-<lib>` and so dropped out
+          # of all future scans. impl-generate's group is per pair.
+          # Returns 0 only once the new run is visible in the run list, so the
+          # caller marks exactly the pairs that really got their retry.
+          dispatch_generate() {
+            local label="$1" spec="$2" lib="$3" issue="$4"
+            local t0 n i
+            t0=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            dispatch "$label" impl-generate.yml \
+              -f specification_id="$spec" -f library="$lib" -f issue_number="$issue" || return 1
+            [[ "$DRY_RUN" == "true" ]] && return 0
+            for i in 1 2 3 4 5 6; do
+              sleep 10
+              n=$(gh run list --workflow=impl-generate.yml --limit 30 --json displayTitle,createdAt \
+                --jq "[.[] | select(.displayTitle == \"Generate: $lib for $spec\" and .createdAt >= \"$t0\")] | length" \
+                2>/dev/null || echo 0)
+              if (( n > 0 )); then
+                return 0
+              fi
+            done
+            echo "::warning::$label → dispatched but no run appeared within 60 s; pair left unmarked for the next scan"
+            return 1
           }
 
           ensure_label() {
@@ -116,10 +161,10 @@ jobs:
                 echo "::warning::PR #$num: ai-review-failed persists after rescue — needs manual attention"
               else
                 ensure_label "ai-review-rescued" "5319e7" "Review re-dispatched once after ai-review-failed"
-                if [[ "$DRY_RUN" != "true" ]]; then
+                if dispatch "PR #$num: review (failed)" impl-review.yml -f pr_number="$num" \
+                   && [[ "$DRY_RUN" != "true" ]]; then
                   gh pr edit "$num" --add-label "ai-review-rescued" --remove-label "ai-review-failed" 2>/dev/null || true
                 fi
-                dispatch "PR #$num: review (failed)" impl-review.yml -f pr_number="$num"
               fi
               continue
             fi
@@ -138,14 +183,44 @@ jobs:
                 continue
               fi
               ensure_label "$marker" "5319e7" "Watchdog re-dispatched repair attempt $attempt"
-              if [[ "$DRY_RUN" != "true" ]]; then
+              if dispatch "PR #$num: repair (stalled, attempt=$attempt)" impl-repair.yml \
+                   -f pr_number="$num" \
+                   -f specification_id="$spec_id" \
+                   -f library="$library" \
+                   -f attempt="$attempt" \
+                 && [[ "$DRY_RUN" != "true" ]]; then
                 gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
               fi
-              dispatch "PR #$num: repair (stalled, attempt=$attempt)" impl-repair.yml \
-                -f pr_number="$num" \
-                -f specification_id="$spec_id" \
-                -f library="$library" \
-                -f attempt="$attempt"
+              continue
+            fi
+
+            # Case 2b: repair crashed after a rejection
+            #   has ai-rejected + ai-attempt-N, PR untouched for stale_hours.
+            #   impl-review set both labels and dispatched impl-repair, which
+            #   then died (its crash-retry exhausted, e.g. during the Claude
+            #   outage of 2026-09-02 03:15–03:45 UTC). Case 2 excludes
+            #   ai-rejected and Case 4 requires no attempt label, so this state
+            #   matched nothing and three PRs sat for hours until a human
+            #   re-dispatched the repair. Same marker as Case 2: one rescue per
+            #   attempt number.
+            if echo " $labels " | grep -q " ai-rejected " \
+               && echo " $labels " | grep -qE " ai-attempt-[0-9]+ " \
+               && (( age > STALE_SEC )); then
+              attempt=$(echo " $labels " | grep -oP "ai-attempt-\K[0-9]+" | sort -nr | head -1)
+              marker="watchdog:repair-rescued-$attempt"
+              if echo " $labels " | grep -q " $marker "; then
+                echo "::warning::PR #$num: crashed repair attempt $attempt already rescued — needs manual attention"
+                continue
+              fi
+              ensure_label "$marker" "5319e7" "Watchdog re-dispatched repair attempt $attempt"
+              if dispatch "PR #$num: repair (crashed after rejection, attempt=$attempt)" impl-repair.yml \
+                   -f pr_number="$num" \
+                   -f specification_id="$spec_id" \
+                   -f library="$library" \
+                   -f attempt="$attempt" \
+                 && [[ "$DRY_RUN" != "true" ]]; then
+                gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
+              fi
               continue
             fi
 
@@ -159,11 +234,11 @@ jobs:
                 continue
               fi
               ensure_label "$marker" "5319e7" "Watchdog re-dispatched impl-merge once"
-              if [[ "$DRY_RUN" != "true" ]]; then
+              if dispatch "PR #$num: merge (ai-approved stuck)" impl-merge.yml \
+                   -f pr_number="$num" \
+                 && [[ "$DRY_RUN" != "true" ]]; then
                 gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
               fi
-              dispatch "PR #$num: merge (ai-approved stuck)" impl-merge.yml \
-                -f pr_number="$num"
               continue
             fi
 
@@ -178,14 +253,14 @@ jobs:
                 continue
               fi
               ensure_label "$marker" "5319e7" "Watchdog re-dispatched repair attempt 1"
-              if [[ "$DRY_RUN" != "true" ]]; then
+              if dispatch "PR #$num: repair (initial, ai-rejected, no attempt label)" impl-repair.yml \
+                   -f pr_number="$num" \
+                   -f specification_id="$spec_id" \
+                   -f library="$library" \
+                   -f attempt="1" \
+                 && [[ "$DRY_RUN" != "true" ]]; then
                 gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
               fi
-              dispatch "PR #$num: repair (initial, ai-rejected, no attempt label)" impl-repair.yml \
-                -f pr_number="$num" \
-                -f specification_id="$spec_id" \
-                -f library="$library" \
-                -f attempt="1"
               continue
             fi
 
@@ -206,11 +281,11 @@ jobs:
                 continue
               fi
               ensure_label "$marker" "5319e7" "Watchdog bootstrapped initial review"
-              if [[ "$DRY_RUN" != "true" ]]; then
+              if dispatch "PR #$num: review (never started, no labels)" impl-review.yml \
+                   -f pr_number="$num" \
+                 && [[ "$DRY_RUN" != "true" ]]; then
                 gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
               fi
-              dispatch "PR #$num: review (never started, no labels)" impl-review.yml \
-                -f pr_number="$num"
               continue
             fi
           done < <(echo "$PRS_JSON" | jq -c '.[]')
@@ -255,13 +330,11 @@ jobs:
                     --json number --jq 'length')
                   if [[ "$open_pr" == "0" ]]; then
                     ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
-                    if [[ "$DRY_RUN" != "true" ]]; then
+                    if dispatch_generate "Issue #$num: generate (stuck pending) $lib" \
+                         "$spec_id" "$lib" "$num" \
+                       && [[ "$DRY_RUN" != "true" ]]; then
                       gh issue edit "$num" --add-label "$marker" 2>/dev/null || true
                     fi
-                    dispatch "Issue #$num: generate (stuck pending) $lib" \
-                      bulk-generate.yml \
-                      -f specification_id="$spec_id" \
-                      -f library="$lib"
                   fi
                   ;;
                 impl:*:failed)
@@ -284,13 +357,11 @@ jobs:
                     --json number --jq 'length')
                   if [[ "$open_pr" == "0" ]]; then
                     ensure_label "$marker" "5319e7" "Watchdog retried $lib once"
-                    if [[ "$DRY_RUN" != "true" ]]; then
+                    if dispatch_generate "Issue #$num: generate (failed) $lib" \
+                         "$spec_id" "$lib" "$num" \
+                       && [[ "$DRY_RUN" != "true" ]]; then
                       gh issue edit "$num" --add-label "$marker" 2>/dev/null || true
                     fi
-                    dispatch "Issue #$num: generate (failed) $lib" \
-                      bulk-generate.yml \
-                      -f specification_id="$spec_id" \
-                      -f library="$lib"
                   fi
                   ;;
               esac
@@ -341,7 +412,7 @@ jobs:
               gap_hm=$(printf '%dh%02dm' $(( gap / 3600 )) $(( (gap % 3600) / 60 )))
               if (( gap > LIVENESS_HOURS * 3600 )); then
                 echo "::warning::daily-regen: no new run on main for ${gap_hm} (> ${LIVENESS_HOURS}h) — schedule starved, re-dispatching"
-                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml
+                dispatch "daily-regen: cron starved (${gap_hm} silent)" daily-regen.yml || true
               else
                 echo "daily-regen liveness: newest run on main created ${gap_hm} ago — healthy"
               fi
