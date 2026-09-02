@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: circlepacking-basic
 created: '2026-09-02T15:36:31Z'
-updated: '2026-09-02T15:41:00Z'
+updated: '2026-09-02T16:01:44Z'
 generated_by: claude-sonnet
 workflow_run: 33648472192
 issue: 2498
@@ -12,51 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Custom force-relaxation packing algorithm correctly implements the 3-level hierarchy
+  - Force-relaxation packing algorithm correctly implements the 3-level hierarchy
     (root ⊃ category ⊃ leaf) with area-accurate radii (r = sqrt(value / pi)), matching
     the spec's area-encoding requirement precisely.
-  - 'Imprint palette is applied in canonical order with the first categorical series
+  - 'Repair directly resolved both attempt-1 weaknesses: the top-2 largest leaf circles
+    are now labeled, and a bold focal ring highlights the single largest file (logo.png)
+    across the whole hierarchy, giving the chart a clear focal point.'
+  - 'Imprint palette applied in canonical order with the first categorical series
     (Source Code) rendered in #009E73; data colors are pixel-identical between plot-light.png
-    and plot-dark.png.'
-  - Theme-adaptive chrome is fully threaded through (PAGE_BG/ELEVATED_BG/INK/INK_SOFT),
-    and both renders pass the light/dark readability checks with no dark-on-dark or
-    light-on-light text.
-  - Dynamic label sizing and angle-aware anchoring (hjust/vjust derived from the outward
-    direction vector) keep every category label clear of its circle and of neighboring
-    labels regardless of approach angle.
+    and plot-dark.png, and chrome is fully theme-adaptive with no dark-on-dark or
+    light-on-light failures.'
+  - Angle-aware label anchoring (hjust/vjust derived from the outward direction vector)
+    keeps every category label clear of its circle and of neighboring labels regardless
+    of approach angle.
   - Data scenario (a repository directory tree with lognormal file-size distributions
-    per category) is realistic, neutral, and produces genuine size variance/outliers
+    per category) is realistic, neutral, and produces genuine size variance and outliers
     rather than uniform circles.
   - Title format, set.seed(42) reproducibility, and ragg::agg_png output at the correct
-    square 2400×2400 canvas are all correct.
+    square 2400x2400 canvas are all correct.
   weaknesses:
-  - Only the 6 category-level circles are labeled; the spec's 'Display labels for
-    larger circles' is not extended to the largest individual leaf circles (e.g. the
-    largest file within Assets or Source Code is visually prominent but unlabeled)
-    — label the top 1-2 leaf circles per cluster, or globally, to close this gap.
-  - 'Design Excellence is good but not yet publication-tier: consider a stronger focal
-    point (e.g. subtly emphasizing or annotating the single largest file across the
-    whole hierarchy) to push Data Storytelling further.'
-  - Two helper functions (pack_children, circle_points) deviate from the strict KISS
-    'no functions' guidance — justified here by the packing algorithm's genuine complexity,
-    but keep an eye on further creeping abstraction in future revisions.
-  - The distinctive technique (force-relaxation packing) is general-purpose math rather
-    than an R/ggplot2-specific capability; consider whether a package-idiomatic circle-drawing
-    helper could reinforce Library Mastery without adding heavy dependencies.
+  - pack_children and circle_points helper functions still deviate from the strict
+    KISS 'no functions' guidance -- justified by the packing algorithm's genuine complexity
+    and reuse across two hierarchy levels, but worth watching for further creeping
+    abstraction.
+  - The distinctive technique (force-relaxation packing) remains general-purpose math
+    rather than an R/ggplot2-specific capability; a package-idiomatic circle-drawing
+    helper could reinforce Library Mastery in a future revision.
+  - A handful of the smallest leaf circles (e.g. in Config and Documentation) sit
+    near the lower visibility threshold -- fine at full resolution but worth a minor
+    size floor if scaled further down for mobile.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matching the required light-theme page background. The root cluster sits on a very subtly lighter "elevated" circle (#FFFDF6), giving faint depth without contradicting the palette rule.
-      Chrome: Title "circlepacking-basic · r · ggplot2 · anyplot.ai" is bold black text, fully readable, centered at top. Six category labels (Assets, Config, Scripts, Tests, Source Code, Documentation) are bold dark-ink text placed outside their respective circles with no overlap onto data or onto each other.
-      Data: Six category clusters, each colored per the Imprint palette in canonical order (Source Code = #009E73 green, Tests = #C475FD lavender, Documentation = #4467A3 blue, Assets = #BD8233 ochre, Config = #AE3030 red, Scripts = #2ABCCD cyan). Leaf (file) circles within each cluster vary visibly in size, showing area-proportional encoding and genuine size outliers (e.g. one large circle per cluster surrounded by several smaller ones). Category circle outlines are thin, subtle grey-ink strokes; the overall root boundary is a very faint background shape enclosing all clusters with padding.
+      Background: Warm off-white (#FAF8F1), matching the required light-theme page background. The root cluster sits on a very subtly lighter "elevated" circle (#FFFDF6) that encompasses all six category clusters with clear padding, giving faint depth without contradicting the palette rule.
+      Chrome: Title "circlepacking-basic · r · ggplot2 · anyplot.ai" is bold black text, fully readable, centered at top, well clear of the canvas edges. Six category labels (Assets, Config, Scripts, Tests, Source Code, Documentation) are bold dark-ink text placed outside their respective circles with no overlap onto data or onto each other.
+      Data: Six category clusters, each colored per the Imprint palette in canonical order (Source Code = #009E73 green, Tests = #C475FD lavender, Documentation = #4467A3 blue, Assets = #BD8233 ochre, Config = #AE3030 red, Scripts = #2ABCCD cyan). Leaf (file) circles within each cluster vary visibly in size, showing area-proportional encoding and genuine size outliers. The two largest leaf circles overall ("logo.png" in Assets, "utils.R" in Source Code) are now individually labeled with bold, contrast-matched text, and the single largest file across the whole hierarchy ("logo.png") is emphasized with a bold dark focal ring -- resolving the attempt-1 note that the storytelling lacked an explicit focal point.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), matching the required dark-theme page background, with the root cluster on a subtly lighter elevated shade (#242420).
-      Chrome: Title and all six category labels are rendered in light off-white text, clearly legible against the dark background — no dark-on-dark failures observed. Category circle outlines switch to a light grey stroke, remaining visible without dominating.
-      Data: Colors are confirmed identical to the light render (same six Imprint palette hues) — only the chrome (background, text, outline colors) flips between themes, exactly as required.
+      Chrome: Title and all six category labels are rendered in light off-white text, clearly legible against the dark background -- no dark-on-dark failures observed. Category circle outlines switch to a light grey stroke, remaining visible without dominating. The focal ring around "logo.png" switches to a light-ink stroke, staying visible against both the leaf fill and the elevated background.
+      Data: Colors are confirmed identical to the light render (same six Imprint palette hues) -- only the chrome (background, text, outline colors) flips between themes, exactly as required. Leaf label text colors (dark ink on ochre/red/blue fills, light ink on green/lavender/cyan fills) remain legible and unchanged from the light render since they are data-tied, not theme-tied.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -68,15 +66,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and category labels use explicit, dynamically computed font
-          sizes; all readable in both themes at full and scaled-down size.
+        comment: Title, category labels, and the two new leaf labels use explicit,
+          size-scaled fonts; all readable in both themes at full and scaled-down size.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Angle-aware label anchoring (hjust/vjust) keeps every label clear
-          of circles and of other labels.
+        comment: Angle-aware label anchoring keeps every label clear of circles and
+          of other labels; new leaf labels and focal ring introduce no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -90,7 +88,7 @@ review:
         max: 2
         passed: true
         comment: Six distinct Imprint hues with good luminance separation; no red-green-only
-          encoding.
+          encoding; leaf label ink is chosen per-fill luma for contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -113,7 +111,7 @@ review:
         comment: 'Canonical Imprint order, first series #009E73, identical data colors
           across themes, theme-correct chrome in both renders.'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -121,8 +119,9 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Custom packing algorithm, elevated-background depth cue, and dynamic
-          label geometry go well beyond a configured default.
+        comment: Custom packing algorithm, elevated-background depth cue, dynamic
+          label geometry, and the new focal-ring device go well beyond a configured
+          default.
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -132,13 +131,15 @@ review:
           whitespace between clusters.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Size and color create clear visual hierarchy across categories and
-          files; no explicit focal-point annotation on the single largest item.
+        comment: The new focal ring around the single largest file, plus labels on
+          the two biggest leaves, now gives the chart an explicit focal point on top
+          of the existing size/color hierarchy -- directly resolving the attempt-1
+          gap.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,12 +151,12 @@ review:
           nesting.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
         comment: Efficient non-overlapping packing, color-by-category, area scaling,
-          and padded root containment all present; individual large leaf circles are
-          not labeled.
+          padded root containment, and now labels on the largest leaf circles are
+          all present -- closes the attempt-1 gap.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -205,7 +206,7 @@ review:
         max: 3
         passed: true
         comment: Two helper functions (pack_children, circle_points) deviate from
-          the strict no-functions guideline, but are justified by the packing algorithm's
+          the strict no-functions guideline, justified by the packing algorithm's
           reuse across two hierarchy levels.
       - id: CQ-02
         name: Reproducibility
@@ -250,8 +251,8 @@ review:
         max: 5
         passed: true
         comment: dplyr::group_modify-driven per-group packing is a tidy-eval-idiomatic
-          pattern, though the core packing math itself is library-agnostic.
-  verdict: REJECTED
+          pattern, though the core packing math itself remains library-agnostic.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
