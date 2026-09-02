@@ -95,7 +95,7 @@ new Chart(canvas, {
         display: true,
         text: "bar-stacked · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22 },
+        font: { size: 27 },
       },
       legend: {
         position: "top",
