@@ -6,6 +6,9 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data: organizational chart, 4 levels (CEO -> VP -> Director -> Manager) ---
+// Branching is intentionally irregular (3 directors under VP Engineering vs. 2
+// elsewhere, 3 managers under Dir. Frontend vs. 1-2 elsewhere) to show the span-
+// of-control variation a hierarchical layout is meant to expose.
 const org = {
   id: "ceo",
   name: "CEO",
@@ -20,15 +23,21 @@ const org = {
           children: [
             { id: "mgr-a", name: "A. Kim" },
             { id: "mgr-b", name: "B. Diaz" },
+            { id: "mgr-c", name: "C. Chen" },
           ],
         },
         {
           id: "dir-be",
           name: "Dir. Backend",
           children: [
-            { id: "mgr-c", name: "C. Chen" },
             { id: "mgr-d", name: "D. Patel" },
+            { id: "mgr-e", name: "E. Novak" },
           ],
+        },
+        {
+          id: "dir-plat",
+          name: "Dir. Platform",
+          children: [{ id: "mgr-f", name: "F. Silva" }],
         },
       ],
     },
@@ -40,14 +49,14 @@ const org = {
           id: "dir-ent",
           name: "Dir. Enterprise",
           children: [
-            { id: "mgr-e", name: "E. Novak" },
-            { id: "mgr-f", name: "F. Silva" },
+            { id: "mgr-g", name: "G. Osei" },
+            { id: "mgr-h", name: "H. Reyes" },
           ],
         },
         {
           id: "dir-smb",
           name: "Dir. SMB",
-          children: [{ id: "mgr-g", name: "G. Osei" }],
+          children: [{ id: "mgr-i", name: "I. Haddad" }],
         },
       ],
     },
@@ -58,12 +67,12 @@ const org = {
         {
           id: "dir-brand",
           name: "Dir. Brand",
-          children: [{ id: "mgr-h", name: "H. Reyes" }],
+          children: [{ id: "mgr-j", name: "J. Costa" }],
         },
         {
           id: "dir-growth",
           name: "Dir. Growth",
-          children: [{ id: "mgr-i", name: "I. Haddad" }],
+          children: [{ id: "mgr-k", name: "K. Ibrahim" }],
         },
       ],
     },
@@ -74,12 +83,12 @@ const org = {
         {
           id: "dir-acct",
           name: "Dir. Accounting",
-          children: [{ id: "mgr-j", name: "J. Costa" }],
+          children: [{ id: "mgr-l", name: "L. Fischer" }],
         },
         {
           id: "dir-treas",
           name: "Dir. Treasury",
-          children: [{ id: "mgr-k", name: "K. Ibrahim" }],
+          children: [{ id: "mgr-m", name: "M. Nakamura" }],
         },
       ],
     },
@@ -114,6 +123,23 @@ layout(org, 0);
 const nodeById = {};
 nodesByLevel.forEach((level) => level.forEach((n) => { nodeById[n.id] = n; }));
 
+// Data-storytelling emphasis: find the Director with the most direct Manager
+// reports (the span-of-control outlier) and highlight its node + connectors.
+const directorSpan = {};
+edges.forEach(([parentId, childId]) => {
+  if (nodeById[parentId].y === 2 && nodeById[childId].y === 3) {
+    directorSpan[parentId] = (directorSpan[parentId] || 0) + 1;
+  }
+});
+const largestTeamId = Object.keys(directorSpan).reduce(
+  (best, id) => (directorSpan[id] > (directorSpan[best] || 0) ? id : best),
+  null,
+);
+
+// Marker radius shrinks from root to leaves, reinforcing the depth encoding
+// that color and shape already provide.
+const LEVEL_RADII = [12, 10, 9, 8];
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -136,9 +162,16 @@ Highcharts.chart("container", {
           const y1 = chart.yAxis[0].toPixels(p.y);
           const x2 = chart.xAxis[0].toPixels(c.x);
           const y2 = chart.yAxis[0].toPixels(c.y);
+          // The largest-team director's connectors render bolder, flagging the
+          // span-of-control outlier rather than a purely structural read.
+          const highlighted = parentId === largestTeamId;
           chart.renderer
             .path(["M", x1, y1, "L", x2, y2])
-            .attr({ stroke: t.inkSoft, "stroke-width": 1.5, opacity: 0.45 })
+            .attr({
+              stroke: t.inkSoft,
+              "stroke-width": highlighted ? 2.5 : 1.5,
+              opacity: highlighted ? 0.7 : 0.45,
+            })
             .add(chart.edgeGroup);
         });
       },
@@ -160,7 +193,7 @@ Highcharts.chart("container", {
   plotOptions: {
     series: { animation: false },
     scatter: {
-      marker: { radius: 9, lineColor: t.pageBg, lineWidth: 1.5 },
+      marker: { lineColor: t.pageBg, lineWidth: 1.5 },
       dataLabels: {
         enabled: true,
         format: "{point.name}",
@@ -175,13 +208,20 @@ Highcharts.chart("container", {
   series: LEVEL_NAMES.map((name, level) => ({
     name,
     color: t.palette[level],
+    marker: { radius: LEVEL_RADII[level] },
+    // The Manager row is the most crowded level and the one that blurs first at
+    // mobile thumbnail scale, so its labels get a larger, semibold font on top
+    // of the vertical stagger that already prevents horizontal collisions.
+    dataLabels:
+      level === 3 ? { style: { fontSize: "15px", fontWeight: "600" } } : undefined,
     data: nodesByLevel[level].map((n, i) => ({
       x: n.x,
       y: n.y,
       name: n.name,
-      // The Manager row is the most crowded level — stagger label offsets so
-      // adjacent short names don't collide horizontally.
-      dataLabels: level === 3 ? { y: i % 2 === 0 ? 16 : 32 } : undefined,
+      dataLabels: level === 3 ? { y: i % 2 === 0 ? 16 : 34 } : undefined,
+      // Call out the span-of-control outlier with a slightly larger, bolder
+      // marker to match the bolder connector lines drawn in chart.events.render.
+      marker: n.id === largestTeamId ? { radius: LEVEL_RADII[level] + 3, lineWidth: 2.5 } : undefined,
     })),
   })),
 });
