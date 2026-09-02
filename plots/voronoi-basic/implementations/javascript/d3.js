@@ -54,20 +54,33 @@ for (let i = 0; i < N_STORES; i++) {
   colorIndex[i] = c % t.palette.length;
 }
 
+// Focal store — the one with the largest service area — gives the viewer a
+// concrete entry point into the tessellation instead of uniform visual weight.
+const cellAreas = stores.map((_, i) => Math.abs(d3.polygonArea(voronoi.cellPolygon(i))));
+const focalIndex = d3.greatestIndex(cellAreas);
+
 // --- SVG mount ----------------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
 // --- Voronoi cells --------------------------------------------------------------
+// The focal cell (largest service area) gets a touch more fill opacity and a
+// heavier ink-toned border so it reads as the entry point into the tessellation.
 g.append("g")
   .selectAll("path")
-  .data(stores.map((d, i) => ({ path: voronoi.renderCell(i), color: t.palette[colorIndex[i]] })))
+  .data(
+    stores.map((d, i) => ({
+      path: voronoi.renderCell(i),
+      color: t.palette[colorIndex[i]],
+      focal: i === focalIndex,
+    }))
+  )
   .join("path")
   .attr("d", (d) => d.path)
   .attr("fill", (d) => d.color)
-  .attr("fill-opacity", 0.55)
-  .attr("stroke", t.pageBg)
-  .attr("stroke-width", 3);
+  .attr("fill-opacity", (d) => (d.focal ? 0.75 : 0.55))
+  .attr("stroke", (d) => (d.focal ? t.ink : t.pageBg))
+  .attr("stroke-width", (d) => (d.focal ? 4 : 3));
 
 // --- Bounding box outline -------------------------------------------------------
 g.append("rect")
@@ -79,16 +92,18 @@ g.append("rect")
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 1.5);
 
-// --- Axes -------------------------------------------------------------------
+// --- Axes ---------------------------------------------------------------------
+// Restrained treatment (short ticks, thin low-contrast domain line) so the
+// tessellation's cell colors stay the primary content, not the chrome.
 const xAxis = g
   .append("g")
   .attr("transform", `translate(0,${ih})`)
-  .call(d3.axisBottom(xScale).ticks(8));
-const yAxis = g.append("g").call(d3.axisLeft(yScale).ticks(8));
+  .call(d3.axisBottom(xScale).ticks(8).tickSize(4).tickPadding(8));
+const yAxis = g.append("g").call(d3.axisLeft(yScale).ticks(8).tickSize(4).tickPadding(8));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
-  ax.selectAll("line").attr("stroke", t.grid);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.selectAll("line").attr("stroke", t.grid).attr("stroke-width", 1);
+  ax.select(".domain").attr("stroke", t.grid).attr("stroke-width", 1);
 }
 
 g.append("text")
@@ -109,16 +124,50 @@ g.append("text")
   .text("Distance North of City Center (km)");
 
 // --- Seed points — the store locations, marked prominently in brand green ---
+// The focal store (largest service area) gets a larger marker and an outer
+// ring so it doubles as the entry point the callout label points to.
 g.append("g")
   .selectAll("circle")
-  .data(pixelPoints)
+  .data(pixelPoints.map((d, i) => ({ d, focal: i === focalIndex })))
   .join("circle")
-  .attr("cx", (d) => d[0])
-  .attr("cy", (d) => d[1])
-  .attr("r", 9)
+  .attr("cx", (d) => d.d[0])
+  .attr("cy", (d) => d.d[1])
+  .attr("r", (d) => (d.focal ? 13 : 9))
   .attr("fill", t.palette[0])
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 2.5);
+
+g.append("circle")
+  .attr("cx", pixelPoints[focalIndex][0])
+  .attr("cy", pixelPoints[focalIndex][1])
+  .attr("r", 19)
+  .attr("fill", "none")
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+
+// --- Focal callout — leader line + label pointing at the largest service area,
+// anchored so it always points away from the canvas edges it's nearest to. ---
+const focalPx = pixelPoints[focalIndex];
+const dirX = focalPx[0] > iw / 2 ? -1 : 1;
+const dirY = focalPx[1] > ih / 2 ? -1 : 1;
+const calloutX = focalPx[0] + dirX * 60;
+const calloutY = focalPx[1] + dirY * 50;
+g.append("line")
+  .attr("x1", focalPx[0])
+  .attr("y1", focalPx[1])
+  .attr("x2", calloutX)
+  .attr("y2", calloutY)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+g.append("text")
+  .attr("x", calloutX + dirX * 6)
+  .attr("y", calloutY)
+  .attr("text-anchor", dirX > 0 ? "start" : "end")
+  .attr("dominant-baseline", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "17px")
+  .style("font-weight", "600")
+  .text("Largest service area");
 
 // --- Title --------------------------------------------------------------------
 const titleText = "Store Service Areas · voronoi-basic · javascript · d3 · anyplot.ai";
