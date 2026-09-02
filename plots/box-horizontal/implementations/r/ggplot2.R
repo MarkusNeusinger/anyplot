@@ -56,7 +56,7 @@ p <- ggplot(df, aes(x = salary_k, y = job_title)) +
     linewidth = 0.5, width = 0.6
   ) +
   stat_summary(
-    fun = mean, geom = "point",
+    fun = mean, geom = "point", orientation = "y",
     shape = 23, size = 3.2, stroke = 1.1,
     fill = PAGE_BG, color = INK
   ) +
@@ -80,7 +80,7 @@ p <- ggplot(df, aes(x = salary_k, y = job_title)) +
     axis.ticks        = element_blank(),
     plot.title        = element_text(color = INK, size = 12, margin = margin(b = 12)),
     plot.caption      = element_text(color = INK_SOFT, size = 7, margin = margin(t = 10)),
-    plot.margin       = margin(t = 16, r = 24, b = 12, l = 12)
+    plot.margin       = margin(t = 16, r = 24, b = 40, l = 12)
   )
 
 # --- Save -------------------------------------------------------------------
