@@ -1,7 +1,7 @@
 // anyplot.ai
 // renko-basic: Basic Renko Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 84/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 const UP_COLOR = t.palette[0]; // "#009E73" — bullish brick, ALWAYS Imprint position 1
