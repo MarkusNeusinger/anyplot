@@ -7,6 +7,7 @@ import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -73,7 +74,9 @@ const tickEvery = Math.ceil(bricks.length / 10);
 // useXScale/useYScale, the documented ChartContainer composition pattern for
 // chart types outside the community surface (same idiom as candlestick/OHLC).
 // Bullish bricks (price up) are brand green, bearish (price down) matte red —
-// the finance up/down semantic exception from the style guide.
+// the finance up/down semantic exception from the style guide. Each brick also
+// carries an ink-colored up/down triangle so direction reads from shape alone,
+// not just hue, for viewers who can't distinguish red from green.
 function Bricks() {
   const xScale = useXScale("x");
   const yScale = useYScale("y");
@@ -88,18 +91,28 @@ function Bricks() {
         const color = brick.direction === 1 ? t.palette[0] : t.palette[4];
         const yTop = yScale(brick.base + BRICK_SIZE);
         const yBottom = yScale(brick.base);
+        const brickHeight = yBottom - yTop;
+        const cy = (yTop + yBottom) / 2;
+        const markSize = Math.min(brickWidth, brickHeight) * 0.4;
+        const showMark = markSize >= 6;
+        const points =
+          brick.direction === 1
+            ? `${cx},${cy - markSize / 2} ${cx - markSize / 2},${cy + markSize / 2} ${cx + markSize / 2},${cy + markSize / 2}`
+            : `${cx},${cy + markSize / 2} ${cx - markSize / 2},${cy - markSize / 2} ${cx + markSize / 2},${cy - markSize / 2}`;
         return (
-          <rect
-            key={i}
-            x={cx - brickWidth / 2}
-            y={yTop}
-            width={brickWidth}
-            height={yBottom - yTop}
-            fill={color}
-            stroke={t.ink}
-            strokeOpacity={0.3}
-            strokeWidth={1}
-          />
+          <g key={i}>
+            <rect
+              x={cx - brickWidth / 2}
+              y={yTop}
+              width={brickWidth}
+              height={brickHeight}
+              fill={color}
+              stroke={t.ink}
+              strokeOpacity={0.3}
+              strokeWidth={1}
+            />
+            {showMark && <polygon points={points} fill={t.ink} fillOpacity={0.8} />}
+          </g>
         );
       })}
     </g>
@@ -186,6 +199,22 @@ export default function Chart() {
       >
         <ChartsGrid horizontal />
         <Bricks />
+        <ChartsReferenceLine
+          axisId="y"
+          y={yMax}
+          label={`Swing high $${yMax.toFixed(2)}`}
+          labelAlign="end"
+          lineStyle={{ stroke: t.amber, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+          labelStyle={{ fill: t.amber, fontSize: 12, fontWeight: 600 }}
+        />
+        <ChartsReferenceLine
+          axisId="y"
+          y={yMin}
+          label={`Swing low $${yMin.toFixed(2)}`}
+          labelAlign="end"
+          lineStyle={{ stroke: t.amber, strokeDasharray: "4 4", strokeWidth: 1.5 }}
+          labelStyle={{ fill: t.amber, fontSize: 12, fontWeight: 600 }}
+        />
         <ChartsXAxis axisId="x" />
         <ChartsYAxis axisId="y" slotProps={{ axisLabel: { x: -64 } }} />
       </ChartContainer>
