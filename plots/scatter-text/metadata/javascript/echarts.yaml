@@ -1,0 +1,247 @@
+library: echarts
+language: javascript
+specification_id: scatter-text
+created: '2026-09-02T06:08:08Z'
+updated: '2026-09-02T06:27:49Z'
+generated_by: claude-sonnet
+workflow_run: 33596975851
+issue: 3482
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - The Nairobi/Perth and Berlin/London label collisions flagged in attempt 1 are
+    resolved via targeted pixel offsets in LABEL_OFFSETS, and both label pairs now
+    read as clearly separate lines in both renders.
+  - Lima and Cairo are lifted off the y=0 gridline with a -22px offset, clearing the
+    axis line in both themes.
+  - 'Clever text-as-marker rendering: symbolSize:0 with per-label textBorderColor
+    matched to the page background keeps every city name legible over gridlines and
+    neighboring labels in both light and dark themes.'
+  - Accurate, realistic city climate dataset (e.g. Singapore 27.0C/2340mm, Riyadh
+    26.0C/100mm, Moscow 5.8C/700mm) closely matches real-world figures.
+  - Clean, idiomatic ECharts option built via REGIONS.map()/cities.map() to generate
+    one series per continent - concise and KISS-compliant.
+  - Correct Imprint palette in canonical order with identical data colors between
+    light and dark renders; theme-adaptive chrome (title, axis, tick, grid) is correctly
+    mapped in both themes.
+  weaknesses:
+  - Design Excellence is solid but not yet at publication level (DE-01 5/8) - the
+    plot reads as a well-executed default rather than a distinctively art-directed
+    chart; consider a subtler background rule (e.g. a light diagonal reference band
+    per climate zone) to push aesthetic sophistication further.
+  - Data storytelling relies on continent color-coding alone (DE-03 4/6) - an explicit
+    visual callout (e.g. a shaded 'tropical' quadrant or a annotated outlier note
+    for Singapore/Mumbai's extreme rainfall) would sharpen the insight further, though
+    this is optional polish, not a defect.
+  - Library Mastery is good but generic-adjacent (LM-02 4/5) - the symbolSize:0 +
+    textBorderColor label-only technique is ECharts-idiomatic but not unique to ECharts;
+    a distinctive ECharts-only feature (e.g. visualMap, graphic elements, or markArea
+    zones) would push this further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "scatter-text - javascript - echarts - anyplot.ai" in dark ink is clearly readable at top; a centered continent legend (Africa, Asia, Europe, Americas, Oceania) sits below it; axis titles "Average Temperature (C)" and "Average Annual Rainfall (mm)" plus gray tick labels are legible against the light background; grid lines are subtle warm-gray.
+      Data: 26 city names render as colored text with no separate markers (symbolSize:0), each colored by its continent's Imprint palette color (Africa = brand green #009E73) with a background-matched text outline for legibility over gridlines and near other labels. Nairobi/Perth and Berlin/London - the two pairs flagged as overlapping in attempt 1 - now sit on clearly separate lines with visible vertical/horizontal gaps. Lima and Cairo are lifted above the y=0 gridline rather than sitting on it.
+      Legibility verdict: PASS - all text readable against the light background, no light-on-light issues, no remaining label collisions.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Title, legend, and axis text all render in light ink and are clearly readable against the dark surface - no dark-on-dark failures; grid lines are subtle light-gray at low opacity.
+      Data: Data colors are identical to the light render (Africa confirmed #009E73, same hues for Asia/Europe/Americas/Oceania); only the chrome (background, text, grid) flips. The same text-outline technique now uses the dark background color, keeping labels crisp against the near-black surface. The same Nairobi/Perth, Berlin/London, and Lima/Cairo fixes hold identically in this render.
+      Legibility verdict: PASS - all text readable against the dark background, no dark-on-dark failures, brand green remains visible and identical to the light render.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, readable in both themes; title fits comfortably
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Nairobi/Perth and Berlin/London offsets resolved the prior overlaps;
+          no collisions remain
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Label-only markers sized and weighted appropriately for 26-point
+          density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Text-border outline gives strong contrast against background and
+          gridlines
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Lima/Cairo cleared off the y=0 gridline; balanced margins, no cut-off
+          content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (C, mm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Text-outline + continent color-coding shows real design thought,
+          not yet publication-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle theme-matched grid, generous whitespace; label crowding no
+          longer holds this back
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Continent color grouping creates visible climate clusters guiding
+          the reader
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-with-text-labels type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All spec features present including overlap handling via offsets
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to temperature/rainfall, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match continent names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Wide climate variety across 5 continents, dense and sparse regions
+          both shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral scenario - world city climate data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values align with real-world climate figures for each city
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Data, init, option - no classes/functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the echarts global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level setOption usage, doesn't push into advanced ECharts
+          features
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: symbolSize:0 label-only scatter with textBorderColor/Width is distinctive
+          to ECharts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
