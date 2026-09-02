@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-stacked
 created: '2026-09-02T13:34:10Z'
-updated: '2026-09-02T13:39:15Z'
+updated: '2026-09-02T13:46:35Z'
 generated_by: claude-sonnet
 workflow_run: 33635992603
 issue: 1947
@@ -12,48 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Color-to-category mapping is intentional, not just ordinal: Solar=brand green,
-    Natural Gas=ochre (''earth/commodity'' per the style guide), Coal=matte red (semantic
-    ''bad/decline'' anchor) — canonical Imprint order and real-world semantics line
-    up perfectly.'
-  - Uses Highcharts' native stackLabels to show the total above each bar (412, 398,
-    387, 381, 374, 374 TWh) — a genuinely library-specific feature that directly answers
-    the spec's 'consider adding total value labels above each complete stack' note.
-  - Component order (Solar, Wind, Hydro, Natural Gas, Coal) is identical across all
-    six bars, satisfying the spec's consistent-ordering requirement.
-  - Data tells a coherent, realistic energy-transition story (solar/wind rising, coal
-    declining, gas easing, hydro flat) that is plausible and non-controversial.
-  - 'Clean chrome: borderWidth 0 with a subtle borderRadius on segments, transparent
-    chart background showing the page token through, subtle single-axis gridlines
-    — no unnecessary framing.'
-  - 'Both renders pass the theme-readability check: warm off-white / near-black backgrounds,
-    all text legible, data colors identical between light and dark.'
+  - 'Palette compliance is exact: first series is brand green #009E73, remaining components
+    follow canonical Imprint order, and data colors are pixel-identical between the
+    light and dark renders — only chrome flips.'
+  - Stack labels (412, 398, 387, 381, 374, 374) implement the spec's suggested 'total
+    value labels above each complete stack' feature via Highcharts' native stackLabels,
+    not a faked annotation.
+  - Component stacking order (Coal at the base rising through Natural Gas, Hydro,
+    Wind, to Solar at the top) is consistent across every bar and, combined with the
+    chosen data trend, tells a coherent fossil-to-renewable transition story across
+    2019-2024.
+  - Theme-adaptive chrome is threaded correctly through every non-data element (title,
+    subtitle, axis titles, tick labels, gridlines, legend, stack-label text) — both
+    renders pass the theme-readability check with no dark-on-dark or light-on-light
+    failures.
+  - 'Data is realistic and neutral: a plausible national electricity generation mix
+    in TWh with sensible magnitudes and a directionally coherent trend (declining
+    coal/gas, rising solar/wind).'
+  - 'Idiomatic, harness-correct Highcharts usage: chart + series animation disabled,
+    no explicit width/height (auto-sizes to mount), credits disabled, no forbidden
+    add-on modules.'
   weaknesses:
-  - Title sits around ~30% of plot width at fontsize 22px — comfortably readable but
-    on the small side relative to the 50-70% guideline; a couple of points larger
-    would give it more presence without risking overflow.
-  - Data storytelling relies solely on the stack labels for narrative; no explicit
-    visual emphasis (e.g. callout/annotation on the 2024 crossover where fossil sources
-    fall below renewables) to guide the eye to the most interesting trend in the data.
-  - Legend swatches and stack composition are clear, but nothing distinguishes Coal/Natural
-    Gas (declining, fossil) from Solar/Wind/Hydro (rising/stable, non-fossil) beyond
-    color — an optional grouping cue (e.g. subtitle callout) could sharpen the 'part-to-whole'
-    + 'trend' story further.
+  - 'Design Excellence is largely default: beyond stackLabels and a 2px bar corner
+    radius, there is no distinctive visual treatment (e.g. an annotation or emphasis
+    callout drawing the eye to the coal-to-solar crossover) that would elevate this
+    above a competent baseline chart.'
+  - Grid and chrome styling rely entirely on library defaults (single subtle y-axis
+    grid, no additional refinement like a highlighted current-year column or muted
+    secondary years) — there's room for more intentional visual hierarchy per DE-02/DE-03.
+  - X-axis label 'Year' and legend are functionally minimal; consider a brief axis
+    subtitle or annotation reinforcing the transition narrative implied by the data,
+    since currently only the subtitle text communicates topic context.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-stacked · javascript · highcharts · anyplot.ai" in bold dark ink, subtitle "Electricity generation mix by source (TWh)" in soft gray beneath it, both clearly legible. X-axis "Year" with 2019-2024 category labels, y-axis "Generation (TWh)" with 0-450 gridded ticks, all in soft dark-gray ink against the light background. Subtle horizontal gridlines. Legend centered below the plot with 5 circular swatches: Solar, Wind, Hydro, Natural Gas, Coal.
-      Data: Six stacked columns (one per year), each with 5 segments bottom-to-top: Coal (matte red), Natural Gas (ochre/gold), Hydro (slate blue), Wind (lavender/purple), Solar (brand green #009E73, first legend entry). Total value label (e.g. "412", "374") printed above each bar. Coal and Natural Gas segments visibly shrink 2019→2024 while Solar and Wind segments grow, communicating the generation-mix shift.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable, no overlap between labels, stack labels, or the legend.
+      Chrome: Bold dark title "bar-stacked · javascript · highcharts · anyplot.ai" centered at top; grey subtitle "Electricity generation mix by source (TWh)" beneath it; dark-grey Y-axis title "Generation (TWh)" and X-axis title "Year"; grey tick labels on both axes; subtle horizontal gridlines; grey stack-total labels (412, 398, 387, 381, 374, 374) above each bar; bottom legend with colored dot markers for Solar/Wind/Hydro/Natural Gas/Coal. All text is clearly legible against the light background — no light-on-light issues.
+      Data: Six stacked column groups (2019-2024), each composed of five segments bottom-to-top: matte red (Coal), ochre (Natural Gas), blue (Hydro), lavender (Wind), brand green (Solar). First series (Solar) is #009E73 as required. Coal segment visibly shrinks year over year while Solar and Wind segments grow, and total bar height gently declines from 412 to 374.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and subtitle now rendered in white/light-gray ink, clearly visible against the dark surface. Axis titles and tick labels switch to light-gray ink. Gridlines are faint but visible. Legend renders identically in layout, with light-gray text labels.
-      Data: Segment colors are pixel-identical to the light render (brand green Solar, lavender Wind, blue Hydro, ochre Natural Gas, matte-red Coal) — only the chrome (background, text, gridlines) flipped, as required. Total value labels above each bar remain legible in light-gray against the dark background.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome text and stack-total labels are clearly visible against the near-black surface.
+      Chrome: Same title/subtitle/axis-title/tick-label/legend layout, now rendered in light grey/off-white text against the dark background; gridlines are faint light lines; stack-total labels render in light grey and are clearly visible above each bar.
+      Data: Identical five-color segment stack and identical color hex values to the light render (Coal red, Natural Gas ochre, Hydro blue, Wind lavender, Solar green) — confirms data colors are constant across themes and only chrome flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, axis, tick, legend, and stack-label text reads clearly against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -64,72 +68,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title is on the small side relative
-          to canvas but clear and bold
+        comment: All text readable in both themes at default library-recommended sizes;
+          no dark-on-dark/light-on-light issues
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, stack totals, or legend
+        comment: No collisions between text, legend, or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar segments and stack-total labels are clearly visible, appropriate
-          for 6 categories x 5 components
+        comment: Six categories with 5 segments each are clearly distinguishable with
+          adequate bar spacing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 5 distinct hues from the Imprint palette, direct legend + labels
-          avoid reliance on color alone
+        comment: Full Imprint palette used, not red-green-only signal, adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas gate passed; generous margins, nothing clipped
+        comment: Good proportions, nothing clipped, title within expected width range,
+          canvas gate passed
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Year'' and ''Generation (TWh)'' are descriptive with units'
+        comment: Descriptive axis titles with units (TWh); mandated title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Solar) = #009E73; remaining series follow canonical
-          Imprint order; backgrounds correct in both themes'
+        comment: 'First series #009E73, canonical Imprint order, identical data colors
+          across themes, correct theme-adaptive backgrounds'
     design_excellence:
-      score: 12
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 4
         max: 8
-        passed: true
-        comment: Deliberate semantic color mapping (green=solar, ochre=gas, red=coal)
-          plus native stackLabels for totals
+        passed: false
+        comment: Competent but mostly default styling beyond stackLabels and rounded
+          bar corners
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Borderless rounded segments, transparent background, subtle single-axis
-          gridlines; fairly close to library defaults otherwise
+        passed: false
+        comment: Default single y-axis grid and legend; no additional refinement layer
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Totals labels add value but no explicit visual emphasis on the renewables/fossil
-          crossover trend
+        comment: Consistent fossil-to-renewable stacking order across years creates
+          a mild narrative, but no explicit emphasis/annotation drives it home
     spec_compliance:
       score: 15
       max: 15
@@ -139,28 +142,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Highcharts column chart with stacking:'normal' — correct stacked
-          bar chart
+        comment: Correct stacked column chart via plotOptions.column.stacking=normal
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, total labels, consistent component
-          order across all bars, adequate spacing
+        comment: Distinct colors, clear legend, total value labels, consistent component
+          order, adequate bar spacing all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=year categories, Y=generation value, y-axis range covers all stack
-          totals
+        comment: Category axis = year, value axis = generation (TWh), all data represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly; legend labels match series
+        comment: Title matches mandated format exactly; legend labels match component
           names
     data_quality:
       score: 15
@@ -171,22 +172,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 6 categories x 5 components, well within spec's 3-10 / 2-6 recommendation,
-          full stacking + totals shown
+        comment: 6 categories x 5 components covers spec's recommended ranges fully
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible national electricity-generation-mix trend, neutral subject
-          matter
+        comment: Plausible, neutral national electricity generation mix by source
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TWh values (18-145 per segment, ~374-412 totals) are sensible for
-          a national grid
+        comment: TWh magnitudes and year-over-year trend are domain-sensible
     code_quality:
       score: 10
       max: 10
@@ -196,34 +194,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, flat declarative config
+        comment: Flat script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data arrays
+        comment: Hard-coded deterministic arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses provided globals only
+        comment: Only uses provided ANYPLOT_TOKENS and Highcharts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract, animation disabled on chart and series,
-          current Highcharts 12 API
+        comment: Correct mount-node contract, animation disabled, current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -231,21 +228,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard column-stacking idiom, categories, plotOptions.column —
-          solid but not pushing further
+        comment: Correct stacking config, stackLabels, borderRadius, animation handling
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: yAxis.stackLabels is a genuinely Highcharts-specific feature used
-          correctly to surface totals
+        passed: false
+        comment: Uses stackLabels (a genuine Highcharts-specific feature) but otherwise
+          generic column chart usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - stack-labels
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling: []
