@@ -1,0 +1,259 @@
+library: ggplot2
+language: r
+specification_id: alluvial-basic
+created: '2026-09-02T10:57:34Z'
+updated: '2026-09-02T11:13:09Z'
+generated_by: claude-sonnet
+workflow_run: 33621600640
+issue: 1878
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Built a fully custom alluvial diagram from primitive geoms (geom_ribbon + geom_rect
+    with smoothstep S-curve band interpolation) instead of falling back to ggalluvial
+    or another library — correctly follows ggplot2.md's 'no workarounds' rule since
+    ggalluvial is not installed
+  - 'Correct Imprint palette: first series (STEM) is #009E73, with a semantically
+    motivated grey (INK_MUTED) for ''Undeclared'' as an ''other'' anchor rather than
+    a fifth arbitrary hue'
+  - 'Theme-adaptive chrome verified correct in both renders: #FAF8F1 light / #1A1A17
+    dark backgrounds, all visible text legible with no dark-on-dark or light-on-light
+    failures'
+  - No edge clipping (checked left/right canvas borders at pixel level) and generous,
+    balanced margins; canvas is well utilized
+  - Direct node labels at the first/last stage plus consistent color and stacking
+    order across all three stages let a viewer decode the unlabeled middle column
+    by color-matching — a clean, low-clutter alternative to a floating legend
+  - Realistic, neutral academic-track dataset (STEM/Business/Arts/Undeclared) with
+    plausible magnitudes and a believable mix of persistence and switching flows
+  weaknesses:
+  - 'The mini-legend meant to label the middle stage (Year 2) — built from geom_point
+    + geom_text around x≈2, y≈1.09×max_y — never appears in either rendered PNG. Verified
+    by cropping and zooming the region directly above the Year 2 column in both themes:
+    nothing is drawn there. This ~15-line block is dead code; either fix why it falls
+    outside the rendered panel range, or remove it since the edge labels plus consistent
+    color/order already identify every category.'
+  - With 16 flows per stage transition (4x4 category matrix), the interior diagonal
+    crossing bands get visually dense — still traceable via alpha blending, but tracing
+    one thin band across all three stages takes more effort than a diagram with fewer
+    categories.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), matches the light-theme spec target.
+      Chrome: Title "alluvial-basic · r · ggplot2 · anyplot.ai" in dark ink, top-left, fully readable, not clipped. "Year 1 / Year 2 / Year 3" x-axis labels below each column in soft grey ink, clearly legible. Category node labels ("Undeclared", "Arts", "Business", "STEM") sit directly left of the Year 1 column and right of the Year 3 column in dark ink — clearly readable, no clipping at the canvas edges. No y-axis ticks/gridlines (intentionally blank, appropriate for this chart type).
+      Data: Three stacked node columns (Year 1/2/3) connected by curved ribbon bands. First/primary category (STEM) renders in Imprint green #009E73; Business in lavender #C475FD; Arts in blue #4467A3; Undeclared in a muted grey (semantic "other" anchor). Bands use alpha transparency (~0.45) so overlapping flows stay distinguishable. Band width is visibly proportional to flow magnitude (the STEM-to-STEM and Business-to-Business self-flows are the widest bands).
+      Legibility verdict: PASS — all rendered text is clearly legible against the light background. Note: a small legend intended above the Year 2 column (per source code) does not actually render in this image (see Weaknesses) — this is a code bug, not a legibility failure, since no text/marks are drawn there at all.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), matches the dark-theme spec target.
+      Chrome: Title in light ink (#F0EFE8-ish), fully readable against the dark background. "Year 1 / Year 2 / Year 3" labels in soft light-grey ink, clearly legible, no dark-on-dark issues. Category node labels ("Undeclared", "Arts", "Business", "STEM") in light ink next to the outer columns, fully readable, no clipping.
+      Data: Identical data colors to the light render — STEM green #009E73, Business lavender #C475FD, Arts blue #4467A3, Undeclared grey — confirmed unchanged; only the chrome (background/text) flipped to the dark tokens as required. Ribbon alpha blending still reads well against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark or unreadable elements found in either theme. Same missing middle-stage legend as the light render (code bug, not a theme-specific legibility failure).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes, all rendered text legible in both themes; not
+          a perfect 8 because the legend text block never actually renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements found
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Ribbons and node blocks well-sized with appropriate alpha blending
+          for overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe categorical hues, alpha blending aids overlapping-band
+          distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, no cut-off content, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Year 1/2/3 stage labels are descriptive and appropriate for the chart
+          type; no y-axis needed for this encoding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, correct Imprint palette + semantic grey anchor,
+          theme-correct chrome in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom-built alluvial from primitive geoms with smoothstep band interpolation
+          and semantic color choice, well above a library default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid and axis ticks removed, generous whitespace, alpha-blended bands;
+          the broken legend keeps it short of perfect polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-consistent flows make persistence vs. switching immediately
+          visible without any annotation
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct alluvial diagram with strict vertical stage ordering, distinct
+          from a generic Sankey
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Chronological stage order, consistent category colors, flow-proportional
+          band width, and transparency all present; middle-stage legend intended for
+          extra clarity does not render
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Time on x, stacked category proportions on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; direct node labeling correctly identifies every
+          category
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows both self-persistence and cross-category switching at varying
+          magnitudes
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible academic-track scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible magnitudes and proportions for student major transitions
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> plot -> save; the smooth_band helper is
+          a necessary geometry utility, not structural over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; data is a deterministic literal tribble
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Legend block is dead code that never renders, indicating insufficient
+          verification of the final output
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{theme}.png via ragg::agg_png
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Solid idiomatic use of geom_ribbon/geom_rect/scale_manual/theme layering
+          to work around ggplot2's lack of a native alluvial geom
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Smoothstep S-curve band interpolation is a genuinely distinctive
+          technique not trivially replicated in another library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - layer-composition
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - minimal-chrome
