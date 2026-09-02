@@ -1,0 +1,280 @@
+library: muix
+language: javascript
+specification_id: flowmap-origin-destination
+created: '2026-09-02T00:48:43Z'
+updated: '2026-09-02T01:02:46Z'
+generated_by: claude-sonnet
+workflow_run: 33576351528
+issue: 3765
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/javascript/muix/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - Hover tooltips are now wired via onMouseEnter/onMouseLeave on both flow arcs and
+    port circles, surfacing origin/destination names and exact flow volume in the
+    interactive HTML — fixes the prior review's SC-02 gap where series={[]} left the
+    overlay with zero interactivity
+  - Grid narrowed to horizontal-only (ChartsGrid horizontal), removing the vertical
+    grid that previously competed with the arc/basemap composition
+  - Hub ports (top 4 by throughput) now get bolder, larger typographic treatment (fontWeight
+    700 / fontSize 16 vs 500 / 14), sharpening the visual hierarchy between major
+    and minor nodes
+  - Hand-traced continent silhouettes rendered through useXScale/useYScale/useDrawingArea
+    and clipped to the drawing area give real geographic context without a mapping
+    library
+  - Flow magnitude is double-encoded via stroke width AND an imprint_seq color gradient
+    — a CVD-safe redundant encoding beyond the spec's minimum ask
+  - Port circle radius encodes total throughput, adding a meaningful second data dimension
+    (hub identification) on top of the required flow arcs
+  - 'Imprint palette used correctly: ports in brand green #009E73, continuous flow-volume
+    gradient built from imprint_seq (single-polarity, matching the data''s polarity)
+    — no custom hexes'
+  - 'Both renders are theme-correct: warm off-white / near-black backgrounds, all
+    chrome (title, axis, tick labels, legend, caption) readable in both themes, data
+    colors identical across themes'
+  - Manual label nudging (labelNudge map) prevents the closely clustered European
+    ports (RTM/HAM/PIR) from colliding while markers stay at their true coordinates
+  weaknesses:
+  - With ~21 arcs converging on hub ports (RTM, SIN, SHA), lines still pile up and
+    cross directly over/through the hub circles, creating visual clutter right at
+    the plot's focal points — the per-arc bow tuning helps but doesn't fully resolve
+    the hairball at the busiest hubs
+  - Typography hierarchy is now applied to hub vs. non-hub port codes, but axis ticks,
+    legend text, and non-hub labels still sit close together in visual weight — a
+    touch more contrast there would sharpen it further
+  - Each city pair only shows a single directional flow; the spec calls out 'directional
+    imbalances' as a use case, and a bidirectional pair (e.g. reciprocal flows between
+    the same two ports with different volumes) would demonstrate that more explicitly
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 -- not pure white.
+      Chrome: Title "flowmap-origin-destination · javascript · muix · anyplot.ai" centered at top in dark ink, comfortably narrow relative to canvas width, clearly readable. Longitude/Latitude axes with degree-formatted tick labels in soft gray-brown ink, both fully legible. A bottom-left gradient legend ("Flow volume (thousand TEU/year)" with 260/1450 endpoint labels) and a bottom-right caption ("Circle size = port throughput · arrows show flow direction") are both readable and stay within the canvas margins. Only horizontal grid lines are present, subtle and non-competing.
+      Data: 14 port circles in brand green (#009E73), sized by throughput (Shanghai, Singapore, Rotterdam largest, rendered with bold/larger code labels as the top-4 hubs). 21 curved arcs connect ports, colored along an imprint_seq green-to-blue gradient and widened proportional to flow volume, with small triangular arrowheads showing direction. Light-gray continent silhouettes sit behind the arcs for geographic context. First data series (ports) confirmed #009E73.
+      Legibility verdict: PASS -- all text readable against the light background, no light-on-light failures observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 -- not pure black.
+      Chrome: Same title, now in light ink, clearly readable. Axis tick labels rendered in light gray, legible. Legend and caption text both switched to light color and remain fully readable against the dark background -- no dark-on-dark failures found.
+      Data: Port circles remain the identical brand green #009E73 as the light render. Arc gradient colors (green-to-blue) are unchanged from the light render -- only the chrome (background, text, grid, continent fill) flipped to the dark theme, exactly as required. Continent silhouettes render as a subtle darker gray, still faintly visible for context.
+      Legibility verdict: PASS -- all text and data remain legible in the dark theme, brand green is still clearly visible against #1A1A17.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (fontSize props on title/axis/labels/legend);
+          readable in both themes; title fits comfortably without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Manual label nudges avoid text-text collisions in the crowded European
+          cluster, but dense arc crossings still pile up over hub circles (RTM, SIN,
+          SHA)
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arc stroke width (2-9px) and alpha (0.35-0.7) scale with flow volume;
+          arrowheads and port circles are all visible, though the densest crossing
+          region near hubs stays busy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient plus redundant width encoding is CVD-safe; no
+          red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills most of the canvas, legend and caption sit close to the
+          plot, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Longitude (°)" / "Latitude (°)" with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Ports use brand green #009E73, flow gradient built from imprint_seq
+          (correct single-polarity choice), theme-correct backgrounds and chrome in
+          both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Inventive custom composition (basemap silhouettes, gradient arcs,
+          throughput circles, hub typography tier) clearly above a configured default,
+          but dense line crossings around hubs keep it short of publication-level
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid narrowed to horizontal-only, removing the prior competing vertical
+          grid; subtle grid, generous whitespace; arc pile-up around hubs remains
+          the main refinement gap
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Circle size (hub throughput) + arc color/width (flow volume) + arrows
+          (direction) + bold hub labels create a clear visual hierarchy; the Shanghai-LA
+          corridor immediately reads as the dominant route
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct origin-destination flow map
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved arcs, magnitude-proportional width, alpha transparency, color
+          gradient, basemap context, and now working hover tooltips (origin/destination
+          + volume) on both arcs and port circles are all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on X, Latitude on Y, all ports and flows visible within
+          axis bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; gradient legend labels (min/max volume) match
+          the data range
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Wide volume range (260-1450), major and minor hubs, multi-directional
+          flows from a single hub (e.g. SIN, RTM), though no single pair shows both
+          directions to illustrate imbalance explicitly
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real container-shipping ports and TEU/year units, neutral trade/logistics
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Volumes and the Shanghai-LA route as the largest corridor are plausible
+          relative to real-world container shipping
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat data -> helper -> overlay components -> Chart export; no unnecessary
+          abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only used @mui/x-charts imports (ChartContainer, axes, grid, hooks)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for a custom flow map; real (not simulated)
+          hover interactivity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the harness contract (default export, skipAnimation, sized
+          from window.ANYPLOT_SIZE)
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ChartContainer plus useXScale/useYScale/useDrawingArea, the
+          recommended MUI X pattern for custom overlays synced to chart scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: The scale-hook-driven custom overlay architecture (arcs, basemap,
+          hub circles, hover state) is fairly distinctive to MUI X's composable chart
+          internals, not a trivial port from another library
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - colorbar
+  - annotations
+  - custom-legend
+  - tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - gradient-fill
