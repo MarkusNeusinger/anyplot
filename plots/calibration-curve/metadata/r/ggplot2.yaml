@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: calibration-curve
 created: '2026-09-02T14:09:09Z'
-updated: '2026-09-02T14:14:08Z'
+updated: '2026-09-02T14:21:57Z'
 generated_by: claude-sonnet
 workflow_run: 33639565269
 issue: 2331
@@ -12,52 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/calibrati
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/calibration-curve/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 93
 review:
   strengths:
-  - 'Brand green #009E73 used correctly for the primary series, identical between
-    light and dark renders'
-  - Diagonal reference line correctly uses the theme-adaptive neutral ink token with
-    reduced alpha, reading as chart structure rather than a data series
-  - coord_fixed() enforces a true 1:1 aspect so the 45-degree perfect-calibration
-    line is geometrically honest — idiomatic and distinctive for this specific plot
-    type
-  - Bubble-size encoding (aes(size = n)) adds the samples-per-bin dimension without
-    needing a separate histogram subplot
-  - Subtitle cleanly surfaces both Brier score and ECE as required by the spec
-  - scales::percent axis labels improve readability over raw 0-1 fractions
-  - Theme-adaptive chrome (background, ink, ink_soft) correctly flips between light/dark
-    while data colors stay identical
-  - Title fontsize is dynamically scaled to avoid overflow on the square canvas
+  - Data shows a genuine S-shaped miscalibration (over-confident at low probabilities,
+    under-confident at high probabilities) instead of a trivial near-diagonal fit,
+    exercising the full range of calibration-curve behavior
+  - Point size encodes samples-per-bin, adding a meaningful second data dimension
+    with a clear labeled legend without cluttering the chart
+  - 'Theme-adaptive chrome is fully correct: brand green #009E73 identical in both
+    renders, warm off-white/near-black backgrounds, subtle 15%-alpha grid, INK-toned
+    diagonal reference line'
+  - Subtitle surfaces both Brier score and ECE, exceeding the spec's 'display Brier
+    score or ECE' requirement
+  - coord_fixed() keeps the 45-degree reference line visually true in the square canvas,
+    and title fontsize is computed from title length rather than hardcoded
   weaknesses:
-  - Grid lines use the full-strength INK color (panel.grid.major = element_line(color
-    = INK, ...)) instead of a faded/reduced-contrast tint, producing a bold, high-contrast
-    grid that competes with the data trace in both themes — style guide requires grid
-    opacity ~15-25%, very subtle. Since ggplot2 exposes no alpha for grid lines, switch
-    to a fixed low-contrast gray hex (not the same token as text/axis-line ink) for
-    panel.grid.major instead of INK.
-  - Overall composition reads as a competent, well-configured default rather than
-    a fully polished custom design — the legend and grid could use more deliberate
-    refinement (e.g. lighter grid, tighter legend spacing) to lift aesthetic sophistication
-    beyond 'good'.
-  - Distinctive-feature usage (coord_fixed + size-mapped bubbles) is solid but could
-    go further — e.g. a direct annotation calling out the over/under-confidence gap
-    at a key bin would deepen the ggplot2-specific storytelling.
+  - Smallest bubbles (tail bins near 0% and 100% predicted probability, ~200 samples)
+    are noticeably small and could fade at mobile/thumbnail scale — consider raising
+    the scale_size_continuous(range=...) floor from 3 to ~4-5
+  - Adjacent bubbles between roughly 55-75% predicted probability overlap slightly
+    because of close x-spacing combined with size encoding — a thin white stroke (edgecolor)
+    or alpha ~0.85 would separate them more cleanly
+  - The spec's optional histogram of the predicted-probability distribution is omitted
+    — not required for approval, but would round out the diagnostic view
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Bold dark title "calibration-curve · r · ggplot2 · anyplot.ai" and gray subtitle "Brier score 0.165 · ECE 0.082" both clearly readable at the top. Axis titles ("Mean predicted probability", "Observed fraction of positives") are dark and legible; percent-formatted tick labels are medium-gray and legible. Grid lines are solid dark (full INK color) -- visible and somewhat bold/high-contrast rather than subtle, though they do not obscure any text or data. Legend "Samples per bin" with five size-scaled green circles reads clearly against the background, no frame/box.
-      Data: Green (#009E73) line and size-scaled bubble markers trace a curve that sits above the gray dashed diagonal reference line for most of the low-to-mid range, visually communicating the underconfident-classifier calibration pattern from the spec.
-      Legibility verdict: PASS
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "calibration-curve · r · ggplot2 · anyplot.ai" at top, gray subtitle "Brier score 0.165 · ECE 0.082" below it. Dark axis titles "Mean predicted probability" (x) and "Observed fraction of positives" (y), softer-gray percent-formatted tick labels on both axes. Faint horizontal/vertical gridlines. Legend "Samples per bin" on the right with a size-graduated key (200-600).
+      Data: A single brand-green (#009E73) line with size-graduated green bubble markers tracing the calibration curve, plus a dashed gray 45-degree reference line for perfect calibration. The curve sits below the diagonal at low predicted probabilities and above it at high predicted probabilities, showing a clear S-shaped miscalibration pattern.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Title and axis titles render in light off-white text, subtitle and tick labels in light gray -- all clearly legible against the dark background, no dark-on-dark text anywhere. Grid lines flip to a light/white full-INK tone, same boldness/high-contrast concern as the light render but no legibility failure.
-      Data: Green line/markers and dashed neutral reference line are pixel-identical in color to the light render -- confirms only chrome flipped, not data colors.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout as light — bold off-white title and subtitle in a lighter gray, light axis titles, softer-gray tick labels, faint gridlines rendered against the dark surface, legend box with light text on the right.
+      Data: Data colors are identical to the light render — same brand-green (#009E73) line and bubbles, same gray dashed reference line. Only the chrome (background, text, grid) has flipped to the dark theme tokens.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed. Brand green reads well on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -65,76 +58,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via theme(); readable in both themes
-          with no overflow or clipping; title fontsize dynamically scaled to fit
+        comment: All font sizes explicitly set (title fontsize computed from length,
+          axis/tick/legend sizes set); readable in both themes; title fits without
+          clipping at ~65% width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data collisions in either render
+        comment: No text overlap; legend clear of the plot area
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bubble size scaled to samples-per-bin (range 3-11) is well adapted
-          to the 10-bin density
+        comment: Size-graduated bubbles adapt to sample count, but the smallest tail
+          bins (~200 samples) are quite small and borderline at mobile scale
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single green series against a neutral dashed reference line; good
-          contrast, CVD-safe
+        comment: Single-hue data + neutral dashed reference line, CVD-safe, good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: coord_fixed() panel plus legend span nearly the full canvas width;
-          balanced margins, nothing cut off
+        comment: Balanced margins, plot fills a reasonable share of the 2400x2400
+          canvas, legend positioned near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles; percent-formatted tick labels supply the
-          implicit unit
+        comment: Descriptive axis titles, percent-formatted ticks give implicit units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, identical across themes; backgrounds are
-          theme-correct #FAF8F1/#1A1A17; reference line correctly uses the theme-adaptive
-          neutral anchor'
+        comment: 'First series is #009E73, identical across themes; backgrounds and
+          chrome are theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful color/typography choices and a size-legend, but the bold
-          high-contrast grid undercuts overall polish
+        passed: true
+        comment: Thoughtful bubble-size encoding, subtitle metrics, clean minimal
+          theme — clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Spines cleanly reduced to an L-shaped axis.line, but grid lines are
-          rendered at full INK strength rather than subtle -- competes with the data
-          trace
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: The curve's departure from the diagonal reference line visually communicates
-          the underconfidence story; bubble sizing adds a secondary hierarchy cue
+        comment: Subtle grid, ticks removed, generous margins, panel border removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: S-shaped miscalibration pattern against the reference diagonal, plus
+          sample-size encoding, guides the viewer to the insight
     spec_compliance:
       score: 15
       max: 15
@@ -144,55 +133,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct reliability-diagram / calibration-curve construction with
-          binned line+points and reference diagonal
+        comment: Correct reliability-diagram / calibration-curve type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Diagonal reference line, 10 equal-width bins, and both Brier score
-          + ECE displayed as required
+        comment: Diagonal reference line, 10 equal-width bins, both Brier score and
+          ECE displayed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: x = mean predicted probability, y = observed fraction of positives,
-          both axes show the full 0-100% range
+          matches spec
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches 'calibration-curve · r · ggplot2 · anyplot.ai';
-          legend label 'Samples per bin' matches the size mapping
+        comment: Title exactly matches required format; legend label 'Samples per
+          bin' matches the size mapping
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows the systematic underconfidence pattern and varying bin population
-          via bubble size; no multi-model comparison, but that is explicitly optional
-          in the spec
+        comment: S-shaped miscalibration spans the full range, not a trivial near-diagonal
+          fit
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral binary-classifier calibration scenario (diagnostic
-          screening model in the code comment) using standard ML metrics
+        comment: Neutral, plausible diagnostic-screening / bagged-ensemble scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sample size (4000), bin counts (200-600), Brier score (0.165) and
-          ECE (0.082) are all internally consistent and realistic
+        comment: n=4000 with ~400/bin average, Brier/ECE values consistent with the
+          visualized miscalibration
     code_quality:
       score: 10
       max: 10
@@ -208,50 +194,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top of script
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'ggplot2, dplyr, ragg all actually used; tibble accessed via :: without
-          a redundant library() call'
+        comment: ggplot2, dplyr, ragg all used; scales/tibble namespace-qualified
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI or simulated interactivity
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave with device=ragg::agg_png, filename sprintf('plot-%s.png',
-          THEME); uses linewidth not deprecated size
+        comment: Saves plot-{THEME}.png via ragg::agg_png, linewidth= used (not deprecated
+          size=)
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic grammar-of-graphics layering, scale_size_continuous, theme_minimal
+          + theme overrides
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering, scale_x/y_continuous with scales::percent,
-          theme_minimal base -- solid idiomatic usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: coord_fixed() for geometric honesty plus scale_size_continuous bubble
-          encoding are genuinely ggplot2-flavored, beyond generic usage
-  verdict: REJECTED
+        comment: coord_fixed() plus aes(size=n) bubble encoding are ggplot2-idiomatic
+          and not trivial to replicate elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - groupby-aggregation
@@ -259,4 +244,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
