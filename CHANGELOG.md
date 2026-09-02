@@ -28,6 +28,25 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **The watchdog now rescues a repair that crashed after a rejection** — a PR carrying
+  `ai-rejected` and `ai-attempt-N` is the state impl-review leaves behind when it
+  dispatches a repair that then dies (its crash-retry exhausted). Case 2 excluded
+  `ai-rejected` and case 4 required no attempt label, so the state matched nothing:
+  after the Claude outage of 2026-09-02 (03:15–03:45 UTC) three PRs sat in it for hours
+  until a human re-dispatched the repair. New case 2b re-dispatches `impl-repair` with
+  the highest attempt number, bounded by the same `watchdog:repair-rescued-<N>` marker.
+- **Watchdog generation retries go straight to `impl-generate` and are marked only once
+  the run exists** — the issue scan dispatched `bulk-generate.yml`, which serialises on
+  one global concurrency group; GitHub keeps a single pending run per group and cancels
+  the older pending run whenever a newer one queues. Nine rescues fired 5 s apart on
+  2026-09-02 produced two runs and seven silent `cancelled`s, yet every pair had already
+  been labelled `watchdog:retried-<lib>` and so dropped out of all future scans. The
+  rescue now dispatches `impl-generate.yml` (concurrency group per pair, `issue_number`
+  passed through), waits up to 60 s for the run to appear, and sets the marker only
+  then. Every rescue marker moves behind its dispatch the same way, and `dispatch()`
+  reports the outcome after the attempt and returns non-zero instead of aborting the
+  scan under `set -e`, so one failed `gh workflow run` no longer leaves every later PR
+  unscanned.
 - **The API image installs `libraqm0`, which is what actually restores text shaping —
   and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
   build-time assertion on `features.check('raqm')` on the understanding that the locked
