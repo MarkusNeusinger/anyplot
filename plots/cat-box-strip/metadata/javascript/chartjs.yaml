@@ -1,0 +1,271 @@
+library: chartjs
+language: javascript
+specification_id: cat-box-strip
+created: '2026-09-02T14:51:41Z'
+updated: '2026-09-02T15:05:43Z'
+generated_by: claude-sonnet
+workflow_run: 33643874270
+issue: 2695
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Whisker caps (Chart.js pointStyle: "line" with pointRotation: 0 rendered at each
+    whiskerMin/whiskerMax) now unambiguously mark the range as a box-plot whisker
+    instead of reading as a generic floating bar — directly resolves the Attempt 1
+    weakness.'
+  - 'Strip-point overplotting in the densest group (Full Sun) is visibly reduced:
+    pointRadius lowered 4→3.5, alpha lowered 0.55→0.45, jitter widened 0.32→0.36,
+    and a subtle pageBg-colored point border was added for definition per the style
+    guide''s overlapping-marker guidance.'
+  - Median bar epsilon increased (0.006→0.01 of the value range), giving the median
+    stripe more visual weight inside the box in both themes without overwhelming the
+    IQR fill.
+  - 'Imprint palette applied correctly and consistently: first category (Low Light)
+    is exactly #009E73, remaining three categories follow canonical positions 2-4
+    (#C475FD lavender, #4467A3 blue, #BD8233 ochre), and all data colors are pixel-identical
+    between light and dark renders.'
+  - Theme-adaptive chrome is fully correct in both renders — title, axis titles, tick
+    labels, gridlines, and the ink-driven median bar all flip appropriately with no
+    dark-on-dark or light-on-light failures.
+  - Realistic, neutral dataset (plant height vs. light exposure) with increasing spread
+    across groups (sd 3→6) and visible low-end outliers beyond the whisker fences,
+    satisfying feature-coverage and data-quality expectations.
+  - Deterministic fixed-seed (42) LCG + Box-Muller RNG and a hand-rolled quantile
+    function give full reproducibility with zero external dependencies.
+  weaknesses:
+  - 'Design storytelling is still generic: the ascending trend (more light -> taller
+    plants) reads from category ordering and color alone, with no explicit visual
+    emphasis or callout on the insight — this is the main remaining gap versus a publication-ready
+    plot.'
+  - The Full Sun group (mean 41, sd 6, n=80, widest spread) still shows moderate point
+    pile-up near the box center even after the radius/alpha/jitter tuning — a further
+    alpha reduction (~0.35) or slightly larger jitter range in just that group could
+    help, though this is now a minor cosmetic issue rather than a legibility problem.
+  - Small helper functions (RNG, gaussian, hexToRgba, quantile) deviate from a strict
+    imports-to-data-to-plot flow; acceptable for JS without a numpy-equivalent, but
+    keeps CQ-01 short of full marks.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold black title "cat-box-strip · javascript · chartjs · anyplot.ai" centered at top; black "Plant Height (cm)" y-axis title and black "Light Condition" x-axis title; dark-gray tick labels on both axes; subtle horizontal-only gridlines. All chrome text is clearly legible against the light background, nothing clipped at any canvas edge.
+      Data: Four groups on the x-axis (Low Light, Medium Light, High Light, Full Sun), each drawn as a semi-transparent color-filled IQR box with a matching-color border, a thin vertical whisker line capped at each end by a short horizontal stroke in the group's color, a dark horizontal median bar inside the box, and a jittered cloud of ~80 semi-transparent dots (now with a faint pageBg-colored edge) scattered around the box. Colors run Low Light = brand green (#009E73), Medium Light = lavender, High Light = blue, Full Sun = ochre — exactly the canonical Imprint order. Distributions widen and shift upward left-to-right (more light → taller, more variable plants), with visible low outliers below the whisker fences in Low Light and Medium Light. The whisker end-caps read clearly as a proper box-plot whisker rather than a plain bar, and the Full Sun strip shows less clumping than before, though some pile-up remains near the box center.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis titles, and tick labels have all flipped to light/off-white tones and remain clearly legible; gridlines are still subtle and visible against the dark background. No dark-on-dark text anywhere.
+      Data: Same four groups, same box/whisker-cap/median/strip structure. The categorical fill and border colors (green, lavender, blue, ochre) are pixel-identical to the light render — only the median bar's inner color and surrounding chrome adapted (median bar reads as a light stripe against the box on dark, versus a dark stripe on light, both correctly using the theme-adaptive ink token). Data colors otherwise unchanged, confirming palette identity across themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis titles 16, ticks 14)
+          and readable in both themes; relies on library defaults for exact proportional
+          tuning rather than a bespoke fit.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps other text or data in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Strip points now visible and reasonably spread; pointRadius 3.5 +
+          alpha 0.45 substantially reduced the Full Sun pile-up from Attempt 1, though
+          some clustering remains near the box center in that group.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint categorical hues; new pageBg-colored
+          point border adds extra definition for overlapping markers per the style
+          guide.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
+          in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units where applicable (Plant Height (cm)).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, remaining series follow canonical Imprint
+          order, chrome and background are theme-correct in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Whisker end-caps plus white-edge strip points push this clearly above
+          a plain default box plot into thoughtful, intentional design; still short
+          of full publication-ready polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-only grid, generous whitespace, and now well-defined whisker caps
+          and a heavier median bar; a small amount of headroom remains for further
+          polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: The ascending trend across categories is visible from ordering and
+          color alone, but there is still no explicit emphasis or annotation calling
+          out the insight — unchanged from Attempt 1.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box-plot-with-strip-overlay type; median, Q1/Q3 box, and
+          now clearly capped whiskers all present.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Jitter, transparency, box + strip overlay, sample-size visibility
+          all present per spec notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on x, value on y, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches spec; legend intentionally omitted since
+          x-axis category labels already identify each group.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows outliers and clearly different spreads (sd 3 to 6) across groups.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world plant-growth-under-light scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Height values and their increase with light exposure are biologically
+          plausible.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A handful of small helper functions (RNG, gaussian, hexToRgba, quantile)
+          are used, reasonable in JS without numpy, but deviates from strict imports-to-data-to-plot
+          flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (42) is fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies solely on the global Chart.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for the required stats and the new whisker-cap
+          dataset; no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a canvas into #container correctly, animation: false set,
+          current API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of mixed bar/scatter datasets and Chart.js's floating-bar
+          [min,max] data convention.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'The floating-bar box-plot-via-bar-ranges technique, combined with
+          a scatter jitter overlay and pointStyle: "line" end-caps for the whiskers,
+          is a genuinely Chart.js-specific workaround not trivially portable to another
+          library.'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
