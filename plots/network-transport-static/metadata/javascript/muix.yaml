@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: network-transport-static
 created: '2026-09-02T04:39:34Z'
-updated: '2026-09-02T04:45:29Z'
+updated: '2026-09-02T05:01:43Z'
 generated_by: claude-sonnet
 workflow_run: 33590537531
 issue: 3463
@@ -12,69 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - Sophisticated custom-drawn network layout built on MUI X's ChartContainer + useXScale/useYScale
-    hooks -- a genuinely distinctive use of the library's low-level composition API
-    for a chart type (transit network) the community package has no native component
-    for.
-  - 'Careful geometric engineering: the perpendicular offset direction is keyed off
-    the canonical (sorted) station pair rather than each route''s own source->target
-    direction, so opposite-direction services on the same corridor consistently land
-    on opposite sides instead of collapsing onto one side when reversed.'
-  - Station labels use a widest-angular-gap algorithm against each node's incident
-    edges so labels are placed where they never collide with a route line, with anchor
-    (start/middle/end) chosen from the gap direction so long names like 'Harborside'
-    don't swing back over the node.
-  - 'Correct, theme-adaptive Imprint palette usage: Regional/Local/Express map to
-    palette[0..2] in canonical order (first series is brand green #009E73), and chrome
-    (hub fill/text, station fill/stroke, page background) correctly inverts between
-    light and dark renders with no dark-on-dark or light-on-light failures.'
-  - Route-type color-coding, directional arrowheads, curved/offset edges for parallel
-    bidirectional routes, and a wide bowed arc for the Central-Harborside skip-stop
-    express all directly implement the spec's stated notes.
-  - Label background boxes (elevatedBg fill, opacity 0.94) keep route-id/time text
-    legible where it crosses lines or other chrome.
+  - Hand-rolled directed-edge rendering (quadratic-bezier curves with canonical-pair
+    perpendicular offsets) correctly separates opposite-direction routes onto opposite
+    sides of the corridor, and bows the Central→Harborside express well clear of the
+    Eastport node it skips.
+  - Central interchange is rendered as a visually larger hub with its full station
+    name set inside, while satellite stations use widest-angular-gap label placement
+    so labels never sit on top of an incident route line — a genuine algorithmic solution,
+    not a fixed offset.
+  - Route type color-coding (Regional / Local / Express) uses the Imprint palette
+    in canonical order with the brand green first, and Express routes get a redundant
+    dashed stroke on top of color, satisfying CVD-safe redundant encoding.
+  - 'Both renders are theme-correct: warm off-white / near-black backgrounds, theme-adaptive
+    ink for all chrome, identical data colors across light and dark.'
+  - Idiomatic, distinctive use of MUI X's useXScale/useYScale hooks to drive a fully
+    custom SVG overlay on the ChartContainer's coordinate system — the library-sanctioned
+    pattern for chart types (network diagrams) the built-in series types can't express.
   weaknesses:
-  - At this station/route density (9 stations, 18 routes), the many small edge labels
-    (fontSize 12) and station labels (fontSize 15) will lose legibility once the PNG
-    is scaled to a ~400px mobile thumbnail -- the hub shape and legend stay readable,
-    but individual route-id/time text will not. Bump edge-label fontSize slightly
-    (e.g. 12->14) or increase label contrast/weight to help the mobile case.
-  - No hover/tooltip affordance exists on the custom RouteEdges/Stations marks despite
-    the spec note 'Tooltips (where supported) should show full route details on hover'
-    -- muix is an interactive library and the emitted HTML currently offers no more
-    route detail than the static PNG. Add a lightweight per-edge/per-node tooltip
-    (even a native SVG <title> element) to honor that note.
-  - The Central-hub cluster (where CTR connects to NJC/EPT/WFD/SGT plus the Harborside
-    express arcs) is the busiest region of the diagram -- R20/R21/EX1/L22 labels sit
-    close together. It reads fine today thanks to the offset algorithm, but a repair
-    pass could push the curve-label placement fraction or perpendicular offset further
-    out specifically for hub-incident edges to add breathing room.
-  - 'Design excellence is solid but stops short of publication-ready: the reason Central
-    is drawn larger than other stations (interchange hub) isn''t explained anywhere
-    in the chart (no size legend / annotation), and the express route''s visual distinction
-    (dashed line only) is the only extra hierarchy layer beyond route-type color.'
-  - Station count (9) and route count (18) sit near the low end of the spec's stated
-    8-20 station / 15-60 route range -- a bit more topological variety (e.g. a cross-branch
-    connection that doesn't pass through Central) would better showcase the degree-based
-    node sizing this implementation already supports.
+  - 'Two edge labels are partially hidden behind the Central hub node: ''R31 07:25→07:34''
+    (Central→Westfield) and ''R21 07:20→07:34'' (Central→Eastport) — the Stations
+    component renders after RouteEdges, so the large 46px-radius Central circle paints
+    over part of the label''s rounded-rect box and text, losing the arrival time on
+    R31 and the leading ''R'' on R21. Increase the offset for trunk-segment reverse-direction
+    labels near the hub (or nudge the lt/offset parameters specifically for edges
+    touching CTR) so no label geometry falls inside the hub''s radius.'
+  - 'DQ-01: all 8 branch routes follow the same symmetric hub-and-spoke, out-and-back
+    pattern (one Regional or Local pair per branch plus one Express skip-stop) — a
+    bit repetitive; an orbital/interchange route bypassing the hub, or a branch with
+    uneven service (e.g. only one direction operating, or a third overlapping route
+    on the same corridor) would show more of what curved/offset edges are for.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 -- not pure white.
-      Chrome: Bold centered title "network-transport-static · javascript · muix · anyplot.ai" in dark ink at top; a top-left legend (Regional/Local/Express swatches with matching line colors) in dark ink; a smaller italic-weight caption at the bottom ("Arrows show travel direction · labels show route ID and scheduled departure -> arrival") in a softer dark gray. All chrome text is clearly legible against the light background.
-      Data: A hub-and-spoke transit network. The "Central" interchange is a large black-filled circle with white "Central" text inside it; eight other stations (North Jct., Uptown, Eastport, Harborside, Westfield, Westbrook, Southgate, Southpark) are drawn as smaller white/cream circles with a dark outline, a short 2-3 letter code inside, and a full station name label placed outside the node. Directed edges are curved lines with arrowheads: green (Regional), purple/lavender (Local), and dashed blue (Express, Central<->Harborside bowing over Eastport). Each edge carries a small label ("R10 07:05->07:12" etc.) on a light background box so it stays readable where it crosses other lines. First (and most common) series color is the brand green #009E73, matching the Imprint palette's canonical order.
-      Legibility verdict: PASS (title, legend, caption, station labels, and hub label are all fully readable; edge-label text is small but legible at full resolution -- likely to lose legibility at ~400px mobile thumbnail, noted as a weakness).
+      Background: Warm off-white (#FAF8F1), matches the required light-theme surface — not pure white.
+      Chrome: Title "network-transport-static · javascript · muix · anyplot.ai" in bold dark ink, clearly visible top-center. A three-item legend (Regional/Local/Express, colored line swatches) sits top-left, fully readable. A tertiary caption at the bottom ("Arrows show travel direction · labels show route ID and scheduled departure → arrival · larger circle marks the Central interchange") is legible in muted ink. Station labels (e.g. "North Jct.", "Uptown", "Harborside") are dark ink on the cream background, all readable.
+      Data: Nine station nodes (white/cream fill, dark stroke) connected by curved directed edges in three colors — green (Regional), lavender/purple (Local), blue dashed (Express) — with arrowheads matching edge color. The Central hub is a large filled dark circle with its name in light text inside. Each edge carries a small pill-shaped label with route ID and departure→arrival time on a light elevated-background box. First categorical series (Regional) is the brand green #009E73, matching the Imprint rule.
+      Defect: Two edge labels ("R31 07:25→07:34" and "R21 07:20→07:34", both trunk routes returning to Central) are partially occluded by the large Central node circle, which is drawn on top of the edge layer — part of the label text is hidden underneath the node. All other 16 edge labels are fully legible.
+      Legibility verdict: PASS overall (title/legend/captions/station labels all clear), with a localized FAIL on 2 of 18 edge labels due to node/label z-order overlap (see weaknesses).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 -- not pure black.
-      Chrome: Same title/legend/caption layout, now rendered in light ink (#F0EFE8-ish) against the dark background -- fully readable, no dark-on-dark text anywhere.
-      Data: Identical network topology and identical data colors to the light render -- green/purple/blue route lines and green brand color are unchanged (only chrome flipped). The "Central" hub inverts correctly: it is now a light-filled circle with dark text (versus black-filled/white-text in light mode), and the other station nodes are dark-filled circles with light outline/light code text -- correct theme-adaptive inversion, not just a straight color copy.
-      Legibility verdict: PASS (all text -- title, legend, station labels, hub label, edge labels -- is light-on-dark and clearly readable; no dark-on-dark failures observed; data colors confirmed identical to the light render).
+      Background: Warm near-black (#1A1A17), matches the required dark-theme surface — not pure black.
+      Chrome: Title, legend, caption, and all station labels render in light ink (near-white/soft-white), clearly visible against the dark background — no dark-on-dark failures observed anywhere.
+      Data: Same three route-type colors (green/lavender/blue-dashed) identical to the light render — confirmed unchanged data-color values, only the chrome (background, ink, node fill/stroke, label box) flipped to dark-theme tokens. The Central hub circle is now a light/cream fill with dark text inside (correctly inverted from the light render's dark-fill/light-text).
+      Defect: Same two labels (R31, R21) are partially hidden behind the Central node in this render too — the geometry bug is theme-independent, as expected since it's a layout issue not a color issue.
+      Legibility verdict: PASS overall (all chrome and 16/18 edge labels fully readable), with the same localized 2-label overlap defect as the light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -82,54 +68,53 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22, caption 13, legend 14, station
-          labels 15, hub label 19, edge labels 12) and fully readable at full resolution
-          in both themes; dense edge/station labels are a real mobile-thumbnail (~400px)
-          legibility risk given 18 routes + 9 stations.
+        comment: All font sizes explicitly set (22/19/15/14/13px) and well-proportioned
+          overall; two edge labels (R31, R21) are unreadable because the Central node
+          covers part of the text — localized legibility failure, not a systemic one.
       - id: VQ-02
         name: No Overlap
+        score: 3
+        max: 6
+        passed: true
+        comment: 16 of 18 edge labels have zero overlap; R31 and R21 labels overlap/hide
+          behind the Central hub node because Stations renders on top of RouteEdges
+          in z-order.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Label-background boxes and the perpendicular-offset/widest-gap-angle
-          placement keep text readable; the Central-hub cluster (R20/R21/EX1/L22)
-          is tightly packed but not overlapping.
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Node radii (13-46px) and line widths (2-2.5px) are well adapted to
-          this sparse (9-node, 18-edge) network.
+        comment: Node sizes scale with degree, edges have adequate stroke width (2-2.5px),
+          arrowheads clearly visible; express dashing adds a second visibility cue.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three route-type colors (green/lavender/blue) are well distinguished
-          and CVD-safe; express routes add a dashed pattern as redundant encoding.
+        comment: Three CVD-safe Imprint hues plus a dashed stroke on Express gives
+          redundant (non-color-only) encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Network fills a large, balanced portion of the 2400x2400 square canvas;
-          legend sits near the plot, not isolated.
+        comment: Network fills a large, balanced portion of the square canvas with
+          generous, even margins; nothing cut off; legend sits near the content.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A -- network diagram has no x/y axes by design; title itself is
-          descriptive and correctly formatted.
+        comment: No axes needed for a network diagram; title follows the required
+          '{spec-id} · {lang} · {lib} · anyplot.ai' format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is brand green #009E73, remaining types use canonical
-          Imprint order; backgrounds and all chrome are theme-correct in both renders;
-          data colors identical across themes.'
+        comment: Regional=palette[0] (#009E73, brand green, first series), Local=palette[1],
+          Express=palette[2], canonical order; backgrounds and chrome are theme-correct
+          and identical data colors across both renders.
     design_excellence:
       score: 15
       max: 20
@@ -139,27 +124,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Strong, thoughtful design -- custom hub emphasis, curved offset edges,
-          deliberate label placement -- clearly above a configured default, though
-          not fully publication-ready (no explanation of why Central is larger, limited
-          color palette to 3 hues).
+        comment: Custom bezier-curve edges with canonical-pair perpendicular offsets,
+          a distinctively styled hub, and a coherent color/dash system read as intentional,
+          above-default design; the label/node overlap keeps it out of the top tier.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No grid, no axis clutter, generous whitespace, subtle label-box backgrounds;
-          minor deduction for the tight Central-hub cluster.
+        comment: No axis chrome or grid, subtle elevated-background label boxes, generous
+          whitespace around the network; small deduction for the overlap defect.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Hub size + route-type color create visual hierarchy that reads immediately
-          as 'Central is the interchange,' but there's no further layer of emphasis
-          (e.g. service frequency) to deepen the story.
+        comment: The oversized, labeled Central node plus color/dash-coded route types
+          immediately establish a hub-and-spoke narrative and a clear focal point.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -167,30 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: a static directed transport network diagram with labeled
-          nodes and directed edges.'
+        comment: Correct directed transport-network diagram with labeled nodes and
+          directed, timed edges.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Directed arrows, edge labels (route id + departure->arrival), curved/offset
-          multi-edges, color-coding by route type all present; hover tooltips ('where
-          supported') from the spec notes are not implemented at all.
+        comment: Directed arrows, route ID + departure→arrival edge labels, curved/offset
+          edges for parallel routes, x/y-based fixed layout, and route-type color-coding
+          are all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Station x/y coordinates correctly drive node placement; all stations
-          and routes are visible.
+        comment: Station x/y coordinates drive node placement exactly as given; all
+          9 stations and 18 routes are shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches the mandated format; legend labels (Regional/Local/Express)
-          match the route-type data.
+        comment: Title format exact; legend labels (Regional/Local/Express) match
+          the route-type data.
     data_quality:
       score: 14
       max: 15
@@ -200,24 +183,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows bidirectional trunk/branch routes, a skip-stop express, and
-          varied node degree; station/route counts sit near the low end of the spec's
-          suggested range so topology variety is somewhat limited.
+        comment: Shows bidirectional pairs, a skip-stop express arc, and degree-based
+          node sizing, but every branch follows the same symmetric out-and-back pattern
+          — no orbital route or asymmetric-frequency branch to show more edge-offset
+          variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral regional commuter-rail scenario with plausible
+        comment: Plausible regional commuter-rail network with neutral, real-world
           station names and schedule.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Departure/arrival times and travel durations are internally consistent;
-          the express route is credibly faster than the equivalent local-plus-transfer
-          trip.
+        comment: Departure/arrival times and travel durations are realistic for the
+          implied distances; station coordinates plausibly represent a radial suburb
+          layout.
     code_quality:
       score: 10
       max: 10
@@ -227,61 +211,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Structure is Data -> derived geometry -> component functions -> default
-          export, which is the required React pattern for muix; no unnecessary abstraction.
+        comment: Structure is appropriate for a React/MUI X custom-marks component
+          (data → derived helpers → RouteEdges/Stations/Legend/Chart) — no unnecessary
+          abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hard-coded and deterministic.
+        comment: Fully hard-coded, deterministic station/route data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ChartContainer, useXScale, useYScale imported, all used.
+        comment: Only ChartContainer and the two scale hooks are imported, both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity (angle math, offset geometry) is justified by the custom
-          network-diagram requirement; no fake UI/functionality.
+        comment: Geometry math (canonical-pair offsets, widest-angle label placement)
+          is appropriately complex for what it accomplishes; no fake interactivity
+          or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly default-exports a component sized to window.ANYPLOT_SIZE
-          with skipAnimation set; harness owns file output.
+        comment: Default-exports the Chart component, sizes to window.ANYPLOT_SIZE,
+          sets skipAnimation — correct harness contract.
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses ChartContainer's low-level scale/axis infrastructure via useXScale/useYScale
-          to drive custom SVG marks -- the documented, recommended approach for chart
-          types the community package has no native component for.
+        comment: Uses ChartContainer's xAxis/yAxis domain plus useXScale/useYScale
+          to drive custom marks — the documented MUI X pattern for chart types outside
+          the built-in series set.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The hook-based scale extraction (useXScale/useYScale) feeding fully
-          custom SVG marks is a MUI X-specific composability pattern that isn't easily
-          replicated in other charting libraries.
-  verdict: REJECTED
+        comment: The scale-hook-driven custom-overlay technique is specific to MUI
+          X's ChartContainer architecture and isn't a trivial port from another library.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
