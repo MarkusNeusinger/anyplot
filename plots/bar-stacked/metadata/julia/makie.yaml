@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: bar-stacked
 created: '2026-09-02T13:30:16Z'
-updated: '2026-09-02T13:34:13Z'
+updated: '2026-09-02T13:41:31Z'
 generated_by: claude-sonnet
 workflow_run: 33635479697
 issue: 1947
@@ -12,82 +12,86 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 89
 review:
   strengths:
-  - Correct, idiomatic use of Makie's barplot! `stack` API for the stacked bar chart,
-    with a clean shared theme-token setup that drives both light/dark renders from
-    one file.
-  - Total value labels rendered above each bar add a clear focal point without visual
-    clutter, directly following the spec's 'consider adding total value labels above
-    each complete stack' suggestion.
+  - Segment strokes (strokewidth=1.25, strokecolor=PAGE_BG) now cleanly delineate
+    each stacked component, and the wider 0.72 bar width reads as a more cohesive
+    stacked mass than the previous 0.62 — both directly resolve the prior review's
+    DE-02/LM-02 feedback.
+  - Total-value labels are now bold with a background-color halo stroke, which noticeably
+    improves legibility against the busy Solar-green top segment in both themes.
+  - The Legend now carries a bold, left-aligned title ("Energy Source"), a small but
+    genuine idiomatic-Makie touch beyond the bare label list from attempt 1.
+  - Correct, idiomatic use of Makie's `barplot!` `stack` kwarg; clean shared theme-token
+    setup drives both light/dark renders from one file.
+  - Data is realistic and internally consistent — printed totals (88, 86, 85, 85,
+    87, 89, 91, 92) exactly match the summed stack values, and the fossil-receding/renewables-rising
+    monthly trend is a coherent, neutral scenario.
   - 'Both renders are fully legible: correct Imprint background/ink tokens, identical
     data colors between themes (first series #009E73 assigned to Solar), spines/grid/typography
     all theme-adaptive.'
-  - Data is realistic (a grid generation-mix scenario) and internally consistent —
-    the printed total labels (88, 86, 85, 85, 87, 89, 91, 92) exactly match the summed
-    stack values.
   - Legend order (Solar / Wind / Natural Gas / Coal, top-to-bottom) mirrors the visual
-    stack order top-to-bottom, making the color-to-segment mapping immediately intuitive.
+    stack order top-to-bottom, keeping the color-to-segment mapping intuitive.
   weaknesses:
-  - Styling closely follows the mandated style-guide baseline (Imprint palette, spine
-    removal, subtle single-axis grid) without much additional distinctive polish —
-    nothing pushes it clearly past 'correct and clean' into 'sophisticated'.
-  - Library-mastery-wise, only the standard `stack` kwarg on barplot! is demonstrated;
-    no further Makie-distinctive touches (e.g. combining `dodge` with `stack`, a titled
-    Legend, richer text! styling for the totals) are shown.
-  - Bar width (0.62) leaves fairly generous gaps between bars; a touch tighter would
-    read as a more cohesive 'stacked mass' per category, though this is a minor aesthetic
-    preference, not a defect.
+  - Only the standard `stack` kwarg on barplot! is showcased for the core technique;
+    no further Makie-distinctive capability is layered in (e.g. dodge+stack combo,
+    per-bar hover-ready metadata, or a richer text! callout for the largest single
+    component).
+  - Styling is polished but still close to the mandated baseline — DE-01 has room
+    to push further past 'correct and clean' into genuinely distinctive, e.g. varying
+    segment corner treatment or a subtitle summarizing the trend.
+  - Segment stroke color equals PAGE_BG, which is correct for separation but means
+    the seams are invisible if the palette gap is small on some future dataset — worth
+    noting as a minor robustness point, not a defect here.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "bar-stacked · julia · makie · anyplot.ai" in bold dark ink, centered top; "Month" x-axis label and "Electricity Generation (GWh)" y-axis label both dark and clearly legible; tick labels (Jan–Aug, 0/50/100) in a softer dark gray; unframed legend on the right (Solar, Wind, Natural Gas, Coal) in dark ink; top/right spines hidden, left/bottom spines a soft neutral gray; one subtle horizontal grid line at y=50.
-      Data: Eight stacked bars (Jan–Aug), each built from four segments bottom-to-top: Coal (ochre #BD8233), Natural Gas (blue #4467A3), Wind (lavender #C475FD), Solar (green #009E73, first categorical series). Bold total labels (88, 86, 85, 85, 87, 89, 91, 92) sit just above each stack.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "bar-stacked · julia · makie · anyplot.ai" centered at top; dark "Month" and "Electricity Generation (GWh)" axis labels; soft-gray tick labels for Jan-Aug and 0/50/100 gridline values. All clearly readable against the light background.
+      Data: Eight stacked bars, each built bottom-to-top from Coal (ochre), Natural Gas (blue), Wind (lavender), Solar (green #009E73 — first Imprint series). Thin background-colored strokes separate each segment. Bold total labels (88, 86, 85, 85, 87, 89, 91, 92) with a subtle halo sit above each stack. Unframed legend on the right, titled "Energy Source" in bold, lists Solar/Wind/Natural Gas/Coal top-to-bottom matching the visual stack order.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-gray tones against the dark background, fully legible; legend text is light-colored; spines and the single grid line at y=50 are a dim neutral tone, subtle but visible.
-      Data: Same four-segment stack order (Coal, Natural Gas, Wind, Solar) with identical hex values to the light render — data colors do not shift between themes. Total labels (88, 86, 85, 85, 87, 89, 91, 92) are rendered in light ink and remain legible above each bar.
-      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements (title, axis labels, ticks, legend, total labels) are clearly visible against the near-black background.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink / soft-gray tokens, fully legible against the dark surface. No dark-on-dark issues detected anywhere (title, axis labels, ticks, legend text, total labels all clearly visible).
+      Data: Colors are pixel-identical to the light render (Coal/Natural Gas/Wind/Solar hues unchanged) — only background, text, spines, and grid opacity flipped for the theme. Segment strokes now render in the dark background color, keeping the same clean separation.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at correct sizes; nothing exceptional
-          beyond correct execution
+        comment: All text readable in both themes; bold+halo total labels improved
+          contrast over attempt 1
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between text, legend, or data elements
+        comment: No collisions between text, legend, or data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bar width (0.62) and gaps are clear and readable; slightly generous
-          spacing
+        comment: Segment strokes now cleanly delineate each stacked component
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, no red-green-only encoding, four hues clearly distinguishable
+        comment: Imprint palette provides adequate contrast; no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); nothing cut off, good proportions
+        comment: 3200x1800 canvas gate passed; balanced proportions, no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -99,32 +103,33 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series (Solar) is #009E73, correct theme-adaptive backgrounds,
-          identical data colors across themes'
+        comment: 'Solar (first series) is #009E73; canonical Imprint order; correct
+          theme backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Meets mandated style-guide baseline but lacks distinctive extra polish
+        comment: Segment strokes and bold legend title add polish, but still close
+          to baseline
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Spines removed, subtle grid, unframed legend — mostly baseline-level
-          refinement
+        comment: Spines removed, subtle grid, unframed legend with title, clean segment
+          separation
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Total labels create a clear focal point; bottom-up ordering (fossil
-          to renewable) adds narrative
+        comment: Total labels create a clear focal point; bottom-up fossil-to-renewable
+          ordering adds narrative
     spec_compliance:
       score: 15
       max: 15
@@ -134,26 +139,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart
+        comment: Correct stacked bar chart via barplot! stack kwarg
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct colors, clear legend, total labels, consistent component
-          order, adequate bar spacing
+        comment: Distinct component colors, clear legend, total labels above stacks,
+          consistent component ordering
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = month category, Y = stacked value, all data represented
+        comment: Category on x-axis, stacked value on y-axis, all data shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match components
+        comment: Title matches mandated format; legend labels match data series
     data_quality:
       score: 15
       max: 15
@@ -163,20 +168,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 8 categories, 4 components, totals, legend — all plot-type aspects
-          shown
+        comment: 8 categories, 4 stacked components, totals shown — covers spec's
+          recommended ranges
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral grid generation-mix scenario
+        comment: Plausible, neutral grid-generation-mix scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible GWh magnitudes; totals verified to match summed components
+        comment: GWh values and monthly trend are sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -186,33 +191,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions/classes
+        comment: Flat script, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness needed
+        comment: Deterministic hand-authored data, no randomness needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie and Colors, both used
+        comment: Only CairoMakie and Colors imported, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: No fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png correctly
+        comment: Saves plot-{THEME}.png with px_per_unit=2, current CairoMakie API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -220,15 +225,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: barplot! with stack kwarg is the idiomatic Makie approach for stacked
-          bars
+        comment: barplot! with stack kwarg is the idiomatic Makie approach; titled
+          Legend with PolyElement is correct pattern
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Only the basic stack kwarg is showcased; no further Makie-distinctive
-          capabilities
+        comment: Legend title and stroke styling are nice touches, but only the basic
+          stack kwarg carries the core technique
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -239,4 +244,5 @@ impl_tags:
   - data-generation
   dataprep: []
   styling:
+  - edge-highlighting
   - publication-ready
