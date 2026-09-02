@@ -1,0 +1,266 @@
+library: d3
+language: javascript
+specification_id: map-route-path
+created: '2026-09-02T02:52:10Z'
+updated: '2026-09-02T03:00:09Z'
+generated_by: claude-sonnet
+workflow_run: 33584080881
+issue: 3768
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Idiomatic d3-geo usage: geoMercator + fitExtent for the projection, geoPath for
+    rendering, geoGraticule for the reference grid, and geoCircle to draw true great-circle
+    elevation-contour rings that stay undistorted under the projection'
+  - 'Correct Imprint palette usage: imprint_seq (interpolateRgbBasis on t.seq) for
+    the single-polarity elevation gradient, brand green (#009E73, palette[0]) for
+    the Start marker, matte red (palette[4]) for the Finish marker — a legitimate
+    semantic-exception assignment matching the spec''s own ''green start / red end''
+    convention'
+  - 'Thoughtful cartographic chrome: north arrow, a distance scale bar computed from
+    real geodesic spacing, direction arrows oriented to the local path tangent, and
+    an elevation legend with units (''Elevation (m)'')'
+  - Fully deterministic, seeded data generation (small fixed-seed LCG) producing a
+    physically plausible switchback mountain-trail profile with realistic distance/elevation-gain
+    ratios
+  - Theme-adaptive chrome correctly threaded through every text and stroke element;
+    data colors (route gradient, Start/Finish markers) are pixel-identical between
+    light and dark renders — only chrome flips
+  - Title correctly formatted as '{Descriptive Title} · map-route-path · javascript
+    · d3 · anyplot.ai' and fontsize-scaled via the length-proportional formula so
+    the longer descriptive+mandated title still fits without overflow
+  weaknesses:
+  - Contour-ring elevation labels ('2311 m', '1611 m') render at 11px, noticeably
+    smaller than the rest of the chrome (13-15px) — bump for better mobile legibility
+  - No literal basemap imagery (streets/terrain/satellite) as the spec notes suggest;
+    the graticule + abstract elevation-contour rings substitute for spatial context,
+    a reasonable workaround given D3's offline/no-fetch/no-CDN constraint, but worth
+    flagging as not a literal basemap
+  - Two small helper functions (rand(), haversineM()) deviate slightly from the strict
+    KISS 'no functions' ideal, though they are minimal and necessary for deterministic
+    randomness and geodesic distance calculation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Backcountry Trail Traverse · map-route-path · javascript · d3 · anyplot.ai" in bold dark ink, subtitle and stats line in softer dark gray, both clearly legible. Map panel outlined with a thin light-gray border; lon/lat graticule and dashed elevation-contour rings are subtle and visible without competing with the route. North arrow, "N" label, and "1 km" scale bar are legible in the bottom-left margin. Elevation legend ("Elevation (m)") with tick labels (2400...1600) is fully readable to the right of the map.
+      Data: Route line uses the imprint_seq gradient (brand green #009E73 near low elevation transitioning to Imprint blue #4467A3 near the peak), identical hue progression to the dark render. Start marker is a brand-green circle, Finish marker is a matte-red square — both with labeled text above them. Small triangular direction arrows are placed along the path, oriented to the local tangent.
+      Legibility verdict: PASS — all text (title, subtitle, stats, contour labels, legend, Start/Finish labels, N/scale-bar labels) is dark-on-light and clearly readable; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, subtitle, and stats line render in light/off-white text, clearly legible against the dark background. Map panel border, graticule, and dashed contour rings remain subtle but visible in a lighter gray tone appropriate for the dark theme. North arrow, "N" label, scale bar, and elevation legend text are all light-colored and readable.
+      Data: Route gradient colors are identical to the light render (same brand-green-to-blue progression) — confirming only chrome flipped, not data colors. Start (green circle) and Finish (red square) markers are unchanged in hue from the light render, with light-colored outline strokes for definition against the dark background.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every title, label, tick, and annotation is clearly visible against the near-black surface. Brand green is still fully legible on the dark surface.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All fonts explicitly set, title fontsize correctly scaled for length;
+          contour-ring labels at 11px are a bit small relative to the rest of the
+          chrome
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, route, legend, or annotations in either
+          theme
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Route line width and markers are visible and appropriately sized;
+          direction-arrow triangles are on the small side
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint sequential gradient plus shape-differentiated Start/Finish
+          markers give redundant encoding beyond hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map panel occupies the large majority of the canvas, legend sits
+          close to the panel, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional x/y axis for a map plot; elevation legend carries
+          units, scale bar and north arrow provide spatial reference
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq used for elevation (single-polarity), palette[0] brand
+          green for Start, palette[4] matte red for Finish (semantic exception matching
+          spec's own convention); theme-correct chrome in both renders
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong, intentional composition: gradient legend, contour rings,
+          scale bar, north arrow — clearly above a configured default'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle graticule and dashed contour rings, generous whitespace, polished
+          typography hierarchy
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Elevation gradient plus contour rings around the peak and directional
+          arrows create a clear visual narrative of the climb and descent
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct route-path map connecting sequential waypoints
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sequential connection, distinct start/end markers, elevation color
+          gradient, direction arrows all present; basemap substituted with graticule
+          + contour context given D3's offline/no-fetch constraint
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lat/lon correctly projected via geoMercator, sequence drives path
+          order
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct with descriptive prefix; Start/Finish and elevation
+          legend labels match the data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows climb, descent, switchback direction changes, and elevation
+          variation; timestamp field unused but color-by-elevation is an explicitly
+          valid alternative
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible mountain-hiking scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Distance, elevation gain, and waypoint spacing are internally consistent
+          and realistic for a mountain-pass trail
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Two small helper functions (rand, haversineM) needed for deterministic
+          RNG and geodesic distance; otherwise linear imports->data->plot flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG produces deterministic waypoints
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a geographic route map, no fake UI or
+          interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correctly builds into #container per the D3 mount-node contract'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of d3-geo''s high-level API: geoMercator/fitExtent, geoPath,
+          geoGraticule, geoCircle, plus d3-scale/d3-interpolate for the elevation
+          ramp'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: d3-geo cartographic primitives (graticule, great-circle geoCircle
+          rings under a fitted Mercator projection) are not easily replicated in Chart.js/ECharts/Highcharts
+          without a dedicated mapping module
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
+  - gradient-fill
