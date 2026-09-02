@@ -83,12 +83,35 @@ const clipG = mapG.append("g").attr("clip-path", "url(#map-clip)");
 const zoomLayer = clipG.append("g");
 const streetsLayer = zoomLayer.append("g");
 const hullLayer = zoomLayer.append("g");
+const focusLayer = zoomLayer.append("g");
 const markerLayer = zoomLayer.append("g");
 
 // Stylized city-street grid basemap (geographic context per the spec notes).
 // non-scaling-stroke keeps line thickness constant on screen while zoomLayer scales.
 const streetCols = 13;
 const streetRows = 8;
+
+// Subtle "city block" fills between the grid lines — purely decorative basemap
+// texture (a deterministic checkerboard-like pattern, not random) that fills
+// the dead space between clusters so the default view reads as a real city
+// fabric instead of an empty grid. Drawn before the street lines so the lines
+// sit on top of the blocks.
+for (let col = 0; col < streetCols; col++) {
+  for (let row = 0; row < streetRows; row++) {
+    if ((col * 3 + row * 2) % 5 >= 2) continue;
+    const bw = iw / streetCols;
+    const bh = ih / streetRows;
+    streetsLayer
+      .append("rect")
+      .attr("x", col * bw + 3)
+      .attr("y", row * bh + 3)
+      .attr("width", bw - 6)
+      .attr("height", bh - 6)
+      .attr("fill", t.ink)
+      .attr("opacity", 0.05);
+  }
+}
+
 for (let i = 1; i < streetCols; i++) {
   const x = (i * iw) / streetCols;
   streetsLayer
@@ -250,6 +273,40 @@ function update(transform) {
     .style("fill", "#FFFFFF")
     .style("pointer-events", "none")
     .text((d) => (d.count > 1 ? d.count : ""));
+
+  // Focal point: recomputed every update so it always tracks whichever
+  // cluster is currently largest — a highlight ring + callout instead of a
+  // flat scene where every cluster carries equal visual weight.
+  focusLayer.selectAll("*").remove();
+  const busiest = clusters.reduce((a, b) => (b.count > a.count ? b : a), clusters[0]);
+  if (busiest && busiest.count > 1) {
+    const ringR = radiusFor(busiest.count) / k + 10 / k;
+    const labelGap = 20 / k;
+    // Flip the callout below the ring when there isn't room above, so it
+    // never gets cropped by the map's clip frame for a top-row cluster.
+    const labelY = busiest.y - ringR - labelGap > 18 / k ? busiest.y - ringR - 8 / k : busiest.y + ringR + labelGap;
+    focusLayer
+      .append("circle")
+      .attr("cx", busiest.x)
+      .attr("cy", busiest.y)
+      .attr("r", ringR)
+      .attr("fill", "none")
+      .attr("stroke", t.ink)
+      .attr("stroke-width", 1.5 / k)
+      .attr("stroke-dasharray", `${5 / k},${4 / k}`)
+      .style("vector-effect", "non-scaling-stroke")
+      .style("pointer-events", "none");
+    focusLayer
+      .append("text")
+      .attr("x", busiest.x)
+      .attr("y", labelY)
+      .attr("text-anchor", "middle")
+      .attr("fill", t.ink)
+      .style("font-size", `${12.5 / k}px`)
+      .style("font-weight", "600")
+      .style("pointer-events", "none")
+      .text("Busiest cluster");
+  }
 }
 
 // --- Zoom / pan behavior -------------------------------------------------------
