@@ -172,6 +172,7 @@ Located in `.github/workflows/`:
 | `report-validate.yml` | Validates user-submitted issue reports |
 | `sync-postgres.yml` | Syncs `plots/` filesystem state to PostgreSQL on push to main |
 | `sync-labels.yml` | Auto-syncs spec/impl labels after manual PR merges |
+| `indexnow-submit.yml` | Pushes changed page URLs to IndexNow (Bing, Yandex, Seznam, Naver, Yep) on every push to main that touches `plots/`; `workflow_dispatch` with `scope=sitemap` submits the whole sitemap |
 | `codeql.yml` | CodeQL scanning (actions, JavaScript/TypeScript, Python) on pushes to main, PRs and a weekly cron; `plots/**` is excluded from triggers and analysis, so pipeline PRs never start a scan |
 | `ci-lint.yml` | Ruff lint check on PRs |
 | `ci-tests.yml` | Unit + integration tests on PRs |
