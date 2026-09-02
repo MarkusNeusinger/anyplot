@@ -1026,8 +1026,10 @@ jobs:
           CAMPAIGN_WINDOW_H: '12'
           # Step outcomes, to tell an infrastructure failure (provider incident,
           # cloud auth, GitHub API) from the agent's own — only the latter counts
-          # toward the 3-attempt cap. `outcome` is the result before
-          # continue-on-error, so the first Claude step reports its real result.
+          # toward the 3-attempt cap. Only the retry step is inspected: it runs
+          # solely when the first Claude step failed, so its failure means both
+          # runs died (the first step has continue-on-error and never fails the
+          # job by itself).
           CLAUDE_RETRY_OUTCOME: ${{ steps.claude_retry.outcome }}
           CLAUDE_EXEC_FILE: ${{ steps.claude_retry.outputs.execution_file }}
           GCP_AUTH_OUTCOME: ${{ steps.gcp_auth.outcome }}
@@ -1061,7 +1063,8 @@ jobs:
           if [ "${CLAUDE_RETRY_OUTCOME}" = "failure" ]; then
             if [ -n "${CLAUDE_EXEC_FILE}" ] && [ -f "${CLAUDE_EXEC_FILE}" ] \
                && grep -qiE 'Internal error|overloaded|rate.?limit|too many requests|ECONNRESET|ETIMEDOUT|"status": *5[0-9][0-9]' "${CLAUDE_EXEC_FILE}"; then
-              INFRA_CAUSE="Claude Code action error: $(grep -oiE 'Internal error[^"]{0,60}|overloaded[^"]{0,40}|rate.?limit[^"]{0,40}|too many requests|ECONNRESET|ETIMEDOUT' "${CLAUDE_EXEC_FILE}" | head -1)"
+              SNIPPET=$(grep -oiE 'Internal error[^"]{0,60}|overloaded[^"]{0,40}|rate.?limit[^"]{0,40}|too many requests|ECONNRESET|ETIMEDOUT|"status": *5[0-9][0-9]' "${CLAUDE_EXEC_FILE}" | head -1)
+              INFRA_CAUSE="Claude Code action error: ${SNIPPET:-provider-side error, see the execution log}"
             fi
           elif [ "${GCP_AUTH_OUTCOME}" = "failure" ] || [ "${GCLOUD_OUTCOME}" = "failure" ] || [ "${GCS_OUTCOME}" = "failure" ]; then
             INFRA_CAUSE="Google Cloud auth/upload step failed"
