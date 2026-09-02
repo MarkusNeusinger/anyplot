@@ -1,0 +1,264 @@
+library: chartjs
+language: javascript
+specification_id: circlepacking-basic
+created: '2026-09-02T15:50:33Z'
+updated: '2026-09-02T16:11:00Z'
+generated_by: claude-sonnet
+workflow_run: 33649026730
+issue: 2498
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'The synthetic hover-target fix works correctly: leaf circles'' already-drawn
+    pixel centers are back-mapped through chart.scales.x/y.getValueForPixel using
+    the same computeTransform() the canvas plugin uses, so the invisible bubble dataset
+    lines up exactly with the visible circles - a real fix for the spec''s ''labels
+    on hover'' requirement, not a cosmetic patch.'
+  - Font-shrink-before-truncate labeling (steps the leaf font size down toward a 9px
+    floor before falling back to ellipsis) measurably reduces truncation versus the
+    prior attempt - 'International Index' and 'Healthcare Sector' now render in full
+    where they were previously cut short.
+  - Genuine from-scratch circle-packing algorithm (front-chain tangent-circle placement
+    + Ritter bounding-circle recentring) remains a real engineering solution to Chart.js
+    having no native circle-packing type.
+  - 'Correct, well-reasoned palette application: skips the deferred semantic-red anchor
+    since no category carries loss/error meaning, matching the Imprint palette''s
+    documented rule.'
+  - Both themes render pixel-identical data colors with fully theme-adaptive chrome;
+    the dashed root ring, title, and category labels all sit with comfortable margin
+    from every canvas edge - no clipping.
+  weaknesses:
+  - Several of the smallest leaf circles still ellipsis-truncate their labels in the
+    static render ('Small Cap Va...', 'Emerging Mark...', 'High Yield B...', 'Commercial
+    Pro...', 'Industrial W...', 'Residential R...', 'Agricultur...', 'Oil Futures
+    ...', 'Venture ...') - now mitigated by working hover tooltips per the spec's
+    'smaller circles may show labels on hover' fallback, so this is a minor remaining
+    polish item rather than a compliance gap.
+  - The implementation still leans on 10+ helper functions; largely justified by the
+    packing-algorithm and hover-alignment complexity, but enclosingCircle's multi-pass
+    loop and the separate placeAbsolute tree walk could still fold into layout for
+    a flatter structure.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Dark-ink title "Investment Portfolio Composition · circlepacking-basic · javascript · chartjs · anyplot.ai" reads clearly across the top, comfortably inside the canvas margin (checked via pixel crop - no clipping at top/bottom/left/right edges). "Total Portfolio" label on the dashed root ring is legible gray. Five bold dark-ink category labels (Equities, Fixed Income, Real Estate, Commodities, Alternatives) sit atop their translucent tinted discs, fully readable.
+      Data: First category (Equities) uses #009E73 brand green; Fixed Income/Real Estate/Commodities/Alternatives use palette[1,2,3,5] (lavender, blue, ochre, cyan) - correctly skipping the semantic-red anchor. Leaf circles are solid-filled in their category color, sized by value (area-proportional). Medium/short labels ("REIT Index", "TIPS", "Gold ETF", "International Index", "Healthcare Sector") now render in full thanks to the font-shrink-before-truncate pass; the smallest circles still truncate their longest labels ("Small Cap Va...", "High Yield B...", "Commercial Pro...", "Industrial W...", "Residential R...", "Agricultur...", "Oil Futures ...", "Venture ...").
+      Legibility verdict: PASS (all chrome text readable; remaining truncation on the smallest leaves is now backed by a working hover tooltip).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Title and category labels flip to light/white text, fully legible against the dark surface. Dashed root ring flips to a light dashed stroke, again with comfortable margin from all four canvas edges. Category tint fills darken correspondingly while remaining distinguishable from the page background.
+      Data: All five leaf-circle fill colors are pixel-identical to the light render (green/lavender/blue/ochre/cyan) - only chrome flipped, as required. Leaf-circle separator strokes use the theme's pageBg color, reading as thin dark gaps rather than competing lines.
+      Legibility verdict: PASS (no dark-on-dark failures found; every title/label/tick-equivalent element is clearly visible against the near-black background).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font-shrink-before-truncate pass recovers several previously-truncated
+          labels (e.g. 'International Index', 'Healthcare Sector'); only the smallest
+          leaf circles still truncate their longest labels.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either theme.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 28 nodes get prominent, well-separated circles; sizing clearly reflects
+          value via area.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Luminance-based contrast-text routine picks dark or light label color
+          per circle fill.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square orientation correctly declared and matches the saved 2400x2400
+          PNG exactly; verified no clipping at any of the four edges via pixel crop.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes needed; title descriptive and correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First category is #009E73; remaining categories correctly skip the
+          deferred semantic-red anchor; backgrounds match spec exactly.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Bespoke circle-packing algorithm and deliberate semantic palette
+          reasoning show real design intent beyond defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Depth-based chrome and background-colored leaf separators keep the
+          composition clean.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three-tier nesting with escalating fill intensity guides the eye
+          from whole portfolio to individual holdings.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine non-overlapping nested circle packing.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Fixed this attempt: leaf circles now bind an invisible bubble dataset
+          back-mapped through getValueForPixel, so the spec''s ''smaller circles may
+          show labels on hover'' fallback is now reachable via a working tooltip with
+          title/value callbacks.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: id/parent/value/label schema followed; values correctly aggregate
+          bottom-up.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; direct on-circle labeling substitutes
+          for a legend.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 28 nodes across 3 hierarchy levels sits within spec range, toward
+          the simpler end.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral investment-portfolio composition.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Dollar-million values are sensible and internally consistent.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: 10+ helper functions; the two added this attempt (computeTransform,
+          collectLeaves) are small and eliminate duplication between the draw pass
+          and the hover-point mapping rather than adding net complexity, but the function
+          count is still high.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data, no RNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; complexity matches the plot type's genuine
+          needs.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct mount contract, animation: false, current Chart.js API.'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the afterDraw plugin hook, an empty-dataset bubble chart as
+          a host, and chart.scales.x/y.getValueForPixel to align a real interaction
+          layer with hand-drawn pixels - idiomatic, correct use of Chart.js's scale
+          API to extend past native chart types.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Genuine circle-packing layout algorithm in vanilla JS is distinctive;
+          now paired with working hover data-binding.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - canvas-plugin-rendering
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - recursive-traversal
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - alpha-blending
