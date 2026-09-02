@@ -1,0 +1,238 @@
+library: chartjs
+language: javascript
+specification_id: kagi-basic
+created: '2026-09-02T02:01:08Z'
+updated: '2026-09-02T02:15:50Z'
+generated_by: claude-sonnet
+workflow_run: 33581145028
+issue: 3341
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Correct Kagi construction algorithm: pivots tracked via reversal-threshold breaks,
+    and thick/yang vs. thin/yin classification correctly follows the shoulder/waist
+    crossing rule'
+  - Trend state is redundantly encoded via both color AND line thickness (7px vs 2.5px),
+    a CVD-safe design choice beyond the red/green semantic exception
+  - 'Custom legend swatches use pointStyle: ''line'' with matching stroke widths,
+    reinforcing the thick/thin visual language instead of generic color boxes'
+  - Subtitle communicates the reversal threshold and sample size, giving the reader
+    context a bare axis wouldn't convey
+  - 'Theme-adaptive chrome correctly implemented in both renders; data colors (#009E73
+    / #AE3030) are identical between light and dark, only chrome flips'
+  - 'Clean, deterministic, well-commented code: seeded LCG for reproducibility, clear
+    separation between data generation, Kagi construction, and chart config'
+  weaknesses:
+  - Aesthetic sophistication is solid but plain beyond the thick/thin encoding — no
+    additional refinement (e.g. endpoint markers at reversal points, or subtle shoulder/waist
+    annotations) that would push Design Excellence further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "kagi-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top center; italic subtitle "4% reversal threshold · 300 daily closes" beneath it; legend below the subtitle with two line swatches ("Yang (uptrend)" thick green, "Yin (downtrend)" thin red); y-axis "Price ($)" and x-axis "Kagi Line Index" titles both in dark ink; tick labels in a softer gray-ink tone. Subtle horizontal gridlines only (no vertical gridlines), consistent with a time-independent x-axis.
+      Data: A single zigzag Kagi line spanning roughly 21 columns from price ~128 down to ~103 and back up to ~118. Segments alternate between thick brand-green (#009E73, yang/uptrend) and thin matte-red (#AE3030, yin/downtrend), with clear horizontal shoulder/waist connectors at each column transition. Line style change (thickness) matches color change one-to-one, giving a redundant, CVD-safe encoding.
+      Legibility verdict: PASS — all text (title, subtitle, legend, axis titles, tick labels) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/subtitle/legend/axis-title layout, now rendered in white/light-gray ink against the dark background. Gridlines remain subtle but visible as faint horizontal lines.
+      Data: Identical zigzag shape and identical data colors (#009E73 green, #AE3030 red) to the light render — only the chrome (background, text, grid) flipped, confirming palette-position consistency between themes.
+      Legibility verdict: PASS — title, subtitle, legend text, and axis labels are all clearly legible in light ink against the dark background; no dark-on-dark failures observed. Brand green and matte red both read clearly against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; explicit font sizes throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, subtitle, legend, axes and data have no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Thick/thin segment widths (7px/2.5px) are clearly distinguishable;
+          pointRadius 0 is correct for a Kagi line
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green is a domain-standard semantic exception, and is reinforced
+          by a redundant thickness encoding, so it is not the sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced proportions, no overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Price ($)'' has units; ''Kagi Line Index'' is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red semantic-exception order per financial-chart convention;
+          both backgrounds theme-correct; data colors identical across themes
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Contextual subtitle and semantic color choice show intent, but overall
+          look stays close to a standard financial line chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle single-axis gridlines, generous whitespace, custom line-style
+          legend swatches instead of default boxes
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color+thickness combo gives a clear, scannable trend narrative across
+          reversal columns
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Kagi zigzag construction
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thick yang / thin yin, reversal-threshold direction changes, shoulder/waist
+          horizontal segments, line-index x-axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = Kagi line index, Y = price, full series shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; legend labels 'Yang (uptrend)' / 'Yin
+          (downtrend)' match the data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full Kagi construction pipeline from raw closes to pivots to thick/thin
+          columns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral synthetic stock price series (drift + noise, floored
+          at $20)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range ~$103-$139 is a realistic single-stock price band
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; only a tiny LCG closure, otherwise flat top-to-bottom
+          script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG (seed 42) is fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-commented, no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts canvas into #container, animation: false, current Chart.js
+          4.x API'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct use of per-segment style callbacks (segment.borderColor/borderWidth)
+          on a linear-scale line chart
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom generateLabels legend and segment-level styling go beyond
+          basic API usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling: []
