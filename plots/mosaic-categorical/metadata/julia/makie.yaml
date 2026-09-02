@@ -1,0 +1,249 @@
+library: makie
+language: julia
+specification_id: mosaic-categorical
+created: '2026-09-02T03:10:22Z'
+updated: '2026-09-02T06:29:15Z'
+generated_by: claude-sonnet
+workflow_run: 33585577937
+issue: 3650
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - 'Correct mosaic construction: rectangle widths encode marginal department proportions
+    and heights encode conditional satisfaction-level proportions within each column,
+    so area is proportional to cell frequency exactly as the spec requires'
+  - Theme-adaptive chrome is fully wired through (title/axis/tick colors, spines,
+    backgrounds) while the three Imprint data colors stay pixel-identical between
+    light and dark renders
+  - 'Notable-cell technique: the department with the highest ''Low satisfaction''
+    share gets a bolder outline, giving the mosaic a clear focal point and a data-storytelling
+    angle beyond a plain grid of tiles'
+  - Percentage labels inside every cell add a redundant, color-independent encoding
+    of the data, improving accessibility
+  - 'Clean, idiomatic Julia: single seeded RNG, no functions/classes, correct 2400x2400
+    canvas and plot-$(THEME).png output'
+  weaknesses:
+  - Palette assignment uses canonical order (Low=green, Medium=lavender, High=blue)
+    instead of the sentiment/status semantic exception the style guide calls out for
+    traffic-light-style scales (Low->red or amber, High->green) - the current mapping
+    puts the brand-positive green on the worst satisfaction tier, which fights viewer
+    intuition
+  - Title occupies only ~35% of the plot width, below the 50-70% guidance range -
+    a modest titlesize bump would strengthen the visual hierarchy without risking
+    overflow
+  - Percentage cell labels at fontsize=11 are on the small side for a 2400px canvas
+    - increasing to ~13-14 would improve legibility at mobile scale
+  - The spec's optional 'color coding can indicate residuals/deviations from independence'
+    idea is left unused - the current design covers raw proportions only, without
+    hinting whether a cell is over/under-represented vs. independence
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
+      Chrome: Title "mosaic-categorical · julia · makie · anyplot.ai" in bold dark ink, clearly visible; "Department" x-axis label and "Satisfaction share" y-axis label in dark ink, both readable; tick labels (department names, 0-100% y ticks) in a slightly lighter gray, still clearly legible; legend "Satisfaction level" with Low/Medium/High swatches on the right, unframed, dark text - all readable.
+      Data: Four department columns (Engineering, Sales, Support, Marketing) of varying widths (proportional to department size), each split vertically into three colored segments - green (Low), lavender (Medium), blue (High) - matching the Imprint palette's first three positions. Every segment carries a black or white percentage label with good contrast against its fill. The Support/Low cell has a bold dark outline calling out the standout finding (highest low-satisfaction share). All text is readable against the light background - no light-on-light issues found.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
+      Chrome: Same title, axis labels, and tick labels now rendered in light ink/gray tones, clearly visible against the dark surface; legend text also flipped to light ink and remains legible; spines/gridless layout unchanged.
+      Data: Same green/lavender/blue segments as the light render, pixel-identical hues confirming the palette does not shift between themes. Percentage labels retain the same per-column ink assignment (dark text on green/lavender, white text on blue) and are readable on both the tile fills and against the dark page background. The Support/Low outline switches to a light stroke so it still reads as a highlight against the dark tile fill. No dark-on-dark failures were found - no text or label merges into the background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; percentage labels slightly small
+          for canvas scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or tile collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 tiles clearly distinguishable, even the smallest (3%) segments
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant percentage labels plus per-column ink contrast; no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, generous legend gutter via colsize!
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive 'Department' / 'Satisfaction share' labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Canonical order used (Low=green) instead of the sentiment semantic
+          exception (Low=red/amber, High=green) the style guide calls out for status-like
+          scales
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Competent custom palette and clean composition, but visually plain
+          beyond the tile grid
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, no grid clutter, generous whitespace around legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold-outline focal point on the standout Support/Low cell gives a
+          clear visual hierarchy
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct mosaic geometry: width=marginal proportion, height=conditional
+          proportion, area=frequency'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Gap spacing, dual-variable labeling, area-proportional rectangles
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 4 departments x 3 satisfaction levels rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 contingency cells shown with percentage labels
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral employee-satisfaction survey scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Department sizes (130-220) and shares are sensible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean matrix-based geometry construction, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), correct 2400x2400
+          target
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic Axis/Figure/poly!/text! usage with proper theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom PolyElement legend and colsize!(Relative(...)) layout control
+          for the legend gutter
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
