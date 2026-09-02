@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bar-stacked
 created: '2026-09-02T13:20:13Z'
-updated: '2026-09-02T13:24:14Z'
+updated: '2026-09-02T13:33:02Z'
 generated_by: claude-sonnet
 workflow_run: 33634729842
 issue: 1947
@@ -12,46 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Correct stacked bar chart via geom_col(position="stack") with a consistent department
-    stacking order (Engineering top to Support bottom) across all six months, matching
-    spec guidance on consistent ordering
-  - 'Imprint palette applied correctly: the first stacked series (Engineering) is
-    #009E73, remaining departments follow the canonical palette order (#C475FD, #4467A3,
-    #BD8233)'
-  - Total value labels above each bar ($285K–$312K) directly implement the spec's
-    suggestion to show cumulative totals alongside individual components, giving a
-    clear focal point
-  - Both themes render correctly with warm off-white (#FAF8F1) / near-black (#1A1A17)
-    backgrounds, fully legible chrome, and identical data colors between light and
-    dark renders
-  - 'Clean, reproducible code: set.seed(42), single geom_col + geom_text layer, correct
-    ragg PNG save at the mandated 8x4.5in / 400dpi landscape canvas'
+  - 'Both attempt-1 weaknesses were fixed correctly: in-segment value labels now use
+    position_stack(vjust = 0.5) exactly as suggested, and legend.background gets an
+    INK_SOFT border matching the library reference theme'
+  - Two-tier label hierarchy (bold white in-segment $ values plus a total above each
+    bar) gives a clear part-to-whole story, matching the spec's suggestion to show
+    both components and cumulative totals
+  - 'Correct Imprint palette order (Engineering #009E73 first, then Sales/Marketing/Support
+    in canonical order), consistent stacking order across all six months, and theme-correct
+    backgrounds/chrome in both renders'
+  - 'Clean, idiomatic, reproducible code: set.seed(42), a single geom_col + two geom_text
+    layers, scales::dollar formatting, ragg::agg_png at the exact 3200x1800 landscape
+    canvas'
   weaknesses:
-  - Design excellence is competent but not distinctive beyond the required Imprint
-    palette and total-label addition — no further hierarchy device (e.g. muted non-focal
-    months, in-segment value labels for large components) to sharpen the storytelling
-  - 'Library mastery is fairly basic: relies on dollar()/label_dollar() formatting
-    and a geom_text totals layer, both common techniques; could showcase more ggplot2-specific
-    capabilities (e.g. position_stack(vjust = 0.5) for in-segment labels, or fine-tuned
-    scale_x_discrete expansion) to demonstrate deeper mastery'
-  - legend.background omits a border (color = NA) where the library guide's reference
-    theme uses color = INK_SOFT for a subtle legend box outline — minor stylistic
-    deviation, not a defect
+  - 'panel.grid.major.y uses the full-opacity INK color (color = INK, linewidth =
+    0.25) instead of a faint/15-25%-opacity treatment. The style guide requires grid
+    opacity 15-25% and ''never bold, high-contrast grid''; the library guide itself
+    says to use a ''faint INK color'' when alpha isn''t available. Visually the horizontal
+    rules read as solid, fairly high-contrast lines rather than subtle guides in both
+    themes. Fix: blend INK toward PAGE_BG (e.g. scales::alpha(INK, 0.2) or a manually
+    mixed lighter gray) instead of using the raw INK token.'
+  - 'The bold white in-segment labels sit on the lightest fill color (Sales, #C475FD
+    lavender) with visibly less contrast margin than on the darker Engineering/Marketing/Support
+    segments - still readable but worth tightening, e.g. a subtle dark text outline
+    or switching that one label to a dark ink color.'
+  - Library mastery still leans on fairly common ggplot2/scales techniques (dollar
+    formatting, geom_text totals + in-segment labels); nothing yet showcases more
+    distinctive grammar-of-graphics capabilities (e.g. facet_wrap for a regional breakdown,
+    coord_flip, or a custom stat).
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, not pure white and not dark.
-      Chrome: Title "bar-stacked · r · ggplot2 · anyplot.ai" in dark ink, top-left, fully visible with no clipping. Y-axis title "Expense ($K)" and x-axis title "Month" in dark ink, both legible. Tick labels ($0K–$300K, Jan–Jun) in soft dark gray, clearly readable. Horizontal major gridlines are subtle dark lines, visible but not dominant; no vertical gridlines. Legend on the right labeled "Department" with four color swatches (Engineering, Sales, Marketing, Support), all text dark and legible against the elevated background swatch box.
-      Data: Six stacked bars (Jan-Jun), each with four segments bottom-to-top: Support (ochre/brown), Marketing (blue), Sales (lavender/purple), Engineering (green, #009E73 — first categorical series as required). Thin background-colored borders separate segments cleanly. Total value labels ($285K-$312K) sit just above each bar top, dark text, no overlap with bars or gridlines.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Chrome: Title "bar-stacked · r · ggplot2 · anyplot.ai" in dark ink, top-left, fully visible with no clipping. Y-axis title "Expense ($K)" and x-axis title "Month" in dark ink, both legible. Tick labels ($0K-$300K, Jan-Jun) in soft dark gray, clearly readable. Horizontal major gridlines are solid dark (full-opacity INK) lines at each $100K step - thin but fairly high-contrast against the light background, more prominent than a "subtle" guideline should be. Legend on the right labeled "Department" with four color swatches (Engineering, Sales, Marketing, Support) inside an elevated box with a visible INK_SOFT border, all text dark and legible.
+      Data: Six stacked bars (Jan-Jun), each with four segments bottom-to-top: Support (ochre/brown), Marketing (blue), Sales (lavender/purple), Engineering (green, #009E73 - first categorical series as required). Thin PAGE_BG-colored borders separate segments cleanly. Each segment now carries a bold white "$XXK" value label centered in the segment (position_stack(vjust = 0.5)); the label on the lavender Sales segment has a smaller contrast margin than on the darker segments but remains readable. Total value labels ($285K-$312K) sit just above each bar top in dark ink, with no overlap with bars, segment labels, or gridlines.
+      Legibility verdict: PASS - all text is clearly readable against the light background; no light-on-light issues. Gridlines are legible but bolder than the style guide's 15-25%-opacity target.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17, not pure black and not light.
-      Chrome: Title, axis titles, and tick labels all rendered in light ink/off-white, clearly visible against the dark background. Gridlines are faint light lines, subtle but visible. Legend box uses a dark elevated background with light text, fully legible.
-      Data: Same four-color stack (green Engineering, purple Sales, blue Marketing, brown Support) in the same order and proportions as the light render — data colors are identical between themes, confirming only chrome flipped. Total value labels are in light/white text above each bar, clearly readable.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all text and data segments are clearly distinguishable from the near-black background.
+      Chrome: Title, axis titles, and tick labels all rendered in light ink/off-white, clearly visible against the dark background. Gridlines are full-opacity light INK lines - same boldness issue as the light render, mirrored in the opposite direction (bright lines on dark background). Legend box uses a dark elevated background with a visible INK_SOFT border and light legible text.
+      Data: Same four-color stack (green Engineering, purple Sales, blue Marketing, brown Support) in the same order and proportions as the light render - data colors are identical between themes, confirming only chrome flipped. In-segment white $ labels and total labels are both clearly readable; no dark-on-dark failures.
+      Legibility verdict: PASS - no dark-on-dark failures observed; all text and data segments are clearly distinguishable from the near-black background. Same gridline-boldness note as the light render.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -62,21 +65,23 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes matching the library's recommended starting values;
-          all text readable in both themes
+        comment: All text readable in both themes; the new in-segment white labels
+          have a smaller contrast margin on the light lavender Sales segment than
+          on the other three
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Total labels, bars, axis text, and legend do not collide
+        comment: In-segment labels, total labels, axis text, and legend do not collide
+          with each other or the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four distinct, well-separated segment colors with clean border separators;
-          density-appropriate for 6 bars x 4 components
+        comment: Four distinct, well-separated segment colors with clean PAGE_BG border
+          separators; density-appropriate for 6 bars x 4 components
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -89,8 +94,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no overflow or clipping, balanced axis
-          label sizes
+        comment: Correct 3200x1800 canvas (gate passed), no overflow or clipping,
+          balanced axis label sizes
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,30 +110,32 @@ review:
         comment: 'First series (Engineering) is #009E73; remaining series follow canonical
           Imprint order; correct theme backgrounds in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom palette and segment borders show polish, but overall styling
-          stays close to the documented defaults
+        passed: true
+        comment: Custom palette, segment borders, and the new two-tier label hierarchy
+          show clear intentional polish beyond documented defaults
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed, minor gridlines dropped, x gridlines omitted; whitespace
-          on the right for the legend is generous
+        passed: true
+        comment: Spines removed, legend now has the subtle INK_SOFT border the library
+          reference theme calls for; gridlines are still full-opacity INK rather than
+          the style guide's 15-25%-opacity faint treatment
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Total labels add a clear cumulative focal point per bar, but no further
-          hierarchy device is used
+        passed: true
+        comment: In-segment values plus total labels now give a genuine two-tier hierarchy
+          (macro totals, micro component breakdown) directly addressing the attempt-1
+          feedback
     spec_compliance:
       score: 15
       max: 15
@@ -138,14 +145,14 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: geom_col(position = "stack") — correct stacked bar chart
+        comment: geom_col(position = "stack") - correct stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked components, consistent order, legend, and total labels all
-          present
+        comment: Stacked components, consistent order, legend, in-segment labels,
+          and total labels all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -218,7 +225,7 @@ review:
         passed: true
         comment: Saves as plot-{THEME}.png via ragg::agg_png
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -229,11 +236,12 @@ review:
         comment: Idiomatic geom_col + scale_fill_manual + scales::label_dollar usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Relies on common techniques (dollar formatting, geom_text totals)
-          rather than more distinctive ggplot2 capabilities
+        passed: true
+        comment: Now uses position_stack(vjust = 0.5) for in-segment labels as suggested
+          in attempt-1 feedback; still relies on fairly common dollar-formatting/geom_text
+          techniques rather than more distinctive grammar-of-graphics capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
