@@ -41,15 +41,11 @@ const variance =
 const stdMs = Math.sqrt(variance);
 const bandwidth = 1.06 * stdMs * Math.pow(n, -1 / 5); // Silverman's rule of thumb
 
-function gaussianKernel(u) {
-  return Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI);
-}
-
 function densityAt(x) {
-  const sum = reactionTimesMs.reduce(
-    (acc, xi) => acc + gaussianKernel((x - xi) / bandwidth),
-    0,
-  );
+  const sum = reactionTimesMs.reduce((acc, xi) => {
+    const u = (x - xi) / bandwidth;
+    return acc + Math.exp(-0.5 * u * u) / Math.sqrt(2 * Math.PI);
+  }, 0);
   return sum / (n * bandwidth);
 }
 
@@ -66,10 +62,18 @@ for (let i = 0; i <= gridSteps; i++) {
 const maxDensity = Math.max(...densityPoints.map((p) => p[1]));
 
 // Reserve a band below zero (never rendered as a labelled tick) for the rug.
+// Ticks are shorter than the band and jittered vertically within it so a
+// dense cluster of nearby x-values scatters into visible texture instead of
+// merging into a solid block.
 const rugBandTop = 0;
 const rugBandBottom = -maxDensity * 0.16;
 const yAxisMin = rugBandBottom * 1.1;
 const yAxisMax = maxDensity * 1.15;
+
+const rugTickHeight = (rugBandTop - rugBandBottom) * 0.55;
+const rugJitterRange = rugBandTop - rugBandBottom - rugTickHeight;
+const jitterRand = makeLcg(7);
+const rugTickTops = reactionTimesMs.map(() => -jitterRand() * rugJitterRange);
 
 // --- Init ---------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -82,7 +86,7 @@ chart.setOption({
   title: {
     text: "density-rug · javascript · echarts · anyplot.ai",
     left: "center",
-    textStyle: { color: t.ink, fontSize: 22, fontWeight: 500 },
+    textStyle: { color: t.ink, fontSize: 28, fontWeight: 500 },
   },
   legend: {
     top: 46,
@@ -138,25 +142,40 @@ chart.setOption({
       lineStyle: { color: t.palette[0], width: 3.5 },
       areaStyle: { color: t.palette[0], opacity: 0.25 },
       z: 2,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        animation: false,
+        lineStyle: { color: t.grid, width: 1 },
+        label: { show: false },
+        data: [{ yAxis: 0 }],
+      },
     },
     {
       name: "Individual trials (rug)",
       type: "custom",
       coordinateSystem: "cartesian2d",
       data: reactionTimesMs,
-      itemStyle: { color: t.palette[0], opacity: 0.45 },
+      itemStyle: { color: t.palette[0], opacity: 0.3 },
       z: 3,
       renderItem: (params, api) => {
         const value = api.value(0);
-        const top = api.coord([value, rugBandTop]);
-        const bottom = api.coord([value, rugBandBottom]);
+        const top = rugTickTops[params.dataIndex];
+        const bottom = top - rugTickHeight;
+        const topPx = api.coord([value, top]);
+        const bottomPx = api.coord([value, bottom]);
         return {
           type: "line",
-          shape: { x1: top[0], y1: top[1], x2: bottom[0], y2: bottom[1] },
+          shape: {
+            x1: topPx[0],
+            y1: topPx[1],
+            x2: bottomPx[0],
+            y2: bottomPx[1],
+          },
           style: {
             stroke: t.palette[0],
             lineWidth: 2,
-            opacity: 0.45,
+            opacity: 0.3,
           },
         };
       },
