@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: scatter-map-geographic
 created: '2026-09-02T06:08:50Z'
-updated: '2026-09-02T06:13:40Z'
+updated: '2026-09-02T06:29:16Z'
 generated_by: claude-sonnet
 workflow_run: 33596923884
 issue: 3617
@@ -12,54 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/muix/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Rich multi-dimensional encoding: longitude/latitude position, marker size for
-    four magnitude tiers, and a continuous green-to-blue colormap for depth — a genuine
-    three-variable geographic scatter within the community-only MUI X surface'
-  - Deterministic, realistic earthquake epicenter data clustered along real-world
-    tectonic belts (Ring of Fire, Alpide belt) with plausible magnitude (5.0-7.8)
-    and depth (5-600km) ranges
-  - 'Clean theme-adaptive chrome: both light and dark renders are fully readable,
-    with the graticule and equator/prime-meridian reference lines reading clearly
-    in both themes'
-  - 'Correct Imprint palette use: the only categorical color is #009E73, and the continuous
-    depth colormap correctly uses imprint_seq (green to blue) for single-polarity
-    data'
-  - 'Idiomatic MUI X usage: zAxis continuous colorMap combined with ContinuousColorLegend,
-    ChartsReferenceLine, and explicit tickInterval formatting are used thoughtfully
-    within the community package''s constraints'
+  - Handcrafted plate-carree basemap (continent silhouettes + 60°/30° graticule) gives
+    real geographic context without pulling in a forbidden geo/D3 dependency, and
+    the projection math is shared exactly between the SVG basemap and the chart's
+    linear axes so points line up perfectly
+  - Depth is mapped through the zAxis continuous colorMap using the Imprint sequential
+    stops (t.seq[0]/t.seq[1]) with a proper ContinuousColorLegend, and the data colors
+    are pixel-identical between the light and dark renders — only chrome flips
+  - Magnitude is binned into four series so marker size scales with earthquake magnitude
+    (5-17px), giving the map genuine multi-dimensional encoding (position + size +
+    color) as the spec calls for
+  - Dashed Prime Meridian / Equator ChartsReferenceLines with inline labels add useful
+    geographic orientation without cluttering the plot
+  - Clean, deterministic LCG-based data generation clustered along real subduction/collision
+    zones (Ring of Fire, Alpide belt, Andes) — factually grounded and neutral in topic
+  - Explicit font sizing throughout (title 24px, subtitle 13px, axis ticks 14px, axis
+    labels 16px, legend 14px) and skipAnimation set correctly per the muix harness
+    contract
   weaknesses:
-  - 'No basemap: only a lon/lat graticule plus equator/prime-meridian reference lines
-    stand in for a basemap, but the spec explicitly asks for country boundaries, coastlines,
-    or terrain for geographic context. Consider adding a minimal hardcoded SVG continent-outline
-    overlay (no D3/geo library needed, so it stays within the community-only muix
-    rule) so the plot reads as a real world map at a glance rather than an abstract
-    coordinate grid.'
-  - 'The bottom magnitude-tier legend swatches are all rendered in flat #009E73 green
-    regardless of tier, because each point''s visible color actually comes from the
-    z-axis depth colorMap, not from the series'' own `color` prop. This can read as
-    a bug (legend implies uniform color while the plot shows a gradient). Add a short
-    caption clarifying the bottom legend encodes size/magnitude only, or otherwise
-    differentiate the swatches.'
-  - 'Visual refinement: the default MUI X left/bottom axis frame lines remain visible,
-    which reads more like a generic chart frame than a map; consider removing them
-    for a cleaner map-like presentation. Also the graticule and the equator/prime-meridian
-    reference lines currently use very similar dash styles, making it hard to tell
-    the ''meaningful'' reference lines apart from the plain grid at a glance.'
+  - The magnitude-tier legend at the bottom renders all four swatches at the same
+    fixed size (itemMarkWidth/itemMarkHeight are uniform in slotProps.legend) and
+    the same green color, so the legend itself conveys zero visual size difference
+    even though the subtitle says 'marker size = magnitude tier' — only the text labels
+    distinguish the tiers. Consider a custom legend (e.g. four manually-sized circle
+    swatches via a small SVG/Box row) so the legend visually matches the size encoding
+    used on the map.
+  - In the densest clusters (Japan-Kuril arc, Indonesia-Philippines arc) many overlapping
+    circles merge into a single blob at this alpha (0.82), making it hard to distinguish
+    individual epicenter counts within a cluster — a touch more transparency (alpha
+    ~0.65-0.7) or a thin stroke contrast would help separate them.
+  - The spec's optional `label` field (point identifier for tooltips) isn't surfaced
+    anywhere in the valueFormatter — only lon/lat/depth are shown; a short place-name
+    or zone label would round out the tooltip content for the interactive HTML view.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 — not pure white.
-      Chrome: Bold dark title top-left ("scatter-map-geographic · javascript · muix · anyplot.ai"), dark "Longitude"/"Latitude" axis labels, dark tick labels with degree+direction formatting (e.g. "60°N", "120°W"), dashed graticule grid, dotted "Prime Meridian" and "Equator" reference lines with small soft-ink labels, bottom row legend for 4 magnitude tiers, top-right continuous color legend ("6 km shallow" to "591 km deep"). All text is clearly legible against the light background.
-      Data: ~80 circular markers clustered into 8 groups tracing major real-world tectonic belts (e.g. Japan-Kuril arc, Aleutian-Alaska arc, Andes subduction zone, Indonesia-Philippines arc). Marker fill ranges from brand green (#009E73, shallow) to blue (deep) via the imprint_seq colormap; marker size varies with magnitude tier. Markers have a thin page-background stroke for separation where they overlap.
-      Legibility verdict: PASS.
+      Chrome: Title "scatter-map-geographic · javascript · muix · anyplot.ai" in bold dark ink top-left, subtitle in muted gray beneath it explaining the size/color encoding. Longitude/Latitude axes with degree-formatted tick labels (e.g. "60°N", "120°W"), light gray graticule gridlines, dashed Prime Meridian and Equator reference lines with inline labels, continent silhouettes drawn as flat light-gray shapes with soft outlines. Continuous depth legend top-right ("6 km shallow" → "591 km deep"). Magnitude-tier legend row at the bottom. All text is dark ink on the cream background and clearly legible.
+      Data: Circular markers cluster along real subduction/collision zones (Japan, Aleutians, Cascadia-Mexico, Andes, Indonesia, Tonga, Anatolia, Himalaya). Marker size varies 5-17px by magnitude tier; color runs from the Imprint sequential green (#009E73-family, shallow) through teal to blue (deep), matching the depth colorbar. Fill opacity ~0.82 with a page-colored stroke keeps overlapping points distinguishable, except in the two densest clusters where several circles fully merge.
+      Legibility verdict: PASS — all chrome text reads clearly against the light background; no dark-on-light or light-on-light failures.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 — not pure black.
-      Chrome: Same title/axis labels/tick labels now rendered in light ink, clearly readable against the dark background; graticule and equator/meridian reference lines still visible at a lower, subtle contrast; both legends (magnitude tiers, continuous depth colorbar) render with light text, fully legible.
-      Data: Marker colors are pixel-identical to the light render (same green-to-blue depth gradient, same cluster positions/sizes) — only the chrome (background, text, grid, reference lines) flips to the dark theme, as required.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed in either render.
+      Chrome: Same title/subtitle/axis/legend layout, now rendered in light ink (white/near-white) on the dark surface. Continents render as a slightly lighter charcoal gray with visible outlines against the near-black page. Graticule and reference lines remain visible but subtle.
+      Data: Marker colors are pixel-identical to the light render (same green-to-blue depth gradient, same per-tier sizes) — only the chrome (background, text, continent fill, grid) flipped for the dark theme, as required.
+      Legibility verdict: PASS — title, axis ticks, axis labels, and both legends are all light-colored and clearly readable on the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -70,75 +69,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24px, axis labels 16px, ticks
-          14px, legend 13-14px); readable in both themes, no overflow/clipping
+        comment: All font sizes explicitly set (title 24, subtitle 13, ticks 14, axis
+          labels 16, legend 14); readable at full size and well-proportioned in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text, data, or legends; both legends sit clear
-          of the plot area
+        comment: No text-on-text or text-on-data collisions; reference-line labels
+          and legends sit clear of the data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Marker sizes (5-17 CSS px) scale with magnitude tier and alpha 0.82
-          + page-bg stroke handle cluster overlap reasonably well
+        comment: Markers sized by magnitude tier and alpha-blended for overlap; two
+          dense clusters (Japan-Kuril, Indonesia) merge into blobs where individual
+          points are hard to separate
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue continuous scale is CVD-safe and high-contrast; no
-          red-green-only signal
+        comment: Green-to-blue sequential encoding, good contrast against both surfaces,
+          not red-green reliant
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills a large majority of the canvas with balanced margins;
-          nothing cut off
+        comment: Plot fills a large, balanced share of the canvas; legends sit close
+          to the map, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude labels plus degree-formatted tick labels (60°N,
-          120°W) convey units clearly
+        comment: Longitude/Latitude axes with degree-formatted tick labels convey
+          units clearly
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Only categorical color used is #009E73; continuous depth uses imprint_seq
-          (green->blue), correct for single-polarity data; backgrounds and chrome
-          are theme-correct in both renders'
+        comment: 'Depth uses imprint_seq (t.seq[0]/t.seq[1]); primary marker color
+          anchored to t.palette[0]; backgrounds correctly #FAF8F1/#1A1A17; data colors
+          identical across themes'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Custom continuous colormap and graticule-as-basemap design are thoughtful,
-          but the lack of a real basemap caps the polish
+        passed: true
+        comment: Custom hand-built basemap + graticule + continuous legend shows real
+          design effort beyond library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Subtle dashed grid and generous whitespace; default axis frame lines
-          and similar dash styles between graticule and reference lines leave some
-          refinement on the table
+        passed: true
+        comment: Axis lines disabled, subtle grid, dashed reference lines, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Clustering along real tectonic belts combined with size (magnitude)
-          and color (depth) creates clear visual hierarchy, though the belts aren't
-          explicitly labeled on the chart
+        passed: true
+        comment: Geographic clustering along fault lines plus depth color creates
+          clear visual hierarchy, though no explicit annotation calls out the pattern
     spec_compliance:
       score: 14
       max: 15
@@ -147,26 +149,28 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        comment: Correct geographic scatter map on a lat/lon plate-carree grid
+        passed: true
+        comment: Correct geographic scatter map with basemap
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        comment: Size + color encoding, alpha for overlap all present; the requested
-          basemap (country boundaries/coastlines/terrain) is entirely absent, replaced
-          only by a graticule
+        passed: true
+        comment: Color legend, size encoding, basemap, alpha-blending all present;
+          size legend swatches don't visually vary in size to match the encoding
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: X=longitude, Y=latitude correctly assigned; full -180..180 / -90..90
-          domain shown
+        passed: true
+        comment: Longitude on x, latitude on y, full -180..180/-90..90 domain shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        comment: Title matches the mandated format exactly; legends (magnitude tiers,
-          depth colorbar) are correctly labeled
+        passed: true
+        comment: Title matches required format exactly; legend labels correctly describe
+          magnitude tiers and depth range
     data_quality:
       score: 14
       max: 15
@@ -175,20 +179,22 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        comment: 8 distinct fault-zone clusters with varied magnitude and depth show
-          good feature coverage
+        passed: true
+        comment: Wide magnitude (5.0-7.8) and depth (5-600km) ranges across 8 real
+          fault zones; optional label field unused
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        comment: Earthquake epicenters are a real, neutral, comprehensible scientific
-          scenario
+        passed: true
+        comment: Real, neutral earthquake-science scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        comment: Magnitude (5.0-7.8) and depth (5-600km) ranges are factually plausible
-          for real subduction-zone earthquakes
+        passed: true
+        comment: Magnitude and depth ranges factually plausible for the named subduction/collision
+          zones
     code_quality:
       score: 10
       max: 10
@@ -197,52 +203,60 @@ review:
         name: KISS Structure
         score: 3
         max: 3
-        comment: Straightforward imports -> data -> component structure, no unnecessary
-          classes
+        passed: true
+        comment: Data -> series -> Chart component, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        comment: Deterministic fixed-seed LCG (seed=8831), no Math.random
+        passed: true
+        comment: Fixed-seed LCG generator
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        comment: Only imports what's used from @mui/x-charts and @mui/material
+        passed: true
+        comment: Only ScatterChart, ChartsReferenceLine, ContinuousColorLegend, Box,
+          Typography, all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
-        comment: Appropriately complex for a 3-variable encoding; no fake UI or interactivity
+        passed: true
+        comment: No fake UI, no over-engineering; hardcoded continent paths are justified
+          given the no-geo-dependency constraint
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        comment: 'Correct harness contract: default export, skipAnimation, sizes from
-          ANYPLOT_SIZE'
+        passed: true
+        comment: Default-exported component, skipAnimation set, current community
+          @mui/x-charts API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        comment: Good use of ScatterChart series, zAxis, ChartsReferenceLine, and
-          explicit tick formatting
+        passed: true
+        comment: Idiomatic use of xAxis/yAxis/zAxis, ChartsReferenceLine, slotProps.legend
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        comment: zAxis continuous colorMap + ContinuousColorLegend is a genuinely
-          MUI X-distinctive feature combination
-  verdict: REJECTED
+        passed: true
+        comment: zAxis continuous colorMap + ContinuousColorLegend are MUI X-distinctive
+          and not trivially replicated elsewhere
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - manual-ticks
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -250,5 +264,4 @@ impl_tags:
   - binning
   styling:
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  - custom-colormap

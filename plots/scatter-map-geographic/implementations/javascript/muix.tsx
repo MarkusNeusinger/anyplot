@@ -1,7 +1,7 @@
 // anyplot.ai
 // scatter-map-geographic: Scatter Map with Geographic Points
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-02
+// Quality: 90/100 | Created: 2026-09-02
 import { ScatterChart } from "@mui/x-charts/ScatterChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { ContinuousColorLegend } from "@mui/x-charts/ChartsLegend";
