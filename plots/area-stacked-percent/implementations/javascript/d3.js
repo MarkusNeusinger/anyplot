@@ -21,16 +21,16 @@ const SERIES = [
 ];
 
 const data = [
-  { year: 2015, chrome: 45, safari: 15, edge: 20, firefox: 15, other: 5 },
-  { year: 2016, chrome: 50, safari: 15, edge: 15, firefox: 12, other: 8 },
-  { year: 2017, chrome: 55, safari: 15, edge: 12, firefox: 10, other: 8 },
-  { year: 2018, chrome: 58, safari: 15, edge: 10, firefox: 9, other: 8 },
-  { year: 2019, chrome: 62, safari: 16, edge: 7, firefox: 8, other: 7 },
-  { year: 2020, chrome: 64, safari: 17, edge: 6, firefox: 7, other: 6 },
-  { year: 2021, chrome: 65, safari: 18, edge: 4, firefox: 6, other: 7 },
-  { year: 2022, chrome: 64, safari: 19, edge: 4, firefox: 5, other: 8 },
-  { year: 2023, chrome: 63, safari: 20, edge: 5, firefox: 4, other: 8 },
-  { year: 2024, chrome: 62, safari: 21, edge: 5, firefox: 3, other: 9 },
+  { year: 2015, chrome: 47, safari: 7, edge: 21, firefox: 17, other: 8 },
+  { year: 2016, chrome: 52, safari: 7, edge: 18, firefox: 14, other: 9 },
+  { year: 2017, chrome: 57, safari: 8, edge: 14, firefox: 11, other: 10 },
+  { year: 2018, chrome: 61, safari: 8, edge: 11, firefox: 9, other: 11 },
+  { year: 2019, chrome: 64, safari: 9, edge: 8, firefox: 8, other: 11 },
+  { year: 2020, chrome: 66, safari: 9, edge: 7, firefox: 7, other: 11 },
+  { year: 2021, chrome: 65, safari: 9, edge: 6, firefox: 6, other: 14 },
+  { year: 2022, chrome: 64, safari: 9, edge: 6, firefox: 5, other: 16 },
+  { year: 2023, chrome: 63, safari: 10, edge: 5, firefox: 4, other: 18 },
+  { year: 2024, chrome: 61, safari: 10, edge: 5, firefox: 4, other: 20 },
 ];
 
 const years = data.map((d) => d.year);
@@ -54,18 +54,6 @@ const y = d3.scaleLinear().domain([0, 1]).range([ih, 0]);
 const stack = d3.stack().keys(SERIES.map((s) => s.key)).offset(d3.stackOffsetExpand);
 const layers = stack(data);
 
-// --- Gridlines (y-axis only) ----------------------------------------------
-g.append("g")
-  .selectAll("line")
-  .data(y.ticks(4))
-  .join("line")
-  .attr("x1", 0)
-  .attr("x2", iw)
-  .attr("y1", (d) => y(d))
-  .attr("y2", (d) => y(d))
-  .attr("stroke", t.grid)
-  .attr("stroke-width", 1);
-
 // --- Areas -----------------------------------------------------------------
 const area = d3
   .area()
@@ -82,6 +70,50 @@ g.selectAll("path.layer")
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1.5)
   .attr("d", area);
+
+// --- Gridlines (y-axis only, drawn above the opaque stack at low opacity) --
+g.append("g")
+  .selectAll("line")
+  .data(y.ticks(4))
+  .join("line")
+  .attr("x1", 0)
+  .attr("x2", iw)
+  .attr("y1", (d) => y(d))
+  .attr("y2", (d) => y(d))
+  .attr("stroke", t.pageBg)
+  .attr("stroke-width", 1)
+  .attr("opacity", 0.35);
+
+// --- Crossover annotation (Safari overtakes Edge/IE) -----------------------
+const crossoverYear = 2019;
+const crossoverRow = data.find((d) => d.year === crossoverYear);
+const crossoverLayer = layers.find((l) => l.key === "safari");
+const crossoverIndex = data.indexOf(crossoverRow);
+const crossoverY = y((crossoverLayer[crossoverIndex][0] + crossoverLayer[crossoverIndex][1]) / 2);
+
+g.append("circle")
+  .attr("cx", x(crossoverYear))
+  .attr("cy", crossoverY)
+  .attr("r", 4)
+  .attr("fill", t.pageBg)
+  .attr("stroke", t.ink)
+  .attr("stroke-width", 1.5);
+
+for (const [stroke, fill] of [
+  [t.pageBg, "none"],
+  ["none", t.ink],
+]) {
+  g.append("text")
+    .attr("x", x(crossoverYear))
+    .attr("y", crossoverY - 14)
+    .attr("text-anchor", "middle")
+    .attr("stroke", stroke)
+    .attr("stroke-width", 3)
+    .attr("fill", fill)
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text("Safari overtakes Edge/IE");
+}
 
 // --- Axes --------------------------------------------------------------
 const xAxis = g
@@ -106,7 +138,15 @@ g.append("text")
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
   .style("font-size", "16px")
-  .text("Share of Total");
+  .text("Share of Total (%)");
+
+g.append("text")
+  .attr("x", iw / 2)
+  .attr("y", ih + 48)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "16px")
+  .text("Year");
 
 // --- Legend (measured in-browser, then centered) ----------------------------
 const legendG = svg.append("g");
