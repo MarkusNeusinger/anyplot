@@ -1,0 +1,260 @@
+library: chartjs
+language: javascript
+specification_id: network-hierarchical
+created: '2026-09-02T06:58:19Z'
+updated: '2026-09-02T07:12:11Z'
+generated_by: claude-sonnet
+workflow_run: 33600667755
+issue: 3343
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Node radius scales down by hierarchy level (24/19/15/12), giving the tree an immediate
+    visual sense of depth and rank without any extra text
+  - 'Chart.js has no native network/tree chart type; the mixed line+scatter dataset
+    technique (edges as zero-marker line datasets under `order: 2`, nodes as scatter
+    datasets under `order: 1`) plus a custom `afterDatasetsDraw` plugin for role labels
+    is a clean, idiomatic workaround within the library''s constraints'
+  - Imprint categorical palette applied in canonical order across the four org levels
+    (green/lavender/blue/ochre), identical between light and dark renders; only chrome
+    flips correctly
+  - Post-order layout algorithm (`assignPositions`/`collect`) centers parents over
+    their children and gives leaves sequential slots, producing a well-balanced, non-overlapping
+    tree even with asymmetric branching (VPs have 3/2/2 managers, managers have 1-3
+    reports)
+  - Edges rendered at low alpha (`hexToRgba(t.inkSoft, 0.35)`) so they recede behind
+    the nodes and labels — subtle, polished detail
+  - Title fontsize scales via the length-based formula, and the legend correctly filters
+    out edge datasets so only the four level categories appear
+  weaknesses:
+  - 'Whitespace is imbalanced top-to-bottom: the gap between the title and the CEO
+    node is noticeably larger than the margin below the legend — tightening the top
+    padding or nudging the tree down slightly would improve canvas balance'
+  - Tree depth is uniform (every leaf is exactly 3 levels below the CEO); a small
+    amount of depth variation (e.g. one manager reporting directly, or a leaf with
+    zero children shown as a dead-end) would demonstrate DQ-01 feature coverage more
+    fully
+  - Recursive layout (`assignPositions`, `collect`) and the `nodeLabelPlugin` object
+    add real code structure beyond simple imports/data/plot — justified by the algorithm's
+    needs, but keep an eye on KISS as the file evolves
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "network-hierarchical · javascript · chartjs · anyplot.ai" in bold dark ink, centered top, clearly readable. Bottom legend ("Executive", "VP", "Manager", "Individual Contributor") in dark text with matching colored circular swatches, clearly readable. Role-title labels below every node (e.g. "CEO", "VP Engineering", "Sr Engineer") are dark, bold, and legible against the light background.
+      Data: A 4-level org chart tree — CEO (green #009E73) at the top, 3 VPs (lavender) on the second level, 7 Managers (blue) on the third level, 12 individual contributors (ochre) as leaves. Straight, thin, low-alpha ink-soft edges connect parent to child without arrowheads. First categorical series (Executive) confirmed as brand green #009E73.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and legend, now rendered in light/white text against the dark background — fully readable, no dark-on-dark failures anywhere (title, node role labels, legend, and category labels all flip to light ink correctly).
+      Data: Identical tree structure and identical node colors to the light render — green root, lavender VPs, blue managers, ochre ICs — confirming the Imprint categorical palette (positions 1-4) is unchanged between themes. Only the chrome (background, text, edge line color via inkSoft token) adapts to the dark theme.
+      Legibility verdict: PASS — all text remains crisp and legible against the dark background; brand green is equally visible on both surfaces.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title dynamically scaled, legend 16px,
+          node labels 15px bold); readable in both themes with no overlap or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/text or text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node radii shrink by level (24/19/15/12), appropriately sized for
+          a 23-node tree
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast and CVD-safe distinction across only 4 categories,
+          well within palette discrimination range
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization overall, but top margin (title-to-CEO) is
+          noticeably larger than the bottom margin below the legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes needed for a network diagram; role labels on nodes
+          serve the descriptive purpose
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Root uses #009E73; VP/Manager/IC follow canonical Imprint order;
+          identical across themes; correct theme-adaptive chrome in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Level-based node sizing and low-alpha edges show clear intentional
+          hierarchy, above a plain default network render
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid/spines clutter, subtle edge lines, clean legend; minor top/bottom
+          whitespace imbalance keeps it from a perfect score
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Color + size hierarchy and asymmetric real-world branching (3/2/2
+          VPs, 1-3 reports per manager) let the viewer read organizational structure
+          at a glance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hierarchical tree layout, root at top, straight unarrowed
+          edges
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with labels/levels, parent-child edges, explicit level assignment,
+          23 nodes within the 10-50 spec range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x/y computed via post-order layout algorithm; full tree visible,
+          no cut-off branches
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels (Executive/VP/Manager/Individual
+          Contributor) correctly describe the four levels, edges excluded from legend
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows asymmetric branching and varying report counts, but every leaf
+          sits at the same depth — no skip-level or dead-end variation
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world small-company org chart (CEO/VP/Manager/IC roles)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 23 employees across 4 levels with plausible team-size ratios (e.g.
+          Engineering VP has more managers/reports than Sales/Product)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses recursive helper functions (assignPositions, collect) and a
+          plugin object beyond plain imports/data/plot, but justified by the tree-layout
+          algorithm the library doesn't provide
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded org tree, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided Chart.js global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a tree layout algorithm, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed line+scatter datasets with `order` control and a custom afterDatasetsDraw
+          plugin is the idiomatic Chart.js pattern for node-link diagrams
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Chart.js's plugin system and dataset ordering — features
+          distinctive to this library's architecture
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - hierarchical-layout
+  styling:
+  - alpha-blending
+  - edge-highlighting
