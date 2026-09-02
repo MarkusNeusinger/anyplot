@@ -789,7 +789,7 @@ uv run python -m automation.scripts.label_manager list
 - **`generate:all`** - Trigger all 15 libraries via bulk-generate
 - **`impl:{library}:pending`** - Generation in progress
 - **`impl:{library}:done`** - Implementation merged to main
-- **`impl:{library}:failed`** - Three failed generation attempts for the pair within a 12-hour window; infrastructure failures (provider incident, cloud auth, GitHub API) are retried on their own cap of 5 and never set it
+- **`impl:{library}:failed`** - Set by impl-generate after three failed generation attempts for the pair within a 12-hour window, or by impl-review when the PR still scores below 50 after four repair attempts; infrastructure failures (provider incident, cloud auth, GitHub API) are retried on their own cap of 5 and never set it
 
 ### PR Labels (set by workflows)
 

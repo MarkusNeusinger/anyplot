@@ -99,7 +99,7 @@ impl-review.yml
 | `generate:{library}` | Trigger generation for library | User |
 | `impl:{library}:pending` | Generation in progress | Workflow |
 | `impl:{library}:done` | Implementation merged to main | Workflow |
-| `impl:{library}:failed` | Three failed generation attempts for the pair within a 12-hour window. Infrastructure failures (provider incident, cloud auth, GitHub API) are retried on a separate cap of 5 and never set this label; a pair paused that way carries no label. | Workflow |
+| `impl:{library}:failed` | Set by `impl-generate.yml` after three failed generation attempts for the pair within a 12-hour window, or by `impl-review.yml` when the PR still scores below 50 after four repair attempts. Infrastructure failures (provider incident, cloud auth, GitHub API) are retried on a separate cap of 5 and never set this label; a pair paused that way carries no label. | Workflow |
 
 ### PR labels (on Pull Requests)
 
