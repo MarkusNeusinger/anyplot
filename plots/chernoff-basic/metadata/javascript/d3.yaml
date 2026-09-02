@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: chernoff-basic
 created: '2026-09-02T15:03:14Z'
-updated: '2026-09-02T15:07:34Z'
+updated: '2026-09-02T15:16:49Z'
 generated_by: claude-sonnet
 workflow_run: 33645324483
 issue: 3003
@@ -12,58 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correct Chernoff faces with 8 distinct facial-feature encodings (face width, face
-    height, eye size, eye spacing, eyebrow slant, nose length, mouth curvature, mouth
-    width) matching the spec's suggested mappings almost exactly
-  - 'Thoughtful data storytelling: industries are grouped both by grid row AND by
-    outline color, giving a redundant encoding that makes cross-industry comparison
-    easy at a glance'
-  - Theme-adaptive chrome is correctly threaded through every element; Imprint data
-    colors (green/lavender/blue for Tech/Retail/Manufacturing) are pixel-identical
-    between light and dark renders, only chrome flips
-  - 'Clean, idiomatic D3: hard-coded deterministic dataset, single global d3 import,
-    scaleLinear/scaleOrdinal + selection.join() used correctly, no fake interactivity'
-  - No clipping, overlap, or canvas-size issues; title format and legend labels comply
-    with spec
+  - Explicit normalize() step now makes the spec's required 0-1 normalization pipeline
+    transparent in code, rather than implicit via scaleLinear domain/range composition
+  - Subtle drop-shadow filter and a dashed amber emphasis ring on the single weakest-fundamentals
+    company add genuine visual refinement and a data-storytelling focal point that
+    were missing in attempt 1
+  - Company-name labels bumped from 14px to 16px, resolving the mobile-width cramping
+    flagged previously
+  - Correct Chernoff faces with 8 distinct facial-feature encodings matching the spec's
+    suggested mappings almost exactly
+  - Theme-adaptive chrome correctly threaded through every element; Imprint data colors
+    are pixel-identical between light and dark renders
   weaknesses:
-  - Design polish is functional but fairly literal/tutorial-style face rendering (plain
-    ellipses and paths); a distinguishing visual refinement (e.g. subtle shading,
-    varied stroke weights, or emphasis on the outlier face) would raise it above baseline
-    Chernoff-face examples
-  - Company-name labels at 14px are the smallest text element and, being 12 of them,
-    look cramped at mobile width (400px) — consider bumping to ~15-16px or trimming
-    to shorter identifiers
-  - The per-variable normalization the spec calls out (0-1 scaling before mapping
-    to facial features) is only implicit via extent-based d3.scaleLinear composition
-    — mathematically equivalent, but an explicit normalization step would make the
-    encoding pipeline more transparent to a reader of the code
+  - Per-face iconography is still built from plain geometric primitives (ellipses/paths);
+    beyond the new drop-shadow and emphasis ring, there's room for further distinguishing
+    polish (e.g. varied stroke weights, subtle gradient on face fill) to push Design
+    Excellence higher
+  - The composite riskScore heuristic that selects the emphasized outlier face is
+    a reasonable narrative choice but is not derived from or explained via the legend/title
+    — a first-time viewer must infer why one face is ringed
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "chernoff-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center; a 3-item legend (Tech/Retail/Manufacturing) with colored dot swatches and soft-ink labels below the title; 12 company-name labels in soft-ink below each face. All chrome text is dark-on-light and clearly legible.
-      Data: 12 Chernoff faces in a 4x3 grid, grouped by industry both by row and by outline color (Tech=green #009E73, Retail=lavender, Manufacturing=blue — first series correctly uses the brand green). Each face's outline color, width/height, eye size/spacing, eyebrow slant, nose length, and mouth curvature/width encode a distinct financial metric. Face fill is a light elevated cream, facial features drawn in dark ink.
+      Chrome: Title "chernoff-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center; a 3-item legend (Tech/Retail/Manufacturing) with colored dot swatches and soft-ink labels below the title; 12 company-name labels in soft-ink below each face, now at 16px. All chrome text is dark-on-light and clearly legible.
+      Data: 12 Chernoff faces in a 4x3 grid, grouped by industry both by row and by outline color (Tech=green #009E73, Retail=lavender, Manufacturing=blue). Each face's outline color, width/height, eye size/spacing, eyebrow slant, nose length, and mouth curvature/width encode a distinct financial metric. A subtle drop-shadow sits beneath each face outline. The weakest-fundamentals company (Anchor Industries) is ringed with a dashed amber emphasis outline.
       Legibility verdict: PASS — no light-on-light text, no clipping, no overlap between labels/faces.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
       Chrome: Same title and legend, now rendered in light ink (near-white) against the dark background; company-name labels in a slightly softer light gray. All chrome text is clearly legible against the dark background.
-      Data: Same 12-face grid; the industry outline colors (green/lavender/blue) are pixel-identical to the light render — only the face fill (now dark elevated gray) and facial-feature ink (now light) flipped with the theme, exactly as required. No dark-on-dark text anywhere.
+      Data: Same 12-face grid; the industry outline colors (green/lavender/blue) are pixel-identical to the light render — only the face fill (now dark elevated gray), facial-feature ink (now light), and drop-shadow flipped with the theme, exactly as required. The amber dashed emphasis ring on Anchor Industries persists correctly.
       Legibility verdict: PASS — all chrome and data elements read clearly; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; 14px company labels are the smallest
-          element and slightly cramped at 12-up on mobile width
+        comment: All text readable in both themes; company labels now 16px, no longer
+          cramped
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -75,22 +69,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Facial features (eyes, brows, nose, mouth) are clearly visible and
-          appropriately sized for 12 sparse observations
+        comment: Facial features clearly visible and appropriately sized for 12 sparse
+          observations
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint categorical colors used for industry grouping, redundantly
-          encoded with grid row placement
+        comment: Imprint categorical colors, redundantly encoded via grid row + outline
+          color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced grid layout, nothing cut off, generous
-          margins
+        comment: Canvas gate passed; balanced grid, generous margins, nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,27 +99,30 @@ review:
         comment: 'First series (Tech) = #009E73; data colors identical across themes;
           backgrounds match theme spec'
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Competent custom SVG iconography, but fairly literal/tutorial-style
-          face rendering without extra polish
+        passed: true
+        comment: Drop-shadow and dashed amber emphasis ring on the outlier face add
+          real polish beyond literal/tutorial-style rendering
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: No axes/grid clutter, generous whitespace between faces, but minimal
-          additional refinement
+        passed: true
+        comment: Drop-shadow depth cue is a genuine refinement; per-face iconography
+          still fairly plain geometric shapes beyond that
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        comment: Industry grouping via row + color creates a clear comparison structure,
-          a genuine storytelling choice
+        passed: true
+        comment: Industry grouping via row + color, now combined with an explicit
+          outlier callout, creates a clearer focal point
     spec_compliance:
       score: 15
       max: 15
@@ -164,8 +161,7 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 8 metrics and industry grouping are demonstrated across the 12
-          faces
+        comment: All 8 metrics and industry grouping demonstrated across the 12 faces
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -214,20 +210,23 @@ review:
         comment: 'Mounts a single svg into #container per the harness contract; no
           animations'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Correct use of scaleLinear/scaleOrdinal, extent, and selection.join()
+        passed: true
+        comment: Correct use of scaleLinear/scaleOrdinal, extent, selection.join(),
+          and an SVG feDropShadow filter
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        comment: Custom SVG shape composition (rotated eyebrows, quadratic mouth curves)
-          for icon-based small multiples goes beyond a basic axis-based chart
+        passed: true
+        comment: Custom SVG shape composition (rotated eyebrows, quadratic mouth curves,
+          drop-shadow filter, dashed emphasis ring)
   verdict: APPROVED
 impl_tags:
   dependencies: []
