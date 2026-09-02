@@ -10,7 +10,8 @@ const t = window.ANYPLOT_TOKENS;
 // Synthetic earthquake epicenters traced along the Alpide seismic belt
 // (Iberia -> Anatolia -> Himalaya -> Sunda arc). Only the core Highcharts
 // bundle is loaded (no highmaps module), so geographic context comes from a
-// longitude/latitude graticule rather than rendered country boundaries.
+// simplified landmass outline drawn by hand with SVGRenderer (see
+// "Geographic context" below) rather than a rendered map projection.
 function lcg(seed) {
   let s = seed >>> 0;
   return () => {
@@ -88,31 +89,45 @@ function colorForDepth(depth, alpha) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+// The Java-Banda segment of the belt (idx 8-9 in ANCHORS) packs the most
+// points into the smallest lon/lat span, so circles blur into a blob there
+// even with alpha blending. Shrink + lighten markers inside that box only.
+const DENSE_ZONE = { lonMin: 100, lonMax: 132, latMin: -12, latMax: 4 };
+function inDenseZone(lon, lat) {
+  return lon >= DENSE_ZONE.lonMin && lon <= DENSE_ZONE.lonMax && lat >= DENSE_ZONE.latMin && lat <= DENSE_ZONE.latMax;
+}
+
 // --- Chart -------------------------------------------------------------------
 const epicenterSeries = {
   type: "scatter",
   name: "Epicenters",
   showInLegend: false,
-  data: epicenters.map((e) => ({
-    x: e.lon,
-    y: e.lat,
-    custom: { magnitude: e.magnitude, depth: e.depth },
-    marker: {
-      radius: sizeForMagnitude(e.magnitude),
-      fillColor: colorForDepth(e.depth, 0.78),
-      lineColor: t.pageBg,
-      lineWidth: 1,
-    },
-  })),
+  data: epicenters.map((e) => {
+    const dense = inDenseZone(e.lon, e.lat);
+    return {
+      x: e.lon,
+      y: e.lat,
+      custom: { magnitude: e.magnitude, depth: e.depth },
+      marker: {
+        radius: sizeForMagnitude(e.magnitude) * (dense ? 0.7 : 1),
+        fillColor: colorForDepth(e.depth, dense ? 0.55 : 0.78),
+        lineColor: t.pageBg,
+        lineWidth: 1,
+      },
+    };
+  }),
 };
 
 // Dummy legend-only series — a standard Highcharts technique for a manual
 // legend (no interactive module is required; the swatches use the exact same
 // colorForDepth / sizeForMagnitude formulas the real points use).
+// Representative depths pushed toward each bin's extreme (rather than its
+// midpoint) so the three swatches span a wider slice of the imprint_seq
+// gradient and stay visually distinguishable at a glance.
 const depthLegend = [
-  { label: "Depth 5–80 km", depth: 42.5 },
-  { label: "Depth 80–150 km", depth: 115 },
-  { label: "Depth 150–300 km", depth: 225 },
+  { label: "Depth 5–80 km", depth: 10 },
+  { label: "Depth 80–150 km", depth: 145 },
+  { label: "Depth 150–300 km", depth: 295 },
 ].map((bin) => ({
   type: "scatter",
   name: bin.label,
@@ -135,6 +150,73 @@ const magnitudeLegend = [
   marker: { radius: sizeForMagnitude(bin.magnitude), fillColor: t.palette[0], lineColor: t.pageBg, lineWidth: 1 },
 }));
 
+// --- Geographic context (SVGRenderer, since highmaps is off-limits) ---------
+// Simplified landmass silhouettes (lon/lat polygons, deliberately coarse —
+// this is visual orientation, not a surveyed coastline) for the regions the
+// belt crosses: S. Europe/N. Africa, Middle East, India, mainland SE Asia,
+// Sumatra, Java. Drawn on chart.events.render via renderer.path() + toPixels()
+// so it re-projects with the axes — a Highcharts-native technique with no
+// direct equivalent in a generic <canvas>-based chart library.
+const LANDMASSES = [
+  [[-20, 50], [-20, 36], [-9, 36], [-9, 30], [10, 30], [10, 36], [20, 36], [20, 32], [36, 32], [36, 42], [20, 44], [0, 44], [-10, 44], [-20, 50]],
+  [[36, 32], [36, 12], [44, 12], [50, 18], [56, 25], [56, 32], [70, 38], [75, 38], [75, 30], [68, 24], [60, 25], [50, 30], [44, 30], [36, 32]],
+  [[68, 24], [72, 20], [73, 8], [80, 8], [80, 20], [88, 22], [92, 26], [97, 27], [97, 20], [92, 22], [85, 26], [80, 26], [73, 24], [68, 24]],
+  [[92, 26], [97, 27], [105, 23], [108, 16], [105, 10], [100, 7], [97, 15], [94, 16], [92, 20], [92, 26]],
+  [[95, 6], [99, 4], [105, -3], [103, -6], [99, 0], [95, 3], [95, 6]],
+  [[105, -6], [112, -8], [115, -9], [114, -7], [108, -6], [105, -6]],
+];
+
+function drawGeoContext(chart) {
+  if (chart.customGeo) {
+    chart.customGeo.forEach((el) => el.destroy());
+  }
+  chart.customGeo = [];
+
+  const xAxis = chart.xAxis[0];
+  const yAxis = chart.yAxis[0];
+  if (!chart.customClip) {
+    chart.customClip = chart.renderer.clipRect(chart.plotLeft, chart.plotTop, chart.plotWidth, chart.plotHeight);
+  } else {
+    chart.customClip.attr({ x: chart.plotLeft, y: chart.plotTop, width: chart.plotWidth, height: chart.plotHeight });
+  }
+
+  const toPath = (points) =>
+    points.map((pt, i) => (i === 0 ? ["M", xAxis.toPixels(pt[0]), yAxis.toPixels(pt[1])] : ["L", xAxis.toPixels(pt[0]), yAxis.toPixels(pt[1])])).concat([["Z"]]);
+
+  LANDMASSES.forEach((poly) => {
+    chart.customGeo.push(
+      chart.renderer
+        .path(toPath(poly))
+        .attr({ fill: t.grid, "fill-opacity": 0.4, stroke: t.inkSoft, "stroke-width": 1, "stroke-opacity": 0.35, zIndex: 1 })
+        .clip(chart.customClip)
+        .add()
+    );
+  });
+
+  // Soft translucent ribbon tracing the seismic-belt corridor itself.
+  const beltPath = ANCHORS.map((a, i) => (i === 0 ? ["M", xAxis.toPixels(a.lon), yAxis.toPixels(a.lat)] : ["L", xAxis.toPixels(a.lon), yAxis.toPixels(a.lat)]));
+  chart.customGeo.push(
+    chart.renderer
+      .path(beltPath)
+      .attr({ stroke: t.palette[0], "stroke-width": 26, "stroke-opacity": 0.08, "stroke-linecap": "round", "stroke-linejoin": "round", fill: "none", zIndex: 2 })
+      .clip(chart.customClip)
+      .add()
+  );
+
+  // Callout labeling the densest cluster (Java-Banda) for orientation,
+  // anchored above the cluster in open space so it clears both the markers
+  // and the trailing Banda-deep point further along the belt.
+  const calloutX = xAxis.toPixels(112) - 10;
+  const calloutY = yAxis.toPixels(8);
+  chart.customGeo.push(
+    chart.renderer
+      .text("Java–Banda cluster", calloutX, calloutY)
+      .css({ color: t.inkSoft, fontSize: "12px", fontStyle: "italic" })
+      .attr({ zIndex: 5 })
+      .add()
+  );
+}
+
 Highcharts.chart("container", {
   chart: {
     type: "scatter",
@@ -142,6 +224,7 @@ Highcharts.chart("container", {
     animation: false,
     style: { fontFamily: "inherit" },
     zooming: { type: "xy" }, // drag-select zoom + pan for exploring point clusters (core feature)
+    events: { render: function () { drawGeoContext(this); } },
   },
   credits: { enabled: false },
   colors: t.palette,
