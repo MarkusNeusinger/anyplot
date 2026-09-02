@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: renko-basic
 created: '2026-09-02T05:30:14Z'
-updated: '2026-09-02T05:34:43Z'
+updated: '2026-09-02T05:42:59Z'
 generated_by: claude-sonnet
 workflow_run: 33594554780
 issue: 3294
@@ -12,37 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
+  - 'Fixed the attempt-1 boundary-tick weakness: showMinLabel/showMaxLabel are now
+    false on the value-type x-axis, so the crowded fractional labels ("-0.5" next
+    to "0", "34.5" next to "30") are gone — clean 0/10/20/30 ticks in both renders.'
   - 'Correct semantic color usage: bullish bricks use the Imprint brand green (#009E73),
-    bearish bricks use the Imprint semantic-red anchor (#AE3030) — an exact match
-    for the style guide''s finance profit/loss semantic exception.'
+    bearish bricks use the Imprint semantic-red anchor (#AE3030) — matches the style
+    guide''s finance profit/loss semantic exception.'
   - Idiomatic, distinctive use of ECharts' custom series with renderItem to draw arbitrary-baseline
-    rectangles — not achievable with a plain bar series and hard to replicate identically
-    in another charting library.
+    rectangles with a small inter-brick gap — not achievable with a plain bar series.
   - Deterministic data generation via a tiny fixed-seed LCG (the browser has no seeded
     RNG), producing ~35 bricks — comfortably inside the spec's 20-50 brick range.
   - Theme-adaptive chrome correctly threaded through title/axis/tick colors and grid;
     both renders are legible and the data colors are pixel-identical across light/dark.
-  - Y-axis-only subtle grid matches both the style guide's line/bar-chart grid guidance
-    and the spec's "subtle grid to help identify price levels" note.
   weaknesses:
-  - Bullish/bearish direction is encoded purely via green/red hue with no redundant
-    encoding (outline, texture) — a CVD-accessibility risk for a chart where color
-    is the primary signal. Add a thin ink-colored stroke around each brick.
-  - The X-axis is type:"value" with fractional min/max (-0.5 and brickData.length
-    - 0.5), causing ECharts to render extra, low-information boundary tick labels
-    ("-0.5" crowded against "0"; "34.5" crowded against "30") at both edges. Switch
-    to type:"category" with integer indices, or hide min/max labels.
-  - 'Solid but visually plain: no additional refinement or emphasis (e.g. a final-price
-    annotation, trend highlight) beyond the mandated tokens to lift Design Excellence
-    above a well-configured default.'
+  - The added ink-colored stroke around every brick does not actually give bullish/bearish
+    direction a redundant, CVD-safe encoding — the stroke color is identical (t.ink)
+    on both up and down bricks, so a colorblind viewer still relies solely on green/red
+    hue to tell direction apart. A genuine fix needs a per-direction visual difference
+    (e.g. a distinct fill pattern/hatch, or a brightness/marker difference tied to
+    direction), not a uniform outline.
+  - 'Still visually plain beyond the mandated tokens: no additional refinement or
+    emphasis (e.g. a final-price annotation, a highlighted trend segment) to lift
+    Design Excellence above a well-configured default.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "renko-basic · javascript · echarts · anyplot.ai" centered at top, fully visible with no clipping. Y-axis name "Price ($)" top-left, X-axis name "Brick Index" bottom-center. Tick labels along both axes in soft dark ink. Subtle horizontal-only gridlines. All title/axis/tick text is clearly readable against the light background.
-      Data: ~35 uniform square bricks with small visible gaps, alternating green (#009E73, bullish) and matte red (#AE3030, bearish), tracing a generally upward price path from roughly 148 to 180. First series color confirmed as #009E73.
+      Chrome: Bold dark title "renko-basic · javascript · echarts · anyplot.ai" centered at top, fully visible with no clipping. Y-axis name "Price ($)" top-left, X-axis name "Brick Index" bottom-center. Tick labels along both axes in soft dark ink, now showing clean round numbers (0, 10, 20, 30) with no crowded fractional boundary labels. Subtle horizontal-only gridlines. All title/axis/tick text is clearly readable against the light background.
+      Data: ~35 uniform square bricks with small visible gaps and a thin ink-colored outline, alternating green (#009E73, bullish) and matte red (#AE3030, bearish), tracing a generally upward price path from roughly 148 to 180. First series color confirmed as #009E73.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
@@ -51,26 +50,25 @@ review:
       Data: Brick colors are pixel-identical to the light render (green #009E73 / red #AE3030) — only chrome (background, text, grid) flipped, confirming palette consistency across themes.
       Legibility verdict: PASS
 
-    Shared observation (both renders): the X-axis shows crowded, low-information boundary tick labels ("-0.5" next to "0" at the left edge, "34.5" next to "30" at the right edge) because the axis is type:"value" with fractional min/max instead of an integer category axis — a minor proportional/legibility issue, not a legibility failure.
+    Shared observation (both renders): the attempt-1 crowded boundary-tick issue is resolved (showMinLabel/showMaxLabel: false). The bricks now carry a thin ink stroke, but since the stroke color is identical for both bullish and bearish bricks it does not add a real redundant (CVD-safe) encoding for direction — direction is still conveyed by hue alone.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicit and readable in both themes; deducted for crowded
-          fractional boundary ticks (-0.5/0 and 30/34.5)
+        comment: All sizes explicit and readable in both themes; boundary-tick crowding
+          from attempt 1 is fixed
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text-on-text/data overlap; minor crowding between adjacent boundary
-          tick labels
+        comment: No text-on-text/data overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -83,14 +81,15 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: Bullish/bearish direction relies solely on green/red hue with no
-          redundant encoding
+        comment: Bullish/bearish direction still relies solely on green/red hue; the
+          new ink stroke is identical for both directions so it adds no redundant
+          CVD-safe signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good margins and canvas usage; boundary-tick crowding costs a point
+        comment: Good margins, canvas gate passed, no more crowded boundary ticks
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,8 +112,8 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Correct and clean but reads as a well-configured default rather than
-          a distinctive design
+        comment: Correct and clean but still reads as a well-configured default rather
+          than a distinctive design
       - id: DE-02
         name: Visual Refinement
         score: 4
@@ -238,14 +237,14 @@ review:
         passed: true
         comment: renderItem-based custom geometry is a genuinely ECharts-distinctive
           feature
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-render-item
   patterns:
   - data-generation
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - publication-ready
+  - edge-highlighting
