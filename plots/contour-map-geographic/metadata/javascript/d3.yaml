@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: contour-map-geographic
+created: '2026-09-01T23:29:36Z'
+updated: '2026-09-01T23:50:35Z'
+generated_by: claude-sonnet
+workflow_run: 33570012292
+issue: 3772
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/javascript/d3/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Real-world accurate geography: peak positions and elevations closely match the
+    actual Mauna Kea (4207 m) and Mauna Loa (4169 m) summits on Hawai''i Island, giving
+    DQ-03 near-perfect factual grounding.'
+  - 'Distinctive D3-geo + d3-contour integration: contour polygons are computed in
+    grid-index space and reprojected into lon/lat before being rendered through geoPath,
+    a technique that is genuinely specific to D3''s ecosystem.'
+  - 'Contour value labels use a stroke halo (paint-order: stroke) and cardinal-direction
+    placement so they stay legible over both light and dark chrome without colliding
+    with the isolines.'
+  - Continuous elevation data correctly uses the imprint_seq colormap (brand green
+    -> blue), with identical data colors between the light and dark renders and theme-correct
+    backgrounds/text in both.
+  - Combines filled hypsometric bands, thinner interior isolines, an emphasized 0
+    m coastline, and a labeled colorbar with tick marks -- covering both the filled
+    and line-only contour requirements from the spec.
+  weaknesses:
+  - Interior isolines are thin (1px) and drawn at 50% opacity, which is a little subtle
+    against the sequential fill bands once the PNG is scaled down to ~400px mobile
+    width -- consider a slightly heavier stroke-width or opacity for the mid-density
+    bands.
+  - The rectangular four-sided map frame departs from the style guide's default L-shaped-spine
+    preference; acceptable for a geographic map, but a lighter/thinner frame stroke
+    would reduce visual weight and read closer to the house style.
+  - Only one terrain feature type (twin volcanic peaks) is demonstrated -- a labeled
+    saddle point or secondary coastal feature would further round out DQ-01 feature
+    coverage in a future iteration.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Hawai'i Island Elevation · contour-map-geographic · javascript · d3 · anyplot.ai" is bold dark ink, clearly readable and comfortably sized (~55% of canvas width). Longitude/latitude tick labels ("156.2°W" ... "20.2°N") are dark-gray, small but legible. Faint lon/lat graticule lines are visible over the light background. Colorbar on the right is titled "Elevation (m)" with dark tick labels at 0/1000/2000/3000/4000 m.
+      Data: A two-peak island silhouette (Hawai'i Island shape) rendered as concentric sequential-color bands from teal-green (low elevation, near #009E73) through blue (high elevation, near #4467A3), matching imprint_seq. A bold dark coastline traces the 0 m isoline, thinner semi-transparent isolines mark intermediate elevation bands, and white-haloed labels ("1000 m", "2000 m", "3000 m", "4000 m") sit at the outer edge of their respective rings without overlapping data or each other.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title, axis tick labels, colorbar title/ticks, and the graticule all switch to light-colored ink/gray tones and remain fully legible against the dark background. No dark-on-dark text was found.
+      Data: The same two-peak elevation gradient (teal-green to blue) as the light render -- colors are visually identical between the two themes, only the chrome (background, text, coastline stroke color reference) adapts. Contour labels keep their halo (now a dark stroke) so they stay readable over both the pale-green fill and the near-black background outside the island.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, no dark-on-dark failures observed.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable in both themes; title comfortably
+          ~55% of canvas width
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Filled bands and coastline are clearly visible; interior isolines
+          a bit subtle at small scale
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq gradient is CVD-safe and high-contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map + colorbar fill the square canvas well with balanced margins,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Lon/lat ticks carry °W/°N units; colorbar labeled 'Elevation (m)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Continuous elevation data uses imprint_seq; backgrounds and chrome
+          are theme-correct in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom sequential palette, halo-stroked labels, hypsometric shading
+          -- clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle graticule and generous whitespace; the full four-sided map
+          frame is heavier than the house L-shaped-spine default
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color gradient and cardinal-placed labels create clear visual hierarchy
+          toward the two summits
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: contour lines anchored to a geographic lon/lat basemap'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled + line-only contours, labeled isolines at meaningful 500 m/1000
+          m intervals, colorbar legend, coastline anchor all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat correctly projected via geoMercator; axes show the full grid
+          extent
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with descriptive prefix; colorbar
+          legend labels correct
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Twin peaks, ridge texture, and a closed coastline are shown; a secondary
+          terrain feature would round this out further
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real, neutral geographic/scientific scenario (Hawai'i Island elevation)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Peak elevations closely match the real Mauna Kea/Mauna Loa summit
+          heights
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes; linear imports -> data -> render flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic synthetic terrain, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a geo-projected contour map; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the d3 mount-node contract; no deprecated API usage
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic use of d3.contours, d3.geoMercator/geoPath, d3.geoGraticule,
+          and d3.scaleSequential
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Reprojecting d3-contour polygons through a geographic projection
+          is a technique distinctive to D3
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
+  - alpha-blending

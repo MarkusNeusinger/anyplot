@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: crossword-basic
+created: '2026-09-02T00:06:07Z'
+updated: '2026-09-02T00:33:22Z'
+generated_by: claude-sonnet
+workflow_run: 33573218645
+issue: 3805
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - 'Fixed the theme-inversion bug from Attempt 2: blocked cells now use a fixed CELL_BLOCK
+    = "#1A1A17" and entry cells a fixed CELL_ENTRY = "#FAF8F1", both hardcoded independent
+    of theme, so the crossword''s black/white pattern is now pixel-identical between
+    plot-light.png and plot-dark.png — matching the correct convention already used
+    in the plotly.py and matplotlib.py implementations of this spec (''contrast IS
+    the data'').'
+  - Correct 180-degree rotational symmetry, generated programmatically by mirroring
+    a half-list of blocked cells to (N-1-row, N-1-col) — matches traditional newspaper-crossword
+    convention.
+  - 'Clever, spec-compliant workaround for the missing heatmap/tilemap add-on module:
+    builds the entire grid from scatter series with square markers plus dataLabels,
+    staying within the core Highcharts bundle.'
+  - Correct standard crossword numbering algorithm (numbers cells that start an across
+    and/or down entry) and precise 1:1 cell aspect ratio via fixed pixel margins independent
+    of Highcharts' auto-layout.
+  - Clue-number font size increased to 14px CSS (up from 13px in Attempt 2), improving
+    mobile-thumbnail legibility while still fitting cleanly in each cell without overlap.
+  weaknesses:
+  - 'In the dark render, blocked cells (fixed #1A1A17 fill) are visually indistinguishable
+    from the near-black page background (#1A1A17) except where grid lines outline
+    their edges — this is the intended, spec-consistent ''contrast is the data'' behavior
+    (and matches the other implementations of this spec), but it does mean the blocked-cell
+    squares read as negative space rather than an explicitly rendered dark fill in
+    that theme.'
+  - Clue numbers at 14px CSS in a dense 15x15 grid are still on the smaller side for
+    a ~400px mobile thumbnail, though legible at full resolution.
+  - 'Library Mastery is capped by the plot type itself: beyond the scatter+square-marker+dataLabels
+    grid technique (already the right idiomatic solution given core-bundle constraints),
+    there isn''t much room to showcase more distinctive Highcharts-only features.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — matches the required light-theme surface.
+      Chrome: Title "crossword-basic · javascript · highcharts · anyplot.ai" renders bold and dark, clearly legible above the grid. No axis labels or ticks are shown (correctly omitted for a grid plot). Numbers 1-72 mark word-start cells along the outer edge in small dark digits.
+      Data: A 15x15 grid of square cells. Blocked cells render as solid near-black (#1A1A17) squares; entry cells render as cream (#FAF8F1, same as page background) squares outlined by subtle grid lines. The blocked-cell pattern shows correct 180-degree rotational symmetry. Small dark clue numbers sit in the top-left corner of word-start cells, clearly readable against the cream cells.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — matches the required dark-theme surface.
+      Chrome: Title renders in light/off-white ink, clearly legible against the dark background. No dark-on-dark text found anywhere.
+      Data: The same 15x15 grid and identical symmetric blocked-cell pattern as the light render. Entry cells keep their fixed cream (#FAF8F1) fill, so they read as distinct light squares against the dark page. Blocked cells keep their fixed near-black (#1A1A17) fill, which is the same shade as the dark page background — so they read as negative space/gaps outlined by the grid lines rather than an overtly painted dark square, but the resulting black/white pattern is pixel-identical to the light render (only chrome flipped, exactly as required). Clue numbers are drawn in a fixed dark ink on top of the fixed-cream entry cells, so they stay legible in this theme too — no dark-on-dark failure.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and clue numbers readable in both themes; 14px clue numbers
+          are an improvement over the previous 13px but still on the small side for
+          a 15x15 grid at mobile thumbnail size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with other text, data, or itself
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Blocked cells clearly visible in light theme; in dark theme they
+          blend with the page background by design (fixed dark fill matching a near-black
+          page), still outlined by grid lines
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast monochrome ink/background in both themes, no color-based
+          signal, no red-green issue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct square 2400x2400 canvas, precise 1:1 cells via fixed pixel
+          margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches mandated format; axis labels correctly omitted for
+          this plot type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed to hardcoded theme-independent CELL_BLOCK/CELL_ENTRY colors,
+          so the black/white crossword pattern is now identical between light and
+          dark renders; only chrome (title, background) flips as required
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean, faithful rendering with a creative scatter+dataLabels grid
+          workaround; polish is inherently limited by the spec's monochrome-for-printing
+          requirement
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Uniform, subtle grid lines; no wasted chrome; axes/legend fully suppressed
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Numbered word-starts create mild visual hierarchy, but there is limited
+          room for storytelling in this plot type
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct crossword grid, built natively within core-bundle constraints
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Numbered word starts, 180-degree symmetric blocking, 1:1 cell aspect
+          ratio, uniform grid lines, and now theme-stable black/white cell colors
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Row/column correctly mapped with a reversed y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format; legend appropriately omitted
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Covers grid, symmetric blocking, and numbering
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral newspaper-style symmetric pattern that now stays
+          consistent across both themes
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15x15 grid is within the spec's stated typical range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat procedural script, no unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded grid data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports, uses only the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear symmetric-mirroring logic, well-commented rationale for fixed
+          cell colors, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) call, animation disabled
+          everywhere
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative, idiomatic use of scatter + square markers + dataLabels
+          to synthesize a grid without any add-on modules
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Solid but doesn't showcase more distinctive Highcharts-only features
+          beyond the grid workaround
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome

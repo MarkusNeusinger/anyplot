@@ -1,0 +1,260 @@
+library: muix
+language: javascript
+specification_id: crossword-basic
+created: '2026-09-02T00:08:51Z'
+updated: '2026-09-02T00:22:01Z'
+generated_by: claude-sonnet
+workflow_run: 33573391459
+issue: 3805
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/muix/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Both weaknesses flagged in Attempt 1 are directly and effectively addressed:
+    clue-number fontSize bumped from cellW*0.26 to cellW*0.32 with fontWeight 600
+    added, and title fontSize bumped from 26 to 30 — both improve legibility and title-width
+    proportion without introducing overflow or overlap'
+  - Correct 180-degree rotational symmetry in the blocked-cell pattern and a faithful
+    reading-order numbering algorithm, matching real newspaper-crossword construction
+    conventions
+  - Creative, technically sound repurposing of MUI X's ScatterChart (band-scale axes
+    + a custom `slots.scatter` renderer) to build a grid chart type the community
+    library doesn't natively offer
+  - Theme-adaptive chrome (title, page background) correctly follows ANYPLOT_THEME
+    while intentionally keeping the puzzle grid monochrome per the spec's 'optimized
+    for printing' requirement — the tradeoff is documented in code comments
+  - Perfectly square canvas with a centered board, even margins, and correct 1.5px/3px
+    stroke-weight hierarchy between cell gridlines and the outer board border; canvas
+    dimension gate passed
+  - Clean, deterministic, harness-compliant code — skipAnimation set, default export,
+    no manual save/mount calls, only used imports
+  weaknesses:
+  - Clue numbers, while now larger and bolder (cellW*0.32, weight 600), are still
+    small in absolute terms within a dense 15x15 grid — worth a final check at the
+    smallest catalog thumbnail size, though this is a soft note rather than a scoring
+    deduction now.
+  - The design never touches the Imprint accent green (fully monochrome by design,
+    which is spec-justified for a print-style puzzle) — an optional subtle accent
+    (e.g. on the outer board border) could tie it closer to the site's visual system
+    without breaking the 'print-ready monochrome' intent.
+  - Repurposing ScatterChart via band scales + a custom slot renderer is a smart workaround
+    for MUI X community's lack of a native grid/heatmap chart type, but remains a
+    step removed from ScatterChart's idiomatic point-marker usage — an inherent tradeoff
+    of the community library's chart coverage, not something to change here.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white page (#FAF8F1-consistent), with the title centered at the top in dark ink text.
+      Chrome: Title "crossword-basic · javascript · muix · anyplot.ai" is fully legible in dark text against the light page, now at fontSize 30 (up from 26 in Attempt 1), comfortably filling roughly half the plot width. No axis ticks/labels shown — correct for a crossword grid, which has no numeric axes.
+      Data: A 15x15 crossword grid centered in a square canvas. Paper-white (open) cells and solid black (blocked) cells form a symmetric pattern; thin dark gridlines (1.5px) separate every cell and a thicker dark border (3px) frames the whole board. Clue numbers sit in the top-left corner of cells that start an across or down entry, in correct reading-order sequence (1, 2, 3, 4, 5, ... 66); the numbers are now bolder and larger (fontSize=cellW*0.32, fontWeight 600, up from 0.26/regular in Attempt 1) and read clearly. Blocked cells show clear 180-degree rotational symmetry (e.g. blocks at row 1 columns 5 and 11 mirror blocks at row 15 columns 11 and 5).
+      Legibility verdict: PASS — title and all clue numbers are readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black page, with the title centered at the top in light/white text.
+      Chrome: Title is fully legible in light text against the dark page — no dark-on-dark issue on the chrome.
+      Data: The crossword grid itself (paper-white open cells, solid black blocked cells, dark gridlines, clue numbers) renders IDENTICALLY to the light render — same colors, same symmetric block pattern, same numbering. This is intentional per the implementation's code comment: the puzzle pattern is treated as fixed "data" (like a categorical data color), matching the spec's explicit "monochrome design optimized for printing" requirement, so only the surrounding page and title chrome flip with the theme.
+      Legibility verdict: PASS — title readable on the dark background; the grid's own cells stay black-ink-on-white-paper (not dark-on-dark) since the puzzle grid keeps its own paper-white cell backgrounds regardless of page theme, so clue numbers remain dark-on-white and fully legible.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and numbers readable in both themes at full size; clue numbers
+          bumped to fontSize=cellW*0.32 with fontWeight 600 (up from 0.26/regular),
+          improving small-scale legibility over Attempt 1.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, numbers, or grid elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cells and borders clearly visible; number density is high but consistent
+          with a full 15x15 puzzle.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast monochrome black/white/paper design, inherently CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; board perfectly centered and square
+          with even margins; nothing clipped; title fontsize increase kept proportion
+          without overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No numeric axes needed for a grid; title present, descriptive, and
+          correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Chrome (title, page bg) correctly theme-adaptive; puzzle grid intentionally
+          monochrome per spec's print requirement, a justified and documented exception
+          to categorical palette use.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional newspaper-crossword polish with a deliberate, documented
+          monochrome design tradeoff.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean stroke hierarchy (1.5px cell lines vs 3px board border), generous
+          centered whitespace, refined bolder number weight.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear, correct puzzle presentation; limited hierarchy beyond the
+          grid itself, appropriate for this plot type.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct crossword grid chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Blocked cells, numbered word starts, symmetry, uniform grid lines,
+          monochrome design all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Row/column coordinates correctly mapped via band xAxis/yAxis scales.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches the mandated format; no legend needed for a
+          single grid series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects of the plot type: blocks, numbers, symmetry, uniform
+          lines, board border.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral newspaper-style crossword pattern.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15x15 grid, at the upper end of the spec's stated 10x10 to 15x15
+          typical range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: One Chart component plus one required custom slot renderer (GridMark);
+          no gratuitous abstraction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded grid data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only Box, Typography, ScatterChart imported, all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; elegant use of scatter + custom slot to express a grid
+          chart type.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: skipAnimation set, default export, no manual save/mount calls — harness
+          contract respected.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses documented ScatterChart extension points (band scales, slots.scatter)
+          correctly, though it's a step removed from ScatterChart's typical point-marker
+          usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative, library-aware workaround for MUI X community's lack of
+          a native grid/heatmap chart type.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
