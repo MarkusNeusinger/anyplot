@@ -118,6 +118,10 @@ for (const key of ["whiskerLow", "whiskerHigh"]) {
     .attr("stroke-width", 1.5);
 }
 
+// Pre-mixed opaque tint (fixed 28% white mix) so the composited box color no
+// longer depends on the page background behind it — only chrome stays theme-adaptive.
+const boxFill = d3.interpolateRgb(t.palette[0], "#ffffff")(0.28);
+
 // box body
 boxGroups
   .append("rect")
@@ -126,8 +130,7 @@ boxGroups
   .attr("width", (d) => x(d.q3) - x(d.q1))
   .attr("height", boxHeight)
   .attr("rx", 3)
-  .attr("fill", t.palette[0])
-  .attr("fill-opacity", 0.72)
+  .attr("fill", boxFill)
   .attr("stroke", t.palette[0])
   .attr("stroke-width", 1.5);
 
@@ -163,7 +166,7 @@ const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(
     .tickFormat((v) => `${v} ms`),
 );
 xAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "14px");
-xAxis.selectAll("line").attr("stroke", t.inkSoft);
+xAxis.selectAll("line").remove();
 xAxis.select(".domain").attr("stroke", t.inkSoft);
 
 const yAxis = g.append("g").call(d3.axisLeft(y));
