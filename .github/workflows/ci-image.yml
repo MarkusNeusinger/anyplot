@@ -81,6 +81,8 @@ jobs:
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
           MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
           FORCE_RUN: ${{ inputs.force_run }}
         run: |
           set -uo pipefail
@@ -89,21 +91,36 @@ jobs:
           # by failing. On a PR or a merge group the refs are guaranteed present
           # (fetch-depth: 0), so a failure there is a real problem and stops the
           # job; on a push whose parent is unreachable the job builds instead.
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            if ! CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA"); then
-              echo "::error::could not diff $PR_BASE_SHA..$PR_HEAD_SHA — refusing to decide whether the image needs building"
-              exit 1
-            fi
-          elif [[ "$EVENT_NAME" == "merge_group" ]]; then
-            if ! CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA"); then
-              echo "::error::could not diff $MG_BASE_SHA..$MG_HEAD_SHA — refusing to decide whether the image needs building"
-              exit 1
-            fi
-          elif ! CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD); then
-            echo "::warning::no parent commit to diff against — building the image rather than skipping the gate"
-            echo "should_build=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          case "$EVENT_NAME" in
+            pull_request)
+              if ! CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA"); then
+                echo "::error::could not diff $PR_BASE_SHA..$PR_HEAD_SHA — refusing to decide whether the image needs building"
+                exit 1
+              fi ;;
+            merge_group)
+              if ! CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA"); then
+                echo "::error::could not diff $MG_BASE_SHA..$MG_HEAD_SHA — refusing to decide whether the image needs building"
+                exit 1
+              fi ;;
+            push)
+              # The whole pushed range, not HEAD~1..HEAD: a push can carry
+              # several commits, and an earlier one touching api/ under a tip
+              # commit that does not would otherwise skip the gate.
+              # github.event.before is all zeroes on a new branch, and after a
+              # force-push the old tip may be gone — neither says anything about
+              # the image, so both build.
+              if [[ "$PUSH_BEFORE" =~ ^0+$ ]] || ! CHANGED_FILES=$(git diff --name-only "$PUSH_BEFORE" "$PUSH_AFTER"); then
+                echo "::warning::the pushed range $PUSH_BEFORE..$PUSH_AFTER is not diffable — building the image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+            *)
+              if ! CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD); then
+                echo "::warning::no parent commit to diff against — building the image rather than skipping the gate"
+                echo "should_build=true" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi ;;
+          esac
 
           echo "Changed files:"
           echo "$CHANGED_FILES"
@@ -210,12 +227,19 @@ jobs:
         if: failure() && steps.check.outputs.should_build == 'true'
         run: docker logs api || true
 
-      # Threshold `warning` with three named exceptions, rather than a
-      # non-blocking run: that way a NEW warning blocks, which is the point of
+      # Threshold `warning` with three exceptions, rather than a non-blocking
+      # run: that way a warning of any other code blocks, which is the point of
       # having the linter at all. All three are deliberate choices in
-      # api/Dockerfile, and Dockerfile edits are not this PR's to make.
-      # app/Dockerfile passes with no exceptions at all — verified against
-      # hadolint 2.15.1, the version this action pins.
+      # api/Dockerfile, named at their line below.
+      #
+      # Note what `ignore` is and is not: hadolint applies it to the whole file,
+      # so a NEW DL3013, DL3008 or DL3025 somewhere else in api/Dockerfile is
+      # also suppressed. Line-scoping needs `# hadolint ignore=<code>` comments
+      # in the Dockerfile itself, next to the three instructions they excuse —
+      # the better home for them, and the right follow-up, but a Dockerfile edit
+      # is not this change's to make. app/Dockerfile needs no exceptions at all,
+      # so nothing there is suppressed — verified against hadolint 2.15.1, the
+      # version this action pins.
       - name: Hadolint (api/Dockerfile)
         if: steps.check.outputs.should_build == 'true'
         uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0

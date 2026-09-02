@@ -39,10 +39,10 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `/openapi.json` and the MCP server all report), the OG disk fallback
   `api/static/og-image.png` survived the runtime stage's COPY, and the process runs as uid
   1000. Two hadolint steps gate both Dockerfiles at threshold `warning` with three named
-  exceptions in `api/Dockerfile`, so a NEW warning blocks. Change detection excludes
-  `plots/**`: the plot pipeline's PRs touch nothing the image serves. Adopted from the
+  exceptions in `api/Dockerfile`, so a warning of any other code blocks. Change detection
+  excludes `plots/**`: the plot pipeline's PRs touch nothing the image serves. Adopted from the
   sibling repo kurrentschrift, which added the same job after its `pyproject.toml` fell out
-  of the runtime stage.
+  of the runtime stage. (#11205)
 
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
