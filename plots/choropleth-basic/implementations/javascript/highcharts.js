@@ -25,8 +25,13 @@ const MARGIN_BOTTOM = 140;
 const PLOT_WIDTH = MOUNT_WIDTH - MARGIN_LEFT - MARGIN_RIGHT;
 const PLOT_HEIGHT = MOUNT_HEIGHT - MARGIN_TOP - MARGIN_BOTTOM;
 
+// LON_MIN/LON_MAX are asymmetric on purpose: the visible region mass (North
+// America through Oceania) spans roughly lon -170..153, not a symmetric
+// -170..170 — Antarctica's single eastward vertex at lon 170 is a thin sliver
+// that barely registers visually. Padding both edges by the same 25° keeps
+// the *content* horizontally centered instead of the raw coordinate extremes.
 const LON_MIN = -195;
-const LON_MAX = 195;
+const LON_MAX = 178;
 const LAT_MIN = -85;
 const LAT_MAX = 80;
 const PX_PER_LON = PLOT_WIDTH / (LON_MAX - LON_MIN);
@@ -81,17 +86,17 @@ const REGIONS = [
   {
     name: "Central Asia",
     value: 12,
-    poly: [[46, 55], [70, 55], [88, 50], [80, 38], [60, 38], [46, 42]],
+    poly: [[46, 55], [66, 56], [76, 48], [70, 38], [58, 37], [46, 41]],
   },
   {
     name: "South Asia",
     value: 18,
-    poly: [[60, 37], [78, 34], [88, 28], [92, 22], [80, 8], [68, 8], [60, 24]],
+    poly: [[60, 36], [76, 33], [86, 27], [90, 21], [79, 8], [68, 8], [60, 23]],
   },
   {
     name: "East Asia",
     value: 29,
-    poly: [[73, 40], [90, 53], [120, 53], [135, 45], [130, 32], [122, 25], [108, 18], [95, 22], [80, 30]],
+    poly: [[84, 39], [92, 52], [120, 53], [135, 45], [130, 32], [122, 25], [108, 18], [96, 21], [86, 27]],
   },
   {
     name: "Southeast Asia",
@@ -128,20 +133,19 @@ function colorForValue(value) {
   const frac = Math.min(1, Math.max(0, (value - VALUE_MIN) / (VALUE_MAX - VALUE_MIN)));
   return lerpColor(t.seq[0], t.seq[1], frac);
 }
-function bounds(poly) {
-  const lons = poly.map((p) => p[0]);
-  const lats = poly.map((p) => p[1]);
-  return { minLon: Math.min(...lons), maxLon: Math.max(...lons), minLat: Math.min(...lats), maxLat: Math.max(...lats) };
-}
-
 // Precompute centroid + a hover hit-radius (px) sized to fit inside each
 // region's bounding box, so the invisible tooltip marker (below) never spills
 // past its own polygon into a neighbor.
 REGIONS.forEach((region) => {
-  const b = bounds(region.poly);
-  region.centroidLon = (b.minLon + b.maxLon) / 2;
-  region.centroidLat = (b.minLat + b.maxLat) / 2;
-  region.hitRadius = 0.42 * Math.min((b.maxLon - b.minLon) * PX_PER_LON, (b.maxLat - b.minLat) * PX_PER_LAT);
+  const lons = region.poly.map((p) => p[0]);
+  const lats = region.poly.map((p) => p[1]);
+  const minLon = Math.min(...lons);
+  const maxLon = Math.max(...lons);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  region.centroidLon = (minLon + maxLon) / 2;
+  region.centroidLat = (minLat + maxLat) / 2;
+  region.hitRadius = 0.42 * Math.min((maxLon - minLon) * PX_PER_LON, (maxLat - minLat) * PX_PER_LAT);
   region.fill = region.value === null ? MUTED : colorForValue(region.value);
 });
 
