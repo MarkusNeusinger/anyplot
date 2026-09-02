@@ -176,6 +176,7 @@ Located in `.github/workflows/`:
 | `codeql.yml` | CodeQL scanning (actions, JavaScript/TypeScript, Python) on pushes to main, PRs and a weekly cron; `plots/**` is excluded from triggers and analysis, so pipeline PRs never start a scan |
 | `ci-lint.yml` | Ruff lint check on PRs |
 | `ci-tests.yml` | Unit + integration tests on PRs |
+| `ci-image.yml` | Builds `api/Dockerfile` and smoke-tests the container before merge — `/health`, the reported version against `pyproject.toml`, the runtime stage's COPY payload, non-root uid — plus hadolint on both Dockerfiles. Skips when only `plots/**` or frontend sources changed |
 | `notify-deployment.yml` | Records GitHub deployment events for `app` / `api` |
 | `bot-serving-check.yml` | Daily synthetic monitor: curls production with crawler UAs (Googlebot/Twitterbot) and fails on non-200 or missing per-route titles — the bot→seo-proxy path is invisible to human traffic and needs its own alarm |
 | `util-claude.yml` | On-demand `@claude` utility (issue/PR comments) |
