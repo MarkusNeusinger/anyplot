@@ -1,0 +1,266 @@
+library: echarts
+language: javascript
+specification_id: scatter-map-geographic
+created: '2026-09-02T06:01:07Z'
+updated: '2026-09-02T06:15:54Z'
+generated_by: claude-sonnet
+workflow_run: 33596590233
+issue: 3617
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/javascript/echarts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Repair resolved both attempt-1 weaknesses: dataZoom (inside, both axes, filterMode:
+    none) now enables pan/zoom to explore clusters as the spec explicitly requested,
+    and the depth colorbar now shows the actual km range ("Deep (580 km)" / "Shallow
+    (8 km)") instead of qualitative-only labels.'
+  - The declutter() pass (pixel-space min-separation nudge, converted back to lon/lat)
+    visibly reduces marker crowding in dense regions (Chile, Turkey/Greece) compared
+    to the prior attempt, while leaving the underlying lon/lat data used for tooltips
+    unaffected.
+  - 'Clever, well-justified workaround for ECharts'' missing bundled world GeoJSON:
+    low-vertex continent silhouettes rendered via a custom series (renderItem + api.coord)
+    on the same lon/lat axes the data points use, giving real geographic context without
+    violating the no-fetch/no-extra-package rule.'
+  - 'Dual encoding is well executed: magnitude drives point diameter via a linear
+    (not sqrt) scale, correctly justified in a comment because Richter magnitude is
+    already logarithmic, and depth drives color via a continuous imprint_seq visualMap.'
+  - Custom fixed-position magnitude size-key legend (graphic elements) sits cleanly
+    beside the depth colorbar with no overlap or clipping in either theme, and theme
+    tokens are threaded correctly throughout both renders.
+  weaknesses:
+  - Dense clusters (Valparaiso/Concepcion in Chile; Izmir/Athens in the Aegean) still
+    show meaningfully overlapping circles after decluttering — the white borderColor
+    keeps individual markers distinguishable, but a few more declutter passes or a
+    slightly larger minimum-separation margin would fully resolve it.
+  - The basemap remains an unprojected equirectangular (plate carree) trace rather
+    than an explicit Natural Earth/Robinson (world) or Mercator (regional) projection
+    the spec suggests; this is an accepted, well-documented tradeoff given ECharts
+    ships no bundled world GeoJSON, but still a minor deviation from the letter of
+    the spec.
+  - Continent silhouettes are very low-vertex (rough polygons), which is coarse enough
+    that a couple of coastlines (e.g. West Africa, Southeast Asia) read as noticeably
+    blocky at close inspection — acceptable for context-only framing, but a few more
+    vertices per continent would sharpen recognizability without much code growth.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1), matching the required light-theme surface.
+      Chrome: Title "Global Earthquakes · scatter-map-geographic · javascript · echarts · anyplot.ai" is centered at top in dark ink, fully legible and comfortably sized (no overflow, no clipping). "Longitude"/"Latitude" axis titles and degree-formatted tick labels (e.g. 150°W, 30°N, 30°S) render in dark gray and are clearly readable. Grid lines are subtle light gray, visible but not dominant. Continent silhouettes are filled light gray with a soft mid-gray outline, providing geographic context without competing with the data markers.
+      Data: ~40 circular markers sized by magnitude (M5-M8 per the on-canvas size-key legend) and colored on a continuous green-to-blue scale for focal depth (shallow=green #009E73, deep=blue), matching the "Deep (580 km)"/"Shallow (8 km)" colorbar on the right — the colorbar now shows the actual depth range in km, not just qualitative labels. Markers have a thin white (page-background-colored) border that keeps overlapping circles in dense clusters (Chile, Turkey/Greece) visually distinguishable, though the circles still meaningfully overlap in those two spots even after the declutter pass. First-series color is the mandated #009E73 green.
+      Legibility verdict: PASS — no light-on-light issues found anywhere in the render, including the legend and colorbar text.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (~#1A1A17), matching the required dark-theme surface.
+      Chrome: Title, axis titles, and tick labels render in light/white text, clearly legible against the dark background. Grid lines are a subtle dark gray, still visible. Continent silhouettes use a darker gray fill with a lighter gray outline, distinguishable from the near-black ocean/background.
+      Data: Marker colors (green-to-blue depth scale, magnitude-sized circles) are pixel-identical to the light render — only chrome (background, text, grid, basemap fill) flipped, confirming the palette-consistency requirement. The same white-bordered overlap pattern in Chile/Turkey-Greece clusters persists, still readable via the border outlines.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick label, legend entry, and colorbar label is clearly visible against the dark surface.
+
+    Canvas: plot-light.png measured at 3200x1800 (landscape target); no canvas-dimension-gate file was present, confirming the gate passed. No AR-09 edge clipping found on title, axis labels, legend, or colorbar in either render — all text and legend elements sit fully within the canvas with margin to spare (verified via pixel crops of the top-right colorbar and size-key legend regions).
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly styled and readable in both themes; no light-on-light
+          or dark-on-dark issues
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Declutter pass reduced crowding versus attempt 1; Chile and Turkey/Greece
+          clusters still overlap noticeably but remain distinguishable via white marker
+          borders
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers sized 14-46px for a ~40-point dataset, alpha 0.75 mitigates
+          overplotting
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-blue sequential scale plus size encoding avoids red-green-only
+          signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, no clipping on title/axes/legend/colorbar,
+          good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude/Latitude axis titles with degree-formatted ticks; descriptive
+          spec-compliant title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, continuous depth encoding uses imprint_seq,
+          backgrounds correct in both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom basemap workaround, dual size/color encoding, and custom legend
+          construction show real design thought
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid and generous whitespace; colorbar now labels actual km
+          range, improving information design
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual size/color encoding plus basemap context creates reasonable
+          hierarchy, though no single focal point is emphasized
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Geographic scatter map with lat/lon positioning
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Basemap, size legend, color legend, tooltip, and now dataZoom pan/zoom
+          are all present, satisfying every feature the spec calls out
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon/lat map correctly to x/y, depth to color, magnitude to size
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
+          · anyplot.ai' format; legends match data semantics
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: latitude, longitude, value (depth->color), size (magnitude), label
+          (place name in tooltip) all used
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: ~40 real-world-plausible epicenters with sensible magnitude/depth
+          ranges, geopolitically neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Magnitude 4.8-8.8 and depth 8-580km are realistic seismological ranges
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes; small focused helper functions (magSize, toPx/fromPx,
+          declutter)
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; uses only the global echarts and ANYPLOT_TOKENS
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; declutter and custom-series basemap are genuine, well-commented
+          techniques
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Follows the mount-node contract exactly; animation: false set'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic visualMap continuous, dataZoom inside, graphic array for
+          a manual legend, custom series via renderItem/api.coord
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom renderItem basemap and pixel-space declutter algorithm are
+          genuinely distinctive, well-justified given ECharts ships no world GeoJSON
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - custom-legend
+  - patches
+  - manual-ticks
+  patterns: []
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - custom-colormap

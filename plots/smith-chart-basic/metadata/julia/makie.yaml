@@ -1,0 +1,252 @@
+library: makie
+language: julia
+specification_id: smith-chart-basic
+created: '2026-09-02T06:10:13Z'
+updated: '2026-09-02T06:14:38Z'
+generated_by: claude-sonnet
+workflow_run: 33596588397
+issue: 3792
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Correct, complete Smith chart construction from first principles — constant-resistance
+    circles, constant-reactance arcs trimmed to the unit disk, chart boundary, and
+    matched-condition point — mathematically accurate impedance-to-reflection-coefficient
+    mapping
+  - 'Full theme-adaptive chrome: identical brand-green (#009E73) locus in both renders,
+    correct #FAF8F1/#1A1A17 backgrounds, all chrome text legible in both themes'
+  - Correct 2400x2400 square canvas — the right orientation choice for a circular
+    diagram with no preferred horizontal axis
+  - Realistic RF engineering scenario (parallel-RLC antenna feed impedance across
+    a 1-6 GHz sweep) with plausible resistance/reactance values and a sensible 50
+    ohm reference impedance
+  - 'Clean, idiomatic Makie code: DataAspect() for true circular geometry, fully deterministic
+    data (no RNG needed), minimal-chrome Axis (no ticks/spines/gridlines from Axis
+    itself), single-file dual-theme pattern'
+  - Visual hierarchy via marker size — larger, outlined markers at the three labeled
+    frequency points vs. small trajectory dots along the rest of the curve
+  weaknesses:
+  - Grid circles/arcs carry no printed r/x values (0.2, 0.5, 1, 2, 5) as conventional
+    Smith charts do — a viewer without an external reference cannot read quantitative
+    resistance/reactance directly off the grid; small numeric labels where each circle/arc
+    crosses the horizontal axis would fix this
+  - Only 3 of 40 frequency points are labeled (start, mid, end) — acceptable under
+    the spec's 'key points' wording, but an additional label near the curve's steepest
+    bend (~2.5 GHz) would better convey the sweep trajectory
+  - Reactance arcs converge into a visually dense cluster near |Gamma| approx 1 (right
+    edge) — inherent to Smith-chart geometry and not a bug, but a slightly thinner
+    linewidth for the higher-|x| arcs there would reduce visual noise
+  - No VSWR (constant reflection-coefficient magnitude) circle included — listed as
+    optional in the spec, but would have added a useful extra layer of RF context
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Antenna S11 Sweep · smith-chart-basic · julia · makie · anyplot.ai" in dark ink, clearly legible, ~60% of plot width. No axis ticks/labels (intentionally omitted — standard for Smith charts, whose grid itself is the coordinate system). Constant-resistance circles and constant-reactance arcs rendered in a subtle mid-gray, visible but not dominant. Frequency labels "1.0 GHz", "3.4 GHz", "6.0 GHz" in dark ink, all readable against the light background.
+      Data: Single brand-green (#009E73) impedance locus with small trajectory dots and three larger labeled markers with light-background strokes. Matched-condition point (Z=Z0) marked with a small gray dot at chart center.
+      Legibility verdict: PASS — all text and grid elements clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title rendered in light/off-white ink, clearly legible against the dark background. Grid circles/arcs in a lighter gray tone that remains visible without overpowering the data curve. Frequency labels "1.0 GHz", "3.4 GHz", "6.0 GHz" in light ink, all clearly readable — no dark-on-dark failures observed.
+      Data: Impedance locus is the identical brand-green (#009E73) as the light render — confirmed unchanged between themes, only chrome (background, grid gray value, text ink, marker stroke color) flipped.
+      Legibility verdict: PASS — all text and grid elements clearly readable, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and frequency labels clearly readable in both themes at full
+          and reduced scale
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text/data collisions; '3.4 GHz' label sits close to the center-axis
+          grid intersection but does not overlap it
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizing well-chosen for 40-point sweep; larger markers highlight
+          the three labeled key points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single brand-green data color reads well on both light and dark chrome,
+          no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas is the correct choice; nothing clipped or
+          overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format matches spec exactly; traditional x/y axis labels correctly
+          omitted for this chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct, data color is Imprint position
+          1 (#009E73), identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Real design effort in the custom-built grid geometry, but missing
+          conventional numeric r/x labels keeps it short of reference-quality polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Spines and ticks fully hidden, grid subtle, generous whitespace inside
+          the unit disk
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Marker-size hierarchy and frequency labels clearly narrate the sweep
+          trajectory across the resonance
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Unmistakably a Smith chart
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Grid, locus, and frequency labels all present; missing standard numeric
+          r/x grid labels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct Z/Z0 normalization and Gamma=(z-1)/(z+1) mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; no legend needed for single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Covers boundary, R-circles, X-arcs, matched point, locus; lacks numeric
+          grid labels and optional VSWR circle
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible antenna feed impedance sweep across a parallel-RLC resonance,
+          neutral subject matter
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 50 ohm reference, resistance/reactance values in a realistic
+          RF range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — no randomness used at all
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity; arc-trimming logic is well-structured
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: DataAspect() for circular geometry, correct theme-token threading
+          through Axis/Figure
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Custom geometric construction of the full Smith chart grid from scratch
+          via lines! is genuinely distinctive; falls just short of full marks for
+          the missing numeric grid labeling
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
