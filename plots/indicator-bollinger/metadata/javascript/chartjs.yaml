@@ -1,0 +1,234 @@
+library: chartjs
+language: javascript
+specification_id: indicator-bollinger
+created: '2026-09-02T01:24:25Z'
+updated: '2026-09-02T01:38:18Z'
+generated_by: claude-sonnet
+workflow_run: 33578914027
+issue: 3237
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/chartjs/plot-dark.html
+quality_score: 95
+review:
+  strengths:
+  - New squeeze/breakout callout plugin directly resolves the prior review's data-storytelling
+    gap - clean dashed leader lines and labels that don't collide with any data or
+    axis text in either theme
+  - Band fill alpha raised from 0.15 to 0.2 gives the Bollinger envelope more visual
+    weight without competing with the bold close-price line
+  - Y-axis grid now uses an explicit, tuned rgba(ink,0.1) instead of the flat default
+    token, matching the polish already applied to the removed x-axis grid
+  - Theme-adaptive chrome remains fully correct in both renders; Imprint palette data
+    colors (green close price, lavender SMA, blue band) are identical across light
+    and dark
+  - Deterministic fixed-seed LCG random walk produces a realistic BTC/USD series that
+    shows both a genuine squeeze (narrow band) and a genuine breakout (price piercing
+    the upper band)
+  weaknesses:
+  - DE-01 could still edge higher with an even more distinctive palette/typography
+    treatment - marginal, non-blocking polish note
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Bold dark title "indicator-bollinger · javascript · chartjs · anyplot.ai" centered at top; legend row (Bollinger Band filled swatch, SMA dashed lavender line, Close Price green line) below title; "Date" and "Price (USD)" axis titles in dark ink; y-axis ticks $34,000-$46,000 with dollar formatting; x-axis dates Mar 1-May 21; subtle horizontal-only grid line (~10% opacity). New "Squeeze" and "Breakout" callout labels with dashed leader lines, clear of all other text/data.
+      Data: Bold 3px green (#009E73) close-price line is the focal series; dashed lavender (palette[1]) SMA line; semi-transparent blue-bordered (palette[2]) Bollinger envelope with alpha 0.2 fill.
+      Legibility verdict: PASS - all text, including new callout labels, clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same layout, chrome fully flipped to light text (title, legend, axis titles, tick labels, callout labels) - all clearly legible, no dark-on-dark failures.
+      Data: Green close price, lavender dashed SMA, blue band border/fill are pixel-identical to the light render; only chrome (background, text, grid) flipped as expected.
+      Legibility verdict: PASS - callout text and connector lines equally legible in dark theme, no dark-on-dark issues found.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, well-proportioned, readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap, including new callout labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Band alpha raised to 0.2, all series clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, good canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: Price (USD)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Imprint palette throughout, theme-correct
+          chrome in both renders'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Role-based color mapping, line-weight hierarchy, custom callout plugin
+          - above configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-axis grid explicitly tuned, x-axis grid removed, legend padded
+          and boxed cleanly
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Squeeze/Breakout annotations mark the two textbook Bollinger events
+          with dashed leader lines
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Bollinger Bands line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Close price, SMA, upper/lower bands, fill all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x, Price on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows squeeze (narrow band) and breakout (wide band/price piercing)
+          - full range of behavior
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic BTC/USD daily close scenario, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and volatility plausible for the domain
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: A few justified helper functions (LCG RNG, rgba conversion) beyond
+          flat script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports, browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic fill:'-1' area-between-lines band technique
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom Chart.js plugin using afterDatasetsDraw hook for callouts
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - alpha-blending
