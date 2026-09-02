@@ -1,0 +1,262 @@
+library: chartjs
+language: javascript
+specification_id: density-rug
+created: '2026-09-02T00:25:14Z'
+updated: '2026-09-02T00:38:56Z'
+generated_by: claude-sonnet
+workflow_run: 33574782226
+issue: 3505
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/chartjs/plot-dark.html
+quality_score: 94
+review:
+  strengths:
+  - 'Directly addresses the prior review''s data-storytelling gap: dashed guide lines
+    now label the two KDE peaks (''Auto-triaged'' / ''Needs a human''), giving the
+    plot a clear focal point and narrative that the first attempt lacked.'
+  - Rug-tick heights now carry slight jitter, breaking up what were previously two
+    near-solid green blocks in the densest x-ranges into a more differentiated, natural-looking
+    rug.
+  - 'Theme-adaptive chrome remains fully correct across both renders — identical brand-green
+    data color on light/dark, correct #FAF8F1/#1A1A17 backgrounds, no dark-on-dark
+    or light-on-light issues anywhere.'
+  - 'Idiomatic, dependency-free Chart.js extension: two custom canvas plugins (rugMarks,
+    modeGuides) built entirely on the core plugin API (afterDatasetsDraw) — no external
+    library or workaround, matching the ''no workarounds'' guidance.'
+  - 'Solid statistical and data foundation: Silverman bandwidth KDE with a Gaussian
+    kernel, realistic bimodal support-ticket first-response-time dataset, deterministic
+    seeded LCG for full reproducibility.'
+  weaknesses:
+  - Rug-tick jitter only varies vertical height, not horizontal density/alpha — the
+    two clusters (110 vs 70 points) still visually clump at their centers; a touch
+    more transparency or width tapering in the busiest sub-windows would sharpen individual-point
+    visibility further.
+  - Mode-guide annotation labels ('Auto-triaged' / 'Needs a human') are set at 12px,
+    noticeably smaller than the 14px tick labels and 16px axis titles used elsewhere
+    in the chart — bumping them closer to 14px would read more consistently with the
+    rest of the chrome.
+  - Design Excellence is now solidly above default thanks to the peak annotations,
+    but the treatment is still a single hue throughout; a small amount of additional
+    visual hierarchy (e.g., a subtler/lighter fill under the tails vs. the modes)
+    could push it further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "density-rug · javascript · chartjs · anyplot.ai" centered at top, clearly legible dark ink; x-axis title "First Response Time (minutes)" and y-axis title "Density" in the same dark ink; tick labels (0, 2, 4, 6, 8, 11.2 on x; 0.05-0.35 on y) in a lighter soft-gray ink, all clearly readable against the light background. Subtle horizontal gridlines only (y-axis), x-axis has just a thin bottom border, no vertical gridlines. Two new dashed vertical guide lines drop from just below the title down to the KDE curve at its two peaks (~2.7 min and ~6.1 min), each topped with a small soft-gray label reading "Auto-triaged" and "Needs a human" respectively — both fully legible and non-overlapping with any other element.
+      Data: Single brand-green (#009E73) KDE curve with matching semi-transparent green fill under the curve, clearly bimodal. Rug marks are thin green tick marks along the x-axis baseline, denser in the two peak regions and sparser in the trough/tails; tick heights are now slightly jittered rather than uniform, so the two dense clusters read as a differentiated cluster of ticks rather than a single solid block. First series color correctly matches the brand green.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title now rendered in light/white text, clearly legible against the dark background; axis titles in light ink; tick labels in a lighter soft-gray-white, all legible; same subtle y-only gridlines, now light-colored at low opacity, visible but unobtrusive. The two dashed guide lines and their "Auto-triaged"/"Needs a human" labels are rendered in the same light soft-gray ink used for other secondary chrome, clearly readable against the dark background with no dark-on-dark issue.
+      Data: Same brand-green (#009E73) curve and fill — confirmed identical hue and shape to the light render, fill reading as a darker semi-transparent green wash against the black background. Rug marks in the same green, same jittered-height density pattern as the light render.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures found in either render; all secondary chrome, including the new annotation labels, correctly uses the theme-adaptive ink token)
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/axis/tick text explicitly sized (22/16/14 css px) and readable
+          in both themes; new 12px annotation labels are slightly smaller than the
+          rest of the chrome but still fully legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render; new mode-guide labels sit
+          cleanly below the title with no overlap.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Curve and fill clearly visible; rug-tick height jitter (added this
+          attempt) breaks the previous near-solid blocks into a differentiated, readable
+          rug in both dense clusters.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green, no red-green reliance, adequate contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); title, axes, guide labels, and rug
+          row all fit within bounds with no overflow or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ('First Response Time (minutes)',
+          'Density').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds are correct #FAF8F1/#1A1A17,
+          data color identical across themes, secondary chrome theme-correct in both
+          renders.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean fill+stroke KDE plus dashed peak-callout guides reads as a
+          thoughtful, above-default design; still a single-hue treatment rather than
+          full custom-palette sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: X grid removed, y-only subtle grid, no tick marks drawn, restrained
+          chrome, dashed guide lines add a polished secondary layer.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New mode-guide annotations directly label the two KDE peaks with
+          a plausible real-world story (auto-triaged vs. human-handled), giving the
+          viewer an immediate focal point that the prior attempt lacked.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly a KDE + rug combination.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE with semi-transparent fill, rug marks with their own transparency,
+          jittered tick heights per the spec's overplotting note — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = response time, Y = density; rug ticks placed at exact data x-values
+          via scale pixel mapping.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          for single series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows full distribution shape, modality, and individual observation
+          locations.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Support-ticket first-response times with a plausible fast/slow bimodal
+          split; neutral subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0.2-11 minute range is sensible for the stated domain.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Small focused helper functions for KDE math, mode-finding, and color
+          conversion; no classes, no over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCGs (seed=42 for data, seed=7 for tick
+          jitter).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals; all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, no filesystem calls.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: parsing:false for numeric point data, linear scale, and core-only
+          plugin usage — solid idiomatic Chart.js.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Two custom canvas plugins (afterDatasetsDraw) for rug marks and mode-guide
+          annotations — a genuinely distinctive, dependency-free use of Chart.js's
+          extension API.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-plugin
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
