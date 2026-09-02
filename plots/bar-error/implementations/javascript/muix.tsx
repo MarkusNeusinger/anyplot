@@ -1,3 +1,7 @@
+// anyplot.ai
+// bar-error: Bar Chart with Error Bars
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 // anyplot.ai
 // bar-error: Bar Chart with Error Bars
