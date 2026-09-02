@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: sn-curve-basic
 created: '2026-09-02T06:04:01Z'
-updated: '2026-09-02T06:09:27Z'
+updated: '2026-09-02T06:20:59Z'
 generated_by: claude-sonnet
 workflow_run: 33596871723
 issue: 3826
@@ -12,50 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/chartjs/plot-dark.html
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - Correct log-log scatter mapping (cycles on x, stress amplitude on y) matches the
-    S-N curve convention
-  - Multiple specimens per stress level with Basquin-equation-driven scatter gives
+  - All three required reference lines (Ultimate Strength, Yield Strength, Endurance
+    Limit) are now present, each annotated with its MPa value directly in the legend
+    text — fixes the Attempt 1 rejection reason and strengthens the storytelling
+  - Palette order now follows the canonical Imprint sequence (green, lavender, blue,
+    ochre, cyan) — correctly skipping the deferred red semantic anchor rather than
+    reaching for it without justification
+  - Correct log-log scatter mapping (cycles to failure on x, stress amplitude on y)
+    with multiple specimens per stress level and Basquin-equation-driven scatter gives
     a scientifically grounded, realistic dataset
-  - Yield strength and endurance limit reference lines use distinct dash patterns;
-    the endurance limit line is thoughtfully trimmed to only the region beyond ~1e6
-    cycles where it is physically meaningful
-  - 'Theme-adaptive chrome (title, axis labels, ticks, grid) is clean and legible
-    in both light and dark renders; brand green #009E73 correctly used for the primary
-    Test specimens series'
+  - Endurance limit line is thoughtfully trimmed to only the region beyond ~1e6 cycles
+    where it is physically meaningful, and each reference line uses a visually distinct
+    dash pattern
+  - 'Theme-adaptive chrome is clean and legible in both light and dark renders; brand
+    green #009E73 correctly used for the primary ''Test specimens'' series; data colors
+    identical across themes'
   - Deterministic LCG-seeded data generation ensures reproducibility
-  - Idiomatic Chart.js mixed chart-type usage (scatter base type with line-type dataset
-    overlays)
   weaknesses:
-  - 'Missing the Ultimate Strength reference line explicitly required by the spec
-    ("Include horizontal reference lines for key material properties: Ultimate Strength,
-    Yield Strength, and Endurance Limit") — only Yield strength and Endurance limit
-    are drawn'
-  - 'Palette order breaks canonical sequence: ''Basquin fit'' uses palette[2] (blue)
-    while palette[1] (lavender) is skipped entirely; ''Yield strength'' uses palette[3]
-    (ochre) with no strong semantic tie to yield strength'
-  - The amber semantic anchor is used for the Endurance limit line without a clear
-    'warning/caution' framing in the legend, weakening the semantic justification
-    for deviating from canonical palette order
-  - No numeric threshold values are annotated on the reference lines, so the reader
-    must cross-reference the legend to know what each line means quantitatively
+  - Log-scale x-axis tick labels are rendered as plain text '10^3', '10^4', etc. instead
+    of true superscript ('10³'), which is a minor typographic rough edge for a log-log
+    engineering chart
+  - Several test-specimen markers at the same stress level sit close enough together
+    to partially overlap into crescent shapes (e.g. near 1.5e3, 1e4, 7e4 cycles) —
+    could use a touch of jitter or slight transparency to keep individual specimens
+    distinguishable
+  - No custom fonts, shadows, or additional polish beyond theme-token defaults and
+    dash-pattern differentiation — solid but not yet publication-level design sophistication
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "sn-curve-basic · javascript · chartjs · anyplot.ai" in dark ink at top; legend top-right listing "Test specimens" (green dot), "Basquin fit" (blue dot), "Yield strength" (ochre dot), "Endurance limit" (pale-yellow dot) — all clearly readable. Axis titles "Cycles to Failure (N)" (x) and "Stress Amplitude (MPa)" (y) in dark ink, tick labels (10^3-10^7 on x; 150-700 on y) in a slightly softer dark gray, all legible. Grid lines are faint but visible, do not compete with data.
-      Data: Green (#009E73) circular markers scatter along a descending log-log trend from ~(10^3, 440 MPa) to ~(7x10^5, 220 MPa); a solid blue line traces the Basquin fit closely through the scatter; a dashed ochre horizontal line sits at ~615 MPa (yield strength); a dotted pale-yellow horizontal line starts at 10^6 cycles at ~230 MPa (endurance limit).
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "sn-curve-basic · javascript · chartjs · anyplot.ai" in dark ink at top center. Legend at top-right lists five entries in one row: "Test specimens" (green dot), "Basquin fit" (lavender dot), "Ultimate strength (780 MPa)" (blue dot), "Yield strength (620 MPa)" (ochre dot), "Endurance limit (230 MPa)" (cyan dot). Axis titles "Cycles to Failure (N)" and "Stress Amplitude (MPa)" in dark ink; tick labels in softer gray. All text is clearly readable against the light background.
+      Data: Green (#009E73) circular markers scatter along a descending log-log trend from ~(1e3, 440 MPa) to ~(7e5, 220 MPa), 40 points total (10 stress levels x 4 specimens). A solid lavender line traces the Basquin fit closely through the scatter. A dash-dot blue horizontal line sits at 780 MPa (ultimate strength). A dashed ochre horizontal line sits at 620 MPa (yield strength). A dotted cyan horizontal line starts at 1e6 cycles at 230 MPa (endurance limit), correctly trimmed to only the physically meaningful region.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis structure as the light render, now rendered in light/off-white and soft-gray tones. All text is clearly legible against the dark background — no dark-on-dark failures observed (tick labels, axis titles, legend text, and title are all visibly light-colored).
-      Data: Colors are identical to the light render — green scatter (#009E73), blue fit line, ochre dashed yield-strength line, pale-yellow dotted endurance-limit line — confirming the Imprint data-color consistency rule (only chrome flips between themes).
-      Legibility verdict: PASS — all text and grid lines are visible and legible against the dark background.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title/legend/axis structure, now rendered in off-white and soft-gray tones — all clearly legible against the dark background. No dark-on-dark issues found; the y-axis min tick "150" near the bottom edge is fully visible, not clipped.
+      Data: Data colors are identical to the light render (green scatter, lavender fit line, blue/ochre/cyan reference lines), confirming only chrome flips between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,76 +63,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; well-proportioned
-          title without overflow
+        comment: All text readable in both themes; log-scale ticks render as plain
+          '10^3' text rather than true superscript
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; overlapping scatter markers use page-background
-          borders for definition, per style guide
+        comment: No text collisions with other text, data, or legend
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers and lines are visible and reasonably sized for ~40 data points,
-          not fully optimal
+        comment: Reference lines clearly distinguished via color + dash pattern; some
+          co-located specimen markers partially overlap into crescent shapes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Dash/dot patterns give redundant encoding beyond hue for the two
-          warm-toned reference lines
+        comment: CVD-safe Imprint hues, no red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills a large majority of the canvas, balanced margins, nothing
-          cut off
+        comment: 3200x1800 canvas, nothing clipped, good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (N, MPa)
+        comment: Descriptive axis titles with units (N, MPa)
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73, but palette order skips position
-          2 (lavender) and reassigns ochre/amber without strong semantic justification'
+        passed: true
+        comment: 'First series #009E73; remaining series follow canonical Imprint
+          order (lavender, blue, ochre, cyan), correctly skipping the deferred red
+          anchor; theme-correct backgrounds in both renders'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: false
-        comment: Above a plain default thanks to differentiated line styles and a
-          trimmed endurance-limit line, but not publication-level
+        comment: Above default via differentiated dash patterns, trimmed endurance
+          line, and MPa-annotated legend, but not yet publication-level custom typography/polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid, clean legend placement, generous whitespace
+        comment: Subtle grid, clean legend, generous whitespace; no additional refinement
+          beyond theme defaults
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Dash/dot differentiation and the trimmed endurance line create some
-          hierarchy, but no numeric annotations and a missing Ultimate Strength line
-          leave the story incomplete
+        passed: true
+        comment: Clear hierarchy via dash/dot styles and now-annotated MPa values
+          in the legend; three material-property thresholds contextualize the fatigue
+          curve
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,51 +139,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct log-log scatter + fit-line S-N curve
+        comment: Log-log scatter with fit line matches S-N curve convention
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Ultimate Strength reference line is missing; only Yield strength
-          and Endurance limit are present
+        passed: true
+        comment: All three reference lines (Ultimate Strength, Yield Strength, Endurance
+          Limit) now present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles on x, stress amplitude on y, correctly assigned
+        comment: Cycles on x, stress amplitude on y, both log scales
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format; legend labels accurately describe
-          each series
+        comment: Title matches mandated format; legend labels match data series including
+          annotated threshold values
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows scatter, multiple specimens per level, and a fit line, but
-          misses the Ultimate Strength property entirely
+        passed: true
+        comment: All three material properties plus multi-specimen scatter and fit
+          line are present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible steel fatigue-testing scenario
+        comment: Steel-alloy fatigue values are plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: Stress/cycle values are plausible for steel alloys, though internal
-          consistency with an (absent) ultimate strength value can't be fully verified
+        comment: Cycle/stress ranges are sensible for steel fatigue testing
     code_quality:
       score: 9
       max: 10
@@ -194,32 +192,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly flat script; one small LCG helper function, which the library
-          guide itself recommends for deterministic browser randomness
+        comment: One small LCG helper function, justified for deterministic browser
+          randomness
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG produces deterministic data
+        comment: Fixed-seed LCG
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses only globals
+        comment: No unused imports; only the Chart.js global is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality
+        comment: No fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Mount-node contract followed correctly, animation disabled
+        comment: 'Mounts canvas into #container per harness contract; animation disabled'
     library_mastery:
       score: 7
       max: 10
@@ -234,10 +232,10 @@ review:
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Leverages Chart.js per-dataset type overrides and native logarithmic
-          scale with custom tick formatting
-  verdict: REJECTED
+        passed: false
+        comment: Leverages per-dataset type overrides, native logarithmic scale, and
+          custom tick-formatting callbacks
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -247,4 +245,5 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
