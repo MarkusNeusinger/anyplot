@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: map-route-path
 created: '2026-09-02T02:54:09Z'
-updated: '2026-09-02T03:00:26Z'
+updated: '2026-09-02T03:14:18Z'
 generated_by: claude-sonnet
 workflow_run: 33583762627
 issue: 3768
@@ -12,54 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - 'Full theme-adaptive chrome: light/dark backgrounds, ink tokens, spines, and terrain-ring
-    alpha all correctly flip between renders, while data colors (start green, end
-    red, sequential green-to-blue elevation path) stay identical across themes.'
-  - 'Correct Imprint palette compliance: brand green #009E73 for the start marker
-    (first categorical series), matte red #AE3030 (palette position 5) as the semantic
-    end-point anchor, and the canonical two-stop sequential colormap (#009E73 -> #4467A3)
-    for the elevation-coded path.'
-  - 'Strong spec coverage: sequential waypoint connection via lines!, distinct start/end
-    markers matching the spec''s own example (green circle / red square), an elevation
-    color gradient along the path, direction-of-travel arrows, and GPS noise + smoothing
-    (smooth_track) to mimic a realistically recorded track.'
-  - 'Clean, reproducible, idiomatic Makie code: Random.seed!(42), correct canvas (3200x1800
-    via resolution=(1600,900), px_per_unit=2), Figure/Axis/lines!/scatter!/Colorbar
-    used correctly, colsize! for a well-proportioned colorbar column.'
+  - Title fontsize now scales dynamically with title length and fills ~48% of plot
+    width (up from ~35% in attempt 1), better matching the proportional-sizing guideline.
+  - 'Full theme-adaptive chrome and Imprint palette compliance carried over correctly:
+    backgrounds, ink tokens, spines, and ring alpha all flip between renders while
+    data colors (start green, end red, elevation gradient) stay identical.'
+  - Direction arrows, distinct start/end markers, GPS noise + smoothing, and the elevation-gradient
+    path all remain intact and well executed.
   weaknesses:
-  - The 'terrain basemap' is a set of unlabeled concentric ellipses around the loop
-    centroid; without any contour value or peak label, a viewer may read them as decorative
-    background rather than clear elevation/terrain context that the spec asks for.
-    Consider a small elevation label near the innermost ring or center peak to make
-    the terrain association explicit.
-  - Title occupies only ~35% of the plot width at titlesize=20 -- comfortably readable
-    but on the conservative side relative to the ~50-70% guideline; a modest bump
-    (~24-26) would improve visual balance without risking overflow.
-  - Design execution is solid (spines removed, subtle terrain rings, elevation-colored
-    path) but not yet distinctive enough for top Design Excellence marks -- e.g. no
-    callout for the summit/peak or trail distance/elevation-gain stat that would deepen
-    the data storytelling.
-  - Per-vertex line coloring and Colorbar usage are competent but fairly standard
-    Makie techniques; nothing library-distinctive (e.g. a custom Makie recipe or advanced
-    layout) to earn top Library Mastery marks.
+  - 'Critical rendering defect: none of the annotation elements added to address attempt
+    1''s feedback are visible in either render. Zoomed pixel crops at the loop centroid
+    (~lon -105.680, lat 39.980) show no summit :star5 marker and no ''Peak · … m''
+    text in either plot-light.png or plot-dark.png; a crop of the top-left axes region
+    shows no ''Elevation gain: +… m'' callout; and the two ring-label text! calls
+    (elevation value in meters) also produce nothing. The code compiles and runs,
+    but this whole feature set is silently absent from the saved PNGs. Debug steps:
+    verify :star5 is a marker symbol this CairoMakie version actually recognizes (swap
+    to :diamond/:utriangle if not); the elevation-gain callout explicitly sets space
+    = :data while the ring-label and summit text! calls omit space entirely — check
+    whether the default differs and is misplacing those two; run the script directly
+    and inspect stdout/stderr for swallowed warnings; visually zoom into the loop
+    centroid and top-left axes corner locally before resubmitting.'
+  - Because the annotations don't render, the round-1 weaknesses ('basemap reads as
+    decorative, unlabeled rings' and 'no summit/stat callout for storytelling') are
+    functionally unresolved — the code changed but the rendered output did not improve
+    in those areas.
+  - The now-dead annotation code adds roughly 30 lines of complexity without any visual
+    payoff, which is itself a code-quality concern independent of the missing feature.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: title "Alpine Loop Trail · map-route-path · julia · makie · anyplot.ai" in dark ink, clearly readable; "Longitude"/"Latitude" axis labels in dark ink, readable; tick labels in a softer gray, readable; left/bottom spines visible in soft gray, top/right spines removed.
-      Data: loop-shaped GPS trail colored green-to-blue along an elevation gradient; green circle start marker (brand #009E73) on the right side of the loop; red square end marker (#AE3030) near the bottom, close to the start; gray triangular direction-arrows along the path pointing counterclockwise; faint concentric ellipse "terrain" rings around the loop's interior, subtle and non-intrusive; colorbar on the right labeled "Elevation (m)" with the same green-to-blue gradient and readable ticks.
-      Legibility verdict: PASS.
+      Background: Warm off-white, matches #FAF8F1.
+      Chrome: Title "Alpine Loop Trail · map-route-path · julia · makie · anyplot.ai" in dark ink, now ~48% of plot width (larger than attempt 1's ~35%). "Longitude"/"Latitude" axis labels and tick labels all readable. Colorbar labeled "Elevation (m)" on the right.
+      Data: GPS loop trail colored on a green-to-blue gradient by elevation; brand-green (#009E73) circle marks the start; matte-red square marks the end; gray triangular arrows show travel direction; faint concentric ellipse "terrain" rings sit inside the loop.
+      Missing elements (verified via pixel-level zoom crops): no summit star marker or "Peak · … m" text at the loop centroid (~lon -105.680, lat 39.980); no elevation-value labels on the two "labeled" terrain rings; no "Elevation gain: +… m" callout near the top-left of the axes. These regions render as plain background.
+      Legibility verdict: PASS for all text that is actually present. The missing elements are a rendering defect (feature never appears), not a legibility failure.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, consistent with #1A1A17 -- not pure black, not light.
-      Chrome: title and axis labels flip to light ink (near-white), clearly readable against the dark background; tick labels in a lighter gray, readable; terrain rings and spines rendered in a light, low-alpha gray, subtle but visible; no dark-on-dark text anywhere.
-      Data: identical colors to the light render -- green start marker, red end marker, green-to-blue elevation path, colorbar gradient -- only the direction-arrow marker fill (INK_SOFT chrome token) and grid/terrain lines flip to a light tone for contrast, as expected since arrows are chrome, not data.
-      Legibility verdict: PASS.
+      Background: Warm near-black, matches #1A1A17.
+      Chrome: Title and axis labels flip to light ink, tick labels to lighter gray — all clearly readable, no dark-on-dark issues.
+      Data: Identical colors to the light render (green start, red end, green-to-blue elevation path, colorbar gradient) — only chrome (rings, spines, arrow fill) flips tone, as expected.
+      Missing elements: same as light render — zoomed crop of the loop centroid on the dark background confirms no summit marker/label is rendered there either.
+      Legibility verdict: PASS for present text; missing-annotation defect confirmed to affect both themes identically.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -67,35 +66,34 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title is on the small side (~35%
-          width) but not squeezed or overflowing
+        comment: All present text readable in both themes; title proportion improved
+          to ~48% of plot width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions; direction arrows sit cleanly on the path
+        comment: No collisions among the elements that do render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Markers well-sized for 260 sparse points; terrain rings are faint
-          enough that their purpose is not fully legible
+        comment: Start/end markers and arrows well-sized, but terrain rings remain
+          unlabeled and the summit marker meant to anchor them is missing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Start/end differ by shape (circle/square) as well as color, mitigating
-          red-green risk
+        comment: Start/end differ by shape as well as color
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, no clipping; title proportion is conservative
-          relative to guideline
+        comment: Correct 3200x1800 canvas, nothing clipped; loop interior reads emptier
+          than intended since planned annotations never appear
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,29 +108,29 @@ review:
         comment: Brand green start, palette-position-5 red end, canonical sequential
           colormap, correct theme backgrounds
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Elevation-colored path and terrain rings show intentional design,
-          but rings are unlabeled and easy to miss
+        passed: false
+        comment: Intended labeled-ring/summit-marker polish is invisible in the output,
+          so delivered sophistication is unchanged from attempt 1
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle low-alpha rings, generous whitespace
+        comment: Spines removed, subtle low-alpha rings, generous whitespace (unchanged)
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Elevation gradient and direction arrows give a clear focal narrative,
-          but no summit/stat callout to deepen it
+        passed: false
+        comment: Summit/elevation-gain callout meant to deepen the story does not
+          render; back to default baseline
     spec_compliance:
       score: 14
       max: 15
@@ -142,28 +140,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct route-path map connecting sequential waypoints
+        comment: Correct route-path map
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
         comment: Start/end markers, elevation gradient, direction arrows, smoothing
-          all present; basemap is a stylized, unlabeled proxy rather than clear terrain
-          context
+          present; basemap still reads as unlabeled proxy since labels don't render
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, latitude on Y, axis limits cover all data with padding
+        comment: Lon on X, lat on Y, limits cover all data
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches the mandated pattern; colorbar substitutes
-          for a legend appropriately
+        comment: Title format matches mandated pattern; colorbar substitutes for legend
     data_quality:
       score: 14
       max: 15
@@ -173,23 +169,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers lat/lon/sequence and elevation as the optional color-encoding
-          dimension
+        comment: Covers lat/lon/sequence plus elevation as optional color dimension
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible alpine loop trail, neutral subject matter
+        comment: Plausible, neutral alpine loop trail
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~0.8km loop radius and 2150-2930m elevation range are realistic for
-          an alpine trail
+        comment: Realistic loop radius and elevation range
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -197,8 +191,8 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Two small helper functions (smooth_track, elevation_field) beyond
-          flat script style
+        comment: smooth_track and elevation_field helper functions beyond flat script
+          style
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -210,20 +204,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: ~30 lines of annotation code currently produce zero visible output
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
-          API
+        comment: Correct save call, current CairoMakie API
     library_mastery:
       score: 7
       max: 10
@@ -233,25 +226,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Figure/Axis/lines!/scatter!/Colorbar and colsize! used idiomatically
+        comment: Figure/Axis/lines!/scatter!/Colorbar/colsize! used idiomatically
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Per-vertex line coloring and marker rotation are nice touches but
-          fairly standard Makie techniques
-  verdict: APPROVED
+        comment: Per-vertex line coloring, marker rotation, analytical contour rings
+          are standard-ish Makie techniques
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   dataprep:
   - rolling-window
+  - normalization
   styling:
-  - alpha-blending
   - custom-colormap
-  - edge-highlighting
+  - alpha-blending
