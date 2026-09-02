@@ -1,3 +1,7 @@
+// anyplot.ai
+// network-weighted: Weighted Network Graph with Edge Thickness
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 86/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 // anyplot.ai
 // network-weighted: Weighted Network Graph with Edge Thickness
