@@ -1,0 +1,242 @@
+library: makie
+language: julia
+specification_id: bar-error
+created: '2026-09-02T11:55:37Z'
+updated: '2026-09-02T12:08:53Z'
+generated_by: claude-sonnet
+workflow_run: 33626760189
+issue: 2376
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Random.seed!(42) now actually drives the data: mean_yield/std_yield are derived
+    from a real seeded simulation of 30 runs per catalyst instead of hardcoded literals,
+    fixing the prior review''s code-cleanliness flag'
+  - New raincloud-style jittered scatter overlay shows the individual per-run distribution
+    behind each bar, and the '★ Top performer' callout on the best catalyst gives
+    the chart an explicit focal point beyond sort order alone
+  - Error bars have clearly visible caps (whiskerwidth=18) with the subtitle explicitly
+    stating the metric (±1 SD, n=30 runs)
+  - Correct Imprint brand green (#009E73) identical across themes, fully theme-adaptive
+    chrome (title, subtitle, ticks, spines, grid, error bars, jitter dots) in both
+    light and dark renders
+  - Clean L-shaped spines, Y-axis-only subtle gridlines, correct omission of a legend
+    for the single-series chart, realistic neutral catalyst-yield scenario
+  weaknesses:
+  - The jitter+scatter+errorbar+text composition is a generic layering technique reproducible
+    in any plotting library; nothing here is distinctive specifically to Makie (e.g.
+    a custom Theme, DataInspector-style interaction hint, or a Makie recipe) so Library
+    Mastery stays capped
+  - Only symmetric error bars are demonstrated; the spec's optional asymmetric-error
+    variant is not shown
+  - Design storytelling is still fairly minimal beyond the top-performer callout and
+    descending sort — no additional visual hierarchy (e.g. distinguishing the callout
+    catalyst's bar color) reinforces the focal point
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Bold dark title "bar-error · julia · makie · anyplot.ai" and a soft-gray subtitle "Error bars: ±1 SD (n = 30 runs per catalyst)" at the top. Y-axis "Reaction Yield (%)", X-axis "Catalyst" with six category ticks (Pd/C, Pt/C, Ru/C, Ni, Cu, Fe). Subtle horizontal gridlines at 50 and 100. L-shaped spines (top/right removed). All title, subtitle, axis labels, and tick labels are clearly readable dark-on-light — no light-on-light issues.
+      Data: Six brand-green (#009E73) bars descending from ~87% to ~54% reaction yield. Each bar has a jittered gray scatter cloud of 30 individual run values behind it (raincloud-style), plus a black error-bar line with visible caps (±1 SD). A "★ Top performer" annotation sits above the Pd/C bar's error-bar cap, clearly readable and non-overlapping.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Title, subtitle, axis labels, and tick labels flip to light/off-white and soft light-gray tones respectively, fully legible against the dark surface — no dark-on-dark failures. Gridlines and spines flip to the light-toned theme-adaptive tokens.
+      Data: Bars are the identical brand green (#009E73) as the light render — data colors unchanged. The jittered scatter dots flip to a light-gray tone (theme-adaptive ink token) and remain clearly visible against the dark bars/background. Error-bar lines and caps flip to a light/white tone, mirroring the light render's black error bars. The "★ Top performer" callout flips to light text, fully readable.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit, no overflow, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap; top-performer callout clears the error-bar cap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars, jitter cloud, and error-bar caps well sized for 6 sparse categories
+          with 30 runs each
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis carries the unit (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green identical across themes; theme-correct chrome
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Raincloud-style distribution overlay + focal callout is clearly above
+          a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, Y-only subtle grid, bar edge strokes, subtle jitter
+          alpha
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Top-performer callout plus visible per-run spread gives a clear focal
+          point and distribution context
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct bar-with-error-bars chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Visible error-bar caps + subtitle explaining ±1 SD, n=30
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format, legend correctly omitted
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Symmetric error bars with meaningful per-catalyst variation and run-level
+          spread shown; asymmetric case not shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral scientific catalyst-yield scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic yields and catalyst ordering (Pd/Pt more active than base
+          metals)
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) now actually drives the randn-based simulation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used (CairoMakie, Colors, Random, Statistics)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct high-level Figure/Axis/barplot!/errorbars!/text! usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layered scatter+bar+errorbar+text composition is generic across libraries;
+          no Makie-specific feature (custom Theme, recipe, DataInspector) leveraged
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - groupby-aggregation
+  styling:
+  - alpha-blending
+  - edge-highlighting

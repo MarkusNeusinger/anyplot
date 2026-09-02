@@ -1,0 +1,250 @@
+library: muix
+language: javascript
+specification_id: area-stacked-percent
+created: '2026-09-02T12:04:53Z'
+updated: '2026-09-02T12:19:39Z'
+generated_by: claude-sonnet
+workflow_run: 33627446022
+issue: 2647
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - X-axis now carries an explicit "Year" axis label (labelStyle fontSize 14, matching
+    the y-axis label size) — closes the VQ-06 gap from attempt 1
+  - Area boundary strokeWidth raised from 1.5 to 2.25, giving the sparse 15-point
+    series more prominent, readable band edges
+  - New ChartsReferenceLine at the 2017 milestone ("fossil share drops below 50%")
+    gives the chart an explicit focal point and sharpens the data storytelling beyond
+    the shape of the areas alone
+  - 'Correct 100% stacked-area implementation via stack + stackOffset: "expand", with
+    y-axis locked to 0-1 and formatted as a percentage'
+  - Imprint palette used in canonical order across all 5 series (Solar=#009E73 brand
+    green through Fossil=matte red), with Hydro landing on blue — a nice semantic
+    bonus (water -> blue) on top of canonical compliance
+  - Custom valueFormatter surfaces both percentage share and raw TWh in tooltips,
+    a genuine interactive enhancement for the HTML detail view
+  - Deterministic, realistic data tells a clear energy-transition story (quadratic
+    solar/wind growth, flat hydro/nuclear, linear fossil decline)
+  - Clean theme-adaptive chrome; title format exactly matches the mandated `area-stacked-percent
+    · javascript · muix · anyplot.ai`; skipAnimation set, no fetch/CDN calls
+  weaknesses:
+  - 'The `grid={{ horizontal: true }}` + dashed `.MuiChartsGrid-line` styling is effectively
+    invisible in both renders — the stacked areas are ~0.9-opacity fills that cover
+    the full 0-100% height at every x position, so any horizontal gridline drawn beneath
+    them is fully occluded. Either drop the dead grid config or reduce area fillOpacity
+    slightly so the dashed reference grid actually shows through.'
+  - Data comment/label calls this a "global electricity generation mix," but the totals
+    (~1,100 TWh in 2010, ~1,050 TWh in 2024) are off by roughly 20x from real global
+    generation (~21,000+ TWh in 2010) — fine as illustrative data, but reword the
+    comment to avoid implying literal global totals since the raw TWh values surface
+    in tooltips
+  - Design excellence is strong but still short of a fully art-directed composition
+    — the milestone reference line is the one explicit emphasis; a secondary touch
+    (e.g. a subtle callout on the point where solar+wind overtake hydro+nuclear) would
+    push this further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title top-left ("area-stacked-percent · javascript · muix · anyplot.ai"), rotated "Share of generation" y-axis label in dark ink on its own column, "Year" x-axis label now present at bottom-center, year tick labels 2010-2024 along the bottom in dark gray, percentage tick labels (0%-100%) along the left in dark gray, dashed milestone reference line at 2017 with label "2017: fossil share drops below 50%" in bold dark text, horizontal legend centered below the plot with 5 color swatches (Solar/Wind/Hydro/Nuclear/Fossil). All chrome text is dark-on-light and clearly legible; no light-on-light failures.
+      Data: Five stacked areas summing to 100% at every year, bottom-to-top: Solar (brand green #009E73), Wind (lavender/purple), Hydro (blue), Nuclear (ochre), Fossil (matte red) — Imprint palette positions 1-5 in canonical order, with Hydro=blue also matching the real-world water association. Solar+Wind grow from a thin sliver in 2010 to roughly 37% by 2024; Fossil shrinks from ~61% to ~31%. Area boundary strokes are now clearly visible (strokeWidth 2.25). No overlapping or unreadable text; no clipped elements at any edge.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Identical title, axis labels (including the new "Year" label), tick labels, legend, and reference-line annotation, all re-rendered in light ink/off-white text — title and axis labels bright, tick/legend text slightly softer gray, milestone reference-line label in bold light ink against the red fill. Fully legible against the dark surface; no dark-on-dark failures anywhere (tick labels, axis titles, and the reference-line annotation all read clearly).
+      Data: Identical five area colors and identical stacking/shape as the light render — confirms only chrome flipped, not data colors. Brand green (#009E73) remains clearly visible and vivid against the dark background; the dashed white reference line reads clearly against the red Fossil band.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicit (title 22px, axis/tick/legend 14px, reference-line
+          label 13px), readable in both themes, no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements observed in either render, including
+          the new reference-line label
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Area boundary strokeWidth raised to 2.25, giving clearly visible
+          band edges for the sparse 15-point series — fixes attempt 1's thin-stroke
+          weakness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Categories distinguished by hue, stacked position, and legend labels;
+          Imprint palette is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (no synthetic weakness file); chart
+          fills the canvas with balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis now has an explicit "Year" label matching the y-axis label
+          size — closes attempt 1's gap
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette canonical order positions 1-5, first series #009E73,
+          identical across themes, theme-correct chrome backgrounds'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Custom palette, intentional layout, and the new milestone annotation
+          add polish beyond attempt 1's defaults-plus-tuning look
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Thicker area strokes, tuned fill opacity, dashed reference line;
+          the horizontal grid config is dead (fully occluded by opaque area fills)
+          which caps this short of maximal polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: 'Explicit "2017: fossil share drops below 50%" reference line gives
+          the chart a clear focal point beyond the inherent shape of the areas — directly
+          addresses attempt 1''s weakness'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: 'Correct 100% stacked area via stack + stackOffset: expand'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Time x-axis, categorical stacking, automatic normalization, 5 categories
+          x 15 periods within spec range
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X=years, Y=percentage share 0-100%, axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format exactly matches mandated pattern; legend labels match
+          category names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Distinct growth/decline trajectories per category, not uniform, plus
+          a milestone callout
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, real-world plausible scenario (electricity generation mix
+          energy transition)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        comment: Percentage shares are directionally realistic, but the data comment
+          labels this "global" while the underlying TWh totals (~1,100 TWh) are ~20x
+          smaller than actual global generation — surfaces in tooltips even though
+          invisible in the static PNG
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Imports -> data -> single exported component, no extraneous abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fully deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: LineChart, ChartsReferenceLine, Box, Typography — all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, no fake functionality, sensible custom y-axis-label workaround
+          with an explanatory comment
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Correct mount-node contract, skipAnimation set, current MUI X API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        comment: Idiomatic stack/stackOffset/area API, ChartsReferenceLine, slotProps
+          for legend, sx for internal class targeting
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: ChartsReferenceLine milestone annotation plus dual-value (percent
+          + TWh) tooltip formatter are genuine MUI X-specific touches
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - hover-tooltips
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - alpha-blending
+  - grid-styling

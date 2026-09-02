@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: area-stacked-percent
+created: '2026-09-02T11:47:46Z'
+updated: '2026-09-02T12:02:05Z'
+generated_by: claude-sonnet
+workflow_run: 33626123773
+issue: 2647
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-percent/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - Direct end-of-line labeling (geom_segment + geom_text at the final quarter) replaces
+    the side legend entirely, with a nudge algorithm that keeps thin adjacent bands
+    (Vendor D/E) legible — a distinctive, well-executed ggplot2 annotation technique
+    that directly addresses the prior review's LM-02/DE-01 feedback
+  - Unused library(tidyr) import removed; imports are now exactly ggplot2, dplyr,
+    ragg — all used
+  - Y-axis title now states units explicitly ("Market Share (%)") instead of relying
+    on tick-label suffixes alone
+  - Correct 100% stacked-area implementation via geom_area(position = "fill"), matching
+    the spec's normalized-to-100% requirement exactly
+  - 'Full theme-adaptive chrome: both renders pass every legibility check, no dark-on-dark
+    or light-on-light failures, and Imprint palette data colors are pixel-identical
+    across themes'
+  - 'Imprint palette in canonical order (positions 1-5), first series brand green
+    #009E73'
+  - Clean KISS structure, fully reproducible via set.seed(42), canvas exactly 3200x1800
+  weaknesses:
+  - Aesthetic still leans on theme_minimal defaults beyond the label treatment — no
+    additional typographic hierarchy or compositional device beyond what's mandated
+  - No explicit annotation calls out the consolidation trend itself (e.g., a callout
+    noting Vendor A's share growth from ~33% to ~55%); the direct labels identify
+    vendors but don't narrate the trend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — matches spec.
+      Chrome: Title "Cloud Market Share · area-stacked-percent · r · ggplot2 · anyplot.ai" in dark ink at top-left, fully visible, no clipping. "Quarter" (x) and "Market Share (%)" (y, 0%-100%) axis labels in dark ink; tick labels in softer gray. Subtle horizontal gridlines at 25% intervals extend into the right-margin label area without colliding with the vendor labels (verified via close crop). Direct end-of-line labels "Vendor A"-"Vendor E" sit to the right of the final data point, each colored to match its band and connected by a thin leader line; labels for thin adjacent bands (C/D/E) are nudged apart so none overlap.
+      Data: Five stacked bands (bottom-to-top: Vendor E red #AE3030, D ochre #BD8233, C blue #4467A3, B lavender #C475FD, A green #009E73) fill the full height at every quarter 2020-2024. Boundary lines between bands match the page background, producing clean separation. Vendor A's share grows from ~33% to ~55% while D and E shrink toward near-zero — a clear consolidation story reinforced by the endpoint labels.
+      Legibility verdict: PASS — all text readable against the light background, no overlaps at any checked region (top-left title/tick, bottom axis, right-side label cluster).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — matches spec.
+      Chrome: Same title, axis labels and tick labels now rendered in light ink, clearly legible. Gridlines are faint light lines, still subtle but visible, and (as in the light render) do not collide with the end-of-line vendor labels. Boundary lines between bands are dark, matching the page background, giving the same clean separation as the light render.
+      Data: Colors are pixel-identical to the light render — same five Imprint hex values in the same stacking order and endpoint-label colors, confirming only chrome flips between themes.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures anywhere (title, axis, ticks, or end-of-line labels).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text readable in both themes; verified via close crops of title,
+          axes, and end-of-line label cluster
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Gridlines extend into the label margin but pass clear of vendor label
+          text; nudge algorithm keeps thin C/D/E bands' labels from colliding
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All five bands clearly distinguishable, boundary strokes match background
+          for clean separation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint palette, adequate contrast on both surfaces, no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800, no clipping or overflow, mandated long
+          title fits without overlap
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Quarter" and "Market Share (%)" — descriptive with units now stated
+          explicitly'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical order, correct light/dark backgrounds,
+          data colors identical across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Direct end-of-line labeling with a custom nudge algorithm is a genuine
+          sophistication upgrade over the prior side-legend version; still built on
+          theme_minimal without further typographic distinction
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Y-only subtle grid, ticks removed, boundary strokes matched to background,
+          colored leader lines for labels — good, near-exhaustive polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Endpoint labels put each vendor's final position front and center,
+          reinforcing the visible consolidation trend toward Vendor A; no explicit
+          trend annotation/callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 100% stacked area via geom_area(position="fill")
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized-to-100% stacking, time on x, category as fill
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: quarter -> x, revenue -> y (normalized), vendor -> fill; all data
+          shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend replaced
+          by matching-colored end-of-line labels
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 5 vendors x 20 quarters, full composition-change story shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral fictional cloud-market-share scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values and resulting shares are sensible for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Unused library(tidyr) removed; only ggplot2, dplyr, ragg remain,
+          all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the label-nudging logic, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png via ragg::agg_png, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_area(position="fill"), scale_x_date, coord_cartesian(clip="off")
+          for off-panel annotations — all idiomatic ggplot2
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Direct end-of-line labeling via layered geom_segment + geom_text
+          with a custom overlap-avoidance algorithm — a real ggplot2-mastery technique,
+          directly addresses prior review feedback
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - minimal-chrome
+  - publication-ready
