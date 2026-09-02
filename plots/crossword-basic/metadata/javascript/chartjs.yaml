@@ -1,0 +1,245 @@
+library: chartjs
+language: javascript
+specification_id: crossword-basic
+created: '2026-09-02T00:03:38Z'
+updated: '2026-09-02T00:16:46Z'
+generated_by: claude-sonnet
+workflow_run: 33572680025
+issue: 3805
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/chartjs/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Correct 180-degree rotational symmetry: black cells are built from a primary
+    half-list plus an automatically-derived mirror partner, matching real newspaper-crossword
+    conventions.'
+  - Standard clue-numbering algorithm (across/down start detection with run-length
+    checks) matches how real crosswords number cells.
+  - Custom Chart.js plugin (afterLayout + afterDatasetsDraw) forces a true square
+    chart area and re-runs scale.configure() so cell fills, grid lines, and numbers
+    all share one synced pixel mapping.
+  - Deliberate, well-commented design choice to keep the puzzle board monochrome/paper-like
+    across both themes (matching the spec's 'optimized for printing' note) while still
+    correctly theming the title and outer canvas background.
+  - Clean, deterministic, in-memory data generation; correct mount-node contract;
+    animation disabled; no stray imports or fake interactivity.
+  - Invisible hit-target scatter points give the HTML detail view working tooltips
+    (row/col + clue number) without affecting the static PNG.
+  weaknesses:
+  - Clue numbers are sized at cellSize*0.24 (~35px on the 2400px canvas) — legible
+    at full resolution, but on this fine 15x15 grid they become very small once scaled
+    to a ~400px mobile thumbnail. Consider bumping to ~0.30 of cell size or a heavier
+    font weight for small-scale legibility.
+  - The outer board frame stroke reuses PAPER_BLOCK (#1A1A17), which is nearly the
+    same hex as the dark-theme canvas background — harmless visually since the cream/black
+    cell contrast already defines the edge, but the explicit outer stroke is functionally
+    redundant in dark mode.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the canvas outside the puzzle board, matching the required light-theme page surface.
+      Chrome: Title "crossword-basic · javascript · chartjs · anyplot.ai" is centered at the top in dark ink, clearly readable against the cream background. No axis labels, ticks, or legend are shown — correctly omitted, since this is a grid, not a cartesian chart.
+      Data: A 15x15 crossword grid fills most of the canvas — cream entry cells, solid near-black blocking cells, a crisp black outer frame, and subtle pale-gray grid lines separating every cell. Bold clue numbers sit in the top-left corner of each cell that starts an across or down entry (verified via a zoomed crop — numbers are crisp and unambiguous at full resolution). The black-cell pattern shows clear 180-degree rotational symmetry (e.g. the block at row 0/col 3 is mirrored at row 14/col 11). No clipping, overlap, or overflow at the canvas edges (verified via zoomed crops of the top-left and bottom-right corners and the title band).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the canvas outside the puzzle board, matching the required dark-theme page surface.
+      Chrome: Title is rendered in light ink, clearly readable against the near-black background — no dark-on-dark issue.
+      Data: The puzzle board itself is intentionally rendered identically to the light render (same cream/black cells, same grid lines and numbers, pixel-identical via zoomed-crop comparison) — a deliberate design choice explained in code comments, since the spec calls for a "monochrome design optimized for printing" (a physical newspaper crossword page doesn't invert for dark mode). Only the chrome (title, surrounding canvas background) adapts to theme; the puzzle grid itself is treated as the "data" layer and stays fixed, analogous to how Imprint palette data colors don't flip with theme.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title and numbers readable at full size in both themes; explicit
+          sizes set, but numbers (cellSize*0.24) will be hard to read at a ~400px
+          mobile thumbnail on this fine 15x15 grid
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between numbers, grid lines, or cell fills
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Cell fills, grid lines, and numbers all clearly visible and appropriately
+          sized for a 225-cell grid
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High-contrast monochrome board, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square-crop plugin keeps the board perfectly square with clean, balanced
+          margins; nothing cut off (verified via zoomed corner crops)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No cartesian axes needed for a grid; title matches mandated format
+          exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canvas background correctly themed (#FAF8F1/#1A1A17) in both renders,
+          title uses ink token; monochrome board is a justified data-layer choice
+          per the spec's printing note
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Deliberate newspaper-style puzzle aesthetic backed by a technically
+          sound square-crop plugin; clearly above generic-default territory
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Subtle grid lines, no axes/spines shown, generous outer margins;
+          solid but not exceptional polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        comment: Limited storytelling opportunity for a structural puzzle grid; hierarchy
+          is inherent (black/white/numbers) rather than authored
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct crossword grid
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Blocked/entry cells, numbering, 180-degree symmetry, uniform grid
+          lines, monochrome design all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 1:1 square cell aspect ratio as required, all 225 cells rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly omitted
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows blocking, entries, numbering, and rotational symmetry together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral 15x15 grid resembling a real published crossword
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15x15 within the spec's stated 10x10-15x15 range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports/data/plugin/plot structure; helper logic is the minimum needed
+          for symmetry/numbering and the Chart.js plugin API
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; Chart is the global
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI/interactivity, appropriate complexity for the visual result
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Best-available idiomatic path given Chart.js has no native grid type
+          — scatter chart + plugin system used correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        comment: Creative use of afterLayout/afterDatasetsDraw plugin hooks, scale.configure()
+          re-sync, and a per-point dynamic pointRadius callback
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
