@@ -124,7 +124,7 @@ function VoronoiCells() {
             fill={revenueColor(site.monthlyRevenueK)}
             fillOpacity={0.82}
             stroke={t.pageBg}
-            strokeWidth={3}
+            strokeWidth={4.5}
           />
         );
       })}
@@ -173,7 +173,16 @@ function RevenueLegend() {
       <text x={legendX} y={legendY - 18} fontSize={14} fill={t.inkSoft}>
         Store monthly revenue ($k)
       </text>
-      <rect x={legendX} y={legendY} width={legendWidth} height={14} fill="url(#revenueGradient)" rx={2} />
+      <rect
+        x={legendX}
+        y={legendY}
+        width={legendWidth}
+        height={14}
+        fill="url(#revenueGradient)"
+        rx={7}
+        stroke={t.grid}
+        strokeWidth={1}
+      />
       <text x={legendX} y={legendY + 30} fontSize={13} fill={t.inkSoft}>
         {`$${minRevenue}k`}
       </text>
