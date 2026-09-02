@@ -1,0 +1,263 @@
+library: muix
+language: javascript
+specification_id: cat-box-strip
+created: '2026-09-02T14:59:18Z'
+updated: '2026-09-02T15:13:14Z'
+generated_by: claude-sonnet
+workflow_run: 33644973182
+issue: 2695
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/muix/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Uses the documented useXScale/useYScale composition pattern to draw a custom box+strip
+    layer — the correct idiomatic fallback since MUI X community has no native boxplot
+    series
+  - 'Deterministic seeded PRNGs (mulberry32) produce realistic, differentiated per-category
+    distribution shapes: tight Bike/Walk, consistent Train, wider Bus, right-skewed
+    Car with traffic-jam outliers'
+  - Theme-adaptive chrome with pixel-identical brand-green (#009E73) data color across
+    light/dark; median line correctly flips via the ink token and stays visible against
+    the box fill in both themes
+  - Dynamic outlier callout ("traffic-jam outliers") that programmatically targets
+    the category with the most extreme outlier instead of a hardcoded label — sharpens
+    data storytelling and directly addresses the prior review's DE-03 weakness
+  - skipAnimation now correctly set on ChartContainer (fixed from attempt 1) and title
+    font-size scaling widened so the title fills closer to the 50-70% width guideline
+    (fixed from attempt 1)
+  weaknesses:
+  - Design remains single-hue throughout (box, points, median line, callout) — the
+    callout's dashed line/label could use the muted/neutral semantic anchor for a
+    touch more visual hierarchy instead of plain inkSoft, per the still-outstanding
+    DE-01 note from attempt 1
+  - Dense Bus/Car clusters show some point-on-point overlap despite jitter + alpha
+    — widening jitterSpread slightly or trimming marker radius in the two densest
+    categories would clean this up further
+  - Y-axis grid renders ~17 horizontal lines across the 0-85 range at 5-unit steps
+    — thinning to ~8-10 lines (10-unit steps) would read as more 'very subtle' per
+    the style guide's grid guidance
+  - KISS structure necessarily relies on several helper functions (mulberry32, gaussian,
+    quantile) since there is no seeded RNG/stats library in-browser — appropriate
+    given the constraint, but keeps CQ-01 shy of a perfect score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "Commute Time by Transport Mode · cat-box-strip · javascript · muix · anyplot.ai" centered at top, sized to fill roughly half the plot width; italic gray subtitle below explaining the box/strip semantics and n=45 per mode; dark "Transport Mode" x-axis label and dark "Commute Time (minutes)" y-axis label; gray tick labels on both axes; subtle horizontal gridlines at 5-minute increments. All chrome elements are clearly legible against the light background.
+      Data: Five box-and-strip groups (Bike, Walk, Train, Bus, Car) in brand green (#009E73) — translucent light-green box fill, solid green border, black median line, and semi-transparent green jittered dots with faint light-edge strokes overlaying each box. Distribution shapes differ meaningfully: Bike/Walk are tight and low, Train is fairly consistent, Bus is wider, and Car is widest with an italic dashed-line callout reading "traffic-jam outliers" pointing at its two clear high points (~72-75 min) above the whisker cap.
+      Legibility verdict: PASS — no text is light-on-light; every chrome element, including the new callout label, reads clearly.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Title and axis labels render in light/white text, subtitle, tick labels, and the outlier callout in light gray — all clearly visible against the dark background. Gridlines are faint but visible. No dark-on-dark failures observed anywhere.
+      Data: Same five groups in the identical brand green (#009E73) box fills/borders and jittered dots as the light render — confirmed pixel-identical data coloring. The median line correctly flips from black (light theme) to white (dark theme) via the theme-adaptive ink token, remaining visible against the green box fill in both themes. The outlier callout targets the same two Car points as the light render.
+      Legibility verdict: PASS — no text is dark-on-dark; median line and callout are visible in both themes.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes; title now scales
+          to fill closer to the 50-70% width guideline (fixed from attempt 1's under-sized
+          title)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions in either render, including the new outlier
+          callout
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Marker size (r=5) and alpha (0.42) well-tuned for n=45 per group;
+          dense Bus/Car clusters show minor point overlap
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue design with clear contrast against both surfaces, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is exactly 3200x1800; plot area fills a strong majority with
+          balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Transport Mode" and "Commute Time (minutes)" — descriptive with
+          units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (only) series is Imprint #009E73, identical across themes;
+          backgrounds and chrome are theme-correct in both renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful monochrome box+strip composition with layered alpha, clearly
+          above library defaults; still single-hue throughout
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal spines, generous whitespace, no visible tick marks; grid
+          could be thinned slightly for extra subtlety
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: New dynamic "traffic-jam outliers" callout gives a clear guided insight
+          on top of the increasing-median category ordering (fixed from attempt 1's
+          'no explicit callout' weakness)
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box plot with strip overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Box (median/Q1/Q3/whiskers to 1.5xIQR), jittered semi-transparent
+          strip points, all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category on x, value on y, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          omitted for single series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows outliers (Car), varied spreads/shapes across all five categories,
+          plus a callout naming the mechanism (traffic jams)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible commute-time-by-transport-mode scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic minute values and relative ordering (bike < walk < train
+          < bus/car variance)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Linear data-gen -> layer -> chart structure; helper functions are
+          necessary given no seeded RNG/stats lib in-browser
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded mulberry32 PRNGs for data and jitter
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for hand-rolled box+strip geometry, no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Harness contract respected, skipAnimation now set, current API used
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly follows the documented useXScale/useYScale composition
+          pattern for unsupported chart types; skipAnimation now present (fixed from
+          attempt 1)
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses useXScale/useYScale hooks to align custom SVG geometry to the
+          chart's shared scales, plus a data-driven outlier callout — a MUI X-specific
+          integration point
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - quantile-calculation
+  styling:
+  - alpha-blending
+  - edge-highlighting

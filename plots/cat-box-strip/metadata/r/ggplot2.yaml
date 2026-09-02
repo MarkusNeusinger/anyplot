@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: cat-box-strip
+created: '2026-09-02T14:41:45Z'
+updated: '2026-09-02T14:56:00Z'
+generated_by: claude-sonnet
+workflow_run: 33643317045
+issue: 2695
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Repair addressed every Attempt 1 weakness directly: box interior now uses ELEVATED_BG
+    fill (visually separating the summary-stat layer from the raw-data layer), a stat_summary()
+    diamond mean marker was added for a distinctive ggplot2 mechanism and a focal
+    point, and both jitter marker size (2.2→2.6) and boxplot linewidth (0.5→0.65)
+    were increased for prominence'
+  - 'First categorical series correctly uses Imprint brand green (#009E73), identical
+    across both renders, with theme-correct chrome flipping cleanly between #FAF8F1/#FFFDF6
+    (light) and #1A1A17/#242420 (dark)'
+  - 'Box + strip + mean-marker combination is well executed: geom_boxplot(fill = ELEVATED_BG,
+    outlier.shape = NA) avoids duplicate outlier glyphs while geom_jitter(width =
+    0.15, alpha = 0.45) shows the raw 60-point-per-group distribution without excessive
+    overplotting'
+  - Realistic, neutral agronomy dataset (fertilizer treatments vs. plant height) with
+    differing means AND spreads per group, plus a genuine high outlier in the Nitrogen
+    group
+  - Font sizes explicitly set and match style-guide defaults (title 12pt, axis titles
+    10pt, ticks 8pt); axis labels carry units; mandated title format exact; clean
+    KISS structure with set.seed(42) and only used imports
+  weaknesses:
+  - 'Design Excellence is still the limiting category: the mean-diamond marker sits
+    close to the median line in most groups (only the Nitrogen group''s outlier visibly
+    separates mean from median), so the ''mean vs. median'' story is present but not
+    strongly emphasized — a thin connecting guide between group means, or a subtle
+    label on the Nitrogen outlier, would sharpen the focal point further'
+  - panel.grid.major.y uses the full INK color at linewidth=0.2 rather than a reduced-alpha
+    rule token — it reads acceptably thin in both renders but is technically brighter/darker
+    than the style guide's 15-25% opacity guidance for grid lines; consider a lighter
+    grid tone for extra polish
+  - stat_summary() is a legitimate ggplot2-specific mechanism but is a fairly common
+    pairing with geom_boxplot()+geom_jitter() — a more visually distinctive touch
+    (e.g. a subtle median-connecting line across groups) would push Library Mastery
+    further
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "cat-box-strip · r · ggplot2 · anyplot.ai" in dark ink top-left, fully visible with comfortable margins. Axis titles "Plant Height (cm)" (y) and "Fertilizer Treatment" (x) in dark ink; tick labels in softer grey. Only thin horizontal (y-axis) gridlines are drawn at 10/20/30/40, no vertical gridlines, no legend (correctly omitted for a single series).
+      Data: Boxplots now show a subtle near-white ELEVATED_BG fill with thin grey (INK_SOFT) outlines, displaying median/Q1/Q3/whiskers per of the 4 fertilizer groups (Control, Nitrogen, Phosphorus, Compost). Jittered strip points in brand green (#009E73) with partial transparency overlay each box, revealing all 60 points per group including a visible high outlier in the Nitrogen group (~40.5 cm). A dark diamond marker (stat_summary mean) sits inside each box near the median line.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now render in light ink, fully legible against the dark surface — no dark-on-dark failures observed. Gridlines flip to a light, subtle color. Box fill flips to the ELEVATED_BG dark tone (#242420), giving the boxes a faint but visible separation from the page background.
+      Data: The jittered strip points and boxplot use the identical brand green (#009E73) as the light render — no data-color drift between themes, confirming only chrome changed. The mean-marker diamond flips to a light/white fill so it stays visible against the dark box interior.
+      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark issues found.
+
+    Both renders pass the theme-readability check, and the data palette (Imprint brand green) is confirmed identical between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (title 12pt, axis titles 10pt, ticks 8pt); all
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; jitter overlap is intentional and expected
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Jitter size increased to 2.6 and boxplot linewidth to 0.65 per repair;
+          mean diamond marker clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single data hue plus neutral chrome; no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed; no clipping or overflow
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis carries units (cm), title mandated format exact
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes; backgrounds match
+          #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Repair added ELEVATED_BG box fill and stat_summary mean marker, moving
+          beyond the flat grey-outline default from Attempt 1
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed via theme_minimal, y-only subtle grid, box fill now
+          separates summary layer from raw data layer
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mean marker adds a focal point but the mean/median divergence is
+          only clearly visible in the Nitrogen group
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box plot with strip overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median/Q1/Q3/whiskers, jitter + alpha to reduce overlap, all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=fertilizer category, y=plant height, all 4 groups shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend correctly omitted for
+          single series
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows quartiles, whiskers, raw distribution, sample size via point
+          density, and mean vs median
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral agronomy fertilizer-vs-growth scenario, plausible and non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plant height in cm with realistic means/spreads per treatment
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No user-defined functions/classes; flat script structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave with ragg::agg_png, plot-{theme}.png naming
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic geom_boxplot + geom_jitter + stat_summary layering, theme_minimal
+          base
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: stat_summary() mean marker is a genuine ggplot2-specific addition
+          from the repair, though the overall combo remains a fairly common pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
