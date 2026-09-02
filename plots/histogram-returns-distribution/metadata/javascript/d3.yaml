@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: histogram-returns-distribution
 created: '2026-09-02T01:19:54Z'
-updated: '2026-09-02T01:24:37Z'
+updated: '2026-09-02T01:32:02Z'
 generated_by: claude-sonnet
 workflow_run: 33578562846
 issue: 3751
@@ -16,44 +16,47 @@ quality_score: 87
 review:
   strengths:
   - Manual equal-width binning correctly avoids d3.bin()'s uneven default thresholds,
-    documented with a clear rationale comment
+    with a clear rationale comment explaining the tradeoff
   - 'Complete feature set from the spec: normal-curve overlay fitted to mean/std,
     mean/std/skew/kurtosis callout box, and ±2σ tail highlighting with dashed boundary
     lines'
-  - Tail highlighting uses the matte-red semantic anchor (palette[4]) correctly for
-    the 'bad/extreme event' role while the bulk stays brand green (palette[0])
+  - Tail highlighting correctly uses the matte-red semantic anchor (palette[4]) for
+    the 'extreme event' role while the bulk stays brand green (palette[0])
   - Theme-adaptive chrome fully threaded through axes, gridlines, callout box, and
-    legend — both renders are legible with no dark-on-dark or light-on-light failures
+    legend — both renders legible with no dark-on-dark or light-on-light failures
   - Deterministic fixed-seed LCG + Box-Muller mixture model produces a realistic negatively-skewed,
     fat-tailed daily-return distribution (skew -0.73, excess kurtosis 3.07) without
     an unseeded RNG
-  - 'Clean layout: no overlapping elements, subtle y-axis gridlines only (correct
-    per bar/histogram grid guidance), generous margins, canvas gate passed'
+  - 'Clean layout: no overlapping elements, subtle y-axis-only gridlines, generous
+    margins, canvas gate passed'
   weaknesses:
   - 'Legend/series colors skip the canonical Imprint order (green → lavender → blue):
     the normal-fit curve uses palette[2] (blue) instead of the next canonical slot
     palette[1] (lavender). Blue-for-model-fit is a defensible convention but is a
     cherry-picked choice per the style guide''s default ordering rule — consider palette[1]
-    or the theme-adaptive ''neutral'' anchor (the style guide assigns baseline/reference-line
-    elements to that role) instead.'
+    or the theme-adaptive ''neutral'' anchor for baseline/reference-line elements
+    instead.'
   - Three small helper functions (uniform, gaussian, normalPdf) add minor structure
     beyond a flat script; justified by the statistical requirements but slightly reduces
     KISS simplicity.
   - 'Design excellence is solid but not exceptional: default system font family, standard
-    rounded-rect callout box — no distinctive typographic or layout flourishes beyond
+    rounded-rect callout box — no distinctive typographic or layout flourish beyond
     the palette/box treatment.'
+  - Library Mastery stays close to the skeleton pattern (selection/join + scale +
+    axis generators); no D3-distinctive feature (e.g. custom easing/interpolation
+    beyond curveBasis, transitions-free layout composition) pushes it further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "histogram-returns-distribution · javascript · d3 · anyplot.ai" is bold dark text, centered, clearly readable. Axis titles "Daily Return (%)" and "Density" are dark and legible. Tick labels (percent x-axis, decimal y-axis) are medium-gray and legible. Subtle horizontal gridlines are visible but do not compete with data. Two dashed gray vertical lines mark the ±2σ tail boundaries. A "Fitted statistics" callout box (mean, std, skew, kurt) sits top-left in an elevated cream box with a thin border. Legend top-right lists "Daily returns" (green swatch), "|z| > 2σ (tail)" (red swatch), "Normal fit" (blue line swatch).
-      Data: Green histogram bars form a left-skewed, roughly bell-shaped distribution peaking near 0%, with a handful of red bars flagging bins beyond ±2σ in both tails (notably a fat left tail near -6%). A smooth blue curve traces the fitted normal PDF, visibly lower-peaked and thinner-tailed than the green bars, illustrating the excess kurtosis and negative skew reported in the stats box.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "histogram-returns-distribution . javascript . d3 . anyplot.ai" is bold dark text, centered at top, clearly readable. Axis titles "Daily Return (%)" and "Density" are dark and legible. Percent-formatted x tick labels and decimal y tick labels are medium-gray and legible. Subtle horizontal gridlines are visible without competing with the data. Two dashed gray vertical lines mark the +/-2 sigma tail boundaries. A "Fitted statistics" callout box (mean, std, skew, kurt in monospace) sits top-left on an elevated cream panel with a thin border. Legend top-right lists "Daily returns" (green swatch), "|z| > 2 sigma (tail)" (red swatch), "Normal fit" (blue line swatch).
+      Data: Green histogram bars form a left-skewed, roughly bell-shaped distribution peaking near 0%, with red bars flagging bins beyond +/-2 sigma in both tails (a fat left tail near -6% stands out). A smooth blue curve traces the fitted normal PDF, visibly lower-peaked and thinner-tailed than the green bars, illustrating the excess kurtosis and negative skew reported in the stats box.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white and soft-gray tones, all clearly legible against the dark background. Gridlines are faint light lines, still visible but subtle. The dashed ±2σ boundary lines and the "Fitted statistics" box (now on a dark-elevated #242420-style panel with light text) are both legible. Legend text and swatches read the same as light mode.
-      Data: Bar colors (green bulk, red tails) and the blue normal-fit curve are pixel-identical to the light render — only the chrome (background, text, grid, box fill) flipped, confirming correct theme-adaptive implementation.
-      Legibility verdict: PASS — no dark-on-dark failures; all title/axis/tick text and the stats box remain fully readable.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white and soft-gray tones, all clearly legible against the dark background. Gridlines are faint light lines, still visible but subtle. The dashed +/-2 sigma boundary lines and the "Fitted statistics" box (now on a dark-elevated panel with light text) remain fully legible. Legend text and swatches read the same as light mode.
+      Data: Bar colors (green bulk, red tails) and the blue normal-fit curve are pixel-identical to the light render -- only the chrome (background, text, grid, box fill) flipped, confirming a correct theme-adaptive implementation. Brand green #009E73 reads well on the dark surface.
+      Legibility verdict: PASS -- no dark-on-dark failures; all title/axis/tick text and the stats box remain fully readable.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,7 +68,7 @@ review:
         max: 8
         passed: true
         comment: All text explicitly sized (14-22px) and readable in both themes;
-          no dark-on-dark or light-on-light issues
+          title fits without clipping
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -84,7 +87,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Red/green tail vs. bulk distinction is reinforced by dashed boundary
+        comment: Red/green tail-vs-bulk distinction reinforced by dashed boundary
           lines and x-position, not color alone
       - id: VQ-05
         name: Layout & Canvas
@@ -121,7 +124,7 @@ review:
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis frame, subtle y-axis-only gridlines, generous margins
+        comment: Minimal axis frame, subtle y-axis-only gridlines, generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -181,7 +184,7 @@ review:
         max: 4
         passed: true
         comment: n=252 matches the spec's recommended 1-year daily sample; return
-          magnitudes are realistic
+          magnitudes realistic
     code_quality:
       score: 9
       max: 10
