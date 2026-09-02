@@ -50,6 +50,31 @@ const zeroReactanceLine = [
   [1, 0],
 ];
 
+// --- Grid value labels: top of each resistance circle, boundary crossing of
+// each reactance arc. Rendered later via the `graphic` component once the
+// coordinate system exists, so positions are exact pixel conversions rather
+// than approximations.
+const resistanceLabelData = resistanceValues.map((r) => ({
+  text: String(r),
+  point: [r / (1 + r), 1 / (1 + r)],
+}));
+
+function reactanceEdgePoint(x) {
+  const theta = 2 * Math.atan(1 / x);
+  return [Math.cos(theta), Math.sin(theta)];
+}
+
+const reactanceLabelData = [
+  ...reactanceValues.map((x) => {
+    const [px, py] = reactanceEdgePoint(x);
+    return { text: `j${x}`, point: [px * 1.07, py * 1.07] };
+  }),
+  ...reactanceValues.map((x) => {
+    const [px, py] = reactanceEdgePoint(x);
+    return { text: `-j${x}`, point: [px * 1.07, -py * 1.07] };
+  }),
+];
+
 // --- Impedance locus: series R-L-C antenna feed, swept 1-5 GHz -------------
 const z0 = 50;
 const inductanceH = 4e-9; // 4 nH series feed inductance
@@ -91,7 +116,7 @@ const freqLabelData = labeledIndices.map((idx) => {
       show: true,
       formatter: `${freqGHz.toFixed(1)} GHz`,
       color: t.ink,
-      fontSize: 15,
+      fontSize: 17,
       offset: [(x / norm) * 46, -(y / norm) * 46],
     },
   };
@@ -160,7 +185,7 @@ chart.setOption({
         formatter: "Z0",
         position: "top",
         color: t.inkSoft,
-        fontSize: 13,
+        fontSize: 15,
       },
       silent: true,
       z: 3,
@@ -185,3 +210,35 @@ chart.setOption({
     },
   ],
 });
+
+// --- Grid value labels via the `graphic` component -------------------------
+// Placed after the first setOption so convertToPixel resolves exact pixel
+// coordinates from the grid's data space, rather than approximating with
+// percentage offsets.
+const gridLabelStyle = { fill: t.inkSoft, fontSize: 12, textAlign: "center" };
+const gridLabelElements = [
+  ...resistanceLabelData.map(({ text, point }) => {
+    const [x, y] = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, point);
+    return {
+      type: "text",
+      x,
+      y,
+      silent: true,
+      z: 4,
+      style: { ...gridLabelStyle, text, textVerticalAlign: "bottom" },
+    };
+  }),
+  ...reactanceLabelData.map(({ text, point }) => {
+    const [x, y] = chart.convertToPixel({ xAxisIndex: 0, yAxisIndex: 0 }, point);
+    return {
+      type: "text",
+      x,
+      y,
+      silent: true,
+      z: 4,
+      style: { ...gridLabelStyle, text, textVerticalAlign: "middle" },
+    };
+  }),
+];
+
+chart.setOption({ graphic: { elements: gridLabelElements } });
