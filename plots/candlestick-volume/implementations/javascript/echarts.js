@@ -1,7 +1,7 @@
 // anyplot.ai
 // candlestick-volume: Stock Candlestick Chart with Volume
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 90/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 const UP_COLOR = t.palette[0]; // "#009E73" — profit/up (Imprint semantic exception)
