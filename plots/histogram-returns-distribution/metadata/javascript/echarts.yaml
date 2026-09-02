@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: histogram-returns-distribution
 created: '2026-09-02T01:22:33Z'
-updated: '2026-09-02T01:28:17Z'
+updated: '2026-09-02T01:37:05Z'
 generated_by: claude-sonnet
 workflow_run: 33578737720
 issue: 3751
@@ -12,57 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Correct density-normalized histogram with a properly fitted normal-distribution
-    overlay curve, exactly as the spec requires
-  - Statistics callout box (Observations, Mean, Std dev, Skewness, Kurtosis) is a
-    native ECharts graphic panel with rounded corners and elevated-surface styling,
-    not a fake UI element
-  - Tail region beyond |z| > 2 is highlighted in the semantic amber anchor color with
-    a matching legend swatch, correctly distinguishing it from the categorical palette
-    pool
-  - 'First categorical series is the mandated brand green #009E73; Imprint palette
-    and theme-adaptive chrome (background, text, grid) are correct and identical data
-    colors across both light and dark renders'
-  - Y-axis-only subtle grid with the y-axis line hidden gives a clean, minimalist
-    L-shaped-equivalent look per the style guide's grid guidelines
-  - Realistic, neutral finance scenario (equity ETF daily returns, ~0.11% mean, ~1.46%
-    std dev, negative skew, fat tails) with factually plausible magnitudes for daily
-    equity volatility
-  - Title fontsize correctly scales down via the length-based formula so the long
-    mandated title string doesn't overflow or clip in either render
+  - Tail regions (|z| > 2) are highlighted with distinct amber coloring per-bar, directly
+    serving the spec's fat-tail/skewness analysis purpose
+  - Density-normalized histogram and normal PDF overlay are on comparable scales,
+    exactly as the spec recommends
+  - Custom rounded stats box (graphic API) cleanly surfaces mean, std dev, skewness,
+    and kurtosis without cluttering the plot area
+  - Deterministic fixed-seed LCG data generation includes a realistic downside-skewed
+    volatility-cluster shock, producing plausible negative skew and excess kurtosis
+    for an equity ETF
+  - 'Minimal chrome: x-axis split lines and tick marks hidden, y-axis-only subtle
+    grid, matching the style guide''s grid guidelines'
+  - First categorical series is Imprint brand green (#009E73), normal-fit line uses
+    palette[1] (#C475FD), both confirmed identical across light/dark renders
+  - Title font size scales down for the long mandated title, avoiding overflow while
+    staying centered and fully legible
   weaknesses:
-  - 'Legend/data color mismatch: the ''Normal fit'' legend swatch renders as purple/lavender
-    (ECharts'' default series-index color, palette[1]) while the actual curve drawn
-    on the chart is blue (lineStyle.color explicitly set to palette[2]). Set itemStyle.color:
-    t.palette[2] on the line series (in addition to lineStyle.color) so the legend
-    icon matches what''s actually rendered — visible in both plot-light.png and plot-dark.png.'
-  - The tail-region highlighting is done by manually recoloring individual histogram
-    bars based on a threshold check; ECharts' markArea (for the two tail bands) or
-    markLine (for the mean ± 2 std-dev boundaries) would be a more idiomatic, distinctive
-    use of the library and would read more clearly as an explicit threshold annotation
-    rather than a per-bar color hack.
-  - Only two data series are used (bar + line) but the line skips palette position
-    2 (lavender) and jumps to palette position 3 (blue) — using palette[1] for the
-    line instead would keep the categorical assignment contiguous and would have avoided
-    the legend color-index mismatch entirely.
+  - Stats box and tail-region legend swatch styling, while clean, reuse standard echarts
+    graphic primitives rather than pushing further into distinctive echarts-only features
+    (e.g. markArea/markLine for the tail bands) — LM-02 headroom remains
+  - x-axis tick label interval (every 3rd bin) is a reasonable density tradeoff but
+    could use markLine to annotate the +/-2 std tail boundaries directly on the axis
+    for extra clarity
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Equity ETF Daily Returns · histogram-returns-distribution · javascript · echarts · anyplot.ai" in dark ink at top, clearly legible; legend below title with two entries ("Daily returns" green square, "Normal fit" purple/lavender dot+dash icon); x-axis "Daily return" and y-axis "Density" labels dark and readable; tick labels (percent values, 0/0.1/0.2/...) in softer gray-ink, all readable; subtle horizontal grid lines on y-axis only.
-      Data: Histogram bars mostly brand green (#009E73), with several bars near both tails recolored amber (#DDCC77-ish) to flag |z|>2 regions; a smooth blue curve (~#4467A3) overlays the histogram as the normal fit; a statistics callout box (elevated cream panel, rounded corners, thin border) sits top-right with Observations/Mean/Std dev/Skewness/Kurtosis plus an amber swatch labeled "Tail region (|z| > 2)".
-      Legibility verdict: PASS. All text is clearly readable against the light background. Note: the "Normal fit" legend icon is purple/lavender while the actual overlay curve is blue — a color-assignment bug, not a legibility failure.
+      Chrome: Title "Equity ETF Daily Returns · histogram-returns-distribution · javascript · echarts · anyplot.ai" is dark, centered, fully visible, not clipped. Legend ("Daily returns", "Normal fit") is dark text, clearly readable. X-axis label "Daily return" and y-axis label "Density" are dark and legible. Tick labels (percent values, density values) are readable dark-gray. Only a subtle horizontal (y-axis) grid is shown; x-axis split lines and tick marks are hidden per style guide.
+      Data: Histogram bars are Imprint brand green (#009E73); bars beyond |z|>2 are amber/gold, matching the "Tail region (|z| > 2)" legend swatch in the stats box. The smooth normal-fit curve is a light purple/lavender (Imprint palette[1], #C475FD). Stats box (top right, rounded rect, light elevated fill) lists Observations, Mean, Std dev, Skewness, Kurtosis in dark text — fully readable, no overlap with the histogram.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, legend text, axis labels/titles, and tick labels all switch to light ink (near-white/light-gray) and remain clearly legible; the statistics box becomes a dark elevated panel (~#242420) with light text, still fully readable; grid lines remain subtle.
-      Data: Data colors are pixel-identical to the light render — same brand-green bars, same amber tail bars, same blue normal-fit curve — confirming only chrome flipped, not data colors. The same purple/blue legend-vs-line mismatch is reproduced identically in this theme.
-      Legibility verdict: PASS. No dark-on-dark or light-on-light failures observed; every text element has strong contrast against the near-black surface.
+      Chrome: Title is white/light and fully visible. Legend text is light and readable. Axis labels ("Daily return", "Density") are light-colored and clear. Tick labels are light gray, easily readable against the dark background. Grid remains the same subtle y-axis-only pattern, adapted to a lighter, low-opacity line on dark background.
+      Data: Bar green, tail amber, and normal-curve lavender are visually identical to the light render — only the surrounding chrome (background, text, box fill, grid) flipped. Stats box uses a dark elevated fill with light text, and remains fully legible — no dark-on-dark text failures observed anywhere (title, axis labels, tick labels, legend, and stats box all pass contrast).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -70,54 +59,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title fontsize scales with title length
-          via the standard formula, no overflow or clipping in either theme; readable
-          at full size.
+        comment: All text readable in both themes; font sizes explicit and scale with
+          title length
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No collisions between text, stats box, and data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bar widths and line thickness (3px) well adapted to 252 observations
-          across 25 bins.
+        comment: Bars, tail highlighting, and normal curve all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green bars, amber tail bars, and blue curve are distinguishable by
-          both hue and shape (bar vs. line), not relying on color alone.
+        comment: Green/lavender/amber trio has good contrast, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          stats box sits inside the plot area, not isolated.
+        comment: Canvas gate passed; nothing clipped or overflowing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Daily return" (percent tick labels) and "Density" are descriptive;
-          effective units are shown via the % tick formatting.'
+        comment: Descriptive axis labels with units (%), title follows mandated format
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series is correctly #009E73 and chrome is theme-correct in
-          both renders, but the ''Normal fit'' legend swatch (auto-assigned palette[1])
-          doesn''t match the actual rendered line color (palette[2]) — a partial-compliance
-          color-index bug.'
+        passed: true
+        comment: 'First series #009E73, palette[1] for normal fit, backgrounds theme-correct
+          in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -125,26 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful use of semantic amber for tail-risk highlighting plus
-          a polished stats callout panel — clearly above defaults, though the legend-color
-          bug undercuts the polish.
+        comment: Custom rounded stats box, per-bar conditional tail coloring; uses
+          token palette as instructed rather than a bespoke scheme
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid, hidden y-axis line, generous whitespace;
-          some refinement visible beyond library defaults.
+        comment: Spines/ticks hidden, y-axis-only subtle grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Amber tail highlighting plus the normal-fit overlay create a clear
-          visual hierarchy directly supporting the spec's risk-analysis narrative
-          (fat tails, skew).
+        comment: Tail highlighting draws the eye directly to the spec's fat-tail narrative;
+          normal overlay supports comparison
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -152,52 +131,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with overlay curve.
+        comment: Histogram with normal-distribution overlay, correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normal overlay, stats box (mean/std/skew/kurtosis), tail highlighting
-          beyond 2 std dev, 25 bins, density normalization — all present.
+        comment: Normal overlay, stats box (mean/std/skew/kurtosis), tail highlighting,
+          density normalization all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = binned daily return, Y = density; axes show the full data range.
+        comment: X=return bins (%), Y=density, correctly mapped
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format is correct and legend labels textually match, but the
-          'Normal fit' legend swatch color doesn't correspond to the rendered line
-          color.
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match series names
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows central peak, negative skew, and fat tails on both sides —
-          the key features of a returns distribution.
+        comment: Histogram, overlay, tail highlight, and stats box all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral finance scenario: equity ETF daily returns.'
+        comment: Equity ETF daily returns with plausible ~0.115% mean / 1.46% std
+          and downside-skewed shocks; neutral subject
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean ~0.11%, std dev ~1.46% and occasional volatility-cluster shocks
-          are realistic for daily equity returns.
+        comment: Percent-scale daily returns are sensible for the domain
     code_quality:
       score: 10
       max: 10
@@ -207,32 +184,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom script, no functions/classes.
+        comment: Flat script, small helper functions only (rand, randNormal, normalPdf)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG deterministic data generation.
+        comment: Fixed-seed LCG (seed=42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; uses only the provided globals.
+        comment: No imports; uses browser globals only, per the mount-node contract
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI or over-engineering.
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Follows the mount-node contract correctly; animation: false set;
-          no explicit size/devicePixelRatio passed to echarts.init.'
+        comment: echarts.init with no explicit size/devicePixelRatio, animation:false
+          set
     library_mastery:
       score: 7
       max: 10
@@ -242,26 +219,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct setOption structure and use of the graphic API for the stats
-          callout, but tail highlighting via manual per-bar recoloring instead of
-          markArea/markLine is less idiomatic.
+        comment: Standard bar+line combo series, correct category/value axis pairing
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom graphic overlay panel (rect + text elements) for the stats
-          box is a distinctive, non-trivial use of ECharts' graphic API.
-  verdict: REJECTED
+        comment: graphic API for custom stats box and per-datapoint conditional itemStyle;
+          could push further with markArea/markLine for tail bands
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - binning
-  - normalization
   styling:
-  - publication-ready
+  - minimal-chrome
   - grid-styling
