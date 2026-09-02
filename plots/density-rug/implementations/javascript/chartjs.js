@@ -16,6 +16,7 @@ function lcg(seed) {
   };
 }
 const rand = lcg(42);
+const jitterRand = lcg(7);
 function gaussian() {
   const u1 = Math.max(rand(), 1e-9);
   const u2 = rand();
@@ -60,6 +61,22 @@ const curve = Array.from({ length: gridSteps + 1 }, (_, i) => {
 });
 const peakDensity = Math.max(...curve.map((p) => p.y));
 
+// Two tallest local maxima, ordered by x, call out the fast/slow cohorts.
+function localMaxima(points) {
+  const maxima = [];
+  for (let i = 1; i < points.length - 1; i++) {
+    if (points[i].y > points[i - 1].y && points[i].y > points[i + 1].y) {
+      maxima.push(points[i]);
+    }
+  }
+  return maxima;
+}
+const modes = localMaxima(curve)
+  .sort((a, b) => b.y - a.y)
+  .slice(0, 2)
+  .sort((a, b) => a.x - b.x);
+const modeLabels = ["Auto-triaged", "Needs a human"];
+
 // --- Color helpers -----------------------------------------------------------
 function hexToRgba(hex, alpha) {
   const r = parseInt(hex.slice(1, 3), 16);
@@ -81,14 +98,47 @@ const rugPlugin = {
     const { ctx, chartArea, scales } = chart;
     const xScale = scales.x;
     ctx.save();
-    ctx.strokeStyle = hexToRgba(brand, 0.4);
+    ctx.strokeStyle = hexToRgba(brand, 0.3);
     ctx.lineWidth = 1.5;
     responseTimes.forEach((value) => {
       const xPixel = xScale.getPixelForValue(value);
+      // Stagger tick height so overlapping ticks in the two dense clusters
+      // don't merge into a solid block.
+      const tickHeight = rugTickHeight + (jitterRand() - 0.5) * 10;
       ctx.beginPath();
       ctx.moveTo(xPixel, chartArea.bottom);
-      ctx.lineTo(xPixel, chartArea.bottom - rugTickHeight);
+      ctx.lineTo(xPixel, chartArea.bottom - tickHeight);
       ctx.stroke();
+    });
+    ctx.restore();
+  },
+};
+
+// --- Mode guides plugin (dashed callouts at the two KDE peaks) --------------
+const modeGuidesPlugin = {
+  id: "modeGuides",
+  afterDatasetsDraw(chart) {
+    if (modes.length < 2) return;
+    const { ctx, chartArea, scales } = chart;
+    const xScale = scales.x;
+    const yScale = scales.y;
+    ctx.save();
+    ctx.strokeStyle = hexToRgba(t.inkSoft, 0.5);
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.font = "12px sans-serif";
+    ctx.fillStyle = t.inkSoft;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const lineTop = chartArea.top + 16;
+    modes.forEach((mode, i) => {
+      const xPixel = xScale.getPixelForValue(mode.x);
+      const yPixel = yScale.getPixelForValue(mode.y);
+      ctx.beginPath();
+      ctx.moveTo(xPixel, lineTop);
+      ctx.lineTo(xPixel, yPixel);
+      ctx.stroke();
+      ctx.fillText(modeLabels[i], xPixel, chartArea.top);
     });
     ctx.restore();
   },
@@ -116,7 +166,7 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { bottom: 4 } },
+    layout: { padding: { top: 4, bottom: 4 } },
     plugins: {
       title: {
         display: true,
@@ -158,5 +208,5 @@ new Chart(canvas, {
       },
     },
   },
-  plugins: [rugPlugin],
+  plugins: [rugPlugin, modeGuidesPlugin],
 });
