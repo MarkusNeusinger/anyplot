@@ -36,6 +36,12 @@ const rawValues = CATEGORY_NAMES.map((_, i) =>
 );
 
 // --- Geometry: kernel density estimate -> violin outline + swarm jitter ----
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+
 function stdDev(values) {
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
   const variance = values.reduce((a, b) => a + (b - mean) ** 2, 0) / values.length;
@@ -94,7 +100,7 @@ function halfWidthAt(category, y) {
 // Beeswarm-style jitter: bin observations along y, spread each bin outward
 // from the center, clipped so points never leave the violin boundary.
 function computeSwarm(category, center) {
-  const binCount = 24;
+  const binCount = 32;
   const binWidth = (domainMax - domainMin) / binCount;
   const bins = Array.from({ length: binCount }, () => []);
   category.values.forEach((v) => {
@@ -102,7 +108,7 @@ function computeSwarm(category, center) {
     bins[b].push(v);
   });
 
-  const spacing = 0.045;
+  const spacing = 0.06;
   const points = [];
   bins.forEach((bin) => {
     bin.sort((a, b) => a - b);
@@ -165,6 +171,23 @@ categories.forEach((category, i) => {
     borderWidth: 1,
     pointRadius: 4.5,
     pointHoverRadius: 6.5,
+  });
+
+  // Secondary emphasis device: a short bold tick marking the median, so the
+  // central tendency of each condition reads at a glance alongside the raw spread.
+  const medianTickWidth = MAX_HALF_WIDTH * 0.55;
+  datasets.push({
+    type: "line",
+    label: `${category.name} (median)`,
+    data: [
+      { x: center - medianTickWidth, y: median(category.values) },
+      { x: center + medianTickWidth, y: median(category.values) },
+    ],
+    borderColor: t.ink,
+    borderWidth: 3,
+    pointRadius: 0,
+    fill: false,
+    tension: 0,
   });
 });
 
