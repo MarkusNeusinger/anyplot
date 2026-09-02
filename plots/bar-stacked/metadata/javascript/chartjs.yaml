@@ -1,0 +1,241 @@
+library: chartjs
+language: javascript
+specification_id: bar-stacked
+created: '2026-09-02T13:25:59Z'
+updated: '2026-09-02T13:38:22Z'
+generated_by: claude-sonnet
+workflow_run: 33635225001
+issue: 1947
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/chartjs/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correct Imprint palette order (Solar #009E73, Wind #C475FD, Hydro #4467A3, Natural
+    Gas #BD8233) with identical data colors between light and dark renders — only
+    chrome flips'
+  - Custom Chart.js plugin (afterDatasetsDraw) adds total-value labels above each
+    stack, directly answering the spec's suggestion to show cumulative totals
+  - categoryPercentage/barPercentage tuned (0.8/0.6) for adequate bar spacing, plus
+    a subtle page-bg border on each segment for clean part-to-whole separation
+  - Deterministic, realistic dataset (monthly energy mix, GWh) with a genuine narrative
+    — solar rising while natural gas falls — that reinforces the stacked-bar composition
+    story
+  - Y-axis-only grid, theme-adaptive ink/inkSoft/grid tokens threaded through title,
+    legend, ticks and axis titles in both themes
+  weaknesses:
+  - Title still spans only ~35% of the 3200px canvas width even after the repair bumped
+    the font from 22px to 27px — well under the ~70-85% expected for the long mandated
+    title string. A further bump (e.g. to ~34-36px) would close the gap without risking
+    overflow.
+  - 'Design excellence is solid but conservative: no additional visual-hierarchy device
+    (e.g. a callout marking the April crossover where renewables overtake gas) beyond
+    the total labels — optional polish, not required'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark-ink title "bar-stacked · javascript · chartjs · anyplot.ai" clearly visible at the top (now 27px after the repair, up from 22px), with a top legend row (Solar/Wind/Hydro/Natural Gas swatches + labels) and dark-ink axis titles ("Month", "Energy Consumption (GWh)"). Subtle y-axis-only gridlines, no x-axis grid. Tick labels in a softer ink tone, all legible.
+      Data: Four stacked segments per bar in canonical Imprint order — Solar (#009E73 green) at the base, then Wind (lavender), Hydro (blue), Natural Gas (ochre) on top — consistent across all six months (Jan-Jun), each with a thin page-bg border separating segments. Bold total-value labels ("145 GWh" ... "120 GWh") sit above each stack with comfortable clearance from the 180 GWh gridline.
+      Legibility verdict: PASS — all text readable, no overlap, no edge clipping.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title/legend/axis titles now render in light ink (#F0EFE8-equivalent), tick labels in soft light gray, gridlines remain subtle at the same low opacity. Total-value labels are light-colored and fully legible against the dark surface.
+      Data: Solar green, Wind lavender, Hydro blue, Natural Gas ochre are pixel-identical to the light render — only chrome (background, text, grid) flipped, as required. No dark-on-dark failures on any text element.
+      Legibility verdict: PASS — all text readable, no overlap, no edge clipping.
+
+    Both renders pass the theme-readability check; the repair's title-font increase (22px -> 27px) is confirmed visually but the title still under-fills the guideline width proportion (see weaknesses).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized and readable in both themes; title still
+          under-fills the ~70-85% guideline width for the mandated title string despite
+          the 22px->27px repair bump
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between total labels, legend, ticks, or data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar segments and total labels are clearly visible at this data density
+          (6 categories x 4 series)
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe Imprint palette, page-bg segment borders
+          aid separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (GWh)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, identical data colors across themes, theme-correct
+          chrome/background
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom total-label plugin and edge-highlighted segments show above-default
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, generous bar spacing, no chartjunk
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Component order plus declining totals tell an energy-transition story,
+          but no explicit focal-point callout
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Total labels above stacks, consistent component order, adequate spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Months on x, stacked GWh values on y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match, legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows rising/falling components and shifting composition over 6 months
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible energy-mix scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: GWh values and month-over-month trends are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data -> mount -> plugin -> chart, no unnecessary abstraction
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic arrays
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct stack/categoryPercentage/barPercentage usage, idiomatic options
+          structure
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom afterDatasetsDraw plugin for total labels demonstrates real
+          Chart.js API depth
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - edge-highlighting
