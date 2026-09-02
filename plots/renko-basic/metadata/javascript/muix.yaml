@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: renko-basic
 created: '2026-09-02T05:36:41Z'
-updated: '2026-09-02T05:41:37Z'
+updated: '2026-09-02T05:50:58Z'
 generated_by: claude-sonnet
 workflow_run: 33594891441
 issue: 3294
@@ -12,97 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Correct, idiomatic use of the documented useXScale/useYScale + custom <rect> composition
-    pattern for a chart type the community package has no native series for (Renko),
-    matching the muix.md guidance exactly.
-  - Deterministic LCG-seeded data spans four distinct trend regimes (uptrend, consolidation,
-    downtrend, recovery), giving the bricks real bullish/bearish variety and a clean
-    visual wave.
-  - 'Both renders are fully theme-correct: identical brick colors (t.palette[0] green
-    / t.palette[4] red) between light and dark, correct #FAF8F1 / #1A1A17 backgrounds,
-    no dark-on-dark or light-on-light text anywhere.'
-  - Title format, subtitle context line (date range, brick size, brick count), and
-    legend all directly serve the spec's requirements without clutter or redundancy.
-  - Correct canvas size (3200x1800), skipAnimation set, no fetch/CDN, self-contained
-    per the harness contract.
+  - Correct finance semantic color exception (t.palette[0] brand green for bullish,
+    t.palette[4] matte red for bearish) plus a redundant ink-colored up/down triangle
+    mark on every brick, so direction reads from shape alone for viewers who can't
+    distinguish red from green
+  - Clean, uniform, gapped brick geometry drawn against useXScale/useYScale band/linear
+    scales — the documented ChartContainer composition idiom for chart types outside
+    the MUI X community surface (same pattern as candlestick/OHLC)
+  - Deterministic LCG-seeded price series across four distinct trend regimes (uptrend,
+    consolidation, downtrend, recovery) produces 41 bricks, squarely inside the spec's
+    20-50 brick target
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    ink, grid) adapts via ANYPLOT_TOKENS, exactly as required
+  - Title/subtitle exactly match the mandated format and add genuinely useful context
+    (date range, brick size, brick count) without cluttering the chart
+  - Well-composed pill-style legend, subtle horizontal-only grid, no text/element
+    overlap or edge clipping across either render
   weaknesses:
-  - 'VQ-04 Color Accessibility: bullish/bearish direction is signaled primarily through
-    red/green hue on the bricks. Direction is also inferable from vertical brick position,
-    but a CVD viewer scanning brick colors alone may struggle to tell bullish from
-    bearish at a glance. Consider strengthening the non-color cue (bigger luminance/saturation
-    gap between the two brick colors) to fully clear the red-green-only bar.'
-  - 'DE-01/DE-03: the chart is clean and well-organized but stops short of a strong
-    focal point beyond the zigzag itself — e.g. no subtle emphasis on the most recent
-    brick or the largest reversal — so the ''story'' still requires the viewer to
-    scan the whole series rather than being guided to an insight.'
-  - 'LM-02: the useXScale/useYScale + custom <rect> composition is the right documented
-    workaround, but it is a fairly generic SVG technique; consider wiring ChartsTooltip
-    or another MUI X-native affordance into the exported interactive HTML to show
-    deeper library-specific mastery beyond the static PNG.'
+  - Swing high/low ChartsReferenceLine annotations use t.amber (warning/caution anchor),
+    but the style guide's semantic-anchor table assigns the 'reference line' role
+    to t.neutral, not amber — consider switching to t.neutral so amber stays reserved
+    for genuine warning/caution states.
+  - Design excellence is solid but conventional (rectangle bricks + dashed reference
+    lines); a stronger focal-point device (e.g. shading the swing range band, or emphasizing
+    the most recent trend leg) would push the storytelling further.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "SolarGrid Energy Daily Close · renko-basic · javascript · muix · anyplot.ai" in dark bold text, centered; a smaller gray subtitle below it ("Jan 2 – Aug 29 · $1.50 brick size · 41 bricks"); dark Y-axis label "Price (USD)" and X-axis label "Brick Sequence (estimated dates)"; subtle horizontal gridlines only; two rounded-pill legend swatches below the chart ("Bullish brick (price up)" green, "Bearish brick (price down)" red). All text is clearly readable against the light background.
-      Data: 41 uniform, gapped rectangular bricks forming a clean rise-plateau-fall-rise wave from ~$64 to ~$85.5 and back down to ~$60, then recovering to ~$69. Bullish bricks render in brand green (#009E73), bearish bricks in a matte red, each with a thin dark outline separating adjacent bricks. First-series green confirmed as #009E73.
-      Legibility verdict: PASS.
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Centered dark-ink title "SolarGrid Energy Daily Close · renko-basic · javascript · muix · anyplot.ai" and a lighter subtitle ("Jan 2 - Aug 29 · $1.50 brick size · 41 bricks") both clearly legible. Y-axis "Price (USD)" with $58-$86 dollar-formatted ticks; x-axis "Brick Sequence (estimated dates)" with sparse date ticks (Jan 6 ... Aug 18). Subtle horizontal grid lines, thin low-opacity axis lines, no visible heavy spines.
+      Data: 41 uniform rectangular bricks trace an up-then-down-then-up arc. Bullish bricks are brand green (#009E73) with a dark up-pointing triangle; bearish bricks are matte red with a dark down-pointing triangle. Two amber dashed reference lines mark "Swing high $85.50" and "Swing low $60.00", labeled at the right edge. Bottom legend shows two pill badges: green "Bullish brick (price up)" and red "Bearish brick (price down)".
+      Legibility verdict: PASS — all title, subtitle, axis, tick, reference-line, and legend text is clearly readable dark-on-light; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, subtitle, axis labels, and legend as the light render, all rendered in light/white text against the dark background; gridlines are subtle and still visible; legend pill borders and fills adapted to the dark surface.
-      Data: Identical brick geometry and identical green/red brick colors to the light render — only the background, text, and grid chrome flipped, exactly as required. No dark-on-dark text anywhere; every label, tick, and legend entry is clearly legible.
-      Legibility verdict: PASS.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis/legend layout, now rendered in light ink against the dark surface. Grid lines remain subtle but visible. No dark-on-dark failures found — every label is clearly legible.
+      Data: Brick colors (brand green / matte red), triangle marks, and amber reference lines are visually identical to the light render — confirms only chrome flips between themes, not data colors.
+      Legibility verdict: PASS — all text reads clearly light-on-dark; brand green and matte red both remain visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Explicit font sizes throughout, readable in both themes, no clipping
+        comment: All text readable in both themes; title auto-scales fontsize by length
+          and stays within bounds
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No collisions between text, bricks, reference lines, or legend
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 41 bricks well-sized and clearly separated, no overplotting
+        comment: 41 uniform bricks with visible gaps, direction triangles clearly
+          visible at this density
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Bullish/bearish direction relies primarily on red/green hue; position
-          also helps but hue is the dominant cue
+        passed: true
+        comment: Redundant shape encoding (triangle up/down) beyond color; brand green/matte-red
+          pair is CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, balanced margins, nothing cut off
+        comment: 3200x1800 canvas confirmed (canvas gate passed), good proportions,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units (Price (USD))
+        comment: Descriptive axis labels with units ($, dates); mandated title format
+          followed
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series is #009E73, backgrounds correct in both themes, chrome
-          theme-correct'
+        passed: false
+        comment: Bullish/bearish correctly use palette[0]/palette[4] finance semantic
+          exception and backgrounds are theme-correct, but swing-high/low reference
+          lines use t.amber (warning role) where the style guide's anchor table assigns
+          t.neutral to the 'reference line' role
     design_excellence:
       score: 14
       max: 20
@@ -112,21 +115,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful typography hierarchy and pill legend, clearly above library
-          defaults
+        comment: Custom brick rendering, pill-style legend, informative subtitle line
+          — clear polish above defaults, though the overall composition (rectangles
+          + dashed lines) stays fairly conventional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Horizontal-only subtle grid, low-opacity axis line, generous whitespace
+        comment: Subtle horizontal-only grid, low-opacity axis lines, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded reversals and the wave shape guide the eye, but no explicit
-          focal-point emphasis
+        comment: Swing high/low annotations plus color+shape encoding give the chart
+          a clear narrative, but no additional focal-point device (e.g. shaded range
+          band) to push it further
     spec_compliance:
       score: 15
       max: 15
@@ -136,48 +141,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Renko brick chart
+        comment: Correct Renko brick construction — new brick only once price crosses
+          a full BRICK_SIZE boundary
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Fixed brick size, up/down colors, gapped uniform bricks, estimated-date
-          x-axis, subtle grid
+        comment: Green/red bullish/bearish coloring, uniform gapped bricks, estimated-date
+          x-axis, subtle grid — all spec notes covered
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = brick sequence, Y = price, full range shown
+        comment: X = brick sequence, Y = price; full brick range shown with padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches spec exactly, legend labels match brick semantics
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          are explicit ('Bullish brick (price up)' / 'Bearish brick (price down)')
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Both bullish and bearish bricks across four regimes
+        comment: Shows brick construction, direction coloring, uniform sizing/gaps,
+          grid, and swing-range annotations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible fictional stock, neutral topic
+        comment: Plausible fictional solar-energy stock, neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range and brick count sensible for the domain
+        comment: 240 daily closes over four regimes yield 41 bricks, within the spec's
+          20-50 brick target
     code_quality:
       score: 10
       max: 10
@@ -187,34 +196,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the two components React requires (Bricks, Chart), no extraneous
-          abstraction
+        comment: Single Bricks() component required by the useXScale/useYScale composition
+          idiom; no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic seeded LCG
+        comment: Fixed-seed LCG PRNG, deterministic dates
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: No fake UI/interactivity; appropriate complexity for a chart type
+          the community surface doesn't natively support
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct harness contract, skipAnimation set
+        comment: Default-exports Chart(), skipAnimation set, sizes to window.ANYPLOT_SIZE
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -222,25 +232,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Matches the documented useXScale/useYScale composition pattern for
-          chart types outside the native surface
+        comment: Uses the documented ChartContainer + useXScale/useYScale composition
+          pattern for chart types outside the native surface, same idiom as candlestick/OHLC
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Uses scale hooks and ChartsGrid, but the composition is a fairly
-          generic SVG technique
-  verdict: REJECTED
+        comment: ChartsReferenceLine, ChartsGrid, and scale hooks are used well; doesn't
+          reach for other distinctive MUI X surface (e.g. tooltip customization)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - custom-legend
+  - annotations
+  - manual-ticks
+  - patches
   patterns:
   - data-generation
   dataprep:
-  - time-series
+  - binning
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - publication-ready
