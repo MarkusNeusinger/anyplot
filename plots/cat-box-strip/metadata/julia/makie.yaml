@@ -1,0 +1,250 @@
+library: makie
+language: julia
+specification_id: cat-box-strip
+created: '2026-09-02T14:44:48Z'
+updated: '2026-09-02T14:59:16Z'
+generated_by: claude-sonnet
+workflow_run: 33643594971
+issue: 2695
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - 'Correct theme-adaptive chrome in both renders; first categorical series is brand
+    green #009E73 and the canonical Imprint order is preserved across all four groups'
+  - Strip markersize increased from 7 to 9 per attempt-1 feedback, fixing the prior
+    element-visibility weakness without reintroducing overplotting (alpha=0.45)
+  - Box + strip composition matches the spec exactly, with show_outliers=false avoiding
+    duplicate outlier markers against the strip overlay
+  - 'Clean minimalist styling: top/right spines removed, subtle single-axis grid,
+    generous whitespace, legend correctly omitted (redundant with x-axis category
+    ticks)'
+  - Realistic, neutral synthetic dataset (caffeine dose vs. reaction time) producing
+    a coherent, plausible dose-response trend
+  - 'Clean, reproducible code: single seed, no unused imports, correct save API, no
+    functions/classes'
+  weaknesses:
+  - 'The median-trend line and diamond markers added in this attempt (lines 95-99:
+    `lines!(ax, 1:length(groups), group_medians; ...)` and the diamond `scatter!`)
+    do not render at all — verified by pixel-sampling both plot-light.png and plot-dark.png
+    in the gaps between boxes (e.g. x=705-1040 at y=100-1700 in the 3200x1800 light
+    PNG): zero pixels match the expected trend_color (~RGB(127,126,121) blended on
+    light bg, ~RGB(144,143,138) blended on dark bg). This was the exact fix requested
+    in the attempt-1 review (''a thin connecting line between group medians'') and
+    it is currently dead code that ships with zero visual effect — investigate why
+    the line/scatter added after boxplot!/scatter! is invisible (z-order, axis autolimits,
+    or a silently-wrong color/alpha) and either make it visible or remove it.'
+  - Because the trend-line attempt is invisible, no additional visual hierarchy or
+    focal point was actually delivered for the dose-response trend — the chart still
+    relies purely on side-by-side box comparison, same as attempt 1
+  - Implementation still stays close to the library-prompt skeleton defaults; the
+    one attempted distinctive touch failed to render, so Library Mastery remains generic
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), confirmed by pixel sampling.
+      Chrome: Bold dark title "cat-box-strip · julia · makie · anyplot.ai" centered at top; axis titles "Caffeine Dose" (x) and "Reaction Time (ms)" (y) in dark ink; tick labels in a softer gray. All clearly legible. Subtle horizontal (y-only) gridlines, L-shaped spine (top/right removed).
+      Data: Four box-and-strip groups left to right (Placebo/50mg/100mg/200mg), colored green (#009E73) -> lavender (#C475FD) -> blue (#4467A3) -> ochre (#BD8233), matching the canonical Imprint order (pixel-verified: first series = exact RGB(0,158,115)). Each box shows median/Q1/Q3/whiskers with jittered, semi-transparent (alpha=0.45, markersize=9) strip points overlaid, clearly revealing sample size and a visible downward trend in reaction time as dose increases. A median-trend dashed line with diamond markers was added in the code (lines!/scatter! after the boxplot/strip calls) but is NOT visible anywhere in the render — pixel-sampled the gaps between boxes (x=705-1040, y=100-1700) and found zero pixels matching the expected trend-line color; the feature is dead code in this render.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), confirmed by pixel sampling (26,26,23).
+      Chrome: Title and axis labels in light cream text, tick labels in a softer light gray — all clearly legible, no dark-on-dark issues. Same gridline/spine treatment as light.
+      Data: Data colors (box strokes, strip points) identical to the light render; only the semi-transparent box fill reads slightly differently due to alpha-compositing against the darker surface, which is expected for a 35%-alpha fill and not a palette violation. Same as light render, the median-trend line/diamond markers do not appear anywhere in the render (verified via the same pixel-sampling method, adjusted for the dark-theme trend color).
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes, good contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, data, or legend elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: markersize increased 7->9 per attempt-1 feedback; good visibility
+          at density (~90 pts/group) without overplotting
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, no overflow or clipping (canvas gate passed, AR-09
+          check clean)
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units (ms)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series exact #009E73 (pixel-verified), canonical Imprint order,
+          correct theme-adaptive backgrounds'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Solid brand-consistent styling with translucent box fill + stroke
+          accents, not exceptionally distinctive
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed, subtle single-axis grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Attempted median-trend line intended as a focal point does not render
+          at all (verified pixel-empty) - no visual hierarchy actually delivered
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct box+strip composite
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Box shows median/Q1/Q3/whiskers, strip overlay with jitter+alpha
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: category on x, value on y, all data visible via strip
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches canonical pattern; legend correctly omitted (redundant
+          with x-axis)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Median/quartiles/whiskers/individual points/sample size all visible
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Caffeine dose vs reaction time, plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times 200-620ms realistic
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 0
+        max: 2
+        passed: false
+        comment: Median-trend line/diamond-scatter block is dead code - added complexity
+          with zero rendered effect
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: false
+        comment: Standard, correct boxplot!/scatter!/Axis usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Attempted distinctive touch (trend line) failed to render; no other
+          Makie-only feature used
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
