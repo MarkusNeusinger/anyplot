@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 49/100 | Created: 2026-09-02
+// Quality: 90/100 | Created: 2026-09-02
 
 //# anyplot-orientation: landscape
 const t = window.ANYPLOT_TOKENS;
