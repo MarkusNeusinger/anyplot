@@ -63,29 +63,52 @@ function andrewsCurve(z, tt) {
 
 const numSamples = 100;
 const tStep = (2 * Math.PI) / (numSamples - 1);
-const seenGroups = new Set();
 
-const series = observations.map((o) => {
+function curvePoints(z) {
   const data = [];
   for (let k = 0; k < numSamples; k++) {
     const tt = -Math.PI + k * tStep;
-    data.push([tt, andrewsCurve(o.z, tt)]);
+    data.push([tt, andrewsCurve(z, tt)]);
   }
-  const groupIndex = groups.findIndex((g) => g.name === o.group);
-  const isFirstOfGroup = !seenGroups.has(o.group);
-  seenGroups.add(o.group);
+  return data;
+}
+
+// Faint individual curves establish the density texture; they carry no
+// legend entry since the bold centroid curve below speaks for the group.
+const individualSeries = observations.map((o) => ({
+  type: "line",
+  name: o.group,
+  data: curvePoints(o.z),
+  color: t.palette[groups.findIndex((g) => g.name === o.group)],
+  opacity: 0.3,
+  lineWidth: 1,
+  showInLegend: false,
+  marker: { enabled: false },
+  enableMouseTracking: false,
+}));
+
+// Bold per-cluster centroid curve — a deliberate visual anchor that keeps
+// each group legible (and carries the legend) even where individual curves
+// braid together in the densest overlap band.
+const centroidSeries = groups.map((group, groupIndex) => {
+  const members = observations.filter((o) => o.group === group.name);
+  const centroidZ = columnStats.map(
+    (_, j) => members.reduce((sum, o) => sum + o.z[j], 0) / members.length
+  );
   return {
     type: "line",
-    name: o.group,
-    data,
+    name: group.name,
+    data: curvePoints(centroidZ),
     color: t.palette[groupIndex],
-    opacity: 0.45,
-    lineWidth: 1.5,
-    showInLegend: isFirstOfGroup,
+    lineWidth: 3,
+    zIndex: 5,
+    showInLegend: true,
     marker: { enabled: false },
-    enableMouseTracking: isFirstOfGroup,
+    enableMouseTracking: false,
   };
 });
+
+const series = [...individualSeries, ...centroidSeries];
 
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
@@ -93,6 +116,7 @@ Highcharts.chart("container", {
     type: "line",
     backgroundColor: "transparent",
     animation: false,
+    zoomType: "x",
     style: { fontFamily: "inherit" },
   },
   credits: { enabled: false },
@@ -106,7 +130,10 @@ Highcharts.chart("container", {
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
-    title: { text: "t", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "t (Fourier parameter, -π to π)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     min: -Math.PI,
     max: Math.PI,
     tickPositions: [-Math.PI, -Math.PI / 2, 0, Math.PI / 2, Math.PI],
@@ -117,14 +144,17 @@ Highcharts.chart("container", {
         return labels[this.value] ?? this.value.toFixed(2);
       },
     },
-    lineColor: t.inkSoft,
+    lineWidth: 0,
     tickColor: t.inkSoft,
     gridLineColor: t.grid,
   },
   yAxis: {
-    title: { text: "f(t)", style: { color: t.inkSoft, fontSize: "16px" } },
+    title: {
+      text: "f(t) (curve value)",
+      style: { color: t.inkSoft, fontSize: "16px" },
+    },
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
-    lineColor: t.inkSoft,
+    lineWidth: 0,
     gridLineColor: t.grid,
   },
   legend: {
