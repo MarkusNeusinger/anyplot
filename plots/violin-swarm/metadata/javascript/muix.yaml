@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: violin-swarm
 created: '2026-09-02T09:58:05Z'
-updated: '2026-09-02T10:02:58Z'
+updated: '2026-09-02T10:13:59Z'
 generated_by: claude-sonnet
 workflow_run: 33616299837
 issue: 3526
@@ -12,108 +12,105 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sw
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Sophisticated from-scratch violin+swarm composition via ChartContainer/useXScale/useYScale:
-    a real Gaussian KDE with Silverman bandwidth, and each violin''s density grid
-    is clipped to its own local support (data range ± 3 bandwidths) rather than the
-    shared Y range, avoiding the pinched-hairline artifact a naive shared-grid approach
-    would produce.'
-  - Beeswarm packing resolves collisions in on-screen pixel space and caps horizontal
-    offset by the violin's own density envelope at that value, so points spread for
-    readability but never cross the violin boundary — confirmed visually in a zoomed
-    crop, no overlapping markers.
-  - 'Correct Imprint palette usage: first series is brand green, canonical order for
-    the 4 abstract condition categories, identical data colors between light and dark
-    renders, both chrome themes fully readable with no dark-on-dark or light-on-light
-    issues, no edge clipping on either render.'
-  - Data setup closely matches the spec's own example (4 experimental conditions,
-    50 trials each, reaction time in ms) and gives each condition a distinct distribution
-    shape (normal, bimodal via a lapse-probability mixture, right-skewed dual-task)
-    so the swarm overlay is genuinely informative rather than decorative.
+  - Custom SVG violin+swarm composition (KDE density, beeswarm collision-avoidance
+    packing, median tick) built entirely on the community `@mui/x-charts` surface
+    via the documented useXScale/useYScale hook composition pattern — the community
+    package has no native violin/swarm chart type.
+  - Bimodality detection with a valley-depth check correctly finds and callouts the
+    genuine second mode in the Sleep-deprived condition, without false-flagging shoulder
+    noise in the unimodal conditions — real data storytelling, not decoration.
+  - Theme-adaptive swarm points and median tick (fill/stroke driven by t.ink / t.pageBg)
+    keep full contrast in both light and dark renders with zero extra branching.
+  - Deterministic fixed-seed LCG with four distinctly-shaped per-condition samplers
+    (normal, bimodal mixture, right-skewed) gives the swarm points real structure
+    to reveal.
+  - Violin alpha (0.38) sits inside the spec's recommended 0.3-0.5 range, and swarm
+    point offsets are capped by the violin's local density envelope so points never
+    escape the violin boundary.
   weaknesses:
-  - 'LM-02: the entire chart body (violin path + swarm circles) is hand-drawn SVG;
-    only the grid and axes come from native MUI X components. This is the documented,
-    correct workaround for a chart type the community package doesn''t ship, but it
-    means no distinctive native MUI X feature (tooltip formatter, legend, native marker/animation
-    API) is actually exercised — limits the Library Mastery score even though the
-    composition technique itself (LM-01) is idiomatic.'
-  - 'DE-03: visual hierarchy relies entirely on the plot type''s inherent structure
-    (density shape + raw points); nothing calls extra attention to the most interesting
-    distributional feature already present in the data (e.g. the bimodal split in
-    Sleep-deprived, visible as two point bands around 480ms and 580-620ms). A subtle
-    annotation or emphasis there would turn a technically correct chart into a stronger
-    data story.'
-  - 'DE-01: solid but not maximal aesthetic sophistication — consider a small refinement
-    like a thin median/quartile tick inside each violin (a common violin-plot embellishment)
-    to add one more layer of information without breaking the clean layered-SVG approach
-    already in place.'
+  - The 'second mode' annotation text is set at fontSize=11 (CSS px in the 1600px
+    mount) — noticeably smaller than the 14px tick / 16px axis-label baseline, and
+    likely to become hard to read once scaled down to the ~400px mobile srcset variant.
+  - The horizontal grid (ChartsGrid, opacity 0.2) is only barely visible in both renders
+    — still technically present and not a legibility failure, but on the faint edge
+    of 'subtle but visible'.
+  - The implementation leans on several small helper functions (lcg, kdeAt, findPeaks,
+    layoutSwarm, stdOf, bandwidthOf) to hand-roll KDE, peak-finding, and beeswarm
+    packing — justified by MUI X's lack of a built-in violin/swarm type, but it is
+    function-heavy relative to the KISS ideal for simpler chart types.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
-      Chrome: Title "violin-swarm · javascript · muix · anyplot.ai" top-left in dark ink, clearly legible. Y-axis label "Reaction Time (ms)" rotated on the left, dark and readable. X-axis category labels (Baseline, Caffeine, Sleep-deprived, Dual-task) legible at the bottom. Horizontal grid lines are subtle (opacity 0.2), visible but not dominant. No vertical gridlines (y-axis-only grid, matches style guide guidance).
-      Data: Four violins, each a distinct Imprint hue in canonical order — Baseline is brand green (#009E73), Caffeine is lavender, Sleep-deprived is blue, Dual-task is ochre — all at ~0.38 fill opacity with a matching-color 1.75px stroke outline. Swarm points are dark ink-filled circles with a thin light stroke, clearly visible against every violin fill and against each other (verified via a zoomed crop of the densest cluster — points are well separated, no overlapping circles). Points visibly widen where the violin is wide and narrow near the tails, confirming they respect the local density envelope.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable; no light-on-light issues; no clipping at any canvas edge (checked title and the tallest violin peak, which stays well clear of the top border).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-swarm · javascript · muix · anyplot.ai" top-left in dark ink, fully visible with clear margin above it (verified via crop — no clipping). Y-axis label "Reaction Time (ms)" rotated along the left edge, dark and readable. X-axis category labels (Baseline, Caffeine, Sleep-deprived, Dual-task) dark, fully visible with clear margin below (verified via crop). Tick labels dark and legible. Horizontal grid lines present but very faint (opacity 0.2) — subtle, still visible on close inspection.
+      Data: Four violins in Imprint palette order — Baseline = brand green #009E73, Caffeine = lavender, Sleep-deprived = blue (desaturated toward slate-grey by the 0.38 fill alpha, as expected), Dual-task = ochre. Dark-ink swarm points with light (page-bg) stroke sit inside each violin, tightly packed via beeswarm layout with no visible overlap. A light (page-bg-colored) median bar crosses each violin. The Sleep-deprived violin carries a dashed leader + "second mode" label pointing at its secondary density hump.
+      Legibility verdict: PASS — all title/axis/tick text reads clearly against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
-      Chrome: Title, y-axis label, tick labels, and category labels all render in light/white text, fully legible against the dark background — no dark-on-dark failures observed anywhere. Grid lines remain subtle and visible.
-      Data: Same four violin hues as the light render — green, lavender, blue, ochre — confirming the data colors are identical between themes and only chrome flipped. Swarm point fill flips from dark ink to a light/cream ink (following the theme-adaptive `t.ink` token), keeping strong contrast against the colored violin fills in this theme too.
-      Legibility verdict: PASS — all text and data elements are clearly readable in dark mode; no theme-adaptation failures found.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis label, and category labels now rendered in light ink, fully visible with the same clear top/bottom margins (re-verified via crop on this render). Grid lines equally faint but present.
+      Data: Same four violin colors as the light render (green/lavender/blue/ochre) — confirmed identical data hues, only chrome flipped. Swarm points are now light-filled with a dark (page-bg) stroke — correctly re-derived from the theme tokens rather than hardcoded, so contrast against the mid-toned violin fill holds in both directions. The median bar is now a dark stripe against each violin, still clearly visible. The "second mode" annotation and leader line remain legible in the lighter secondary-text tone.
+      Legibility verdict: PASS — no dark-on-dark failures; every chrome element (title, axis label, ticks, category labels, annotation) is clearly readable against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels all explicitly sized and readable
-          in both themes
+        comment: Title/axis/tick text reads clearly in both themes at full res; the
+          'second mode' annotation at 11px CSS is noticeably smaller and risks becoming
+          hard to read at ~400px mobile width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zoomed crop of the densest swarm cluster shows clean separation,
-          no colliding markers or text
+        comment: Beeswarm collision-avoidance packing keeps points from overlapping;
+          median line and annotation don't collide with data.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Marker size (11px diameter) is well-tuned for 50 points per category
+        comment: 5px-radius swarm markers are well-matched to ~50 points/category
+          (medium density); violin outlines and swarm points both clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette plus light stroke on markers for extra contrast
+        comment: No red-green-only signal; theme-adaptive ink-fill/page-bg-stroke
+          swarm points keep contrast in both directions.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: No clipping, generous top margin above tallest violin, balanced axis
-          labels
+        comment: 'Verified via pixel crop: violin peaks and axis labels have clear
+          margin from every canvas edge, nothing clipped; well-balanced overall proportions.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Reaction Time (ms)" has units, category labels are descriptive'
+        comment: Y-axis labeled with units (Reaction Time (ms)); x-axis categories
+          are self-explanatory.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, first series green, identical data colors
-          across themes, correct backgrounds
+        comment: 'First series (Baseline) is brand green #009E73; canonical Imprint
+          order followed for the remaining 3 categories; data colors identical between
+          light/dark, only chrome flips; backgrounds match #FAF8F1/#1A1A17.'
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -121,21 +118,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Real KDE with per-category local support grids and pixel-space beeswarm
-          collision resolution; room for one more embellishment (e.g. median tick)
+        comment: Custom SVG violin+swarm+median-tick composition with real KDE math
+          and collision-aware point packing — well beyond a generic combo chart.
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: L-shaped axes, subtle horizontal-only grid, generous whitespace
+        comment: L-shaped spines, generous whitespace, clean typography hierarchy;
+          grid at opacity 0.2 is right on the edge of under-visible.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Distribution shapes are visible but nothing calls out the bimodal
-          Sleep-deprived cluster specifically
+        comment: The bimodality-aware 'second mode' callout gives the Sleep-deprived
+          violin a genuine focal point that explains structure the swarm already hints
+          at.
     spec_compliance:
       score: 15
       max: 15
@@ -145,28 +144,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Violin plot with overlaid swarm points, exactly as specified
+        comment: Violin plot with overlaid swarm points, as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Violin alpha 0.38 (within 0.3-0.5 spec range), points centered and
-          spread within the violin boundary, contrasting ink color for points
+        comment: Swarm centered within the violin, alpha=0.38 (within the spec's 0.3-0.5
+          range), contrasting ink-colored points, points constrained to the violin's
+          local density envelope.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: category on x (band scale), value on y (linear), full data range
-          shown with padding
+        comment: X=category (band scale), Y=value (linear, reaction time in ms); axis
+          range covers full data range plus 10% padding.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches "violin-swarm · javascript · muix · anyplot.ai";
-          no legend needed for a single value axis
+        comment: Title matches the mandated 'violin-swarm · javascript · muix · anyplot.ai'
+          format exactly; legend correctly omitted since categories are already labeled
+          on the x-axis.
     data_quality:
       score: 15
       max: 15
@@ -176,21 +177,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Density shape plus individual points across 4 categories with meaningfully
-          different distribution shapes (normal, bimodal, right-skewed)
+        comment: Shows density shape (violin), raw observations (swarm), central tendency
+          (median tick), and distribution structure (bimodal callout) — comprehensive.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction-time experiment is plausible and neutral, matches the spec's
-          suggested example
+        comment: Plausible, neutral reaction-time experiment across baseline/caffeine/sleep-deprivation/dual-task
+          conditions.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300-650ms range is a sensible reaction-time domain
+        comment: 300-650ms range is a sensible scale for a choice-reaction-time task.
     code_quality:
       score: 9
       max: 10
@@ -200,35 +201,37 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Multiple helper functions, but justified by the custom-composition
-          requirement (no native violin/swarm component)
+        comment: Multiple small helper functions (lcg, kdeAt, findPeaks, layoutSwarm,
+          stdOf, bandwidthOf) — necessary to hand-roll KDE/peak-finding/beeswarm packing
+          since MUI X ships none of it, but function-heavy relative to a minimal chart.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Deterministic fixed-seed LCG (seed=42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports actually used
+        comment: Only imports what's used from @mui/x-charts.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, complexity is appropriate for the custom SVG
-          layer
+        comment: No fake UI or simulated interactivity; complexity is proportionate
+          to the custom-composition requirement.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: skipAnimation set, harness mount-node contract respected
+        comment: Default-exports Chart(), sizes to window.ANYPLOT_SIZE, skipAnimation
+          set, respects the mount-node contract.
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -236,22 +239,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses the documented ChartContainer + useXScale/useYScale composition
-          technique, the correct approach for chart types the community package doesn't
-          ship
+        comment: Uses the documented composition technique (useXScale/useYScale +
+          ChartContainer with empty series) — the correct, idiomatic escape hatch
+          for chart types MUI X community doesn't ship.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Chart body is fully custom SVG; only grid/axes are native MUI X components,
-          so no distinctive native feature (tooltip, legend, native animation) is
-          actually exercised
-  verdict: REJECTED
+        passed: true
+        comment: The full violin+swarm+bimodality composition is a genuinely distinctive
+          use of MUI X's hook-based extensibility, not achievable via any built-in
+          chart type.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
@@ -260,3 +264,4 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
+  - publication-ready

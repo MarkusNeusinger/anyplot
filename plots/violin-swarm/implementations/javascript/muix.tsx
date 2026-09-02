@@ -1,7 +1,7 @@
 // anyplot.ai
 // violin-swarm: Violin Plot with Overlaid Swarm Points
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-02
+// Quality: 92/100 | Created: 2026-09-02
 import { ChartContainer } from "@mui/x-charts/ChartContainer";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
