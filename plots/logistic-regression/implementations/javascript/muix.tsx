@@ -9,7 +9,6 @@ import { ScatterPlot } from "@mui/x-charts/ScatterChart";
 import { ChartsXAxis } from "@mui/x-charts/ChartsXAxis";
 import { ChartsYAxis } from "@mui/x-charts/ChartsYAxis";
 import { ChartsGrid } from "@mui/x-charts/ChartsGrid";
-import { ChartsLegend } from "@mui/x-charts/ChartsLegend";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
@@ -44,11 +43,12 @@ const engagementScores = Array.from(
 );
 const converted = engagementScores.map((score) => (rng() < trueProbability(score) ? 1 : 0));
 
-// Jitter around 0 / 1 so overlapping points stay legible
+// Jitter around 0 / 1 so overlapping points stay legible — wide enough to
+// ease the dense x=40-60 overlap band without touching the -0.08/1.08 axis padding.
 const scatterClass0 = [];
 const scatterClass1 = [];
 engagementScores.forEach((score, i) => {
-  const jitter = (rng() - 0.5) * 0.1;
+  const jitter = (rng() - 0.5) * 0.14;
   if (converted[i] === 1) {
     scatterClass1.push({ x: score, y: 1 + jitter, id: `converted-${i}` });
   } else {
@@ -103,6 +103,17 @@ function fitLogisticRegression(xs, ys, iterations, learningRate) {
 
 const model = fitLogisticRegression(engagementScores, converted, 600, 0.5);
 
+// Inflection point (p = 0.5) and in-sample accuracy at that threshold, for
+// the model-summary annotation drawn near the curve's midpoint.
+const midpointX = model.mean + (-model.b0 / model.b1) * model.std;
+const accuracy =
+  engagementScores.reduce((correct, score, i) => {
+    const xn = (score - model.mean) / model.std;
+    const p = 1 / (1 + Math.exp(-(model.b0 + model.b1 * xn)));
+    const predictedClass = p >= 0.5 ? 1 : 0;
+    return correct + (predictedClass === converted[i] ? 1 : 0);
+  }, 0) / N_POINTS;
+
 // 95% Wald confidence interval on the predicted probability, via the delta
 // method on the linear predictor (standard logistic-regression CI approach).
 const Z95 = 1.96;
@@ -144,11 +155,44 @@ function ConfidenceBand() {
   return <path d={d} fill={t.ink} fillOpacity={0.14} stroke="none" />;
 }
 
+// Small model-summary callout anchored on the curve's inflection point
+// (p = 0.5). Drawn in the empty mid-band between the two jittered scatter
+// clusters, so it never collides with data points, the legend, or the
+// dashed threshold-line label (which sits at the axis' left edge).
+function InflectionAnnotation() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  if (!xScale || !yScale) return null;
+
+  const markerX = xScale(midpointX);
+  const markerY = yScale(0.5);
+  const labelY = yScale(0.8);
+
+  return (
+    <g>
+      <circle cx={markerX} cy={markerY} r={5} fill={t.pageBg} stroke={t.ink} strokeWidth={2} />
+      <text x={markerX} y={labelY} fontSize={13} fill={t.inkSoft} textAnchor="middle">
+        <tspan x={markerX} dy={0}>{`Midpoint ≈ ${midpointX.toFixed(1)}`}</tspan>
+        <tspan x={markerX} dy={16}>{`Accuracy at p=0.5: ${(accuracy * 100).toFixed(0)}%`}</tspan>
+      </text>
+    </g>
+  );
+}
+
 const TITLE = "Customer Conversion · logistic-regression · javascript · muix · anyplot.ai";
 const TITLE_FONT_DEFAULT = 22;
 const titleFontSize =
   TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
 const TITLE_HEIGHT = 60;
+
+// Legend built by hand so each swatch matches its series' real mark shape —
+// circular dots for the two scatter series, a short stroke for the fitted
+// line — instead of ChartsLegend's uniform bar swatches.
+const LEGEND_ITEMS = [
+  { type: "circle", color: t.palette[4], label: "Not converted (y = 0)" },
+  { type: "circle", color: t.palette[0], label: "Converted (y = 1)" },
+  { type: "line", color: t.ink, label: "Fitted probability" },
+];
 
 export default function Chart() {
   return (
@@ -156,6 +200,7 @@ export default function Chart() {
       <div
         style={{
           height: TITLE_HEIGHT,
+          position: "relative",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -165,6 +210,37 @@ export default function Chart() {
         }}
       >
         {TITLE}
+        <div
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: 70,
+            transform: "translateY(-50%)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 5,
+            alignItems: "flex-start",
+          }}
+        >
+          {LEGEND_ITEMS.map((item) => (
+            <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {item.type === "circle" ? (
+                <span
+                  style={{
+                    width: 9,
+                    height: 9,
+                    borderRadius: "50%",
+                    backgroundColor: item.color,
+                    flexShrink: 0,
+                  }}
+                />
+              ) : (
+                <span style={{ width: 18, height: 3, backgroundColor: item.color, flexShrink: 0 }} />
+              )}
+              <span style={{ fontSize: 13, color: t.ink }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
       <ChartContainer
         width={width}
@@ -188,7 +264,7 @@ export default function Chart() {
             data: scatterClass0,
             label: "Not converted (y = 0)",
             color: hexToRgba(t.palette[4], 0.6),
-            markerSize: 10,
+            markerSize: 8,
             xAxisId: "engagement",
           },
           {
@@ -197,7 +273,7 @@ export default function Chart() {
             data: scatterClass1,
             label: "Converted (y = 1)",
             color: hexToRgba(t.palette[0], 0.6),
-            markerSize: 10,
+            markerSize: 8,
             xAxisId: "engagement",
           },
         ]}
@@ -232,6 +308,7 @@ export default function Chart() {
         <ConfidenceBand />
         <ScatterPlot skipAnimation />
         <LinePlot skipAnimation />
+        <InflectionAnnotation />
         <ChartsXAxis
           axisId="engagement"
           tickLabelStyle={{ fontSize: 14, fill: t.inkSoft }}
@@ -249,18 +326,6 @@ export default function Chart() {
           labelAlign="start"
           labelStyle={{ fill: t.inkSoft, fontSize: 13 }}
           lineStyle={{ stroke: t.inkSoft, strokeDasharray: "8 5", strokeWidth: 1.5 }}
-        />
-        <ChartsLegend
-          position={{ vertical: "top", horizontal: "right" }}
-          slotProps={{
-            legend: {
-              itemMarkWidth: 20,
-              itemMarkHeight: 4,
-              markGap: 8,
-              itemGap: 24,
-              labelStyle: { fontSize: 14, fill: t.ink },
-            },
-          }}
         />
       </ChartContainer>
     </div>
