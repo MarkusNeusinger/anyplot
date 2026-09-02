@@ -131,6 +131,17 @@ categories.forEach((cat, ci) => {
 const allViolinYs = violinsByGroup.flatMap((vs) => vs.flatMap((v) => v.points.map((p) => p[1])));
 const yAxisMax = Math.ceil(Math.max(...allViolinYs) / 5) * 5;
 
+// Highlight the widest Junior/Senior split (Debugging) with a median-to-median
+// markLine, giving the viewer a focal point beyond "read the chart yourself".
+function median(values) {
+  const sorted = values.slice().sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+}
+const gapCatIdx = categories.indexOf("Debugging");
+const gapJuniorMedian = median(combos[gapCatIdx][0]);
+const gapSeniorMedian = median(combos[gapCatIdx][1]);
+
 // --- Chart --------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -161,6 +172,28 @@ const swarmSeries = groups.map((grp, gi) => ({
   symbolSize: 9,
   itemStyle: { color: t.palette[gi], borderColor: t.pageBg, borderWidth: 1 },
   z: 3,
+  ...(gi === groups.length - 1
+    ? {
+        markLine: {
+          symbol: "none",
+          silent: true,
+          z: 4,
+          lineStyle: { color: t.ink, type: "dashed", width: 1.5 },
+          label: {
+            formatter: `Δ ${Math.abs(gapSeniorMedian - gapJuniorMedian).toFixed(1)}s`,
+            color: t.ink,
+            fontSize: 13,
+            position: "middle",
+          },
+          data: [
+            [
+              { coord: [slotX(gapCatIdx, 0), gapJuniorMedian] },
+              { coord: [slotX(gapCatIdx, 1), gapSeniorMedian] },
+            ],
+          ],
+        },
+      }
+    : {}),
 }));
 
 chart.setOption({
@@ -205,7 +238,7 @@ chart.setOption({
         return Math.abs(value - idx) < 1e-6 && idx >= 0 && idx < nCat ? categories[idx] : "";
       },
     },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
   },
@@ -218,7 +251,7 @@ chart.setOption({
     nameGap: 65,
     nameTextStyle: { color: t.ink, fontSize: 16 },
     axisLabel: { color: t.inkSoft, fontSize: 14 },
-    axisLine: { lineStyle: { color: t.inkSoft } },
+    axisLine: { onZero: false, lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
   },
   series: [...violinSeries, ...swarmSeries],
