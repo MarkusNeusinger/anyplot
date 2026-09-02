@@ -1,0 +1,248 @@
+library: highcharts
+language: javascript
+specification_id: violin-swarm
+created: '2026-09-02T09:58:41Z'
+updated: '2026-09-02T10:17:33Z'
+generated_by: claude-sonnet
+workflow_run: 33616073987
+issue: 3526
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/javascript/highcharts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Correctly builds a violin shape from scratch (mirrored area series with Gaussian
+    KDE) since Highcharts core has no native violin type — a genuine library-mastery
+    workaround, not a fallback to another library.
+  - Swarm layout algorithm bins points by value and scales offsets to the locally
+    interpolated violin half-width, so points visibly stay inside the violin silhouette
+    at every height instead of a naive fixed jitter.
+  - Violin fillOpacity (0.4) sits inside the spec's recommended 0.3-0.5 range and
+    keeps swarm points clearly visible through the fill.
+  - First categorical series is the brand green (#009E73) with a contrasting blue-purple
+    swarm color (palette[2]), matching the spec's suggestion of a contrasting point
+    color.
+  - Deterministic LCG + Box-Muller sampler with a fixed seed (42) gives full reproducibility
+    with no external RNG dependency.
+  - Theme chrome (title/axis/tick/legend colors, transparent chart background, gridline
+    color) is correctly threaded from window.ANYPLOT_TOKENS in both renders, and chart+series
+    animation is disabled for the screenshot harness.
+  - 'Realistic, non-controversial dataset: log-normal IL-6 biomarker concentrations
+    with varying sample sizes (45-60) across four dose groups showing a plausible
+    dose-response trend.'
+  weaknesses:
+  - Swarm points in the Medium Dose and High Dose groups overlap fairly heavily near
+    the density peak — the violin narrows there but point count stays high, so individual
+    observations become harder to distinguish; consider slightly smaller marker radius
+    or a tighter SWARM_STEP for the narrower groups.
+  - The x-axis (category) has no axis title — only the tick labels ('Placebo', 'Low
+    Dose', ...) identify the grouping variable; an explicit axis title (e.g. 'Treatment
+    Group') would remove any ambiguity, though the category labels alone are self-explanatory
+    here.
+  - Legend only shows two generic entries ('Density estimate', 'Individual trial')
+    without per-group color coding, which is expected since violin fill color doesn't
+    vary by group — acceptable, but a subtitle or annotation noting per-group N would
+    add clarity for varying sample sizes.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-swarm · javascript · highcharts · anyplot.ai" in bold dark ink, centered top. Y-axis title "IL-6 Concentration (pg/mL)" rotated on the left in soft ink. Numeric y-axis ticks (2-22) and four x-axis category labels (Placebo, Low Dose, Medium Dose, High Dose) in soft grey. Subtle horizontal gridlines only. Legend ("Density estimate", "Individual trial") centered below the plot. All text is clearly readable against the light background — no light-on-light issues.
+      Data: Four violin shapes in Imprint brand green (#009E73) with ~40% fill opacity and a solid green outline, each overlaid with individual trial points in a contrasting blue-purple (palette[2]). Violins shrink and shift downward in value from Placebo to High Dose, showing a clear dose-response trend. Points are visibly spread horizontally within each violin's silhouette, staying inside the violin boundary.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light ink/soft-grey tones against the dark background. Gridlines are faint but visible. Legend text is light grey and readable.
+      Data: Violin fill and swarm point colors are the same underlying Imprint values as the light render (green fill, blue-purple points) — only the chrome (background, text, gridlines) has flipped; the violin fill visually reads as a deeper green due to alpha blending over the dark background, which is expected and not a color deviation. No dark-on-dark text failures observed — every label remains legible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All titles/labels/ticks readable in both themes; explicit font sizes
+          throughout
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; swarm points overlap somewhat in denser/narrower
+          groups (Medium/High Dose)
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Markers appropriately sized for n=45-60; some crowding in narrower
+          violins reduces individual-point visibility slightly
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green vs blue-purple contrast is CVD-safe, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no drift flag); no clipping or overflow; balanced
+          proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis has descriptive title with units (pg/mL); x-axis categories
+          self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds correct in both themes; data
+          colors identical (chrome only flips)'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Deliberate contrasting palette and intentional violin/swarm hierarchy,
+          but otherwise fairly standard layout
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Spines minimized, subtle single-axis gridlines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Clear visual hierarchy of decreasing dose-response trend across groups
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct violin-with-swarm-overlay chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Density shape, overlaid points centered within violin, alpha 0.4
+          fill, contrasting point color — all per spec notes
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on one axis, continuous value on the other, all data shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels are clear
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        comment: Shows density + individual points + varying sample sizes across groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        comment: Plausible IL-6 dose-response biomarker scenario, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: pg/mL values in a sensible biomarker range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Helper functions are necessary for from-scratch KDE/swarm layout
+          given no native violin type
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG sampler
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected, animation disabled on chart and series
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Mirrored-area violin trick and scatter overlay are idiomatic Highcharts
+          workarounds for an unsupported series type
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Custom KDE + swarm-binning algorithm shows above-average library
+          mastery for a type Highcharts doesn't support natively
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
+  - edge-highlighting
