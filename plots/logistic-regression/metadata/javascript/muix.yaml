@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: logistic-regression
 created: '2026-09-02T02:17:07Z'
-updated: '2026-09-02T02:24:38Z'
+updated: '2026-09-02T02:34:43Z'
 generated_by: claude-sonnet
 workflow_run: 33581912135
 issue: 3550
@@ -12,58 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - Fits an actual logistic regression via batch gradient descent and derives a real
-    95% Wald confidence interval from the observed Fisher information — not fabricated/hard-coded
-    curve data.
-  - Custom ConfidenceBand component built with the useXScale/useYScale hooks to draw
-    a filled uncertainty band directly in data-to-pixel space — a genuinely MUI-X-specific
-    technique, not reachable via the top-level <LineChart>/<ScatterChart> API.
-  - 'Thoughtful semantic color mapping: ''Converted'' uses brand green (#009E73) and
-    ''Not converted'' uses the matte-red semantic anchor (#AE3030) — matching the
-    Imprint style guide''s documented good/bad semantic-exception pattern rather than
-    arbitrary ordinal colors.'
-  - Deterministic, seeded LCG data generation (no Math.random()), correct for the
-    offline browser harness.
-  - All font sizes explicitly set (title 22px scaled for length, axis 16px, ticks/legend
-    14px) and theme-adaptive chrome (ink/inkSoft) is threaded through every text element
-    — both renders are cleanly readable.
-  - Correct title format, correct legend labels, dashed p=0.5 decision-threshold reference
-    line exactly as the spec requests.
+  - Custom SVG overlays (ConfidenceBand, InflectionAnnotation) built with useXScale/useYScale
+    hooks demonstrate real MUI X mastery beyond the declarative chart API.
+  - 'Every spec-required feature is present: jittered scatter, smooth sigmoid curve,
+    95% CI band, dashed p=0.5 threshold line, and a model-summary annotation (midpoint
+    + accuracy).'
+  - Hand-built legend with per-series accurate swatches (circles for scatter, a stroke
+    for the line) instead of MUI's default uniform bar swatches.
+  - 'Correct palette/theme handling: brand green for the positive class, identical
+    data colors across themes, chrome correctly re-tokenized in dark mode.'
+  - Deterministic, self-contained implementation - seeded LCG for data, and a from-scratch
+    gradient-descent logistic fit with Wald confidence intervals, no external stats
+    dependency needed in the browser.
   weaknesses:
-  - 'Legend swatches for the two scatter series (''Not converted'', ''Converted'')
-    render as thin horizontal bars (itemMarkHeight: 4 applied globally) rather than
-    circular dots matching the actual scatter markers — a small mismatch between legend
-    iconography and the data it represents; consider per-series markType/legend styling
-    so scatter series get round swatches.'
-  - 'Design Excellence is only at the ''well-configured default'' tier: the composition
-    (curve + band + jittered scatter + dashed threshold) is a fairly standard statistical-plot
-    layout without an extra distinguishing visual touch (e.g. a subtle callout of
-    the decision midpoint, or emphasis styling on the curve where it crosses p=0.5).'
-  - The spec's optional suggestion to display model coefficients or an accuracy metric
-    as an annotation was not taken up — a small text annotation near the curve's inflection
-    point (e.g. midpoint engagement score, or classification accuracy at the 0.5 threshold)
-    would meaningfully strengthen the data-storytelling score.
-  - Scatter clusters in the x=40-60 range show moderate overplotting even with jitter
-    and alpha=0.6 — a touch more jitter spread or slightly smaller markers in that
-    dense band would improve individual point visibility.
+  - The midpoint/accuracy annotation sits partly inside the confidence-band shading
+    in both themes, softening contrast slightly - consider anchoring it just above
+    the band (e.g. around y=0.85-0.9 at this x).
+  - Code carries more helper functions/components (fitLogisticRegression, predictWithCI,
+    hexToRgba, ConfidenceBand, InflectionAnnotation) than a minimal KISS script would
+    - most are justified by the manual logistic fit and MUI X's hook-based overlay
+    pattern, but hexToRgba could be inlined via a template literal.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Customer Conversion · logistic-regression · javascript · muix · anyplot.ai" is bold dark text, clearly legible, centered, occupying roughly 60-65% of canvas width. X-axis label "Customer Engagement Score" and y-axis label "Probability" are dark and readable. Tick labels (0, 20, 40, 60, 80, 100 / 0.0-1.0) are medium-gray and readable. Horizontal gridlines are thin and subtle. Legend (top-right, no box frame) reads "Not converted (y = 0)", "Converted (y = 1)", "Fitted probability" and is fully legible.
-      Data: Red/matte-red jittered points cluster near y=0 (mostly x<50, some scattered through x=70), green jittered points cluster near y=1 (mostly x>35). A black sigmoid curve rises smoothly from near 0 to near 1, crossing the dashed "Decision threshold (p = 0.5)" line at roughly x=55. A light-gray semi-transparent confidence band surrounds the curve, widening slightly at the edges. First class color (Converted) is #009E73 as required; Not-converted uses the matte-red semantic anchor, a documented semantic exception for a bad/negative outcome.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-light or overlap issues found.
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "Customer Conversion · logistic-regression · javascript · muix · anyplot.ai" in dark ink top-left; hand-built legend top-right (maroon dot "Not converted", green dot "Converted", black stroke "Fitted probability"); axis labels "Customer Engagement Score" / "Probability" in dark ink; all clearly readable.
+      Data: Maroon jittered scatter near y=0 (class 0), teal-green jittered scatter near y=1 (class 1), black sigmoid curve (~3px), light-gray 95% CI band, dashed threshold line at p=0.5 with open-circle inflection marker and two-line annotation. First categorical series (Converted) uses #009E73 brand green.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — reads essentially black on screen but is driven by the correct theme token, not a custom color, and not pure white.
-      Chrome: Title, axis labels, and tick labels all render in light/off-white text, clearly legible against the dark background. Gridlines are faint but visible. Legend text is light-colored and fully readable. No dark-on-dark text was found anywhere (title, axis titles, ticks, legend, and the "Decision threshold" label are all rendered in light ink/inkSoft tones).
-      Data: Data colors are identical to the light render — same matte-red and brand-green scatter colors, same white/light curve (curve flips to white ink for contrast, band flips to light-gray fill), confirming only chrome flipped and categorical data hues stayed constant.
-      Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures observed.
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Same title/legend/axis labels now in light ink/off-white against the dark surface - all clearly legible, no dark-on-dark failures.
+      Data: Scatter colors (maroon, teal-green) and annotation text identical to light render; curve, CI band, and threshold line switch to light/white strokes appropriate for dark chrome.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -71,75 +57,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; title fits
-          without overflow.
+        comment: All text readable in both themes; annotation loses a touch of contrast
+          over the CI band
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text/legend/data collisions found.
+        comment: Annotation partially sits inside the confidence-band fill
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Markers (size 10, alpha 0.6) fit the 100-300 point density band,
-          though the x=40-60 cluster shows moderate overplotting.
+        comment: Marker size and alpha well-tuned for N=180 density with jitter
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/matte-red pairing plus vertical positional separation gives
-          redundant encoding beyond hue alone.
+        comment: Classes separated by color and y-position, not color alone; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, plot fills a good majority of the canvas.
+        comment: Canvas gate passed, no overflow, balanced proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels; Probability is inherently unitless so no
-          unit needed.
+        comment: Descriptive axis labels, mandated title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Converted = #009E73 (brand green, first/success class), Not converted
-          = #AE3030 (documented semantic anchor for bad/negative outcome); backgrounds
-          and chrome are theme-correct in both renders.'
+        comment: Brand green for positive class, theme-adaptive backgrounds, identical
+          data colors across themes
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Well-configured, thoughtful (real stats, semantic colors) but a fairly
-          standard statistical-plot layout without a distinguishing visual signature.
+        passed: true
+        comment: Hand-built legend, custom SVG overlays, refined typography
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle horizontal-only grid, no frame/box, generous whitespace; legend
-          swatch shape (bar) doesn't match the scatter marker shape it represents.
+        comment: No spines, subtle horizontal grid, generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Curve + band + threshold line create clear visual hierarchy, but
-          the spec's optional coefficient/accuracy annotation was not used to sharpen
-          the takeaway.
+        comment: Clear focal point at inflection point with model-summary callout
     spec_compliance:
       score: 15
       max: 15
@@ -149,27 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct logistic regression curve plot with scatter + fitted sigmoid.
+        comment: Correct sigmoid + jittered binary scatter
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Jittered points, distinct class colors, smooth prominent curve, 95%
-          CI band, dashed p=0.5 threshold, clear axis labels all present.
+        comment: Jitter, distinct colors, curve, CI band, threshold line, annotation,
+          alpha all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = engagement score, Y = probability, full data range shown.
+        comment: x/y correct, axes cover full range with sensible padding
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format with a descriptive prefix; legend
-          labels are accurate and descriptive.
+        comment: Title matches mandated format, legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -179,22 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full sigmoid range covered, both classes present across the whole
-          x-range, CI band and threshold both shown.
+        comment: Curve, CI band, threshold, scatter, annotation all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Marketing conversion vs. engagement score — real, neutral, comprehensible
-          business scenario.
+        comment: Marketing conversion vs. engagement score, plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Engagement score 0-100 and a midpoint around 55 are realistic and
-          internally consistent.
+        comment: 0-100 score range, N=180 within recommended 50-500
     code_quality:
       score: 9
       max: 10
@@ -204,35 +178,32 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (rng, fitLogisticRegression, predictWithCI,
-          ConfidenceBand) but each is justified by the actual statistical computation
-          required, not gratuitous abstraction.
+        comment: Several helper functions/components, justified by hook-based overlays
+          and manual fit
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG (seed 42), fully deterministic.
+        comment: Seeded LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Every import (ChartContainer, LinePlot, ScatterPlot, axes, grid,
-          legend, reference line, scale hooks) is used.
+        comment: Every import is used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI/interactivity, complexity matches the task.
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No manual save calls; uses the current composable ChartContainer
-          API correctly.
+        comment: Correct harness contract, current MUI X composition API
     library_mastery:
       score: 9
       max: 10
@@ -242,26 +213,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses the composable ChartContainer + LinePlot/ScatterPlot/ChartsGrid/ChartsLegend/ChartsReferenceLine
-          primitives rather than only the top-level chart wrapper.
+        comment: ChartContainer composition with per-axis IDs, skipAnimation on both
+          plot components
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: useXScale/useYScale hooks used to hand-build a confidence-band SVG
-          path directly in chart coordinate space — a MUI-X-specific capability not
-          easily replicated in other declarative charting libraries.
-  verdict: REJECTED
+        comment: useXScale/useYScale hooks drive genuinely custom overlays; base composition
+          is more standard
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
+  - custom-legend
+  - confidence-band
   patterns:
   - data-generation
+  - regression
   dataprep:
   - regression
+  - normalization
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
