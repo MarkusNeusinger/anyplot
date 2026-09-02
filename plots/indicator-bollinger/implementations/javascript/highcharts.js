@@ -60,6 +60,28 @@ const yMin = Math.min(...lowerData.map((d) => d[1]));
 const yMax = Math.max(...upperData.map((d) => d[1]));
 const yPad = (yMax - yMin) * 0.1;
 
+// Find the single most extreme band touch (closest approach of price to
+// either envelope edge) to call out as an overbought/oversold focal point.
+let touchIdx = 0;
+let touchType = "upper";
+let minGap = Infinity;
+for (let i = 0; i < closeData.length; i++) {
+  const gapUpper = upperData[i][1] - closeData[i][1];
+  const gapLower = closeData[i][1] - lowerData[i][1];
+  if (gapUpper < minGap) {
+    minGap = gapUpper;
+    touchIdx = i;
+    touchType = "upper";
+  }
+  if (gapLower < minGap) {
+    minGap = gapLower;
+    touchIdx = i;
+    touchType = "lower";
+  }
+}
+const touchPoint = closeData[touchIdx];
+const touchLabel = touchType === "upper" ? "Overbought touch" : "Oversold touch";
+
 // --- Chart -------------------------------------------------------------------
 // Bollinger fill without the arearange module: an upper "area" (tinted, fills
 // toward the axis floor) drawn under a lower "area" filled in the page
@@ -109,7 +131,7 @@ Highcharts.chart("container", {
       name: "Bollinger Bands (±2σ)",
       type: "area",
       data: upperData,
-      color: t.palette[2],
+      color: t.palette[1],
       fillOpacity: 0.15,
       lineWidth: 1,
     },
@@ -117,7 +139,7 @@ Highcharts.chart("container", {
       name: "Lower Band (-2σ)",
       type: "area",
       data: lowerData,
-      color: t.palette[2],
+      color: t.palette[1],
       fillColor: t.pageBg,
       fillOpacity: 1,
       lineWidth: 1,
@@ -137,6 +159,27 @@ Highcharts.chart("container", {
       data: closeData,
       color: t.palette[0],
       lineWidth: 3,
+    },
+    {
+      name: touchLabel,
+      type: "scatter",
+      data: [touchPoint],
+      color: t.amber,
+      marker: {
+        enabled: true,
+        symbol: "diamond",
+        radius: 8,
+        lineWidth: 2,
+        lineColor: t.ink,
+      },
+      dataLabels: {
+        enabled: true,
+        format: touchLabel,
+        y: touchType === "upper" ? -16 : 22,
+        style: { color: t.ink, fontSize: "13px", fontWeight: "600", textOutline: "none" },
+      },
+      showInLegend: false,
+      enableMouseTracking: false,
     },
   ],
 });
