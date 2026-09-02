@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: range-interval
 created: '2026-09-02T05:35:15Z'
-updated: '2026-09-02T05:40:15Z'
+updated: '2026-09-02T05:48:59Z'
 generated_by: claude-sonnet
 workflow_run: 33594185266
 issue: 3577
@@ -12,54 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-int
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - MUI X community BarChart has no native floating-bar/range primitive, so the implementation
-    draws each range directly with useXScale/useYScale against the chart's own scales
-    instead of faking it with a transparent-spacer stacked series — a well-reasoned,
-    well-commented workaround that avoids a documented react-spring paint bug on stacked
-    series.
-  - Categories are sorted ascending by range midpoint/magnitude (Customer Support
-    -> Engineering Leadership), giving the chart a clear low-to-high narrative.
-  - 'domainLimit: "strict" plus an explicit axisMin/axisMax keeps a few dollars of
-    breathing room on both ends of the $30k-$220k axis instead of the bars touching
-    the plot edges.'
+  - 'Fixed both weaknesses flagged in the attempt-1 review: added ink-stroked endpoint
+    circle markers at min/max and a per-bar ink edge stroke, sharpening range boundaries
+    per the style guide''s edge-highlighting recommendation.'
+  - Distinctive use of the useXScale/useYScale library hooks to render a true floating-range
+    bar directly from the chart's own scales -- a well-reasoned, well-commented workaround
+    that avoids a documented react-spring paint bug on stacked-series fakes.
+  - Categories are sorted ascending by range midpoint (Customer Support -> Engineering
+    Leadership), giving the chart a clear low-to-high narrative.
+  - 'Theme handling is fully correct: identical brand-green (#009E73) data color in
+    both renders, correct #FAF8F1/#1A1A17 backgrounds, all chrome (title, axis, ticks)
+    legible in both themes via ANYPLOT_TOKENS.'
   - Horizontal orientation correctly chosen per the spec's guidance because department
-    labels are long, and margin={left:240} gives them room without truncation.
-  - 'Theme handling is entirely correct: identical brand-green (#009E73) data color
-    in both renders, correct #FAF8F1/#1A1A17 backgrounds, and all chrome (title, axis,
-    ticks) legible in both themes via ANYPLOT_TOKENS.'
-  - Per-bar native <title> tooltips add real hover value in the interactive HTML output
-    without attempting to fake interactivity in the static PNG.
+    labels are long, with margin={left:240} giving them room without truncation.
+  - 'domainLimit: "strict" plus explicit axisMin/axisMax keeps breathing room on both
+    ends of the axis instead of bars touching the plot edges; per-bar native <title>
+    tooltips add real hover value in the HTML output without faking interactivity
+    in the static PNG.'
   weaknesses:
-  - No endpoint markers or midpoint markers on the range bars (the spec lists these
-    as optional emphasis techniques) - adding small circular caps at min/max would
-    make the exact bound values easier to read at a glance.
-  - Every bar uses a single flat brand-green fill with no edge highlighting; since
-    a couple of ranges overlap in value (e.g. DevOps & Infrastructure and Software
-    Engineering both span the ~$85-145k band), a subtle white/ink edge stroke per
-    bar would sharpen the boundary between rounded bar and gridline at a glance, per
-    the style guide's bar-edge recommendation.
-  - 'Design excellence is solid but plain: rounded corners and a subtle vertical grid
-    are the only refinements beyond BarChart defaults - no secondary visual emphasis
-    (e.g. highlighting the widest or narrowest range) to reinforce the data story
-    beyond the ascending sort order.'
+  - 'The new endpoint circle caps are smaller than the bar height (capRadius = barHeight
+    * 0.34, so cap diameter is only ~68% of barHeight): at every one of the 16 endpoints
+    (8 categories x 2 bounds, both themes) the rounded-rect bar''s own corner (rx=4)
+    pokes out above and below the circle as a small squarish shoulder instead of being
+    fully covered by a clean pill cap. Fix: raise capRadius to >= barHeight / 2 (e.g.
+    barHeight * 0.5) so the circle''s diameter matches or exceeds the bar height.'
+  - 'Design excellence is still fairly plain beyond the new endpoint markers and edge
+    stroke: no secondary visual emphasis (e.g. highlighting the widest or narrowest
+    range, or the ~$85-145k band where DevOps & Infrastructure and Software Engineering
+    overlap) to reinforce the data story beyond the ascending sort order.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1, not pure white.
-      Chrome: Title "range-interval · javascript · muix · anyplot.ai" top-left in dark ink, clearly readable. X-axis label "Annual Base Salary ($ thousands)" below the tick labels, dark ink, legible. X-axis tick labels ($30k-$220k in $10k steps) and Y-axis category labels (8 department names) render in dark/soft-dark text, all fully legible with no clipping. Subtle vertical gridlines at each $10k tick, low-contrast against the cream background.
-      Data: All 8 range bars use the same solid brand green (#009E73) with rounded corners, horizontal orientation, one bar per department, spanning from min to max salary. Bars are clearly distinguishable from the light background and from each other via vertical spacing.
+      Chrome: Title "range-interval · javascript · muix · anyplot.ai" top-left in dark ink, clearly readable. X-axis label "Annual Base Salary ($ thousands)" below the tick labels, dark ink, legible. X-axis tick labels ($30k-$220k in $10k steps) and Y-axis category labels (8 department names) render in dark text, all fully legible with no clipping. Subtle vertical gridlines at each $10k tick, low-contrast against the cream background.
+      Data: All 8 range bars use solid brand green (#009E73) fill with a thin dark ink stroke and rounded corners, one bar per department, horizontal orientation, spanning from min to max salary. Each bar now has two ink-ringed circular endpoint markers pinning the exact min/max bounds. On close inspection, the bar's rounded rectangle corner is slightly taller than the endpoint circle, so a small squarish "shoulder" of the bar body is visible poking out above/below each circle -- a minor rendering seam, not a legibility issue.
       Legibility verdict: PASS - no light-on-light or otherwise unreadable text found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17, not pure black.
       Chrome: Same title, axis label, and tick/category labels now render in light ink (near-white/soft-light), clearly visible against the dark background. Gridlines are similarly subtle but visible in this theme's soft light tone.
-      Data: Bars are the identical brand green (#009E73) as the light render - confirmed unchanged data color, only the chrome (text, gridlines, background) flipped for the theme.
+      Data: Bars and endpoint markers are the identical brand green (#009E73) with the same ink stroke as the light render -- confirmed unchanged data color, only the chrome (text, gridlines, background) flipped for the theme. The same endpoint-cap shoulder seam is visible here too, consistent across both themes.
       Legibility verdict: PASS - no dark-on-dark failures; all text and gridlines are clearly visible against the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -78,18 +76,20 @@ review:
         comment: No text/text or text/data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: 8 categories (sparse-to-medium density) rendered as prominent, well-sized
-          rounded bars with visible spacing between rows.
+        comment: 8 categories rendered as prominent, well-sized rounded bars with
+          endpoint markers, but the endpoint circle diameter (~68% of bar height)
+          leaves the bar's own rounded corner visible as a small shoulder at every
+          one of the 16 endpoints, undermining the intended clean pill-cap look.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single brand-green series, no red-green sole-signal issue, adequate
-          contrast against both surfaces.
+        comment: Single brand-green series with dark ink stroke, no red-green sole-signal
+          issue, adequate contrast against both surfaces.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
@@ -119,24 +119,27 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Rounded bar corners and clean single-hue presentation are tasteful
-          but the visual is otherwise a straightforward bar rendering with no additional
-          polish (no edge stroke, no secondary accent).
+        comment: Improved over attempt 1 with the added ink edge stroke and endpoint
+          markers, but the endpoint-cap shoulder seam (see VQ-03) keeps the overall
+          polish from reading as fully deliberate.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Legend hidden appropriately for single series, subtle vertical-only
-          grid, generous left margin for category labels, minimal chrome.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Ascending sort by range magnitude creates a mild narrative (support
-          -> leadership) but there is no explicit emphasis, annotation, or highlighted
-          focal point.
+        comment: Legend hidden appropriately, subtle vertical-only grid, generous
+          left margin, and the new edge stroke addresses the attempt-1 'no edge highlighting'
+          weakness -- but the mismatched endpoint-circle-to-bar-height ratio is itself
+          a refinement miss.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Ascending sort by range magnitude plus the new endpoint markers give
+          a mild narrative and bound emphasis, but there is still no explicit highlight
+          of a focal category (e.g. the widest range or the DevOps/Software Engineering
+          overlap band).
     spec_compliance:
       score: 15
       max: 15
@@ -154,8 +157,8 @@ review:
         max: 4
         passed: true
         comment: Horizontal orientation used for long labels, categories sorted by
-          range order per the spec's notes; optional endpoint/midpoint markers omitted
-          but not required.
+          range order, and endpoint markers now added per the spec's optional-emphasis
+          note.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -171,16 +174,16 @@ review:
         comment: Title matches the exact mandated format; legend correctly omitted
           for a single series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Demonstrates the range-bar concept across 8 varied-width ranges;
-          missing optional endpoint/midpoint marker demonstration.
+        comment: Demonstrates the range-bar concept across 8 varied-width ranges,
+          now including the endpoint-marker technique the spec suggests.
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -262,3 +265,4 @@ impl_tags:
   dataprep: []
   styling:
   - grid-styling
+  - edge-highlighting

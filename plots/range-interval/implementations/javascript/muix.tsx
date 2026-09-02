@@ -1,7 +1,7 @@
 // anyplot.ai
 // range-interval: Range Interval Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-02
+// Quality: 88/100 | Created: 2026-09-02
 import { BarChart } from "@mui/x-charts/BarChart";
 import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
