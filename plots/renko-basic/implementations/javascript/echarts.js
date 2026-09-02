@@ -73,7 +73,12 @@ chart.setOption({
     nameTextStyle: { color: t.inkSoft, fontSize: 16 },
     min: -0.5,
     max: brickData.length - 0.5,
-    axisLabel: { color: t.inkSoft, fontSize: 14 },
+    axisLabel: {
+      color: t.inkSoft,
+      fontSize: 14,
+      showMinLabel: false,
+      showMaxLabel: false,
+    },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { show: false },
   },
@@ -103,7 +108,11 @@ chart.setOption({
         return {
           type: "rect",
           shape: { x: topLeft[0], y: topLeft[1], width, height },
-          style: { fill: direction > 0 ? UP_COLOR : DOWN_COLOR },
+          style: {
+            fill: direction > 0 ? UP_COLOR : DOWN_COLOR,
+            stroke: t.ink,
+            lineWidth: 1,
+          },
         };
       },
       encode: { x: 0, y: [1, 2] },
