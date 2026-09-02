@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: heatmap-geographic
 created: '2026-09-02T00:57:44Z'
-updated: '2026-09-02T01:03:00Z'
+updated: '2026-09-02T01:18:54Z'
 generated_by: claude-sonnet
 workflow_run: 33576949527
 issue: 3638
@@ -12,54 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Correct Imprint sequential colormap (brand green → blue) for single-polarity density
-    data, matching the spec's KDE/intensity requirement
-  - Imprint data colors are identical between light and dark renders; chrome (background,
-    text, ticks) is fully theme-adaptive with no dark-on-dark or light-on-light failures
-  - DataAspect() keeps the lon/lat grid proportionally correct and the saved PNG lands
-    exactly on the 2400×2400 square canvas target
-  - Reproducible, severity-weighted Gaussian KDE built from a seeded 5-cluster synthetic
-    wildfire dataset, with explicit font sizes and a title that dynamically scales
-    down for the long descriptive-prefixed string
-  - Raw ignition points are revealed via a background-colored, low-alpha scatter overlay
-    on top of the density surface — a subtle, non-competing way to show underlying
-    point data without cluttering the heatmap
+  - 'Both previously flagged spec gaps are fixed: a simplified western-US coastline/border
+    outline now grounds the plot geographically, and heatmap! now carries alpha=0.85
+    so that outline shows through the density surface as the spec requested'
+  - The manual triple-nested KDE loop was replaced with a vectorized broadcast accumulation
+    — same numerical result, more idiomatic Julia
+  - Raw ignition scatter markersize increased 3→5, fixing the mobile-visibility risk
+    flagged in Attempt 1
+  - Imprint data colors remain identical between light/dark renders; theme-adaptive
+    chrome has no dark-on-dark or light-on-light failures
+  - Reproducible (Random.seed!(42)), explicit font sizes throughout, title dynamically
+    scales for the long descriptive-prefixed string, and the PNG lands exactly on
+    the 2400x2400 canvas target
   weaknesses:
-  - 'Missing geographic context: the spec explicitly asks for ''country boundaries,
-    coastlines, or street maps as a basemap'', but the plot is a bare lon/lat Cartesian
-    heatmap with no visual cue that grounds it geographically beyond axis labels and
-    the title. Add a simplified western-US / state-outline via lines!() with a small
-    set of hardcoded boundary coordinates (no GeoMakie/NetworkLayout needed).'
-  - The spec asks for the sequential colormap to be applied 'with transparency to
-    allow the basemap to show through' — heatmap! has no alpha, and since there is
-    currently no basemap this instruction is entirely unaddressed. Once a boundary
-    outline is added, give heatmap! an alpha (e.g. ~0.85) so the outline remains visible
-    underneath.
-  - The KDE surface is computed via a manual triple-nested loop (grid_n×grid_n×n_points
-    ≈ 15M inner iterations) rather than a vectorized/broadcast approach — correct
-    and fast enough in Julia, but less idiomatic/elegant than a broadcasted distance
-    computation.
-  - Raw ignition scatter uses a small markersize=3, which risks becoming nearly invisible
-    once the PNG is scaled down to mobile width (~400px); consider bumping slightly
-    for better visibility at small sizes.
+  - No explicit annotation or emphasis calls out the single most severe wildfire cluster
+    — a text label or size/opacity emphasis on the highest-density region would sharpen
+    the data storytelling
+  - The geographic boundary is a small hardcoded polygon with fairly coarse vertices;
+    it reads clearly as context but a slightly higher-resolution outline would look
+    more like a real basemap
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (~#FAF8F1) visible in the margins around the axes; matches the spec target.
-      Chrome: Title "Wildfire Ignition Density, Western US · heatmap-geographic · julia · makie · anyplot.ai" in bold dark ink, clearly readable and comfortably within canvas bounds (no clipping). X-axis label "Longitude (°)" and Y-axis label "Latitude (°)" in dark ink, tick labels in a softer gray-ink tone. Colorbar label "Weighted ignition density" and its tick labels (5, 10, 15) are readable on the right edge with adequate margin. No grid lines (intentionally disabled). Top/right spines removed.
-      Data: The full plot area is filled by a sequential green-to-blue KDE surface (brand green #009E73 at low density, blue #4467A3 at high density) covering five wildfire clusters at varying intensity (Pacific Northwest, Northern California, Southern California, Utah/Colorado border, Arizona/New Mexico). Small pale dots (raw ignition points, background-colored at low alpha) are visible within the denser blue clusters.
+      Chrome: Title "Wildfire Ignition Density, Western US · heatmap-geographic · julia · makie · anyplot.ai" in bold dark ink, clearly readable and comfortably within canvas bounds (no clipping). X-axis label "Longitude (°)" and Y-axis label "Latitude (°)" in dark ink, tick labels in a softer gray-ink tone. Colorbar label "Weighted ignition density" and its tick labels are readable on the right edge. No grid lines (intentionally disabled). Top/right spines removed.
+      Data: A sequential green-to-blue KDE surface (brand green #009E73 at low density, blue #4467A3 at high density) covers five wildfire clusters at varying intensity. A thin dark boundary outline (simplified western-US coastline/border) is now visible underneath the semi-transparent (alpha=0.85) heatmap, grounding the plot geographically. Small pale dots (raw ignition points, background-colored at low alpha, markersize=5) are visible within the denser clusters.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (~#1A1A17) visible in the margins; matches the spec target.
-      Chrome: Same title, axis labels, and colorbar label now rendered in light ink (near-white for primary text, light gray for tick labels/colorbar ticks), fully legible against the dark background. Spines and grid follow the same theme-adaptive treatment as the light render.
-      Data: The green-to-blue KDE surface and cluster locations are visually identical to the light render — same hues, same positions, same relative intensities. The raw-point overlay dots are now dark (background-colored at low alpha against the black page), still visible as small dark speckles within the blue cluster cores.
+      Chrome: Same title, axis labels, and colorbar label now rendered in light ink, fully legible against the dark background. Boundary outline, spines and grid follow the same theme-adaptive treatment as the light render.
+      Data: The green-to-blue KDE surface, boundary outline, and cluster locations are visually identical to the light render — same hues, same positions, same relative intensities. The raw-point overlay dots are now dark (background-colored at low alpha), still visible as small dark speckles within the cluster cores.
       Legibility verdict: PASS — no dark-on-dark failures; all text and data remain clearly distinguishable from the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -77,11 +66,11 @@ review:
         comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: KDE surface clearly visible; raw scatter markersize=3 is a bit small
-          for mobile scaling
+        comment: Raw-point markersize bumped 3->5, now clearly visible even at mobile
+          scaling
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -93,15 +82,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the vast majority of the 2400x2400 canvas, balanced colorbar
-          placement, canvas gate passed
+        comment: Canvas gate passed (2400x2400 square); plot fills the vast majority
+          of the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) / Latitude (°) / Weighted ignition density all descriptive
-          with units
+        comment: Longitude (deg) / Latitude (deg) / Weighted ignition density all
+          descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -110,53 +99,59 @@ review:
         comment: 'imprint_seq (#009E73 -> #4467A3) used correctly for single-polarity
           density; theme-correct chrome in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Sequential Imprint colormap plus a background-colored reveal-scatter
-          technique is a step above a plain library default
+        passed: true
+        comment: Layered boundary + semi-transparent density + reveal-scatter reads
+          as a deliberate, polished geographic treatment
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: Spines/grid removed, colorbar tightly integrated, but the full-bleed
-          heatmap leaves little breathing whitespace
+        passed: true
+        comment: Spines/grid removed; boundary line gives the surface visual structure
+          instead of a flat full-bleed fill
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        comment: Blue hotspots create a visual focal hierarchy across clusters, but
-          there is no explicit emphasis or annotation calling out the most severe
-          region
+        passed: false
+        comment: Density gradient creates hierarchy across clusters, but no explicit
+          annotation calls out the most severe region
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
-        comment: 'Correct geographic heatmap: KDE surface over lon/lat with DataAspect()'
+        passed: true
+        comment: Correct geographic KDE heatmap with DataAspect()
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        comment: Missing basemap/coastline/boundary geographic context and the alpha-transparency-for-basemap
-          note explicitly requested by the spec
+        passed: true
+        comment: Geographic boundary context and colormap transparency (alpha=0.85)
+          both now present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        comment: Longitude on X, latitude on Y, all clusters shown within the correct
-          bounding box
+        passed: true
+        comment: Longitude on X, latitude on Y, all clusters within the correct bounding
+          box
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title format correct with descriptive prefix; colorbar serves as
           legend, correctly labeled
     data_quality:
@@ -167,70 +162,81 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
+        passed: true
         comment: Five clusters with varying spread and severity weighting show density
           variation well
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Wildfire ignition density across the Western US is a real, neutral,
           comprehensible scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
+        passed: true
         comment: Lon/lat bounds and acreage-based severity weighting are plausible;
           exact intensity units are synthetic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
+        passed: true
         comment: No functions/classes, linear imports -> data -> plot -> save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Random.seed!(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: CairoMakie, Colors, Random, Statistics all used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        comment: Manual triple-nested KDE loop works but is less idiomatic than a
-          vectorized/broadcast approach
+        passed: true
+        comment: Manual triple-nested KDE loop replaced with a vectorized/broadcast
+          accumulation
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Saves plot-$(THEME).png via current save(...) API
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Good use of Axis, heatmap!, scatter!, Colorbar, DataAspect()
+        passed: true
+        comment: Good use of Axis, heatmap!, scatter!, lines!, Colorbar, DataAspect()
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        comment: DataAspect() and figure-layout-integrated Colorbar are Makie-specific
-          touches, but nothing highly distinctive
-  verdict: REJECTED
+        passed: false
+        comment: Layered lines!+alpha-blended heatmap!+scatter! composition is a nice
+          touch, though still shy of a highly distinctive feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
+  - layer-composition
   patterns:
   - data-generation
   - matrix-construction
