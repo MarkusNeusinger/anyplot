@@ -102,20 +102,27 @@ for continent in continents
     poly!(ax, continent; color = LAND_FILL, strokecolor = LAND_LINE, strokewidth = 1.2)
 end
 
+# The Middle East / South Asia corridor cluster crosses over itself the most
+# densely (Delhi/Mumbai/Dubai/Cairo/Nairobi/Istanbul), so those arcs get a
+# wider curvature spread and lower alpha to stay disentangled.
+crowded_hubs = Set(["Delhi", "Mumbai", "Dubai", "Cairo", "Nairobi", "Istanbul"])
+
 for (origin, dest, flow) in flows
     x0, y0 = cities[origin]
     x1, y1 = cities[dest]
     dx, dy = x1 - x0, y1 - y0
     dist = sqrt(dx^2 + dy^2)
-    cx = (x0 + x1) / 2 - dy / dist * dist * 0.15
-    cy = (y0 + y1) / 2 + dx / dist * dist * 0.15
+    is_crowded = origin in crowded_hubs && dest in crowded_hubs
+    curvature = is_crowded ? 0.22 : 0.15
+    cx = (x0 + x1) / 2 - dy / dist * dist * curvature
+    cy = (y0 + y1) / 2 + dx / dist * dist * curvature
     t = range(0, 1; length = 40)
     arc_x = @. (1 - t)^2 * x0 + 2 * (1 - t) * t * cx + t^2 * x1
     arc_y = @. (1 - t)^2 * y0 + 2 * (1 - t) * t * cy + t^2 * y1
     norm_flow = (flow - min_flow) / (max_flow - min_flow)
     lines!(
         ax, arc_x, arc_y;
-        color = (get(FLOW_CMAP, norm_flow), 0.6),
+        color = (get(FLOW_CMAP, norm_flow), is_crowded ? 0.5 : 0.6),
         linewidth = 1.5 + 7.5 * norm_flow,
     )
 end
@@ -130,6 +137,18 @@ scatter!(
     color = BRAND, markersize = node_size,
     strokecolor = PAGE_BG, strokewidth = 1.5,
 )
+
+# Label the top hub cities by total flow so major corridors are identifiable
+# without an external reference.
+top_hubs = first(sort(collect(node_totals); by = last, rev = true), 5)
+for (name, _) in top_hubs
+    x, y = cities[name]
+    text!(
+        ax, x, y + 4;
+        text = name, color = INK, fontsize = 13,
+        align = (:center, :bottom), font = :bold,
+    )
+end
 
 Colorbar(
     fig[1, 2];
