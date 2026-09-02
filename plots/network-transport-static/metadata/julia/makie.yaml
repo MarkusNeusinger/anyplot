@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: network-transport-static
 created: '2026-09-02T04:48:30Z'
-updated: '2026-09-02T05:29:26Z'
+updated: '2026-09-02T05:50:45Z'
 generated_by: claude-sonnet
 workflow_run: 33589715646
 issue: 3463
@@ -12,55 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 79
+quality_score: 81
 review:
   strengths:
-  - 'Excellent Spec Compliance: realistic regional-rail data with express/regional/local
-    route kinds, correctly formatted edge labels ("EX 1 | 08:00 → 08:14") matching
-    the spec''s mandated pattern, and offset parallel lines that correctly distinguish
-    bidirectional route pairs at each station.'
-  - 'Genuinely distinctive Library Mastery: uses Makie.project/Makie.boundingbox to
-    measure real on-screen glyph geometry, then runs an oriented-bounding-box collision
-    search to place every edge and station label overlap-free — a technique that would
-    be hard to replicate as cleanly in another library.'
-  - Correct Imprint palette usage in canonical order (brand green first for Express,
-    lavender for Regional, blue for Local), fully theme-adaptive chrome, and identical
-    data colors between the light and dark renders.
-  - 'Thoughtful visual hierarchy: the Central interchange node is enlarged relative
-    to the others, and hollow node rings keep crossing edges visible through the station
-    markers.'
+  - Legend now sits inset directly adjacent to the network (next to Eastport/Hillcrest)
+    instead of floating isolated far to the right, which was the prior review's primary
+    blocking issue.
+  - Arrowheads were enlarged (arrowsize 15 -> 20), improving route-direction legibility
+    at both desktop and mobile scale.
+  - 'Excellent Spec Compliance: realistic express/regional/local route data, correctly
+    formatted edge labels ("EX 1 | 08:00 -> 08:14"), offset parallel lines that correctly
+    distinguish bidirectional route pairs, and a distinctive OBB-based label collision-avoidance
+    system that keeps 22 route labels and 12 station labels overlap-free.'
+  - Correct Imprint palette (brand green Express, lavender Regional, blue Local) in
+    canonical order, fully theme-adaptive chrome, and identical data colors between
+    the light and dark renders.
   weaknesses:
-  - Legend sits isolated far to the right of the network diagram with a large band
-    of empty canvas between the rightmost station (Eastport) and the legend column
-    — this reads as a floating, disconnected element rather than part of the composition.
-    Move the legend closer to the diagram (e.g. as a compact inset in an empty region
-    of the network, or directly adjacent to the rightmost stations) and tighten the
-    column split so the whitespace is balanced left-to-right rather than concentrated
-    on the right edge.
-  - 'Code structure violates the CQ-01 KISS guideline for this catalog: the collision-avoidance
-    logic introduces a full geometry module (an OBB struct plus a dozen helper functions
-    for overlap/intersection testing) instead of the simple Imports → Data → Plot
-    → Save script shape expected here. The output quality justifies some complexity,
-    but consider whether a simpler heuristic offset scheme for label placement could
-    reach an acceptable result with far less code.'
-  - Arrowheads (arrowsize=15 on a 3200 px canvas) are quite subtle at full size and
-    easy to miss at a glance — increase arrowhead size slightly so route direction
-    reads clearly, especially once the PNG is scaled down for mobile widths.
+  - 'The Legend''s declared title ("Route type") never renders in either theme --
+    pixel inspection of both plot-light.png and plot-dark.png confirms only the Express/Regional/Local
+    rows are drawn, with no title text above them despite `title = "Route type"` being
+    set on the Legend(...) call. This is a code correctness bug: verify the Makie
+    Legend API usage (titleposition/titlevisible, or whether `title` needs to be a
+    positional argument in this Makie version) and fix so the title actually displays,
+    or remove the dead config if the title is being intentionally dropped.'
+  - 'Whitespace is left-right imbalanced: the network diagram itself is well centered
+    within its axis, but the inset legend only adds content to the right margin, leaving
+    roughly 465px of empty canvas on the left vs. roughly 65px on the right (measured
+    on the 3200px-wide canvas) -- a noticeably lopsided composition. Consider nudging
+    the axis/network slightly left within the figure, or balancing the left margin
+    with a small unobtrusive element, so the empty space reads as intentional framing
+    rather than an accidental gap.'
+  - 'CQ-01 KISS Structure repeat violation: the implementation still introduces a
+    full OBB (oriented-bounding-box) geometry module -- a struct plus roughly a dozen
+    helper functions for overlap/segment/circle intersection testing -- well beyond
+    the simple Imports -> Data -> Plot -> Save shape expected for this catalog. The
+    output quality justifies some of this complexity, but it remains flagged from
+    the previous review as a structural concern.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Regional Rail Network · network-transport-static · julia · makie · anyplot.ai" in dark ink at top-center; 12 station labels in dark ink; rotated edge labels (route id + times) in a softer ink-gray; legend ("Route type": Express/Regional/Local) in dark title + softer ink-gray entries, no frame. All chrome text is clearly legible against the light background.
-      Data: Hollow-ring station markers (larger ring at Central); directed edges in three colors — brand green (#009E73, Express), lavender (Regional), blue (Local) — with small arrowheads showing travel direction; bidirectional route pairs are drawn as offset parallel lines. First categorical series is confirmed brand green.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "Regional Rail Network · network-transport-static · julia · makie · anyplot.ai" in dark ink at top-center; 12 station labels in dark ink; rotated edge labels (route id + times) in a softer ink-gray; legend (Express/Regional/Local rows) in softer ink-gray, inset next to Eastport/Hillcrest with no frame. All chrome text is clearly legible against the light background. Note: the legend's configured "Route type" title does not actually render (verified by pixel scan) -- only the three colored rows are visible.
+      Data: Hollow-ring station markers (larger ring at Central hub); directed edges in three colors -- brand green (#009E73, Express), lavender (Regional), blue (Local) -- with visible arrowheads showing travel direction; bidirectional route pairs drawn as offset parallel lines. First categorical series is confirmed brand green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, station labels, and edge labels now rendered in light ink (title/station labels near-white, edge labels/legend entries in a lighter soft gray) — fully readable against the dark background, no dark-on-dark text found.
-      Data: Same three edge colors (green/lavender/blue) as the light render, confirming data colors are identical between themes — only chrome (background, text) flipped.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, station labels, and edge labels now rendered in light ink (title/station labels near-white, edge labels/legend entries in a lighter soft gray) -- fully readable against the dark background, no dark-on-dark text found. Same missing legend title as the light render.
+      Data: Same three edge colors (green/lavender/blue) as the light render, confirming data colors are identical between themes -- only chrome (background, text) flipped.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -69,21 +71,22 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set, readable in both themes; title scales
-          to fit; only minor loss on the smallest rotated edge labels
+          down for the long descriptive-prefixed string; smallest rotated edge labels
+          are the only minor loss
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
         comment: OBB-based collision search keeps every station and edge label clear
-          of overlaps
+          of overlaps in both renders
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Node markers and lines well sized for 22 routes; arrowheads are on
-          the small/subtle side
+        comment: Node markers and lines well sized for 22 routes; arrowheads enlarged
+          from the previous attempt (15->20) and now read clearly
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -92,12 +95,12 @@ review:
         comment: Green/lavender/blue are CVD-distinguishable, no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 0
+        score: 2
         max: 4
-        passed: false
-        comment: Legend floats isolated far right with a large empty gap from the
-          diagram — matches the explicit 'legend isolated in empty space' zero-point
-          trigger
+        passed: true
+        comment: 'Legend no longer isolated (fixed from previous review), but whitespace
+          is still left-right imbalanced: ~465px empty margin on the left vs ~65px
+          on the right'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -113,7 +116,7 @@ review:
         comment: Canonical Imprint order, brand green first, correct theme-adaptive
           chrome and backgrounds in both renders
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -125,11 +128,12 @@ review:
           default but not fully publication-level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Spines/grid removed and diagram itself is refined, but overall canvas
-          composition is unbalanced due to the isolated legend
+        comment: Spines/grid removed, diagram refined, legend now integrated near
+          the network; overall composition still slightly unbalanced left-to-right
+          and the legend title fails to render
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -138,7 +142,7 @@ review:
         comment: Enlarged Central hub and color-by-route-kind create visual hierarchy
           guiding the reader
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -163,11 +167,12 @@ review:
           layout used per spec
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels match
-          route kinds
+        comment: Title format correct with descriptive prefix; legend color/label
+          rows match route kinds, but the legend's own configured title ("Route type")
+          never renders
     data_quality:
       score: 14
       max: 15
@@ -201,8 +206,9 @@ review:
         score: 0
         max: 3
         passed: false
-        comment: Introduces an OBB struct and a dozen geometry helper functions instead
-          of the simple Imports → Data → Plot → Save shape
+        comment: Still introduces an OBB struct and a dozen geometry helper functions
+          instead of the simple Imports -> Data -> Plot -> Save shape; unchanged from
+          the previous review
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -245,8 +251,8 @@ review:
         max: 5
         passed: true
         comment: Uses Makie.project/Makie.boundingbox introspection for pixel-accurate
-          label collision avoidance — a distinctive, hard-to-replicate technique
-  verdict: REJECTED
+          label collision avoidance -- a distinctive, hard-to-replicate technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
