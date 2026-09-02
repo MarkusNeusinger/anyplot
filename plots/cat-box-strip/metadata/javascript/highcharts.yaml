@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: cat-box-strip
 created: '2026-09-02T14:58:43Z'
-updated: '2026-09-02T15:03:40Z'
+updated: '2026-09-02T15:12:17Z'
 generated_by: claude-sonnet
 workflow_run: 33644704672
 issue: 2695
@@ -12,52 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - 'Correctly works around the missing highcharts-more/boxplot module: box, whiskers,
-    and median are drawn from primitive SVG shapes (renderer.path/rect) anchored to
-    real axis pixel coordinates via toPixels(), driven by actual computed quartile/IQR
-    statistics — exactly the pattern the library prompt recommends.'
-  - 'Full spec feature coverage: median, Q1/Q3 box, IQR-fenced whiskers, jittered
+  - 'Strip markers now carry a background-colored edge stroke (lineColor: t.pageBg,
+    lineWidth: 1), fixing attempt 1''s flat/edgeless markers and giving clear point
+    definition against the box fill and neighboring points.'
+  - 'Jitter spread was widened from ±0.275 to ±0.32 of category width, visibly reducing
+    overplotting in the two densest groups (Car: 80 pts, Bus: 65 pts) versus attempt
+    1.'
+  - 'Full spec feature coverage retained: median/Q1/Q3 box, IQR-fenced whiskers, jittered
     semi-transparent strip points, deliberately varying sample sizes across groups
-    (80/65/50/35 — ''sample size awareness''), and genuine outliers (bus delays at
-    91/95) rendered beyond the whisker for outlier-with-context.'
+    (80/65/50/35 - ''sample size awareness''), and genuine outliers (bus delays at
+    91/95) rendered beyond the whisker.'
+  - Box, whiskers, and median are drawn from primitive SVG shapes (renderer.path/rect)
+    anchored to real axis pixel coordinates via toPixels(), correctly working around
+    the unavailable highcharts-more boxplot module.
   - Imprint palette applied in canonical order (green/lavender/blue/ochre) and kept
     identical between light and dark renders; all chrome (ink, inkSoft, grid) is theme-adaptive
     via window.ANYPLOT_TOKENS.
   - Each series keeps Highcharts' default per-index marker symbol (circle/diamond/square/triangle),
     giving free redundant shape encoding across the four categories.
   weaknesses:
-  - 'Strip/scatter markers are drawn with lineWidth: 0 (no edge stroke). The style
-    guide calls for a white/background-colored edge on scatter markers for definition,
-    especially with overlapping points — add e.g. lineColor: t.pageBg (or white),
-    lineWidth: 1 to the marker config so points stay distinct from each other and
-    from the box border in denser clusters (Car: 80 pts, Bus: 65 pts).'
-  - In the densest groups (Car, Bus) jittered points still clump visibly near the
-    median line — widen the jitter spread slightly (e.g. ±0.32 instead of ±0.275 of
-    category width) or trim marker radius to ~3.5-4px to reduce overplotting without
-    hurting legibility.
+  - Residual clumping remains in the densest groups (Car, Bus) despite the widened
+    jitter - a further nudge to ±0.36-0.38 or trimming marker radius to ~3.5px in
+    those groups would separate points even more cleanly, though this is now a minor
+    polish item rather than a legibility problem.
+  - Box stroke width (2.5px) is visually heavier than the whisker/median lines (2-3px),
+    a small weight imbalance that doesn't hurt readability but could be tightened
+    for a more uniform line hierarchy.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
       Chrome: Title "cat-box-strip · javascript · highcharts · anyplot.ai" is bold dark ink, clearly legible; x-axis title "Transportation Mode" and y-axis title "Commute Time (minutes)" are dark-gray (inkSoft) and legible; tick labels (0-100 on y, category names on x) are legible; horizontal gridlines are subtle/light and don't compete with data.
-      Data: Four groups — Car (green #009E73 box + jittered dots), Bus (lavender box + diamonds, includes two outlier points near 91/95 above the whisker), Bike (blue box + squares), Walk (ochre box + triangles). First categorical series is confirmed brand green. Box shows median line, Q1/Q3 edges, whiskers extend to IQR fence; strip points are semi-transparent and jittered around each category's x position.
+      Data: Four groups - Car (green #009E73 box + jittered circles), Bus (lavender box + diamonds, includes two outlier points near 91/95 above the whisker), Bike (blue box + squares), Walk (ochre box + triangles). First categorical series is confirmed brand green. Box shows median line, Q1/Q3 edges, whiskers extend to the IQR fence; strip points are semi-transparent, jittered around each category's x position, and now carry a subtle background-colored edge stroke that separates them from the box fill and each other.
       Legibility verdict: PASS.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
       Chrome: Title, axis titles, and tick labels all switch to light/off-white ink and remain clearly readable against the dark surface; no dark-on-dark text found. Gridlines remain subtle (light, low-opacity).
-      Data: Identical box/strip layout and colors to the light render (green/lavender/blue/ochre, same outlier points visible for Bus) — confirms only chrome flips between themes, data colors are constant.
+      Data: Identical box/strip layout and colors to the light render (green/lavender/blue/ochre, same outlier points visible for Bus) - confirms only chrome flips between themes, data colors are constant. Marker edge strokes are visible in this theme too (background-colored, so darker here).
       Legibility verdict: PASS.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
         comment: Explicit font sizes (title 22px, axis titles 16px, ticks 14px); all
@@ -70,11 +73,12 @@ review:
         comment: No text/data collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Markers lack an edge stroke (lineWidth: 0), so points blend at the
-          box border and clump in the two densest groups (Car 80pts, Bus 65pts).'
+        comment: Markers now carry a background-colored edge stroke and jitter was
+          widened, fixing attempt 1's edgeless/clumped markers; minor residual clumping
+          remains in the two densest groups (Car, Bus).
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -101,27 +105,27 @@ review:
         comment: First series brand green, canonical order, theme-correct backgrounds
           in both renders.
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom SVG box/whisker construction plus jittered strip overlay is
-          more than generic defaults, but not maximally polished (see marker edge
-          weakness).
+        comment: Custom SVG box/whisker construction, box fill opacity, jittered strip
+          overlay with edge-stroked markers, and per-series shape variation go well
+          beyond generic defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Minimal spines/grid and generous whitespace, but skips the style
-          guide's recommended white marker edge for point definition.
+        comment: Clean spines/grid and generous whitespace; the marker edge stroke
+          fix closes the gap flagged in attempt 1.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
         comment: Box + strip combination clearly conveys both summary stats and raw
@@ -171,7 +175,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Commute time by transportation mode — plausible, neutral domain.
+        comment: Commute time by transportation mode - plausible, neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -187,7 +191,7 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (lcg, randNormal, quantile, drawBoxes) —
+        comment: Several helper functions (lcg, randNormal, quantile, drawBoxes) -
           justified by the statistics needed, but more structure than the simplest
           possible script.
       - id: CQ-02
@@ -234,7 +238,7 @@ review:
         passed: true
         comment: Highcharts.color().setOpacity() utility, categorical axis with explicit
           tickPositions, and per-series default marker symbols used to good effect.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,3 +252,4 @@ impl_tags:
   styling:
   - alpha-blending
   - publication-ready
+  - edge-highlighting
