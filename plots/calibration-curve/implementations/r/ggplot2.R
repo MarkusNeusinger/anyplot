@@ -18,6 +18,7 @@ IMPRINT_PALETTE <- c("#009E73", "#C475FD", "#4467A3", "#BD8233",
                      "#AE3030", "#2ABCCD", "#954477", "#99B314")
 BRAND       <- IMPRINT_PALETTE[1]
 ANYPLOT_NEUTRAL <- INK  # theme-adaptive anchor for the reference (baseline) line
+GRID_COLOR  <- scales::alpha(INK, 0.15)  # faint grid, distinct from the INK/INK_SOFT text tokens
 
 # --- Data -----------------------------------------------------------------
 # A diagnostic screening model that is systematically underconfident: bagged
@@ -74,7 +75,7 @@ p <- ggplot(calib, aes(x = mean_pred, y = frac_pos)) +
   theme(
     plot.background    = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background   = element_rect(fill = PAGE_BG, color = NA),
-    panel.grid.major   = element_line(color = INK, linewidth = 0.25),
+    panel.grid.major   = element_line(color = GRID_COLOR, linewidth = 0.3),
     panel.grid.minor   = element_blank(),
     panel.border       = element_blank(),
     axis.line          = element_line(color = INK_SOFT, linewidth = 0.4),
@@ -86,6 +87,8 @@ p <- ggplot(calib, aes(x = mean_pred, y = frac_pos)) +
     legend.background  = element_rect(fill = PAGE_BG, color = NA),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_text(color = INK, size = 9),
+    legend.key.size    = unit(0.8, "lines"),
+    legend.spacing.y   = unit(2, "pt"),
     legend.position    = "right",
     plot.margin        = margin(t = 12, r = 16, b = 8, l = 8)
   )
