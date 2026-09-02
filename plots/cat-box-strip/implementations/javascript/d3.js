@@ -52,21 +52,8 @@ const y = d3
   .nice()
   .range([ih, 0]);
 
-// --- SVG mount ----------------------------------------------------------
-const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
-const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-// --- Y gridlines (subtle, horizontal only) -------------------------------
-g.append("g")
-  .attr("class", "grid")
-  .call(d3.axisLeft(y).ticks(6).tickSize(-iw).tickFormat(""))
-  .call((sel) => sel.select(".domain").remove())
-  .selectAll("line")
-  .attr("stroke", t.grid);
-
 // --- Box stats per category ------------------------------------------------
 const boxWidth = x.bandwidth() * 0.42;
-const jitterWidth = x.bandwidth() * 0.66;
 
 const stats = categories.map((category) => {
   const values = data
@@ -84,15 +71,64 @@ const stats = categories.map((category) => {
   return { category, q1, median, q3, whiskerLow, whiskerHigh };
 });
 
-// --- Strip points (jittered, drawn beneath the box) -------------------------
+// Highest-yield group carries the story of this chart; give it a focal point.
+const winner = stats.reduce((best, s) => (s.median > best.median ? s : best), stats[0]).category;
+
+// --- SVG mount ----------------------------------------------------------
+const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
+const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+// --- Winner spotlight band (drawn first, sits behind everything) ------------
+g.append("rect")
+  .attr("x", x(winner))
+  .attr("y", 0)
+  .attr("width", x.bandwidth())
+  .attr("height", ih)
+  .attr("rx", 10)
+  .attr("fill", color(winner))
+  .attr("fill-opacity", 0.07);
+
+// --- Y gridlines (subtle, horizontal only) -------------------------------
+g.append("g")
+  .attr("class", "grid")
+  .call(d3.axisLeft(y).ticks(6).tickSize(-iw).tickFormat(""))
+  .call((sel) => sel.select(".domain").remove())
+  .selectAll("line")
+  .attr("stroke", t.grid);
+
+// --- Strip points (deterministic beeswarm via force simulation, drawn beneath the box) --
+const pointRadius = 4;
+const swarmWidth = x.bandwidth() * 0.82;
+const points = categories.flatMap((category) => {
+  const cx = x(category) + x.bandwidth() / 2;
+  const nodes = data
+    .filter((d) => d.category === category)
+    .map((d) => ({
+      category: d.category,
+      value: d.value,
+      x: cx + (rand() - 0.5) * 4,
+      y: y(d.value),
+      fy: y(d.value),
+    }));
+  const sim = d3
+    .forceSimulation(nodes)
+    .force("x", d3.forceX(cx).strength(0.08))
+    .force("collide", d3.forceCollide(pointRadius + 0.6))
+    .stop();
+  for (let i = 0; i < 200; i++) sim.tick();
+  const lo = cx - swarmWidth / 2;
+  const hi = cx + swarmWidth / 2;
+  for (const n of nodes) n.x = Math.min(hi, Math.max(lo, n.x));
+  return nodes;
+});
 g.selectAll("circle")
-  .data(data)
+  .data(points)
   .join("circle")
-  .attr("cx", (d) => x(d.category) + x.bandwidth() / 2 + (rand() - 0.5) * jitterWidth)
-  .attr("cy", (d) => y(d.value))
-  .attr("r", 4)
+  .attr("cx", (d) => d.x)
+  .attr("cy", (d) => d.fy)
+  .attr("r", pointRadius)
   .attr("fill", (d) => color(d.category))
-  .attr("fill-opacity", 0.45)
+  .attr("fill-opacity", 0.4)
   .attr("stroke", "none");
 
 // --- Whiskers ----------------------------------------------------------
@@ -135,9 +171,21 @@ g.selectAll(".box")
   .attr("width", boxWidth)
   .attr("height", (d) => y(d.q1) - y(d.q3))
   .attr("fill", (d) => color(d.category))
-  .attr("fill-opacity", 0.16)
+  .attr("fill-opacity", (d) => (d.category === winner ? 0.22 : 0.16))
   .attr("stroke", (d) => color(d.category))
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", (d) => (d.category === winner ? 3.5 : 2.5));
+
+// --- Winner annotation (points the eye at the highest-yield group) ---------
+const winnerStats = stats.find((d) => d.category === winner);
+const winnerCx = x(winner) + x.bandwidth() / 2;
+g.append("text")
+  .attr("x", winnerCx)
+  .attr("y", y(winnerStats.q3) - 16)
+  .attr("text-anchor", "middle")
+  .attr("fill", color(winner))
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Highest yield");
 
 // --- Median lines --------------------------------------------------------
 g.selectAll(".median")
@@ -151,22 +199,28 @@ g.selectAll(".median")
   .attr("stroke", t.ink)
   .attr("stroke-width", 3);
 
-// --- Axes ----------------------------------------------------------------
-const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x));
-const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6));
+// --- Axes ------------------------------------------------------------------
+// y ticks drop their stub (tickSize 0) since the gridlines already mark them;
+// x keeps a short stub since it has no gridline counterpart.
+const xAxis = g
+  .append("g")
+  .attr("transform", `translate(0,${ih})`)
+  .call(d3.axisBottom(x).tickSize(4));
+const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickSize(0));
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
   ax.selectAll("line").attr("stroke", t.inkSoft);
-  ax.select(".domain").attr("stroke", t.inkSoft);
+  ax.select(".domain").attr("stroke", t.inkSoft).attr("stroke-width", 1);
 }
 
-// --- Axis labels -----------------------------------------------------------
+// --- Axis labels -------------------------------------------------------------
+// Sized below the 18px title so the bold title reads as clearly dominant.
 g.append("text")
   .attr("x", iw / 2)
   .attr("y", ih + 80)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "18px")
+  .style("font-size", "15px")
   .text("Fertilizer Treatment (n = 70 per group)");
 
 g.append("text")
@@ -175,7 +229,7 @@ g.append("text")
   .attr("y", -70)
   .attr("text-anchor", "middle")
   .attr("fill", t.ink)
-  .style("font-size", "18px")
+  .style("font-size", "15px")
   .text("Crop Yield (kg per plot)");
 
 // --- Title -----------------------------------------------------------------
