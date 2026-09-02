@@ -63,6 +63,32 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   any inbound one first so a caller cannot supply it. The pre-traffic smoke reads the secret
   at run time and sends it, accepting `off`/`off-seen` so the pipeline keeps working before
   the gate is armed and after a rollback. (#11208)
+- **The bot-serving monitor now raises an alarm instead of only turning a tab red, and
+  derives what it asserts from the repo** — `bot-serving-check.yml` gained `issues: write`:
+  a failing run opens the fixed-title issue **Bot serving check is red** (or comments on it,
+  so a long outage is one thread rather than one issue per night) and the next green run
+  comments and closes it. Until now the check could only go red in the Actions tab, which is
+  exactly how it sat red for ten consecutive nights unnoticed — caused by the other half of
+  this change: hard-coded expectations. The swept routes now come from the
+  `@router.get("/seo-proxy/…")` decorators in `api/routers/seo.py` — read off the parsed
+  AST, so a decorator in single quotes, wrapped over two lines, carrying kwargs or passing
+  its path as `path=` is not silently skipped the way a regex skips it, and a path that is
+  no string literal at all fails the run rather than disappearing (10 routes today, and a
+  new bot page is covered the moment it lands) — and the expected spec title, YAML-decoded
+  and then HTML-escaped the way the renderer escapes it, from
+  `plots/<spec>/specification.yaml`, so a copy change can no longer make the alarm lie. The
+  per-route assertion is the generated `<link rel="canonical">` — the SPA shell carries none
+  at all and the href names the route, so one match proves both that the bot hop ran and
+  that the right page came back. Two watchdogs stop a silent no-op: the run fails if the
+  sweep found no routes or the spec file no title, and it fails if `seo.py` grows a fourth
+  parameterised route beyond the three this file probes by hand. The middle of those three,
+  the consolidated `/{spec}/{language}`, gained a probe of its own — it must answer 301, and
+  a target still carrying `/seo-proxy` is the redirect loop that once cost 48 Googlebot
+  "Redirect error" URLs. A `concurrency` group keeps a manual dispatch from racing the
+  nightly run over the same issue, and the two issue-mutating steps run only on the default
+  branch, so a dispatch from a feature branch can never raise or close a production
+  incident. Timeout recomputed to 62 min by the file's own formula (36 checks x 90 s + five
+  non-retried probes). (#11209)
 - **The API image is built and its container smoke-tested before merge, not after** — the
   first build attempt of a changed Dockerfile used to happen in Cloud Build, once the PR was
   already on `main`; that is how the deploy-api trigger sat red from 2026-08-30 until #10821
@@ -176,6 +202,27 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `api/Dockerfile` fails the build outright when Pillow lands without libraqm. (#10813)
 
 ### Changed
+
+- **The frontend deploys through a candidate revision instead of straight onto live
+  traffic** — `app/cloudbuild.yaml` now follows the same candidate-rollout pattern as
+  `api/cloudbuild.yaml`: deploy with `--no-traffic --tag=candidate
+  --revision-suffix=b$BUILD_ID`, smoke the candidate on its tag URL, then `update-traffic`
+  to exactly that revision (the chains are not identical — this one pushes `:latest` only
+  after the promotion, where the API still pushes it alongside the deploy). The service
+  carries the whole crawler path in `app/nginx.conf` — the `$is_bot` map, the `location =`
+  bypasses, the `@seo_proxy` upstream — and that is the file whose breakage served every
+  bot an HTTP 502 for four weeks in 2026 while humans, Plausible and CI all saw a healthy
+  site; until now a typo in it went live unchecked and the daily bot-serving monitor was
+  the only net, a night later. The smoke probes both halves of the split (a browser UA
+  must get `<div id="root">`, Googlebot must get the prerendered page — asserted on the
+  `<link rel="canonical">`, which the SPA shell carries not at all and whose value names
+  the route) on the home page and a deep route, plus `robots.txt` and `llms.txt` from the
+  `location =` bypasses and the latter's UTF-8 charset. The candidate tag is re-asserted
+  after the probes as well as before, so a concurrent build moving it mid-smoke fails this
+  build instead of getting it promoted on someone else's evidence. `:latest` moves only
+  after this build's promotion, so the tag can no longer name an image that was never
+  rolled out, and the build timeout goes to 20 min to leave room for a cold candidate.
+  (#11207)
 
 - **The `babysit-pipeline` skill gains the backfill scheduler and the driver's per-spec
   liveness check** — `run_queue.sh <queue-dir> [slots]` keeps N `run_spec.sh` drivers
