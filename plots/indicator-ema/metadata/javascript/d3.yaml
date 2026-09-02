@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: indicator-ema
 created: '2026-09-02T01:46:34Z'
-updated: '2026-09-02T01:51:55Z'
+updated: '2026-09-02T02:05:09Z'
 generated_by: claude-sonnet
 workflow_run: 33580329444
 issue: 3652
@@ -12,93 +12,91 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Correct semantic color use: the close price is rendered as a neutral reference
-    line (theme-adaptive ink, 0.5 opacity) while the two EMA signal lines use the
-    Imprint palette, first-series green (#009E73) for EMA 12 and lavender (#C475FD)
-    for EMA 26 — exactly the ''baseline/reference line'' semantic-anchor pattern from
-    the style guide.'
-  - Crossover markers (amber-stroke circles) highlight golden-cross/death-cross events,
-    directly answering the spec's suggestion to highlight crossover points and adding
-    real analytical value.
-  - EMA lines are correctly thinner (2.5px) than the price line (3.5px), matching
-    the spec's explicit guidance to avoid visual clutter.
+  - 'The repair precisely addressed the prior review''s storytelling gap: the first
+    golden cross and first death cross now get a directional triangle glyph, a leader
+    line, and a named text callout ("Golden cross" / "Death cross") with a legibility
+    halo, so the viewer sees the trading signal immediately instead of needing outside
+    domain knowledge.'
+  - Title fontsize was raised from 22px to 28px, so the mandated string now uses ~55%
+    of canvas width (up from ~40-45%) with no overflow or clipping in either theme.
+  - 'Correct semantic color use: the close price is a theme-adaptive neutral reference
+    line at 0.5 opacity, while the two EMA signal lines use the Imprint palette (green
+    #009E73 for EMA 12, lavender #C475FD for EMA 26) exactly per the baseline/reference-line
+    pattern.'
   - 'Clean, minimal chrome: y-axis-only subtle gridlines, ink-soft L-shaped axis,
-    generous margins, and a dynamically-measured legend (via getBBox) that avoids
-    item overlap regardless of label length.'
+    generous margins, and a dynamically measured legend (getBBox) that avoids overlap
+    regardless of label length.'
   - 'Fully deterministic and reproducible: seeded LCG random walk plus the standard
-    recursive EMA formula, no external data.'
-  - Title fontsize scales via the linear baseline-char formula, keeping the long mandated
-    title readable without overflow.
-  - 'Both themes are correctly rendered: data colors (green/lavender/ink) are identical
+    recursive EMA formula, no external data or network calls.'
+  - 'Both themes render correctly: data colors (green/lavender/ink/amber) are pixel-identical
     across light and dark, only chrome (background, text, grid) flips, with no dark-on-dark
     or light-on-light failures.'
   weaknesses:
-  - 'Design storytelling is good but not exceptional: the crossover circles mark golden/death-cross
-    events but carry no label — a small annotation (e.g. ''Bullish cross'') on one
-    or two crossovers would let a viewer grasp the significance immediately instead
-    of needing outside domain knowledge.'
-  - Title occupies only ~40-45% of canvas width at the current fontsize; not an overflow/clipping
-    problem, but a slightly larger title would use the generous top-margin whitespace
-    more effectively and land closer to the guide's ~50-70% target for a custom-prefixed
-    title.
-  - Library mastery is solid (data joins, curveMonotoneX, tickSize gridline trick,
-    dynamic getBBox legend) but stays within standard idiomatic D3 usage rather than
-    a technique that is hard to replicate in a declarative charting library — e.g.
-    a custom crossover glyph with a leader line would push this further.
+  - 'Visual refinement is good but not maximal: the axis domain lines are still drawn
+    in full (ink-soft L-shape) rather than further minimized, which keeps Visual Refinement
+    short of a perfect score.'
+  - Only the very first golden cross and first death cross are labeled; the later
+    crossovers (~late April and ~early June) remain plain unlabeled amber rings by
+    design to avoid clutter, but a viewer scanning the full series only gets the named-signal
+    story once.
+  - The crossover glyph + leader-line system is a nice D3-idiomatic touch but is still
+    a fairly standard annotation pattern; a more singularly D3-specific technique
+    (e.g. a hover-driven nearest-point voronoi affordance in the HTML view) would
+    push Library Mastery further.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), matches spec — not pure white.
-      Chrome: Title "NovaTech Inc. (NVTC) · indicator-ema · javascript · d3 · anyplot.ai" in bold dark ink, clearly visible. Axis labels ("Trading date", "Closing price (USD)") and tick labels in soft ink, all readable against the light background. Legend row above the chart with three swatches (gray line, lavender line, green line) and labels, all legible. Subtle horizontal gridlines only.
-      Data: Close price drawn as a semi-transparent gray line (0.5 opacity), EMA 26 (long) in lavender (#C475FD), EMA 12 (short) in brand green (#009E73) — first series is correctly #009E73. Three amber-stroke circles mark short/long EMA crossover points.
+      Chrome: Title "NovaTech Inc. (NVTC) · indicator-ema · javascript · d3 · anyplot.ai" in bold dark ink at 28px, now spanning ~55% of the canvas width, clearly visible and not clipped. Axis labels ("Trading date", "Closing price (USD)") and tick labels in soft ink, all readable against the light background. Legend row above the chart with three swatches (gray, lavender, green) and labels, all legible with no overlap. Subtle horizontal-only gridlines.
+      Data: Close price drawn as a semi-transparent gray reference line (0.5 opacity), EMA 26 (long) in lavender (#C475FD), EMA 12 (short) in brand green (#009E73) — first series is correctly #009E73. Two amber-stroke triangle glyphs with leader lines and text callouts label the first "Golden cross" and first "Death cross"; two additional plain amber rings mark later, unlabeled crossovers. Callout text sits on a translucent halo so it stays legible where the price line passes underneath.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), matches spec — not pure black.
       Chrome: Title, axis labels, and tick labels are rendered in light ink tones, clearly legible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle. Legend text is light and readable.
-      Data: Identical colors to the light render — gray reference line, lavender EMA 26, green EMA 12 (#009E73), amber crossover circles. Confirms the Imprint data colors do not shift between themes, only the chrome (background/text/grid) flips.
+      Data: Identical colors to the light render — gray reference line, lavender EMA 26, green EMA 12 (#009E73), amber triangle glyphs/rings and callout text. Confirms the Imprint data colors do not shift between themes; only the chrome (background/text/grid/halo) flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set, readable in both themes; title dynamically
-          scaled and slightly conservative in width but not overflowing
+        comment: All font sizes explicitly set; title raised to 28px now fills ~55%
+          of width without overflow; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend width computed dynamically via getBBox, no collisions between
-          text or data
+        comment: Legend, axis text, and new crossover callouts (with legibility halo)
+          have zero collisions with data or each other
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line de-emphasized (0.5 alpha) as background context, EMA lines
-          prominent, crossover circles well sized
+        comment: Price line de-emphasized as background context, EMA lines prominent,
+          crossover triangles/rings well sized
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 3 distinguishable Imprint hues, appropriate for n=3 series without
-          redundant encoding
+        comment: 3 distinguishable Imprint hues plus amber semantic accent, no red-green
+          reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area ~66% of canvas, balanced margins, nothing cut off
+        comment: Plot area well-proportioned, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,34 +108,35 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First EMA series is #009E73, second is #C475FD, price line uses
-          theme-adaptive neutral as a reference line; both themes theme-correct'
+        comment: 'First EMA series #009E73, second #C475FD, neutral reference line
+          for price; both themes theme-correct'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Semantic neutral for reference line and amber crossover highlighting
-          show real design thought, above a generic default but short of publication-level
-          polish
+        passed: true
+        comment: Custom triangle crossover glyphs with leader lines and legibility
+          halo, semantic neutral reference line, and a tuned title size show clear
+          intentional polish above a configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Y-only subtle grid, L-shaped ink-soft spines, generous margins —
-          good refinement, not maximal
+        comment: Y-only subtle grid, ink-soft L-shaped axis, generous margins — good
+          refinement, axis domain lines still fully drawn rather than minimized further
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Crossover markers create visual hierarchy pointing to trend-signal
-          events, but lack a text callout that would make the insight immediate
+        passed: true
+        comment: Named 'Golden cross' / 'Death cross' callouts with directional glyphs
+          let the viewer immediately grasp the key trend-reversal signal without outside
+          knowledge
     spec_compliance:
       score: 15
       max: 15
@@ -153,8 +152,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Price line prominent, distinct EMA colors, thinner EMA lines, crossover
-          highlighting all present
+        comment: Prominent price line, distinct EMA colors, thinner EMA lines, named
+          crossover highlighting all present
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -184,7 +183,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Plausible neutral stock ticker scenario (NovaTech Inc.)
+        comment: Plausible neutral fictional stock ticker scenario (NovaTech Inc.)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
@@ -219,7 +218,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity even with the added callout logic, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
@@ -235,16 +235,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct high-level scales, line generators, axis calls
+        comment: Correct high-level scales, line generators, axis calls, d3.symbol
+          generator
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: Data-join pattern for crossover markers, curveMonotoneX, tickSize
-          gridline trick, dynamic getBBox legend width — several D3-specific techniques,
-          not yet a truly unique one
-  verdict: REJECTED
+          gridline trick, dynamic getBBox-driven legend and callout halo — several
+          D3-specific techniques, still short of one truly unique-to-D3 capability
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
