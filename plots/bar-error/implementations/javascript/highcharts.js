@@ -10,6 +10,13 @@ const categories = ["Control", "Drug A", "Drug B", "Drug C", "Drug D", "Drug E"]
 const meanActivity = [42.3, 58.1, 71.4, 49.8, 63.2, 55.6];
 const stdDev = [4.1, 6.8, 5.2, 7.3, 4.9, 6.1];
 
+const peakIndex = meanActivity.indexOf(Math.max(...meanActivity));
+const peakColor = Highcharts.color(t.palette[0]).brighten(0.25).get();
+const columnData = meanActivity.map((y, i) => ({
+  y,
+  color: i === peakIndex ? peakColor : t.palette[0],
+}));
+
 // Only the core Highcharts bundle is loaded (no highcharts-more), so the
 // errorbar series type isn't available. Error bars are composed instead from
 // a plain "line" series: a vertical whisker plus top/bottom caps per category,
@@ -17,7 +24,14 @@ const stdDev = [4.1, 6.8, 5.2, 7.3, 4.9, 6.1];
 // other. The gap points still carry an explicit `x` — a bare `null` array
 // entry has no x, and Highcharts then auto-indexes it sequentially, which
 // silently stretches the category axis with phantom trailing categories.
-const CAP_HALF_WIDTH = 0.18;
+//
+// Cap width is derived from the column's own geometry (point/group padding)
+// rather than a hand-picked constant, so the caps stay visually proportioned
+// to the bar beneath them at ~75% of the column's rendered width.
+const POINT_PADDING = 0.15;
+const GROUP_PADDING = 0.1;
+const BAR_HALF_WIDTH = ((1 - 2 * GROUP_PADDING) * (1 - 2 * POINT_PADDING)) / 2;
+const CAP_HALF_WIDTH = BAR_HALF_WIDTH * 0.75;
 const errorBarData = [];
 categories.forEach((_, i) => {
   const low = meanActivity[i] - stdDev[i];
@@ -50,7 +64,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Error bars show ±1 standard deviation",
+    text: `Error bars show ±1 standard deviation · ${categories[peakIndex]} shows the highest mean activity`,
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
@@ -67,14 +81,18 @@ Highcharts.chart("container", {
   legend: { enabled: false },
   plotOptions: {
     series: { animation: false },
-    column: { borderWidth: 0, pointPadding: 0.15, groupPadding: 0.1 },
+    column: {
+      borderWidth: 0,
+      borderRadius: 3,
+      pointPadding: POINT_PADDING,
+      groupPadding: GROUP_PADDING,
+    },
   },
   series: [
     {
       name: "Enzyme activity",
       type: "column",
-      data: meanActivity,
-      color: t.palette[0],
+      data: columnData,
       showInLegend: false,
     },
     {
