@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: dashboard-metrics-tiles
 created: '2026-09-01T23:58:33Z'
-updated: '2026-09-02T00:03:08Z'
+updated: '2026-09-02T00:13:28Z'
 generated_by: claude-sonnet
 workflow_run: 33572808330
 issue: 3791
@@ -12,56 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 92
 review:
   strengths:
-  - Correct, well-reasoned semantic use of the Imprint palette for status dots (green/amber/red
-    as a traffic-light convention) and for the change indicator (favorable=green,
-    unfavorable=red), with a clear in-code comment explaining the semantic-exception
-    rationale
-  - Headline value is mathematically derived from the sparkline's final data point
-    (buildMetric), so the big number and the trend line always agree — avoids a common
-    fake-dashboard inconsistency
-  - Deterministic fixed-seed LCG for randomness, appropriate since the browser has
-    no seeded RNG
-  - 'Theme-adaptive chrome is correct and verified in both renders: warm off-white
-    / near-black backgrounds, elevated card surfaces, readable ink tokens, identical
-    data colors across themes'
-  - Responsive 3x2 CSS grid for 6 tiles matches the spec's own layout guidance exactly
-  - 'Correct Chart.js mount-node contract: one canvas per sparkline, animation disabled,
-    no fixed canvas sizing, legend/tooltip cleanly disabled for the compact sparkline
-    use case'
+  - Status color coding (green/amber/red for good/warning/critical) is a well-justified
+    semantic exception to the ordinal Imprint palette, applied consistently to both
+    the status dot and the sparkline stroke
+  - Change-direction color is computed independently of status via a higherIsBetter
+    flag, so 'up' correctly reads red for Memory/Error Rate but green for Requests/sec
+    — a subtle correctness detail many implementations get wrong
+  - Custom endpoint-dot Chart.js plugin (afterDatasetsDraw) marks the sparkline's
+    latest point with a ring-stroked dot, a genuine plugin-system feature rather than
+    a generic line chart
+  - Canvas gradient fill (scriptable backgroundColor) fades each sparkline area to
+    transparent — an idiomatic Chart.js/canvas technique, not a flat alpha fill
+  - Deterministic LCG-seeded data generation with realistic ops-monitoring values
+    (CPU %, memory %, response time ms, error rate %, req/s, active users) covering
+    both favorable and unfavorable, and good/warning/critical states
+  - Clean theme-token usage throughout (t.ink, t.inkSoft, t.elevatedBg) — all chrome
+    is legible and correctly adapted in both light and dark renders
+  - Minimal-chrome sparklines (no axes, no gridlines, no legend/tooltip) are the right
+    call for compact KPI tiles and keep focus on the big number
   weaknesses:
-  - 'Each tile uses justify-content: space-between across label/value/sparkline, producing
-    a large dead vertical gap between the metric label and the value, and again between
-    the value and the sparkline — tighten this spacing for a denser, more polished
-    stat-tile feel (affects VQ-05 / DE-02)'
-  - 'Library Mastery is generic: the sparkline is a standard line+fill+hidden-scales
-    recipe that any charting library could replicate with minor changes — consider
-    a Chart.js-distinctive touch, e.g. a plugin-drawn end-point dot marker on the
-    sparkline, or a canvas gradient fill instead of flat alpha color, to showcase
-    library-specific capability'
-  - Only 1 of 6 tiles is flagged 'critical'; a slightly wider spread of severity/status
-    combinations would demonstrate fuller feature coverage of the status-coding concept
-    (DQ-01)
-  - buildMetric() is a helper function used to construct all 6 metrics — reasonable
-    for avoiding repetition, but strict KISS structure (imports → data → plot → save,
-    no functions) would inline the metric construction instead (CQ-01)
+  - Grid is hardcoded to a fixed 3-column x 2-row layout rather than deriving columns/rows
+    from metrics.length (fine for the current 6-tile dataset per spec's 'static snapshot'
+    guidance, but would not adapt if the tile count changed)
+  - Helper functions (buildMetric, favorableColor, rand) and the plugin object move
+    away from a strict flat KISS script structure — justified here to avoid 6x duplicated
+    tile-construction code, but worth noting against the generic 'no functions/classes'
+    code-quality guideline
+  - Data storytelling relies on redundant color+arrow+status-dot encoding rather than
+    any explicit hierarchy/emphasis technique (e.g., highlighting the most critical
+    tile) — solid but not maximal visual hierarchy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white page background matching #FAF8F1, with slightly lighter elevated card surfaces (~#FFFDF6) for the 6 tiles arranged in a 3x2 grid.
-      Chrome: Title "dashboard-metrics-tiles · javascript · chartjs · anyplot.ai" in bold dark ink, fully visible top-left. Each tile has a small status dot + metric label (dark ink / soft ink), a large bold value, a small colored change indicator with arrow, and a filled sparkline line chart. All text is clearly legible against the light background.
-      Data: First tile (CPU Usage, status "good") uses brand green (#009E73) for both the status dot and sparkline. Memory and Active Users (status "warning") use amber (#DDCC77). Error Rate (status "critical") uses matte red (#AE3030). Change indicators are colored green when the change is favorable (e.g. CPU down, Response Time down, Requests/sec up) and red when unfavorable (e.g. Memory up, Error Rate up, Active Users down), each paired with an explicit up/down arrow glyph.
+      Background: Warm off-white (#FAF8F1-consistent) page background with slightly lighter elevated cream tile cards (~#FFFDF6). Not pure white.
+      Chrome: Bold dark heading "dashboard-metrics-tiles · javascript · chartjs · anyplot.ai" top-left, fully legible. Each of the 6 tiles shows a colored status dot + secondary-ink metric label (e.g. "CPU Usage"), a large bold primary-ink value ("47%", "128ms", "9073"), and a smaller colored change indicator with up/down triangle glyph and percentage. All text is clearly legible against the light background — no light-on-light issues.
+      Data: Each tile has a compact sparkline (line + gradient area fill, no axes/gridlines) beneath the value, with a small ringed dot marking the latest point. Sparkline color matches the tile's status: green (#009E73) for CPU Usage/Response Time/Requests-sec (good), amber for Memory/Active Users (warning), red for Error Rate (critical). Change-indicator colors are independently correct: e.g. Memory's +8.4% is red (unfavorable, since lower memory is better) while Requests/sec's +6.7% is green (favorable).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black page background matching #1A1A17, with elevated dark-gray card surfaces (~#242420) for the 6 tiles, clearly distinguishable from the page background.
-      Chrome: Same title, now rendered in light cream ink, fully visible and readable. Metric labels use a lighter soft-ink gray, values are bright white/cream, all readable against the dark tile backgrounds. No dark-on-dark or light-on-light failures observed anywhere.
-      Data: Data colors (green, amber, matte red for status/sparklines; green/red for change indicators) are pixel-identical to the light render — only the chrome (page bg, card bg, text) flipped, as required.
+      Background: Warm near-black page background (~#1A1A17-consistent) with slightly lighter charcoal elevated tile cards (~#242420). Not pure black.
+      Chrome: Same heading now rendered in light ink, fully legible against the dark background. Tile labels use light secondary-ink color, values use bright light-ink white/cream text — no dark-on-dark failures anywhere; every label, value, and change indicator is clearly readable.
+      Data: Sparkline colors are pixel-identical to the light render (green/amber/red per status), confirming only chrome (background, text) flipped between themes as required. Gradient fills and endpoint dots render correctly with the dot's ring stroke matching the dark tile background instead of the light one.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -69,53 +66,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, label 16px, value 46px,
-          change 18px); readable in both themes with no clipping or overflow
+        comment: All font sizes explicitly set (22/16/46/18px); readable in both themes
+          with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements in any tile, either theme
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Sparklines clearly visible with appropriate line weight and fill
-          for a 16-point compact trend; markers correctly omitted for the sparkline
-          idiom
+        comment: Unmarked line + single endpoint dot is the correct density choice
+          for compact sparklines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Status/change color coding is redundantly encoded with text labels
-          and arrow direction, not color alone; good contrast in both themes
+        comment: Status uses 3-way green/amber/red plus redundant arrow glyph, not
+          color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Grid uses most of the canvas with balanced margins; minor deduction
-          for the large dead vertical gaps within each tile from justify-content:
-          space-between'
+        comment: Tiles fill most of the canvas with balanced, generous margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No cartesian axes (sparkline tiles by design), but every value carries
-          its unit (%, ms) and a descriptive metric label
+        comment: Each tile's value carries its unit (%, ms) inline; labels are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct semantic-exception use of Imprint palette (green/amber/matte-red
-          for status), identical data colors across themes, correct theme backgrounds
+        comment: Green/amber/red status mapping is a documented semantic exception;
+          backgrounds are theme-correct in both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -123,23 +116,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful semantic color use and clean card-based dashboard layout,
-          clearly above library defaults, though not publication/FiveThirtyEight-tier
+        comment: Thoughtful semantic palette, gradient fills, custom endpoint marker
+          — clearly above defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: No grid, no spines, generous outer padding, rounded cards — but internal
-          tile spacing (space-between layout) looks slightly disjointed rather than
-          deliberately composed
+        comment: No grid, rounded cards, generous whitespace, subtle gradient details
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color-coded status dots and directional change arrows give an immediate
-          at-a-glance read of healthy vs. at-risk metrics
+        comment: Status dot + value + arrow + sparkline combine for immediate at-a-glance
+          health read; no single highlighted focal tile
     spec_compliance:
       score: 15
       max: 15
@@ -149,52 +140,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dashboard metric-tile grid with embedded sparklines
+        comment: Dashboard metric tiles with embedded sparklines, correct 3x2 grid
+          for 6 tiles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Value, label, sparkline, change indicator with arrow+percentage,
-          and status color coding all present
+        comment: Value, label, sparkline, change indicator with arrow, and status
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Headline value derived from the sparkline's own final point, guaranteeing
-          consistency
+        comment: Sparkline's final point matches the displayed headline value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format matches exactly; per-tile status dot + label serves
-          as the legend, appropriate for this layout
+        comment: Title matches mandated format exactly; per-tile status dot + label
+          serves as inline legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good mix of good/warning/critical statuses and favorable/unfavorable
-          changes across 6 metrics; could show slightly more severity variety
+        comment: Covers good/warning/critical statuses and both favorable/unfavorable
+          change directions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, realistic ops-monitoring scenario (CPU, memory, latency,
-          error rate, throughput, active users)
+        comment: Neutral, realistic ops-monitoring metrics (CPU, memory, latency,
+          error rate, throughput, users)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values and magnitudes plausible for a mid-size service
+        comment: All values and percentages are plausible for the domain
     code_quality:
       score: 9
       max: 10
@@ -204,60 +195,58 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Uses a buildMetric() helper to avoid repetition across 6 metrics;
-          deviates slightly from strict no-function KISS structure
+        comment: Uses helper functions (buildMetric, favorableColor) to avoid 6x duplicated
+          tile blocks; justified but not flat-script KISS
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG (seed=42), fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; browser globals used directly
+        comment: No unused imports; browser globals only
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-commented, no fake UI or fake interactivity
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct mount-node contract, animation: false set, current Chart.js
-          API'
+        comment: Correct mount-node contract, animation:false, current Chart.js API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Scriptable options, plugin hooks, canvas gradients — idiomatic Chart.js
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct idiomatic sparkline recipe (hidden scales/legend/tooltip,
-          fill+tension), one Chart instance per tile
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Generic sparkline pattern replicable in most charting libraries with
-          minor changes; no Chart.js-specific plugin/gradient/hover feature leveraged
-  verdict: REJECTED
+        comment: Custom afterDatasetsDraw plugin drawing a ringed endpoint dot is
+          genuinely Chart.js-specific
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - sparkline
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - gradient-fill
   - minimal-chrome
-  - alpha-blending
