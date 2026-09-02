@@ -1,7 +1,7 @@
 // anyplot.ai
 // candlestick-volume: Stock Candlestick Chart with Volume
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 89/100 | Created: 2026-09-02
+// Quality: 94/100 | Created: 2026-09-02
 
 import { useState } from "react";
 import { ChartContainer } from "@mui/x-charts/ChartContainer";

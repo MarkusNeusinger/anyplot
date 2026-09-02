@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: candlestick-volume
 created: '2026-09-02T14:29:19Z'
-updated: '2026-09-02T14:35:42Z'
+updated: '2026-09-02T14:47:03Z'
 generated_by: claude-sonnet
 workflow_run: 33641430605
 issue: 3068
@@ -12,9 +12,25 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/muix/plot-dark.html
-quality_score: 89
+quality_score: 94
 review:
   strengths:
+  - 'Directly and precisely addressed every weakness from the attempt-1 review: added
+    a diagonal SVG hatch pattern to bearish candle bodies AND bearish volume bars,
+    giving color-vision-deficient readers a real non-hue secondary encoding of the
+    up/down distinction (VQ-04).'
+  - 'Added a genuine data-storytelling annotation: a bracketed, amber-outlined highlight
+    band spanning both panes over Feb 19-21 with a ''Selloff -> reversal'' callout,
+    correctly identifying the largest directional swing in the series and tying it
+    to the spec''s own framing (''identify volume-confirmed trends or reversals'')
+    instead of leaving all 60 days undifferentiated (DE-03).'
+  - 'Visible visual-refinement pass: pill-shaped legend chips now have an elevated
+    background and border (previously bare swatches+text), a subtle horizontal divider
+    line now sits between the price and volume panes, and a faint elevated-background
+    tint delineates the volume pane from the price pane above it (DE-01/DE-02).'
+  - 'Bearish elements also gained a heavier stroke outline (candle bodies: opacity
+    0.3->0.6, width 1->2; volume bars: added an ink outline) as a further redundant
+    cue distinguishing bearish from bullish beyond hue and hatch alone.'
   - Correctly solves the 'no native candlestick in MUI X community' problem via the
     documented ChartContainer + useXScale/useYScale composition pattern, drawing real
     OHLC candles against the shared band scale rather than faking it or reaching for
@@ -24,54 +40,42 @@ review:
     split exactly, with columns landing under the matching candle.'
   - Real cross-pane crosshair driven by actual mouse position (not a simulated/static
     annotation) spans both panes and drives a live OHLCV + volume tooltip readout
-    — correctly absent from the static PNG per the interactive-library fairness rules,
+    -- correctly absent from the static PNG per the interactive-library fairness rules,
     and live in the emitted HTML.
-  - 'Data is realistic and fully covers the plot type: both bullish and bearish candles,
-    varying spreads/wick lengths, and volume magnitudes that plausibly correlate with
-    the size of each day''s price move.'
   - Deterministic in-memory data generation (fixed-seed LCG, fixed calendar anchor)
-    with correct OHLC invariants (high ≥ max(open,close), low ≤ min(open,close)).
-  - 'Palette correctly follows the finance semantic exception: brand green (#009E73)
-    for bullish, matte red (#AE3030) for bearish, applied consistently to both candlesticks
-    and volume bars, identical across light/dark renders.'
-  - All font sizes are explicitly set (title, axis labels, tick labels, legend, tooltip)
-    and `skipAnimation` is set on both ChartContainers.
+    with correct OHLC invariants (high >= max(open,close), low <= min(open,close));
+    both bullish and bearish candles present with realistic spreads, wick lengths,
+    and volume magnitudes.
+  - 'Palette correctly follows the finance semantic exception (brand green #009E73
+    for bullish, matte red for bearish), applied consistently across candlesticks
+    and volume bars, pixel-identical between light and dark renders -- only chrome
+    flips.'
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: the layout is functional
-    but visually plain — plain title/legend typography, no subtle refinements (e.g.,
-    a faint separator or elevated background tint delineating the price pane from
-    the volume pane, refined legend chip styling) that would elevate it past a standard
-    dashboard look.'
-  - 'No visual hierarchy or storytelling beyond raw color-coding: the chart displays
-    the full 60-day series without emphasizing any specific insight (e.g., the sharp
-    Feb 19-21 selloff/reversal or the volume spike that accompanies it). Consider
-    a subtle emphasis technique (e.g., a light callout or slightly bolder treatment
-    on the largest single-day move) to guide the viewer''s eye — the spec''s own framing
-    (''identify volume-confirmed trends or reversals'') offers a natural candidate.'
-  - 'Bullish/bearish encoding relies solely on red vs. green hue (VQ-04): while this
-    is the sanctioned finance semantic exception and the two hues have some luminance
-    separation, there is no secondary encoding (e.g., a subtle texture, outline weight,
-    or opacity difference) to reinforce the distinction for color-vision-deficient
-    readers.'
-  - Title ('candlestick-volume · javascript · muix · anyplot.ai') renders comfortably
-    small relative to the canvas (~30-35% of width) — not a violation, but there is
-    room to size it slightly larger for a stronger visual anchor without approaching
-    overflow.
+  - 'Library Mastery is solid but not maximal: the dual synchronized ChartContainers
+    plus real cross-pane crosshair already showcase the low-level scale/composition
+    API well, but there is room for one more distinctive MUI X touch (e.g. a ChartsReferenceLine
+    marking a key price level) to push LM-02 to full marks.'
+  - Data storytelling is now present but still modest -- a single highlight window
+    with a generic callout label. Labeling the specific reversal price level or the
+    volume-spike magnitude directly on the chart would deepen the narrative further.
+  - Title renders at a comfortable, legible size but still occupies well under half
+    the plot width; there is headroom to size it slightly larger for a stronger visual
+    anchor without approaching overflow.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Bold dark title "candlestick-volume · javascript · muix · anyplot.ai" centered at top; a two-item legend row below it ("Bullish (close ≥ open)" green swatch, "Bearish (close < open)" red swatch); upper price pane with a "Price (USD)" y-axis labeled in $XX.00 increments and subtle horizontal gridlines; lower volume pane with a "Volume" y-axis labeled in M increments and a shared "Date" x-axis (Feb 1 … Mar 26) below it. All title, axis-label, and tick-label text renders in dark ink and is clearly legible against the light background.
-      Data: 60 daily candlesticks with visible wicks and bodies, colored brand green (#009E73) for bullish days and matte red (#AE3030) for bearish days; the volume bars directly below use the same two colors, aligned under their corresponding candle. The series traces a plausible down-then-up-then-down price cycle with varying spread widths and wick lengths.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Bold dark title "candlestick-volume · javascript · muix · anyplot.ai" centered at top; a two-item legend row below it, now styled as pill-shaped chips with a light elevated background and border ("Bullish (close ≥ open)" green swatch, "Bearish (close < open)" red swatch with dark outline); upper price pane with a "Price (USD)" y-axis labeled in $XX.00 increments and subtle horizontal gridlines; a thin divider rule and a faintly tinted volume pane below with a "Volume" y-axis labeled in M increments and a shared "Date" x-axis (Feb 1 ... Mar 26). An amber-bordered highlight band brackets Feb 19-21 across both panes with a "Selloff -> reversal" callout box. All title, axis-label, and tick-label text renders in dark ink and is clearly legible against the light background.
+      Data: 60 daily candlesticks with visible wicks and bodies, colored brand green (#009E73) for bullish days and matte red for bearish days; bearish bodies and volume bars additionally carry a diagonal hatch texture and heavier outline, a non-hue secondary encoding of the down direction. Volume bars sit directly below aligned under their corresponding candle. The series traces a plausible down-then-up-then-down price cycle, with the sharpest down-then-up move (Feb 19-21) highlighted and matched to a visible volume spike.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, legend, and axis structure as the light render, all text now rendered in light ink (white/off-white) and clearly legible against the dark background. Gridlines are faint light lines, still subtle but visible.
-      Data: Candlestick and volume bar colors are pixel-identical to the light render (#009E73 bullish / #AE3030 bearish) — confirming only chrome flipped between themes.
-      Legibility verdict: PASS — no dark-on-dark or light-on-light failures observed; no title/axis/tick text is unreadable in either theme.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, legend, divider, highlight band, and axis structure as the light render, all text now rendered in light ink (white/off-white) and clearly legible against the dark background. Gridlines are faint light lines, still subtle but visible. Legend chips and the volume-pane tint use the dark-mode elevated background token.
+      Data: Candlestick and volume-bar colors (including the bearish hatch/outline treatment) are pixel-identical to the light render -- confirming only chrome flipped between themes.
+      Legibility verdict: PASS -- no dark-on-dark or light-on-light failures observed; no title/axis/tick text is unreadable in either theme.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -79,35 +83,37 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes and well-proportioned;
-          title comfortably small, no overflow/clipping.
+        comment: All font sizes explicitly set; readable in both themes; title fontsize
+          bumped 22->24 this attempt, no overflow/clipping.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render.
+        comment: No text or element collisions in either render, including the new
+          callout box.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Candlestick bodies/wicks and volume bars are well-sized for 60-period
+        comment: Candlestick bodies/wicks and volume bars well-sized for 60-period
           density in both panes.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Bull/bear relies solely on red-vs-green hue (sanctioned finance semantic
-          exception); no secondary encoding for CVD readers.
+        comment: 'Fixed this attempt: diagonal hatch + heavier outline now give bearish
+          elements a genuine non-hue secondary encoding alongside the sanctioned finance
+          green/red exception.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Price/volume split matches spec's 70-75/25-30 guidance; balanced
-          margins; full width used.
+          margins; full width used; canvas dimension gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -122,30 +128,32 @@ review:
         comment: Brand green + matte-red semantic exception applied consistently;
           theme-correct backgrounds and chrome in both renders.
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Functional but plain; a well-configured setup rather than publication-grade
-          polish.
+        passed: true
+        comment: 'Fixed this attempt: pill-shaped elevated legend chips, hatch texture,
+          and the amber-framed callout push this past ''well-configured default''.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle horizontal-only grid and reduced-opacity axis lines show some
-          refinement; whitespace is reasonable.
+        passed: true
+        comment: 'Fixed this attempt: added a pane-divider rule and a faint elevated
+          tint delineating the volume pane, on top of the existing subtle horizontal-only
+          grid.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Color contrast provides basic hierarchy, but no emphasis or annotation
-          highlights the notable Feb selloff/reversal or its volume confirmation.
+        passed: true
+        comment: 'Fixed this attempt: the Feb 19-21 selloff/reversal is now bracketed
+          and labeled across both panes, tying the largest price swing to its volume
+          confirmation.'
     spec_compliance:
       score: 15
       max: 15
@@ -209,8 +217,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward React component structure; the two draw-helper components
-          are idiomatic for the composition pattern, not over-engineering.
+        comment: Straightforward React component structure; draw-helper components
+          remain idiomatic for the composition pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -228,14 +236,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; clean, appropriately complex for the composition pattern
-          required.
+        comment: No fake UI; new hatch/highlight code is clean and appropriately scoped.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exported component, harness-owned output, skipAnimation set.
+        comment: Default-exported component, harness-owned output, skipAnimation set
+          on both ChartContainers.
     library_mastery:
       score: 9
       max: 10
@@ -251,10 +259,10 @@ review:
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
+        passed: true
         comment: Dual synchronized ChartContainers plus a real cross-pane crosshair
           genuinely showcase MUI X's low-level scale/composition API.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -262,6 +270,8 @@ impl_tags:
   - manual-ticks
   - custom-legend
   - hover-tooltips
+  - annotations
+  - patches
   patterns:
   - data-generation
   dataprep:
@@ -269,3 +279,4 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
+  - edge-highlighting
