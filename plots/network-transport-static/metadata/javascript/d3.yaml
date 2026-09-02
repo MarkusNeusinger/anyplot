@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: network-transport-static
+created: '2026-09-02T04:45:03Z'
+updated: '2026-09-02T05:02:54Z'
+generated_by: claude-sonnet
+workflow_run: 33590053723
+issue: 3463
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Both attempt-1 blocking issues are resolved: native <title> hover tooltips now
+    cover stations and routes, and node/edge/label construction uses D3''s idiomatic
+    selection.data(...).join(...) + d3.scaleLinear instead of imperative loops and
+    manual math'
+  - Canvas padding was tightened, eliminating the uneven corner whitespace flagged
+    previously (Airport/top-right, Oldtown/bottom-left)
+  - Correct Imprint palette in canonical order (green/lavender/blue for regional/express/local),
+    with data colors identical between light and dark renders
+  - Sophisticated collision-avoidance system keeps 21 dense edge-time labels legible
+    without overlapping node labels or each other, in both themes
+  - Curved/offset edges correctly distinguish parallel routes on the same station
+    pair (e.g. Central Station <-> Eastgate carries both IC10 and RE6)
+  - Clean hub-and-spoke visual hierarchy makes Central Station's role as the network
+    hub immediately obvious
+  weaknesses:
+  - Edge-time labels (14px CSS, 21 of them) remain dense and small; still likely hard
+    to read at a ~400px mobile thumbnail despite the slight size bump from 13px
+  - Chrome/data-label typography still relies on the Inter/system-sans fallback stack
+    rather than a more distinctive typographic choice
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Bold dark title "network-transport-static · javascript · d3 · anyplot.ai" centered at top; 12 station nodes as cream-filled circles with dark ink outlines and bold dark station-name labels beneath each; dark-gray edge-time labels on light pills; legend (Regional/Express/Local) centered at bottom. All chrome text clearly readable against the light background.
+      Data: First route type (Regional) uses #009E73, Express uses lavender #C475FD, Local uses blue #4467A3 — canonical Imprint order. Directional arrowheads color-matched per type. Curved/offset edges distinguish parallel routes between the same station pair.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout with all chrome inverted — light/white title, near-black node fills with light ink outlines, light station-name and edge-time text on dark pills, light legend text. No dark-on-dark failures; all chrome text clearly readable against the dark background.
+      Data: Route colors identical to the light render (#009E73 / #C475FD / #4467A3), confirming only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: All font sizes explicit and readable in both themes at full resolution;
+          dense 14px edge-time labels remain small for mobile thumbnails
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Custom declutter algorithm keeps all labels collision-free in both
+          renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Node radius, stroke width, and arrowheads well-sized for 12 nodes
+          / 21 edges
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 3 well-separated hues, not red-green, redundant arrowhead + legend
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Padding tightened since attempt 1; network now fills the frame evenly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for network diagram; title correct, edge labels carry
+          unit-bearing time data
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical Imprint order, identical across themes, theme-correct backgrounds
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Curved offset edges, rounded label pills, per-type color-coding,
+          deliberate typography stack
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No competing grid/spines, generous whitespace, now-balanced canvas
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hub-and-spoke structure around Central Station immediately legible;
+          route-type coloring adds interpretive layer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network/transport diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Labels, arrows, edge times, curved parallel routes, fixed layout,
+          and now native <title> hover tooltips all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Coordinates correctly drive layout via d3.scaleLinear, aspect preserved
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact, legend labels match route-type data
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 12 stations, 21 routes across all 3 types, bidirectional and parallel
+          pairs; no 3+-parallel-route pair
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral regional-rail scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Departure always precedes arrival, realistic durations, express faster
+          than regional
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly linear flow, retains small helper functions justified by the
+          collision-avoidance algorithm
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hard-coded, deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the provided d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Single svg sized from window.ANYPLOT_SIZE, current D3 7.9 API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Now uses selection.data(...).join(...) and d3.scaleLinear throughout,
+          fixing the attempt-1 finding
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom arrowhead markers, quadratic-Bezier offset curves, getBBox()-driven
+          label decluttering
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
