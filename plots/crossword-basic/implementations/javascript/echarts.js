@@ -78,6 +78,7 @@ const gridTop = titleSpace + (mount.height - titleSpace - margin - available) / 
 const entryFill = "#FFFDF6";
 const blockedFill = "#1A1A17";
 const cellStroke = "#4A4A44";
+const outerFrameStroke = "#1A1A17";
 const numberFill = "#1A1A17";
 
 // --- Init ---------------------------------------------------------------
@@ -124,7 +125,7 @@ chart.setOption({
             style: {
               fill: cell.blocked ? blockedFill : entryFill,
               stroke: cellStroke,
-              lineWidth: 2,
+              lineWidth: 1.5,
             },
           },
         ];
@@ -133,10 +134,11 @@ chart.setOption({
             type: "text",
             style: {
               text: String(cell.number),
-              x: topLeft[0] + 5,
-              y: topLeft[1] + 3,
+              x: topLeft[0] + 6,
+              y: topLeft[1] + 4,
               fill: numberFill,
-              fontSize: 12,
+              fontSize: 15,
+              fontWeight: 600,
               textVerticalAlign: "top",
               textAlign: "left",
             },
@@ -144,6 +146,17 @@ chart.setOption({
         }
         return { type: "group", children };
       },
+    },
+  ],
+  // Bolder outer frame vs. the thinner inner dividers gives the printed card a
+  // typographic hierarchy instead of one uniform line weight throughout.
+  graphic: [
+    {
+      type: "rect",
+      shape: { x: gridLeft, y: gridTop, width: available, height: available },
+      style: { fill: "none", stroke: outerFrameStroke, lineWidth: 5 },
+      z: 100,
+      silent: true,
     },
   ],
 });
