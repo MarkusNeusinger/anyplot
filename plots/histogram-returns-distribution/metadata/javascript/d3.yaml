@@ -1,0 +1,253 @@
+library: d3
+language: javascript
+specification_id: histogram-returns-distribution
+created: '2026-09-02T01:19:54Z'
+updated: '2026-09-02T01:32:02Z'
+generated_by: claude-sonnet
+workflow_run: 33578562846
+issue: 3751
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/d3/plot-dark.html
+quality_score: 87
+review:
+  strengths:
+  - Manual equal-width binning correctly avoids d3.bin()'s uneven default thresholds,
+    with a clear rationale comment explaining the tradeoff
+  - 'Complete feature set from the spec: normal-curve overlay fitted to mean/std,
+    mean/std/skew/kurtosis callout box, and ±2σ tail highlighting with dashed boundary
+    lines'
+  - Tail highlighting correctly uses the matte-red semantic anchor (palette[4]) for
+    the 'extreme event' role while the bulk stays brand green (palette[0])
+  - Theme-adaptive chrome fully threaded through axes, gridlines, callout box, and
+    legend — both renders legible with no dark-on-dark or light-on-light failures
+  - Deterministic fixed-seed LCG + Box-Muller mixture model produces a realistic negatively-skewed,
+    fat-tailed daily-return distribution (skew -0.73, excess kurtosis 3.07) without
+    an unseeded RNG
+  - 'Clean layout: no overlapping elements, subtle y-axis-only gridlines, generous
+    margins, canvas gate passed'
+  weaknesses:
+  - 'Legend/series colors skip the canonical Imprint order (green → lavender → blue):
+    the normal-fit curve uses palette[2] (blue) instead of the next canonical slot
+    palette[1] (lavender). Blue-for-model-fit is a defensible convention but is a
+    cherry-picked choice per the style guide''s default ordering rule — consider palette[1]
+    or the theme-adaptive ''neutral'' anchor for baseline/reference-line elements
+    instead.'
+  - Three small helper functions (uniform, gaussian, normalPdf) add minor structure
+    beyond a flat script; justified by the statistical requirements but slightly reduces
+    KISS simplicity.
+  - 'Design excellence is solid but not exceptional: default system font family, standard
+    rounded-rect callout box — no distinctive typographic or layout flourish beyond
+    the palette/box treatment.'
+  - Library Mastery stays close to the skeleton pattern (selection/join + scale +
+    axis generators); no D3-distinctive feature (e.g. custom easing/interpolation
+    beyond curveBasis, transitions-free layout composition) pushes it further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "histogram-returns-distribution . javascript . d3 . anyplot.ai" is bold dark text, centered at top, clearly readable. Axis titles "Daily Return (%)" and "Density" are dark and legible. Percent-formatted x tick labels and decimal y tick labels are medium-gray and legible. Subtle horizontal gridlines are visible without competing with the data. Two dashed gray vertical lines mark the +/-2 sigma tail boundaries. A "Fitted statistics" callout box (mean, std, skew, kurt in monospace) sits top-left on an elevated cream panel with a thin border. Legend top-right lists "Daily returns" (green swatch), "|z| > 2 sigma (tail)" (red swatch), "Normal fit" (blue line swatch).
+      Data: Green histogram bars form a left-skewed, roughly bell-shaped distribution peaking near 0%, with red bars flagging bins beyond +/-2 sigma in both tails (a fat left tail near -6% stands out). A smooth blue curve traces the fitted normal PDF, visibly lower-peaked and thinner-tailed than the green bars, illustrating the excess kurtosis and negative skew reported in the stats box.
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title, axis titles, and tick labels now rendered in light/off-white and soft-gray tones, all clearly legible against the dark background. Gridlines are faint light lines, still visible but subtle. The dashed +/-2 sigma boundary lines and the "Fitted statistics" box (now on a dark-elevated panel with light text) remain fully legible. Legend text and swatches read the same as light mode.
+      Data: Bar colors (green bulk, red tails) and the blue normal-fit curve are pixel-identical to the light render -- only the chrome (background, text, grid, box fill) flipped, confirming a correct theme-adaptive implementation. Brand green #009E73 reads well on the dark surface.
+      Legibility verdict: PASS -- no dark-on-dark failures; all title/axis/tick text and the stats box remain fully readable.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text explicitly sized (14-22px) and readable in both themes;
+          title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Stats box, legend, dashed tail lines, axes, and bars never collide
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars and fitted curve clearly visible and distinguishable at n=252
+          medium density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green tail-vs-bulk distinction reinforced by dashed boundary
+          lines and x-position, not color alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); good proportions, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (Daily Return (%), Density)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; tail correctly uses the matte-red semantic
+          anchor; backgrounds correct in both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom stats callout box and semantic tail coloring show polish beyond
+          generic defaults, but typography/layout stays conventional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal axis frame, subtle y-axis-only gridlines, generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tail highlighting + normal-fit overlay + stats box create a clear
+          focal point around fat-tail risk
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with density normalization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normal overlay, stats box (mean/std/skew/kurt), tail highlighting,
+          28 bins (within 20-50 recommended range) all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = returns %, Y = density, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Histogram, normal fit, tail flags, and stats all shown together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixture model produces plausible, neutral daily-equity-return characteristics
+          (negative skew, fat left tail)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=252 matches the spec's recommended 1-year daily sample; return
+          magnitudes realistic
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Three small helper functions (uniform, gaussian, normalPdf) are justified
+          by the stats requirements but add minor structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3 is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Mount-node contract respected; no animation; correct d3 v7 API usage
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of d3 selection/join, scales, and axis generators
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Custom equal-width binning workaround and d3-array stats functions
+          (mean/deviation/sum) show some d3-specific nuance, but overall usage stays
+          close to the skeleton pattern
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - publication-ready
+  - alpha-blending

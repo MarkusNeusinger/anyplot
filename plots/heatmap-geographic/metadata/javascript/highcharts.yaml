@@ -1,0 +1,271 @@
+library: highcharts
+language: javascript
+specification_id: heatmap-geographic
+created: '2026-09-02T01:09:24Z'
+updated: '2026-09-02T01:25:03Z'
+generated_by: claude-sonnet
+workflow_run: 33577628170
+issue: 3638
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'Basemap now reads as an actual district layout: irregular avenue/side-street
+    spacing with distinct line weights, a diagonal boulevard, and two named landmarks
+    (Clock Tower, Public Library) — directly resolves the attempt-1 ''minimal basemap''
+    weakness.'
+  - Correctly works around the missing core-bundle heatmap/colorAxis module by hand-computing
+    a Gaussian KDE surface and mapping density to a per-cell imprint_seq RGBA color
+    with alpha scaling — a legitimate, well-documented workaround, not a hack.
+  - GRID_COLS raised 100 -> 150 for a visibly smoother density surface, and the helper-function
+    count was trimmed (hexToRgb and the streetLine function are gone, replaced by
+    inline hex parsing and declarative array literals) — both directly address attempt-1
+    feedback.
+  - Hotspot name labels drawn directly above each density blob via chart.renderer
+    give the viewer an immediate read of which zones matter, without relying on tooltip-only
+    interactivity.
+  - Deterministic seeded LCG-based data generation keeps the KDE surface reproducible
+    across runs.
+  - Data colors are pixel-identical between light and dark renders; only chrome (background,
+    text, grid, block-fill tint) flips, exactly per the theme-adaptive chrome rules.
+  - Plot/X/Y coordinate system is derived from real km-per-degree conversion at the
+    district's latitude so the KDE grid cells stay square (not stretched) on screen
+    — a subtle correctness detail most implementations skip.
+  weaknesses:
+  - The KDE surface still shows a faint blocky/stepped edge under close inspection
+    despite the GRID_COLS 100->150 increase, most noticeable where the Boutique Row
+    and Farmers Market Square blobs nearly touch — pushing GRID_COLS higher still,
+    or adding a touch of cell-edge anti-aliasing, would read as fully continuous density.
+  - Only two landmarks (Clock Tower, Public Library) anchor the basemap; the Boutique
+    Row / Farmers Market Square half of the district has no surrounding basemap detail
+    besides the street grid and density blobs — a third reference point on that side
+    would balance the district read.
+  - 'Design excellence is solid but not yet exceptional: the hand-drawn legend and
+    street grid are functional rather than highly polished (e.g. the legend bar has
+    no tick marks between Low/High, and the street lines use only two dash styles)
+    — more visual refinement here would push Design Excellence further.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white page background (~#FAF8F1) outside the plot area; the plot area itself carries a subtly distinct warm-beige "block fill" tint (~#EDE9DA) used deliberately as basemap chrome for the geographic district, not as data.
+      Chrome: Title "heatmap-geographic · javascript · highcharts · anyplot.ai" (bold, dark ink, top-left) and the KDE-methodology subtitle are both clearly readable. X/Y axis titles ("km east of district center" / "km north of district center") and tick labels are dark-on-light and legible. An irregular dashed street grid (major "avenue" lines + thinner "side street" lines + one diagonal boulevard) sits beneath the density surface, with two small square landmark markers labeled "Clock Tower" and "Public Library". Four hotspot name labels ("Transit Station Plaza", "Mall Food Court", "Boutique Row", "Farmers Market Square") sit above their respective blobs in bold dark text, fully readable with no overlap. A hand-drawn horizontal gradient legend bar ("Relative ping density", Low/High) sits bottom-left.
+      Data: Four smooth density blobs rendered as a green-to-blue sequential gradient (imprint_seq) with alpha scaling so low-density edges fade into the basemap; peak-density cores read as blue, low-density edges read as pale teal-green. The gradient starts at the Imprint brand green (#009E73) for low density.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black page background (~#1A1A17) outside the plot area; plot area carries a slightly lighter near-black block tint (~#26261F), consistent with the light render's basemap-chrome intent.
+      Chrome: Title, subtitle, axis titles, and tick labels all flip to light ink color and remain fully legible against the dark background. The street grid (avenues, side streets, diagonal boulevard) and the two landmark labels remain visible at reduced opacity but are still clearly distinguishable. Hotspot labels remain bold and light-colored, clearly readable with no overlap. The gradient legend bar and its Low/High labels are unchanged in position and fully legible in light-gray text.
+      Data: The four density blobs use the identical green-to-blue gradient and alpha scaling as the light render — pixel-for-pixel identical data colors, confirming only chrome flipped between themes.
+      Legibility verdict: PASS — no dark-on-dark text; every chrome element (title, subtitle, axis labels, tick labels, hotspot labels, landmark labels, legend text) is clearly legible against the near-black surface.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set in CSS-px mount space; readable in
+          both themes; title fits comfortably, no clipping.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, subtitle, axis labels, hotspot labels,
+          landmark labels, or legend.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: KDE grid cell size scales with plot pixel geometry; density surface
+          clearly visible at all four hotspots.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue gradient with alpha, no red-green reliance,
+          good contrast against basemap tint.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced margins, nothing cut off, axis labels proportionate.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axis titles include units ('km east/north of district center').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Data gradient built from t.seq (imprint_seq) stops; data colors identical
+          across themes; chrome theme-correct in both renders.
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom hand-drawn legend, irregular street-grid basemap with named
+          landmarks, hotspot annotations — clearly above library defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Native axis gridlines disabled in favor of a subtle dashed street
+          grid; generous whitespace; minor blockiness remains at KDE cell edges.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Named hotspot labels plus visible density-magnitude contrast between
+          zones guide the viewer to the insight immediately.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine continuous KDE density surface over geographic coordinates,
+          not a discrete choropleth.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE, sequential+alpha colormap, colorbar legend, zoom, and now a
+          convincing street-map basemap with landmarks are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Km-offset X/Y correctly derived from and convertible back to lat/lon;
+          axes show full data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; custom density legend
+          is correct and appropriate given a single density series.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Four hotspots with varying weight/spread show a range of density
+          magnitudes and cluster shapes.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Anonymized, opted-in foot-traffic pings near a shopping district
+          — real, neutral, comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: District size, KDE bandwidth, and ping counts are all realistic for
+          a small commercial corridor.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper-function count trimmed since attempt 1 (hexToRgb and streetLine
+          removed); remaining helpers are justified by the Highcharts render-callback
+          pattern.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG PRNG.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused globals; only ANYPLOT_TOKENS/THEME and Highcharts used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the constraint (no heatmap module); no
+          fake interactive elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled in both required
+          places.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly adapts to the core-bundle-only constraint (no heatmap/colorAxis
+          module) using scatter + renderer instead of importing a forbidden add-on
+          module.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses chart.renderer for freeform SVG legend/labels/landmarks and
+          zooming:{type:'xy'} drag-to-zoom — Highcharts-specific capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
