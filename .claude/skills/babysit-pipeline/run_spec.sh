@@ -51,16 +51,32 @@ meta_present() {  # assumes a fresh `git fetch` already ran this iteration
   [ -n "$(git -C "$REPO" ls-tree --name-only origin/main -- "plots/${SPEC}/metadata/${lang}/$1.yaml" 2>/dev/null)" ]
 }
 
-pipeline_active() {
-  for wf in impl-generate.yml impl-review.yml impl-repair.yml impl-merge.yml impl-review-retry.yml; do
-    local out
-    if ! out=$(gh run list --workflow="$wf" --limit 12 --json status \
-        --jq '.[] | select(.status=="in_progress" or .status=="queued") | .status' 2>&1); then
-      printf 'WARN: gh run list %s failed; assuming active: %s\n' "$wf" "$out" >> "$LOG"
+# Per-spec liveness. A missing lib is still in flight when impl-generate has a
+# queued/in-progress run for THIS spec, or an open implementation/<spec>/<lib>
+# PR exists that was touched within the last hour (review, repair and merge all
+# happen on that PR). The earlier repo-wide "any impl-* run active" signal broke
+# both ways once several drivers ran side by side: it was almost always true
+# (a dead spec hid behind its neighbours' runs) and, with a short list limit,
+# it missed a long generate run whose entry had scrolled off (false PARTIAL
+# while PRs were mid-repair). `--status` filters server-side, so the list
+# length no longer matters.
+spec_active() {
+  local st out
+  for st in in_progress queued waiting; do
+    if ! out=$(gh run list --workflow=impl-generate.yml --status "$st" --limit 100 \
+        --json displayTitle \
+        --jq ".[] | select(.displayTitle | test(\" for ${SPEC}\$\")) | .displayTitle" 2>&1); then
+      printf 'WARN: gh run list --status %s failed; assuming active: %s\n' "$st" "$out" >> "$LOG"
       return 0
     fi
     grep -q . <<<"$out" && return 0
   done
+  if ! out=$(gh pr list --state open --limit 100 --json headRefName,updatedAt \
+      --jq ".[] | select((.headRefName | startswith(\"implementation/${SPEC}/\")) and (.updatedAt > (now - 3600 | todate))) | .headRefName" 2>&1); then
+    printf 'WARN: gh pr list failed; assuming active: %s\n' "$out" >> "$LOG"
+    return 0
+  fi
+  grep -q . <<<"$out" && return 0
   return 1
 }
 
@@ -71,7 +87,7 @@ pipeline_active() {
 # `?` on error, never 0: a masked API failure reading as "all healthy" is how a
 # quota outage gets mistaken for a slow queue.
 recent_generate_failures() {
-  gh run list --workflow=impl-generate.yml --limit 60 \
+  gh run list --workflow=impl-generate.yml --limit 100 \
     --json conclusion,updatedAt \
     --jq "[.[] | select(.conclusion==\"failure\" and (.updatedAt > (now - 1500 | todate)))] | length" 2>/dev/null \
     || echo "?"
@@ -118,7 +134,9 @@ for i in "${!TODO[@]}"; do
   [ "$i" -lt $(( ${#TODO[@]} - 1 )) ] && sleep "$STAGGER"
 done
 
-MAXMIN=$(( 30 + 15 * ${#TODO[@]} )); [ "$MAXMIN" -gt 150 ] && MAXMIN=150
+# Runner queueing grows with the number of drivers in flight, so the budget is
+# a little more generous than the 2-slot version (6 libs: 150 min, cap 180).
+MAXMIN=$(( 30 + 20 * ${#TODO[@]} )); [ "$MAXMIN" -gt 180 ] && MAXMIN=180
 iters=$(( MAXMIN * 60 / INTERVAL ))
 idle=0; last_done=-1
 for ((i=1; i<=iters; i++)); do
@@ -133,7 +151,7 @@ for ((i=1; i<=iters; i++)); do
     exit 0
   fi
   if [ "$done_n" -gt "$last_done" ]; then idle=0; last_done=$done_n
-  elif pipeline_active; then idle=0
+  elif spec_active; then idle=0
   else idle=$((idle+1)); fi
   printf '[%s iter %d/%d] %d/%d done, missing: %s (idle=%d)\n' \
     "$(TZ=UTC date -u +%H:%M:%S)" "$i" "$iters" "$done_n" "${#TODO[@]}" "${missing[*]}" "$idle" >> "$LOG"
