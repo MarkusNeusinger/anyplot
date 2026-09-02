@@ -17,7 +17,13 @@ const tiers = [
 ];
 const statusOrder = ["Churned", "At Risk", "Retained"];
 const statusColor = { Churned: t.palette[4], "At Risk": t.amber, Retained: t.palette[0] };
-const statusTextColor = { Churned: t.pageBg, "At Risk": t.ink, Retained: t.pageBg };
+// Fixed (non-theme-adaptive) label colors chosen for contrast against each
+// status's own fixed data fill — the fills never change between themes, so
+// the label colors must not either (t.ink/t.pageBg flip per theme and would
+// invert the contrast in dark mode).
+const LABEL_LIGHT = "#FAF8F1";
+const LABEL_DARK = "#1A1A17";
+const statusTextColor = { Churned: LABEL_LIGHT, "At Risk": LABEL_DARK, Retained: LABEL_LIGHT };
 
 const totals = tiers.map((tier) => statusOrder.reduce((sum, status) => sum + tier.counts[status], 0));
 const grandTotal = totals.reduce((sum, total) => sum + total, 0);
@@ -140,7 +146,7 @@ chart.setOption({
     type: "value",
     min: 0,
     max: 100,
-    name: "Share within tier",
+    name: "Share within tier (%)",
     nameLocation: "center",
     nameGap: 55,
     nameTextStyle: { color: t.ink, fontSize: 16 },
