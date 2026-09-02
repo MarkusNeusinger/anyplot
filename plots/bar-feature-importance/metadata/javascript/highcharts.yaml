@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: bar-feature-importance
 created: '2026-09-02T12:42:08Z'
-updated: '2026-09-02T12:46:43Z'
+updated: '2026-09-02T13:04:45Z'
 generated_by: claude-sonnet
 workflow_run: 33630941298
 issue: 2276
@@ -12,52 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-featu
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-feature-importance/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
   - Bars sorted descending by importance (highest at top) exactly as the spec requires,
-    achieved via the reversed-array trick for Highcharts' bottom-up 'bar' category
-    order.
-  - 'Sequential color gradient (Imprint imprint_seq, #009E73 -> #4467A3) mapped to
-    each bar''s importance value, matching the spec''s explicit request for a gradient
-    tied to magnitude — and it is identical across light/dark renders.'
-  - Importance values shown as bold text annotations at the end of each bar for precision,
-    per spec notes.
-  - Realistic, neutral loan-default-risk feature set (credit score, DTI, income, ...)
-    with importances that sum to exactly 1.000 like real sklearn/XGBoost feature_importances_
-    output — excellent factual correctness.
-  - 'Both themes fully readable: warm off-white / near-black backgrounds, correct
-    ink/inkSoft/grid token usage, no dark-on-dark or light-on-light failures.'
+    via the reversed-array trick for Highcharts' bottom-up 'bar' category order.
+  - 'Sequential Imprint gradient (imprint_seq, #009E73 -> #4467A3) mapped to each
+    bar''s importance value via per-point color, identical across light and dark renders.'
+  - 'Repair correctly removed the residual y-axis baseline (xAxis.lineWidth: 0), producing
+    a fully spine-free layout.'
+  - New 'top predictor' callout on the dominant feature (amber text, bold) sharpens
+    the data story beyond color/length alone.
+  - 'The code comment explains why Highcharts'' colorAxis + colorKey pattern isn''t
+    used: it needs modules/coloraxis.js, which the harness doesn''t load (core bundle
+    only). The per-point color gradient is the correct, documented workaround, not
+    a shortcut.'
+  - Realistic, neutral loan-default-risk feature set with importances summing to exactly
+    1.000, matching real sklearn/XGBoost feature_importances_ output.
+  - 'Both themes fully readable: correct off-white/near-black backgrounds, correct
+    ink/inkSoft/grid tokens, no dark-on-dark or light-on-light failures.'
   - Clean, deterministic, dependency-free code with explicit font sizes throughout
     and no fake interactivity.
   weaknesses:
-  - 'Per-bar color is computed manually with a hand-rolled hexToRgb/lerpColor pair
-    instead of Highcharts'' native continuous-coloring pattern (chart-level colorAxis
-    with stops + series.colorKey, as shown in prompts/library/highcharts.md''s own
-    colorAxis example). This works visually but skips the library''s distinctive built-in
-    mechanism for exactly this ''color mapped to a continuous value'' case — replace
-    the manual lerp with colorAxis stops = [[0, t.seq[0]], [1, t.seq[1]]] and colorKey:
-    ''y'' on the series.'
-  - 'The vertical axis baseline (x=0 line, lineColor: t.inkSoft) stays visible as
-    a residual spine — consider hiding it (lineWidth: 0) for a fully spine-free, more
-    polished look.'
-  - No visual callout distinguishes the single dominant feature (Credit score) beyond
-    its color/length — a subtle annotation or emphasis (e.g. a short label like 'Top
-    predictor') would push the storytelling from good to excellent.
-  - The optional std/error-bar feature from the spec notes is omitted entirely; not
-    required, but showing it (even for a subset) would better demonstrate ensemble-importance
-    variability.
+  - 'Library Mastery is still modest: per-point color assignment is idiomatic given
+    the module constraint, but nothing else in the implementation showcases a Highcharts-distinctive
+    feature beyond basic bar/dataLabels config.'
+  - The optional std/error-bar feature from the spec notes is still omitted entirely;
+    not required, but even a subset would better demonstrate ensemble-importance variability.
+  - Using the amber semantic anchor (reserved for warning/caution per the style guide)
+    to highlight 'top predictor' is a mild semantic mismatch — the neutral or ink
+    token would fit the 'strongest signal' meaning better, though this is a minor
+    design judgment call, not a compliance violation.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "bar-feature-importance · javascript · highcharts · anyplot.ai" in bold dark ink at top, subtitle "Gradient-boosted model · predicting loan default risk" in softer gray beneath it. Y-axis shows 12 feature-name categories (e.g. "Credit score", "Debt-to-income ratio", ... "Verification status"), x-axis shows a numeric "Relative importance" scale from 0 to 0.25 with light vertical gridlines. All text is dark and clearly legible against the light background.
-      Data: 12 horizontal bars sorted descending by importance from top (Credit score, 0.238) to bottom (Verification status, 0.023). Bar color forms a sequential gradient from brand green (#009E73) at the lowest values to a blue tone (~#4467A3) at the highest value — the top bar (Credit score) is visibly the most blue/distinct. Bold black data-label text shows the precise importance value (e.g. "0.238") just past the end of each bar.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "bar-feature-importance · javascript · highcharts · anyplot.ai" in bold dark ink at top, subtitle "Gradient-boosted model · predicting loan default risk" in softer gray beneath it. Y-axis lists 12 feature names ("Credit score" down to "Verification status"), x-axis shows "Relative importance" from 0 to 0.25 with subtle vertical gridlines. All chrome text is dark and clearly legible against the light background.
+      Data: 12 horizontal bars sorted descending by importance from top (Credit score, 0.238) to bottom (Verification status, 0.023). Bar color forms a sequential Imprint gradient from brand green (#009E73) at low values to blue (~#4467A3) at the top bar. Bold data-label text shows the precise value at the end of each bar; the top bar's label additionally reads "0.238 — top predictor" in amber, positioned inside the bar (Highcharts auto-flipped it inward since the bar nearly spans the full axis range) with no clipping. No residual axis baseline is visible — the y-axis spine was removed in this attempt.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title/subtitle/axis structure as the light render, now rendered in light/white text against the dark background — fully legible, no dark-on-dark issues found on title, subtitle, axis ticks, or axis title.
-      Data: Same 12 bars, same sort order, and the gradient colors are pixel-identical to the light render (green at low end transitioning to blue at Credit score) — only the chrome (background, text, gridlines) flipped for the theme. Data-label text switches from black in light mode to white in dark mode and remains clearly readable against both the dark background and the bar fills.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Identical title/subtitle/axis structure, now in light/white text — fully legible, no dark-on-dark failures on title, subtitle, ticks, or axis title.
+      Data: Same 12 bars, same sort order, and the gradient colors are pixel-identical to the light render (only chrome flipped). Data-label text switches to white/light and remains readable against both the dark background and the bar fills; the amber "top predictor" label on the top bar reads clearly against the blue bar in this theme too.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -70,13 +66,15 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicit (title 22px, subtitle 14px, ticks 14px, axis
-          titles 16px, data labels 13px bold); readable in both themes with no overflow
+          title 16px, data labels 13px); readable in both themes with no overflow
+          or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between category labels, bars, or data-label text
+        comment: No collisions between category labels, bars, or data-label text,
+          including the new top-predictor callout
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -113,7 +111,7 @@ review:
         comment: 'imprint_seq (#009E73 -> #4467A3) used for the continuous importance
           mapping, identical across themes; correct theme backgrounds'
     design_excellence:
-      score: 15
+      score: 17
       max: 20
       items:
       - id: DE-01
@@ -125,18 +123,18 @@ review:
           above library defaults
       - id: DE-02
         name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Repair removed the residual y-axis baseline (xAxis.lineWidth: 0);
+          subtle gridlines, no bar borders, generous spacing — fully spine-free now'
+      - id: DE-03
+        name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Subtle gridlines, no bar borders, generous spacing; residual x=0
-          axis line keeps it from being perfect
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: true
-        comment: Sort order + color gradient create a clear focal point (Credit score)
-          but no explicit callout/annotation
+        comment: Sort order + color gradient + new explicit 'top predictor' data-label
+          callout make the focal point unmistakable
     spec_compliance:
       score: 15
       max: 15
@@ -153,7 +151,7 @@ review:
         max: 4
         passed: true
         comment: Descending sort, sequential gradient, and value annotations all present;
-          optional std/error bars correctly omitted
+          optional std/error bars correctly treated as optional
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -218,7 +216,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake functionality
+        comment: Appropriate complexity, no fake functionality; new code comment documents
+          the module-constraint tradeoff clearly
       - id: CQ-05
         name: Output & API
         score: 1
@@ -227,28 +226,32 @@ review:
         comment: Uses Highcharts.chart('container', ...) with no explicit width/height,
           animation disabled
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct core API usage, but reimplements continuous color interpolation
-          manually instead of Highcharts' colorAxis pattern
+        comment: Per-point data.color assignment is the correct, documented Highcharts
+          pattern when colorAxis's module isn't loaded; core API usage is otherwise
+          clean
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Manual hexToRgb/lerpColor gradient could be replicated in any library;
-          misses Highcharts' distinctive colorAxis + colorKey continuous-coloring
-          feature
-  verdict: REJECTED
+        comment: Native colorAxis + colorKey continuous-coloring is genuinely unavailable
+          (requires modules/coloraxis.js, which this harness's core bundle forbids
+          per prompts/library/highcharts.md); the per-point dataLabels override on
+          the top bar is a small distinctive touch, but overall usage remains close
+          to generic
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
