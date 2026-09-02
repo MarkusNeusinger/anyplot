@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: frequency-polygon-basic
 created: '2026-09-02T00:47:33Z'
-updated: '2026-09-02T00:52:18Z'
+updated: '2026-09-02T01:01:41Z'
 generated_by: claude-sonnet
 workflow_run: 33576487263
 issue: 3418
@@ -12,54 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/javascript/echarts/plot-dark.html
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - 'First series correctly uses brand green #009E73 with the remaining series following
-    Imprint canonical order (lavender, blue)'
-  - Distinct line styles (solid/dashed/dotted) paired with color differentiate the
-    three groups without relying on color alone (CVD-safe)
-  - Bin edges are shared across all three groups (dataMin/dataMax/binWidth computed
-    once from the pooled data) so the polygons compare fairly, per the spec's explicit
-    requirement
-  - Polygons are correctly extended to zero at both ends via the unshift/push points
-    in toPolygon(), closing the shape as the spec requests
-  - Semi-transparent area fills (opacity 0.12) let overlapping distributions read
-    clearly instead of obscuring each other
+  - Peak markPoint pins with ms labels (420 ms Caffeine, 447 ms Placebo, 502 ms Sleep-deprived)
+    directly address the prior review's DE-03/LM-02 gaps, giving each group a clear,
+    labeled focal point that guides comparison
+  - Custom tooltip formatter aggregates all three series per bin midpoint with rounded
+    ms and per-group counts — a genuine ECharts-specific feature beyond a bare line+area
+    series
+  - 'emphasis: { focus: ''series'', lineStyle: { width: 4 } } leverages ECharts''
+    series-focus interaction to dim other groups on hover'
+  - 'X-axis axisLine is now hidden (axisLine: { show: false }), matching the already-hidden
+    splitLine and delivering the cleaner minimal chrome the prior review requested'
+  - 'First series correctly uses brand green #009E73 with the remaining two following
+    Imprint''s canonical order; distinct line styles (solid/dashed/dotted) keep the
+    chart CVD-safe independent of color'
+  - Bin edges are shared across all three groups and each polygon is correctly extended
+    to zero at both ends, matching the spec's explicit requirements
   - Deterministic reproducibility via a fixed-seed LCG feeding a Box-Muller normal
-    sampler, no external RNG dependency
-  - Theme-adaptive chrome is threaded correctly through ANYPLOT_TOKENS in both renders
-    — text, axis lines, and grid all read clearly on both the light and dark surfaces
-  - Canvas dimension gate passed (3200x1800 landscape, no clipping observed on either
-    render)
+    sampler
+  - Theme-adaptive chrome threads correctly through ANYPLOT_TOKENS in both renders;
+    canvas dimension gate passed with no clipping
   weaknesses:
-  - 'Design Excellence is competent but generic: beyond the spec-mandated fills/line-styles
-    there is no deliberate focal point or emphasis (e.g., a markLine for each group''s
-    mean/peak reaction time, or a callout on the largest gap between groups) to guide
-    the viewer to an insight — add one to strengthen DE-03 (Data Storytelling)'
-  - No distinctive ECharts-specific features are used beyond a standard line+area
-    series (LM-02) — consider a tooltip formatter for precise per-bin readouts, markLine/markPoint
-    to flag each group's peak, or emphasis/legend-hover focus to leverage capabilities
-    unique to ECharts
-  - 'Chrome could be more refined (DE-02): axisLine on both axes is rendered at full
-    default weight even though grid lines are already subdued — consider lightening
-    or thinning the axis lines further, or dropping the x-axis line to match the already-hidden
-    x splitLine, for a cleaner minimal look'
+  - 'xAxis (type: value) autoscales from 0 even though the zero-extended data only
+    spans roughly 230-750ms, leaving ~25-30% of the plot width as empty margin on
+    the left of the visible polygons — set xAxis.min to a value just below the extended
+    minimum point (e.g. midpoints[0] - 2*binWidth) to reclaim that space'
+  - Peak markPoint pins (symbolSize 34) sit exactly on top of the peak bin's data
+    marker, visually replacing rather than augmenting it — offset the pin slightly
+    above the line (e.g. via a small y-value bump or symbolOffset) so the underlying
+    circle marker at the peak bin stays visible, preserving marker consistency across
+    all bins
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "frequency-polygon-basic · javascript · echarts · anyplot.ai" is centered, dark ink text, fully readable. Legend ("Placebo" solid green, "Caffeine" dashed lavender, "Sleep-deprived" dotted blue) sits below the title with matching line-style swatches, clearly readable. X-axis "Reaction Time (ms)" and Y-axis "Frequency (count)" titles and tick labels are dark/soft-ink on the light background, all legible. Horizontal grid lines are faint and unobtrusive; vertical grid is hidden.
-      Data: Three overlapping frequency polygons with semi-transparent fills — green (Placebo, solid line, peak ~450ms), lavender/magenta (Caffeine, dashed line, peak ~420ms, leftmost/fastest), blue (Sleep-deprived, dotted line, peak ~500ms, rightmost/slowest). First series is confirmed brand green #009E73. Circular markers sit at each bin midpoint; lines extend to zero at both ends closing each polygon shape. Overlap regions blend into muted composite colors, which is expected and readable.
+      Chrome: Title "frequency-polygon-basic · javascript · echarts · anyplot.ai" is centered, dark ink text, fully readable. Legend ("Placebo" solid green, "Caffeine" dashed lavender, "Sleep-deprived" dotted blue) sits below the title with matching line-style swatches, clearly readable. X-axis "Reaction Time (ms)" and Y-axis "Frequency (count)" titles and tick labels are dark/soft-ink on the light background, all legible. Horizontal grid lines are faint and unobtrusive; vertical grid and x-axis line are both hidden for a cleaner frame.
+      Data: Three overlapping frequency polygons with semi-transparent fills — green (Placebo, solid line, peak 447ms), lavender/magenta (Caffeine, dashed line, peak 420ms, leftmost/fastest), blue (Sleep-deprived, dotted line, peak 502ms, rightmost/slowest). First series is confirmed brand green #009E73. Each peak now carries a colored pin marker with a bold "<value> ms" label above it, giving each distribution a clear labeled focal point. Circular markers sit at each bin midpoint; lines extend to zero at both ends closing each polygon shape. Overlap regions blend into muted composite colors, which is expected and readable. The x-axis auto-ranges from 0, leaving a visible empty margin before the first non-zero data point around ~230ms.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, legend, and both axis titles/tick labels switch to light ink text against the dark background, all clearly legible; no dark-on-dark text observed anywhere. Grid lines remain subtle but visible against the dark surface.
-      Data: Same three colors and line styles as the light render — green, lavender/magenta, blue — confirming data-color identity across themes; only the chrome (background, text, grid) flips. Markers and fills remain clearly distinguishable from the near-black background.
+      Chrome: Title, legend, and both axis titles/tick labels switch to light ink text against the dark background, all clearly legible; no dark-on-dark text observed anywhere. Grid lines remain subtle but visible against the dark surface. Peak labels render in light text, staying legible against the dark background.
+      Data: Same three colors, line styles, and peak-pin annotations as the light render — green, lavender/magenta, blue — confirming data-color identity across themes; only the chrome (background, text, grid) flips. Markers, fills, and peak pins remain clearly distinguishable from the near-black background. Same left-margin whitespace observed as in the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -74,7 +73,8 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No text/element collisions in either render
+        comment: No text/element collisions in either render, including the new peak
+          pin labels
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -91,10 +91,11 @@ review:
           of color, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800), no clipping, balanced proportions
+        comment: Canvas gate passed, no clipping, but xAxis auto-ranges from 0 leaving
+          ~25-30% empty margin on the left before the first data point
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -110,30 +111,31 @@ review:
         comment: 'First series #009E73, canonical Imprint order, correct theme backgrounds
           both renders'
     design_excellence:
-      score: 11
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom line styles + translucent fills, but most polish just satisfies
-          spec requirements rather than adding extra sophistication
+        comment: Peak markPoint pins and a per-bin tooltip formatter add real polish
+          beyond the spec-mandated fills/line-styles
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: X-axis splitLine hidden and grid subdued, but axis lines still rendered
-          at full default weight
+        comment: X-axis axisLine now hidden to match the hidden splitLine, resolving
+          the prior review's full-weight axis line note
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Translucent overlap aids comparison but there is no deliberate focal
-          point or annotation guiding the viewer to an insight
+        passed: true
+        comment: Labeled peak pins for each group create deliberate focal points that
+          guide the viewer straight to the key comparison (peak reaction time per
+          condition)
     spec_compliance:
       score: 15
       max: 15
@@ -187,7 +189,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 250-750ms range and n=300/group with 18 bins are sensible for the
+        comment: ~230-750ms range and n=300/group with 18 bins are sensible for the
           domain
     code_quality:
       score: 9
@@ -199,7 +201,7 @@ review:
         max: 3
         passed: true
         comment: Helper functions (lcg, normalSamples, toPolygon) are necessary in
-          JS (no numpy/histogram builtin) but do add structure beyond linear imports->data->plot
+          JS (no numpy/histogram builtin) but add structure beyond linear imports->data->plot
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,7 +219,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for binning logic, no fake UI
+        comment: Appropriate complexity for binning/peak logic, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
@@ -226,7 +228,7 @@ review:
         comment: echarts.init with no explicit size/devicePixelRatio, animation:false
           set
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -234,19 +236,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Standard idiomatic option/series API usage
+        comment: Standard idiomatic option/series API usage including markPoint
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No ECharts-distinctive features (markLine, tooltip formatter, emphasis/focus)
-          used beyond a generic line+area series
-  verdict: REJECTED
+        passed: true
+        comment: markPoint peak annotations, custom tooltip formatter, and emphasis/focus
+          now used, resolving the prior 'generic line+area series' note
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - area-fill
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
