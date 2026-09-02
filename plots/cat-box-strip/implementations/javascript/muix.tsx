@@ -1,3 +1,7 @@
+// anyplot.ai
+// cat-box-strip: Box Plot with Strip Overlay
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 93/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 // anyplot.ai
 // cat-box-strip: Box Plot with Strip Overlay
