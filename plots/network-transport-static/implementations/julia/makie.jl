@@ -110,18 +110,161 @@ ax = Axis(
     xticklabelsvisible = false,
     yticklabelsvisible = false,
 )
-xlims!(ax, -12.3, 12.3)
-ylims!(ax, -8.8, 8.8)
+const XMIN, XMAX = -12.3, 12.3
+const YMIN, YMAX = -8.8, 8.8
+xlims!(ax, XMIN, XMAX)
+ylims!(ax, YMIN, YMAX)
+
+# Column/row proportions must be fixed before the collision-avoidance pass
+# below measures the axis's real screen scale — measuring against a layout
+# that later gets resized by a late `colsize!` would give a scale that no
+# longer matches the saved figure.
+colsize!(fig.layout, 1, Relative(0.85))
+colsize!(fig.layout, 2, Relative(0.15))
+
+# --- Label collision avoidance ----------------------------------------------
+# Every edge label is rotated to align with its edge, so its footprint is a
+# rotated rectangle (an oriented bounding box, OBB); station labels are
+# axis-aligned rectangles anchored by (halign, valign) rather than centered.
+# `PX_PER_UNIT` and every label's (w, h) come from real Makie glyph
+# measurements (`Makie.project` / `Makie.boundingbox`) on this exact axis,
+# not an estimated font-metrics guess — an earlier CHAR_W/LINE_H guess ran
+# ~30-40% too large, which made the collision search reject valid candidates
+# and fall back to extreme offsets instead of a nearby clear slot.
+Makie.update_state_before_display!(fig)
+let p0 = Makie.project(ax.scene, Point2f(0.0, 0.0)),
+    p1 = Makie.project(ax.scene, Point2f(1.0, 0.0)),
+    p2 = Makie.project(ax.scene, Point2f(0.0, 1.0))
+    global PX_PER_UNIT = (abs(p1[1] - p0[1]) + abs(p0[2] - p2[2])) / 2
+end
+
+function measure_wh(txt, fontsize)
+    tmp = text!(ax, 0.0, 0.0; text = txt, fontsize = fontsize, align = (:center, :center), rotation = 0.0)
+    Makie.update_state_before_display!(fig)
+    bb = Makie.boundingbox(tmp)
+    delete!(ax, tmp)
+    return bb.widths[1] / PX_PER_UNIT, bb.widths[2] / PX_PER_UNIT
+end
+
+function anchor_center_offset(halign, valign, w, h)
+    cx = halign == :left ? w / 2 : halign == :right ? -w / 2 : 0.0
+    cy = valign == :bottom ? h / 2 : valign == :top ? -h / 2 : 0.0
+    return cx, cy
+end
+
+struct OBB
+    cx::Float64
+    cy::Float64
+    hw::Float64
+    hh::Float64
+    ang::Float64
+end
+
+obb_axes(o::OBB) = ((cos(o.ang), sin(o.ang)), (-sin(o.ang), cos(o.ang)))
+
+function obb_corners(o::OBB)
+    (ax1, ay1), (ax2, ay2) = obb_axes(o)
+    return [
+        (o.cx + ax1 * o.hw + ax2 * o.hh, o.cy + ay1 * o.hw + ay2 * o.hh),
+        (o.cx - ax1 * o.hw + ax2 * o.hh, o.cy - ay1 * o.hw + ay2 * o.hh),
+        (o.cx - ax1 * o.hw - ax2 * o.hh, o.cy - ay1 * o.hw - ay2 * o.hh),
+        (o.cx + ax1 * o.hw - ax2 * o.hh, o.cy + ay1 * o.hw - ay2 * o.hh),
+    ]
+end
+
+project(corners, axis) = (minimum(c -> c[1] * axis[1] + c[2] * axis[2], corners),
+                           maximum(c -> c[1] * axis[1] + c[2] * axis[2], corners))
+
+function obb_overlap(a::OBB, b::OBB; margin = 0.0)
+    ca, cb = obb_corners(a), obb_corners(b)
+    for axis in (obb_axes(a)..., obb_axes(b)...)
+        amin, amax = project(ca, axis)
+        bmin, bmax = project(cb, axis)
+        (amax + margin < bmin || bmax + margin < amin) && return false
+    end
+    return true
+end
+
+cross2(ax, ay, bx, by) = ax * by - ay * bx
+
+function seg_intersect(p1, p2, p3, p4)
+    d1 = cross2(p4[1] - p3[1], p4[2] - p3[2], p1[1] - p3[1], p1[2] - p3[2])
+    d2 = cross2(p4[1] - p3[1], p4[2] - p3[2], p2[1] - p3[1], p2[2] - p3[2])
+    d3 = cross2(p2[1] - p1[1], p2[2] - p1[2], p3[1] - p1[1], p3[2] - p1[2])
+    d4 = cross2(p2[1] - p1[1], p2[2] - p1[2], p4[1] - p1[1], p4[2] - p1[2])
+    return ((d1 > 0) != (d2 > 0)) && ((d3 > 0) != (d4 > 0))
+end
+
+function point_in_obb(p, o::OBB)
+    (ax1, ay1), (ax2, ay2) = obb_axes(o)
+    dx, dy = p[1] - o.cx, p[2] - o.cy
+    return abs(dx * ax1 + dy * ay1) <= o.hw && abs(dx * ax2 + dy * ay2) <= o.hh
+end
+
+function seg_obb_overlap(p1, p2, o::OBB; margin = 0.0)
+    oi = OBB(o.cx, o.cy, o.hw + margin, o.hh + margin, o.ang)
+    (point_in_obb(p1, oi) || point_in_obb(p2, oi)) && return true
+    corners = obb_corners(oi)
+    for i in 1:4
+        j = i == 4 ? 1 : i + 1
+        seg_intersect(p1, p2, corners[i], corners[j]) && return true
+    end
+    return false
+end
+
+function circle_obb_overlap(cx, cy, r, o::OBB; margin = 0.0)
+    (ax1, ay1), (ax2, ay2) = obb_axes(o)
+    dx, dy = cx - o.cx, cy - o.cy
+    u = clamp(dx * ax1 + dy * ay1, -o.hw, o.hw)
+    v = clamp(dx * ax2 + dy * ay2, -o.hh, o.hh)
+    closest_x, closest_y = o.cx + u * ax1 + v * ax2, o.cy + u * ay1 + v * ay2
+    return (closest_x - cx)^2 + (closest_y - cy)^2 <= (r + margin)^2
+end
+
+function obb_in_bounds(o::OBB, xmin, xmax, ymin, ymax)
+    return all(c -> xmin <= c[1] <= xmax && ymin <= c[2] <= ymax, obb_corners(o))
+end
+
+# Candidate (lt, offset-multiplier, side) triples for one edge label, tried
+# distance-tier by distance-tier: every (endpoint, side) combination at the
+# current offset is tried before the offset grows, so a label prefers a
+# nearby clear slot (a flipped side, or the other endpoint) over a distant
+# one on its preferred side — the search used to exhaust one side's offsets
+# first, which cleared collisions but could fling a label several units from
+# its own edge with nothing else in that empty space to relate it back.
+candidate_list(lt_base, dirsign) = [
+    (lt, m, side)
+    for m in (1.0, 1.3, 1.6, 1.9, 2.2, 2.5, 2.8, 3.1, 3.4, 3.7, 4.0, 4.5, 5.0)
+    for lt in (lt_base, 1 - lt_base, 0.5, 0.15, 0.85, 0.05, 0.95)
+    for side in (dirsign, -dirsign)
+]
+
+# Station-label boxes are placed first — they're fixed, so every edge label
+# must steer around them rather than the other way round. Node markers
+# (`scatter!` circles, sized in screen px like the labels) are a second
+# fixed obstacle class — an edge label landing on top of a station ring is
+# just as unreadable as landing on the station's text.
+placed_boxes = OBB[]
+for s in stations
+    w, h = measure_wh(s.label, 15)
+    cxoff, cyoff = anchor_center_offset(s.halign, s.valign, w, h)
+    ax_, ay_ = s.x + s.ldx, s.y + s.ldy
+    push!(placed_boxes, OBB(ax_ + cxoff, ay_ + cyoff, w / 2, h / 2, 0.0))
+end
+
+node_circles = [(s.x, s.y, (s.ms / 2) / PX_PER_UNIT) for s in stations]
 
 # Edges — offset parallel lines distinguish each bidirectional pair; every
-# edge ends with a direction arrowhead and a rotated route/time label.
+# edge ends with a direction arrowhead. Line/arrow geometry is drawn
+# immediately; labels are placed in a second pass once every line segment is
+# known, so a label can be checked against *all* edges, not just earlier ones.
+route_geom = NamedTuple[]
 for r in routes
     sx, sy = pos[r.source]
     tx, ty = pos[r.target]
     dx, dy = tx - sx, ty - sy
     dist   = sqrt(dx^2 + dy^2)
     ux, uy = dx / dist, dy / dist
-    px, py = -uy, ux
 
     # The offset side must be anchored to the *pair* (station A, station B),
     # not to this route's own direction — a reverse route's (ux, uy) already
@@ -146,14 +289,6 @@ for r in routes
     arrows!(ax, [x1], [y1], [ux * 0.001], [uy * 0.001];
             arrowsize = 15, color = col, linewidth = 0)
 
-    # Label sits near whichever endpoint has fewer other lines converging on
-    # it, not at the midpoint — a busy interchange has every spoke close
-    # together, but a quiet terminus has open space for the route/time text.
-    label_off = abs(line_off) + 0.75
-    lt = degree[r.target] <= degree[r.source] ? 0.70 : 0.30
-    mx = x0 * (1 - lt) + x1 * lt + canon_px * label_off * dirsign
-    my = y0 * (1 - lt) + y1 * lt + canon_py * label_off * dirsign
-
     ang = atan(dy, dx)
     if ang > pi / 2
         ang -= pi
@@ -161,9 +296,54 @@ for r in routes
         ang += pi
     end
 
-    text!(ax, mx, my;
-          text = "$(r.route_id) | $(r.dep) → $(r.arr)",
-          fontsize = 13, color = INK_SOFT, align = (:center, :center), rotation = ang)
+    txt  = "$(r.route_id) | $(r.dep) → $(r.arr)"
+    w, h = measure_wh(txt, 13)
+
+    push!(route_geom, (r = r, x0 = x0, y0 = y0, x1 = x1, y1 = y1,
+                        canon_px = canon_px, canon_py = canon_py,
+                        dirsign = dirsign, line_off = line_off, ang = ang,
+                        txt = txt, w = w, h = h))
+end
+
+line_segments = [((g.x0, g.y0), (g.x1, g.y1)) for g in route_geom]
+
+# Label sits near whichever endpoint has fewer other lines converging on it,
+# not at the midpoint — a busy interchange has every spoke close together,
+# but a quiet terminus has open space for the route/time text. From that
+# starting point, walk `candidate_list` until a position clears every
+# station label, every previously-placed edge label, and every edge line.
+for g in route_geom
+    r = g.r
+    lt_base = degree[r.target] <= degree[r.source] ? 0.70 : 0.30
+
+    # Track the LEAST-colliding candidate seen so far, not just the last one
+    # tried — if every candidate collides with something, falling back to
+    # the final (most extreme) candidate regardless of its own score can
+    # fling a label onto an unrelated station far down the list, which is
+    # worse than a mild overlap near the original slot. Out-of-bounds
+    # candidates are penalized rather than excluded outright, so a position
+    # is always chosen even in a pathological case.
+    best       = nothing
+    best_score = typemax(Int)
+    for (lt, mult, side) in candidate_list(lt_base, g.dirsign)
+        label_off = (abs(g.line_off) + 0.75) * mult
+        mx = g.x0 * (1 - lt) + g.x1 * lt + g.canon_px * label_off * side
+        my = g.y0 * (1 - lt) + g.y1 * lt + g.canon_py * label_off * side
+        cand = OBB(mx, my, g.w / 2, g.h / 2, g.ang)
+        score = count(b -> obb_overlap(cand, b; margin = 0.08), placed_boxes) +
+                count(seg -> seg_obb_overlap(seg[1], seg[2], cand; margin = 0.08), line_segments) +
+                count(c -> circle_obb_overlap(c[1], c[2], c[3], cand; margin = 0.08), node_circles) +
+                (obb_in_bounds(cand, XMIN, XMAX, YMIN, YMAX) ? 0 : 1000)
+        if score < best_score
+            best, best_score = cand, score
+        end
+        best_score == 0 && break
+    end
+    push!(placed_boxes, best)
+
+    text!(ax, best.cx, best.cy;
+          text = g.txt, fontsize = 13, color = INK_SOFT,
+          align = (:center, :center), rotation = g.ang)
 end
 
 # Nodes — hollow rings so crossing edges stay visible through the station
@@ -192,8 +372,5 @@ Legend(
     tellheight      = false,
     patchsize       = (26, 10),
 )
-
-colsize!(fig.layout, 1, Relative(0.85))
-colsize!(fig.layout, 2, Relative(0.15))
 
 save("plot-$(THEME).png", fig; px_per_unit = 2)
