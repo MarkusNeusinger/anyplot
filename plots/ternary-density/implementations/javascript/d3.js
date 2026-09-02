@@ -38,7 +38,7 @@ const samples = [
 ];
 
 // --- Layout -------------------------------------------------------------------
-const margin = { top: 110, right: 260, bottom: 60, left: 60 };
+const margin = { top: 110, right: 170, bottom: 60, left: 60 };
 const iw = width - margin.left - margin.right;
 const ih = height - margin.top - margin.bottom;
 
@@ -73,19 +73,22 @@ const g = svg.append("g").attr("transform", `translate(${offsetX},${offsetY})`);
 const trianglePoints = [apex, bottomLeft, bottomRight].map((p) => p.join(",")).join(" ");
 svg.append("clipPath").attr("id", "tri-clip").append("polygon").attr("points", trianglePoints);
 
-// --- Ternary grid (drawn beneath the density layer, low-opacity) ------------
-const gridG = g.append("g");
-for (const lvl of [20, 40, 60, 80]) {
-  const lines = [
-    [project(lvl, 100 - lvl, 0), project(lvl, 0, 100 - lvl)], // constant sand
-    [project(100 - lvl, lvl, 0), project(0, lvl, 100 - lvl)], // constant silt
-    [project(100 - lvl, 0, lvl), project(0, 100 - lvl, lvl)], // constant clay
-  ];
-  for (const [[x1, y1], [x2, y2]] of lines) {
-    gridG.append("line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
-      .attr("stroke", t.grid).attr("stroke-width", 1.5);
+function drawGrid(target, strokeOpacity) {
+  for (const lvl of [20, 40, 60, 80]) {
+    const lines = [
+      [project(lvl, 100 - lvl, 0), project(lvl, 0, 100 - lvl)], // constant sand
+      [project(100 - lvl, lvl, 0), project(0, lvl, 100 - lvl)], // constant silt
+      [project(100 - lvl, 0, lvl), project(0, 100 - lvl, lvl)], // constant clay
+    ];
+    for (const [[x1, y1], [x2, y2]] of lines) {
+      target.append("line").attr("x1", x1).attr("y1", y1).attr("x2", x2).attr("y2", y2)
+        .attr("stroke", t.grid).attr("stroke-width", 1.5).attr("stroke-opacity", strokeOpacity);
+    }
   }
 }
+
+// Base grid pass for the empty triangle area outside the density blobs.
+drawGrid(g.append("g"), 1);
 
 // --- Kernel density estimate over the ternary plane, clipped to the triangle
 const densityContours = d3.contourDensity()
@@ -104,7 +107,7 @@ contourG.selectAll("path.band").data(densityContours).join("path")
   .attr("class", "band")
   .attr("d", geoPath)
   .attr("fill", (d) => colorScale(d.value))
-  .attr("fill-opacity", 0.9)
+  .attr("fill-opacity", 0.7)
   .attr("stroke", "none");
 
 // Key density levels get a subtle outline so bands read individually.
@@ -116,6 +119,12 @@ contourG.selectAll("path.level").data(keyLevels).join("path")
   .attr("stroke", t.ink)
   .attr("stroke-opacity", 0.25)
   .attr("stroke-width", 1.2);
+
+// Re-drawn on top of the density fill (clipped to the triangle) so the grid
+// stays legible through the color, per spec's "grid visible beneath density
+// with appropriate transparency" — a stack of overlapping contour bands would
+// otherwise hide it no matter how transparent a single band is.
+drawGrid(contourG.append("g"), 0.55);
 
 // --- Triangle frame + vertex labels ------------------------------------------
 g.append("polygon").attr("points", trianglePoints)
@@ -135,10 +144,12 @@ for (const v of vertexLabels) {
     .text(v.text);
 }
 
-// --- Density legend ------------------------------------------------------
+// --- Density legend (anchored to the triangle's own right edge, not the
+// canvas margin, so it sits snug beside the plot rather than floating in it) -
 const legendWidth = 24;
 const legendHeight = 320;
-const legendX = width - margin.right + 60;
+const legendGap = 50;
+const legendX = offsetX + side + legendGap;
 const legendY = offsetY + (triHeight - legendHeight) / 2;
 
 const gradient = svg.append("defs").append("linearGradient")
