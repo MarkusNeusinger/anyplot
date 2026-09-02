@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: datamatrix-basic
 created: '2026-09-02T00:06:09Z'
-updated: '2026-09-02T00:11:50Z'
+updated: '2026-09-02T00:20:36Z'
 generated_by: claude-sonnet
 workflow_run: 33573286388
 issue: 3811
@@ -12,49 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/chartjs/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - 'Structurally correct Data Matrix layout: solid L-shaped finder pattern and alternating
-    clock/timing track match ISO/IEC 16022 exactly, verified visually in both renders.'
-  - Fully deterministic, in-memory data generation with no RNG — content string bits
-    map cleanly into interior modules.
-  - Generous quiet zone and well-balanced canvas fill (~70%), correct square orientation
-    directive.
-  - Theme-adaptive title/subtitle chrome is correctly readable in both light and dark
-    renders; animation:false and the mount-node contract are followed correctly.
-  - Subtitle communicates the encoded content, adding useful context beyond a bare
-    grid.
+  - 'Fixed the attempt-1 polarity bug: the module card is now a fixed white background
+    with fixed black modules in BOTH themes, matching the spec''s ''high contrast
+    black on white'' requirement and the approved qrcode-basic precedent — verified
+    pixel-identical in light and dark renders.'
+  - 'New thin #009E73 brand accent border framing the card gives the implementation
+    a distinctive identity touch that was explicitly requested in the attempt-1 review,
+    closing the gap with the qrcode-basic sibling.'
+  - New theme-adaptive caption ('16×16 modules · ECC 200 (stylized)') below the card
+    adds useful structural context without cluttering the grid.
+  - 'Structurally correct Data Matrix layout: solid L-shaped finder pattern (left
+    column + bottom row) and alternating clock/timing track (top row + right column)
+    match ISO/IEC 16022 exactly.'
+  - Fully deterministic, in-memory data generation with no RNG; content string bits
+    map cleanly into interior modules and the encoded content is echoed in the subtitle.
+  - Generous quiet zone (2 module-widths) and well-balanced canvas fill, correct square
+    orientation directive.
   weaknesses:
-  - The module fill color uses t.ink (the theme text token) instead of a fixed black-on-white,
-    so the dark render inverts the matrix to light modules on a near-black background.
-    This breaks the spec's explicit "Use high contrast black on white for maximum
-    readability" note and diverges from the already-approved qrcode-basic chartjs
-    implementation (plots/qrcode-basic/implementations/javascript/chartjs.js), which
-    deliberately keeps a fixed white card + black modules across both themes for scan-validity,
-    flipping only the surrounding page chrome. Repair should paint a fixed light card
-    behind the grid and fill modules in a fixed dark color in both themes, leaving
-    only background/title/subtitle theme-adaptive.
-  - 'Design Excellence is functional but plain — no accent framing or brand touch
-    (contrast with the qrcode-basic sibling''s thin #009E73 accent border around its
-    white card). A similar subtle brand accent would lift DE-01/DE-02.'
-  - Interior module bits are derived by directly chunking the content string's raw
-    ASCII bits in raster order rather than genuine ECC 200 / Reed-Solomon placement
-    — understandable given no browser-available Data Matrix library, and the code's
-    own comments are honest about this being a stylized representation. No action
+  - 'Design Excellence is solid but not exceptional: the caption font (14px) is noticeably
+    smaller than the title/subtitle hierarchy would suggest is optimal for a 2400px
+    canvas — still legible, but slightly cramped relative to the generous surrounding
+    whitespace.'
+  - Data storytelling remains minimal beyond the subtitle/caption text — no additional
+    visual hierarchy (e.g. a subtly emphasized finder-pattern region) distinguishes
+    structural zones of the matrix for a reader unfamiliar with Data Matrix anatomy.
+  - Interior module bits are still derived by directly chunking the content string's
+    raw ASCII bits in raster order rather than genuine ECC 200 / Reed-Solomon placement
+    — understandable given no browser-available Data Matrix library, and the code
+    stays honest about this being a stylized representation via the caption. No action
     needed beyond keeping that honesty intact.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), correct light theme surface, not pure white.
-      Chrome: Title "datamatrix-basic · javascript · chartjs · anyplot.ai" in bold dark ink (~55% canvas width), clearly readable. Subtitle "Encodes "SERIAL:12345678"" in smaller muted ink beneath it, readable.
-      Data: 16x16 module grid in solid dark ink on the light background. Left column + bottom row solid (L-shaped finder pattern); top row + right column alternating (clock/timing track); interior cells form the data region derived from the content string's bits. Quiet zone margin on all sides, grid fills ~70% of canvas.
-      Legibility verdict: PASS - all text and modules clearly readable against the light background.
+      Chrome: Title "datamatrix-basic · javascript · chartjs · anyplot.ai" in bold dark ink (~55% canvas width), clearly readable. Subtitle 'Encodes "SERIAL:12345678"' in smaller muted ink beneath it, readable. Caption "16×16 modules · ECC 200 (stylized)" below the card in soft muted ink, small but legible.
+      Data: 16x16 module grid on a fixed white card, framed by a thin #009E73 brand-green accent border. Left column + bottom row solid black (L-shaped finder pattern); top row + right column alternating black/white (clock/timing track); interior cells form the data region derived from the content string's bits, rendered in solid black. Quiet zone margin (white) on all sides inside the card, card fills a well-balanced portion of the canvas.
+      Legibility verdict: PASS — all text, the accent border, and modules are clearly readable against the light background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), correct dark theme surface.
-      Chrome: Title and subtitle switch to light cream / muted-light text, clearly readable - no dark-on-dark issues.
-      Data: Module positions are pixel-identical to the light render, BUT the module fill color also flips (via t.ink) to light cream squares on the near-black background - i.e. the matrix polarity inverts to light-on-dark instead of staying black-on-white. Still fully legible/high-contrast, but this breaks the spec's literal "black on white" requirement and diverges from the qrcode-basic precedent, which keeps its code fixed white/black in both themes.
-      Legibility verdict: PASS for text; FLAG for data-module polarity inversion (see weaknesses).
+      Chrome: Title and subtitle switch to light cream / muted-light text, clearly readable — no dark-on-dark issues. Caption also switches to a lighter muted tone, still legible.
+      Data: Module positions and colors are pixel-identical to the light render — the card stays fixed white with fixed black modules and the same #009E73 accent border, only the surrounding page chrome (background, title, subtitle, caption) follows the theme. This correctly fixes the attempt-1 polarity-inversion bug where the modules flipped to light-on-dark.
+      Legibility verdict: PASS — text is theme-correct and the fixed-polarity card remains maximally high-contrast on the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -65,14 +66,14 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/subtitle font sizes explicitly set (22px/15px), readable in
-          both themes; subtitle slightly small for a 2400px canvas.
+        comment: Title/subtitle/caption font sizes explicitly set (22px/16px/14px),
+          readable in both themes; caption is small but still legible.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, subtitle, and grid.
+        comment: No collisions between title, subtitle, card, and caption.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -85,14 +86,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Maximum ink/background contrast in both themes, no CVD concerns.
+        comment: Maximum black/white contrast on the card in both themes; no CVD concerns.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills ~70% of canvas, balanced margins, square orientation correctly
-          used, nothing cut off.
+        comment: Card + quiet zone + caption fill a well-balanced portion of the canvas,
+          balanced margins, square orientation correctly used, nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,37 +106,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Theme chrome (background, title, subtitle) is fully theme-correct
-          in both renders; grayscale ink is appropriate for the barcode's structural
-          chrome.
+        comment: Brand accent border uses Imprint palette[0] (#009E73); theme chrome
+          (background, title, subtitle, caption) is fully theme-correct in both renders;
+          fixed black/white card is appropriate for the barcode's scan-validity requirement.
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: 'Well-configured default: correct structure but no distinguishing
-          polish, e.g. no brand accent framing unlike the qrcode-basic sibling''s
-          #009E73 border.'
+        comment: 'The new #009E73 accent border gives the card a deliberate brand
+          touch, clearly above a plain default and closing the gap with the qrcode-basic
+          sibling.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
         comment: Scales/legend fully stripped, generous whitespace and quiet zone,
-          but no extra refinement beyond the basics.
+          plus the accent border and caption add polish beyond the basics.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Subtitle states what content is encoded, slightly above the raw-data-dump
-          default, but no visual hierarchy or emphasis beyond that.
+        comment: Subtitle and caption state what content is encoded and the module
+          count, slightly above the raw-data-dump default, but no visual hierarchy
+          or emphasis distinguishes the finder/timing/data regions.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -147,13 +149,12 @@ review:
           alternating clock/timing track exactly as ISO/IEC 16022 describes.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Quiet zone, L-shaped finder, and alternating timing track present,
-          but 'high contrast black on white' is only honored in the light render —
-          the dark render inverts modules to light-on-dark because the plugin fills
-          with the theme ink token instead of a fixed color.
+        passed: true
+        comment: Quiet zone, L-shaped finder, alternating timing track, and 'high
+          contrast black on white' are now all honored in BOTH renders — the attempt-1
+          dark-mode polarity inversion is fixed.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -247,13 +248,15 @@ review:
         comment: Leverages the Chart.js plugin lifecycle as a canvas-drawing platform,
           the same pattern already established in the qrcode-basic sibling — reasonable
           but not novel.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting
