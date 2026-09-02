@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: choropleth-basic
 created: '2026-09-02T15:35:25Z'
-updated: '2026-09-02T15:39:27Z'
+updated: '2026-09-02T15:53:28Z'
 generated_by: claude-sonnet
 workflow_run: 33648235878
 issue: 3069
@@ -12,49 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/d3/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Deterministic seeded LCG generates plausible synthetic per-state renewable-share
-    values (no network fetch needed for the offline harness)
-  - Correct sequential Imprint color scale (d3.scaleSequential + d3.interpolateRgbBasis
-    over tokens.seq) — right polarity choice for magnitude data with no natural midpoint
-  - 'Thoughtful missing-data handling: two states rendered as gray tiles plus a dedicated
-    ''No data'' legend swatch, matching the spec''s missing-data requirement'
-  - Adaptive per-tile label ink computed from each fill's own luminance keeps state
-    abbreviations legible regardless of theme or color, a nice accessibility touch
-  - Title, legend text, and chrome are correctly theme-adaptive and data colors are
+  - Title fontsize now correctly scaled to occupy ~57% of canvas width, squarely within
+    the 50-70% comfort range (fixed from ~42% in the prior attempt)
+  - New "Highest & lowest share" callout sharpens data storytelling by naming IL (92%,
+    highest) and UT (9%, lowest), echoed by thicker ink-color borders on those same
+    two tiles in the grid
+  - The callout also puts the tile-grid's dead lower-left space to better use, improving
+    canvas balance versus the prior attempt
+  - Deterministic seeded LCG, correct sequential Imprint color scale (d3.scaleSequential
+    + d3.interpolateRgbBasis over tokens.seq), thoughtful missing-data handling (gray
+    tiles + dedicated "No data" legend swatch), and per-tile luminance-based adaptive
+    label ink all carry over unchanged and remain strong
+  - Title, legend, and callout chrome are correctly theme-adaptive; data colors are
     identical between light and dark renders
   weaknesses:
-  - Uses an equal-area tile-grid cartogram instead of an actual geographic projection;
-    the spec's Notes suggest 'an appropriate map projection (e.g. Albers Equal Area
-    for US)' — the tile-grid choice is a reasonable, well-documented workaround for
-    the offline/no-topojson-network constraint, but it departs from a literal geographic
-    choropleth shape
-  - Large unused negative space in the lower-left/middle of the 3200x1800 canvas,
-    inherent to the US tile-grid's outline — the composition feels imbalanced; consider
-    centering the grid within the canvas or trimming margins so the visual mass fills
-    the frame better
-  - Title occupies only ~42% of canvas width, below the style guide's ~50-70% comfort
-    range for a title this length — a modest fontsize increase would give it more
-    visual weight
-  - No additional annotation calling out the highest/lowest state or a notable pattern,
-    so Data Storytelling is solid but not sharpened beyond the color encoding itself
+  - Still an equal-area tile-grid cartogram rather than a literal geographic projection;
+    a reasonable, documented trade-off for the offline no-topojson-network harness,
+    but it departs from the spec's suggested 'appropriate map projection' note
+  - 'The new callout''s swatches are hollow, unfilled squares (stroke only, fill:
+    none) rather than being filled with the corresponding tile''s actual data color
+    — a reader can''t visually match the callout swatch to a color on the gradient/tiles.
+    Fill each swatch with color(maxRegion.value) / color(minRegion.value) instead
+    of fill: none so it reads as a color-legend swatch rather than an empty checkbox'
+  - Some unused negative space remains in the lower-left quadrant of the 3200x1800
+    canvas below the new callout (rows 7-8 in the AK/HI/WA columns), though less than
+    in the prior attempt
+  - No-data gray fill remains close in value to a couple of the darker teal tiles
+    — still distinguishable by hue but a slightly stronger tonal separation would
+    help scanability
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1, not pure white.
-      Chrome: Title "Renewable Electricity Share · choropleth-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center, clearly readable. Legend at top-right with "Renewable electricity share (%)" label, a horizontal gradient bar from green to blue labeled "9%" / "92%", plus a gray "No data" swatch with label — all readable secondary-ink text.
-      Data: A US state tile-grid cartogram — one rounded rectangle per state, arranged in an equal-area grid approximating US geography, each labeled with its 2-letter abbreviation. Fill color runs along a green-to-blue sequential ramp (first stop is Imprint brand green #009E73) mapped to each state's value; two states (WY, SC) are filled solid gray to indicate missing data. Per-tile label ink switches between dark and light based on the fill's own luminance, so every abbreviation stays legible against its own tile.
-      Legibility verdict: PASS — all title, legend, and tile-label text is clearly readable against the light background; no light-on-light text found.
+      Chrome: Title "Renewable Electricity Share · choropleth-basic · javascript · d3 · anyplot.ai" in bold dark ink at top-center, now spanning ~57% of canvas width (up from ~42% in the prior attempt) — clearly readable. Legend at top-right with "Renewable electricity share (%)" label, a horizontal gradient bar from green to blue labeled "9%" / "92%", plus a gray "No data" swatch with label — all readable secondary-ink text. New "Highest & lowest share" callout box in the lower-left dead space lists "IL — 92% (highest)" and "UT — 9% (lowest)" next to hollow ink-stroked swatch outlines.
+      Data: A US state tile-grid cartogram — one rounded rectangle per state, arranged in an equal-area grid approximating US geography, each labeled with its 2-letter abbreviation. Fill color runs along a green-to-blue sequential ramp (first stop is Imprint brand green #009E73) mapped to each state's value; two states (WY, SC) are filled solid gray to indicate missing data. IL and UT tiles carry a visibly thicker dark-ink border matching the callout's highlight. Per-tile label ink switches between dark and light based on the fill's own luminance, so every abbreviation stays legible against its own tile.
+      Legibility verdict: PASS — all title, legend, callout, and tile-label text is clearly readable against the light background; no light-on-light text found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17, not pure black.
-      Chrome: Same title now in light ink, clearly readable. Same legend layout with light secondary-ink text for value labels and "No data" caption; the no-data swatch is now a lighter warm gray so it still reads against the dark page background.
-      Data: Identical tile-grid layout and identical green-to-blue data colors as the light render — only chrome (background, title/legend ink, tile borders, no-data swatch tone) flipped for the dark surface. Per-tile label ink again auto-selects dark or light per tile so every abbreviation stays legible.
-      Legibility verdict: PASS — no dark-on-dark text found; all chrome and tile labels are clearly visible against the near-black background, and the brand green tiles still read well.
+      Chrome: Same title, now in light ink, clearly readable at the same ~57% width. Same legend layout with light secondary-ink text for value labels and "No data" caption; the no-data swatch is a lighter warm gray so it still reads against the dark page background. Same callout box, with hollow swatch outlines now in light ink and IL/UT tile borders in light ink to match.
+      Data: Identical tile-grid layout and identical green-to-blue data colors as the light render — only chrome (background, title/legend/callout ink, tile borders, no-data swatch tone) flipped for the dark surface. Per-tile label ink again auto-selects dark or light per tile so every abbreviation stays legible.
+      Legibility verdict: PASS — no dark-on-dark text found; all chrome, callout, and tile labels are clearly visible against the near-black background, and the brand green tiles still read well.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,14 +65,15 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title/legend/tick labels readable in both themes; luminance-based
+        comment: Title/legend/callout/tick labels readable in both themes; luminance-based
           per-tile label ink keeps state abbreviations legible on every fill color
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No text or element collisions in either render, including the new
+          callout box
       - id: VQ-03
         name: Element Visibility
         score: 5
@@ -86,12 +90,12 @@ review:
           not solely red-green
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Nothing cut off, but the US tile-grid outline leaves large unused
-          negative space in the lower-left/middle of the 3200x1800 frame, and the
-          title occupies only ~42% of width, under the ~50-70% comfort range
+        comment: Nothing cut off; title now occupies ~57% of width (within the 50-70%
+          comfort range), and the new callout fills most of the previously dead lower-left
+          space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -108,32 +112,32 @@ review:
           theme-adaptive backgrounds #FAF8F1/#1A1A17, data colors identical across
           themes'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Rounded tiles, adaptive label-ink logic, and a well-composed dual
-          legend (gradient + no-data swatch) show intentional polish above generic
-          defaults
+        comment: Rounded tiles, adaptive label-ink logic, echoed highlight borders,
+          and a well-composed dual legend plus callout show intentional polish above
+          generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean legend construction, subtle page-bg-colored tile strokes, generous
-          inter-tile spacing
+        comment: Clean legend and callout construction, subtle page-bg-colored tile
+          strokes, generous inter-tile spacing; the hollow checkbox-style callout
+          swatches read slightly unrefined since they don't carry color
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: The color encoding lets a viewer scan for regional clusters, but
-          there's no additional emphasis (callout, sorted legend, highlighted extremes)
-          to sharpen the narrative
+        comment: New highest/lowest callout, echoed by thicker borders on the IL and
+          UT tiles, gives the map a clear focal point beyond the base color encoding
     spec_compliance:
       score: 13
       max: 15
@@ -153,8 +157,8 @@ review:
         passed: true
         comment: Color legend with value range present; missing data shown gracefully
           as gray + labeled swatch; region boundaries visible but not overwhelming;
-          the spec's 'appropriate map projection' note is not used (tile grid instead),
-          which is the one missing suggested feature
+          the spec's 'appropriate map projection' note is still not used (tile grid
+          instead)
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -178,8 +182,9 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers value-to-color encoding and missing-data handling; no additional
-          map features like insets for non-contiguous regions beyond grid placement
+        comment: Covers value-to-color encoding, missing-data handling, and now a
+          highest/lowest callout; no additional map features like insets for non-contiguous
+          regions beyond grid placement
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -252,6 +257,7 @@ impl_tags:
   techniques:
   - colorbar
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep: []
