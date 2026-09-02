@@ -7,15 +7,20 @@ const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
 
 // --- Data: fictional legislature, ordered left-to-right along the political
-// spectrum. Imprint categorical positions 1-6 in canonical order. -----------
+// spectrum. Independent sits centrist (between Liberal and Conservative)
+// rather than at a spectrum edge, since it is unaligned rather than extreme.
+// Colors come from a categorical scale, keyed by name, so the first party
+// (leftmost, "Green Alliance") lands on Imprint position 1 (#009E73). ------
 const parties = [
-  { name: "Green Alliance", seats: 42, color: t.palette[0] },
-  { name: "Social Democratic Party", seats: 96, color: t.palette[1] },
-  { name: "Liberal Party", seats: 58, color: t.palette[2] },
-  { name: "Conservative Party", seats: 121, color: t.palette[3] },
-  { name: "Reform Party", seats: 47, color: t.palette[4] },
-  { name: "Independent", seats: 36, color: t.palette[5] },
+  { name: "Green Alliance", seats: 42 },
+  { name: "Social Democratic Party", seats: 96 },
+  { name: "Liberal Party", seats: 58 },
+  { name: "Independent", seats: 36 },
+  { name: "Conservative Party", seats: 121 },
+  { name: "Reform Party", seats: 47 },
 ];
+const color = d3.scaleOrdinal().domain(parties.map((p) => p.name)).range(t.palette);
+parties.forEach((p) => (p.color = color(p.name)));
 const totalSeats = d3.sum(parties, (d) => d.seats);
 const majority = Math.floor(totalSeats / 2) + 1;
 
@@ -113,6 +118,48 @@ svg.selectAll("circle.seat").data(seatData).join("circle")
   .attr("fill", (d) => d.color)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
+
+// --- Governing coalition: the fewest, largest parties whose seats combined
+// cross the majority line — a concrete answer to "which coalition governs?"
+// rather than stopping at the threshold line alone. -------------------------
+const bySeatsDesc = [...parties].sort((a, b) => b.seats - a.seats);
+const coalition = [];
+let coalitionSeats = 0;
+for (const p of bySeatsDesc) {
+  if (coalitionSeats >= majority) break;
+  coalition.push(p);
+  coalitionSeats += p.seats;
+}
+
+const partyExtent = new Map(
+  parties.map((p) => {
+    const angles = seatData.filter((d) => d.party === p.name).map((d) => d.angle);
+    return [p.name, [d3.min(angles), d3.max(angles)]];
+  })
+);
+const bandR = rMax + 34;
+const bandLine = d3.line();
+const bandPoints = (aStart, aEnd, steps = 24) =>
+  d3.range(steps + 1).map((i) => {
+    const a = aStart + ((aEnd - aStart) * i) / steps;
+    return [seatX(bandR, a), seatY(bandR, a)];
+  });
+
+coalition.forEach((p) => {
+  const [aMin, aMax] = partyExtent.get(p.name);
+  svg.append("path")
+    .attr("d", bandLine(bandPoints(aMin, aMax)))
+    .attr("fill", "none")
+    .attr("stroke", p.color)
+    .attr("stroke-width", 6)
+    .attr("stroke-linecap", "round")
+    .attr("opacity", 0.65);
+});
+svg.append("text")
+  .attr("x", width / 2).attr("y", margin.top - 22)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.inkSoft).style("font-size", "14px").style("font-style", "italic")
+  .text(`Governing coalition — ${coalition.map((p) => p.name).join(" + ")} (${coalitionSeats} seats)`);
 
 // --- Legend: swatch + name + seat count, wrapped into rows and centered ------
 const legendG = svg.append("g");
