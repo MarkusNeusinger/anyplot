@@ -24,18 +24,21 @@ const southAmerica = [
   [-79, 9],
 ].reverse();
 const africa = [
-  [-17, 15], [-10, 20], [0, 20], [10, 22], [20, 32], [32, 31], [34, 27],
-  [43, 12], [51, 12], [45, 0], [40, -11], [35, -20], [33, -27], [25, -34],
+  [-17, 15], [-10, 20], [0, 20], [10, 22], [20, 28], [32, 27], [34, 23],
+  [42, 8], [50, 9], [45, 0], [40, -11], [35, -20], [33, -27], [25, -34],
   [18, -34], [14, -22], [12, -5], [9, 5], [0, 4], [-10, 7], [-17, 15],
 ];
+// Southern boundary follows the Mediterranean/Red Sea/Gulf of Aden north
+// shore (not the African coast), well above Africa's northern coastline
+// above, so a clearly visible sea gap separates Eurasia from Africa below.
 const eurasia = [
   [-9, 36], [0, 43], [10, 44], [19, 42], [23, 42], [28, 41], [30, 46],
   [40, 44], [47, 42], [50, 45], [55, 50], [60, 55], [68, 60], [80, 66],
   [92, 72], [104, 73], [118, 73], [135, 71], [150, 65], [168, 66], [178, 65],
   [170, 55], [155, 45], [141, 35], [130, 32], [122, 25], [110, 20], [105, 10],
   [98, 7], [93, 15], [90, 22], [88, 22], [80, 20], [70, 20], [65, 25],
-  [60, 25], [52, 15], [43, 12], [35, 30], [32, 31], [20, 32], [10, 22],
-  [0, 20], [-6, 35], [-9, 36],
+  [60, 25], [52, 22], [44, 22], [35, 36], [28, 39], [16, 41], [6, 41],
+  [-4, 41], [-7, 39], [-9, 36],
 ];
 const australia = [
   [113, -22], [121, -33], [129, -32], [137, -33], [141, -38], [145, -38],
@@ -59,11 +62,11 @@ const rand = () => {
 
 const faultClusters = [
   { lon: 140, lat: 36, spread: 5, n: 11 }, // Japan Trench
-  { lon: 118, lat: -4, spread: 8, n: 12 }, // Indonesia
-  { lon: 122, lat: 13, spread: 5, n: 8 }, // Philippines
-  { lon: -71, lat: -28, spread: 5, n: 11 }, // Chile
+  { lon: 118, lat: -4, spread: 10, n: 12 }, // Indonesia
+  { lon: 122, lat: 13, spread: 7, n: 8 }, // Philippines
+  { lon: -71, lat: -28, spread: 7, n: 11 }, // Chile
   { lon: -120, lat: 36, spread: 4, n: 8 }, // California
-  { lon: -155, lat: 58, spread: 9, n: 8 }, // Aleutians
+  { lon: -155, lat: 58, spread: 11, n: 8 }, // Aleutians
   { lon: 174, lat: -40, spread: 5, n: 6 }, // New Zealand
   { lon: 85, lat: 29, spread: 7, n: 8 }, // Himalaya
   { lon: 28, lat: 38, spread: 7, n: 6 }, // Anatolia
@@ -88,22 +91,29 @@ const path = d3.geoPath(projection);
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
 const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+// Zoomable layer: sphere/graticule/land/points pan+zoom together; the title
+// and legends stay fixed in screen space (per the spec's zoom/pan suggestion).
+const mapLayer = g.append("g");
+
 // --- Basemap: sphere outline, graticule, coastlines --------------------------
-g.append("path")
+mapLayer
+  .append("path")
   .datum({ type: "Sphere" })
   .attr("d", path)
   .attr("fill", "none")
   .attr("stroke", t.inkSoft)
   .attr("stroke-width", 1);
 
-g.append("path")
+mapLayer
+  .append("path")
   .datum(d3.geoGraticule10())
   .attr("d", path)
   .attr("fill", "none")
   .attr("stroke", t.grid)
   .attr("stroke-width", 0.75);
 
-g.selectAll("path.land")
+mapLayer
+  .selectAll("path.land")
   .data(landmasses.features)
   .join("path")
   .attr("class", "land")
@@ -120,7 +130,8 @@ const color = d3.scaleSequential(d3.interpolateRgbBasis(t.seq)).domain(depthExte
 const radius = d3.scaleSqrt().domain(magExtent).range([5, 20]);
 
 // --- Points ---------------------------------------------------------------
-g.selectAll("circle.epicenter")
+mapLayer
+  .selectAll("circle.epicenter")
   .data(epicenters)
   .join("circle")
   .attr("class", "epicenter")
@@ -128,9 +139,21 @@ g.selectAll("circle.epicenter")
   .attr("cy", (d) => projection([d.lon, d.lat])[1])
   .attr("r", (d) => radius(d.magnitude))
   .attr("fill", (d) => color(d.depthKm))
-  .attr("fill-opacity", 0.78)
+  .attr("fill-opacity", 0.58)
   .attr("stroke", t.pageBg)
   .attr("stroke-width", 1);
+
+// --- Zoom/pan: explore dense clusters (identity transform at rest, so the
+// static screenshot is unaffected) ---------------------------------------
+const zoom = d3
+  .zoom()
+  .scaleExtent([1, 8])
+  .translateExtent([
+    [0, 0],
+    [iw, ih],
+  ])
+  .on("zoom", (event) => mapLayer.attr("transform", event.transform));
+svg.call(zoom);
 
 // --- Legend: depth (color, sequential) ---------------------------------------
 const legendX = 24;
@@ -151,7 +174,7 @@ legend
   .attr("x", 0)
   .attr("y", -10)
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text("Depth (km)");
 legend
   .append("rect")
@@ -165,7 +188,7 @@ legend
   .attr("x", 0)
   .attr("y", 30)
   .attr("fill", t.inkSoft)
-  .style("font-size", "12px")
+  .style("font-size", "14px")
   .text(`${Math.round(depthExtent[0])}`);
 legend
   .append("text")
@@ -173,7 +196,7 @@ legend
   .attr("y", 30)
   .attr("text-anchor", "end")
   .attr("fill", t.inkSoft)
-  .style("font-size", "12px")
+  .style("font-size", "14px")
   .text(`${Math.round(depthExtent[1])}`);
 
 // --- Legend: magnitude (size) --------------------------------------------
@@ -183,7 +206,7 @@ sizeLegend
   .attr("x", 0)
   .attr("y", -10)
   .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .style("font-size", "14px")
   .text("Magnitude");
 const magSteps = [magExtent[0], (magExtent[0] + magExtent[1]) / 2, magExtent[1]];
 let cx = 0;
@@ -195,7 +218,8 @@ magSteps.forEach((m) => {
     .attr("cx", cx)
     .attr("cy", 12 - r)
     .attr("r", r)
-    .attr("fill", "none")
+    .attr("fill", t.inkSoft)
+    .attr("fill-opacity", 0.35)
     .attr("stroke", t.inkSoft)
     .attr("stroke-width", 1);
   sizeLegend
@@ -204,7 +228,7 @@ magSteps.forEach((m) => {
     .attr("y", 30)
     .attr("text-anchor", "middle")
     .attr("fill", t.inkSoft)
-    .style("font-size", "12px")
+    .style("font-size", "14px")
     .text(m.toFixed(1));
   cx += r + 14;
 });
