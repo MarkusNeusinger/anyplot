@@ -1,7 +1,3 @@
-// anyplot.ai
-// cat-box-strip: Box Plot with Strip Overlay
-// Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 // anyplot.ai
 // cat-box-strip: Box Plot with Strip Overlay
@@ -77,14 +73,17 @@ const STATS = CATEGORY_PARAMS.map(
     const lowFence = q1 - 1.5 * iqr;
     const highFence = q3 + 1.5 * iqr;
     const inFence = sorted.filter((v) => v >= lowFence && v <= highFence);
+    const whiskerLow = inFence.length ? inFence[0] : sorted[0];
+    const whiskerHigh = inFence.length ? inFence[inFence.length - 1] : sorted[sorted.length - 1];
     return {
       category,
       jittered,
       q1,
       median,
       q3,
-      whiskerLow: inFence.length ? inFence[0] : sorted[0],
-      whiskerHigh: inFence.length ? inFence[inFence.length - 1] : sorted[sorted.length - 1],
+      whiskerLow,
+      whiskerHigh,
+      outliers: sorted.filter((v) => v < whiskerLow || v > whiskerHigh),
     };
   },
 );
@@ -155,6 +154,42 @@ function BoxStripLayer() {
           />
         ));
       })}
+      {(() => {
+        // Callout on the category whose outliers reach furthest above its
+        // whisker cap — sharpens the story instead of a fixed, hardcoded label.
+        const withOutliers = STATS.filter((s) => s.outliers.length > 0);
+        if (!withOutliers.length) return null;
+        const target = withOutliers.reduce((a, b) =>
+          Math.max(...b.outliers) > Math.max(...a.outliers) ? b : a,
+        );
+        const topOutlier = Math.max(...target.outliers);
+        const cx = (xScale as any)(target.category) + bandwidth / 2;
+        const cyOutlier = (yScale as any)(topOutlier);
+        const labelY = cyOutlier - 30;
+        return (
+          <g>
+            <line
+              x1={cx}
+              y1={cyOutlier - 8}
+              x2={cx}
+              y2={labelY + 8}
+              stroke={t.inkSoft}
+              strokeWidth={1}
+              strokeDasharray="2,3"
+            />
+            <text
+              x={cx}
+              y={labelY}
+              textAnchor="middle"
+              fontSize={13}
+              fontStyle="italic"
+              fill={t.inkSoft}
+            >
+              traffic-jam outliers
+            </text>
+          </g>
+        );
+      })()}
     </g>
   );
 }
@@ -166,7 +201,7 @@ export default function Chart() {
 
   const title =
     "Commute Time by Transport Mode · cat-box-strip · javascript · muix · anyplot.ai";
-  const titleSize = title.length > 67 ? Math.round(22 * (67 / title.length)) : 22;
+  const titleSize = title.length > 70 ? Math.round(24 * (70 / title.length)) : 24;
   const subtitle =
     "Box: median, Q1–Q3, whiskers to 1.5×IQR · dots: individual commutes (jittered), n=45 per mode";
 
@@ -175,6 +210,7 @@ export default function Chart() {
       width={W}
       height={H}
       series={[]}
+      skipAnimation
       xAxis={[
         {
           id: "x",
