@@ -144,17 +144,49 @@ apart, then polls until each metadata file lands, and exits with
 `run_in_background: true`; it skips libraries already on main, so
 re-running it after a partial result retries exactly the gaps.
 
-**Two specs in parallel is fine — but only in this mode** (~4 specs/h
-vs ~2); ten concurrent `impl-generate` runs showed no rate-limit
-effects. It works because `run_spec.sh` decides per library from
-`origin/main` metadata. `poll_spec.sh` and `monitor_spec.sh` must
+**Several specs in parallel is fine — but only in this mode.** It
+works because `run_spec.sh` decides per library from `origin/main`
+metadata and reads liveness per spec (its own generate runs, its own
+open `implementation/<spec>/*` PRs), so drivers never mistake each
+other's runs for progress. `poll_spec.sh` and `monitor_spec.sh` must
 still run one spec at a time: their stall logic reads *any* active
 `impl-*` run as belonging to the spec they are watching (§3), so a
 second spec in flight makes them call a stalled spec healthy. Never
-mix the two modes on the same queue. Keep a ledger —
-`done.log` / `deferred.log` next to the queue file in `agentic/runs/`
-— and append the result line before dispatching the next spec, so a
-compaction or a crashed session can resume without recounting.
+mix the two modes on the same queue. The slot count is the user's
+call: **2 is the default**, 4 with their OK. A 5-slot trial on
+2026-09-01 was clean on the GitHub side (API quota untouched, impl-*
+runner wait ≤4 min; only CodeQL piled up) — the binding limit is the
+Claude usage window, which is why the user pulled it back the same
+evening. Reducing means: stop launching and let in-flight PRs drain;
+never cancel runs that already spent Claude time.
+
+**For an unattended queue use the scheduler** —
+`.claude/skills/babysit-pipeline/run_queue.sh <queue-dir> [slots]`,
+started detached (`setsid nohup ... > <queue-dir>/queue.out &`) so it
+survives the session. It keeps `[slots]` drivers in flight over
+`<queue-dir>/full_queue.txt`, skips libraries already on main and
+pairs recorded as `CONFIRMED GAP` in `deferred.log`, harvests every
+driver's `RESULT=` line into `done.log` / `deferred.log`, and holds
+new launches for 15 min while any throttle sign is present: GitHub
+core quota below 800, **three or more distinct generate pairs failing
+within 25 min** (§4's cluster rule), or a rate-limit signature in a
+failed impl-* log. `DEADLINE=<epoch>` stops new launches at a fixed
+time. A `rescue_specs.txt` (`<spec> <lib...>` lines) is re-checked
+ahead of the queue and launched only once nothing for that spec is in
+flight — the way to re-queue a spec that an outage cut short without
+auto-closing PRs that are still under review or repair. Stop it with
+`pkill -f run_queue.sh`; drivers keep watching (all their dispatches
+went out at start), so "finish the current specs, start nothing new"
+is exactly that. Keep the ledger next to the queue file in
+`agentic/runs/` — a compaction or a crashed session resumes from it
+without recounting.
+
+**Report every ~10 minutes** from one cycle script: GitHub quota,
+runner queue depth and impl-* queue age, impl-* failures of the last
+30 min with the first `##[error]` line of each new one, the scheduler
+log tail, per-spec progress from `origin/main` metadata, open impl
+PRs with labels. A run of ~1600 pipeline runs on 2026-09-02 needed no
+other signal.
 
 **The one-retry rule.** A library that comes back missing gets
 exactly one fresh targeted dispatch before it is deferred. This is
@@ -197,8 +229,38 @@ nothing failed.
   Nothing re-dispatches it: watchdog case 3 fires once, then only
   logs `already retried by watchdog — needs manual attention`. Audit
   it against metadata before trusting it — of 87 such labels on
-  2026-08-24, **42 sat on implementations that had since landed**.
-  Take the label as a hint to check, never as the coverage answer.
+  2026-08-24, **42 sat on implementations that had since landed**
+  (impl-merge clears the label on merge only since #11197). Take the
+  label as a hint to check, never as the coverage answer.
+- **A provider outage looks like a capability cliff.** On 2026-09-02
+  03:15–03:45 UTC every Claude step ended `is_error:true` with
+  `Internal error: directory mismatch ... tsconfig.json`; 27 pairs
+  across three specs burned all three attempts in twenty minutes and
+  two whole specs came back 0/6. That is a throttle signal, not six
+  gaps: the scheduler's cluster rule held launches, and every pair
+  regenerated fine once the incident was over. Since #11199 such
+  failures no longer spend the pair's budget; before it, expect a
+  re-dispatch inside the 12-hour window to run without auto-retry.
+- **Rescuing an outage-hit spec has an order.** First let the
+  pipeline finish what it can: PRs in `ai-review-failed` and stalled
+  repairs are the watchdog's job (`gh workflow run
+  watchdog-stuck-jobs.yml -f stale_hours=2` when you cannot wait for
+  the cron; since #11198 it also covers `ai-rejected` +
+  `ai-attempt-N` with a crashed repair — before that, dispatch
+  `impl-repair.yml` yourself with the watchdog's parameters
+  `pr_number`, `specification_id`, `library`, `attempt`). Only then
+  put the spec on `rescue_specs.txt`: the driver's dispatch
+  auto-closes every open PR of the pair, so a regeneration fired while
+  a repair is mid-flight throws that work away.
+- **`Merge: PR #N` failing five times with "Head branch is out of
+  date" while `mergeable` stays `UNKNOWN` is a stuck PR object, not a
+  branch problem.** Seen on #10850 (2026-09-01): `update-branch` had
+  pushed a merge commit, the branch ref moved, the pull request never
+  registered it. Re-running impl-merge cannot help. With the user's OK
+  push an empty commit to the PR branch (`git commit-tree` on the
+  remote head, plain push) so GitHub re-syncs and recomputes
+  mergeability, then re-dispatch `impl-merge.yml -f pr_number=N`;
+  the merge itself stays with the workflow.
 - **"Agent reports success, writes no file"** is a live intermittent
   failure (8 of 85 generate runs on 2026-08-24, ~9%): the Claude step
   ends `"subtype":"success","is_error":false` and the next step fails

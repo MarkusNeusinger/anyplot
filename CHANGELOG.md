@@ -26,6 +26,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ## [Unreleased]
 
+### Changed
+
+- **The `babysit-pipeline` skill gains the backfill scheduler and the driver's per-spec
+  liveness check** — `run_queue.sh <queue-dir> [slots]` keeps N `run_spec.sh` drivers
+  in flight over a queue file, skips libraries already on main and confirmed gaps,
+  harvests every driver's result into the ledger, holds launches on throttle signs
+  (GitHub quota, ≥3 distinct generate pairs failing within 25 min, rate-limit
+  signatures in failed logs), and re-queues outage-hit specs from a rescue list only
+  once nothing for them is in flight. `run_spec.sh` now reads liveness per spec (its
+  own generate runs and open `implementation/<spec>/*` PRs) instead of "any impl-*
+  run active", which had produced false PARTIAL verdicts with several drivers in
+  flight. `SKILL.md` §5 documents the slot-count rule, the reporting cycle, and new
+  gotchas from the 2026-09-02 run: a provider outage reads like a capability cliff, the
+  order in which to rescue an outage-hit spec, and the stuck-PR-object symptom behind
+  "Head branch is out of date".
+
 ### Fixed
 
 - **The API image installs `libraqm0`, which is what actually restores text shaping —
