@@ -477,13 +477,29 @@ service, which is what makes local development, the test suite and the rollback
 work: remove the variable from the service, promote the resulting revision, and
 the gate is gone.
 
-**Arming and rolling back** are the same procedure with one flag changed. Three
+**Arming and rolling back** are the same procedure with one flag changed. Several
 things make it more than two commands, and each of them has bitten a comparable
-rollout somewhere:
+rollout somewhere. The whole block runs in a fail-fast subshell: half of these
+commands feed the next one, so continuing after a failed lookup would mutate the
+service from an empty variable and still print a plausible-looking health line
+at the end.
 
 ```bash
+(
+set -euo pipefail
 SERVICE=anyplot-api
 LOC="--project=anyplot --region=europe-west4"
+
+# 0. Do not race the deploy pipeline. A build that ALREADY deployed its
+#    candidate promotes it at the end — and that revision was cloned from the
+#    pre-arm template, so the promote silently undoes the arm (its own smoke
+#    accepts `off`, by design). A build that starts AFTER this block inherits
+#    the binding, because the deploy is additive (`--update-secrets`). So the
+#    dangerous window is exactly "a build already in flight".
+gcloud builds list --project=anyplot --region=europe-west4 --ongoing --format="value(id)" | grep -q . && {
+  echo "a Cloud Build is in flight; wait for it to finish (or fail) before arming."
+  exit 1
+}
 
 # 1. Build the new revision from the image that is SERVING, not from whatever
 #    is latest. `services update` clones the service's latest template, and the
@@ -497,6 +513,7 @@ read -r SERVING LATEST <<<"$(gcloud run services describe "$SERVICE" $LOC --form
       t=[x for x in d['status']['traffic'] if x.get('percent')==100]; \
       print(t[0]['revisionName'], d['status']['latestReadyRevisionName'])")"
 IMAGE=$(gcloud run revisions describe "$SERVING" $LOC --format="value(spec.containers[0].image)")
+test -n "$SERVING" && test -n "$IMAGE" || { echo "could not resolve the serving revision or its image"; exit 1; }
 
 # A mismatch is a WARNING, never a stop: it is normal right after a deploy, and
 # it is permanent after a failed smoke — a hard refusal here would make the
@@ -512,6 +529,7 @@ test "$SERVING" = "$LATEST" || echo "note: latest ($LATEST) is not serving ($SER
 #    intermittent 403s inside a single revision.
 VERSION=$(gcloud secrets versions list ORIGIN_SECRET --project=anyplot \
   --filter="state=ENABLED" --sort-by=~createTime --limit=1 --format="value(name)")
+test -n "$VERSION" || { echo "no ENABLED version of ORIGIN_SECRET"; exit 1; }
 
 # 3. Update, then promote BY NAME. The service pins traffic to a named
 #    revision, so the update alone serves nothing; and `--to-latest` here would
@@ -521,16 +539,21 @@ gcloud run services update "$SERVICE" $LOC --image="$IMAGE" \
   --update-secrets="ORIGIN_SECRET=ORIGIN_SECRET:$VERSION" --revision-suffix="$SUFFIX"
 gcloud run services update-traffic "$SERVICE" $LOC --to-revisions="$SERVICE-$SUFFIX=100"
 
-# 4. Confirm what is now serving — the gate's verdict AND the image, because
-#    step 1's warning is only worth having if somebody looks.
+# 4. Confirm the result. Not optional: step 0 only narrows the race, and this
+#    is what catches a build that promoted over the arm anyway — the verdict
+#    would read `off` on a path that carries the header. If it does, that
+#    promote reverted the arm; re-run the whole block.
 curl -s "https://api.anyplot.ai/health"
 gcloud run services describe "$SERVICE" $LOC --format="value(status.traffic)"
+)
 ```
 
 **Rolling back** is the same block with `--remove-secrets=ORIGIN_SECRET` in
 place of `--update-secrets` (step 2 then has nothing to resolve) and a
 `disarm-` suffix. It must stay executable in the worst state the service can be
-in, which is why step 1 warns rather than refuses.
+in, which is why step 1 warns rather than refuses — and when the gate is causing
+an outage, step 0's wait is the wrong trade: skip it, disarm, and re-check
+afterwards.
 
 **Rotating the secret** means changing two sides that must agree, and the gate
 accepts exactly one value — so there is no overlap window. Roll back first,

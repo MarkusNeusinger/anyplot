@@ -79,9 +79,11 @@ binding is created once under Settings → Variables as a *Secret*; it survives
 later deploys.
 
 **API** (when it has to be scriptable) — a multipart request of metadata plus
-module. The secret is never typed: it is read from Secret Manager at execution
-time, stays in a shell variable, and reaches `curl` through stdin, so it lands
-in no shell history, no file and no process list.
+module. Neither secret is ever typed. Both are read at execution time and each
+reaches its command through a channel other processes cannot read: the origin
+secret on `python3`'s **stdin**, the Cloudflare token on a `--config` file
+descriptor. Neither is exported, so neither appears in a shell history, a file,
+an argument vector, or a `/proc/<pid>/environ`.
 
 It runs in a fail-fast subshell for a reason: a script `PUT` **replaces** the
 bindings, so a failed or empty secret read would deploy an empty binding, the
@@ -99,13 +101,17 @@ runs.
     --secret=ORIGIN_SECRET --project=anyplot)
   [ -n "$ORIGIN_SECRET" ] || { echo "empty ORIGIN_SECRET — refusing to deploy"; exit 1; }
 
-  ORIGIN_SECRET="$ORIGIN_SECRET" python3 -c '
-import json, os, sys
+  # The secret goes in on STDIN, not in the child's environment: a
+  # `VAR=value python3 …` prefix puts it in `/proc/<pid>/environ`, which any
+  # same-UID process can read for the life of the call (Copilot review). The
+  # shell variable itself is never exported.
+  printf '%s' "$ORIGIN_SECRET" | python3 -c '
+import json, sys
 json.dump({
     "main_module": "worker.js",
     "compatibility_date": "2026-04-29",
     "bindings": [
-        {"type": "secret_text", "name": "ORIGIN_SECRET", "text": os.environ["ORIGIN_SECRET"]},
+        {"type": "secret_text", "name": "ORIGIN_SECRET", "text": sys.stdin.read()},
     ],
 }, sys.stdout)' | curl --fail-with-body -sS -X PUT \
     "https://api.cloudflare.com/client/v4/accounts/{account}/workers/scripts/anyplot-api-proxy" \
