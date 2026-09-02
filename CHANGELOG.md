@@ -41,6 +41,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   paused without `impl:<lib>:failed` (an incident is not a capability verdict). "Agent
   reports success but writes no file" and a missing theme render still count as before.
   (#11199)
+- **A merged implementation now clears its `impl:<lib>:failed` label and the watchdog's
+  retry marker** — impl-merge removed the stale labels in one comma-separated
+  `gh issue edit`, and `gh` rejects the whole call when any name in the list is not a
+  repository label (`impl:<lib>:pending` only exists on demand), so the fallback added
+  `impl:<lib>:done` and left `impl:<lib>:failed` in place. Issues #3343 and #3650 ended
+  the 2026-09-02 outage rescue with both labels for the same libraries, and every
+  watchdog scan since reported those pairs as "already retried — needs manual
+  attention". The labels are now removed one at a time, each call tolerated, and
+  `watchdog:retried-<lib>` goes with them. (#11197)
 - **The watchdog now rescues a repair that crashed after a rejection** — a PR carrying
   `ai-rejected` and `ai-attempt-N` is the state impl-review leaves behind when it
   dispatches a repair that then dies (its crash-retry exhausted). Case 2 excluded
