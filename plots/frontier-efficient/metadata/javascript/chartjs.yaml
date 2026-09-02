@@ -1,0 +1,256 @@
+library: chartjs
+language: javascript
+specification_id: frontier-efficient
+created: '2026-09-02T01:01:50Z'
+updated: '2026-09-02T01:07:50Z'
+generated_by: claude-sonnet
+workflow_run: 33577000904
+issue: 3342
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Semantically thoughtful Imprint palette usage: the Efficient Frontier (the plot''s
+    hero series) gets brand green #009E73, Min Variance and Max Sharpe portfolios
+    use canonical palette positions 2-3, and the Capital Market Line correctly borrows
+    the theme-adaptive ''neutral'' ink token for its reference-line role -- palette
+    choices map to semantic roles rather than arbitrary assignment.'
+  - Continuous Sharpe-ratio coloring for the random-portfolio cloud correctly uses
+    an imprint_seq (green-to-blue) gradient via a hand-rolled hex lerp, exactly matching
+    the spec's 'color coding can indicate Sharpe ratio' suggestion, with no forbidden
+    colormap.
+  - 'All spec notes are fulfilled: frontier curve visually distinguished by thicker
+    line and distinct color, random portfolio scatter shown below the frontier, min-variance
+    and max-Sharpe (tangency) portfolios explicitly marked with distinct point shapes
+    (diamond/triangle), and the optional Capital Market Line is included and tangent
+    to the risk-free rate.'
+  - 'Realistic, neutral, well-researched finance data: named asset classes (Govt Bonds,
+    Corp Bonds, REITs, US/Intl Equity, Emerging Mkts) with plausible annualized return/vol/correlation
+    values, deterministic LCG simulation with fixed seeds for full reproducibility.'
+  - 'Redundant encoding beyond color: min-variance (diamond), max-Sharpe (triangle),
+    and risk-free rate (circle) use distinct pointStyle shapes with ink borders, keeping
+    the key portfolios distinguishable even for colorblind viewers.'
+  - Theme-adaptive chrome is fully correct in both renders -- warm off-white/near-black
+    backgrounds, readable ink/inkSoft text, subtle grid -- with title fontsize dynamically
+    scaled to the (longer, prefixed) title length so it doesn't overflow.
+  - 'Title format is exactly right: ''6-Asset Portfolio Universe · frontier-efficient
+    · javascript · chartjs · anyplot.ai''.'
+  weaknesses:
+  - The 300-point random-portfolio scatter uses full-opacity pointBackgroundColor
+    with no alpha; in the densest risk band (~8-12%) points overlap heavily and individual
+    markers become hard to distinguish even with the background-colored border trick
+    -- consider alpha < 1 or a slightly smaller pointRadius for that density.
+  - The continuous Sharpe-ratio color encoding has no accompanying numeric scale/colorbar
+    in the static PNG -- a reader can see relative gradient but not read an actual
+    Sharpe value off the chart (the legend label names the encoding but doesn't quantify
+    it).
+  - The 'Capital Market Line' legend swatch renders as a plain hollow/gray circle
+    rather than a themed dash-line icon in both renders, since that dataset has no
+    explicit pointBackgroundColor for legend styling -- minor legend-polish inconsistency
+    versus the other, more deliberately styled swatches.
+  - Code uses several small helper functions (makeLcg, samplePortfolioWeights, portfolioStats,
+    hexToRgb, lerpColor) for the portfolio-theory math, which is well justified by
+    domain complexity but is a mild departure from the purest 'flat imports -> data
+    -> plot' KISS structure.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "6-Asset Portfolio Universe · frontier-efficient · javascript · chartjs · anyplot.ai" in dark ink, centered at top, fully visible and not clipped. X-axis title "Risk (Annualized Std Dev)" and Y-axis title "Expected Return (Annualized)" in dark ink; both axes' percentage tick labels in a softer gray. Subtle light-gray gridlines on both axes. Legend row at bottom with 6 entries (Max Sharpe, Min Variance, Risk-Free Rate, Efficient Frontier, Capital Market Line, Random Portfolios), all legible.
+      Data: Dense teal-to-blue gradient scatter cloud (random portfolios, colored by Sharpe ratio, imprint_seq gradient), a bold brand-green (#009E73) curve tracing the efficient frontier along the cloud's upper edge, a black dashed Capital Market Line tangent from the risk-free point through the tangency portfolio, a purple diamond marking the minimum-variance portfolio, and a dark-blue triangle marking the maximum-Sharpe (tangency) portfolio. First highlighted/hero series (the frontier) uses brand green as required.
+      Legibility verdict: PASS -- all title, axis, tick, and legend text reads clearly against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Same title and axis titles now rendered in light off-white ink, tick labels in a lighter secondary gray, gridlines a subtle light overlay. Legend text switches to light gray, fully readable against the dark surface.
+      Data: Identical data colors to the light render -- teal-to-blue Sharpe gradient scatter, brand-green frontier curve, purple diamond, blue triangle, and a white (theme-flipped) dashed Capital Market Line -- confirming only chrome flipped and categorical/continuous data hues stayed constant.
+      Legibility verdict: PASS -- no dark-on-dark failures found; every text element (title, axis labels, ticks, legend) is clearly legible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title fontsize dynamically scaled
+          for the longer prefixed title, fits without overflow; readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text-on-text or text-on-data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 300-point scatter uses background-colored point borders to separate
+          overlaps, but full opacity in the densest risk band still causes some overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Redundant shape+color encoding for key portfolios; CVD-safe imprint_seq
+          gradient for the scatter cloud.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; legend sits directly
+          under the plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with % units shown on tick labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Frontier (hero series) uses brand green, min-variance/max-Sharpe
+          use canonical palette order, CML/risk-free use theme-adaptive neutral/muted
+          anchors semantically, continuous Sharpe uses imprint_seq. Backgrounds and
+          chrome theme-correct in both renders.
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Semantic palette assignment, layered marker hierarchy, and gradient-encoded
+          scatter clearly go beyond a library default, though a numeric scale for
+          the continuous variable would push this further.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Subtle grid, generous whitespace, background-matched point borders
+          for overlap separation; not fully polished due to the plain Capital Market
+          Line legend swatch and dense-region overplotting.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        comment: Bold green frontier line plus distinctly shaped min-variance/max-Sharpe
+          markers immediately draw the eye to the key insight; falls short of a 6
+          without an explicit numeric callout or scale.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct scatter-plus-frontier-curve chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Frontier curve, portfolio scatter, min-variance/max-Sharpe markers,
+          and optional Capital Market Line all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: X = risk, Y = expected return, matching the spec's axis mapping exactly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels correctly describe each series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Shows the full frontier shape, suboptimal scatter below it, key marked
+          portfolios, and CML.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, realistic 6-asset universe with named, plausible asset classes.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: Return/risk/correlation values and Sharpe/CAPM math are internally
+          consistent and realistic for the asset classes chosen.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Flat top-to-bottom flow but relies on several small helper functions
+          for the portfolio-theory math.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fixed-seed LCG PRNG, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No unused imports; browser globals only.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for portfolio-theory simulation, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Respects the mount-node contract; animation disabled.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Mixes scatter and line datasets within a single scatter-type chart,
+          custom pointStyle per dataset, tick-formatting callback.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: Uses order-based z-stacking and per-dataset pointStyle/showLine mixing,
+          which is fairly Chart.js-specific, though not maximally unique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - binning
+  styling:
+  - custom-colormap
+  - publication-ready
