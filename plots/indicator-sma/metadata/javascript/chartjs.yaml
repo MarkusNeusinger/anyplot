@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: indicator-sma
 created: '2026-09-02T01:50:42Z'
-updated: '2026-09-02T01:55:05Z'
+updated: '2026-09-02T02:06:24Z'
 generated_by: claude-sonnet
 workflow_run: 33580666504
 issue: 3651
@@ -12,133 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 94
 review:
   strengths:
-  - 'First series (Close) uses brand green #009E73 with the three SMA overlays following
-    the canonical Imprint order (#C475FD, #4467A3, #BD8233), identical across light
-    and dark renders'
-  - Data is deliberately regime-shifted (sustained uptrend then pullback) so the SMA
-    lines actually cross each other, demonstrating golden/death-cross-style behavior
-    rather than three parallel flat lines
-  - Longer SMAs correctly show more leading null values (SMA 200 only starts plotting
-    after ~200 trading days), exactly matching the spec's note about calculation windows
-  - Line weight increases with SMA period (2 / 2.5 / 2.5 / 3 px) giving a subtle visual
-    hierarchy that separates short- from long-term trend lines
-  - X-axis grid is disabled while Y-axis grid is kept, matching the spec's explicit
-    request for 'grid lines on the y-axis' without cluttering the dense daily time
-    series
-  - Theme chrome (title, ticks, axis titles, legend) is fully token-driven and reads
-    cleanly in both light and dark renders with no dark-on-dark or light-on-light
-    failures
-  - Deterministic LCG-seeded random walk plus a hand-rolled SMA function keep the
-    implementation reproducible and dependency-free
+  - 'Golden-cross/death-cross storytelling is genuinely excellent: the Close line''s
+    per-segment color (Chart.js `segment` callback) plus the fill band to SMA 50 (`fill:
+    2`) turns the bullish/bearish signal into the chart''s focal point instead of
+    a decorative line overlay'
+  - 'Correct Imprint palette application: Close defaults to brand green #009E73 with
+    the bearish segments legitimately using the semantic-anchor matte red #AE3030
+    (finance profit/loss convention), while SMA 20/50/200 follow the canonical palette
+    order (#C475FD / #4467A3 / #BD8233)'
+  - SMA null-handling is honest — SMA 200 visibly only starts partway through the
+    series, matching the spec's note that longer windows have more initial null values
+  - 'Theme-adaptive chrome is clean in both renders: warm #FAF8F1/#1A1A17 backgrounds,
+    all text readable, data colors identical between light and dark'
+  - 'Realistic, deterministic data: a 320-day LCG-seeded random walk with an explicit
+    uptrend-then-pullback regime shift, giving the chart real crossover behavior in
+    both directions (DQ-01 coverage)'
+  - Title, axis titles ("Date", "Price (USD)"), and legend labels ("SMA 20/50/200")
+    all follow spec and format conventions, with title fontsize scaling logic for
+    the long mandated string
   weaknesses:
-  - 'Design Excellence is at ''well-configured default'' level: the chart is a clean
-    but plain multi-line overlay with no fill/area shading, no emphasis on the golden/death-cross
-    moments, and no distinctive visual flourish beyond correct palette and line-width
-    hierarchy'
-  - No data storytelling device highlights the crossover signals that are central
-    to the indicator-sma spec's applications (golden cross / death cross) — a viewer
-    has to find the crossing points themselves
-  - 'Library Mastery is generic: the implementation only uses the standard `type:
-    ''line''` + multi-dataset API. Chart.js''s per-point `segment` styling (e.g. coloring
-    the Close line''s segments by whether price is above/below SMA 50) would be a
-    genuinely distinctive, hard-to-replicate-elsewhere feature that fits this exact
-    spec'
-  - Legend uses default flat swatches; grouping/ordering price vs. SMAs or adding
-    a subtle divider would reinforce the visual hierarchy already established by line
-    width
+  - The 'Close' legend swatch always renders solid brand green, even though the actual
+    line alternates green/red via the segment callback — a reader skimming the legend
+    alone won't know red also means 'Close' (bearish state), only the in-chart fill/line
+    teaches that
+  - 'LM-02: the fill-between-series + conditional segment coloring is a nice technique
+    but is achievable with moderate effort in other libraries (Plotly `fill=''tonexty''`,
+    ECharts `areaStyle`) — not fully unique to Chart.js'
+  - Axis border lines (left/bottom scale borders) are left at Chart.js defaults rather
+    than explicitly restyled — fine as an L-shaped frame, but slightly less deliberate
+    than the rest of the chart's polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "TechCorp Stock · indicator-sma · javascript · chartjs · anyplot.ai" is dark and crisp at top center; "Date" and "Price (USD)" axis titles are dark and clearly legible; tick labels are a softer dark gray, fully readable; legend (Close, SMA 20, SMA 50, SMA 200) sits top-right with clear swatches; horizontal gridlines are faint but visible, vertical gridlines are absent by design.
-      Data: Close line is brand green (#009E73), SMA 20 is purple, SMA 50 is blue, SMA 200 is ochre/brown — matches canonical Imprint categorical order. All four lines are clearly distinguishable, with SMA 200 appropriately starting later in the series (fewer leading points) than SMA 20/50.
-      Legibility verdict: PASS.
+      Background: Warm off-white (~#FAF8F1), not pure white.
+      Chrome: Title "TechCorp Stock · indicator-sma · javascript · chartjs · anyplot.ai" in dark ink, top-right legend ("Close", "SMA 20", "SMA 50", "SMA 200") in dark ink, axis titles "Date" / "Price (USD)" dark and legible, tick labels in a slightly softer dark gray, subtle horizontal y-axis gridlines only (x-axis grid off).
+      Data: Close line rendered in brand green (#009E73) when price sits above SMA 50, switching to matte red (#AE3030) when below — with a light green/light red fill band between Close and SMA 50 visualizing the spread. SMA 20 is lavender/purple, SMA 50 is blue, SMA 200 is ochre/tan, appearing only after day 200 as expected from the rolling-window null-handling. All four series distinguishable.
+      Legibility verdict: PASS — no overlapping or clipped text, all labels and legend entries fully readable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels all render in light tones (white/soft gray) and remain fully legible against the dark background; no dark-on-dark text anywhere; legend swatches and labels are equally readable; gridlines are faint but present.
-      Data: Close, SMA 20, SMA 50, and SMA 200 use the exact same hex colors as the light render (green, purple, blue, ochre) — only the chrome (background/text/grid) flipped, as required.
-      Legibility verdict: PASS.
+      Background: Warm near-black (~#1A1A17), not pure black.
+      Chrome: Same title, legend, and axis titles now rendered in light/off-white ink, tick labels in a lighter soft gray, gridlines subtle and still visible against the dark surface. No dark-on-dark text anywhere.
+      Data: Identical data colors to the light render — brand green / matte red segment split on Close, lavender/blue/ochre SMA lines, fill bands present with the same reduced-opacity tinting. Confirms only chrome (background + text) flipped, not the data palette.
+      Legibility verdict: PASS — all text, gridlines, and data series remain clearly legible on the dark surface; no unreadable elements.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes with generous
-          breathing room; title comfortably fits without clipping
+        comment: All font sizes explicitly set (title scaled by length, ticks 14px,
+          axis titles 18px, legend 16px); readable in both themes, no clipping or
+          squeeze
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, axes, or data lines
+        comment: No collisions between legend, ticks, titles, or data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Thin lines (2-3px) with no markers are correct for 320-point dense
-          daily series
+        comment: pointRadius 0 with 2-3px lines is well-suited to 320 dense daily
+          points; SMA lines get progressively thicker for longer periods
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Four hues (green/purple/blue/ochre) are mutually distinguishable,
-          no red-green-only signal
+        comment: Bullish/bearish state is redundantly encoded by line position relative
+          to SMA 50, not color alone, mitigating the red/green CVD concern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas with balanced margins;
-          legend sits near the plot
+        comment: Plot area fills most of the canvas with balanced margins; legend
+          sits near the plot, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Date'' and ''Price (USD)'' — descriptive with units'
+        comment: '"Date" and "Price (USD)" — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, remaining SMAs follow canonical Imprint order,
-          identical across themes, backgrounds are correct off-white/near-black'
+        comment: 'Close defaults to #009E73 with #AE3030 semantic-anchor bearish segments
+          (finance exception); SMA 20/50/200 follow canonical palette order; theme-correct
+          backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Looks like a well-configured Chart.js default — correct palette and
-          typography but no distinctive visual flourish
+        passed: true
+        comment: 'Strong, thoughtful design: conditional coloring and fill-band clearly
+          above library defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: X gridlines dropped, Y gridlines kept per spec, generous whitespace
-          — some refinement beyond raw defaults
+        comment: Grid adjusted (x-grid off, subtle y-grid), whitespace generous; axis
+          border lines left at defaults rather than explicitly restyled
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Line-width hierarchy (thicker for longer SMAs) and an engineered
-          trend/pullback that produces real crossovers create some visual hierarchy,
-          but the crossover moments themselves are not emphasized
+        comment: Segment-colored crossover fill makes the golden-cross/death-cross
+          signal the immediate visual focal point
     spec_compliance:
       score: 15
       max: 15
@@ -148,29 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line SMA overlay chart
+        comment: Multi-line SMA overlay chart, correct type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price line prominent, three distinct SMAs, legend with periods, y-axis
-          grid, correct leading-null behavior for longer SMAs
+        comment: Price line, three SMA overlays, legend with periods, y-axis grid
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, price on Y, all series fully visible
+        comment: X=Date, Y=Price(USD), full data range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · indicator-sma · javascript ·
-          chartjs · anyplot.ai'; legend labels (Close, SMA 20/50/200) match spec
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match spec ("SMA 20", "SMA 50", "SMA 200")
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -178,21 +174,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Uptrend, pullback, SMA crossovers, and staggered SMA start points
-          are all present
+        comment: Shows sustained uptrend, pullback, and multiple bullish/bearish crossovers
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible generic-stock scenario ('TechCorp Stock')
+        comment: Neutral, comprehensible business scenario (generic stock)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range and daily volatility (~3% shocks, small drift) are realistic
-          for equity data
+        comment: Price range and daily volatility are plausible for a stock
     code_quality:
       score: 10
       max: 10
@@ -202,58 +196,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Only the minimal helper functions needed for SMA/LCG generation,
-          otherwise linear top-to-bottom flow
+        comment: Small necessary helpers (lcg, sma, crossState) only, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG(42)
+        comment: Seeded LCG (42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only ANYPLOT_TOKENS and Chart used
+        comment: No imports needed; Chart global used directly
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately sized for the visualization, no fake UI
+        comment: Appropriate complexity for the crossover visualization, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Follows mount-node contract exactly, animation disabled
+        comment: Mount-node contract followed correctly, animation:false set
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct high-level `new Chart` + multi-dataset config, interaction
-          mode set for tooltip usability
+        comment: Correct high-level Chart.js API usage throughout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Generic multi-line usage; no Chart.js-specific feature (e.g. per-segment
-          coloring) that would be hard to replicate elsewhere
-  verdict: REJECTED
+        passed: true
+        comment: Uses Chart.js's segment callback and dataset-target fill, but similar
+          fill-between capability exists in other interactive libraries
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - conditional-styling
+  - area-fill
   patterns:
   - data-generation
   dataprep:
   - rolling-window
   - time-series
   styling:
+  - alpha-blending
   - grid-styling
