@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import secrets
 import time
 from collections import Counter
 from datetime import datetime, timedelta, timezone
@@ -17,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
 from api.exceptions import raise_validation_error
+from api.secret_compare import secret_matches
 from core.config import settings
 from core.constants import LIBRARY_NAMES, SUPPORTED_LIBRARIES
 from core.database import FEEDBACK_REACTIONS, FEEDBACK_STATUSES, FeedbackRepository, SpecRepository
@@ -91,7 +91,9 @@ def require_admin(
     expected = settings.admin_token
     if not expected:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Debug endpoints not configured")
-    if not secrets.compare_digest(x_admin_token or "", expected):
+    # Constant-time, and byte-wise: a non-ASCII header would make
+    # `secrets.compare_digest` raise on two `str` (api/secret_compare.py).
+    if not secret_matches(x_admin_token, expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin token")
 
 
@@ -487,8 +489,11 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
     expected = settings.cache_invalidate_token
     if not expected:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Cache invalidation not configured")
-    # Constant-time compare to avoid byte-by-byte token recovery via timing.
-    if not secrets.compare_digest(x_cache_token or "", expected):
+    # Constant-time compare to avoid byte-by-byte token recovery via timing —
+    # byte-wise, because this endpoint is exempt from the origin gate and is
+    # therefore reachable on the direct `run.app` URL, where a non-ASCII header
+    # would otherwise turn a cheap 401 into a logged 500 (api/secret_compare.py).
+    if not secret_matches(x_cache_token, expected):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid cache token")
 
     stats_before = get_cache_stats()

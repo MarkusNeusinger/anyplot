@@ -64,11 +64,10 @@ independent of where the middleware ends up in the stack.
 
 from __future__ import annotations
 
-import secrets
-
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+from api.secret_compare import secret_matches
 from core.config import settings
 
 
@@ -78,20 +77,6 @@ ORIGIN_SECRET_HEADER = "x-origin-secret"
 # a hole. See the module docstring for what each of these two buys, and why
 # `/seo-proxy/…` is not among them.
 EXEMPT_PATHS = frozenset({"/health", "/debug/cache/invalidate"})
-
-
-def _matches(presented: str, expected: str) -> bool:
-    """Constant-time compare of the presented header against the secret.
-
-    Compared as BYTES, not as `str`: `secrets.compare_digest` raises TypeError
-    when either `str` holds a non-ASCII character, and a header value reaches
-    here latin-1-decoded straight from the wire. So a caller could put one byte
-    ≥ 0x80 in `X-Origin-Secret` and turn every refusal into an unhandled 500 —
-    an unauthenticated way to make the gate expensive instead of cheap (Copilot
-    review). Encoding first removes the restriction and the whole class of
-    problem, and covers a non-ASCII secret at the other end too.
-    """
-    return secrets.compare_digest(presented.encode("utf-8"), expected.encode("utf-8"))
 
 
 def gate_is_armed() -> bool:
@@ -136,7 +121,7 @@ def header_verdict(request: Request) -> str:
         return "off-seen" if presented else "off"
     if not presented:
         return "missing"
-    return "ok" if _matches(presented, settings.origin_secret or "") else "mismatch"
+    return "ok" if secret_matches(presented, settings.origin_secret) else "mismatch"
 
 
 class OriginSecretMiddleware:
@@ -163,9 +148,7 @@ class OriginSecretMiddleware:
             await self.app(scope, receive, send)
             return
         presented = Request(scope).headers.get(ORIGIN_SECRET_HEADER)
-        # An absent header is not a mismatch to measure, it is simply the wrong
-        # door — so it short-circuits before the compare.
-        if presented and _matches(presented, settings.origin_secret or ""):
+        if secret_matches(presented, settings.origin_secret):
             await self.app(scope, receive, send)
             return
         response = JSONResponse(

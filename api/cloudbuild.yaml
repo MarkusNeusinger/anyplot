@@ -83,7 +83,16 @@ steps:
       - "--update-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest"
       - "--execution-environment=gen2"
       # ^|^ alt delimiter: values contain @ (emails) and may contain , (multi-email lists)
-      - "--set-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
+      #
+      # `--update-env-vars` for the same reason as `--update-secrets` above, and
+      # belt and braces on top of it: a secret-backed variable lives in the same
+      # revision environment as a literal one, so a destructive `--set-env-vars`
+      # is a second way this pipeline could drop the hand-attached
+      # ORIGIN_SECRET and silently disarm the gate (Copilot review). Additive on
+      # both flags means one deploy cannot undo an out-of-band change; the cost
+      # is that a variable dropped from this line is no longer removed by the
+      # next deploy, which is the trade already accepted for the secrets.
+      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
       - "--cpu-throttling"
       - "--concurrency=15"
       - "--timeout=600"

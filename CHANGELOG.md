@@ -51,15 +51,33 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   over `api.anyplot.ai` and so carries the header, while an exemption would leave the API's
   most expensive reads open on the direct URL — a cache miss or an unknown id queries the
   repositories, and a crawler user agent schedules an outbound Plausible event per request.
-  The header is compared as bytes rather than as `str`, because `secrets.compare_digest`
-  raises `TypeError` on a non-ASCII `str` and a header arrives latin-1-decoded from the wire:
-  comparing strings would have handed any caller a one-byte way to turn every refusal into an
-  unhandled 500. The Cloudflare Worker behind `anyplot.ai/api/*` now has
+  Every header secret is now compared through one byte-wise comparator
+  (`api/secret_compare.py`, used by the gate and by both `/debug/*` locks), because
+  `secrets.compare_digest` raises `TypeError` on a non-ASCII `str` while a header arrives
+  latin-1-decoded from the wire: comparing strings handed any caller a one-byte way to turn a
+  cheap 401 or 403 into an unhandled, logged 500 — including on `/debug/cache/invalidate`,
+  which is exempt from the gate precisely because it has its own lock. The Cloudflare Worker
+  behind `anyplot.ai/api/*` now has
   its source in `infra/cloudflare/`, because a Worker subrequest to a host in the same zone
   bypasses that zone's Transform Rules — so the Worker stamps the header itself, deleting
   any inbound one first so a caller cannot supply it. The pre-traffic smoke reads the secret
   at run time and sends it, accepting `off`/`off-seen` so the pipeline keeps working before
   the gate is armed and after a rollback. (#11208)
+- **The API image is built and its container smoke-tested before merge, not after** — the
+  first build attempt of a changed Dockerfile used to happen in Cloud Build, once the PR was
+  already on `main`; that is how the deploy-api trigger sat red from 2026-08-30 until #10821
+  with every PR check green throughout. The new `.github/workflows/ci-image.yml` builds
+  `api/Dockerfile` with Buildx (`push: false`, `load: true`, GHA layer cache), starts the
+  result with no database and no secrets, and asserts what only a running container can show:
+  `/health` answers, its `version` equals `pyproject.toml`'s (`api/version.py` falls back to
+  `0.0.0+unknown` when the installed dist-info is missing — silently, in a field `/health`,
+  `/openapi.json` and the MCP server all report), the OG disk fallback
+  `api/static/og-image.png` survived the runtime stage's COPY, and the process runs as uid
+  1000. Two hadolint steps gate both Dockerfiles at threshold `warning` with three named
+  exceptions in `api/Dockerfile`, so a warning of any other code blocks. Change detection
+  excludes `plots/**`: the plot pipeline's PRs touch nothing the image serves. Adopted from the
+  sibling repo kurrentschrift, which added the same job after its `pyproject.toml` fell out
+  of the runtime stage. (#11205)
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
   key file (`app/public/<key>.txt`, served by an explicit nginx `location` so crawler UAs
@@ -206,13 +224,16 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   idle window — so the instance is in practice never reclaimed and visitors keep the
   same time to first byte. `anyplot-api` keeps `min-instances=1`: its cold start is
   ~11.6 s and its traffic does leave gaps over 15 minutes. (#10812)
-- **The API deploy attaches secrets with `--update-secrets` instead of `--set-secrets`** —
-  the latter replaces the whole binding set, so any secret attached to the service out of
-  band would be stripped from every revision the pipeline creates. `ORIGIN_SECRET` is
-  exactly such a binding — attached by hand to arm the origin gate, removed by hand to roll
-  back — and the old flag would have silently disarmed the gate on the next deploy. It
-  cannot be listed in the flag instead: Cloud Run refuses a deploy naming a secret that does
-  not exist, which would break every build until the rollout creates it. (#11208)
+- **The API deploy configures the revision additively — `--update-secrets` and
+  `--update-env-vars`, not the `--set-` forms** — both `--set-` flags replace their whole set,
+  so anything attached to the service out of band is stripped from every revision the pipeline
+  creates. `ORIGIN_SECRET` is exactly such a binding — attached by hand to arm the origin gate,
+  removed by hand to roll back — and a secret-backed variable lives in the same revision
+  environment as a literal one, so either flag was a way to silently disarm the gate on the
+  next deploy. It cannot simply be listed in the flag instead: Cloud Run refuses a deploy
+  naming a secret that does not exist, which would break every build until the rollout creates
+  it. The cost is that a variable dropped from either line is no longer removed automatically.
+  (#11208)
 - **The analytics middleware moves inside `CORSMiddleware`** — a consequence of where the
   origin gate has to sit. The gate belongs inside CORS, so its 403 still carries the headers
   a browser needs to read it as a 403 rather than as an opaque network error, and outside

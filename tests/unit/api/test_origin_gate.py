@@ -17,7 +17,8 @@ from fastapi.testclient import TestClient
 
 import api.main as api_main
 from api.main import app
-from api.origin_gate import ORIGIN_SECRET_HEADER, _matches, is_exempt
+from api.origin_gate import ORIGIN_SECRET_HEADER, is_exempt
+from api.secret_compare import secret_matches
 from core.config import settings
 
 
@@ -271,8 +272,44 @@ class TestANonAsciiHeaderIsRefused:
         with pytest.raises(TypeError):
             stdlib_secrets.compare_digest(seen, SECRET)
 
-        assert _matches(seen, seen) is True
-        assert _matches(seen, SECRET) is False
+        assert secret_matches(seen, seen) is True
+        assert secret_matches(seen, SECRET) is False
+
+    @pytest.mark.parametrize(
+        ("presented", "expected"),
+        [(None, SECRET), ("", SECRET), (SECRET, None), (SECRET, ""), (None, None)],
+        ids=["no-header", "empty-header", "no-secret", "empty-secret", "neither"],
+    )
+    def test_a_missing_side_never_matches(self, presented, expected):
+        """An unconfigured secret must not be satisfiable by an absent header,
+        which is what a bare `compare_digest("", "")` would do."""
+        assert secret_matches(presented, expected) is False
+
+
+class TestTheOtherHeaderSecretsUseTheSameComparator:
+    """The gate exempts `/debug/cache/invalidate` on the grounds that it has its
+    own lock — so that lock has to be as cheap to fail as the gate is. It used
+    the raw `str` comparison, and it is the one endpoint reachable on the direct
+    `run.app` URL, so a non-ASCII `X-Cache-Token` turned a 401 into a logged 500
+    (Copilot review). `X-Admin-Token` had the same comparison."""
+
+    RAW = b"tok\xe9n"
+
+    def test_a_non_ascii_cache_token_is_a_401_or_503_not_a_500(self, client: TestClient, monkeypatch):
+        monkeypatch.setattr(settings, "cache_invalidate_token", "the-real-token")
+        res = client.post("/debug/cache/invalidate", headers={"X-Cache-Token": self.RAW})
+        assert res.status_code == 401
+
+    def test_a_non_ascii_admin_token_is_a_401_not_a_500(self, client: TestClient, monkeypatch):
+        monkeypatch.setattr(settings, "admin_token", "the-real-token")
+        monkeypatch.setattr(settings, "cf_access_team_domain", None)
+        res = client.get("/debug/status", headers={"X-Admin-Token": self.RAW})
+        assert res.status_code == 401
+
+    def test_the_right_cache_token_still_works(self, client: TestClient, monkeypatch):
+        monkeypatch.setattr(settings, "cache_invalidate_token", "the-real-token")
+        res = client.post("/debug/cache/invalidate", headers={"X-Cache-Token": "the-real-token"})
+        assert res.status_code == 200
 
 
 class TestATrailingNewlineCannotLockEveryoneOut:
