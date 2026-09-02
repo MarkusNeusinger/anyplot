@@ -10,14 +10,11 @@ const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 const lowC = [0, 0, 2, 5, 9, 13, 15, 14, 11, 7, 3, 1];
 const highC = [3, 5, 9, 14, 19, 22, 24, 24, 19, 13, 7, 4];
 const ranges = months.map((_, i) => [lowC[i], highC[i]]);
+const widestIdx = months.reduce((best, _, i) => (highC[i] - lowC[i] > highC[best] - lowC[best] ? i : best), 0);
 
-// brand green fill with reduced opacity so the range bars stay light
-function withAlpha(hex, alpha) {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-}
+// brand green fill, hardcoded rgba (t.palette[0] is always #009E73) — widest-range month gets a stronger fill
+const fillColors = months.map((_, i) => (i === widestIdx ? "rgba(0, 158, 115, 0.9)" : "rgba(0, 158, 115, 0.5)"));
+const borderWidths = months.map((_, i) => (i === widestIdx ? 3 : 2));
 
 // --- Title sizing (scale down once the title exceeds the ~67-char baseline) -
 const title = "Berlin Monthly Temperature Range · range-interval · javascript · chartjs · anyplot.ai";
@@ -36,9 +33,9 @@ new Chart(canvas, {
       {
         label: "Temperature range",
         data: ranges,
-        backgroundColor: withAlpha(t.palette[0], 0.55),
+        backgroundColor: fillColors,
         borderColor: t.palette[0],
-        borderWidth: 2,
+        borderWidth: borderWidths,
         borderSkipped: false,
         borderRadius: 6,
         barPercentage: 0.6,
@@ -52,7 +49,11 @@ new Chart(canvas, {
     plugins: {
       title: { display: true, text: title, color: t.ink, font: { size: titleFontSize, weight: "500" } },
       legend: { display: false },
-      tooltip: { enabled: false },
+      tooltip: {
+        callbacks: {
+          label: (ctx) => `Low ${lowC[ctx.dataIndex]}°C – High ${highC[ctx.dataIndex]}°C`,
+        },
+      },
     },
     scales: {
       x: {
