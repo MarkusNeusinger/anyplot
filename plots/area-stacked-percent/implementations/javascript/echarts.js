@@ -29,6 +29,19 @@ providers.forEach((name) => {
   sharePct[name] = rawSpend[name].map((v, i) => (100 * v) / totals[i]);
 });
 
+// Give each band a little depth: a vertical gradient fill (richer near the
+// band's own boundary, softer toward the stack) instead of a flat opacity.
+function hexToRgba(hex, alpha) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+function bandGradient(hex) {
+  return new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+    { offset: 0, color: hexToRgba(hex, 0.92) },
+    { offset: 1, color: hexToRgba(hex, 0.6) },
+  ]);
+}
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -46,6 +59,7 @@ chart.setOption({
   legend: {
     top: 68,
     left: "center",
+    icon: "roundRect",
     itemWidth: 16,
     itemHeight: 10,
     textStyle: { color: t.inkSoft, fontSize: 14 },
@@ -55,7 +69,7 @@ chart.setOption({
     type: "category",
     data: quarters,
     boundaryGap: false,
-    axisLabel: { color: t.inkSoft, fontSize: 13, rotate: 30 },
+    axisLabel: { color: t.inkSoft, fontSize: 14, rotate: 30 },
     axisLine: { lineStyle: { color: t.inkSoft } },
     axisTick: { show: false },
     splitLine: { show: false },
@@ -70,13 +84,14 @@ chart.setOption({
     axisTick: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
   },
-  series: providers.map((name) => ({
+  series: providers.map((name, i) => ({
     name,
     type: "line",
     stack: "share",
-    areaStyle: { opacity: 0.85 },
+    areaStyle: { color: bandGradient(t.palette[i]), opacity: 0.9 },
     lineStyle: { width: 1, color: t.pageBg },
     showSymbol: false,
+    emphasis: { focus: "series" },
     data: sharePct[name],
   })),
 });
