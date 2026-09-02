@@ -100,6 +100,15 @@ function cellAngles(r, i) {
   const end = ((i + 1) / count) * 2 * Math.PI - Math.PI / 2;
   return [start, end];
 }
+// A filled wedge (inner arc, outer arc, two radial edges) for the soft
+// "first step" highlight behind the entry cell.
+function wedgePath(rInner, rOuter, a0, a1) {
+  const [ix1, iy1] = point(rInner, a0);
+  const [ox1, oy1] = point(rOuter, a0);
+  const [ox2, oy2] = point(rOuter, a1);
+  const [ix2, iy2] = point(rInner, a1);
+  return ['M', ix1, iy1, 'L', ox1, oy1, 'A', rOuter, rOuter, 0, 0, 1, ox2, oy2, 'L', ix2, iy2, 'A', rInner, rInner, 0, 0, 0, ix1, iy1, 'Z'];
+}
 
 const chart = Highcharts.chart('container', {
   chart: {
@@ -110,6 +119,16 @@ const chart = Highcharts.chart('container', {
       load: function () {
         const renderer = this.renderer;
         const wallStyle = { stroke: t.ink, 'stroke-width': wallWidth, fill: 'none', 'stroke-linecap': 'round' };
+        const perimeterStyle = { stroke: t.ink, 'stroke-width': wallWidth + 1.5, fill: 'none', 'stroke-linecap': 'round' };
+
+        // Soft "first step" highlight: a faint tint over the entry cell,
+        // hinting at the route into the maze without giving the solution away.
+        const [entryA0, entryA1] = cellAngles(outerRow, entryIndex);
+        const entryInnerRadius = (outerRow / NUM_RINGS) * maxRadius;
+        renderer
+          .path(wedgePath(entryInnerRadius, maxRadius, entryA0, entryA1))
+          .attr({ fill: t.palette[0], 'fill-opacity': 0.1, stroke: 'none' })
+          .add();
 
         // Ring boundaries: one arc per fine-grained cell, skipped where a
         // passage (spanning-tree edge) crosses that boundary.
@@ -129,7 +148,9 @@ const chart = Highcharts.chart('container', {
           }
         }
 
-        // Outer perimeter: same treatment, with one gap left open for entry.
+        // Outer perimeter: drawn heavier than the interior walls (a classic
+        // maze-print convention that frames the puzzle), with one gap left
+        // open for entry.
         for (let i = 0; i < rows[outerRow].length; i++) {
           if (i === entryIndex) continue;
           const [a0, a1] = cellAngles(outerRow, i);
@@ -137,7 +158,7 @@ const chart = Highcharts.chart('container', {
           const [x2, y2] = point(maxRadius, a1);
           renderer
             .path(['M', x1, y1, 'A', maxRadius, maxRadius, 0, 0, 1, x2, y2])
-            .attr(wallStyle)
+            .attr(perimeterStyle)
             .add();
         }
 
@@ -157,8 +178,17 @@ const chart = Highcharts.chart('container', {
           }
         }
 
-        // Goal marker at the center hub.
-        renderer.circle(cx, cy, 16).attr({ fill: t.palette[1], stroke: t.pageBg, 'stroke-width': 3 }).add();
+        // Goal marker at the center hub: a radial gradient (via Highcharts'
+        // native Color/gradient API) gives the hub a subtle raised depth
+        // instead of a flat fill.
+        const goalFill = {
+          radialGradient: { cx: 0.35, cy: 0.35, r: 0.75 },
+          stops: [
+            [0, Highcharts.color(t.palette[1]).brighten(0.35).get()],
+            [1, t.palette[1]],
+          ],
+        };
+        renderer.circle(cx, cy, 16).attr({ fill: goalFill, stroke: t.pageBg, 'stroke-width': 3 }).add();
         renderer
           .text('GOAL', cx, cy - 28)
           .attr({ align: 'center', zIndex: 5 })
@@ -184,7 +214,7 @@ const chart = Highcharts.chart('container', {
   },
   title: {
     text: 'maze-circular · javascript · highcharts · anyplot.ai',
-    style: { color: t.ink, fontSize: '22px', fontWeight: '600' },
+    style: { color: t.ink, fontSize: '27px', fontWeight: '600' },
   },
   credits: { enabled: false },
   series: [],
