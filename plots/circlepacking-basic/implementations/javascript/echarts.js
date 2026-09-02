@@ -3,10 +3,6 @@
 // Library: echarts 6.1.0 | JavaScript 22.23.2
 // Quality: 87/100 | Created: 2026-09-02
 //# anyplot-orientation: square
-// anyplot.ai
-// circlepacking-basic: Circle Packing Chart
-// Library: echarts 5.5.1 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
@@ -130,9 +126,27 @@ const placeAbsolute = (node, ox, oy) => {
 };
 placeAbsolute(root, 0, 0);
 
+// --- Budget rollups (for tooltips: every node, not just leaves, gets a $ total) --
+const computeTotal = (node) => {
+  node.total = node.children.length === 0 ? node.value : node.children.reduce((sum, c) => sum + computeTotal(c), 0);
+  return node.total;
+};
+computeTotal(root);
+
+// --- Solid depth-2 fill: mix the hue with a fixed literal (not the theme
+// background) so the composited pixel color is identical in both themes —
+// canvas alpha over a theme-dependent backdrop would otherwise drift.
+const hexToRgb = (hex) => [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16), parseInt(hex.slice(5, 7), 16)];
+const mixColor = (hexA, hexB, ratio) => {
+  const a = hexToRgb(hexA);
+  const b = hexToRgb(hexB);
+  return `#${a.map((v, i) => Math.round(v * ratio + b[i] * (1 - ratio)).toString(16).padStart(2, "0")).join("")}`;
+};
+
 // --- Flatten with depth-based Imprint coloring ------------------------------
 // Divisions (depth 1) take Imprint positions 1-4 in declared order; leaves
-// (depth 2) inherit their division's hue at lower opacity to read as nested.
+// (depth 2) inherit their division's hue, darkened by a fixed literal ratio
+// (not theme-dependent alpha) to read as nested.
 const flatData = [];
 const flatten = (node, depth, color) => {
   flatData.push({
@@ -141,7 +155,9 @@ const flatten = (node, depth, color) => {
     r: node.r,
     depth,
     label: node.label,
+    amount: node.total,
     color,
+    parentId: node.parent,
   });
   node.children.forEach((child, idx) => {
     const childColor = depth === 0 ? t.palette[idx % t.palette.length] : color;
@@ -178,55 +194,146 @@ flatData.forEach((d, idx) => {
     if (rPx < 60) return;
     labelCandidates.push({
       idx,
-      priority: 0,
+      metric: Infinity, // division rims are reserved space, never evicted by a leaf
       text: d.label,
-      fontSize: DIVISION_FONT,
+      maxFontSize: DIVISION_FONT,
+      minFontSize: DIVISION_FONT,
       bold: true,
-      yOffsetUnits: -d.r * 0.62,
       charW: 0.62,
+      positions: [{ dx: 0, dy: -d.r * 0.62 }],
     });
   } else {
     if (rPx < 34) return;
     const fontSize = Math.min(LEAF_FONT_MAX, Math.max(LEAF_FONT_MIN, rPx * 0.34));
     labelCandidates.push({
       idx,
-      priority: 1 / rPx,
+      metric: d.r, // real circle size, so bigger-value leaves always get first claim
       text: d.label,
-      fontSize,
+      maxFontSize: fontSize,
+      minFontSize: LEAF_FONT_MIN * 0.75,
       bold: false,
-      yOffsetUnits: 0,
       charW: 0.56,
+      // Own center first, then a few nudges toward the circle's own rim —
+      // enough freedom to dodge a bigger neighbor's box without drifting
+      // onto a sibling circle.
+      positions: [
+        { dx: 0, dy: 0 },
+        { dx: 0, dy: -d.r * 0.45 },
+        { dx: 0, dy: d.r * 0.45 },
+        { dx: -d.r * 0.4, dy: 0 },
+        { dx: d.r * 0.4, dy: 0 },
+      ],
     });
   }
 });
-labelCandidates.sort((a, b) => a.priority - b.priority);
+// Larger circles claim label space first.
+labelCandidates.sort((a, b) => b.metric - a.metric);
 
 const placedRects = [];
 const rectsOverlap = (a, b) => !(a.x2 < b.x1 || a.x1 > b.x2 || a.y2 < b.y1 || a.y1 > b.y2);
-labelCandidates.forEach((cand) => {
-  const node = flatData[cand.idx];
-  const cx = node.x;
-  const cy = node.y + cand.yOffsetUnits;
-  const wUnits = (cand.text.length * cand.fontSize * cand.charW + 8) / pxPerUnit;
-  const hUnits = (cand.fontSize * 1.3 + 6) / pxPerUnit;
-  const rect = { x1: cx - wUnits / 2, x2: cx + wUnits / 2, y1: cy - hUnits / 2, y2: cy + hUnits / 2 };
-  if (placedRects.some((r) => rectsOverlap(rect, r))) return;
-  placedRects.push(rect);
+const boxFor = (cand, cx, cy, fontSize) => {
+  const wUnits = (cand.text.length * fontSize * cand.charW + 8) / pxPerUnit;
+  const hUnits = (fontSize * 1.3 + 6) / pxPerUnit;
+  return { x1: cx - wUnits / 2, x2: cx + wUnits / 2, y1: cy - hUnits / 2, y2: cy + hUnits / 2 };
+};
+const acceptLabel = (cand, node, fontSize, rect, pos) => {
+  placedRects.push({ ...rect, metric: cand.metric, idx: cand.idx });
   node.showLabel = true;
-  node.labelFontSize = cand.fontSize;
+  node.labelFontSize = fontSize;
   node.labelBold = cand.bold;
-  node.labelYOffsetUnits = cand.yOffsetUnits;
+  node.labelYOffsetUnits = pos.dy;
+  node.labelXOffsetUnits = pos.dx;
   node.labelCharW = cand.charW;
+};
+// Every position is tried at full size before any position is tried at a
+// smaller size (nudging beats shrinking); only the primary (center) position
+// at full size may evict an already-placed label, and only if every
+// colliding label belongs to a strictly smaller circle — long names are the
+// usual reason a big circle's default box collides where a shorter-named
+// smaller sibling's box does not.
+const tryPlace = (cand, node, allowEvict) => {
+  for (let fontSize = cand.maxFontSize; fontSize >= cand.minFontSize; fontSize -= 1) {
+    for (let p = 0; p < cand.positions.length; p += 1) {
+      const pos = cand.positions[p];
+      const cx = node.x + pos.dx;
+      const cy = node.y + pos.dy;
+      const rect = boxFor(cand, cx, cy, fontSize);
+      const collisions = placedRects.filter((r) => rectsOverlap(rect, r));
+      if (collisions.length === 0) {
+        acceptLabel(cand, node, fontSize, rect, pos);
+        return true;
+      }
+      if (allowEvict && p === 0 && fontSize === cand.maxFontSize && collisions.every((r) => r.metric < cand.metric)) {
+        collisions.forEach((r) => placedRects.splice(placedRects.indexOf(r), 1));
+        acceptLabel(cand, node, fontSize, rect, pos);
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+const candByIdx = {};
+labelCandidates.forEach((cand) => {
+  candByIdx[cand.idx] = cand;
+  tryPlace(cand, flatData[cand.idx], true);
+});
+
+// Local-monotonicity repair: a bigger leaf can still lose its label slot to
+// an even-bigger sibling's box, while a smaller sibling elsewhere happens to
+// sit in open space and keeps its label — within one parent cluster, evict
+// that smaller sibling's label and retry the bigger circle in the freed space
+// so a reader never sees "smaller labeled, bigger not" inside the same circle.
+const leafByParent = {};
+flatData.forEach((d, idx) => {
+  if (d.depth === 2) (leafByParent[d.parentId] ||= []).push(idx);
+});
+Object.values(leafByParent).forEach((siblingIdxs) => {
+  const bySizeDesc = siblingIdxs.slice().sort((a, b) => flatData[b].r - flatData[a].r);
+  bySizeDesc.forEach((idx) => {
+    const node = flatData[idx];
+    if (node.showLabel) return;
+    const cand = candByIdx[idx];
+    if (!cand) return;
+    const victimIdx = siblingIdxs.find((j) => flatData[j].showLabel && flatData[j].r < node.r);
+    if (victimIdx === undefined) return;
+    const rectPos = placedRects.findIndex((r) => r.idx === victimIdx);
+    if (rectPos === -1) return;
+    const savedRect = placedRects[rectPos];
+    placedRects.splice(rectPos, 1);
+    if (tryPlace(cand, node, false)) {
+      flatData[victimIdx].showLabel = false;
+    } else {
+      placedRects.push(savedRect);
+    }
+  });
 });
 
 const seriesData = flatData.map((d) => {
   if (d.depth === 0) {
-    return { value: [d.x, d.y, d.r], itemStyle: { color: "transparent", borderColor: t.inkSoft, borderWidth: 1.5, opacity: 0.4 } };
+    return {
+      value: [d.x, d.y, d.r],
+      itemStyle: { color: "transparent", borderColor: t.inkSoft, borderWidth: 1.5, opacity: 0.4 },
+      label: d.label,
+      amount: d.amount,
+    };
   }
   if (d.depth === 1) {
-    return { value: [d.x, d.y, d.r], itemStyle: { color: d.color, opacity: 0.85, borderColor: t.pageBg, borderWidth: 2.5 } };
+    return {
+      value: [d.x, d.y, d.r],
+      itemStyle: { color: d.color, opacity: 0.85, borderColor: t.pageBg, borderWidth: 2.5 },
+      label: d.label,
+      amount: d.amount,
+    };
   }
-  return { value: [d.x, d.y, d.r], itemStyle: { color: d.color, opacity: 0.5, borderColor: t.pageBg, borderWidth: 1.2 } };
+  // Solid literal-mixed fill (not canvas alpha over the theme background) so
+  // the composited leaf color is pixel-identical between light and dark.
+  return {
+    value: [d.x, d.y, d.r],
+    itemStyle: { color: mixColor(d.color, "#000000", 0.82), opacity: 1, borderColor: t.pageBg, borderWidth: 1.2 },
+    label: d.label,
+    amount: d.amount,
+  };
 });
 
 // --- Custom-series renderers -----------------------------------------------
@@ -244,7 +351,7 @@ const labelSeriesData = labeledNodes.map((d) => ({ value: [d.x, d.y] }));
 
 const renderLabel = (params, api) => {
   const raw = labeledNodes[params.dataIndex];
-  const labelCenter = api.coord([api.value(0), api.value(1) + raw.labelYOffsetUnits]);
+  const labelCenter = api.coord([api.value(0) + raw.labelXOffsetUnits, api.value(1) + raw.labelYOffsetUnits]);
   const w = raw.label.length * raw.labelFontSize * raw.labelCharW + 8;
   const h = raw.labelFontSize * 1.3 + 6;
   return {
@@ -283,6 +390,15 @@ chart.setOption({
     left: "center",
     textStyle: { color: t.ink, fontSize: 22 },
   },
+  // Recovers labels dropped by the static collision-avoidance layout: any
+  // circle (labeled or not) shows its name + budget on hover.
+  tooltip: {
+    trigger: "item",
+    backgroundColor: t.elevatedBg,
+    borderColor: t.grid,
+    textStyle: { color: t.ink, fontSize: 14 },
+    formatter: (params) => (params.data && params.data.amount != null ? `<strong>${params.data.label}</strong><br/>$${params.data.amount}M` : ""),
+  },
   grid: { left: "9%", right: "9%", top: "12%", bottom: "6%" },
   xAxis: { type: "value", min: -domain, max: domain, show: false, splitLine: { show: false } },
   yAxis: { type: "value", min: -domain, max: domain, show: false, splitLine: { show: false } },
@@ -299,6 +415,7 @@ chart.setOption({
       coordinateSystem: "cartesian2d",
       renderItem: renderLabel,
       data: labelSeriesData,
+      tooltip: { show: false },
       clip: false,
     },
   ],
