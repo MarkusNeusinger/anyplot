@@ -102,7 +102,7 @@ xAxisG.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
 xAxisG.select(".domain").attr("stroke", t.inkSoft);
 
 // --- Violins + swarm points, one <g> per category-group combination --------
-const swarmRadius = 3.2;
+const swarmRadius = 3.8;
 for (const v of violins) {
   const violinG = g
     .append("g")
@@ -180,14 +180,37 @@ g.append("text")
   .text("Task Complexity");
 
 // --- Legend (group hue) --------------------------------------------------
-const legend = svg.append("g").attr("transform", `translate(${width - margin.right - 190},58)`);
+const legendW = 260;
+const legendH = 40;
+const legendSwatchStart = 104;
+const legend = svg.append("g").attr("transform", `translate(${width - margin.right - legendW},46)`);
+
+legend
+  .append("rect")
+  .attr("width", legendW)
+  .attr("height", legendH)
+  .attr("rx", 8)
+  .attr("fill", t.elevatedBg)
+  .attr("stroke", t.grid)
+  .attr("stroke-width", 1);
+
+legend
+  .append("text")
+  .attr("x", 14)
+  .attr("y", legendH / 2 + 5)
+  .attr("fill", t.inkSoft)
+  .style("font-size", "12px")
+  .style("font-weight", "600")
+  .style("letter-spacing", "0.04em")
+  .text("EXPERTISE");
+
 groups.forEach((group, i) => {
-  const row = legend.append("g").attr("transform", `translate(${i * 100},0)`);
+  const row = legend.append("g").attr("transform", `translate(${legendSwatchStart + i * 78},${legendH / 2 - 8})`);
   row
     .append("rect")
     .attr("width", 16)
     .attr("height", 16)
-    .attr("rx", 3)
+    .attr("rx", 4)
     .attr("fill", color(group))
     .attr("fill-opacity", 0.55)
     .attr("stroke", color(group))
