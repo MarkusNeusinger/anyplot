@@ -1,7 +1,7 @@
 # anyplot.ai
 # histogram-returns-distribution: Returns Distribution Histogram
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-09-02
+# Library: makie 0.21.9 | Julia 1.11.9
+# Quality: 87/100 | Created: 2026-09-02
 
 using CairoMakie
 using Colors
