@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: heatmap-geographic
 created: '2026-09-02T01:21:51Z'
-updated: '2026-09-02T01:27:19Z'
+updated: '2026-09-02T01:45:10Z'
 generated_by: claude-sonnet
 workflow_run: 33578143407
 issue: 3638
@@ -12,57 +12,53 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Genuine Gaussian KDE computed from real Bay Area check-in data, with the kernel
-    truncated at 3×bandwidth so distant points cannot bleed into a visible tail —
-    the six hotspots read as distinct clusters instead of one blob.
-  - Correct Imprint sequential palette (t.seq[0] → t.seq[1], green → blue) with alpha
-    blending; data colors are byte-identical between light and dark renders, and chrome
-    (title, axis, grid, reference-line labels) correctly uses t.ink / t.inkSoft /
-    t.grid theme tokens.
-  - Title font size is programmatically scaled down (Math.max(14, round(22 * min(1,
-    67/len))) so the long descriptive + mandated title fits without overflowing the
-    canvas.
-  - ContinuousColorLegend's colorMap min/max is kept in sync with the zAxis min/max
-    (the code comment explicitly flags this MUI X pitfall), avoiding a legend/data
-    scale mismatch.
+  - 'The repair replaced the scatter-marker density approximation with a true rasterized
+    KDE: the Gaussian kernel is sampled onto a 400px-wide grid, colour-mapped per
+    pixel, and drawn as a single <image>, so the browser''s bilinear upscaling produces
+    a genuinely smooth, continuous density field with no scalloped circle edges.'
+  - Correct Imprint sequential palette (t.seq[0] to t.seq[1], green to blue) with
+    an alpha floor that fades low-density pixels to transparent; data colors are byte-identical
+    between light and dark renders and the colorbar direction (green=Low, blue=High)
+    matches the data mapping.
+  - Title font size is programmatically scaled down so the long descriptive + mandated
+    title fits without overflowing the canvas in either render.
+  - Kernel is truncated at 3x bandwidth and distances are converted to km so the density
+    field is isotropic in real space, avoiding a visible tail bleeding across the
+    whole map.
   - 'Fully self-contained and deterministic: fixed-seed LCG + Box-Muller gaussian
-    jitter, no network/CDN calls, no external dependencies beyond @mui/x-charts.'
+    jitter, no network/CDN calls, no dependencies beyond @mui/x-charts.'
   weaknesses:
-  - The KDE surface is approximated with large overlapping scatter markers (markerSize=34),
-    which produces visible scalloped/circular edges around each hotspot cluster instead
-    of a smooth continuous density gradient — increase GRID_COLS/GRID_ROWS (finer
-    grid) while shrinking markerSize proportionally so adjacent cells blend into a
-    smoother field, or reduce marker opacity contrast between neighboring cells.
-  - Geographic context is limited to a plain lon/lat graticule (dashed reference lines)
-    — the spec asks for country boundaries, coastlines, or a street basemap; since
-    MUI X community has no tile/basemap layer, consider at least a stylized bay/coastline
-    SVG path overlay if feasible, or explicitly document the graticule as the closest
-    available substitute.
-  - The left-side 'Latitude' axis title sits close to the '37.60°N' y-tick label —
-    increase left margin slightly (or axis label offset) for more breathing room between
-    the rotated axis title and the tick text.
-  - Several small helper functions (rand, gaussian, hexToRgba, MapTitle) push slightly
-    past pure KISS structure — justified by the RNG/color-conversion needs, but keep
-    an eye on whether MapTitle's custom SVG <text> could instead use ChartsText or
-    a built-in title slot if MUI X offers one, for tighter library-idiomatic usage.
+  - The rotated 'Latitude' axis title visibly overlaps the '37.60°N' y-tick label
+    in both renders — zooming into the region shows the tick label's digits directly
+    crossing the letters of 'titude'. This was flagged as a proximity concern in attempt
+    1 and was not resolved by the repair; increase MARGIN.left further or add an explicit
+    offset/padding between the y-axis label and the tick labels so they no longer
+    collide.
+  - Geographic context is still limited to a plain lon/lat graticule — the spec asks
+    for boundaries/coastlines/basemap context; a lightweight Bay Area coastline outline
+    (if feasible in SVG within the community @mui/x-charts surface) would strengthen
+    this further.
+  - A few small helper functions (rand, gaussian, hexToRgb, MapTitle) push slightly
+    past pure KISS structure — reasonable given the RNG/canvas-rasterization/color-conversion
+    needs, but worth noting.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Bay Area Retail Foot-Traffic Density · heatmap-geographic · javascript · muix · anyplot.ai" centered at top in dark ink, clearly readable and comfortably sized (does not overflow). "Longitude" / "Latitude" axis titles and °W/°N tick labels are dark and legible. Dashed gray graticule lines (both the axis grid and the lon/lat ChartsReferenceLine overlay) are subtle and readable, with the reference-line lat labels placed along the right edge and lon labels floating mid-plot — none are clipped by the canvas.
-      Data: Six overlapping-circle clusters over the Bay Area (SF/Oakland/Berkeley cluster top-left, Palo Alto and Fremont/San Jose clusters lower-right) rendered in the Imprint sequential ramp — green at the edges, shifting to blue-green at the highest-density cores (SF and San Jose). First/only data series correctly starts from t.seq[0] (green).
-      Legibility verdict: PASS overall. Minor concern: the rotated "Latitude" axis title sits close to the "37.60°N" tick label on the left edge — tight but not confirmed as clipped/garbled.
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white).
+      Chrome: Title "Bay Area Retail Foot-Traffic Density · heatmap-geographic · javascript · muix · anyplot.ai" is centered, dark ink, ~55% of canvas width, fully readable, not clipped. "Longitude"/"Latitude" axis titles and °W/°N tick labels are dark and legible, EXCEPT the "Latitude" axis title visibly overlaps the "37.60°N" y-tick label (confirmed on zoomed crop: the "60" digits directly cross the "titude" letterforms).
+      Data: A single continuous rasterized density field (six soft blended blobs over the Bay Area: SF/Oakland/Berkeley top-left, a faint Fremont patch center-right, Palo Alto and San Jose lower area) rendered as a smooth Imprint-sequential gradient (green at low density → blue at high density), no scalloped/circular artifacts. Colorbar legend confirms "Low"=green (bottom) / "High"=blue (top), matching the data direction.
+      Legibility verdict: PASS overall, with one confirmed local overlap (Latitude axis title vs. 37.60°N tick label) that does not make either element fully unreadable but is a visible defect.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title, now in light ink, fully readable against the dark surface. Axis titles and tick labels use light/soft-light tokens and are legible; graticule lines remain subtle dashed strokes, visible without competing with the data.
-      Data: Confirmed identical hotspot geometry and identical Imprint sequential colors (green → blue-green) to the light render — only the chrome (background, text, grid) flipped, exactly as required.
-      Legibility verdict: PASS overall — no dark-on-dark failures observed; all text (title, axis labels, tick labels, "Low"/"High" legend labels) reads clearly against the near-black background. Same left-axis-title/tick-label proximity note as the light render.
+      Background: Warm near-black, consistent with #1A1A17 (not pure black).
+      Chrome: Same title now in light ink, fully readable and not clipped. Axis titles/tick labels use light/soft-light tokens and are legible; graticule remains subtle. Same "Latitude"/"37.60°N" overlap present, confirmed identically on a zoomed crop of the dark render — not a light-only regression.
+      Data: Data colors are confirmed byte-identical to the light render (green → blue gradient, same colorbar direction) — only chrome (background, text) flipped, as required. No dark-on-dark failures anywhere else (title, axis, ticks, "Low"/"High" legend labels all read clearly against the dark background).
+      Legibility verdict: PASS overall, with the same local Latitude/tick-label overlap as the light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -70,107 +66,103 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All title/axis/tick text explicitly sized and readable in both themes;
-          reference-line labels at 12px are a touch small but still legible.
+        comment: All font sizes explicitly set, readable in both themes, title fits
+          without overflow
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Rotated 'Latitude' axis title sits close to the '37.60°N' tick label
-          on the left edge — tight spacing, no other collisions.
+        passed: false
+        comment: Latitude axis title visibly overlaps the 37.60°N tick label in both
+          renders (confirmed on zoom) — flagged in attempt 1, not resolved
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Alpha-stacked circles usefully darken at density peaks, but leave
-          visible scalloped/circular cluster edges rather than a smooth continuous
-          field.
+        comment: Continuous raster density field clearly visible at all six hotspots,
+          including the fainter low-weight ones
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Sequential green→blue ramp, CVD-safe, no red-green sole signal.
+        comment: Sequential green-to-blue ramp, good contrast against both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good margins, nothing clipped at the canvas edge, title fits comfortably
-          within width.
+        comment: Balanced margins, plot fills a healthy majority of the canvas, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Longitude''/''Latitude'' with °W/°N units on tick labels.'
+        comment: Longitude/Latitude with °W/°N units on tick labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'imprint_seq (t.seq[0]/t.seq[1]) used correctly; identical data colors
-          across themes; correct #FAF8F1/#1A1A17 backgrounds.'
+        comment: imprint_seq (t.seq[0]→t.seq[1]) used correctly, identical across
+          themes, correct theme backgrounds
     design_excellence:
-      score: 14
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Real KDE computation, deliberate hotspot placement, custom legend/graticule
-          — above generic-defaults baseline.
+        comment: Genuine smooth rasterized KDE reads as a professional density map,
+          close to publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, clean L-shaped axes, but scalloped circle edges reduce
-          overall refinement versus a true smooth heatmap.
+        comment: Scalloped edges from attempt 1 are gone, gradient is smooth; the
+          axis-title/tick-label overlap keeps this off a perfect score
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Clear focal points (SF, San Jose) via color+overlap density; secondary
-          clusters (Palo Alto, Fremont) read as clearly lower intensity.
+        comment: Clear focal points at SF and San Jose read immediately through color
+          and density contrast
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Scatter-approximated density surface conveys a geographic heatmap
-          reasonably well, though it reads as overlapping bubbles rather than a continuous
-          field.
+        comment: Now a genuinely continuous rasterized heatmap, matching the spec's
+          'smooth density variations' requirement
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: KDE ✓, sequential colormap+alpha ✓, colorbar legend ✓; geographic
-          context is only a plain graticule, not boundaries/coastlines/basemap.
+        comment: KDE, sequential colormap with transparency, and colorbar all present;
+          geographic context is still only a plain graticule, not boundaries/coastlines/basemap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=longitude, y=latitude, z=density; axes cover the full Bay Area
-          bounding box.
+        comment: Longitude/Latitude correctly mapped to X/Y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'; continuous legend present with Low/High labels.
+        comment: Title format correct, Low/High legend labels match the data direction
     data_quality:
       score: 14
       max: 15
@@ -180,23 +172,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Multiple hotspots, background noise points, normalized density field,
-          colorbar — solid coverage of the plot type; loses a point for the thin basemap
-          substitute.
+        comment: Six hotspots with varied weights/bandwidths plus background noise
+          points show a realistic range of density
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real SF Bay Area cities, plausible retail foot-traffic framing, neutral
-          subject matter.
+        comment: Real, neutral, comprehensible scenario (retail foot-traffic across
+          real Bay Area cities)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Valid lat/lon bounds, realistic per-hotspot visit counts (90-140),
-          normalized 0-1 density scale.
+        comment: Coordinates, city placements, and relative densities are geographically
+          and factually plausible
     code_quality:
       score: 9
       max: 10
@@ -206,37 +197,35 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: A handful of small helper functions (rand, gaussian, hexToRgba, MapTitle)
-          — justified by RNG/color-conversion needs but not purely flat script.
+        comment: A few small helper functions (rand, gaussian, hexToRgb, MapTitle),
+          justified by RNG/canvas-rasterization needs
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic.
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ScatterChart, ContinuousColorLegend, ChartsReferenceLine imported
-          — all used.
+        comment: Only @mui/x-charts imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity/UI; appropriate complexity for a KDE-on-scatter
-          workaround.
+        comment: Appropriate complexity for a genuine client-side KDE raster; no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Sizes to window.ANYPLOT_SIZE, skipAnimation set, harness owns save
-          — current API.
+        comment: Renders via the harness contract correctly, no deprecated APIs
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,17 +233,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of zAxis continuous colorMap, ContinuousColorLegend axisDirection='z',
-          ChartsReferenceLine for graticule.
+        comment: Correct ScatterChart/zAxis/ContinuousColorLegend usage, though the
+          raster <image> overlay is a workaround for MUI X's lack of a native heatmap
+          layer
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Creative use of scatter + continuous colorMap + alpha-stacking to
-          approximate a heatmap within community-tier constraints (no native Heatmap
-          component).
-  verdict: REJECTED
+        comment: Creative combination of a hand-rolled canvas raster with ContinuousColorLegend
+          + zAxis colorMap sync, going beyond generic usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -262,7 +251,6 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - kde
   styling:
