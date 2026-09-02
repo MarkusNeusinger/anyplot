@@ -65,7 +65,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title = "crossword-basic · julia · makie · anyplot.ai",
-    titlesize = 24,
+    titlesize = 32,
     titlecolor = INK,
     aspect = DataAspect(),
     backgroundcolor = PAGE_BG,
@@ -138,9 +138,9 @@ Label(
     fontsize = 15,
     color = INK_SOFT,
     tellwidth = false,
-    padding = (0, 0, 0, 14),
+    padding = (0, 0, 0, 18),
 )
-rowsize!(fig.layout, 2, Fixed(50))
+rowsize!(fig.layout, 2, Fixed(60))
 
 # --- Save -----------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
