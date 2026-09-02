@@ -25,10 +25,13 @@ function gaussian(mean, std) {
 }
 
 // Neighborhood clusters: center coord, point count, spread, visit-weight range
+// Downtown/Mission spread is tightened to well under half their ~1.9km
+// separation so the KDE shows a visible valley between the two peaks instead
+// of merging into one region.
 const neighborhoods = [
-  { name: "Downtown", lon: -122.4194, lat: 37.7749, n: 700, lonStd: 0.016, latStd: 0.013, weightMean: 62, weightStd: 20 },
-  { name: "Mission", lon: -122.4090, lat: 37.7599, n: 600, lonStd: 0.018, latStd: 0.014, weightMean: 50, weightStd: 18 },
-  { name: "Sunset", lon: -122.4862, lat: 37.7599, n: 500, lonStd: 0.013, latStd: 0.011, weightMean: 40, weightStd: 15 },
+  { name: "Downtown", lon: -122.4194, lat: 37.7749, n: 700, lonStd: 0.006, latStd: 0.005, weightMean: 62, weightStd: 20 },
+  { name: "Mission", lon: -122.4090, lat: 37.7599, n: 600, lonStd: 0.006, latStd: 0.005, weightMean: 50, weightStd: 18 },
+  { name: "Sunset", lon: -122.4862, lat: 37.7599, n: 500, lonStd: 0.007, latStd: 0.006, weightMean: 40, weightStd: 15 },
 ];
 
 const points = [];
@@ -46,10 +49,12 @@ neighborhoods.forEach((c) => {
 const lonMin = -122.52, lonMax = -122.375;
 const latMin = 37.735, latMax = 37.805;
 const nx = 42, ny = 38;
-const bandwidthLon = 0.006, bandwidthLat = 0.005;
+const bandwidthLon = 0.0035, bandwidthLat = 0.003;
 
 const cellLon = (i) => lonMin + ((lonMax - lonMin) * i) / (nx - 1);
 const cellLat = (j) => latMin + ((latMax - latMin) * j) / (ny - 1);
+const lonIndexF = (lon) => ((lon - lonMin) / (lonMax - lonMin)) * (nx - 1);
+const latIndexF = (lat) => ((lat - latMin) / (latMax - latMin)) * (ny - 1);
 
 const grid = [];
 let minDensity = Infinity;
@@ -82,6 +87,25 @@ const markers = neighborhoods.map((c) => ({
 
 const lonLabels = Array.from({ length: nx }, (_, i) => cellLon(i).toFixed(2));
 const latLabels = Array.from({ length: ny }, (_, j) => cellLat(j).toFixed(2));
+
+// Simplified San Francisco shoreline (Ocean Beach -> Golden Gate -> northern
+// waterfront -> Bay side), hand-picked lon/lat vertices anchoring the density
+// grid to real geography.
+const coastlinePoints = [
+  [-122.5090, 37.736],
+  [-122.5110, 37.752],
+  [-122.5115, 37.768],
+  [-122.5095, 37.784],
+  [-122.5010, 37.797],
+  [-122.4830, 37.804],
+  [-122.4520, 37.805],
+  [-122.4250, 37.804],
+  [-122.4040, 37.799],
+  [-122.3910, 37.789],
+  [-122.3855, 37.774],
+  [-122.3800, 37.758],
+  [-122.3770, 37.742],
+].map(([lon, lat]) => [lonIndexF(lon), latIndexF(lat)]);
 
 // --- Title (fontsize scales down for the descriptive prefix) ---------------
 const title = "San Francisco Retail Visits · heatmap-geographic · javascript · echarts · anyplot.ai";
@@ -139,6 +163,10 @@ chart.setOption({
     textStyle: { color: t.inkSoft, fontSize: 12 },
     inRange: { color: t.seq },
   },
+  dataZoom: [
+    { type: "inside", xAxisIndex: 0 },
+    { type: "inside", yAxisIndex: 0 },
+  ],
   series: [
     {
       name: "Visit density",
@@ -147,6 +175,21 @@ chart.setOption({
       data: grid,
       progressive: 0,
       itemStyle: { borderWidth: 0 },
+    },
+    {
+      // Drawn above the heatmap (not literally "underneath") because the heatmap
+      // paints every cell opaquely, including low-density cells at the ramp's
+      // base color, so a layer beneath it would be fully hidden.
+      name: "Coastline",
+      type: "line",
+      coordinateSystem: "cartesian2d",
+      data: coastlinePoints,
+      showSymbol: false,
+      smooth: 0.3,
+      lineStyle: { color: t.inkSoft, width: 2, type: "dashed", opacity: 0.6 },
+      z: 5,
+      silent: true,
+      tooltip: { show: false },
     },
     {
       name: "Neighborhood",
