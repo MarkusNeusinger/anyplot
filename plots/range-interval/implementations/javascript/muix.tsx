@@ -39,27 +39,49 @@ function RangeBars() {
   const xScale = useXScale();
   const yScale = useYScale();
   const barHeight = yScale.bandwidth() * 0.72;
+  const capRadius = barHeight * 0.34;
 
   return (
     <g>
       {departments.map((dept, i) => {
         const x0 = xScale(minSalary[i]);
         const x1 = xScale(maxSalary[i]);
-        const y = yScale(dept) + (yScale.bandwidth() - barHeight) / 2;
+        const yMid = yScale(dept) + yScale.bandwidth() / 2;
+        const y = yMid - barHeight / 2;
         return (
-          <rect
-            key={dept}
-            x={Math.min(x0, x1)}
-            y={y}
-            width={Math.abs(x1 - x0)}
-            height={barHeight}
-            rx={4}
-            fill={t.palette[0]}
-          >
-            <title>
-              {dept}: ${minSalary[i]}k – ${maxSalary[i]}k
-            </title>
-          </rect>
+          <g key={dept}>
+            <rect
+              x={Math.min(x0, x1)}
+              y={y}
+              width={Math.abs(x1 - x0)}
+              height={barHeight}
+              rx={4}
+              fill={t.palette[0]}
+              stroke={t.ink}
+              strokeWidth={1}
+            >
+              <title>
+                {dept}: ${minSalary[i]}k – ${maxSalary[i]}k
+              </title>
+            </rect>
+            {/* Endpoint markers: small ink-ringed caps pin the exact min/max bounds. */}
+            <circle
+              cx={x0}
+              cy={yMid}
+              r={capRadius}
+              fill={t.palette[0]}
+              stroke={t.ink}
+              strokeWidth={1}
+            />
+            <circle
+              cx={x1}
+              cy={yMid}
+              r={capRadius}
+              fill={t.palette[0]}
+              stroke={t.ink}
+              strokeWidth={1}
+            />
+          </g>
         );
       })}
     </g>
