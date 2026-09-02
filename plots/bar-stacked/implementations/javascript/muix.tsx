@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 86/100 | Created: 2026-09-02
 import { BarChart } from "@mui/x-charts/BarChart";
+import { useXScale, useYScale } from "@mui/x-charts/hooks";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 
@@ -39,6 +40,38 @@ const series = components.map((c) => ({
   valueFormatter: (v) => `$${v}K`,
 }));
 
+// Stack totals, used for the total-value labels above each bar and to give
+// the y-axis enough headroom that those labels never clip against the top.
+const totals = months.map((m) => {
+  const s = spendByMonth[m];
+  return s.compute + s.storage + s.networking + s.database;
+});
+const yMax = Math.ceil((Math.max(...totals) * 1.15) / 10) * 10;
+
+// Total labels above each stack (per the spec's "Notes" suggestion), placed
+// via the chart's own scales so they track the bars exactly.
+function TotalLabels() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  return (
+    <g>
+      {months.map((m, i) => (
+        <text
+          key={m}
+          x={xScale(m) + xScale.bandwidth() / 2}
+          y={yScale(totals[i]) - 10}
+          textAnchor="middle"
+          fontSize={14}
+          fontWeight={600}
+          fill={t.ink}
+        >
+          {`$${totals[i]}K`}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 export default function Chart() {
   const W = window.ANYPLOT_SIZE.width; // 1600 CSS px (landscape mount)
   const H = window.ANYPLOT_SIZE.height; // 900 CSS px
@@ -63,6 +96,9 @@ export default function Chart() {
           height={H - CHART_TOP}
           colors={t.palette}
           skipAnimation
+          borderRadius={3}
+          axisHighlight={{ x: "none", y: "none" }}
+          tooltip={{ trigger: "none" }}
           xAxis={[
             {
               scaleType: "band",
@@ -80,6 +116,7 @@ export default function Chart() {
               labelStyle: { fontSize: 15, fill: t.ink },
               tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
               disableTicks: true,
+              max: yMax,
             },
           ]}
           series={series}
@@ -95,8 +132,11 @@ export default function Chart() {
           sx={{
             "& .MuiChartsAxis-line": { stroke: t.grid },
             "& .MuiChartsGrid-line": { stroke: t.grid },
+            "& .MuiBarElement-root": { stroke: t.pageBg, strokeWidth: 1 },
           }}
-        />
+        >
+          <TotalLabels />
+        </BarChart>
       </Box>
     </Box>
   );
