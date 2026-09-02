@@ -22,7 +22,7 @@ function lcg(seed) {
 const random = lcg(42);
 
 const HIST_MONTHS = 42;
-const FORECAST_HORIZON = 9;
+const FORECAST_HORIZON = 12;
 const FORECAST_START = HIST_MONTHS - 1; // last historical index == first forecast index (overlap)
 const TOTAL_MONTHS = HIST_MONTHS + FORECAST_HORIZON;
 
@@ -75,6 +75,11 @@ dates.forEach((_, i) => {
 // (upper - lower). The visible area then spans exactly [lower, upper]. The
 // wider 95% band is declared first so the narrower 80% band draws on top of
 // it, giving the "darker inner / lighter outer" nesting the spec asks for.
+// The base/stroke hiding below (see `sx`) depends on `@mui/x-charts`'
+// internal `.MuiAreaElement-series-*` / `.MuiLineElement-series-*` class
+// names, which are not part of the library's public API and could change
+// on a version bump — there's no documented public hook for "stack a series
+// but don't render its own line/fill" as of 7.29.1.
 const series = [
   { id: "lower95-base", data: lower95, stack: "ci95", showMark: false, color: t.pageBg },
   {
@@ -113,6 +118,12 @@ const series = [
     curve: "monotoneX",
   },
 ];
+
+// Tight y-axis floor: pad just below the lowest plotted value (across the
+// historical line and the wide 95% band) instead of a hand-picked constant,
+// so the margin below the data stays proportional as FORECAST_HORIZON changes.
+const plottedLows = [...actual, ...lower95].filter((v) => v !== null);
+const yMin = Math.floor((Math.min(...plottedLows) - 150) / 100) * 100;
 
 const TITLE = "Monthly Demand Forecast · timeseries-forecast-uncertainty · javascript · muix · anyplot.ai";
 const TITLE_FONT_DEFAULT = 22;
@@ -209,7 +220,7 @@ export default function Chart() {
           ]}
           yAxis={[
             {
-              min: 2500,
+              min: yMin,
               tickLabelStyle: { fontSize: 14 },
               valueFormatter: (v) => v.toLocaleString("en-US"),
             },
