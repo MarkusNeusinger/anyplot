@@ -1,0 +1,230 @@
+library: d3
+language: javascript
+specification_id: maze-circular
+created: '2026-09-02T02:49:05Z'
+updated: '2026-09-02T03:03:51Z'
+generated_by: claude-sonnet
+workflow_run: 33584190300
+issue: 3804
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/javascript/d3/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Algorithmically sound maze generation: a growing-tree carve over the polar cell
+    graph produces a spanning tree, which guarantees exactly one solvable path, as
+    the spec requires.'
+  - Radial cell subdivision roughly doubles the sector count whenever arc-length-per-cell
+    would exceed the ring height, keeping cells close to square instead of the long,
+    thin outer-ring cells common in naive circular mazes.
+  - The start arrow is deliberately sized to match the visual weight of the goal dot
+    (per the code comment referencing prior review feedback) so both markers stay
+    legible even at thumbnail scale.
+  - 'Theme-adaptive chrome is correct: walls (t.ink), caption (t.inkSoft) and background
+    flip between light/dark, while the single accent color (t.palette[0]) stays visually
+    identical in both renders.'
+  - Strong canvas utilization for a square format — the maze fills most of the 2400x2400
+    canvas with balanced margins for the title above and caption below.
+  weaknesses:
+  - Wall stroke-width is 4px on a 2400px canvas; a slightly heavier stroke (e.g. 5-6px)
+    would hold up better once the PNG is scaled down to mobile thumbnail widths without
+    harming the print-friendly puzzle look.
+  - The maze-carving helper functions (parentIndex, getNeighbors, link/isLinked, pickFrontierIndex)
+    are necessary for a valid spanning-tree algorithm, but push the file away from
+    the simplest possible KISS structure — acceptable here given the procedural-generation
+    nature of the spec, not a real defect.
+  - 'Library Mastery is solid but conservative: only d3.arc() and .data().join() are
+    used distinctively; leaning further into d3-shape (e.g. d3.lineRadial with a curve
+    interpolator) or d3-hierarchy for ring/sector bookkeeping would make the D3-specific
+    value clearer.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "maze-circular · javascript · d3 · anyplot.ai" in bold dark ink at top, clearly legible. Caption "7 rings · medium difficulty · green marks the goal (center) and start (outer edge)" below the maze in a softer dark gray, clearly legible. All maze walls are drawn as solid black/dark-ink strokes at consistent thickness.
+      Data: A circular maze of 8 concentric rings subdivided into radial sectors, with the outer perimeter as a full circle broken only at one gap (the entry). A solid green (#009E73) dot marks the center goal, and a solid green triangular arrow points inward at the outer-edge entry gap. No other colors present.
+      Legibility verdict: PASS — title, caption, and maze geometry are all clearly readable against the light background; no dark-on-light or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and caption text, now rendered in light ink/soft-light gray, clearly legible against the dark background. Maze walls are drawn as light-colored strokes (inverted from dark to light per theme), maintaining the same consistent thickness as the light render.
+      Data: The maze geometry is pixel-identical to the light render (same wall layout, same entry gap position). The goal dot and entry arrow are the exact same green (#009E73) as in the light render — confirming data colors are held constant across themes.
+      Legibility verdict: PASS — no dark-on-dark failures; title, caption, and tick-free maze walls are all clearly visible against the near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (22px title, 17px caption), readable in both
+          themes, no clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between title, caption, and maze geometry
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Consistent 4px wall stroke reads well; could be a touch heavier for
+          mobile-thumbnail robustness
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single accent green against high-contrast ink walls, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Maze fills a large, well-balanced portion of the square canvas; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: N/A axes for this plot type; caption clearly explains the color coding
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Accent color is exactly Imprint position 1 (#009E73), identical across
+          themes; backgrounds are theme-correct
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Clean, professional minimalist puzzle aesthetic with a well-executed
+          near-square cell subdivision
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        comment: Generous whitespace, consistent stroke weight, no chrome clutter
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Color contrast (green vs ink) creates a clear visual hierarchy guiding
+          the eye from start to goal
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        comment: Correct circular maze with concentric rings and radial passages
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        comment: Concentric walls, radial dividers, radial passages, entry marker,
+          goal marker, guaranteed single solution, consistent wall thickness all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        comment: Radial geometry correctly maps ring index to radius and sector index
+          to angle
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        comment: Title format exact; caption substitutes for a legend and is accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: 'Shows all maze aspects: rings, sectors, passages, entry, goal'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Neutral, comprehensible puzzle-app scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: 8 rings and medium difficulty are within the spec's recommended 5-10
+          range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        comment: Helper functions are necessary for a correct spanning-tree maze algorithm,
+          but move away from pure imports->data->plot->save
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Fixed-seed LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: No unused imports; only the d3 global is used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Appropriate complexity for procedural maze generation; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: Correctly follows the mount-node contract; harness captures plot-{theme}.png/.html
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Uses d3.arc() and the .data().join() pattern idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: d3.arc() ring-wall generation is D3-specific, though the radial geometry
+          itself is hand-rolled rather than leaning on d3-shape/d3-hierarchy further
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - polar-projection
+  patterns:
+  - data-generation
+  - graph-traversal
+  dataprep: []
+  styling:
+  - publication-ready
