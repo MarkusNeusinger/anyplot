@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: datamatrix-basic
 created: '2026-09-02T00:15:32Z'
-updated: '2026-09-02T00:21:13Z'
+updated: '2026-09-02T00:32:38Z'
 generated_by: claude-sonnet
 workflow_run: 33574023781
 issue: 3811
@@ -12,52 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/javascript/muix/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - Correct L-shaped finder pattern (solid left column + bottom row) and alternating
-    timing pattern (top row + right column), matching ISO/IEC 16022 conventions exactly
-    as described in the spec
-  - Fully deterministic content encoding (FNV-1a seed + fixed-seed LCG filler) with
-    no external RNG — reproducible pixel-for-pixel across renders
-  - 'Idiomatic, distinctive MUI X usage: composes ChartContainer purely for its sized
-    SVG coordinate space and drives custom module rects via useDrawingArea, rather
-    than forcing the data into a scatter/heatmap series it doesn''t fit'
-  - 'Correct Imprint palette application — brand green (#009E73) is the module color,
-    both theme backgrounds (#FAF8F1 / #1A1A17) are correct, and the data color is
-    identical between light and dark renders'
-  - Visible quiet zone margin, informative caption stating encoded content, module
-    count, and ECC level; title matches the required '{spec-id} · {language} · {library}
-    · anyplot.ai' format
+  - 'Margin-balance fix from attempt 1 is verified in both renders: the card''s horizontal
+    and vertical whitespace now read as symmetric, resolving the prior VQ-05 deduction'
+  - The new elevated card (t.elevatedBg fill, t.grid hairline border, rounded corners)
+    is a legitimate, non-fake decorative touch that lifts Design Excellence without
+    simulating any interactive/UI element
+  - Correct L-shaped finder pattern and alternating timing pattern, matching ISO/IEC
+    16022 conventions
+  - Fully deterministic content encoding (FNV-1a seed + fixed-seed LCG filler), reproducible
+    pixel-for-pixel across renders
+  - Correct Imprint palette application — brand green (#009E73) is the sole data color,
+    identical between light and dark renders, both theme backgrounds and the new card
+    chrome are theme-correct
   weaknesses:
-  - Real Data Matrix codes are conventionally black-on-white for scanner contrast;
-    using Imprint brand green correctly follows anyplot's mandatory first-series-is-#009E73
-    design rule, but it's worth noting as an inherent (and correctly resolved) tension
-    with the spec's literal 'black on white for maximum readability' note — no action
-    needed
-  - Horizontal margin around the matrix (outer flex centering plus quiet zone) is
-    visibly larger than the vertical margin (quiet zone only, no outer flex margin),
-    giving a slightly asymmetric frame — reserve a small vertical outer margin so
-    top/bottom balances left/right
-  - Composition is correct but visually static/mechanical, as a barcode pattern has
-    little room for a focal point; Design Excellence scores stay near baseline because
-    there isn't much intentional visual hierarchy beyond the title/matrix/caption
-    stack
+  - Composition is still visually mechanical — the barcode pattern itself has limited
+    room for a focal point, so Design Excellence remains mid-pack despite the card
+    framing
+  - (Inherent, not actionable) Real Data Matrix codes are conventionally black-on-white
+    for scanner contrast; using Imprint brand green correctly follows anyplot's mandatory
+    first-series-is-#009E73 rule, so this is a resolved tension, not a defect
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "datamatrix-basic · javascript · muix · anyplot.ai" top-left in dark ink, clearly legible. Caption 'Encodes "PCB-SN:48291X7A" · 24×24 modules · ECC 200' centered below the matrix in a softer dark gray, clearly legible against the light background.
-      Data: A 24×24 module grid rendered in brand green (#009E73) on the cream background. Solid green border along the left column and bottom row (L-shaped finder pattern), alternating green/cream cells along the top row and right column (timing/clock pattern), and a pseudo-random green/cream fill in the interior data region. A visible cream quiet-zone margin surrounds the matrix on all sides.
-      Legibility verdict: PASS — all text is dark-on-light and clearly readable; the green modules have strong contrast against the cream background.
+      Chrome: Title "datamatrix-basic · javascript · muix · anyplot.ai" top-left in dark ink, clearly legible. The matrix now sits inside a distinct elevated card (soft cream fill, thin hairline border, rounded corners), well-centered with balanced horizontal/vertical whitespace. Caption below the card states the encoded content, module count, and ECC level in soft dark gray, clearly legible.
+      Data: 24×24 module grid in brand green (#009E73): solid green left column and bottom row (L-shaped finder pattern), alternating green/cream top row and right column (timing pattern), pseudo-random green/cream fill in the interior data region.
+      Legibility verdict: PASS — all text is dark-on-light and clearly readable; the green modules have strong contrast against the card and page background.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and caption text, now rendered in light ink/soft-light gray, clearly legible against the dark background. No dark-on-dark issues observed on any text element.
-      Data: The exact same 24×24 module grid in the identical brand green (#009E73) — finder pattern, timing pattern, and data region positions match the light render pixel-for-pixel; only the surrounding chrome (background, text color) flipped to the dark theme. The green modules remain highly visible against the near-black background.
-      Legibility verdict: PASS — no dark-on-dark text, data color is identical to the light render, contrast is strong in both themes.
+      Chrome: Same title and caption text, now rendered in light ink/soft-light gray, clearly legible against the dark background. The card uses the dark elevated surface with a matching hairline border and rounded corners, same balanced framing as the light render. No dark-on-dark issues observed.
+      Data: The exact same 24×24 module grid in the identical brand green (#009E73) — finder pattern, timing pattern, and data region positions match the light render pixel-for-pixel; only the chrome (page background, card background, text color) flipped to the dark theme.
+      Legibility verdict: PASS — no dark-on-dark text, data color identical to the light render, contrast strong in both themes.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -72,28 +63,27 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, matrix, and caption
+        comment: No collisions between title, card, matrix, and caption
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Module cells sized to the drawing-area pitch exactly, clearly distinguishable,
-          tiny anti-alias overlap (+0.6px) prevents seam gaps
+        comment: Module cells sized to the drawing-area pitch exactly, clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome brand green vs. cream/near-black gives strong contrast
+        comment: Monochrome brand green vs. card/page background gives strong contrast
           in both themes; no red-green-only signal
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 2400x2400 square canvas, no clipping, but horizontal margin
-          is visibly larger than vertical margin
+        comment: Correct 2400x2400 square canvas, no clipping; the prior horizontal/vertical
+          margin asymmetry is now balanced via OUTER_MARGIN plus the card's own centering
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -105,30 +95,31 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 as sole data color, correct theme-adaptive backgrounds,
-          identical data color both themes'
+        comment: 'Brand green #009E73 as sole data color, correct theme-adaptive backgrounds
+          and card chrome, identical data color both themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        comment: Clean typographic hierarchy but the matrix itself is an inherently
-          mechanical repeated-block pattern with limited room for polish
+        comment: New elevated card (fill, hairline border, rounded corners) frames
+          the matrix with intentional product-label styling; still a mechanical repeated-block
+          pattern underneath
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        comment: No unnecessary chrome (no axes/gridlines/legend), generous quiet-zone
-          whitespace
+        comment: Subtle border + rounded corners + now-balanced whitespace read as
+          deliberate refinement, up from a bare flat background
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        comment: Title → matrix → caption stack gives some hierarchy, but the barcode
-          pattern itself doesn't guide the viewer toward an insight
+        comment: Title → card → caption stack gives some hierarchy, but the barcode
+          pattern itself still doesn't guide the viewer toward an insight
     spec_compliance:
       score: 15
       max: 15
