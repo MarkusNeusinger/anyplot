@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: indicator-bollinger
 created: '2026-09-02T01:22:52Z'
-updated: '2026-09-02T01:28:38Z'
+updated: '2026-09-02T01:37:41Z'
 generated_by: claude-sonnet
 workflow_run: 33578749312
 issue: 3237
@@ -12,133 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 95
 review:
   strengths:
-  - Clean idiomatic Makie composition (Figure/Axis, band!, lines!, Legend with explicit
-    handles, colsize! for the legend column) with no functions/classes
-  - 'Engineered data tells a clear technical-analysis story: a calm opening, a volatility
-    squeeze (narrow bands), and a breakout where price pierces the upper band repeatedly'
-  - 'Theme-adaptive chrome correctly threaded through every element (title, axis labels,
-    ticks, spines, grid) and identical between light/dark renders; first series is
-    the mandated brand green #009E73'
-  - 20-day SMA rendered with the theme-adaptive INK token as a dashed reference line
-    -- a correct, idiomatic use of the 'neutral' semantic anchor rather than spending
-    a categorical palette slot on it
-  - All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14, tick label
-    sizes=12); L-shaped spines (top/right removed); generous whitespace; no clipping
-    at any canvas edge
+  - 'All three attempt-1 weaknesses cleanly fixed: band envelope now uses IMPRINT_PALETTE[2]
+    (lavender) in canonical 1→N order, grid is now y-axis-only, and a new linked band-width
+    sub-panel visualizes the squeeze/breakout pattern the spec suggested'
+  - Linked multi-panel layout (linkxaxes!, GridLayout with rowsize!/colsize!) is genuinely
+    idiomatic Makie usage that showcases the library's layout strengths
+  - 'Engineered data tells a clear technical-analysis story: calm opening, volatility
+    squeeze (narrow bands), then breakout with price piercing the upper band — now
+    made explicit by the band-width sub-panel'
+  - 'Theme-adaptive chrome correctly threaded through both panels and identical between
+    light/dark renders; first series is the mandated brand green #009E73; SMA correctly
+    uses the theme-adaptive INK/neutral token rather than a categorical color'
+  - All font sizes explicitly set, L-shaped spines, generous whitespace, no clipping
+    at any canvas edge in either theme
   weaknesses:
-  - Band envelope uses IMPRINT_PALETTE[3] (blue) while IMPRINT_PALETTE[2] (lavender)
-    is skipped entirely -- with only 2 true categorical series (price=pos1, bands=pos3)
-    this reads as cherry-picking rather than canonical 1->N order; either use IMPRINT_PALETTE[2]
-    for the bands or drop to a single categorical series plus the neutral anchor with
-    a documented semantic reason for jumping to blue
-  - Both xgridcolor and ygridcolor are enabled; the style guide recommends Y-axis-only
-    grid for line/time-series charts -- set xgridvisible=false (or omit xgridcolor)
-    to reduce visual noise from the vertical gridlines
-  - Design storytelling is good but stops at 'default + hierarchy' -- the spec explicitly
-    suggests 'showing band width as a secondary indicator or noting squeeze patterns';
-    a small linked sub-panel (band width = upper_band .- lower_band) or a lightweight
-    annotation marking the squeeze/breakout zones would push this from good to publication-quality
-    and raise DQ-01/DE-03
-  - Library Mastery usage is solid but generic relative to Makie's distinctive strengths
-    -- consider a linked multi-panel layout (e.g. price+bands on top, band-width or
-    volume on a second linked Axis) to showcase Makie's GridLayout/linkxaxes! capabilities,
-    which are hard to replicate as directly in other libraries
+  - Band-width sub-panel y-axis label ('Band width') has no unit suffix even though
+    the value is in the same USD units as the price panel — a minor missed opportunity
+    for full VQ-06 polish
+  - Legend column leaves a small strip of unused whitespace to its right; tightening
+    colsize! slightly would let the plot area breathe a touch more
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
-      Chrome: Title "indicator-bollinger · julia · makie · anyplot.ai" in bold dark ink, clearly visible; "Date" and "Price (USD)" axis labels in dark ink; tick labels in a softer gray -- all readable. L-shaped spines (top/right removed). Subtle vertical + horizontal gridlines at low opacity, not competing with data. Legend at right ("Close price", "20-day SMA", "Bands (±2σ)") with no visible frame, text in dark ink, readable.
-      Data: Brand-green (#009E73) close-price line is prominent and unambiguous; a black dashed 20-day SMA line (theme ink, not a categorical color) runs through the middle; a blue (#4467A3) semi-transparent band envelope (~18% alpha) fills the ±2σ range with matching blue border lines. The chart shows a calm opening, a mid-chart volatility squeeze (narrow bands), and a late breakout where the green line pierces the upper band repeatedly.
-      Legibility verdict: PASS -- no dark-on-light or overlap issues found.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "indicator-bollinger · julia · makie · anyplot.ai" centered at top; dark "Price (USD)" / "Date" / "Band width" axis labels; softer gray tick labels on both panels. L-shaped spines (top/right removed) on both the price panel and the band-width sub-panel. Grid is now y-axis-only (subtle, low-opacity horizontal lines) — the x-grid seen in attempt 1 has been removed. Legend at right ("Close price", "20-day SMA", "Bands (±2σ)"), frameless, dark readable text. All text is clearly readable against the light background.
+      Data: Brand-green (#009E73) close-price line is prominent (linewidth=3); a black dashed 20-day SMA (theme ink/neutral token, not a categorical color) runs through the middle; a lavender (#009E73-palette position 2, #C475FD) semi-transparent band envelope fills the ±2σ range, matched by a lavender line in the new lower band-width sub-panel showing the squeeze (Mar–Apr) and two expansion/breakout phases (mid-Feb, late-May/Jun) where price pierces the upper band.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
-      Chrome: Title, axis labels, and tick labels have all flipped to light tones (near-white for primary text, lighter gray for tick labels) and remain clearly legible against the dark background. Spines/gridlines flipped to light-on-dark equivalents at the same subtle opacity. Legend text is light-colored and readable.
-      Data: Close-price line is the identical brand green (#009E73), band envelope is the identical blue (#4467A3) with matching alpha -- confirmed unchanged from the light render. The SMA reference line flips from black to white (correct, since it uses the theme-adaptive INK/neutral token rather than a fixed categorical color).
-      Legibility verdict: PASS -- no dark-on-dark failures found; all text and data elements are clearly distinguishable from the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis labels, and tick labels have all flipped to light tones (white/light-gray) and remain clearly legible on both panels. Spines and gridlines flipped to their light-on-dark equivalents at the same subtle opacity. Legend text is light-colored and readable, no frame.
+      Data: Data colors are confirmed identical to the light render — the brand-green close-price line and lavender band envelope/band-width line are unchanged; only the SMA reference line flips from black to near-white, correct since it uses the theme-adaptive ink/neutral token rather than a fixed categorical hex. No dark-on-dark failures anywhere — all chrome and data are clearly distinguishable from the near-black surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titlesize=20, xlabelsize/ylabelsize=14,
-          tick sizes=12); readable in both themes, no overflow or clipping
+        comment: All font sizes explicitly set (titlesize=20, labelsize=14, ticklabelsize=12);
+          title comfortably proportioned, no overflow, well-balanced in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: No overlapping text or data elements across either panel
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line weights (3 for price, 2 dashed for SMA, 1.5 for band borders)
-          and 0.18 fill alpha are well-tuned for ~120 daily points
+        comment: Line weights (price=3, bands=1.5, SMA=2, band-width=2) appropriately
+          scaled for ~100-point density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/blue/ink combination is CVD-safe and reinforced by solid-vs-dashed
-          linestyle redundancy
+        comment: Green/lavender/ink combination is CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills most of the canvas, legend sits directly adjacent,
-          balanced margins, nothing cut off
+        comment: 68/32 row split with legend near the plot; balanced margins, nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Price (USD)" carries units; "Date" is adequately descriptive for
-          a time axis'
+        comment: Price (USD) has units; Date and Band width descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'First series correctly #009E73 and chrome is theme-correct in both
-          renders, but bands use IMPRINT_PALETTE[3] while IMPRINT_PALETTE[2] is skipped
-          with no documented semantic reason'
+        passed: true
+        comment: Close price = IMPRINT_PALETTE[1] (#009E73); bands now use canonical
+          IMPRINT_PALETTE[2] (lavender, fixed from attempt 1's palette[3]); SMA uses
+          theme-adaptive INK/neutral token; backgrounds and chrome theme-correct in
+          both renders
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Thoughtful use of the neutral ink token for the SMA baseline and
-          a restrained blue band fill, above a plain default but not yet publication-tier
+        comment: Thoughtful two-panel indicator design with semantic use of the neutral
+          ink token for the SMA baseline; clearly above library defaults, not yet
+          full publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Spines removed, generous whitespace, subtle grid alpha, but both
-          x- and y-axis gridlines are on where the style guide recommends y-only for
-          line charts
+        comment: Grid is now y-only (fixed from attempt 1), spines removed, generous
+          whitespace; minor unused whitespace strip beside the legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Engineered squeeze-then-breakout data plus color/line-weight contrast
-          creates a clear visual hierarchy, though the optional band-width secondary
-          indicator suggested in the spec is not included
+        comment: New band-width sub-panel makes the squeeze-then-breakout narrative
+          explicit rather than implicit in envelope width alone
     spec_compliance:
       score: 15
       max: 15
@@ -148,54 +134,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Bollinger Bands chart: price line + upper/lower band envelope
-          + middle SMA'
+        comment: Correct Bollinger Bands chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Prominent close-price line, same-color semi-transparent band fill,
-          dashed middle band, standard 20-period/2sigma parameters
+        comment: Price line, upper/lower bands with fill, dashed SMA, and now the
+          optional band-width secondary indicator from the spec notes are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, price on Y, all series visible across the full date range
+        comment: Date on x, Price (USD) on y, band width on secondary linked panel
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches "indicator-bollinger · julia · makie · anyplot.ai";
-          legend labels ("Close price", "20-day SMA", "Bands (±2σ)") match the data
+        comment: Title format correct; legend labels (Close price / 20-day SMA / Bands
+          (±2σ)) match the data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows a calm period, a volatility squeeze, and a breakout with repeated
-          upper-band piercing; a clear lower-band/oversold touch after the warmup
-          window is less pronounced
+        comment: Squeeze, breakout, upper-band piercing, and lower-band touch all
+          demonstrated; band-width panel now shows the pattern explicitly
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Generic, unbranded daily stock-price scenario over 120 trading days
-          -- neutral and plausible
+        comment: Neutral, plausible daily stock-price scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range (~$118-$230) and daily volatility are realistic for an
-          equity over a 6-month window
+        comment: Realistic price range and volatility magnitudes for a 120-day equity
+          series
     code_quality:
       score: 10
       max: 10
@@ -205,60 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat imports -> data -> plot -> save, no functions/classes
+        comment: Imports → data → plot → save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics, Dates all used
+        comment: Only CairoMakie, Colors, Random, Statistics, Dates — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No over-engineering, no fake UI elements
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) using current band!/lines!/Legend
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
           API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!, lines!, linkxaxes!, GridLayout with rowsize!/colsize!, explicit
+          Legend with handles — expert use of Makie's high-level API
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Correct use of band!, lines!, explicit Legend with handles, and colsize!
-          for layout -- solid high-level API usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: band! and GridLayout colsize! go beyond generic usage, but a linked
-          multi-panel layout would better showcase Makie-specific strengths
-  verdict: REJECTED
+        comment: Linked multi-panel layout (linkxaxes! + GridLayout) directly addresses
+          attempt-1 feedback and is a genuinely Makie-distinctive technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - custom-legend
-  - layer-composition
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - grid-styling
