@@ -2,7 +2,7 @@ library: muix
 language: javascript
 specification_id: dashboard-metrics-tiles
 created: '2026-09-02T00:07:28Z'
-updated: '2026-09-02T00:13:21Z'
+updated: '2026-09-02T00:27:05Z'
 generated_by: claude-sonnet
 workflow_run: 33573526328
 issue: 3791
@@ -12,58 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/muix/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/muix/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/javascript/muix/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Correct 3x2 tile grid for 6 metrics matching the spec's own grid-sizing guidance,
-    with clean card styling (rounded corners, colored left-accent bar, generous padding)
-  - 'Two independent semantic encodings are used correctly: the left border encodes
-    tile status (good/warning/critical via #009E73 / amber / matte-red) while the
-    change badge encodes favorable/unfavorable direction (green/red) with a redundant
-    arrow glyph — matches the Imprint style guide''s status and sentiment semantic-exception
-    examples exactly'
-  - 'Idiomatic MUI X usage: SparkLineChart with area, curve="monotoneX", showHighlight,
-    resolveSizeBeforeRender, and skipAnimation (required to avoid mid-tween screenshots)'
-  - Deterministic, seeded data generation (small LCG) with no network calls, satisfying
-    the offline/reproducibility requirement
-  - Theme-adaptive chrome is correctly threaded through in both renders — text, borders,
-    and tile backgrounds flip correctly while data/status colors stay identical between
-    light and dark
-  - 'Title format is exactly correct: "dashboard-metrics-tiles · javascript · muix
-    · anyplot.ai"'
+  - Severity-based tile ordering (critical first) plus a subtle background tint and
+    thicker left border on the critical tile create a clear visual hierarchy the eye
+    lands on immediately
+  - Custom vector SVG change-arrows and a top-to-bottom alpha-fade gradient area fill
+    (via the SparkLineChart `slots`/`slotProps` API) replace attempt 1's plain Unicode
+    glyphs and flat fill
+  - Example values (CPU 63%/-3.7%, Memory 58%/+4.6%, Response Time 187ms/-9.3%) are
+    now independently chosen and no longer mirror the spec's own illustrative numbers
+  - 'Small-magnitude formatting fix: uptime''s -0.02% now renders as "0.02%" (two
+    decimals) instead of a misleading "0.0%" alongside its down arrow'
+  - 'Two independent, semantically correct color encodings: left border/tile tint
+    = status (good/warning/critical via `#009E73` / amber / matte-red `#AE3030`),
+    change badge = favorable/unfavorable direction (green/red) with a redundant arrow,
+    matching the Imprint style guide''s semantic-exception rules exactly'
+  - 'Idiomatic, distinctive MUI X usage: `SparkLineChart` with `area`, `curve="monotoneX"`,
+    `showHighlight`, `resolveSizeBeforeRender`, `skipAnimation`, and a custom `slots.area`
+    override for the gradient fill'
+  - Deterministic, seeded data generation (small LCG) with no network calls; theme-adaptive
+    chrome correctly threaded through both renders with data colors identical across
+    themes
   weaknesses:
-  - Example values for CPU Usage (45%, -5.2%), Memory (72%, +8.1%), and Response Time
-    (120ms, -14.8%) are near-verbatim copies of the spec's own illustrative example
-    ('CPU Usage at 45% (down 5%), Memory at 72% (up 8%), Response Time at 120ms (down
-    15%)') rather than an independently generated realistic scenario — regenerate
-    these three with different, still-plausible numbers.
-  - Uptime tile shows '▼ 0.0%' for a -0.02% change_percent — rounding to one decimal
-    makes the badge read as 'no change' while the arrow still points down, which is
-    confusing. Use two decimal places for small-magnitude metrics like uptime so the
-    displayed number and the arrow agree.
-  - The up/down change indicator uses plain Unicode triangle glyphs (▲/▼) instead
-    of a crisper vector/icon glyph — functional but reads as the least-polished element
-    of an otherwise refined card design; consider an MUI icon or small inline SVG
-    for a sharper look at 2x scale.
-  - All six tiles carry equal visual weight (same size, same border thickness) regardless
-    of severity — nothing beyond the thin accent bar helps the eye land on the one
-    'critical' (Error Rate) tile first, so the dashboard doesn't create a strong at-a-glance
-    priority order.
-  - The sparkline area fill is a flat, fully-opaque solid color with no vertical fade
-    — a subtle top-to-bottom alpha gradient on the area fill would match the rest
-    of the card's restrained, polished aesthetic more closely.
+  - Mandated title occupies only ~35% of canvas width — comfortably within bounds
+    and not a violation, but there is room to grow it slightly for better visual balance
+    with the tile grid below
+  - Sparklines show no discrete point markers even for the sparse 16-point series;
+    acceptable for the minimalist sparkline convention, but a single end-point dot
+    (beyond the hover-only highlight) would reinforce the 'current value' anchor
+  - Uptime tile is colored 'warning' for a 99.95% value with a tiny -0.02% dip — a
+    plausible SLA-threshold read, but slightly arbitrary as the sole 'warning' justification
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white page background, consistent with #FAF8F1 — not pure white. Tile backgrounds are a very subtly lighter elevated tone, giving a nearly flat, minimalist card look rather than a heavy-contrast card-on-page effect.
-      Chrome: Title "dashboard-metrics-tiles · javascript · muix · anyplot.ai" in dark ink, top-left, fully visible with generous margin. Each of the 6 tiles has an uppercase gray metric label (CPU USAGE, MEMORY, RESPONSE TIME, ERROR RATE, REQUESTS / SEC, UPTIME), a large bold dark value, and a small colored change badge with an arrow glyph. All text is dark-on-light and clearly legible; no clipping at any canvas edge.
-      Data: Left accent bars are green (CPU Usage, Response Time, Requests/sec — status "good"), amber/yellow (Memory, Uptime — status "warning"), and red (Error Rate — status "critical"). Change badges are colored green when the change is favorable and red when unfavorable, independent of the status color (e.g. Memory has an amber border but a red "unfavorable" badge). Sparklines below each value are compact filled area charts colored to match each tile's status accent, each ending exactly at the tile's headline value. First-series green matches #009E73; the critical/error color reads as the palette's matte-red semantic anchor.
-      Legibility verdict: PASS
+      Background: Warm off-white page background, consistent with #FAF8F1, not pure white.
+      Chrome: Title "dashboard-metrics-tiles · javascript · muix · anyplot.ai" top-left in dark ink, fully visible and not clipped. Six rounded tile cards in a 3x2 grid, each with an uppercase metric label in muted gray, a large bold dark value, and a colored change badge (vector arrow + percentage). Each tile has a colored left-accent bar (green/amber/red) matching its status; the critical "Error Rate" tile additionally carries a subtle red background tint and a thicker accent bar, making it the clear focal point.
+      Data: Sparklines are filled with a top-to-bottom gradient fade in the tile's status color (green for CPU/Response Time/Requests-per-sec, amber for Memory/Uptime, red for Error Rate). Change badges use redundant color + arrow-direction encoding (green up/down = favorable, red = unfavorable), independent of the status color.
+      Legibility verdict: PASS — all text (title, labels, values, change badges) is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black page background, consistent with #1A1A17 — not pure black. Tile backgrounds are a very subtly lighter dark tone than the page, matching the light theme's restrained elevation approach.
-      Chrome: Same title, labels, values, and change badges as the light render, now rendered in light ink (near-white) against the dark tiles. No dark-on-dark or unreadable text was found anywhere — labels, values, and change percentages are all clearly legible. No edge clipping.
-      Data: Accent-bar colors and sparkline fill colors are visually identical to the light render (green / amber / red), confirming only chrome (background, text) flipped between themes as required. Green still reads as the same #009E73-family hue on both surfaces.
-      Legibility verdict: PASS
+      Background: Warm near-black background, consistent with #1A1A17, not pure black. Tile cards use a slightly lighter dark elevated background so the grid structure remains visible.
+      Chrome: Title and all tile labels/values render in light ink (white/off-white), clearly readable. Same 3x2 grid, same critical-tile tint/border emphasis as the light render.
+      Data: Accent bars, badge colors, and sparkline gradient fills are visually identical to the light render (green #009E73, amber, matte-red) — only the page/tile chrome flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures found on any tile; all text remains legible against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -74,83 +66,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (15/42/17/22 px). Readable in both
-          themes at full size; hierarchy (big value, small label/change) reads well.
-          Not full marks because the change/label text is quite small relative to
-          the headline value and the '0.0%' rounding artifact on Uptime slightly undercuts
-          the badge's readability of intent.
+        comment: All font sizes explicitly set (title 22px, label 15px, value 42px,
+          change 17px); readable in both themes; title comfortably within canvas,
+          no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between any label, value, badge, or sparkline in either
-          theme.
+        comment: No overlapping text or elements anywhere in the grid
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparklines are compact per the spec's own request, area fill and
-          status color make the trend clearly visible against both surfaces.
+        comment: Sparkline fills and change badges clearly visible; sizing appropriate
+          for compact KPI-tile context
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Change direction is never color-only — every badge pairs color with
-          an up/down arrow glyph, so it isn't CVD-dependent.
+        comment: Change badges use redundant arrow-direction + color encoding; not
+          red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Grid fills the vast majority of the canvas below the title with balanced
-          gaps and margins; nothing is cut off or isolated.
+        comment: 3x2 grid fills the canvas well with balanced margins and gaps; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No literal axes in a tile dashboard, but every value carries its
-          unit (%, ms, count) and labels are descriptive metric names.
+        comment: Metric labels descriptive; values carry explicit units (%, ms, count)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct semantic-exception use of Imprint: good=#009E73, warning=amber
-          anchor, critical=matte-red anchor; favorable/unfavorable badges use green/red
-          sentiment mapping. Backgrounds and chrome are theme-correct in both renders.'
+        comment: 'Brand green #009E73 for good, amber semantic anchor for warning,
+          matte-red #AE3030 for critical; theme-correct chrome in both renders'
     design_excellence:
-      score: 13
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom card design clearly above library defaults (rounded corners,
-          accent bars, restrained tile elevation), but the plain Unicode arrow glyphs
-          and lack of any finer polish (e.g. custom icon, tabular-number alignment)
-          keep it short of publication-ready.
+        passed: true
+        comment: Custom SVG arrows, gradient sparkline fills, and severity tinting
+          are clearly above library defaults
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: No grid/spines needed and were correctly omitted; whitespace generous.
-          The flat, fully-opaque sparkline area fill (no fade) is the one un-refined
-          detail.
+        passed: true
+        comment: No spines/grid, generous whitespace, refined gradient area fill;
+          small remaining polish headroom
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Color contrast (status border + change color) creates real hierarchy
-          that lets a viewer spot problem metrics, but all tiles carry equal visual
-          weight so nothing draws the eye to the single 'critical' tile first.
+        passed: true
+        comment: Severity-first ordering plus tint/border emphasis on the critical
+          tile gives the dashboard a clear focal point
     spec_compliance:
       score: 15
       max: 15
@@ -160,30 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct metric-tile dashboard grid.
+        comment: Correct dashboard metric-tile grid with embedded sparklines
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Value, label, sparkline, change indicator with arrow+percent, and
-          optional status are all present and working.
+        comment: Value, label, sparkline, change indicator with arrow, and status
+          color coding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sparkline history correctly ends on the tile's headline value; all
-          16 history points render.
+        comment: All six metrics correctly mapped to value/history/change/status
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly correct; no legend needed since status/direction
-          are already labeled via color+arrow.
+        comment: Title format exactly matches spec; no traditional legend needed since
+          encoding is per-tile
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -191,24 +173,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Mix of good/warning/critical statuses, favorable and unfavorable
-          changes, and varied value formats (%, ms, count, high-precision %) — shows
-          the full range of tile states.
+        comment: Good/warning/critical statuses, positive/negative changes, and varied
+          units (%, ms, count) all represented
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Neutral ops-monitoring context, but 3 of 6 metrics (CPU, Memory,
-          Response Time) closely mirror the spec's own example numbers almost verbatim
-          rather than an independently generated scenario.
+        passed: true
+        comment: Independently chosen values no longer mirror the spec's illustrative
+          example; realistic ops-monitoring scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Values are realistic, but the Uptime change (-0.02%) rounds to a
-          displayed '0.0%' alongside a down arrow, which reads as internally inconsistent.
+        passed: true
+        comment: Uptime's small change now shows 2 decimals (0.02%), consistent with
+          its down arrow; all other values realistic
     code_quality:
       score: 10
       max: 10
@@ -218,35 +198,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Helper functions (lcg, buildHistory, changeColor, MetricTile) are
-          idiomatic React composition needed to avoid duplicating 6 near-identical
-          tiles — not over-engineering.
+        comment: Component decomposition is idiomatic for React, not over-engineered
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG per metric, fully deterministic.
+        comment: Seeded LCG-based deterministic history generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only Box, Typography, SparkLineChart imported and used.
+        comment: Only Box, Typography, SparkLineChart imported and used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering, appropriate complexity for a multi-tile
-          dashboard.
+        comment: Clean, appropriate complexity, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Default-exports Chart, skipAnimation set on the chart component,
-          sizes from window.ANYPLOT_SIZE — correct harness contract.
+        comment: skipAnimation set; harness mount contract respected
     library_mastery:
       score: 9
       max: 10
@@ -256,22 +232,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: SparkLineChart used with its high-level community props (area, curve,
-          showHighlight, resolveSizeBeforeRender) rather than low-level manual SVG.
+        comment: SparkLineChart used with its recommended high-level API and props
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: false
-        comment: SparkLineChart is a MUI X-specific component not trivially replicated
-          elsewhere, but the overall dashboard-tile composition around it is generic
-          layout code any library could produce.
-  verdict: REJECTED
+        passed: true
+        comment: Custom slots.area override for gradient fill is a distinctive MUI
+          X extensibility mechanism
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - sparklines
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - gradient-fill
