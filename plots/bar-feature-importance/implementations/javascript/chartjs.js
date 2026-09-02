@@ -1,7 +1,7 @@
 // anyplot.ai
 // bar-feature-importance: Feature Importance Bar Chart
-// Library: chartjs 4.4.7 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: chartjs 4.4.7 | JavaScript 22.23.2
+// Quality: 88/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
