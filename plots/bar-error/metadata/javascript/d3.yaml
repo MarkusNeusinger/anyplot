@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: bar-error
 created: '2026-09-02T11:59:59Z'
-updated: '2026-09-02T12:04:11Z'
+updated: '2026-09-02T12:13:43Z'
 generated_by: claude-sonnet
 workflow_run: 33627203453
 issue: 2376
@@ -12,40 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-error
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-error/javascript/d3/plot-dark.html
-quality_score: 83
+quality_score: 91
 review:
   strengths:
-  - Correct Imprint palette usage (#009E73 first series) with fully theme-adaptive
-    chrome — no dark-on-dark or light-on-light issues in either render
-  - Clear, well-proportioned error bars with visible caps, plus an explicit annotation
-    ("±1 SD, n = 20 samples per group") satisfying the spec's requirement to explain
-    error semantics
-  - 'Idiomatic modern D3 v7: .join() selections and a nested data-join for the error-bar
-    caps'
-  - Realistic, plausible engineering data (alloy annealing tensile strength) with
-    sensible axis scale and headroom via .nice()
+  - Error bars have clear stem + cap construction via nested D3 data joins (selectAll('.cap').data(d
+    => [...]).join()), producing crisp, consistently styled whiskers across all five
+    bars
+  - 'Data storytelling: the peak bar (400°C) is called out with a triangle marker,
+    ''Peak'' label, and a bolded x-axis tick label — the viewer immediately sees the
+    insight without needing to compare all five bars manually'
+  - 'Explicit annotation (''Error bars: ±1 SD (n = 20 samples per group)'') satisfies
+    the spec''s requirement to explain what the error bars represent'
+  - All font sizes are explicitly set (16px ticks, 18px axis labels, 30px title, 14-15px
+    annotations), and both light and dark renders are fully legible with correctly
+    flipped chrome
+  - Realistic, neutral materials-science scenario (tensile strength vs. annealing
+    temperature) with plausible SD magnitudes and a physically sensible peak-then-decline
+    curve
   weaknesses:
-  - Vestigial dead code in the y-axis .call() (.selectAll(".tick line").clone().attr("x2",
-    0)) produces invisible zero-length duplicate tick lines — remove it, since gridlines
-    are already drawn separately in the Gridlines section above
-  - 'Design Excellence is at baseline: no visual emphasis (color, weight, or callout)
-    draws attention to the notable pattern (peak strength at 400°C treatment) — consider
-    a subtle callout or highlighting to add a stronger focal point'
-  - Library Mastery relies on fairly standard D3 idioms for this straightforward chart
-    type; no additional distinctive D3 capability is demonstrated beyond the nested-join
-    error caps
+  - Title occupies only ~32% of canvas width at 30px — noticeably smaller than the
+    ~50-70% typical range for a custom-length title; a modest fontsize bump would
+    give the title more visual presence without risking overflow
+  - No asymmetric error bars demonstrated (spec calls this out as an optional feature
+    for skewed/percentage data) — all five groups use symmetric ±SD, so that data-quality
+    dimension is not exercised
+  - Bar corners are rounded on all four corners (rx=4) including the bottom, which
+    is a very minor stylistic inconsistency since bars typically round only the top
+    corners — invisible at this radius/bar-height ratio but worth noting for future
+    polish
+  - Idiomatic usage is solid but conventional (scaleBand/scaleLinear/axisBottom/axisLeft,
+    no custom tick formatting or d3-shape helpers beyond the manual triangle path)
+    — leaves some room to showcase more distinctive D3 idioms
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white, matches #FAF8F1 — PASS
-      Chrome: bold dark title "bar-error · javascript · d3 · anyplot.ai", axis labels "Annealing Treatment" / "Tensile Strength (MPa)", tick labels, and a small gray annotation "Error bars: ±1 SD (n = 20 samples per group)" — all clearly readable against the light background
-      Data: 5 rounded-corner green (#009E73) bars with black error-bar stems and visible caps at ±1 SD; subtle horizontal gridlines behind bars
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1-like), not pure white and not dark — matches the light-theme spec.
+      Chrome: Title "bar-error · javascript · d3 · anyplot.ai" in bold dark ink, centered top. X-axis label "Annealing Treatment" and Y-axis label "Tensile Strength (MPa)" in dark ink, both readable. Tick labels in a softer dark gray, subtle horizontal-only gridlines. Top-right annotation "Error bars: ±1 SD (n = 20 samples per group)" in soft ink, fully legible.
+      Data: Five bars in the Imprint green (#009E73) for "Untreated", "200°C", "400°C", "600°C", "800°C". Each bar has a black stem + capped error bar showing ±1 SD. The 400°C bar (peak) has a small triangle marker and bold "Peak" label above its error cap, and its x-axis tick label is bolded to draw the eye.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black, matches #1A1A17 — PASS
-      Chrome: title, axis labels, tick labels, and annotation all render in light ink, clearly legible against the dark background; no dark-on-dark issues
-      Data: identical #009E73 green bars (confirmed same hex as light render); error-bar stems/caps flip to a light color, remaining clearly visible against the bars
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17-like), not pure black and not light — matches the dark-theme spec.
+      Chrome: Title, axis labels, tick labels, and the "Error bars" annotation all render in light/white ink, fully readable against the dark background. Error bar stems and caps flip to a light color (from t.ink) for contrast against the dark surface. Gridlines remain subtle.
+      Data: Bars remain the identical Imprint green (#009E73) as the light render — confirms color parity, only chrome flipped. Peak triangle marker and "Peak" label are in light ink, still clearly visible; the 400°C tick label remains bolded.
+      Legibility verdict: PASS — no dark-on-dark failures; all text and error-bar strokes are clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,69 +65,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; tertiary annotation
-          shrinks appropriately at mobile 400px thumbnail
+        comment: All font sizes explicitly set, readable in both themes; title occupies
+          only ~32% of width, a bit small relative to the ideal 50-70% range for a
+          custom-length title
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions
+        comment: Peak triangle/label, annotation, and axis text are all spaced clear
+          of each other and the bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Error bar caps clearly visible, sized proportionally to bar width
+        comment: Bars, error stems (2.5px) and caps are clearly visible and well-proportioned
+          for 5 categories
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single series, strong contrast in both themes
+        comment: High-contrast ink error bars against green fill in both themes; no
+          red-green reliance
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing clipped, balanced axis labels
+        comment: Plot fills a large, balanced portion of the canvas; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axis labels descriptive with units (MPa)
+        comment: Y-axis label includes units (MPa); title matches mandated format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; both renders theme-correct on background/chrome'
+        comment: 'First series is #009E73 (Imprint green), identical across themes;
+          backgrounds and chrome are theme-correct'
     design_excellence:
-      score: 10
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Rounded bar corners and proportional error-cap-width formula show
-          some polish, but a fairly standard bar+error treatment
+        comment: Rounded bar corners, bolded peak label, and callout marker read as
+          intentional design beyond a plain default bar chart
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: L-shaped spines, subtle y-only grid, generous whitespace — meets
-          style-guide defaults cleanly but doesn't exceed them
+        comment: Subtle horizontal-only grid and generous whitespace; axis domain
+          lines still present as standard D3 axis chrome
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 6
         max: 6
-        passed: false
-        comment: Rise-then-fall pattern (peak at 400°C) visible from bar heights alone,
-          but nothing actively guides the reader to it
+        comment: Peak marker + bold label + triangle immediately draws the eye to
+          the 400°C peak — clear visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +138,23 @@ review:
         name: Plot Type
         score: 5
         max: 5
-        passed: true
         comment: Correct bar chart with error bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
-        passed: true
-        comment: Visible caps, annotation explaining error semantics, consistent styling
-          across categories
+        comment: Visible caps, explanatory annotation, consistent styling all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
-        passed: true
-        comment: category -> x, mean -> y, sd -> error range; all data shown
+        comment: Category on X, value on Y, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
-        passed: true
-        comment: Title exactly matches required format; legend correctly omitted for
-          single series
+        comment: Title format exact; no legend needed for single series, annotation
+          substitutes appropriately
     data_quality:
       score: 14
       max: 15
@@ -157,75 +163,65 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
-        passed: true
-        comment: Bars, error stems, caps, annotation all present; asymmetric-error
-          variant not shown (optional per spec)
+        comment: Varying error magnitudes and a realistic rise-then-fall trend; no
+          asymmetric error demonstrated (optional per spec)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
-        passed: true
-        comment: Plausible alloy annealing tensile-strength values, neutral scientific
-          framing
+        comment: Neutral materials-science scenario, fully plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
-        passed: true
-        comment: Sensible MPa range, y-axis niced to 500 with good headroom
+        comment: Tensile strength and SD magnitudes are realistic for metal alloys
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
         score: 3
         max: 3
-        passed: true
-        comment: Flat top-level script, no functions/classes
+        comment: Linear script, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
-        passed: true
-        comment: Hardcoded deterministic data
+        comment: Hard-coded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
-        passed: true
-        comment: No unused imports (d3 global only)
+        comment: No unused imports; uses only the global d3
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Vestigial .clone().attr("x2", 0) call produces invisible dead-code
-          duplicate tick lines
+        comment: Clean, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
-        passed: true
-        comment: Correct mount-node contract, current D3 v7 .join() API
+        comment: 'Correctly builds into #container per the mount-node contract, current
+          D3 7.x API'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Proper scaleBand/scaleLinear/axisBottom/axisLeft, modern .join()
-          pattern, nested data-join for error caps
+        comment: Correct scaleBand/scaleLinear/axis usage and .join() data binding,
+          but fairly conventional patterns
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Nested data-join for error caps is a nice D3-specific technique,
-          but nothing further showcases D3's distinctive capabilities
+        comment: Nested per-datum data join for error caps and a manually drawn triangle
+          path are D3-specific techniques not trivially replicated in higher-level
+          charting libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -234,4 +230,6 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - grid-styling
+  - publication-ready
