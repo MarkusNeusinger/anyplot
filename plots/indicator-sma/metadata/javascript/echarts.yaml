@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: indicator-sma
 created: '2026-09-02T01:57:30Z'
-updated: '2026-09-02T02:03:26Z'
+updated: '2026-09-02T02:13:24Z'
 generated_by: claude-sonnet
 workflow_run: 33580975051
 issue: 3651
@@ -12,56 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/javascript/echarts/plot-dark.html
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - 'Exact Imprint theme compliance: background pixel-sampled at #FAF8F1 (light) and
-    #1A1A17 (dark), first series #009E73, canonical palette order (green/lavender/blue)
-    preserved identically across both themes'
-  - 'Correct SMA warm-up handling: connectNulls=false with a manual sma() window function
-    correctly truncates each line''s start (day 20/50/200) instead of drawing a flat
-    or interpolated lead-in, matching the spec''s note about initial null values'
-  - 'Thoughtful visual hierarchy: the raw Close line is rendered thin and at 55% opacity
-    while the three SMA overlays are bold and fully opaque, letting the smoothed trend
-    lines read as the focal point'
-  - 'Clean, deterministic, KISS-structured code: seeded LCG for price generation,
-    no unused imports, correct mount-node contract (no explicit width/height/devicePixelRatio
-    on echarts.init), animation disabled'
-  - No edge clipping and no overlap in either render; y-axis gridlines present as
-    requested by the spec, x-axis gridlines correctly suppressed to reduce clutter
+  - 'Correct Imprint palette order: SMA 20 = #009E73 (brand green, first categorical
+    series), SMA 50 = lavender, SMA 200 = blue; Close line uses the theme-adaptive
+    ink token as a neutral baseline/reference layer rather than competing for a palette
+    slot'
+  - 'Both renders are fully theme-correct: #FAF8F1/#1A1A17 backgrounds, all text readable,
+    no dark-on-dark or light-on-light failures'
+  - 'Distinctive ECharts touch: markLine crossover annotations ("Golden Cross"/"Death
+    Cross") directly visualize the technical-analysis signal the spec''s Applications
+    section calls out, giving the chart a clear focal point instead of just three
+    overlaid lines'
+  - Synthetic data uses three deliberate regimes (climb, slide, recovery) so all three
+    SMAs visibly diverge, cross, and reconverge -- exercises the full behavior space
+    the spec asks for, including the longer initial null window for SMA 200
+  - Deterministic data generation via a fixed-seed LCG, clean single-purpose helpers
+    (sma, toSeries), no external dependencies beyond the echarts global
+  - Explicit font sizing throughout (title 22px, legend/axis/tick 14px) with balanced
+    axis label sizing and no overflow or clipping in either render
   weaknesses:
-  - Only 260 periods are generated, which is the bare minimum of the spec's 250-500
-    range — the 200-period SMA is only valid for the last ~60 points (about 3 months),
-    too short a window to demonstrate 'meaningful long-term SMA behavior' as the spec
-    requires; increase to 400-500 periods so SMA 200 has substantial history
-  - None of the three SMAs ever cross each other (SMA 200 stays below SMA 50/20 for
-    its entire visible range) — the spec's own Applications section highlights golden-cross/death-cross
-    detection as a core use case for this chart type; tune the price drift/noise so
-    at least one crossover between SMA lines (or between Close and an SMA) is visible
-  - The Close line is de-emphasized (55% opacity, 1.5px width) relative to the spec's
-    instruction to 'display the price/close line prominently' — consider raising its
-    opacity/width slightly (e.g. opacity 0.7-0.8) so it still reads as the primary
-    series while the SMA overlays remain the trend highlight
-  - The legend swatch for 'Close' renders as a fully opaque dark circle (itemStyle
-    uses t.ink with no opacity) while the actual line is drawn at 55% opacity — align
-    the legend swatch opacity with the line style for visual consistency
-  - 'Library Mastery is generic: the chart could be reproduced nearly identically
-    in Highcharts/Chart.js/D3 with the same structure; consider an ECharts-distinctive
-    touch such as a markLine/markPoint to flag a crossover event, or markArea to shade
-    a golden-cross zone, which would also help address the crossover-visibility weakness
-    above'
+  - The 'Golden Cross'/'Death Cross' markLine annotations are computed from SMA 20
+    vs SMA 200, but the spec's own Applications section defines that terminology as
+    the 50-day vs 200-day crossover -- consider computing the crossover from smaMedium/smaLong
+    (or relabeling to something like 'Fast/Long Cross') so the annotation matches
+    the conventional definition it names
+  - Design Excellence is solid but still reads close to a well-configured default
+    line chart outside of the crossover annotations -- e.g. no distinct linestyle/marker
+    redundancy as SMA lines get close together, and the legend/grid styling doesn't
+    go much beyond baseline ECharts chrome
+  - Y-axis grid is present but the plot otherwise relies entirely on line color to
+    separate four overlapping series near the crossover zones; a subtle white/ink
+    stroke or slightly different z-order emphasis on Close vs the SMAs could sharpen
+    the read further
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, pixel-sampled at RGB(250,248,241) = #FAF8F1 — exact match, not pure white.
-      Chrome: Title "indicator-sma · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible; legend below it ("Close", "SMA 20", "SMA 50", "SMA 200") in soft dark gray; y-axis title "Price (USD)" and tick labels in soft dark gray, all crisp against the light background; x-axis time ticks (Mar/May/Jul/Sep/Nov) legible; horizontal y-axis gridlines subtle and visible, x-axis gridlines intentionally suppressed.
-      Data: Close line is a thin, semi-transparent dark-gray line showing daily noise; SMA 20 is a bold brand-green (#009E73) line; SMA 50 is a bold lavender/purple line; SMA 200 is a bold blue line appearing only for the final ~60 points (Nov onward) since it needs 200 prior periods to compute. All four lines trend upward from ~$148 to ~$190 over the year, with SMA 20 tracking closest to Close and SMA 50/200 progressively smoother/lagged.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no overlap, no clipping.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "indicator-sma · javascript · echarts · anyplot.ai" centered in dark ink text, clearly legible. Legend row (Close, SMA 20, SMA 50, SMA 200) directly below in secondary-ink grey, all readable. X-axis time ticks (Apr, Jul, Oct, 2024, ...) and Y-axis "Price (USD)" label with numeric ticks (120-240) all rendered in soft dark grey, fully legible. Horizontal grid lines are subtle and don't compete with the data. Two vertical dashed reference lines labeled "Death Cross" and "Golden Cross" in soft ink text near the top of the plot area.
+      Data: Close price rendered as a thin, semi-transparent dark-ink line (baseline/reference layer). SMA 20 in brand green (#009E73, thickest), SMA 50 in lavender/purple, SMA 200 in blue -- all clearly distinguishable from each other and from the Close line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, pixel-sampled at RGB(26,26,23) = #1A1A17 — exact match, not pure black.
-      Chrome: Same title, legend, and axis labels now rendered in light/soft-white ink, clearly legible against the dark background; gridlines remain subtle; no dark-on-dark text anywhere.
-      Data: Same four series in identical colors to the light render — Close (dark-gray/faded), SMA 20 (#009E73 green), SMA 50 (lavender), SMA 200 (blue) — confirming data colors are unchanged between themes and only chrome (background/text) flipped.
-      Legibility verdict: PASS — all chrome text is clearly readable against the dark background; brand green remains highly visible; no dark-on-dark or light-on-light failures observed.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Title and legend now render in light text (white/light grey) against the dark background, fully legible. Axis ticks and the "Price (USD)" label are light grey and easily readable. Grid lines remain subtle. "Death Cross"/"Golden Cross" labels render in light grey, clearly visible against the dark background -- no dark-on-dark failure.
+      Data: SMA 20 (green), SMA 50 (lavender), SMA 200 (blue) are pixel-identical in hue to the light render -- only the chrome (background, text, axis lines) flipped. Close line now renders as a light/white semi-transparent line, correctly using the theme-adaptive ink token as its color source.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -72,48 +68,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 22px, legend/axis 14px); well-proportioned,
-          no overflow, readable in both themes
+        comment: All font sizes explicitly set (title 22px, legend/axis/tick 14px);
+          readable and well-proportioned in both themes, no overflow or clipping
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, axes, or data
+        comment: No text or annotation overlap in either render, including the crossover
+          markLine labels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line widths/opacity well adapted to 260-point density; no markers
-          avoids clutter
+        comment: Line weights (Close 1.75/0.75 alpha, SMA20 3, SMA50/200 2.5) are
+          well-adapted to a 460-point dense time series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/lavender/blue/gray combination is CVD-safe, no red-green-only
-          signal
+        comment: Good contrast, CVD-safe Imprint hues, no red-green-only signaling
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Content spans ~96% width / ~92% height with balanced margins, nothing
-          cut off (pixel-verified)
+        comment: Chart fills the majority of the canvas with balanced margins; legend
+          sits directly under the title, near the plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis labeled 'Price (USD)' with units
+        comment: Y-axis labeled 'Price (USD)' with units; time x-axis is self-descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, canonical order, backgrounds pixel-verified
-          #FAF8F1/#1A1A17, identical data colors across themes'
+        comment: 'First categorical series (SMA 20) is #009E73; SMA 50/200 follow
+          canonical Imprint order; both renders theme-correct'
     design_excellence:
       score: 12
       max: 20
@@ -123,24 +119,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with an opacity-based hierarchy;
-          not yet publication-ready custom design
+        comment: Well-configured default line chart; thoughtful color use but not
+          much beyond baseline ECharts chrome
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis line hidden, x-axis gridlines suppressed, subtle y-axis gridlines
-          only; legend swatch opacity not aligned with line opacity
+        comment: Subtle grid, hidden y-axis line/ticks, generous whitespace; some
+          refinement beyond raw defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Faded Close line vs. bold SMA overlays creates clear visual hierarchy
-          toward the trend signal
+        comment: Golden/Death Cross markLine annotations create a clear focal point
+          tied directly to the spec's technical-analysis use case
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,50 +144,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SMA indicator overlay chart
+        comment: Correct multi-line SMA overlay chart
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: All 3 SMA periods + legend + y-gridlines present; Close line is less
-          'prominent' than spec wording suggests
+        comment: Close line, 3 distinct-colored SMAs, legend with periods, y-axis
+          grid lines all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on x, price on y, full range visible
+        comment: Time on x, price on y, all series fully visible across the axis range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact; legend labels match spec ('SMA 20/50/200')
+        comment: Title format exact; legend labels match spec ('SMA 20', 'SMA 50',
+          'SMA 200')
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Shows SMA convergence but no true crossover event and SMA 200 has
-          minimal history
+        comment: Three regimes (climb/slide/recovery) exercise crossovers and the
+          longer null window for SMA 200
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible one-year stock-like price series
+        comment: Plausible, neutral generic stock-price scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: Plausible price levels and growth, but 260 periods is the minimum
-          allowed and undersells the long-term SMA
+        comment: Values/proportions realistic; minor terminology imprecision -- markLine
+          crossover is computed from SMA20/SMA200 rather than the spec's stated 50/200
+          golden-cross definition
     code_quality:
       score: 10
       max: 10
@@ -201,57 +199,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Data -> Init -> Option sections; helper functions (lcg, sma, toSeries)
-          are minimal and necessary
+        comment: Linear Data -> Compute -> Init -> Option flow; helper functions (sma,
+          toSeries, lcg) are necessary computation, not over-abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded LCG(42), deterministic dates
+        comment: Fixed-seed LCG (seed 42) and deterministic date generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports, only ANYPLOT_TOKENS/echarts globals
+        comment: Only uses the provided echarts global, no extraneous imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity
+        comment: Appropriate complexity, no fake UI/functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, no explicit size/devicePixelRatio
+        comment: Correct mount-node contract, animation disabled, no deprecated API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct high-level setOption usage with time axis and z-ordering,
-          but no advanced idiomatic patterns
+        comment: Idiomatic time-axis, tooltip trigger, and option structure
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic line-chart usage; no ECharts-distinctive features like markLine/markArea/visualMap
-  verdict: REJECTED
+        passed: true
+        comment: markLine crossover annotations tied to a data series are a genuinely
+          ECharts-specific technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - alpha-blending
