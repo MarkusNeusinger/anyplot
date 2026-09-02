@@ -81,6 +81,14 @@ const hexToRgba = (hex, alpha) => {
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
+// Tighten the y-axis to the actual data range instead of a fixed 0-250 span,
+// which left the ~100-215 band compressed into a narrow vertical strip.
+const spannedValues = [...actual, ...lower95, ...upper95].filter((v) => v !== null);
+const dataMin = Math.min(...spannedValues);
+const dataMax = Math.max(...spannedValues);
+const yAxisMin = Math.floor((dataMin - 10) / 10) * 10;
+const yAxisMax = Math.ceil((dataMax + 10) / 10) * 10;
+
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
@@ -117,6 +125,8 @@ chart.setOption({
     type: "value",
     name: "Revenue ($k)",
     nameTextStyle: { color: t.inkSoft, fontSize: 14 },
+    min: yAxisMin,
+    max: yAxisMax,
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "${value}k" },
     axisLine: { show: false },
     splitLine: { lineStyle: { color: t.grid } },
@@ -140,8 +150,10 @@ chart.setOption({
       stack: "ci95",
       symbol: "none",
       lineStyle: { opacity: 0 },
-      areaStyle: { color: t.palette[2], opacity: 0.15 },
-      itemStyle: { color: hexToRgba(t.palette[2], 0.15) },
+      areaStyle: { color: t.palette[1], opacity: 0.15 },
+      // Legend swatch uses a higher alpha than the in-chart band so the
+      // 80%/95% entries stay visually distinct at a glance.
+      itemStyle: { color: hexToRgba(t.palette[1], 0.45) },
     },
     // 80% CI band (narrower, drawn on top of the 95% band)
     {
@@ -161,8 +173,8 @@ chart.setOption({
       stack: "ci80",
       symbol: "none",
       lineStyle: { opacity: 0 },
-      areaStyle: { color: t.palette[2], opacity: 0.32 },
-      itemStyle: { color: hexToRgba(t.palette[2], 0.32) },
+      areaStyle: { color: t.palette[1], opacity: 0.32 },
+      itemStyle: { color: hexToRgba(t.palette[1], 0.85) },
     },
     // Historical + forecast lines on top
     {
@@ -190,8 +202,8 @@ chart.setOption({
       type: "line",
       data: forecast,
       symbol: "none",
-      lineStyle: { color: t.palette[2], width: 3, type: "dashed" },
-      itemStyle: { color: t.palette[2] },
+      lineStyle: { color: t.palette[1], width: 3, type: "dashed" },
+      itemStyle: { color: t.palette[1] },
     },
   ],
 });
