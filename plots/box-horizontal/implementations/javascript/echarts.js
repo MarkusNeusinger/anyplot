@@ -25,12 +25,11 @@ function randNormal(mean, std) {
   return mean + z * std;
 }
 
-function percentile(sorted, p) {
-  const idx = (sorted.length - 1) * p;
-  const lo = Math.floor(idx);
-  const hi = Math.ceil(idx);
-  if (lo === hi) return sorted[lo];
-  return sorted[lo] + (sorted[hi] - sorted[lo]) * (idx - lo);
+function median(sorted) {
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
 }
 
 const roles = [
@@ -48,9 +47,7 @@ const roles = [
   { name: "Software Engineer", n: 22, mean: 132, std: 20, extra: [214] },
 ];
 
-// Sort by median ascending so the axis reads low-to-high bottom-to-top —
-// per the spec's "sort by median for easier comparison" guidance.
-const withScores = roles.map((role) => {
+const withSalaries = roles.map((role) => {
   const salaries = [];
   for (let i = 0; i < role.n; i++) {
     salaries.push(
@@ -59,48 +56,27 @@ const withScores = roles.map((role) => {
   }
   role.extra.forEach((v) => salaries.push(v));
   salaries.sort((a, b) => a - b);
-  return { name: role.name, salaries, median: percentile(salaries, 0.5) };
+  return { name: role.name, salaries };
 });
-withScores.sort((a, b) => a.median - b.median);
 
-const categoryNames = withScores.map((r) => r.name);
-const boxData = [];
-const outlierData = [];
+// Sort by median ascending so the axis reads low-to-high bottom-to-top —
+// per the spec's "sort by median for easier comparison" guidance.
+withSalaries.sort((a, b) => median(a.salaries) - median(b.salaries));
 
-withScores.forEach((role, catIndex) => {
-  const salaries = role.salaries;
-  const q1 = percentile(salaries, 0.25);
-  const median = percentile(salaries, 0.5);
-  const q3 = percentile(salaries, 0.75);
-  const iqr = q3 - q1;
-  const lowerFence = q1 - 1.5 * iqr;
-  const upperFence = q3 + 1.5 * iqr;
-
-  const inliers = salaries.filter((v) => v >= lowerFence && v <= upperFence);
-  const outliers = salaries.filter((v) => v < lowerFence || v > upperFence);
-
-  const color = t.palette[catIndex];
-  boxData.push({
-    value: [inliers[0], q1, median, q3, inliers[inliers.length - 1]],
-    itemStyle: { color: t.elevatedBg, borderColor: color, borderWidth: 3 },
-  });
-  outliers.forEach((v) => {
-    outlierData.push({
-      value: [v, catIndex],
-      itemStyle: {
-        color: color,
-        opacity: 0.85,
-        borderColor: t.pageBg,
-        borderWidth: 1,
-      },
-    });
-  });
-});
+const categoryNames = withSalaries.map((r) => r.name);
+const rawSource = withSalaries.map((r) => r.salaries);
+const overallMedian = median(
+  withSalaries.flatMap((r) => r.salaries).sort((a, b) => a - b),
+);
 
 // --- Init ---------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
 
 // --- Option ---------------------------------------------------------------
+// Quartiles, whiskers (1.5*IQR) and outliers are computed by ECharts' own
+// built-in "boxplot" dataset transform (registered with the boxplot chart,
+// no extra import needed) rather than reimplemented by hand. The transform
+// yields two result sets: boxData (dataset[1]) and outliers (dataset[2]).
 chart.setOption({
   animation: false,
   color: t.palette,
@@ -110,6 +86,19 @@ chart.setOption({
     left: "center",
     textStyle: { color: t.ink, fontSize: 24, fontWeight: 500 },
   },
+  dataset: [
+    { source: rawSource },
+    {
+      fromDatasetIndex: 0,
+      transform: {
+        type: "boxplot",
+        config: {
+          itemNameFormatter: (params) => categoryNames[params.value],
+        },
+      },
+    },
+    { fromDatasetIndex: 1, fromTransformResult: 1 },
+  ],
   grid: { left: 40, right: 70, top: 100, bottom: 90, containLabel: true },
   xAxis: {
     type: "value",
@@ -134,14 +123,42 @@ chart.setOption({
     {
       name: "Salary distribution",
       type: "boxplot",
-      data: boxData,
+      datasetIndex: 1,
+      encode: { x: [1, 2, 3, 4, 5], y: 0 },
+      // colorBy:"data" + boxplot's own stroke-only visualDrawType makes
+      // ECharts cycle the Imprint palette across the box *borders* per
+      // category automatically, while the fill stays a constant elevated
+      // surface — the hollow-box look, driven by the library itself rather
+      // than per-item itemStyle bookkeeping.
+      colorBy: "data",
       boxWidth: [16, 32],
+      itemStyle: { color: t.elevatedBg, borderWidth: 3 },
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          color: t.ink,
+          fontSize: 13,
+          formatter: `Overall median: $${Math.round(overallMedian)}k`,
+          position: "insideEndTop",
+        },
+        data: [{ xAxis: overallMedian }],
+      },
     },
     {
       name: "Outliers",
       type: "scatter",
-      data: outlierData,
+      datasetIndex: 2,
+      encode: { x: 1, y: 0 },
       symbolSize: 13,
+      itemStyle: {
+        color: (params) =>
+          t.palette[categoryNames.indexOf(params.value[0]) % t.palette.length],
+        opacity: 0.85,
+        borderColor: t.pageBg,
+        borderWidth: 1,
+      },
     },
   ],
 });
