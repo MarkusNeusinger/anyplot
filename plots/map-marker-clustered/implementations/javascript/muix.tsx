@@ -13,6 +13,9 @@ import { useXScale, useYScale } from "@mui/x-charts/hooks";
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
+const MARGIN = { top: 24, right: 56, bottom: 84, left: 96 };
+const TITLE_HEIGHT = 56;
+const LEGEND_HEIGHT = 48;
 
 // --- Reproducible LCG (seed 42) — no Math.random() in the browser harness ---
 let seed = 42;
@@ -66,8 +69,11 @@ for (let i = 0; i < RURAL_STORE_COUNT; i++) {
 }
 
 // --- Grid-based proximity clustering (fixed zoom level) ---------------------
-const LAT_CELL = 0.42;
-const LON_CELL = 0.55;
+// Cell size tuned so adjacent cluster bubbles don't visually overlap at this
+// canvas scale (larger cells merge nearby stores into a single bubble
+// instead of leaving crowded neighbors).
+const LAT_CELL = 0.55;
+const LON_CELL = 0.75;
 
 const cells = new Map();
 stores.forEach((store) => {
@@ -95,6 +101,49 @@ const clusters = Array.from(cells.values()).map((members, i) => ({
   count: members.length,
 }));
 
+// Bubble radius (px) per cluster-size tier — MUI X's ScatterPlot `markerSize`
+// is the marker *radius* in CSS px (confirmed by measuring the rendered PNG:
+// a markerSize=17 bubble paints a 33-34px-diameter circle), so these match
+// the `markerSize` values passed to the series below directly.
+function radiusPxFor(count) {
+  if (count > 6) return 30;
+  if (count >= 2) return 17;
+  return 7;
+}
+
+// Nudge overlapping cluster centroids apart in lon/lat space so every
+// bubble's full circumference stays visible, converting the pixel-space
+// circle-circle separation back through the known linear axis scale.
+const plotWidthPx = width - MARGIN.left - MARGIN.right;
+const plotHeightPx = height - TITLE_HEIGHT - LEGEND_HEIGHT - MARGIN.top - MARGIN.bottom;
+const pxPerLon = plotWidthPx / (LON_RANGE[1] - LON_RANGE[0]);
+const pxPerLat = plotHeightPx / (LAT_RANGE[1] - LAT_RANGE[0]);
+const MIN_GAP_PX = 8;
+for (let pass = 0; pass < 40; pass++) {
+  let moved = false;
+  for (let i = 0; i < clusters.length; i++) {
+    for (let j = i + 1; j < clusters.length; j++) {
+      const a = clusters[i];
+      const b = clusters[j];
+      const dxPx = (b.x - a.x) * pxPerLon;
+      const dyPx = (b.y - a.y) * pxPerLat;
+      const distPx = Math.hypot(dxPx, dyPx) || 0.001;
+      const minDistPx = radiusPxFor(a.count) + radiusPxFor(b.count) + MIN_GAP_PX;
+      if (distPx < minDistPx) {
+        const pushPx = (minDistPx - distPx) / 2;
+        const nx = dxPx / distPx;
+        const ny = dyPx / distPx;
+        a.x -= (nx * pushPx) / pxPerLon;
+        a.y -= (ny * pushPx) / pxPerLat;
+        b.x += (nx * pushPx) / pxPerLon;
+        b.y += (ny * pushPx) / pxPerLat;
+        moved = true;
+      }
+    }
+  }
+  if (!moved) break;
+}
+
 const individualStores = clusters.filter((c) => c.count === 1);
 const smallClusters = clusters.filter((c) => c.count >= 2 && c.count <= 6);
 const largeClusters = clusters.filter((c) => c.count > 6);
@@ -107,14 +156,98 @@ const TITLE =
 const TITLE_FONT_DEFAULT = 22;
 const titleFontSize =
   TITLE.length > 67 ? Math.round(TITLE_FONT_DEFAULT * (67 / TITLE.length)) : TITLE_FONT_DEFAULT;
-const TITLE_HEIGHT = 56;
-const LEGEND_HEIGHT = 48;
 
 const SIZE_LEGEND = [
-  { label: "1 store", diameter: 9 },
-  { label: "2–6 stores", diameter: 19 },
+  { label: "1 store", diameter: 7 },
+  { label: "2–6 stores", diameter: 17 },
   { label: "7+ stores", diameter: 30 },
 ];
+
+// --- Lightweight static basemap approximation --------------------------------
+// MUI X community has no tile/geo layer, so the geographic context the spec
+// asks for ("a basemap with appropriate geographic context") is drawn as a
+// simplified vector coastline + strait/sound inlet + state/international
+// boundary lines, positioned in real lon/lat and projected through the live
+// axis scale — the same technique ClusterCountLabels already uses.
+const PACIFIC_COAST = [
+  [-124.35, 43.7],
+  [-124.15, 44.2],
+  [-124.35, 44.9],
+  [-124.4, 45.6],
+  [-124.0, 46.15],
+  [-124.35, 46.5],
+  [-124.4, 47.3],
+  [-124.45, 47.9],
+  [-124.5, 48.3],
+];
+
+const PUGET_SOUND = [
+  [-123.3, 48.25],
+  [-122.9, 48.3],
+  [-122.6, 48.1],
+  [-122.4, 47.75],
+  [-122.35, 47.45],
+  [-122.5, 47.05],
+  [-122.65, 47.15],
+  [-122.55, 47.55],
+  [-122.65, 47.9],
+  [-122.95, 48.15],
+];
+
+// Straight-line approximations, close enough at this zoom level.
+const CANADA_BORDER_LAT = 49.0;
+const WA_OR_BORDER_LAT = 46.0;
+
+function GeographicBackdrop() {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  if (!xScale || !yScale) return null;
+
+  const project = ([lon, lat]) => `${xScale(lon)},${yScale(lat)}`;
+
+  // Ocean strip: coastline plus the two viewport corners on the west edge
+  // (lon = LON_RANGE[0]) so the shape closes into a clean west-of-coast fill.
+  const oceanPoints = [
+    [LON_RANGE[0], LAT_RANGE[0]],
+    ...PACIFIC_COAST,
+    [LON_RANGE[0], LAT_RANGE[1]],
+  ]
+    .map(project)
+    .join(" ");
+
+  const soundPoints = PUGET_SOUND.map(project).join(" ");
+
+  // "Water → blue" per the Imprint semantic-color convention, at low alpha
+  // so it reads as a tint rather than a data series.
+  const waterColor = t.palette[2];
+
+  return (
+    <g pointerEvents="none">
+      <polygon points={oceanPoints} fill={waterColor} opacity={0.22} stroke="none" />
+      <polygon points={soundPoints} fill={waterColor} opacity={0.22} stroke="none" />
+      <line
+        x1={xScale(LON_RANGE[0])}
+        y1={yScale(CANADA_BORDER_LAT)}
+        x2={xScale(LON_RANGE[1])}
+        y2={yScale(CANADA_BORDER_LAT)}
+        stroke={t.inkSoft}
+        strokeWidth={1.25}
+        strokeDasharray="6 4"
+        opacity={0.5}
+      />
+      <line
+        x1={xScale(-123.6)}
+        y1={yScale(WA_OR_BORDER_LAT)}
+        x2={xScale(LON_RANGE[1])}
+        y2={yScale(WA_OR_BORDER_LAT)}
+        stroke={t.inkSoft}
+        strokeWidth={1.25}
+        strokeDasharray="6 4"
+        opacity={0.5}
+      />
+    </g>
+  );
+}
 
 // Cluster-count labels, drawn at the live axis scale so each count sits
 // exactly centered on its bubble — the honest way to show "how many
@@ -166,7 +299,7 @@ export default function Chart() {
       <ChartContainer
         width={width}
         height={chartHeight}
-        margin={{ top: 24, right: 56, bottom: 84, left: 96 }}
+        margin={MARGIN}
         series={[
           {
             type: "scatter",
@@ -205,7 +338,7 @@ export default function Chart() {
             min: LON_RANGE[0],
             max: LON_RANGE[1],
             label: "Longitude (°)",
-            valueFormatter: (v) => `${v.toFixed(0)}°`,
+            valueFormatter: (v) => `${Math.abs(v).toFixed(0)}°${v < 0 ? "W" : "E"}`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
@@ -216,7 +349,7 @@ export default function Chart() {
             min: LAT_RANGE[0],
             max: LAT_RANGE[1],
             label: "Latitude (°)",
-            valueFormatter: (v) => `${v.toFixed(0)}°`,
+            valueFormatter: (v) => `${Math.abs(v).toFixed(0)}°${v < 0 ? "S" : "N"}`,
             tickLabelStyle: { fontSize: 14, fill: t.inkSoft },
             labelStyle: { fontSize: 16, fill: t.ink },
           },
@@ -227,6 +360,7 @@ export default function Chart() {
           "& .MuiChartsGrid-line": { stroke: t.grid, strokeWidth: 1 },
         }}
       >
+        <GeographicBackdrop />
         <ChartsGrid horizontal vertical />
         <ScatterPlot skipAnimation />
         <ClusterCountLabels />
