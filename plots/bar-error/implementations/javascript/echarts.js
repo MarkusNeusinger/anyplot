@@ -85,6 +85,18 @@ chart.setOption({
       itemStyle: { color: t.palette[0] },
       data: means,
       z: 2,
+      markLine: {
+        symbol: "none",
+        silent: true,
+        label: {
+          formatter: "Average: {c} kg",
+          color: t.inkSoft,
+          fontSize: 13,
+          position: "insideEndTop",
+        },
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        data: [{ type: "average", name: "Average yield" }],
+      },
     },
     {
       type: "custom",
