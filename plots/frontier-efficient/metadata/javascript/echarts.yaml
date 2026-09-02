@@ -1,0 +1,240 @@
+library: echarts
+language: javascript
+specification_id: frontier-efficient
+created: '2026-09-02T01:05:35Z'
+updated: '2026-09-02T01:20:47Z'
+generated_by: claude-sonnet
+workflow_run: 33577339308
+issue: 3342
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/javascript/echarts/plot-dark.html
+quality_score: 93
+review:
+  strengths:
+  - Correct closed-form Markowitz/Merton efficient frontier computed in-browser via
+    a real Gauss-Jordan matrix inverse, with no external math library
+  - imprint_seq continuous colormap correctly applied to Sharpe ratio (single-polarity
+    data) with a clearly labeled High/Low Sharpe colorbar
+  - 'All three attempt-1 weaknesses are resolved: legend swatches now match rendered
+    line colors, the Capital Market Line uses the neutral ink tone (dashed) instead
+    of the semantically-mismatched amber, and scatter marker size/opacity were trimmed
+    to ease density'
+  - Min-variance and max-Sharpe portfolios are directly labeled on the chart, aiding
+    data storytelling beyond the legend alone
+  - Deterministic LCG-seeded random-portfolio generation gives full reproducibility
+  - Both themes are fully theme-adaptive and legible; backgrounds match the spec tokens;
+    data colors are identical between renders
+  weaknesses:
+  - The scatter cloud in the 8-13% risk band remains moderately dense even after the
+    attempt-1 trim; a further opacity reduction (~0.35) or a slightly smaller symbolSize
+    in that band would help distinguish overlapping points.
+  - Both the Efficient Frontier and Capital Market Line use the same ink color (differentiated
+    only by line width/dash), which is a defensible neutral-reference-line choice
+    but means no series in this chart uses the Imprint categorical palette (#009E73
+    or the rest of t.palette) — worth a design note for consistency with other catalog
+    entries, though not a correctness issue given the continuous-encoding data story
+    here.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1
+      Chrome: Title, legend row, both axis titles, and % tick labels are all dark and clearly readable. Grid lines thin and subtle.
+      Data: ~400-point scatter cloud colored on a continuous blue-to-green imprint_seq scale by Sharpe ratio, labeled High/Low Sharpe colorbar; thick solid black efficient-frontier curve; black dashed capital market line; diamond and pin glyphs directly label Min Variance and Max Sharpe with no overlap.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17
+      Chrome: Title, legend, axis titles, and tick labels render in light/off-white tones, clearly legible. No dark-on-dark failures. Legend swatches for Efficient Frontier and Capital Market Line now correctly match the rendered ink color (attempt-1 defect fixed).
+      Data: Scatter cloud and colorbar colors are pixel-identical to the light render; only chrome (frontier/CML lines, markers) flipped from black/dark-gray to white/light-gray.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All text explicitly sized, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between labels, data, or legend
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: symbolSize/opacity trimmed per attempt-1 feedback but 8-13% risk
+          band still moderately dense
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential blue-green scale, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed, good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units (%)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: imprint_seq correctly used; attempt-1 legend-swatch mismatch is fixed
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Continuous color encoding, custom pin/diamond glyphs, direct labels
+          above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, legend-color bug resolved
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point via bold frontier curve and labeled key portfolios;
+          CML now neutral ink instead of amber
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct efficient-frontier scatter/line chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Frontier curve, scatter, min-var/max-sharpe markers, CML all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Risk on X, return on Y, correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Mandated title format; legend labels match series
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All plot-type aspects shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible 5-asset universe, correlation structure, risk-free rate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Returns/risk ranges match spec's typical domain values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Helper functions justified by lack of browser linear-algebra library
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; vanilla JS
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, clean structure
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows mount-node contract, animation disabled
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: itemStyle/legend-icon gotcha from attempt 1 now handled correctly
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: visualMap continuous mapping, custom pin/diamond symbols
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - correlation-matrix
+  styling:
+  - publication-ready
+  - alpha-blending
+  - custom-colormap

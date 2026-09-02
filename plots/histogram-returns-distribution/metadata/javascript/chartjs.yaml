@@ -1,0 +1,251 @@
+library: chartjs
+language: javascript
+specification_id: histogram-returns-distribution
+created: '2026-09-02T01:16:40Z'
+updated: '2026-09-02T01:23:05Z'
+generated_by: claude-sonnet
+workflow_run: 33578393480
+issue: 3751
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Correct histogram plus fitted normal curve overlay with density normalization,
+    exactly matching the specification's core requirement
+  - Tail regions beyond +/-2 standard deviations are highlighted with the Imprint
+    semantic red anchor, directly satisfying the 'highlight tail regions' requirement
+  - Custom Chart.js canvas plugin renders a polished on-chart stats box (mean, std
+    dev, skewness, kurtosis) using afterDraw and roundRect
+  - Deterministic fixed-seed LCG data generation with a blended fat-tail mixture produces
+    genuine skew/kurtosis rather than a pure Gaussian, matching the risk-analysis
+    narrative
+  - Theme-adaptive chrome (title, subtitle, ticks, grid, stats box) is correctly threaded
+    through ANYPLOT_TOKENS and is legible in both light and dark renders
+  weaknesses:
+  - Legend swatch for 'Daily Returns' renders matte-red (Chart.js uses the first backgroundColor
+    array entry as the legend color) even though the vast majority of bars are brand
+    green -- misleading at a glance. Force the swatch via plugins.legend.labels.generateLabels
+    to use t.palette[0], or otherwise decouple the legend color from the per-bar tail-highlight
+    array.
+  - 'Tail-vs-body bar coloring relies on red vs. green hue alone; the luminance gap
+    between #AE3030 and #009E73 is modest, so colorblind readers get limited redundant
+    signal beyond bar position. Consider a thin ink-color edge stroke on the tail
+    bars for redundant encoding.'
+  - The fitted normal curve uses t.palette[2] (blue), skipping canonical position
+    2 (t.palette[1], lavender) without a strong semantic justification -- the style
+    guide says to use positions 1-to-N in order by default unless a semantic exception
+    applies.
+  - Stats box lines are not vertically aligned into columns (label vs. value) since
+    the text is not tabular-formatted, giving a slightly ragged right edge to the
+    numbers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "histogram-returns-distribution · javascript · chartjs · anyplot.ai" in dark ink, clearly readable; italic gray subtitle "Matte-red bars mark returns beyond ±2σ (tail risk)" readable; top legend with two swatches ("Normal (Fitted)" hollow blue-outlined box, "Daily Returns" solid red box) in dark text; x-axis "Daily Return (%)" ticks from -4.6% to 2.8%+ in soft ink; y-axis "Density" ticks 0 to 0.45 in soft ink; stats callout box (Mean/Std Dev/Skewness/Kurtosis) top-right with a light elevated-bg fill and thin border, dark text.
+      Data: Histogram bars mostly brand green (#009E73) across the central bulk of the distribution, with matte-red (#AE3030) bars at the outer bins beyond +/-2 sigma on both tails; a smooth blue (#4467A3) fitted normal curve overlays the bars, peaking slightly left of the tallest green bar (reflecting the fat-tail/negative-skew data).
+      Legibility verdict: PASS -- all text is clearly readable against the light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Title and subtitle render in light/off-white text, clearly readable; legend text is light-colored and readable; axis tick labels and axis titles are light gray/off-white and readable; stats box uses a dark elevated fill with a thin light-ish border and light text, fully legible; grid lines are faint and subtle.
+      Data: Same brand-green body bars, matte-red tail bars, and blue fitted curve as the light render -- data colors are identical between themes, confirming only chrome flipped.
+      Legibility verdict: PASS -- no dark-on-dark failures; all title/axis/tick/legend/stats-box text is clearly visible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; readable at full size and proportioned
+          well in both themes; title fits without clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, subtitle, legend, stats box, and chart
+          area
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 full-width bins with no gaps, 3.5px curve line -- well adapted
+          to 252-observation density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: Tail-vs-body coloring leans on red-vs-green hue with only a modest
+          luminance gap; position is the main redundant cue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Daily Return (%)" has units; "Density" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Body/tail bars correctly use palette[0] green and semantic palette[4]
+          red, but the fitted curve uses palette[2] blue, skipping canonical position
+          2 (lavender) without a stated semantic reason
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom stats-box plugin, tail-risk narrative subtitle, and semantic
+          color use are clearly above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: X grid removed, Y grid subtle, borderless bars -- refined, but stats-box
+          text isn't columnar and legend swatch is inconsistent
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtitle plus color-coded tails plus stats box together guide the
+          viewer straight to the tail-risk insight
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct histogram with normal overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normal overlay, stats box (mean/std/skew/kurtosis), tail highlighting,
+          density normalization, and appropriate bin count all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = daily return %, Y = density, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Title format correct; legend labels match dataset names but the 'Daily
+          Returns' swatch color (red) doesn't represent the dominant bar color (green)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows fat tails, negative skew, and excess kurtosis -- the key aspects
+          a returns-distribution histogram should demonstrate
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, real-world equity daily-returns scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Mean/std/skew/kurtosis values are realistic for daily equity returns
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small helper functions (LCG, normalPdf) and a plugin object are used,
+          justified by the library's own guidance for seeded RNG and custom drawing
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately complex, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Mixed bar+line chart with order-based layering and the official plugin
+          API for custom drawing
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom afterDraw plugin drawing a styled stats callout is a Chart.js-specific
+          technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling: []
