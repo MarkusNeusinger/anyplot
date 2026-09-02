@@ -132,6 +132,38 @@ const RISING = t.palette[0];
 const FALLING = "#AE3030";
 const tickStep = Math.max(1, Math.ceil((lastCol + 1) / 15));
 
+// --- Zebra row shading every other box: keeps dense columns (many stacked
+// X/O glyphs at the box interval) reading as discrete symbols rather than a
+// solid block, without shrinking the data-label font below VQ-01 comfort ---
+const allBoxes = columns.flatMap((c) => c.boxes);
+const minBoxAll = Math.min(...allBoxes);
+const maxBoxAll = Math.max(...allBoxes);
+const rowBands = [];
+for (let b = minBoxAll; b <= maxBoxAll; b += 2) {
+  rowBands.push({
+    from: (b - 0.5) * BOX_SIZE,
+    to: (b + 0.5) * BOX_SIZE,
+    color: Highcharts.color(t.grid).setOpacity(0.15).get(),
+  });
+}
+
+// --- Current reversal-zone highlight: shades the most recent column so the
+// reader can spot the live reversal at a glance (Highcharts xAxis.plotBands,
+// a core capability distinct from a plain scatter+dataLabels rendering) ----
+const lastColumn = columns[lastCol];
+const reversalZoneColor = Highcharts.color(lastColumn.direction === 1 ? RISING : FALLING)
+  .setOpacity(0.1)
+  .get();
+
+// --- Price target via the classic vertical count method (spec Applications):
+// target = extreme of the active column + column height x box size x
+// reversal count, projected in the column's own direction --------------------
+const lastBoxCount = lastColumn.boxes.length;
+const priceTarget =
+  lastColumn.direction === 1
+    ? Math.min(...lastColumn.boxes) * BOX_SIZE + lastBoxCount * BOX_SIZE * REVERSAL_BOXES
+    : Math.max(...lastColumn.boxes) * BOX_SIZE - lastBoxCount * BOX_SIZE * REVERSAL_BOXES;
+
 Highcharts.chart("container", {
   chart: {
     type: "scatter",
@@ -160,6 +192,14 @@ Highcharts.chart("container", {
     lineColor: t.inkSoft,
     tickColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: [
+      {
+        from: lastCol - 0.5,
+        to: lastCol + 0.5,
+        color: reversalZoneColor,
+        zIndex: 0,
+      },
+    ],
   },
   yAxis: {
     title: { text: "Price ($)", style: { color: t.inkSoft, fontSize: "16px" } },
@@ -167,6 +207,22 @@ Highcharts.chart("container", {
     gridLineColor: t.grid,
     lineColor: t.inkSoft,
     labels: { style: { color: t.inkSoft, fontSize: "14px" } },
+    plotBands: rowBands,
+    plotLines: [
+      {
+        value: priceTarget,
+        color: t.amber,
+        dashStyle: "ShortDot",
+        width: 2,
+        zIndex: 5,
+        label: {
+          text: `Price target (vertical count): $${priceTarget.toFixed(0)}`,
+          align: "right",
+          x: -6,
+          style: { color: t.amber, fontSize: "12px", fontWeight: "600" },
+        },
+      },
+    ],
   },
   legend: {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
@@ -186,7 +242,8 @@ Highcharts.chart("container", {
         verticalAlign: "middle",
         align: "center",
         y: 1,
-        style: { fontWeight: "700", fontSize: "16px", textOutline: "none" },
+        padding: 0,
+        style: { fontWeight: "700", fontSize: "14px", textOutline: "none" },
       },
     },
   },
