@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: choropleth-basic
 created: '2026-09-02T15:43:31Z'
-updated: '2026-09-02T15:49:20Z'
+updated: '2026-09-02T16:00:35Z'
 generated_by: claude-sonnet
 workflow_run: 33648778968
 issue: 3069
@@ -12,52 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/choroplet
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/choropleth-basic/javascript/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 86
 review:
   strengths:
-  - Correct Imprint sequential colormap (imprint_seq, green → blue) for the continuous
+  - 'Canvas balance fixed: LON_MAX tightened from 195 to 178 so the region mass is
+    now horizontally centered, with left/right whitespace visually matched in both
+    renders'
+  - Central Asia / South Asia / East Asia polygons were re-vertexed, clearing the
+    crowded shared boundary flagged in attempt 1 while keeping the silhouettes recognizable
+  - Correct Imprint sequential colormap (imprint_seq, green -> blue) for the continuous
     renewable-share data, with identical data colors between light and dark renders
-  - 'Excellent ''missing data'' handling: Antarctica rendered as a dashed muted-gray
-    region with an in-place ''No data'' label and a matching swatch in the legend,
-    exactly matching the spec''s requirement'
-  - Clever theme-adaptive text coloring — the 'No data' label color is bound to t.pageBg
-    so it always contrasts against the muted swatch fill in both themes
-  - Title matches the mandated '{spec-id} · {language} · {library} · anyplot.ai' format
-    exactly, with a clear, neutral descriptive subtitle for context
+  - 'Excellent missing-data handling: Antarctica rendered as a dashed muted-gray region
+    with an in-place ''No data'' label and a matching swatch in the legend, exactly
+    matching the spec''s requirement'
   - Genuine (non-fake) hover tooltips via Highcharts pointFormatter over invisible
-    per-region hit markers — real interactivity, not a simulated static effect
+    per-region hit markers -- real interactivity, not a simulated static effect
+  - Title matches the mandated '{spec-id} . {language} . {library} . anyplot.ai' format
+    exactly, with a clear, neutral descriptive subtitle for context
   - Realistic, well-reasoned regional data ordering (hydro-heavy South America highest,
     oil/gas-exporting Middle East lowest) for a neutral, non-controversial topic
   weaknesses:
-  - 'Unbalanced canvas margins: the map content (North America through Oceania) only
-    spans roughly the left 87% of the plot width, leaving a noticeably larger empty
-    margin on the right than on the left — tighten LON_MIN/LON_MAX or re-center the
-    regions so left/right whitespace is balanced'
-  - Region silhouettes are quite coarse/blocky (hand-authored polygons), and adjacent
-    regions like Central Asia and East Asia visually crowd against each other at their
-    shared boundary — refining vertex placement would raise the perceived polish
-  - Code relies on six custom helper functions (hexToRgb, lerpColor, colorForValue,
-    bounds, drawChoropleth, drawLegend) for a fairly elaborate manual-choropleth-on-scatter
-    workaround; some of this is inherent to working around the missing highmaps module,
-    but consolidating where possible would simplify the structure
+  - Region silhouettes remain coarse/blocky (hand-authored polygons) -- Aesthetic
+    Sophistication (DE-01) is still capped by this; refining vertex density on the
+    largest shapes (North America, South America) would raise perceived polish
+  - No region reaches the top '60%+' legend bucket (max value is South America at
+    55%) -- a region in the 60-70% band would let readers see the full color range
+    actually in use
+  - Code still relies on five custom helper routines (hexToRgb, lerpColor, colorForValue,
+    drawChoropleth, drawLegend) for the manual-choropleth-on-scatter workaround --
+    largely inherent to the missing highmaps module, but still far from the KISS imports->data->plot->save
+    ideal (CQ-01)
   - No strong visual emphasis/callout on the highest or lowest region (e.g., South
-    America at 55% vs. Middle East at 5%) — optional, since the spec doesn't explicitly
-    request annotations, but would strengthen the data storytelling
+    America at 55% vs. Middle East at 5%) -- optional since the spec doesn't explicitly
+    request annotations, but would strengthen the data storytelling (DE-03)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "choropleth-basic · javascript · highcharts · anyplot.ai" in bold dark ink, top-left; subtitle "Renewable share of electricity generation by world region — illustrative data" in a softer dark gray beneath it. Both fully readable against the light background. A manual gradient legend bar (green → blue) sits bottom-left with "0%", "30%", "60%+" tick labels and a "Renewable electricity generation share" caption above it, plus a dashed gray "No data" swatch to its right — all text clearly legible.
-      Data: 13 hand-drawn world-region polygons filled with a green-to-blue sequential gradient (Imprint imprint_seq) based on each region's renewable-electricity-share value — South America and the Middle East-adjacent hexagon read at the color extremes, matching their assigned values. Antarctica is rendered as a dashed, muted dark-gray shape with a light "No data" label inside it, legible against the darker swatch. Region boundaries are outlined with thin page-background-colored strokes for separation without visual noise.
-      Legibility verdict: PASS — all title, subtitle, legend, and annotation text is clearly readable against the light background; no light-on-light issues found.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "choropleth-basic · javascript · highcharts · anyplot.ai" in bold dark ink, top-left; subtitle "Renewable share of electricity generation by world region — illustrative data" in a softer dark gray beneath it. Both fully readable against the light background. A manual gradient legend bar (green -> blue) sits bottom-left with "0%", "30%", "60%+" tick labels and a "Renewable electricity generation share" caption above it, plus a dashed gray "No data" swatch to its right -- all text clearly legible.
+      Data: 13 hand-drawn world-region polygons filled with a green-to-blue sequential gradient (Imprint imprint_seq) based on each region's renewable-electricity-share value. The region mass is now horizontally centered in the plot area, with visually balanced left/right margins (the attempt-1 right-side imbalance is gone). Antarctica is rendered as a dashed, muted dark-gray shape with a light "No data" label inside it, legible against the darker swatch. Region boundaries are outlined with thin page-background-colored strokes for separation without visual noise.
+      Legibility verdict: PASS -- all title, subtitle, legend, and annotation text is clearly readable against the light background; no light-on-light issues found.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
       Chrome: Same title and subtitle, now rendered in light ink/soft-light gray, fully legible against the dark background. The same gradient legend bar and labels appear bottom-left in light-colored text, with the "No data" swatch now shown as a lighter muted-gray dashed shape.
-      Data: The region fill colors are identical to the light render (same green-to-blue gradient positions per region) — only the chrome (background, text, region-boundary stroke color which uses the page background) flipped. Antarctica's "No data" swatch/region is now a lighter gray with a dark "No data" label, which remains legible because the label color is bound to the (now dark) page background, correctly contrasting with the lighter muted swatch. No dark-on-dark text failures were found.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, including the theme-adaptively colored "No data" label.
+      Data: The region fill colors are identical to the light render (same green-to-blue gradient positions per region) -- only the chrome (background, text, region-boundary stroke color which uses the page background) flipped. Antarctica's "No data" swatch/region is now a lighter gray with a dark "No data" label, which remains legible because the label color is bound to the (now dark) page background, correctly contrasting with the lighter muted swatch. No dark-on-dark text failures were found.
+      Legibility verdict: PASS -- all text is clearly readable against the dark background, including the theme-adaptively colored "No data" label.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -89,11 +91,11 @@ review:
           + label, not color alone
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Map content ends around 87% of plot width leaving a noticeably larger
-          empty margin on the right than the left; otherwise good use of canvas
+        passed: true
+        comment: 'Fixed: LON_MAX tightened from 195 to 178, region mass now horizontally
+          centered with balanced left/right whitespace'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,27 +111,29 @@ review:
         comment: Correct imprint_seq sequential colormap for single-polarity continuous
           data; theme-correct chrome and backgrounds in both renders
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        comment: Entirely custom-built choropleth (no library defaults available)
-          with a coherent color story, but region silhouettes are coarse/blocky
+        passed: false
+        comment: Coherent color story but region silhouettes remain coarse/blocky
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: No grid, hidden axes, clean gradient legend; some crowding between
-          adjacent region boundaries
+        passed: true
+        comment: 'Improved: Central Asia/South Asia/East Asia re-vertexed, clearing
+          the crowded shared boundary from attempt 1'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        comment: Color gradient creates clear regional hierarchy (hydro-heavy vs.
-          oil-heavy regions read instantly) without explicit annotations
+        passed: false
+        comment: Color gradient creates clear regional hierarchy without explicit
+          annotations or callouts
     spec_compliance:
       score: 15
       max: 15
@@ -138,25 +142,28 @@ review:
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: 'Functions as a genuine choropleth: regions shaded by value with
           a legend'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
+        passed: true
         comment: Color legend, sequential palette, visible-but-subtle boundaries,
-          and graceful missing-data handling all present; true map projection is infeasible
-          without the unavailable highmaps module
+          and graceful missing-data handling all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Lon/lat correctly mapped to region positions; all regions and values
           represented
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title format exact; legend labels (0%/30%/60%+/No data) match the
           data thresholds
     data_quality:
@@ -167,18 +174,21 @@ review:
         name: Feature Coverage
         score: 5
         max: 6
+        passed: true
         comment: Good spread from 5% to 55% plus a missing-data case; no region demonstrates
           the top '60%+' legend bucket
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Renewable electricity share by world region is a real, neutral, non-controversial
           scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Values align with real-world patterns (hydro-heavy South America
           highest, oil/gas Middle East lowest)
     code_quality:
@@ -189,29 +199,33 @@ review:
         name: KISS Structure
         score: 1
         max: 3
-        comment: Six custom helper functions (color interpolation, geometry, drawing)
-          go well beyond the imports→data→plot→save ideal, though partly inherent
-          to the manual-choropleth workaround
+        passed: false
+        comment: Five custom helper functions go well beyond the imports->data->plot->save
+          ideal, though largely inherent to the manual-choropleth workaround
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Fully deterministic hard-coded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: No imports beyond the Highcharts global and ANYPLOT_TOKENS
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: No fake functionality; complexity is justified by the manual-choropleth
           technique
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: No explicit width/height; animation disabled; credits disabled
     library_mastery:
       score: 6
@@ -221,6 +235,7 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
+        passed: false
         comment: Correct within the core-bundle constraint (no highmaps), but relies
           on a low-level scatter+SVGRenderer workaround rather than a native high-level
           map API
@@ -228,9 +243,10 @@ review:
         name: Distinctive Features
         score: 3
         max: 5
+        passed: false
         comment: Uses Highcharts' SVGRenderer for custom path/text drawing layered
           on a chart, a reasonably distinctive Highcharts capability
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
