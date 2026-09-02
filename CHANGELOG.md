@@ -55,6 +55,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   incident. Timeout recomputed to 62 min by the file's own formula (36 checks x 90 s + five
   non-retried probes). (#11209)
 
+- **The API image is built and its container smoke-tested before merge, not after** — the
+  first build attempt of a changed Dockerfile used to happen in Cloud Build, once the PR was
+  already on `main`; that is how the deploy-api trigger sat red from 2026-08-30 until #10821
+  with every PR check green throughout. The new `.github/workflows/ci-image.yml` builds
+  `api/Dockerfile` with Buildx (`push: false`, `load: true`, GHA layer cache), starts the
+  result with no database and no secrets, and asserts what only a running container can show:
+  `/health` answers, its `version` equals `pyproject.toml`'s (`api/version.py` falls back to
+  `0.0.0+unknown` when the installed dist-info is missing — silently, in a field `/health`,
+  `/openapi.json` and the MCP server all report), the OG disk fallback
+  `api/static/og-image.png` survived the runtime stage's COPY, and the process runs as uid
+  1000. Two hadolint steps gate both Dockerfiles at threshold `warning` with three named
+  exceptions in `api/Dockerfile`, so a warning of any other code blocks. Change detection
+  excludes `plots/**`: the plot pipeline's PRs touch nothing the image serves. Adopted from the
+  sibling repo kurrentschrift, which added the same job after its `pyproject.toml` fell out
+  of the runtime stage. (#11205)
+
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
   key file (`app/public/<key>.txt`, served by an explicit nginx `location` so crawler UAs
