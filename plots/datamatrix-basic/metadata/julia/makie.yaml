@@ -1,0 +1,253 @@
+library: makie
+language: julia
+specification_id: datamatrix-basic
+created: '2026-09-02T00:03:21Z'
+updated: '2026-09-02T00:20:25Z'
+generated_by: claude-sonnet
+workflow_run: 33573106018
+issue: 3811
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Directly resolves the attempt-1 weaknesses: the barcode is now built from individually
+    stroked poly! cells with colored lines!/text! overlays that visually teach the
+    ISO/IEC 16022 structure, instead of a plain heatmap! relying solely on caption
+    text'
+  - 'Both renders are theme-correct: title and caption chrome flip correctly between
+    INK/INK_SOFT tokens on the FAF8F1/1A1A17 page backgrounds, while the barcode card
+    itself stays fixed black-on-white (DM_BG/DM_INK) with a well-reasoned, explicitly
+    documented rationale that also matches the spec''s own ''high contrast black on
+    white'' requirement'
+  - 'Correct ISO/IEC 16022 structure: solid L-shaped finder pattern on the left column
+    + bottom row (green outline), alternating clock/timing track on the top row +
+    right column (blue outline), 3-module quiet zone, all clearly labeled'
+  - 'Idiomatic, distinctive Makie usage: layered poly! + lines! + text! composition
+    with DataAspect() for square cells, no fake interactivity, Random.seed!(42) for
+    reproducibility'
+  - Realistic, neutral pharmaceutical-serialization content pulled directly from the
+    spec's own Applications list
+  - No AR-08/AR-09 issues found; no edge clipping in either render (verified via pixel
+    inspection); saved canvas is exactly 2400x2400 (square canonical size)
+  weaknesses:
+  - Data region fill is still uniform random noise with no semantic pattern -- an
+    honest, documented simplification of out-of-scope ECC200 encoding, but a bit more
+    structured fill would sell the illustration further
+  - FINDER / CLOCK TRACK annotation labels are small (fontsize=11 on a 2400px canvas,
+    ~16px cap height) -- legible at full size but will shrink close to unreadable
+    at small thumbnail scales; consider bumping to ~13-14
+  - 'Library-mastery ceiling not fully reached: the poly!/lines!/text! layering is
+    a genuine distinctive-feature improvement over the prior generic heatmap!, but
+    still stops short of leveraging further Makie-specific capabilities (e.g. a legend/colorbar
+    recipe or Observable-driven layout)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white page background, consistent with #FAF8F1 -- not pure white. Confirmed via pixel sample (250, 248, 241).
+      Chrome: Title "Pharmaceutical Serialization · datamatrix-basic · julia · makie · anyplot.ai" in bold dark ink at the top, fully visible with no clipping (text starts well inside the top edge). Caption below the matrix ("Encodes "RX-88451-2024-A7" · 20x20 modules + quiet zone · finder pattern (green) + clock track (blue) per ISO/IEC 16022") renders in a softer dark gray, fully legible with no clipping at the bottom edge.
+      Data: The Data Matrix renders on a near-white card (#FFFDF6) with black modules -- high-contrast black-on-white per the spec's own mandate. A solid black column runs down the left edge and a solid black row along the bottom edge, outlined in Imprint green (#009E73) and labeled "FINDER" -- the L-shaped finder pattern. The top row and right column alternate black/white modules, outlined in Imprint blue (#4467A3) and labeled "CLOCK TRACK" -- the timing track. The interior is a dense pseudo-random black/white data region. A visible quiet zone (white border, 3 modules) surrounds the whole matrix before the card edge.
+      Legibility verdict: PASS -- all text is clearly readable against the light background; no light-on-light issues found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black page background, consistent with #1A1A17 -- not pure black. Confirmed via pixel sample (26, 26, 23).
+      Chrome: Title and caption both render in light ink (INK / INK_SOFT tokens: sampled caption glyph pixels at (184,183,176), clearly visible against the (26,26,23) page background) -- no dark-on-dark failures found anywhere in the chrome.
+      Data: The Data Matrix card and its black/white modules, plus the FINDER/CLOCK TRACK outlines and labels, are pixel-identical to the light render -- the card intentionally keeps its fixed DM_BG/DM_INK (white card, black modules) across both themes since a printed barcode must stay scanner-legible under any ambient lighting; this is a documented, deliberate exception to theme-adaptive chrome, not a bug (confirmed the surrounding page chrome, title and caption, do flip correctly with THEME).
+      Legibility verdict: PASS -- all title/caption text is clearly readable against the dark background; no dark-on-dark text found.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Dynamic title fontsize, explicit sizes throughout, all readable in
+          both themes; FINDER/CLOCK TRACK annotations are on the small side (fontsize=11)
+          for thumbnail scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: FINDER label sits in the quiet-zone margin, CLOCK TRACK label above
+          the card -- no overlap with title, caption, or modules
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Modules (~86px each) and outline strokes are large and unambiguous
+          at full and mobile scale
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Pure black/white core plus green/blue accents, no red-green as sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (2400x2400 square); matrix fills canvas with balanced
+          margins, no overflow or clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No literal axes needed for a matrix; caption fully describes content,
+          dimensions, and standard
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Finder outline uses Imprint palette 1 (#009E73), clock outline uses
+          Imprint palette 3 (#4467A3); theme chrome correctly flips; barcode fixed
+          black-on-white is a documented, spec-mandated exception
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        comment: Layered poly!/lines!/text! composition with a card-style lift against
+          the page background and documented design rationale; polished but not fully
+          publication-tier
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: All spines/ticks/grid removed, generous whitespace, visible quiet
+          zone as an intentional element
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        comment: Finder pattern and clock track are now visually differentiated with
+          color-coded outlines and labels (fixes attempt-1 weakness); the data region
+          itself remains undifferentiated noise
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Data Matrix 2D barcode visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zone, L-shaped finder, alternating clock track, high-contrast
+          black/white all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Matrix grid correctly maps module positions
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format matches {Descriptive Title} · {spec-id} · {language}
+          · {library} · anyplot.ai; no legend needed for a single-series barcode
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        comment: Shows finder pattern, clock track, data region, and quiet zone --
+          all structural aspects, now visually as well as textually
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        comment: Pharmaceutical serialization code, a real application listed directly
+          in the spec, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        comment: 20x20 modules plus quiet zone is plausible for a ~17-character alphanumeric
+          payload; random data-region fill is an honestly documented simplification
+          of ECC200 encoding
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        comment: Imports -> data -> plot -> save, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        comment: Clean, no fake UI or over-engineering; ECC200 scope limitation is
+          honestly commented
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current CairoMakie
+          API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Correct high-level Figure/Axis usage with DataAspect() to lock square-cell
+          aspect
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        comment: poly! per-module cells layered with lines!/text! overlays is a genuine
+          improvement over the prior generic heatmap! and demonstrates Makie's layered-plotting
+          model, though it stops short of further distinctive capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - edge-highlighting

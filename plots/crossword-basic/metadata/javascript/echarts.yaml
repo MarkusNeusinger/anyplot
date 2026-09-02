@@ -1,0 +1,268 @@
+library: echarts
+language: javascript
+specification_id: crossword-basic
+created: '2026-09-02T00:02:09Z'
+updated: '2026-09-02T00:17:44Z'
+generated_by: claude-sonnet
+workflow_run: 33573039162
+issue: 3805
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/echarts/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Cell numbers were increased from 12px to 15px per the previous review's feedback,
+    landing squarely in the recommended 14-16px range and reading clearly at native
+    resolution in both themes.
+  - Correct 180-degree rotational symmetry, built programmatically by mirroring the
+    authored top half rather than hand-tuning, guaranteeing the traditional newspaper-style
+    black-cell pattern by construction.
+  - The word-numbering algorithm correctly implements the standard across/down word-start
+    scan (blocked-neighbor + open-neighbor checks).
+  - Thoughtful, explicitly documented decision to keep the puzzle card's entry/blocked
+    cell fills fixed across themes as print content rather than chrome, correctly
+    preserving the black/white crossword metaphor instead of naively inverting it
+    with ANYPLOT_THEME.
+  - Idiomatic, clean use of ECharts' 'custom' series with renderItem + api.coord/api.size
+    for per-cell rect+text composition -- the correct advanced pattern for this kind
+    of grid rendering.
+  - Fully deterministic, no external dependencies, no fake interactivity, correct
+    mount-node contract (no explicit size/devicePixelRatio passed to echarts.init).
+  weaknesses:
+  - 'REGRESSION: the new outer-frame graphic added to give the grid a bolder border
+    (echarts.js, `outerFrameStroke = "#1A1A17"`, drawn via the `graphic` rect around
+    line 155-160) is hardcoded and not theme-adaptive. In the dark render this hex
+    is IDENTICAL to the dark page background (`#1A1A17`), so the entire outer border
+    vanishes on all four edges. Confirmed by pixel sampling: in plot-light.png, column
+    x=250 shows a solid near-black band from y=255 to y=265 (the 5px frame) sitting
+    on the `#FAF8F1`-derived cell background; in plot-dark.png the same y-range has
+    zero color transition -- the frame pixels are pixel-identical to the surrounding
+    page background. This is a dark-on-dark chrome failure (the frame is structural
+    chrome providing the card''s typographic hierarchy, not the print-content cell
+    fills, so it must flip with theme). Fix: derive outerFrameStroke from the theme
+    token, e.g. `const outerFrameStroke = t.ink;` (which is `#1A1A17` in light and
+    `#F0EFE8` in dark) so the border always contrasts against the page background
+    in both themes, while keeping entryFill/blockedFill/cellStroke fixed as intentional
+    print content.'
+  - DE-03 (Data Storytelling) still shows no visual emphasis beyond the base grid
+    -- unchanged from the previous review. Acceptable as a default for this plot type,
+    but a subtle treatment on the numbered starter cells could add polish if pursued
+    further.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "crossword-basic · javascript · echarts · anyplot.ai" in dark ink, centered, clearly legible. No axes, legend, or tick labels present (correctly omitted for a grid puzzle). A bold 5px near-black outer frame clearly bounds the 15x15 grid on all four sides, visually distinct from the thinner (1.5px) inner cell-divider lines -- confirmed by pixel sampling (solid near-black band from y=255-265 at the top edge, versus the #FAF8F1-derived surrounding page).
+      Data: A 15x15 crossword grid rendered as a monochrome print card -- off-white entry cells with dark grid dividers, solid near-black blocking cells, and dark clue numbers (15px, up from a previously-flagged 12px) in the top-left corner of word-start cells. Symmetric black-cell pattern visible (180-degree rotational symmetry).
+      Legibility verdict: PASS -- title, grid content, and the outer frame are all clearly readable against the light page background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title in light ink, clearly legible against the dark page background -- correctly theme-adaptive. HOWEVER, the outer frame border is NOT visible: it is hardcoded to #1A1A17, which is pixel-identical to the dark page background. Sampling the same column/row range that shows a clear frame band in the light render (y=255-265) shows zero color transition in the dark render -- the frame simply is not there. The puzzle card has no defined boundary on any edge in this theme.
+      Data: The crossword card content itself renders identically to the light version -- same off-white entry cells, same near-black blocking cells, same dark clue numbers on white cells. This is intentional and documented in the code (the puzzle grid is treated as fixed print content, not theme-adaptive chrome), and it works correctly for the cell fills. Interior cell-divider lines (#4A4A44) remain visible against the dark background since that gray has enough contrast against #1A1A17.
+      Legibility verdict: FAIL (frame only, not text) -- no dark-on-dark issue for any text (numbers sit on white entry cells, title follows the theme correctly), but the outer frame is a dark-on-dark chrome failure: its hardcoded stroke color exactly matches the page background, so the intended bold-border typographic hierarchy from the previous review's feedback is completely absent in this theme.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Cell numbers increased to 15px per prior feedback (within the recommended
+          14-16px range); title and numbers fully legible in both themes at native
+          resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between numbers, grid lines, cells, or title.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Blocked vs entry cells clearly and unambiguously distinguishable
+          in both renders; interior grid dividers visible but not dominant.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome design does not rely on hue for encoding; strong contrast
+          throughout.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Grid proportions and margins are good, but the outer frame -- the
+          puzzle card's boundary -- is entirely invisible in the dark render, leaving
+          the grid edge undefined on all four sides.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this plot type; title fully matches the mandated
+          format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'Outer frame stroke is hardcoded to #1A1A17, identical to the dark
+          theme''s page background -- a dark-on-dark chrome failure confirmed by pixel
+          sampling.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Added a bolder outer frame for typographic hierarchy per the previous
+          review, but it disappears entirely in the dark render, undermining the intended
+          polish in half the deliverable.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean spacing and line-weight differentiation in light mode, but
+          the same frame bug removes that refinement in dark mode.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Displays the puzzle structure without additional emphasis or hierarchy
+          beyond the baseline grid -- unchanged from the previous review.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct crossword grid type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: White entry / black blocking cells, numbering, 180-degree symmetry,
+          uniform grid lines, monochrome design -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Cell col/row mapped correctly to x/y with inverted y-axis for top-down
+          reading.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exactly matches the mandated pattern; no legend needed.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows blocked cells, entry cells, across-only starts, down-only starts,
+          and combined starts.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, realistic newspaper-style crossword grid.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15x15 with a realistic blocked-cell density matches real-world daily-crossword
+          conventions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat, sequential script; renderItem callback is required by the ECharts
+          custom-series API.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded/mirrored data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, well-commented, no fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Textbook idiomatic use of ECharts custom series (coordinateSystem,
+          renderItem, api.coord/api.size).
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Custom-series per-cell composition plus a graphic overlay for the
+          frame is a genuinely distinctive ECharts feature, not trivially replicated
+          elsewhere.
+  verdict: REJECTED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - grid-styling
