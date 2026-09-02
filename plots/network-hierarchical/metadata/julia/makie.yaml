@@ -1,0 +1,262 @@
+library: makie
+language: julia
+specification_id: network-hierarchical
+created: '2026-09-02T07:02:18Z'
+updated: '2026-09-02T07:23:48Z'
+generated_by: claude-sonnet
+workflow_run: 33600473612
+issue: 3343
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Direct fix of the prior attempt''s top-heavy composition: LEVEL_SPACING 1.3→1.6
+    and BOX_W 0.82→0.87 lift canvas usage to ~93% vertical / ~88% horizontal with
+    margins on every side instead of a quarter-canvas dead zone below the leaf row.'
+  - New STROKE_WIDTHS tapering (3.2→2.0 from CEO to Manager/IC) adds a second visual-hierarchy
+    channel layered on top of the level color coding, giving the org chart a genuine
+    seniority cue beyond the root's green accent alone.
+  - Edge alpha and width now scale down with sibling count (0.6→0.35 alpha, 1.8→1.1
+    width), visibly reducing clutter at high fan-out parents (VP Engineering's 3 directors,
+    VP Operations' 3 directors) versus the previous uniform-weight edges.
+  - 'Theme-adaptive chrome remains fully correct: level border colors (data channel)
+    are pixel-identical between light and dark, only background/text/edge chrome flips
+    (#FAF8F1 light / #1A1A17 dark confirmed).'
+  - Data is a plausible, neutral 24-node/4-level org chart with varied branching factors
+    (1-3 children per parent) that clearly shows organizational depth, within the
+    spec's 10-50 node guidance.
+  weaknesses:
+  - Canvas fill is now very tight (~93% vertical / ~88% horizontal content bounds)
+    — slightly past the 50-80% 'perfect' band; the left margin (~7.7% of width) is
+    noticeably wider than the right/top/bottom margins (~2-5%), giving a faint left-heavy
+    imbalance. A touch more xlims/ylims padding, or rebalancing colsize! for the legend
+    column, would let the composition breathe without reintroducing the earlier whitespace
+    problem.
+  - 'Library Mastery is still generic: the diagram is fundamentally poly!(Rect2f)
+    + lines! + text!, a pattern easily replicated in any plotting library. No Makie-distinctive
+    technique lifts it beyond correct-but-ordinary usage (GraphMakie/NetworkLayout
+    are unavailable in this runtime, so this is a soft note, not a requirement).'
+  - Longest node labels ('Finance Analyst', 'Dir. Enterprise') now fit with real padding
+    after the BOX_W widening, but the fixed box width has no slack for future longer
+    labels — worth keeping in mind for later edits, not a defect today.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, measured background pixel [250,248,241] matches #FAF8F1 exactly (not pure white, not dark).
+      Chrome: Title "network-hierarchical · julia · makie · anyplot.ai" in bold dark ink, clearly visible top-center with ample margin above and below. No axis ticks/gridlines (intentionally hidden via hidedecorations!/hidespines! — correct for a network diagram). "Level" legend sits at the right edge with dark, readable labels for CEO/VP/Director/Manager-IC, framevisible=false.
+      Data: 24 boxes across 4 levels, cream fill (#FFFDF6-family ELEVATED_BG) with colored strokes tapering in width from CEO (thickest, brand green #009E73) down to Manager/IC (thinnest, ochre) — VPs lavender, Directors blue, all in canonical Imprint order. Parent-child edges are soft gray lines whose alpha/width shrink at high fan-out parents, visibly reducing clutter at VP Engineering/VP Operations. Node labels (e.g. "Finance Analyst", "Dir. Enterprise") sit centered with real padding inside their boxes, fully visible, no clipping.
+      Legibility verdict: PASS — every title, node label, and legend entry is dark-on-light and clearly legible; no overlap between any two text elements, edges, or boxes.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 (not pure black, not light).
+      Chrome: Title renders in light ink, clearly visible against the dark background. Legend text is light-colored and readable. No axis chrome present (by design, consistent with the light render).
+      Data: Same 24 boxes and identical level-to-color mapping as the light render (green/lavender/blue/ochre strokes with the same tapering stroke widths) — confirms the data channel is theme-invariant. Box fills switch to the dark elevated surface, node text switches to light ink, edges remain soft gray at the same fan-out-scaled alpha/width.
+      Legibility verdict: PASS — no dark-on-dark failures; all node labels, title, and legend text are clearly legible light-on-dark, matching the light render's layout exactly (only chrome flipped).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout; all labels fit inside boxes with
+          real padding after BOX_W widening (0.82→0.87); dense 24-node label set will
+          read small at mobile thumbnail scale, which is inherent to the node count
+          rather than a sizing defect
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, boxes, or edges in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boxes and edges are clearly visible; fan-out-scaled edge alpha/width
+          fixes the prior clutter at high-fan-out parents
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 4 distinct hue families for levels, adequate contrast, no red-green-only
+          encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Content bounds span ~93% height / ~88% width — fixes the prior quarter-canvas
+          whitespace but now slightly exceeds the 50-80% 'perfect' band with a left
+          margin wider than the other three sides
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis needed for a network diagram; title format matches spec exactly
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Root uses brand green #009E73, remaining levels follow Imprint canonical
+          order; backgrounds theme-correct and measured exactly; data colors identical
+          across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Color-coded levels plus tapering stroke widths and a clean legend
+          show clear design intent above a generic default org chart
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/axis fully removed, translucent edges scaled by fan-out, legend
+          frame removed — detailed and polished, though whitespace is now tight rather
+          than generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast (root green) combined with stroke-width tapering creates
+          layered visual hierarchy that reads seniority at a glance, addressing the
+          prior attempt's single-cue weakness
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hierarchical/tree network layout, root at top
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with IDs/labels/levels, parent-child edges, root at top, straight
+          unarrowed edges, spacing prevents overlap at crowded levels
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Y encodes level depth, X encodes tree position via mean-of-children
+          layout, all nodes visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format exactly; legend labels match level
+          names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 4 levels, varied branching factors (1-3 children per parent) clearly
+          show organizational depth and branching
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral corporate org chart with real job titles
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 24 nodes within the spec's 10-50 node guidance, realistic team sizes
+          per director
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat top-level script, no unnecessary functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hand-authored data, no randomness involved
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Statistics all actually used (mean)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the layout algorithm, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png via current Makie API with px_per_unit=2
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of poly!/lines!/text!/Legend, hidedecorations!/hidespines!,
+          colsize! for legend column ratio
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Custom Rect2f node boxes, tapering strokewidths, and a hand-built
+          PolyElement legend are reasonable but not a particularly distinctive use
+          of Makie-specific capability; fundamentally replicable in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending
+  - edge-highlighting
