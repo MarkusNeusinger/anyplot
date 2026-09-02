@@ -41,7 +41,7 @@ skewness = mean(z_scores .^ 3)
 excess_kurtosis = mean(z_scores .^ 4) - 3
 
 # --- Histogram binning (manual, so tail bins can be recolored) ------------
-n_bins = 30
+n_bins = 22
 lo, hi = minimum(daily_returns), maximum(daily_returns)
 edges = range(lo, hi; length = n_bins + 1)
 bin_width = step(edges)
@@ -54,10 +54,7 @@ bin_centers = [edges[i] + bin_width / 2 for i in 1:n_bins]
 densities = counts ./ (n_days * bin_width)  # density normalization
 
 tail_threshold = 2 * std_return
-bar_colors = [
-    abs(c - mean_return) > tail_threshold ? ANYPLOT_AMBER : IMPRINT_PALETTE[1]
-    for c in bin_centers
-]
+is_tail_bin = [abs(c - mean_return) > tail_threshold for c in bin_centers]
 
 # Normal distribution fitted to the sample, for comparison
 normal_xs = range(lo, hi; length = 200)
@@ -74,7 +71,7 @@ fig = Figure(
 ax = Axis(
     fig[1, 1];
     title              = "histogram-returns-distribution · julia · makie · anyplot.ai",
-    titlesize          = 20,
+    titlesize          = 25,
     titlecolor         = INK,
     xlabel             = "Daily Return (%)",
     ylabel             = "Density",
@@ -97,17 +94,25 @@ ax = Axis(
     yminorgridvisible  = false,
 )
 
-barplot!(ax, bin_centers, densities; color = bar_colors, width = bin_width, gap = 0.0)
-lines!(ax, normal_xs, normal_ys; color = ANYPLOT_NEUTRAL, linewidth = 3, linestyle = :dash)
+barplot!(
+    ax, bin_centers[.!is_tail_bin], densities[.!is_tail_bin];
+    color = IMPRINT_PALETTE[1], width = bin_width, gap = 0.0,
+    label = "Daily returns (|z| ≤ 2σ)",
+)
+barplot!(
+    ax, bin_centers[is_tail_bin], densities[is_tail_bin];
+    color = ANYPLOT_AMBER, width = bin_width, gap = 0.0,
+    label = "Tail events (|z| > 2σ)",
+)
+lines!(
+    ax, normal_xs, normal_ys;
+    color = ANYPLOT_NEUTRAL, linewidth = 3, linestyle = :dash, label = "Normal fit",
+)
 
-legend_elements = [
-    PolyElement(color = IMPRINT_PALETTE[1]),
-    PolyElement(color = ANYPLOT_AMBER),
-    LineElement(color = ANYPLOT_NEUTRAL, linestyle = :dash, linewidth = 3),
-]
-legend_labels = ["Daily returns (|z| ≤ 2σ)", "Tail events (|z| > 2σ)", "Normal fit"]
+# Legend built declaratively from the axis's own labeled plot objects, rather
+# than hand-assembled proxy elements — Makie collects the legend entries for us.
 Legend(
-    fig[1, 2], legend_elements, legend_labels;
+    fig[1, 2], ax;
     framevisible = false,
     labelcolor   = INK_SOFT,
     labelsize    = 12,
@@ -119,12 +124,12 @@ stats_text = @sprintf(
     mean_return, std_return, skewness, excess_kurtosis,
 )
 poly!(
-    ax, Rect2f(0.02, 0.72, 0.34, 0.26);
+    ax, Rect2f(0.02, 0.79, 0.34, 0.17);
     color = (ELEVATED_BG, 0.92), strokecolor = INK_SOFT, strokewidth = 1,
     space = :relative,
 )
 text!(
-    ax, 0.045, 0.955;
+    ax, 0.045, 0.935;
     text = stats_text, space = :relative, align = (:left, :top),
     color = INK, fontsize = 13, font = :bold,
 )
