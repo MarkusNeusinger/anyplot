@@ -1,0 +1,235 @@
+library: makie
+language: julia
+specification_id: ternary-density
+created: '2026-09-02T07:39:16Z'
+updated: '2026-09-02T07:43:05Z'
+generated_by: claude-sonnet
+workflow_run: 33602620679
+issue: 3696
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Custom vector masking (poly! fills over the bounding-box corners) produces crisp
+    diagonal triangle edges instead of the staircase artifact a rectilinear heatmap
+    grid would leave.
+  - Bimodal KDE correctly reflects the two synthetic facies (sand-rich and clay-rich
+    clusters) baked into the data generation, giving the plot a clear visual story.
+  - 'Theme-adaptive chrome is fully correct: background, ink, grid alpha, and contour-line
+    color all flip between light/dark while the Imprint sequential colormap stays
+    pixel-identical.'
+  - Explicit bin edges (avoiding half-cell heatmap overhang) and explicit xlims!/ylims!
+    (avoiding vertex-label clipping) show careful attention to Makie's specific rendering
+    quirks.
+  weaknesses:
+  - Triangle occupies only ~45% of the landscape canvas width, leaving large empty
+    margins on both sides — tightening the column sizing or axis fraction would better
+    use the 1600x900 canvas.
+  - Contour lines are unlabeled (no density values on the lines themselves); a viewer
+    must rely solely on the colorbar to map contour levels to values.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 target.
+      Chrome: Title, vertex labels (Sand/Silt/Clay), and colorbar label/ticks all rendered in dark ink, clearly visible. Grid lines beneath the density layer are subtle but visible.
+      Data: Green-to-blue Imprint sequential colormap (#009E73 -> #4467A3) shows two density modes (sand-rich, clay-rich), matching the two-facies data generation. Dark contour lines trace key density levels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 target.
+      Chrome: Title, vertex labels, and colorbar label/ticks switch to light ink and remain fully legible. No dark-on-dark failures. Contour lines switch to light color for visibility.
+      Data: Heatmap colors and spatial pattern are pixel-identical to the light render, confirming only chrome flipped between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text legible in both themes; colorbar tick labels slightly small
+          relative to canvas scale
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; explicit xlims/ylims prevent vertex-label clipping
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap + contour combo is clear and well-differentiated
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue sequential progression, CVD-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Triangle only fills ~45% of canvas width, large empty margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels and colorbar label are descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct imprint_seq continuous colormap; both renders theme-correct
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom vector masking for crisp triangle corners is genuinely polished
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines/decorations hidden, soft ink outline, subtle grid; docked
+          for underused canvas whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Two clear density hotspots create a legible narrative; contour lines
+          lack numeric labels
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct ternary density plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE heatmap, grid beneath density, labeled vertices, contour lines,
+          auto bandwidth — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct barycentric-to-Cartesian transform; all three components
+          represented
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; colorbar labeled correctly
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: KDE, contour, grid, vertex labels — full spec feature coverage
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Sand/silt/clay sediment composition is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=2400 within spec range; proportions sum to 1 as required
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2, current API
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: DataAspect and composed primitives used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Vector-masking trick to avoid heatmap staircase artifacts is distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - minimal-chrome

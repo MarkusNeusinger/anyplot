@@ -1,0 +1,273 @@
+library: highcharts
+language: javascript
+specification_id: network-hierarchical
+created: '2026-09-02T07:06:27Z'
+updated: '2026-09-02T07:23:42Z'
+generated_by: claude-sonnet
+workflow_run: 33601260499
+issue: 3343
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Deliberate span-of-control storytelling: the Director with the most direct reports
+    (Dir. Frontend) gets bolder, more opaque connectors and a slightly larger marker,
+    giving the chart a clear analytical insight instead of a plain org-chart dump.'
+  - Depth is double-encoded with shape AND Imprint color (circle/diamond/square/triangle
+    x green/purple/blue/amber), which is CVD-safe and reinforced further by marker
+    radius shrinking from root to leaves.
+  - Custom tidy-tree layout (recursive layout() positioning + hand-drawn SVG connectors
+    via chart.renderer.path in chart.events.render) is a well-executed workaround
+    for Highcharts core lacking a tree/networkgraph module; data colors are identical
+    between light and dark renders.
+  - 'Manager-row labels are vertically staggered (y: 16/34 alternating) to prevent
+    horizontal collisions at the densest level of the tree.'
+  weaknesses:
+  - Parent-to-child connector lines cut directly through several node labels (confirmed
+    at 'VP Engineering' and 'Dir. Frontend', likely at any node whose children are
+    symmetric around the parent's x) because the middle edge segment renders exactly
+    vertical, straight through the dataLabel sitting just below the marker. The thin,
+    semi-transparent stroke keeps the text technically legible, but it is visible
+    line-through-text overlap at multiple points in the tree. Fix by nudging the label's
+    y-offset further down or inserting a small gap/route-around for edges whose x
+    matches the parent's x almost exactly.
+  - 'CQ-01 (KISS): the script relies on a recursive layout() helper rather than a
+    flat imports->data->plot structure. This is justified by the tree-position math
+    Highcharts doesn''t provide natively, but it still costs a point against the flat-script
+    ideal.'
+  - 'LM-01/LM-02: the hand-rolled SVG connector approach is a clever workaround for
+    the missing native tree/networkgraph module rather than genuine idiomatic use
+    of a built-in Highcharts series type, which caps Library Mastery below max even
+    though the implementation is otherwise strong.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "network-hierarchical · javascript · highcharts · anyplot.ai" in bold dark ink at top, clearly readable. Node labels (CEO, VP names, Director names, Manager names) render in a softer dark gray, all readable against the light background. A four-item legend (CEO / VP / Director / Manager) sits centered below the tree, matching each level's marker shape and color.
+      Data: Root "CEO" is a green (#009E73) circle at the top; 4 "VP" nodes are purple diamonds one level down; 9 "Director" nodes are blue squares; 13 "Manager" nodes are amber/ochre triangles at the bottom, shrinking in radius with depth. Gray connector lines fan from each parent down to its children; the connectors under "Dir. Frontend" (which has the most direct manager reports) are visibly bolder and more opaque than the rest, highlighting the span-of-control outlier.
+      Legibility verdict: PASS — all text is readable against the light background, though the exactly-vertical middle connector of a few 3-child nodes (e.g. "VP Engineering", "Dir. Frontend") visibly crosses through the label glyphs (see Weaknesses); text stays legible since the stroke is thin and semi-transparent.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title and node labels now render in light gray/white, clearly legible against the dark background. No dark-on-dark text was found anywhere in the tree or legend.
+      Data: Node colors (green CEO circle, purple VP diamonds, blue Director squares, amber Manager triangles) are identical to the light render — only the background, connector-line gray, and text color shifted for the dark theme, exactly as required. The same "Dir. Frontend" connector-highlighting is preserved.
+      Legibility verdict: PASS — all text reads clearly on the dark surface; the same minor line-through-label overlap present in the light render also appears here (same layout, theme-independent issue), but it is not a legibility failure.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, node labels 13/15px, legend
+          14px); readable in both themes. Manager labels get slightly blurry at 400px
+          thumbnail scale given 13 leaf nodes, but remain identifiable.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: true
+        comment: Middle connector lines pass exactly through several node labels ('VP
+          Engineering', 'Dir. Frontend') because the child directly below the parent
+          produces a vertical edge through the label; text stays legible (thin, semi-transparent
+          stroke) but the overlap is visible at multiple points in the tree.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker radius scales from 12px at root to 8px at leaves, appropriate
+          for a 27-node tree; connectors sized/opacity-tuned so structural lines don't
+          overwhelm nodes.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Depth double-encoded via shape + color; no red-green-only signaling;
+          good contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Tree fills most of the 3200x1800 canvas with balanced margins; legend
+          sits close to the plot, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes are intentionally hidden (node-link layout has no data axes);
+          title is descriptive and correctly formatted.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'CEO = #009E73 (palette[0]); VP/Director/Manager follow canonical
+          Imprint order; identical data colors across light/dark; backgrounds and
+          chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Shape+color depth encoding, shrinking marker radii, and a deliberate
+          highlight of the span-of-control outlier go well beyond a configured default;
+          the label/connector overlap keeps it short of publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axis clutter, subtle low-opacity connectors, generous whitespace;
+          the connector-through-label overlap is the main refinement gap.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bolder/thicker connectors and a slightly larger marker call out the
+          Director with the largest team, giving the tree a genuine analytical focal
+          point rather than a flat structural dump.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct hierarchical/tree layout with fixed vertical levels, root
+          at top, per the spec.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Nodes with unique IDs/labels, parent-child edges, explicit level
+          assignment (0=root), 27 nodes within the 10-50 range.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Node x/y correctly reflect tidy-tree position and level; all nodes
+          and edges visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'network-hierarchical · javascript · highcharts
+          · anyplot.ai'; legend labels (CEO/VP/Director/Manager) match the four levels.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Branching is intentionally irregular (3 vs 2 directors per VP, 1-3
+          managers per director), showing the span-of-control variation a hierarchical
+          layout is meant to expose.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, comprehensible corporate org-chart scenario (CEO -> VP ->
+          Director -> Manager).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Spans of control (2-3 directors per VP, 1-3 managers per director)
+          are realistic for a mid-size org.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Uses a recursive layout() helper instead of a flat script; justified
+          by the tree-position math but deviates from the pure imports->data->plot
+          ideal.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hard-coded org data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No stray imports; only window.Highcharts / window.ANYPLOT_TOKENS
+          globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Complexity is proportional to the problem (manual tree layout is
+          required since no networkgraph module is loaded); no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct Highcharts.chart('container', ...) call, animation disabled
+          on chart and series, no deprecated API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly falls back to scatter + chart.events.render + renderer.path
+          since core Highcharts has no tree/networkgraph module; the fallback is well-structured
+          but is still a workaround rather than a native series.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts' custom SVG renderer (chart.renderer.g/path) hooked
+          into the render lifecycle event — a distinctive, non-trivial Highcharts
+          technique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready
