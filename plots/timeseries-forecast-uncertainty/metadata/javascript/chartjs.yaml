@@ -1,0 +1,273 @@
+library: chartjs
+language: javascript
+specification_id: timeseries-forecast-uncertainty
+created: '2026-09-02T07:40:51Z'
+updated: '2026-09-02T07:47:35Z'
+generated_by: claude-sonnet
+workflow_run: 33604231944
+issue: 3188
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/javascript/chartjs/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Correct, theme-consistent Imprint palette use: historical series is brand green
+    #009E73 (always-first rule) and forecast + both confidence bands use a coherent
+    blue family (palette[2]), giving the chart a legible color family exactly as the
+    spec suggests.'
+  - 'Nested confidence bands built with Chart.js''s `fill: "+1"` relative-fill idiom
+    (95% dataset fills to its paired lower-bound dataset, 80% dataset fills to its
+    own pair) so the 80% band renders visibly darker/denser than the wider 95% band
+    — matches the spec''s ''darker for 80%, lighter for 95%'' requirement.'
+  - Forecast-start marker implemented as a genuine Chart.js plugin (`afterDraw` hook)
+    that reads `chart.scales.x.getPixelForValue()` — a native, idiomatic technique
+    rather than a static annotation guess, and it is placed and labeled without colliding
+    with any other chart element in either render.
+  - 'Legend is deliberately filtered (`filter: (item) => !item.text.includes("lower")`)
+    to hide the two invisible helper datasets (80%/95% CI lower bounds), leaving exactly
+    the four legend entries a reader needs: Historical, Forecast, 80% Confidence,
+    95% Confidence.'
+  - 'Data is realistic and complete: 40 months of noisy trend+seasonality SaaS revenue
+    history followed by a 12-month forecast whose 80%/95% bands widen with horizon
+    (linear growth in spread), correctly dramatizing increasing forecast uncertainty
+    over time.'
+  - 'Both renders are fully theme-correct: identical data colors, `#FAF8F1`/`#1A1A17`
+    backgrounds, and all text (title, ticks, axis titles, legend, forecast-start label)
+    uses theme tokens with no dark-on-dark/light-on-light failures.'
+  weaknesses:
+  - 95% confidence band uses alpha 0.12, below the spec's suggested 0.2-0.4 range
+    — it still reads clearly in both renders, but nudging it toward 0.18-0.2 would
+    align with the spec's guidance while remaining visually subordinate to the 80%
+    band.
+  - The mandated title renders at only ~40% of plot width instead of the ~70-85% naturally
+    expected for this length of mandated string at the library default 22px — not
+    a defect (still fully legible, not cramped), but there is unused visual weight
+    available for the title if a future pass wants slightly larger/bolder typography
+    for more aesthetic punch.
+  - Typography is uniformly default sans-serif across every text element; a touch
+    more hierarchy (e.g., a heavier weight for the title vs. regular for ticks, which
+    Chart.js already partially does by default) or a subtitle summarizing the forecast
+    horizon would push Design Excellence further above 'good.'
+  - No direct numeric callout of the forecast values or CI width at key milestones
+    (e.g., end-of-horizon point estimate) — would add a stronger data-storytelling
+    focal point beyond the color/line-style distinction already in place.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "timeseries-forecast-uncertainty · javascript · chartjs · anyplot.ai" in bold dark ink at top-center; X-axis title "Month" and Y-axis title "Monthly Revenue ($ thousands)" in dark ink; tick labels (Jan 2022 ... Apr 2026 on X, 400-750 on Y) in a softer grey; bottom legend with swatches for 95% Confidence, 80% Confidence, Historical, Forecast; a grey dashed vertical rule at the historical/forecast boundary labeled "Forecast start" near the top of the plot area. All text is clearly legible against the light background.
+      Data: Historical line (Jan 2022-Apr 2025) is solid brand green (#009E73) showing an upward trend with seasonal wiggle from ~415 to ~615. From the forecast-start line onward, a dashed blue line (forecast) dips then rises toward ~660 by Apr 2026, enclosed in two nested blue-tinted bands: a denser/darker inner band (80% CI) and a lighter, wider outer band (95% CI) that both widen with the forecast horizon.
+      Legibility verdict: PASS — no light-on-light or unreadable text found.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title, axis titles, tick labels, legend, and "Forecast start" marker, all recolored to light/soft-light tones (white title, light-grey ticks and axis titles) and clearly visible against the dark background; gridlines are faint light-on-dark, subtle but present.
+      Data: Historical line remains the identical brand green #009E73; forecast dashed line and both confidence bands remain the identical blue family and alpha values as the light render — confirming data colors are theme-invariant while only chrome (background/text/grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; every label, tick, and legend entry is readable.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22, axis titles 16, ticks/legend
+          14-16, annotation 14); no overflow or clipping in either theme; balanced
+          X/Y axis label and tick sizing.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; legend, forecast-start label, and ticks
+          are all cleanly spaced.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weights (3px) and band alpha are appropriate for a ~52-point
+          monthly series; no overplotting.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/blue combination is CVD-safe; CI bands add alpha-based redundant
+          encoding beyond hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills roughly 75-80% of the canvas with balanced margins;
+          legend sits directly under the plot.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis label includes units ('$ thousands').
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; forecast/bands use Imprint palette position
+          3; backgrounds and chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Coherent color family and clean composition, but typography and overall
+          look remain close to a well-configured library default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: X-axis grid removed, layout padding tuned, legend curated — real
+          refinement beyond defaults, short of fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Solid-vs-dashed line style plus widening bands and the forecast-start
+          marker create visual hierarchy, but there's no explicit callout of the headline
+          forecast insight.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Time series with forecast + nested uncertainty bands, correctly implemented
+          as a Chart.js line chart with fill-based bands.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Solid historical / dashed forecast, forecast-start vertical marker,
+          nested 80%/95% bands, semi-transparent fills all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on X, revenue on Y; both historical and forecast portions fully
+          shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels match the
+          data series (helper bound datasets correctly hidden).
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows trend, seasonality, noise, and a widening forecast uncertainty
+          envelope.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible SaaS monthly revenue scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values, trend rate, and uncertainty growth are all realistic for
+          a monthly SaaS revenue forecast.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Only minimal helper functions required for LCG data gen, hex-to-rgba
+          conversion, and the Chart.js plugin object; no over-structuring.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG (seed 42).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; only the global Chart is used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriately complex for the visualization; no fake UI/interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled, current Chart.js
+          v4 API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Chart.js's recommended relative fill ('+1') pattern for area-between-lines
+          bands, plus a properly registered custom plugin.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 3
+        passed: true
+        comment: Custom afterDraw plugin leveraging Chart.js's plugin/scale API is
+          a library-specific technique, though vertical reference markers are achievable
+          in most charting libraries.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  styling:
+  - alpha-blending
