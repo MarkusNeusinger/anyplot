@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: flowmap-origin-destination
 created: '2026-09-02T00:47:43Z'
-updated: '2026-09-02T00:53:11Z'
+updated: '2026-09-02T01:05:12Z'
 generated_by: claude-sonnet
 workflow_run: 33576010676
 issue: 3765
@@ -15,57 +15,46 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 quality_score: 89
 review:
   strengths:
-  - Genuinely idiomatic ECharts flow-map built on the 'lines' series with curveness,
-    directional arrow symbols, and a continuous visualMap-driven color gradient (imprint_seq)
-    for flow volume — a technique that is hard to replicate as cleanly in other libraries.
-  - 'Port marker size scales with total throughput and line width/opacity scale with
-    flow share, giving the chart real visual hierarchy: major corridors (Shanghai-LA,
-    Shanghai-Rotterdam) and hub ports (Rotterdam, Shanghai, Singapore) are immediately
-    visible.'
-  - Thoughtful per-port label placement ('left'/'right'/'top'/'bottom') to keep city
-    names from colliding in dense clusters (Rotterdam/Hamburg, Shanghai/Busan).
-  - 'Clean theme-adaptive chrome throughout: title, subtitle, axis names, tick labels,
-    grid, and visualMap legend all read tokens; both renders pass the light/dark legibility
-    check with no dark-on-dark or light-on-light failures.'
-  - 'First categorical series (ports) is the mandated #009E73 brand green, and continuous
-    flow-volume data correctly uses imprint_seq (single-polarity) rather than a categorical
-    palette or forbidden colormap.'
-  - 'Realistic, neutral, well-scaled dataset: 14 real container ports, 24 routes with
-    plausible corridor volumes (600-3800k TEU), transparency (0.4-0.7) applied per
-    spec''s guidance for overlapping arcs.'
-  - 'Honest engineering workaround for a hard library constraint: comments explicitly
-    document that no bundled world GeoJSON or network fetch is available offline,
-    so the custom-rendered polygon basemap is a deliberate, disclosed approximation
-    rather than a fake/misleading map.'
+  - Correct continuous Imprint sequential colormap (green -> blue) for flow-volume
+    magnitude via visualMap, plus brand green (#009E73) for all port nodes — full
+    VQ-07 palette compliance in both themes.
+  - 'Thoughtful overlap resolution: Rotterdam/Hamburg markers are nudged apart with
+    symbolOffset (true coordinates untouched) and each port''s label position (top/bottom/left/right)
+    is hand-picked so labels for close neighbors (Shanghai/Busan, Rotterdam/Hamburg)
+    diverge instead of colliding.'
+  - Arc line width and opacity scale with flow share (1.5-7.5px, alpha 0.4-0.7) exactly
+    per spec, with alternating curveness so parallel routes into the same hub stay
+    visually separable.
+  - Fully theme-adaptive chrome end-to-end (axis lines, tick labels, grid, land-mass
+    fill/stroke, title/subtitle) with no clipping and no dark-on-dark/light-on-light
+    failures in either render.
+  - Deterministic, realistic dataset — 14 real container ports, 24 plausible trade
+    routes with sensible TEU volumes — and a well-engineered workaround (cartesian2d
+    + custom renderItem land polygons) for the lack of echarts-gl/GeoJSON in the offline
+    harness.
   weaknesses:
-  - The hand-built continent silhouettes (NORTH_AMERICA, SOUTH_AMERICA, EURASIA, AFRICA,
-    AUSTRALIA arrays) are low-vertex and visibly rough/blocky compared to real coastlines
-    — a viewer familiar with world geography will notice the imprecise shapes, which
-    caps Design Excellence below 'publication-ready'. Consider adding a few more vertices
-    at major capes/peninsulas (e.g. Scandinavia, the Iberian/Italian peninsulas, Baffin
-    Island) to reduce the low-poly look without needing a full GeoJSON.
-  - Rotterdam and Hamburg's port markers overlap heavily (Hamburg's circle is largely
-    occluded behind Rotterdam's larger circle) because both are geographically close
-    at this global zoom. Consider a small deterministic offset for closely-spaced
-    port pairs, or reducing marker opacity slightly at overlap zones, so both throughput
-    circles stay individually readable.
-  - The world 'map' is really a cartesian lon/lat grid with axis ticks in degrees
-    rather than a true equirectangular projection — functionally fine and clearly
-    labeled, but slightly more 'scientific scatter plot' than 'stylized flow map'
-    in feel. Not a spec violation, just a minor polish opportunity (e.g. hiding the
-    axis ticks/gridlines in favor of a cleaner map frame) for a future pass.
+  - Hand-simplified continent polygons omit recognizable features geography-literate
+    viewers expect (India's peninsula, the Arabian Peninsula's shape, Japan/UK/Indonesia
+    as islands) — acceptable given the offline-harness constraint but a step down
+    from a real coastline dataset.
+  - All four axis sides keep a full value-axis frame (axisLine on all sides) rather
+    than the style guide's default L-shaped/spine-reduced look — a reasonable choice
+    for a geographic reference grid, but less refined than the house style.
+  - The faintest arcs (lowest flow share, ~0.4 opacity, ~1.5px width) are hard to
+    pick out where they cross the dense Shanghai/Singapore/Jebel Ali cluster — could
+    use a touch more contrast or z-ordering there.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Global Trade Flows · flowmap-origin-destination · javascript · echarts · anyplot.ai" and subtitle are dark ink, clearly legible; "Longitude"/"Latitude" axis names and degree-formatted tick labels (e.g. "150°W", "30°N") are soft dark gray, all readable against the cream background; horizontal/vertical graticule lines are subtle light gray, visible without competing with data; the "Low volume"/"High volume" visualMap legend text at the bottom is legible dark-gray.
-      Data: Continent silhouettes render as light-gray filled polygons with a soft outline, giving geographic context. Port markers are solid brand green (#009E73) circles sized by throughput (Rotterdam/Shanghai/Singapore largest), each labeled with the city name in dark ink. Flow arcs are curved lines colored on a green-to-blue sequential gradient (thin/light-green for low-volume routes like Durban corridors, thick/blue for high-volume routes like Shanghai-Los Angeles), with directional arrowheads at the destination end.
-      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues.
+      Background: Warm off-white (~#FAF8F1), not pure white — matches the required light-theme page surface.
+      Chrome: Title "Global Trade Flows · flowmap-origin-destination · javascript · echarts · anyplot.ai" and subtitle are dark ink, clearly legible; longitude/latitude axis tick labels (dark gray) and gridlines (very subtle light gray) are all readable against the light background; the "Low volume / High volume" visualMap legend text at the bottom is legible.
+      Data: 14 green (#009E73) port-throughput circles sized by volume, connected by curved arcs colored on a green-to-blue continuous scale (imprint_seq) and widened for higher-volume routes; continents render as pale gray-green filled polygons behind the arcs for geographic context.
+      Legibility verdict: PASS — no light-on-light text found; all labels, ticks, and legend read cleanly against the cream background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title and subtitle render in light off-white ink, clearly legible; axis names and tick labels are light gray, easily readable against the dark background; graticule lines are subtle light-gray at low opacity, visible but not dominant; visualMap legend text at the bottom is legible light-gray.
-      Data: Continent polygons are dark-gray fills with a lighter stroke, still distinguishable from the near-black page background. Port markers remain the identical brand green (#009E73) as the light render, sized identically by throughput. Flow arcs use the identical green-to-blue sequential gradient and arrowheads as the light render — confirmed pixel-for-pixel consistent data colors between themes.
-      Legibility verdict: PASS — no dark-on-dark failures; all title, axis, tick, and legend text is clearly visible against the near-black background, and the brand green remains highly visible on the dark surface.
+      Background: Warm near-black (~#1A1A17), not pure black — matches the required dark-theme page surface.
+      Chrome: Title and subtitle render in light ink (#F0EFE8-ish), axis tick labels and gridlines switch to light-gray tones, and the continent polygons switch to a darker gray fill with a lighter stroke — all remain clearly distinguishable from the near-black background.
+      Data: Port circles and arc colors are visually identical to the light render (same green nodes, same green-to-blue continuous arc scale) — only the chrome (background, text, grid, land fill) flipped, as required.
+      Legibility verdict: PASS — no dark-on-dark failures; every title, axis label, tick, port label, and legend string stays legible against the near-black surface.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -76,79 +65,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set via t.* tokens; title scales dynamically
-          with title length; readable in both themes; no overflow or clipping.
+        comment: Title fontsize correctly scales with title length; all text readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Per-port label placement (left/right/top/bottom) deliberately avoids
-          text collisions even in dense clusters like Rotterdam/Hamburg and Shanghai/Busan.
+        comment: Per-port label positions and marker offsets (Rotterdam/Hamburg) avoid
+          collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line widths/opacities and marker sizes scale well with flow/throughput,
-          but Rotterdam and Hamburg's markers overlap heavily at this zoom, partially
-          hiding Hamburg's circle.
+        comment: Line widths/opacity scale with flow share, but the faintest arcs
+          are hard to see in the dense Asia cluster
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green-to-blue sequential gradient plus brand-green markers are CVD-safe;
-          no red-green-only signal.
+        comment: Sequential green-blue scale is CVD-safe, no red-green sole encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization and balanced margins; minor deduction for
-          the rough polygon basemap edges eating into the otherwise clean layout feel.
+        comment: No clipping, good proportions; four-sided axis frame is a bit heavier
+          than the house style default
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude axis names with degree-suffixed (°E/°W/°N/°S)
-          tick labels.
+        comment: Longitude/Latitude labeled with degree-formatted ticks
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First categorical series (ports) is #009E73; continuous flow volume
-          correctly uses imprint_seq; backgrounds and chrome are theme-correct in
-          both renders.'
+        comment: 'First series #009E73, continuous data uses imprint_seq, backgrounds
+          theme-correct in both renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Custom gradient legend, size-scaled markers, and a hand-built basemap
-          show real design intent, but the low-vertex continent shapes are visibly
-          crude and hold this back from 'publication-ready'.
+        comment: Custom continent geometry, throughput-scaled markers, intentional
+          hub hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid, generous whitespace, no boxed legend frame; the jagged
-          basemap polygon edges are the main refinement gap.
+        comment: Subtle grid and generous whitespace, but full axis frame kept on
+          all sides
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Color gradient + marker size jointly create a clear focal point on
-          major hubs and corridors — the viewer sees the story (Shanghai/Rotterdam/Singapore
-          as hubs) immediately.
+        comment: Color/width hierarchy highlights major corridors; marker size highlights
+          hub ports
     spec_compliance:
       score: 15
       max: 15
@@ -158,30 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct origin-destination flow map: curved arcs over geographic
-          points with a basemap.'
+        comment: Correct origin-destination flow map with curved arcs over a basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Curved arcs, flow-proportional width, 0.4-0.7 alpha, color gradient
-          by magnitude, basemap context, and hover tooltips are all present.
+        comment: Curved arcs, flow-proportional width, 0.4-0.7 alpha, color-encoded
+          magnitude, basemap, hover tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, latitude on Y; arcs correctly connect origin to destination
-          coordinates.
+        comment: Longitude/latitude axes correctly map origin/dest coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'; visualMap legend labels ('Low volume'/'High volume') match
-          the encoded data.
+        comment: Title matches required format; visualMap legend clearly labeled
     data_quality:
       score: 15
       max: 15
@@ -191,22 +170,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 24 routes spanning a wide range of volumes (600-3800k TEU) and 14
-          ports with varied throughput sizes show the full range of the flow-map form.
+        comment: origin/dest lat/lon, flow magnitude, and names all used
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral, comprehensible scenario: global container-shipping
-          corridors between real ports.'
+        comment: Real container ports and plausible, neutral shipping-volume dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Corridor-level TEU volumes are plausible order-of-magnitude figures
-          for major shipping lanes; no physically impossible values.
+        comment: TEU volumes are sensible for individual trade-route legs
     code_quality:
       score: 9
       max: 10
@@ -216,64 +192,62 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Mostly linear data->option flow; two small pure helper functions
-          (renderLand, portSize) are justified by the custom render-item requirement.
+        comment: A couple of small helper functions, mostly required by the custom
+          renderItem/sizing API
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic, hardcoded in-memory data.
+        comment: Fully deterministic, hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports beyond the provided echarts/tokens globals.
+        comment: No unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a flow map on a library without native
-          geo support; no fake UI or simulated interactivity.
+        comment: Real functionality, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false, no explicit size/devicePixelRatio
-          passed to echarts.init.
+        comment: animation:false, correct init contract, current API
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of 'lines' series, 'scatter' for nodes, 'custom' series
-          for the basemap, and continuous visualMap bound to a specific seriesIndex.
+        comment: Smart cartesian2d + lines + custom renderItem workaround given no
+          geo/GL extensions
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: The lines-series curveness + arrow symbols + visualMap-on-lines combination
-          is genuinely ECharts-distinctive and hard to replicate elsewhere with equal
-          ease.
-  verdict: REJECTED
+        comment: visualMap continuous, lines series curveness/arrows, custom series
+          render item
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - bezier-curves
   - colorbar
-  - hover-tooltips
+  - bezier-curves
+  - patches
   patterns:
   - data-generation
-  dataprep:
-  - normalization
+  - iteration-over-groups
+  dataprep: []
   styling:
   - alpha-blending
   - custom-colormap
+  - edge-highlighting
