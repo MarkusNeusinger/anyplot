@@ -18,6 +18,9 @@ const IMPRINT_PALETTE = [
     colorant"#009E73", colorant"#C475FD", colorant"#4467A3", colorant"#BD8233",
     colorant"#AE3030", colorant"#2ABCCD", colorant"#954477", colorant"#99B314",
 ]
+# Per-segment label ink chosen for contrast against each fixed data color
+# (green/lavender read best with dark text, blue reads best with light text).
+const CELL_LABEL_INK = [colorant"#1A1A17", colorant"#1A1A17", colorant"#FFFFFF"]
 
 # --- Data ---------------------------------------------------------------------
 # Employee satisfaction survey cross-tabulated by department and satisfaction level.
@@ -40,6 +43,11 @@ end
 
 row_totals = vec(sum(counts; dims = 2))
 total = sum(counts)
+
+# Most notable cell: the department with the highest conditional share of
+# "Low" satisfaction, called out below with a bolder tile outline.
+low_col = findfirst(==("Low"), satisfaction_levels)
+notable_row = argmax(satisfaction_shares[:, low_col])
 
 # --- Mosaic geometry ------------------------------------------------------------
 # Column widths encode marginal proportions of department; segment heights within
@@ -91,7 +99,20 @@ for i in 1:n_rows
     for j in 1:n_cols
         height = counts[i, j] / row_totals[i] * usable_height
         rect = Rect2f(x_starts[i], y_start, column_widths[i], height)
-        poly!(ax, rect; color = IMPRINT_PALETTE[j], strokecolor = PAGE_BG, strokewidth = 2)
+        is_notable = i == notable_row && j == low_col
+        stroke_color = is_notable ? INK : PAGE_BG
+        stroke_width = is_notable ? 3.5 : 2
+        poly!(ax, rect; color = IMPRINT_PALETTE[j], strokecolor = stroke_color, strokewidth = stroke_width)
+
+        if height > 0.05
+            pct = round(Int, counts[i, j] / total * 100)
+            text!(
+                ax, x_starts[i] + column_widths[i] / 2, y_start + height / 2;
+                text = "$(pct)%", color = CELL_LABEL_INK[j], fontsize = 11,
+                align = (:center, :center),
+            )
+        end
+
         y_start += height + gap_y
     end
 end
