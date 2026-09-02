@@ -33,10 +33,13 @@ companies = Dict(
     "Energy" => ["SolarPeak", "WindForge", "HydroCore", "GeoVolt", "EcoGrid", "TerraPower", "BrightFuel"],
 )
 
-# (growth_mean, growth_std, margin_mean, margin_std) per sector
+# (growth_mean, growth_std, margin_mean, margin_std) per sector.
+# Healthcare is drawn with a tighter spread on purpose: it is the one sector
+# where labels sit close enough together to require the density-management
+# techniques (rotation jitter + alpha) the spec calls out for dense regions.
 cluster_params = Dict(
     "Technology" => (28.0, 6.0, 18.0, 5.0),
-    "Healthcare" => (14.0, 4.0, 24.0, 5.0),
+    "Healthcare" => (14.0, 2.5, 24.0, 2.8),
     "Finance" => (6.0, 5.0, 22.0, 5.5),
     "Energy" => (10.0, 7.0, 10.0, 6.0),
 )
@@ -45,6 +48,7 @@ labels = String[]
 growth = Float64[]
 margin = Float64[]
 point_colors = RGB{Float64}[]
+point_sectors = String[]
 
 for (i, sector) in enumerate(sectors)
     growth_mean, growth_std, margin_mean, margin_std = cluster_params[sector]
@@ -53,8 +57,58 @@ for (i, sector) in enumerate(sectors)
         push!(growth, growth_mean + growth_std * randn())
         push!(margin, margin_mean + margin_std * randn())
         push!(point_colors, IMPRINT_PALETTE[i])
+        push!(point_sectors, sector)
     end
 end
+
+# De-overlap pass: the tight Healthcare cluster can draw a label almost on top
+# of a neighbor (in or out of Healthcare) by chance — nudge any such pair
+# apart symmetrically along their connecting vector. Runs a few passes since
+# separating one pair can nudge a label into a third; only Healthcare's
+# tighter cluster is normalized this aggressively, so other sectors keep
+# their original (already-reviewed) spacing untouched.
+healthcare_idx = findall(==("Healthcare"), point_sectors)
+xspan, yspan = 48.0, 38.0  # matches xlims!/ylims! below
+min_norm_dist = 0.05
+n = length(labels)
+for _pass in 1:4, a in 1:n, b in (a + 1):n
+    if a ∉ healthcare_idx && b ∉ healthcare_idx
+        continue
+    end
+    dx = (growth[b] - growth[a]) / xspan
+    dy = (margin[b] - margin[a]) / yspan
+    dist = max(hypot(dx, dy), 1e-6)
+    if dist < min_norm_dist
+        push_x = (min_norm_dist - dist) * (dx / dist) * xspan / 2
+        push_y = (min_norm_dist - dist) * (dy / dist) * yspan / 2
+        growth[a] -= push_x; margin[a] -= push_y
+        growth[b] += push_x; margin[b] += push_y
+    end
+end
+
+# CloudSpire is the clear growth outlier — give it visual emphasis (larger,
+# bolder label) instead of leaving it to blend in with the rest of the cluster.
+outlier_idx = findfirst(==("CloudSpire"), labels)
+fontsizes = fill(18.0, length(labels))
+fontsizes[outlier_idx] = 24.0
+
+# Jitter rotation and soften alpha for the dense Healthcare cluster, per the
+# spec's density-management guidance.
+rotations = zeros(Float64, length(labels))
+alphas = ones(Float64, length(labels))
+for idx in healthcare_idx
+    rotations[idx] = deg2rad(rand(-12:12))
+    alphas[idx] = 0.82
+end
+
+label_colors = [RGBAf(c.r, c.g, c.b, a) for (c, a) in zip(point_colors, alphas)]
+points = Point2f.(growth, margin)
+
+# Healthcare and Energy sit below WCAG 3:1 contrast on the cream bg as plain
+# text (no marker ink to fall back on) — give just those two an ink stroke.
+energy_idx = findall(==("Energy"), point_sectors)
+stroke_idx = vcat(healthcare_idx, energy_idx)
+plain_idx = findall(s -> s in ("Technology", "Finance"), point_sectors)
 
 # --- Plot -------------------------------------------------------------------
 fig = Figure(
@@ -92,12 +146,35 @@ ax = Axis(
 )
 
 text!(
-    ax, Point2f.(growth, margin);
-    text = labels,
-    color = point_colors,
-    fontsize = 18,
+    ax, points[plain_idx];
+    text = labels[plain_idx],
+    color = label_colors[plain_idx],
+    fontsize = fontsizes[plain_idx],
+    rotation = rotations[plain_idx],
     font = :bold,
     align = (:center, :center),
+)
+
+text!(
+    ax, points[stroke_idx];
+    text = labels[stroke_idx],
+    color = label_colors[stroke_idx],
+    fontsize = fontsizes[stroke_idx],
+    rotation = rotations[stroke_idx],
+    font = :bold,
+    align = (:center, :center),
+    strokewidth = 1.0,
+    strokecolor = INK,
+)
+
+# Callout for the growth outlier, reinforcing the emphasis from its larger fontsize.
+text!(
+    ax, Point2f(growth[outlier_idx], margin[outlier_idx] - 2.6);
+    text = "↑ fastest-growing",
+    fontsize = 11,
+    font = :regular,
+    color = INK_SOFT,
+    align = (:center, :top),
 )
 
 xlims!(ax, -6, 42)
