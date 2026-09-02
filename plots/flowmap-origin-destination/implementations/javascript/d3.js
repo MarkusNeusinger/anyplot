@@ -88,7 +88,7 @@ const arcOpacity = d3.scaleLinear().domain(flowExtent).range([0.45, 0.75]);
 const nodeRadius = d3
   .scaleSqrt()
   .domain(d3.extent(Array.from(nodeTotals.values())))
-  .range([7, 17]);
+  .range([6, 12]);
 
 // --- SVG mount -----------------------------------------------------------
 const svg = d3.select("#container").append("svg").attr("width", width).attr("height", height);
@@ -156,21 +156,25 @@ mapG
   .attr("class", "landmass")
   .attr("d", geoPath)
   .attr("fill", t.inkSoft)
-  .attr("fill-opacity", 0.22)
+  .attr("fill-opacity", 0.16)
   .attr("stroke", "none");
 
 // Direction gradient + arrowhead — every arc fades brand green (origin) into
 // blue (destination), so color alone encodes flow direction independent of
 // magnitude (width/opacity encode magnitude instead).
 const defs = svg.append("defs");
+// markerUnits="userSpaceOnUse" pins the arrowhead to a small fixed pixel size
+// (8x8) independent of each arc's stroke-width, so high-flow arcs no longer
+// balloon a wedge over the destination city circle.
 defs
   .append("marker")
   .attr("id", "flow-arrow")
   .attr("viewBox", "0 0 10 10")
   .attr("refX", 8.5)
   .attr("refY", 5)
-  .attr("markerWidth", 6)
-  .attr("markerHeight", 6)
+  .attr("markerUnits", "userSpaceOnUse")
+  .attr("markerWidth", 8)
+  .attr("markerHeight", 8)
   .attr("orient", "auto")
   .append("path")
   .attr("d", "M0,0 L10,5 L0,10 Z")
