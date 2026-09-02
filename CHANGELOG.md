@@ -40,7 +40,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   flight. `SKILL.md` §5 documents the slot-count rule, the reporting cycle, and new
   gotchas from the 2026-09-02 run: a provider outage reads like a capability cliff, the
   order in which to rescue an outage-hit spec, and the stuck-PR-object symptom behind
-  "Head branch is out of date".
+  "Head branch is out of date". (#11201)
 
 ### Fixed
 
