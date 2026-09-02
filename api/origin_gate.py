@@ -60,6 +60,19 @@ through explicitly anyway: a browser cannot attach a custom header to a
 preflight, so a gate that refused one would break every cross-origin call on the
 site rather than protecting anything. The exemption is what makes that
 independent of where the middleware ends up in the stack.
+
+**What this gate does not close.** It protects the API service's own door. The
+APP service (`anyplot-app`) also stands with `ingress=all`, and its nginx
+relays a crawler user agent through `@seo_proxy` to `https://api.anyplot.ai` —
+where the edge stamps the header legitimately. So a caller who sends a crawler
+user agent to the app's raw `*.run.app` URL still reaches the prerendered
+render, and its DB queries and Plausible event, without having passed the edge
+himself (Copilot review). That is a second door on a second service, not a hole
+in this one: the request this process sees genuinely came through the edge.
+Closing it means gating the app service or refusing to proxy for `run.app`
+hosts in `app/nginx.conf` — and `bot-serving-check.yml` deliberately probes that
+exact flow on the app origin, so it is a change with its own blast radius and
+its own PR.
 """
 
 from __future__ import annotations
