@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: map-marker-clustered
 created: '2026-09-02T02:42:50Z'
-updated: '2026-09-02T02:47:06Z'
+updated: '2026-09-02T02:59:19Z'
 generated_by: claude-sonnet
 workflow_run: 33583593648
 issue: 3766
@@ -12,44 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/echarts/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
+  - Donut-ring cluster glyph now encodes the full category mix per cluster (canonical
+    angular order, hole punched to page background for a legible count) instead of
+    a single dominant color — directly resolves the attempt-1 DE-03 weakness without
+    requiring hover
   - Real click-to-zoom plus scroll/drag interactivity driven by echarts dataZoom,
-    not simulated
+    not simulated; clusters genuinely re-split and re-merge via screen-space union-find
+    clustering re-run on every zoom/pan
   - 'Uses the Imprint categorical palette in exact canonical order (brand green, lavender,
-    blue, ochre) with the first series correctly on #009E73'
-  - Custom screen-space union-find clustering re-runs on every zoom/pan so clusters
-    genuinely split and re-merge instead of just rescaling fixed dots
-  - Both renders are theme-correct with no legibility failures -- warm off-white/near-black
-    backgrounds, readable chrome, identical data colors
-  - Manual legend graphic correctly explains the dominant-color convention since per-point
-    categories don't map to an ECharts series legend, and cluster tooltips reveal
-    the full category breakdown to mitigate the dominant-only simplification
+    blue, ochre), first series correctly on #009E73'
+  - Both renders are theme-correct with no legibility failures — warm off-white/near-black
+    backgrounds, readable chrome, identical data colors between light and dark
+  - Manual legend graphic correctly explains the ring-segment convention since per-point
+    categories don't map to an ECharts series legend; tooltip still exposes the exact
+    numeric breakdown on hover
   - Low-fidelity but real, hardcoded US outline gives geographic basemap context despite
     the offline/no-CDN rendering constraint
   weaknesses:
-  - 4 of the 7 visible clusters share the same dominant "Partner" (ochre) color, which
-    reduces visual category diversity in this particular data draw -- a statistical
-    artifact of the per-point RNG assignment, not a bug, but it flattens the color
-    storytelling
-  - The spec's optional "consider showing a convex hull or spider lines when hovering
-    over clusters" affordance is not implemented -- not required, but would add polish
-  - Basemap is an intentionally low-fidelity hardcoded outline (documented in-code
-    as a tradeoff for the offline render harness) -- acceptable but coarse compared
+  - The smallest cluster (Denver, count=17) has a small outer radius, so its four
+    ring segments are thin and slightly harder to distinguish at a glance than on
+    the larger clusters, though the center count label stays legible
+  - The spec's optional 'consider showing a convex hull or spider lines when hovering
+    over clusters' affordance is still not implemented — not required, but would add
+    polish
+  - Basemap remains an intentionally low-fidelity hardcoded outline (documented in-code
+    as a tradeoff for the offline render harness) — acceptable but coarse compared
     to real street/terrain context
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1-consistent), not pure white.
-      Chrome: Title "map-marker-clustered · javascript · echarts · anyplot.ai" and subtitle "Scroll to zoom, drag a cluster into view, click a cluster to expand it" are dark, centered, and fully legible. Right-side "Store type" legend (Flagship/Outlet/Kiosk/Partner) and explanatory caption text are dark ink on the light background, clearly readable. A thin gray US outline gives geographic context.
-      Data: Seven circular cluster markers of varying size (sqrt-scaled by count) sit over their metro locations, each labeled with a white bold count number with a dark text border for contrast. Colors: teal/green (Flagship, #009E73) top-left (Seattle, 21), blue (Kiosk) far-left (LA, 46), two ochre/brown (Partner) markers mid-map (Chicago 36, Denver 17), purple/lavender (Outlet) right (NY, 58), and two more ochre (Partner) markers lower-right (Houston 31, Miami 26).
-      Legibility verdict: PASS
+      Chrome: Title "map-marker-clustered · javascript · echarts · anyplot.ai" and subtitle "Scroll to zoom, drag a cluster into view, click a cluster to expand it" render in dark ink, centered, fully legible. Right-side "Store type" legend (Flagship/Outlet/Kiosk/Partner swatches) plus an explanatory caption about the ring-segment convention render in dark ink, clearly readable. Thin gray US outline gives geographic context.
+      Data: Seven donut-ring cluster glyphs, sqrt-scaled by count, sit over their metro locations. Each ring is split into segments in canonical category order (green=Flagship, purple=Outlet, blue=Kiosk, ochre=Partner) sized by that category's share of the cluster, with a page-background-colored hole in the center holding a bold count label (e.g. 58 for New York, 46 for LA, 36 for Chicago, 31 for Houston, 26 for Miami, 21 for Seattle, 17 for Denver). First categorical color confirmed as #009E73 (Flagship). No stray singleton markers are visible at this zoom level — all points collapse into the seven metro clusters, as expected for the full-US view.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17-consistent), not pure black.
-      Chrome: Title, subtitle, legend text, and caption all render in light ink, fully legible against the dark background -- no dark-on-dark failures observed. The US outline switches to a light gray stroke, still subtle but visible.
-      Data: Same seven clusters, same positions, same sizes, and confirmed identical data colors to the light render (teal, blue, ochre x4, purple) -- only chrome (background, outline, text) flipped as expected.
-      Legibility verdict: PASS
+      Chrome: Title, subtitle, legend text, and caption all render in light ink, fully legible — no dark-on-dark failures. The US outline switches to a light gray stroke, still subtle but visible.
+      Data: Same seven cluster glyphs, same positions, sizes, and ring-segment proportions; colors confirmed identical to the light render (green, purple, blue, ochre) — only chrome (background, outline, text) flipped, as expected. The ring hole matches the dark page background so count labels stay legible on the dark surface too.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
+
+    Both renders confirm the Imprint data colors are unchanged across themes and only chrome elements adapt.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,71 +65,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at full size; legend caption text
-          is small (12-13px) but clear
+        comment: Title, subtitle, legend, and caption all readable in both themes
+          at sensible font sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between clusters, labels, legend, or basemap outline
+        comment: No collisions between text, legend, or cluster glyphs
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sqrt-scaled cluster sizing keeps markers proportionate and visible;
-          low marker count needs no density mitigation
+        comment: Cluster sizes scale with sqrt(count); ring segments visible even
+          on the smallest cluster
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Count labels use white text with dark outline independent of fill
-          color; category is never the sole signal since tooltip breakdown and legend
-          reinforce it
+        comment: Imprint palette provides adequate contrast, not reliant on red-green
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; balanced layout, nothing clipped or overflowing
+        comment: Exact 3200x1800 canvas, no overflow or clipping, balanced whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes intentionally hidden as appropriate for a basemap; title fully
-          descriptive
+        comment: Axes hidden by design (map projection); title descriptive and correctly
+          formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Exact Imprint canonical order used: #009E73 green, lavender, blue,
-          ochre; theme-correct backgrounds in both renders'
+        comment: 'First categorical series is #009E73; canonical Imprint order; theme-correct
+          backgrounds in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Custom union-find clustering and sqrt sizing show real thought, but
-          visual presentation itself (plain circles, simple legend) is fairly standard
+        passed: false
+        comment: Custom union-find clustering plus a donut-ring category-mix glyph
+          go beyond a generic scatter map, though the overall map presentation is
+          still fairly conventional
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        comment: Hidden axes, subtle basemap line, generous whitespace, bordered markers
-          for separation -- clean but not exceptional
+        passed: true
+        comment: Hidden axes, subtle basemap line, page-background-punched ring holes,
+          bordered segments — a clean, deliberate look
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        comment: Size clearly communicates magnitude, but 4 of 7 clusters share the
-          same dominant color, flattening the categorical story at this zoom level
+        passed: true
+        comment: Ring segments now expose the full category mix per cluster at a glance,
+          directly fixing the attempt-1 dominant-color flattening issue
     spec_compliance:
       score: 15
       max: 15
@@ -134,52 +142,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered marker map
+        comment: Clustered marker map with zoom-dependent aggregation
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Cluster counts, dynamic re-clustering on zoom, real click-to-zoom,
-          category color-coding, basemap all present; only the optional hover convex-hull/spider-line
-          'consider' item is skipped
+        comment: Cluster counts, category color-coding, click-to-zoom expansion, basemap
+          context all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly projected (equirectangular, latitude-corrected);
-          full extent covers all points
+        comment: lon/lat correctly projected and mapped to x/y
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format exactly; legend labels match categories
+        comment: Title matches required format exactly; manual legend labels match
+          categories
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        comment: Shows clustering, counts, category coloring, and basemap; the fully-zoomed-out
-          default view only shows aggregated clusters (individual markers require
-          interactive zoom, correctly not penalized per JS-library fairness rules)
+        passed: true
+        comment: Individual points, cluster aggregation, category breakdown, and hover
+          detail all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral retail store network across major US metros
+        comment: Plausible U.S. retail store distribution across real metro areas,
+          neutral subject matter
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 235 points across 7 metros, within the spec's 100-5000 range, realistic
-          per-city counts
+        comment: 235 points within the spec's 100-5000 range
     code_quality:
       score: 9
       max: 10
@@ -188,36 +195,37 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        comment: A handful of small helper functions (clustering, projection, series
-          builder) are justified by the algorithm's inherent complexity, not over-engineering
+        passed: true
+        comment: A few helper functions (clusterStores, seriesFor, project) needed
+          for the interactive re-clustering; reasonably organized, not over-engineered
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic
+        comment: Fixed-seed LCG since seeded Math.random is unavailable in the browser
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No unused imports; only globals used
+        comment: No imports beyond the provided echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; click/zoom interactivity is real and dispatched through
-          actual echarts actions
+        comment: Appropriate complexity for genuine zoom/re-cluster interactivity;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation:false set, no explicit size/devicePixelRatio
-          passed to init
+        comment: 'echarts.init with no explicit size/devicePixelRatio, animation:
+          false set'
     library_mastery:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -225,21 +233,21 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Idiomatic use of custom series renderItem, scatter series, inside-type
-          dataZoom, graphic components, and tooltip formatter
+        comment: Idiomatic use of custom series, dataZoom, tooltip formatter, and
+          graphic elements
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
-        comment: Leverages ECharts-distinctive custom renderItem for the basemap and
-          real dataZoom-driven zoom/pan interactivity, going well beyond a generic
-          scatter chart
+        passed: true
+        comment: Custom renderItem donut-ring glyph plus real dataZoom-driven zoom/pan/re-cluster
+          interactivity is well beyond generic scatter usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - hover-tooltips
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
