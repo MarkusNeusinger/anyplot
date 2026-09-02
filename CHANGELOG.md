@@ -37,6 +37,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   `api.indexnow.org` (10,000 per request; a deleted implementation is submitted too).
   `workflow_dispatch` with `scope=sitemap` submits the whole live sitemap for the initial
   load. Google does not take part and keeps reading the sitemap. The protocol is free.
+  (#11202)
 
 ### Fixed
 

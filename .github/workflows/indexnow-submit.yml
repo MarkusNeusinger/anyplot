@@ -59,11 +59,33 @@ jobs:
 
       - name: Collect URLs
         id: urls
+        env:
+          # Number of commits in the push; a squash merge is exactly one.
+          PUSH_COMMITS: ${{ github.event_name == 'push' && toJSON(github.event.commits) || '[]' }}
         run: |
           set -euo pipefail
+          # The full list comes from the checkout, not from the live sitemap:
+          # every spec directory is a hub page and every metadata file an
+          # implementation page (the same rule the sitemap follows), plus the
+          # static pages. No fetch means no Cloudflare edge or bot management
+          # between a GitHub runner and the list, and the shallow checkout
+          # still carries the complete tree.
+          full_list() {
+            for p in / /plots /specs /libraries /map /palette /about /mcp /legal /stats; do
+              echo "https://${HOST}${p}"
+            done
+            git ls-tree -d --name-only HEAD plots/ | awk -F/ '{ print "https://'"$HOST"'/" $2 }'
+            git ls-tree -r --name-only HEAD plots/ | awk -F/ '
+              $3 == "metadata" && NF == 5 { lib = $5; sub(/\.[^.]+$/, "", lib); print "https://'"$HOST"'/" $2 "/" $4 "/" lib }'
+          }
+          commits=$(jq 'length' <<<"$PUSH_COMMITS")
           if [ "$SCOPE" = "sitemap" ]; then
-            curl -sfS "https://${HOST}/sitemap.xml" \
-              | grep -oE '<loc>[^<]+</loc>' | sed -E 's#</?loc>##g' | sort -u > urls.txt
+            full_list | sort -u > urls.txt
+          elif [ "$commits" -gt 1 ]; then
+            # A multi-commit push (rare on main) is not what fetch-depth 2 can
+            # diff; submitting everything is cheap and always correct.
+            echo "::notice::push carries ${commits} commits; submitting the full list instead of a diff"
+            full_list | sort -u > urls.txt
           else
             git diff --name-only HEAD~1 HEAD -- plots/ | awk -F/ '
               $1 != "plots" || NF < 3 { next }
@@ -93,16 +115,21 @@ jobs:
               '{host: $host, key: $key, keyLocation: $loc,
                 urlList: ($list | split("\n") | map(select(length > 0)))}')
             # Bounded: a slow or flaky api.indexnow.org must not burn the job
-            # timeout; three retries cover a transient error.
+            # timeout; three retries cover a transient error, and a transport
+            # error after them yields code 000 for the branch below instead of
+            # aborting under `set -e`.
             code=$(curl -sS -o response.txt -w '%{http_code}' \
               --max-time 30 --retry 3 --retry-delay 5 --retry-all-errors \
               -X POST "https://api.indexnow.org/indexnow" \
               -H "Content-Type: application/json; charset=utf-8" \
-              --data "$body")
+              --data "$body") || code="000"
             n=$(grep -c . "$f")
             case "$code" in
               200|202) echo "::notice::IndexNow accepted ${n} URL(s) (HTTP ${code})" ;;
               # 4xx is a protocol or key problem on our side; make it visible.
-              *) echo "::error::IndexNow returned HTTP ${code} for ${n} URL(s): $(head -c 300 response.txt)"; exit 1 ;;
+              4*) echo "::error::IndexNow rejected ${n} URL(s) (HTTP ${code}): $(head -c 300 response.txt 2>/dev/null)"; exit 1 ;;
+              # 5xx / no response: their side. Every later push resubmits its
+              # own URLs and `scope=sitemap` covers a longer gap, so warn.
+              *) echo "::warning::IndexNow unavailable (HTTP ${code}) for ${n} URL(s); resubmit with scope=sitemap if it persists" ;;
             esac
           done
