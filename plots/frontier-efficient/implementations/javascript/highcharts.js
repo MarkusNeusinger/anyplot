@@ -94,8 +94,9 @@ const cmlSlope =
   (maxSharpePortfolio.ret - riskFreeRate) / maxSharpePortfolio.risk;
 const cmlMaxRisk = frontier[frontier.length - 1].risk * 1.15;
 
-// Color-code the random-portfolio cloud by Sharpe ratio (imprint_seq gradient)
-function lerpHex(a, b, frac) {
+// Color-code the random-portfolio cloud by Sharpe ratio (imprint_seq gradient),
+// returned as an rgba() string so alpha can vary per point.
+function lerpHex(a, b, frac, alpha) {
   const ah = parseInt(a.slice(1), 16);
   const bh = parseInt(b.slice(1), 16);
   const ar = (ah >> 16) & 0xff,
@@ -107,20 +108,28 @@ function lerpHex(a, b, frac) {
   const rr = Math.round(ar + (br - ar) * frac);
   const rg = Math.round(ag + (bg - ag) * frac);
   const rb = Math.round(ab + (bb - ab) * frac);
-  return `#${((1 << 24) + (rr << 16) + (rg << 8) + rb).toString(16).slice(1)}`;
+  return `rgba(${rr}, ${rg}, ${rb}, ${alpha})`;
 }
 
 const sharpeValues = portfolios.map((p) => p.sharpe);
 const sharpeMin = Math.min(...sharpeValues);
 const sharpeMax = Math.max(...sharpeValues);
 
+// Risk band where the random-portfolio cloud clumps most densely — thin it
+// out with a smaller radius and lower opacity so the frontier still reads.
+const DENSE_BAND_MIN = 8;
+const DENSE_BAND_MAX = 14;
+
 const cloudData = portfolios.map((p) => {
   const frac = (p.sharpe - sharpeMin) / (sharpeMax - sharpeMin);
+  const xPct = Number((p.risk * 100).toFixed(2));
+  const inDenseBand = xPct >= DENSE_BAND_MIN && xPct <= DENSE_BAND_MAX;
   return {
-    x: Number((p.risk * 100).toFixed(2)),
+    x: xPct,
     y: Number((p.ret * 100).toFixed(2)),
     sharpe: Number(p.sharpe.toFixed(2)),
-    color: lerpHex(t.seq[0], t.seq[1], frac),
+    color: lerpHex(t.seq[0], t.seq[1], frac, inDenseBand ? 0.5 : 0.75),
+    marker: inDenseBand ? { radius: 3 } : undefined,
   };
 });
 
@@ -152,7 +161,7 @@ Highcharts.chart("container", {
     style: { color: t.ink, fontSize: "22px", fontWeight: "600" },
   },
   subtitle: {
-    text: "Simulated 6-asset universe · point color encodes Sharpe ratio",
+    text: `Simulated 6-asset universe · point color encodes Sharpe ratio (${sharpeMin.toFixed(2)} low → ${sharpeMax.toFixed(2)} high)`,
     style: { color: t.inkSoft, fontSize: "14px" },
   },
   xAxis: {
@@ -208,7 +217,6 @@ Highcharts.chart("container", {
       type: "scatter",
       data: cloudData,
       marker: { radius: 4 },
-      opacity: 0.75,
       showInLegend: false,
     },
     {
