@@ -1,0 +1,245 @@
+library: chartjs
+language: javascript
+specification_id: heatmap-geographic
+created: '2026-09-02T00:59:38Z'
+updated: '2026-09-02T01:15:51Z'
+generated_by: claude-sonnet
+workflow_run: 33577114457
+issue: 3638
+language_version: 22.23.2
+library_version: 4.4.7
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/chartjs/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/chartjs/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/chartjs/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/javascript/chartjs/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'All three attempt-1 weaknesses addressed directly: schematic coastline basemap,
+    true gradient colorbar (replacing discrete swatches), and native zoom/pan'
+  - Zoom/pan implemented without an external plugin — correctly follows the Chart.js
+    library rule against reaching for uninstalled community plugins
+  - Colorbar gradient direction and tick placement (High near top/blue, Low near bottom/green)
+    are internally consistent with the bubble density-color mapping
+  - Ocean fill/coastline is subtle enough to read as context rather than competing
+    with the data layer, and uses theme tokens (t.seq, t.ink, t.inkSoft) correctly
+    in both themes
+  - Density floor and alpha/radius floor keep low-density edge cells visible in dark
+    mode instead of fading into the near-black background
+  - Theme-adaptive chrome remains fully correct in both renders — no dark-on-dark
+    or light-on-light failures anywhere, including the new elements
+  weaknesses:
+  - The coastline is a very rough, minimal sketch (a handful of straight segments)
+    rather than a recognizable geographic reference — it reads as 'some water is nearby'
+    more than genuine spatial grounding; a slightly denser polyline or a second landmark
+    would strengthen the narrative further
+  - The underlying visualization is still a grid-of-circles bubble mosaic rather than
+    a smoothly interpolated continuous surface, which is the closest Chart.js's core
+    chart types can get to a true heatmap — a structural limitation of the library,
+    not something further repair is likely to fix
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white.
+      Chrome: Title "heatmap-geographic · javascript · chartjs · anyplot.ai" in dark ink, clearly legible. Axis titles "Longitude"/"Latitude" and degree-formatted tick labels (e.g. "-122.44°") dark and readable. New schematic coastline with italic rotated "Pacific Ocean" label and light blue water tint along the western edge. Continuous vertical gradient colorbar (green->blue) with "Density" header and High/Medium/Low tick labels on the right. Grid lines faint but visible.
+      Data: Grid mosaic of circles across the eastern two-thirds of the longitude range; first/only series uses the Imprint sequential colormap (t.seq green->blue), radius and color both scale with density, hotspot core near -122.41/37.785 clearly the most intense (blue, largest circles).
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black.
+      Chrome: Title, axis titles, tick labels, colorbar "Density" header and High/Medium/Low ticks, and the coastline's "Pacific Ocean" label are all rendered in light tones and clearly legible. No dark-on-dark failures observed anywhere.
+      Data: Colors and circle layout are pixel-identical to the light render — confirms only chrome (background, text, grid, water tint) flips between themes. Low-density edge cells stay visible as small green circles rather than fading into the near-black background, thanks to the alpha/radius floor in the code.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All chrome text and new colorbar/coastline text readable in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Colorbar sits cleanly in the reserved right-hand padding, no collision
+          with data or axis
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Low-density edge cells stay visible in dark mode thanks to the alpha/radius
+          floor
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Sequential colormap, adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 3200x1800, nothing clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units (degree symbol)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint seq colormap, correct light/dark chrome backgrounds
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Coastline + true gradient colorbar meaningfully raise polish; still
+          a discrete circle mosaic rather than a smooth surface
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, clean colorbar plugin, restrained water tint
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Coastline anchors the hotspot pattern to a real place, colorbar clarifies
+          the density scale
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Density-mapped-bubble approximation of a geographic heatmap given
+          core Chart.js has no native matrix/heatmap type
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Basemap, continuous colorbar, and zoom-pan now all present; coastline
+          still rough/minimal
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Lon/lat correctly mapped to x/y
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; colorbar now genuinely continuous
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: KDE grid, hotspots, coastline all present
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible downtown incident clustering, neutral framing
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 900 points, sensible bounding box
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No classes, flat top-to-bottom structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond globals, nothing unused
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI, appropriate complexity for a KDE + basemap + colorbar
+          pipeline
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts canvas into #container, animation disabled, current Chart.js
+          API'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Avoided the uninstalled chartjs-plugin-zoom trap by wiring pan/zoom
+          directly onto the linear scales
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom colorbar plugin, custom basemap plugin, hand-rolled zoom/pan
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - colorbar
+  - zoom-pan
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
+  - alpha-blending
+  - gradient-fill
