@@ -1,0 +1,245 @@
+library: d3
+language: javascript
+specification_id: crossword-basic
+created: '2026-09-01T23:58:46Z'
+updated: '2026-09-02T00:16:24Z'
+generated_by: claude-sonnet
+workflow_run: 33572860780
+issue: 3805
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/javascript/d3/plot-dark.html
+quality_score: 85
+review:
+  strengths:
+  - 'Fixed the theme-inversion defect from attempt 1: blocked/entry cell fills are
+    now fixed hex literals (#1A1A17 / #FAF8F1) instead of theme-adaptive tokens, so
+    the puzzle''s black/white identity is now identical in both light and dark renders
+    — only the stroke and frame follow the theme, exactly matching the spec''s monochrome-data
+    intent.'
+  - Exact 180-degree rotational symmetry achieved via point-reflection construction
+    (bottom half derived from the top half) rather than manually mirrored coordinates
+    — verified programmatically to be a perfectly valid, fully-checked crossword grid
+    with no isolated single-letter cells.
+  - 'Correct standard newspaper-crossword numbering algorithm: checks both across-start
+    and down-start conditions and increments in reading order — verified correct.'
+  - Clue numbers now use a fixed dark NUMBER_FILL so they stay legible against the
+    fixed off-white entry-cell background in both themes, resolving the prior dark-theme
+    contrast concern.
+  - Idiomatic D3 data-join pattern (d3.cross + selectAll().data().join()) used for
+    both grid cells and clue numbers.
+  - Deterministic, hand-authored data with no randomness — fully reproducible; explicit
+    font sizing and exactly correct mandated title text.
+  - Square 2400x2400 canvas format is the right choice for a symmetric grid plot;
+    holds up cleanly even at the 400px mobile thumbnail size.
+  weaknesses:
+  - 'LM-02: no D3-distinctive feature is used beyond the basic data-join grid build
+    (no d3-scale, d3-hierarchy, d3-force, etc.) — mastery beyond basic API usage remains
+    limited. This is a soft ceiling for a grid plot type and not required to fix.'
+  - 'DE-03: visual hierarchy is inherent to the grid/numbering structure but there
+    is no additional emphasis (e.g. distinguishing across-only vs down-only start
+    cells, or subtle shading) to add storytelling beyond the base puzzle structure.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1.
+      Chrome: Bold dark title "crossword-basic · javascript · d3 · anyplot.ai" centered at top, clearly readable. Grid clue numbers (small dark-gray digits, ~15px) sit in the top-left corner of word-start cells, clearly readable against the off-white cell fill. Outer frame is a solid dark stroke; thin gray grid lines separate every cell.
+      Data: A 13x13 crossword grid with symmetric black blocking cells (fixed near-black fill) and white entry cells (fixed off-white fill), verified programmatically to have exact 180-degree rotational symmetry and no isolated/unchecked single-letter cells.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17.
+      Chrome: Title renders in light text, clearly readable against the dark background. Outer frame is a light stroke, visible against the dark page.
+      Data: Blocked cells and entry cells now use the SAME fixed hex fills as the light render (#1A1A17 blocked / #FAF8F1 entry) — the puzzle's black/white identity no longer inverts between themes, resolving the attempt-1 defect. Clue numbers remain dark-gray on the fixed off-white entry-cell fill (not theme-flipped), so they stay legible on both surfaces. Verified at the 400px mobile thumbnail size — the grid, blocks, and numbers all remain crisp and distinguishable against the dark page background.
+      Legibility verdict: PASS (no dark-on-dark or light-on-light failures; cell-fill identity now matches the light render as required).
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes (26px title, 15px numbers); readable in both
+          themes; verified crisp even at 400px thumbnail
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between numbers, cells, or title
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Fixed entry/block fills now give strong, theme-independent contrast;
+          dark-theme contrast issue from attempt 1 is resolved
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome design, no red-green or hue-only signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid fills the square canvas well with balanced margins, nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for a grid plot; title is descriptive and correctly
+          formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed hex literals for the data pattern (block/entry) render identically
+          in both themes; only chrome (stroke, frame, title) follows the theme tokens
+          as required
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean newspaper-style monochrome grid, above a plain default but
+          not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle strokes, generous margins, consistent frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Structure and numbering give inherent hierarchy; no additional emphasis
+          beyond that
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct crossword grid type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Symmetric blocking, numbering, uniform grid lines, and now theme-stable
+          black/white cell identity all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Grid rows/cols and numbering logic correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches mandated format; no legend needed
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows blocked cells, entry cells, across-start and down-start numbering,
+          symmetric pattern; verified fully-checked grid with no isolated cells
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral, newspaper-style puzzle layout
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13x13 grid within the 10-15 spec range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear script
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, no randomness
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the global d3, no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant point-reflection symmetry construction, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, current D3 v7 join API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct idiomatic selection.data().join() pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic SVG grid build; no D3-distinctive feature (scales, hierarchy,
+          etc.) used
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - matrix-construction
+  - data-generation
+  dataprep: []
+  styling: []
