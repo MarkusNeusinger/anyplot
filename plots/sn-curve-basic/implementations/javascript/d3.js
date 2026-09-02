@@ -51,7 +51,15 @@ const fitSamples = d3.range(0, 121).map((i) => {
 });
 
 // --- Scales -------------------------------------------------------------------
-const x = d3.scaleLog().domain([1e3, 1e7]).range([0, iw]);
+// Derive the x domain from the actual jittered data (padded) instead of hardcoding
+// [1e3, 1e7] — the 700 MPa level's base cycle count sits right at 1e3, and jitter
+// can push some specimens below that fixed boundary.
+const cycleExtent = d3.extent([...data.map((d) => d.cycles), basquinN1, fitMaxCycles]);
+const domainPad = 1.08; // headroom so edge markers never clip against the axes
+const x = d3
+  .scaleLog()
+  .domain([cycleExtent[0] / domainPad, cycleExtent[1] * domainPad])
+  .range([0, iw]);
 const y = d3.scaleLog().domain([380, 1000]).range([ih, 0]);
 
 // --- SVG mount ------------------------------------------------------------
@@ -93,7 +101,14 @@ const xAxis = g
 xAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
 xAxis.select(".domain").attr("stroke", t.inkSoft);
 
-const yAxis = g.append("g").call(d3.axisLeft(y).ticks(7, "~s").tickSize(0).tickPadding(10));
+const yAxis = g.append("g").call(
+  d3
+    .axisLeft(y)
+    .ticks(7)
+    .tickFormat((d) => d3.format(",")(d))
+    .tickSize(0)
+    .tickPadding(10),
+);
 yAxis.selectAll("text").attr("fill", t.inkSoft).style("font-size", "15px");
 yAxis.select(".domain").attr("stroke", t.inkSoft);
 
@@ -150,7 +165,11 @@ g.selectAll("circle")
   .attr("stroke-width", 1.5);
 
 // --- Legend ----------------------------------------------------------------
-const legend = g.append("g").attr("transform", `translate(${iw - 300},170)`);
+// Anchored below the endurance-limit line, which is always the lowest reference
+// line and stays clear of the data cloud (no stress level plots below it) —
+// unlike a fixed y, this never collides with a reference line or the scatter.
+const legendY = y(enduranceLimit) + 25;
+const legend = g.append("g").attr("transform", `translate(${iw - 300},${legendY})`);
 legend
   .append("circle")
   .attr("cx", 8)
