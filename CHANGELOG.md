@@ -28,6 +28,15 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Fixed
 
+- **Implementation pages no longer share one meta description per spec** — the SEO
+  proxy reused the spec description verbatim as the `<meta name="description">` and OG
+  description of every implementation page, so up to 15 library pages and their hub
+  carried an identical snippet; 4,254 plot pages had about 334 distinct descriptions,
+  which Bing Webmaster Tools flagged as "too many pages with identical meta descriptions".
+  The snippet now opens with the page's identity, `{title} in {library} ({language}):
+  {description}`, trimmed to 155 characters as before, so a searcher who typed the
+  library name sees it in the result. The hub keeps the plain description; body copy
+  and JSON-LD are unchanged.
 - **Infrastructure failures no longer spend a pair's generation budget** — the
   3-attempt cap in `impl-generate.yml` counted every failed run alike, so the Claude
   outage of 2026-09-02 (03:15–03:45 UTC, every run ending in `is_error:true` with an
