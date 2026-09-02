@@ -1,0 +1,248 @@
+library: d3
+language: javascript
+specification_id: bar-stacked
+created: '2026-09-02T13:28:34Z'
+updated: '2026-09-02T13:33:18Z'
+generated_by: claude-sonnet
+workflow_run: 33635477488
+issue: 1947
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correct Imprint palette in canonical order (Software=#009E73 brand green first,
+    then lavender/blue/ochre), identical data colors across light and dark renders
+  - Idiomatic d3.stack() + selection.join() data-join pattern, exactly the right d3-shape
+    tool for a stacked bar chart
+  - Bold total-value labels above each stack ($100M...$130M) directly implement the
+    spec's 'consider adding total value labels' suggestion and add real storytelling
+    value
+  - All font sizes explicitly set; both renders fully legible with correct theme-adaptive
+    chrome (ink/inkSoft/grid tokens threaded through axes, title, legend, labels)
+  - Measured, centered legend built with getBBox() for pixel-accurate horizontal centering
+    — no drift or overlap
+  - Y-axis-only subtle gridlines, L-shaped spine (left+bottom kept, top/right absent),
+    generous whitespace, white/bg stroke between stacked segments for definition
+  - Realistic, neutral quarterly software-company revenue data with correct component
+    ordering (largest component 'Software' consistently at the bottom of every bar)
+  weaknesses:
+  - Y-axis keeps its small per-tick line marks in addition to the full-width horizontal
+    gridlines from the '.grid' group — redundant chrome; remove the y-axis's own tick
+    line marks (mirror the `xAxis.selectAll('line').remove()` treatment already applied
+    to the x-axis) so gridlines alone carry that role.
+  - Design excellence is solid (measured legend, total labels, stroke separators)
+    but conventional rather than exceptional — consider one more visual-hierarchy
+    touch, e.g. lightly emphasizing the ~30% total revenue growth from 2023 Q1 to
+    2024 Q2, to push data storytelling further.
+  - After the length-based font-shrink formula, the title occupies only ~40-45% of
+    the plot width, on the low end of the 50-70% comfortable range — not a violation,
+    but there's headroom to size it slightly larger without risking overflow.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Quarterly Revenue by Product Line · bar-stacked · javascript · d3 · anyplot.ai" centered at top in bold dark ink; horizontal legend (Software/Hardware/Services/Support) below the title, centered; Y-axis "Revenue ($M)" with $-formatted, unit-labeled ticks; X-axis "Quarter" with six quarter categories (2023 Q1 - 2024 Q2); subtle horizontal gridlines only. All chrome text renders in dark ink against the light background.
+      Data: Six stacked bars, four segments each in Imprint order — Software (#009E73 green, bottom), Hardware (lavender), Services (blue), Support (ochre, top) — with a white stroke between segments for definition. Bold total-value labels ($100M ... $130M) sit above each stack.
+      Legibility verdict: PASS — all title, axis, tick, legend, and data-label text is clearly readable against the light background; no overlap.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout as the light render — title, legend, axis labels, ticks, and total-value labels are all re-rendered in light ink (white/near-white) against the dark background. Gridlines remain subtle and visible.
+      Data: Identical stacked-bar structure and identical segment colors to the light render (Software green, Hardware lavender, Services blue, Support ochre) — confirming data colors are constant across themes; only chrome flips. The white/pageBg stroke between segments becomes a dark-colored separator in this theme, still providing clean segment definition against the bright fills.
+      Legibility verdict: PASS — no dark-on-dark failures; every text element (title, axis labels, ticks, legend, total labels) is clearly legible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; well-proportioned, no overflow, readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bar segments clearly visible with white stroke separators
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Imprint palette, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills the canvas well with balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Revenue ($M) and Quarter, descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, canonical Imprint order, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful typography, stroke separators, measured legend — clearly
+          above defaults but not publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine, subtle y-only grid, generous whitespace; minor redundant
+          y-axis tick marks alongside gridlines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bold total labels create a clear growth-focused focal point beyond
+          a raw data dump
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Distinct colors + legend, total labels above stacks, consistent largest-at-bottom
+          ordering, adequate bar spacing
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Category on X, stacked revenue on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format with descriptive prefix; legend labels
+          match series keys
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Four differentiated components with varying magnitude and share across
+          quarters
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible quarterly software-company revenue scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Revenue values and proportions are realistic for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions/classes, linear top-to-bottom structure
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global used, no unused imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, no manual save calls needed
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.stack(), scaleBand/scaleLinear/scaleOrdinal, axisBottom/axisLeft,
+          join() pattern — expert idiomatic usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: getBBox()-measured legend centering and low-level stack+join pattern
+          are D3-specific, though not maximally exploited
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - edge-highlighting
+  - grid-styling
