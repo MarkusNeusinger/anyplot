@@ -7,8 +7,9 @@ const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
 // Feature importances from a gradient-boosted model predicting house sale
-// price (King County-style housing data), sorted ascending so the highest
-// importance ends up at the top of the horizontal bar chart.
+// price (King County-style housing data), sorted descending so the highest
+// importance renders at the top -- Chart.js horizontal bars (indexAxis: "y")
+// place labels[0] at the top by default.
 const features = [
   { name: "Waterfront view", importance: 0.012 },
   { name: "Renovation year", importance: 0.015 },
@@ -24,7 +25,7 @@ const features = [
   { name: "Above-ground area (sqft)", importance: 0.101 },
   { name: "Construction grade", importance: 0.138 },
   { name: "Living area (sqft)", importance: 0.187 },
-].sort((a, b) => a.importance - b.importance);
+].sort((a, b) => b.importance - a.importance);
 
 const labels = features.map((f) => f.name);
 const values = features.map((f) => f.importance);
@@ -49,6 +50,11 @@ const barColors = values.map((v) => {
   return lerpColor(t.seq[0], t.seq[1], ratio);
 });
 
+// Subtle emphasis on the single most important feature (index 0, now at the
+// top after the descending sort) to sharpen the "what matters most" story.
+const borderWidths = values.map((_, i) => (i === 0 ? 2 : 0));
+const borderColors = values.map((_, i) => (i === 0 ? t.ink : "transparent"));
+
 // --- Value labels at bar end (native Chart.js plugin API, no external deps) -
 const valueLabelsPlugin = {
   id: "valueLabels",
@@ -57,10 +63,10 @@ const valueLabelsPlugin = {
     const meta = chart.getDatasetMeta(0);
     ctx.save();
     ctx.fillStyle = t.ink;
-    ctx.font = "500 15px sans-serif";
     ctx.textBaseline = "middle";
     ctx.textAlign = "left";
     meta.data.forEach((bar, i) => {
+      ctx.font = i === 0 ? "700 15px sans-serif" : "500 15px sans-serif";
       ctx.fillText(values[i].toFixed(3), bar.x + 10, bar.y);
     });
     ctx.restore();
@@ -81,7 +87,8 @@ new Chart(canvas, {
         label: "Feature importance",
         data: values,
         backgroundColor: barColors,
-        borderWidth: 0,
+        borderColor: borderColors,
+        borderWidth: borderWidths,
         barPercentage: 0.75,
         categoryPercentage: 0.85,
       },
@@ -121,6 +128,12 @@ new Chart(canvas, {
       y: {
         ticks: { color: t.inkSoft, font: { size: 15 } },
         grid: { display: false },
+        title: {
+          display: true,
+          text: "Feature",
+          color: t.ink,
+          font: { size: 18 },
+        },
         border: { color: t.inkSoft },
       },
     },
