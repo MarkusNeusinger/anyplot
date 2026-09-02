@@ -78,12 +78,25 @@ errorGroups
   .attr("stroke", t.ink)
   .attr("stroke-width", 2.5);
 
+// --- Peak callout (data storytelling) -----------------------------------
+const peak = data.reduce((a, b) => (b.mean > a.mean ? b : a));
+const peakX = x(peak.treatment) + x.bandwidth() / 2;
+const peakY = y(peak.mean + peak.sd) - 14;
+g.append("path")
+  .attr("d", `M${peakX - 6},${peakY} L${peakX + 6},${peakY} L${peakX},${peakY + 9} Z`)
+  .attr("fill", t.ink);
+g.append("text")
+  .attr("x", peakX)
+  .attr("y", peakY - 8)
+  .attr("text-anchor", "middle")
+  .attr("fill", t.ink)
+  .style("font-size", "14px")
+  .style("font-weight", "600")
+  .text("Peak");
+
 // --- Axes ----------------------------------------------------------------
 const xAxis = g.append("g").attr("transform", `translate(0,${ih})`).call(d3.axisBottom(x).tickSizeOuter(0));
-const yAxis = g
-  .append("g")
-  .call(d3.axisLeft(y).ticks(6).tickSizeOuter(0))
-  .call((sel) => sel.selectAll(".tick line").clone().attr("x2", 0));
+const yAxis = g.append("g").call(d3.axisLeft(y).ticks(6).tickSizeOuter(0));
 
 for (const ax of [xAxis, yAxis]) {
   ax.selectAll("text").attr("fill", t.inkSoft).style("font-size", "16px");
@@ -91,6 +104,13 @@ for (const ax of [xAxis, yAxis]) {
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
 g.selectAll(".tick line").attr("stroke", t.inkSoft);
+
+// Emphasize the peak treatment's x-axis label to guide the reader to it.
+xAxis
+  .selectAll("text")
+  .filter((d) => d === peak.treatment)
+  .style("font-weight", "700")
+  .attr("fill", t.ink);
 
 // --- Axis labels ---------------------------------------------------------
 g.append("text")
