@@ -17,6 +17,11 @@ const ELEVATED = THEME == "light" ? colorant"#FFFDF6" : colorant"#242420"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const MUTED    = THEME == "light" ? colorant"#6B6A63" : colorant"#A8A79F"
+# Data tiles keep the same green/blue fill in both themes, so the label ink
+# drawn on top of them must stay fixed too — it must NOT follow a
+# theme-adaptive chrome token like ELEVATED, which is for callout-box
+# backgrounds and correctly flips dark in dark mode (wrong here).
+const DATA_TILE_INK = colorant"#FFFDF6"
 
 # Imprint sequential colormap — single-polarity continuous data
 const IMPRINT_SEQ = cgrad([colorant"#009E73", colorant"#4467A3"])
@@ -47,7 +52,20 @@ const STATE_GRID = Dict(
 )
 
 states = sort(collect(keys(STATE_GRID)))
-renewable_share = Dict(s => round(15 + 70 * rand(), digits=1) for s in states)
+
+# Illustrative/synthetic values (not sourced from real generation
+# statistics). A mild regional bias is layered on top of the random
+# baseline — Pacific/Mountain/Plains states lean higher (wind + hydro
+# capacity), a few coal-belt Southeast/Midwest states lean lower — so the
+# map reads as a plausible spatial pattern rather than pure noise.
+const HIGH_RENEWABLE_STATES = Set(["WA", "OR", "CA", "ID", "IA", "KS", "ND", "VT", "ME", "NH"])
+const LOW_RENEWABLE_STATES  = Set(["WV", "KY", "IN", "OH", "MS", "AL", "LA"])
+
+renewable_share = Dict{String, Float64}()
+for s in states
+    bias = s in HIGH_RENEWABLE_STATES ? 15.0 : (s in LOW_RENEWABLE_STATES ? -10.0 : 0.0)
+    renewable_share[s] = clamp(round(15 + 55 * rand() + bias, digits=1), 5.0, 92.0)
+end
 
 # A few states have not reported yet — rendered as muted "no data" tiles
 for s in ("MT", "SD", "WY")
@@ -85,7 +103,7 @@ for s in states
     fill_color = missing_data ? MUTED : IMPRINT_SEQ[(v - vmin) / (vmax - vmin)]
     # MUTED flips from medium-dark (light theme) to medium-light (dark theme),
     # so the "no data" tile needs the opposite text tone from data tiles.
-    text_color = missing_data ? (THEME == "light" ? ELEVATED : colorant"#1A1A17") : ELEVATED
+    text_color = missing_data ? (THEME == "light" ? ELEVATED : colorant"#1A1A17") : DATA_TILE_INK
 
     poly!(ax, Rect2f(x - tile / 2, y - tile / 2, tile, tile);
           color = fill_color, strokewidth = 2, strokecolor = PAGE_BG)
