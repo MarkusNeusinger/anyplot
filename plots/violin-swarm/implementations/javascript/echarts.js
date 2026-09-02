@@ -31,12 +31,10 @@ const samplesByCategory = [
 ];
 
 // --- Kernel density estimation (Gaussian kernel, Silverman bandwidth) ------
-function mean(values) {
-  return values.reduce((sum, v) => sum + v, 0) / values.length;
-}
-function stdDev(values) {
-  const m = mean(values);
-  return Math.sqrt(mean(values.map((v) => (v - m) ** 2)));
+function meanAndStdDev(values) {
+  const m = values.reduce((sum, v) => sum + v, 0) / values.length;
+  const variance = values.reduce((sum, v) => sum + (v - m) ** 2, 0) / values.length;
+  return { mean: m, stdDev: Math.sqrt(variance) };
 }
 function quantile(sortedValues, q) {
   const pos = (sortedValues.length - 1) * q;
@@ -48,11 +46,9 @@ function quantile(sortedValues, q) {
 }
 function silvermanBandwidth(values) {
   const sorted = [...values].sort((a, b) => a - b);
-  const spread = Math.min(
-    stdDev(values),
-    (quantile(sorted, 0.75) - quantile(sorted, 0.25)) / 1.34
-  );
-  return 0.9 * (spread || stdDev(values)) * Math.pow(values.length, -0.2);
+  const { stdDev } = meanAndStdDev(values);
+  const spread = Math.min(stdDev, (quantile(sorted, 0.75) - quantile(sorted, 0.25)) / 1.34);
+  return 0.9 * (spread || stdDev) * Math.pow(values.length, -0.2);
 }
 function gaussianKde(values, bandwidth) {
   return (y) => {
@@ -119,20 +115,27 @@ function beeswarmOffsets(violin) {
       bins[binIndex].push(i);
     });
   const offsets = new Array(values.length).fill(0);
+  // Density-scaled marker size: bins forced below MAX_POINT_SPACING (crowded)
+  // get a ratio < 1 so renderer can shrink/lighten points to stay distinguishable.
+  const sizeRatios = new Array(values.length).fill(1);
   bins.forEach((indices, binIndex) => {
     const count = indices.length;
     if (count === 0) return;
     const binCenterY = yMin + (binIndex + 0.5) * binWidth;
     const spacing = Math.min(MAX_POINT_SPACING, (2 * halfWidthAt(violin, binCenterY)) / count);
+    const ratio = Math.max(0.4, Math.min(1, spacing / MAX_POINT_SPACING));
     indices.forEach((valueIndex, k) => {
       offsets[valueIndex] = (k - (count - 1) / 2) * spacing;
+      sizeRatios[valueIndex] = ratio;
     });
   });
-  return offsets;
+  return { offsets, sizeRatios };
 }
 
 violins.forEach((violin) => {
-  violin.offsets = beeswarmOffsets(violin);
+  const { offsets, sizeRatios } = beeswarmOffsets(violin);
+  violin.offsets = offsets;
+  violin.sizeRatios = sizeRatios;
 });
 
 // --- Series data --------------------------------------------------------
@@ -147,8 +150,19 @@ const violinOutlines = violins.map((violin) => {
   return points;
 });
 
+// Low Dose is the deliberately bimodal category (see data generation above);
+// give it a subtle accent so the storytelling point isn't purely implicit.
+const BIMODAL_INDEX = 1;
+
 const swarmPoints = violins.flatMap((violin) =>
-  violin.values.map((value, i) => [violin.index + violin.offsets[i], value])
+  violin.values.map((value, i) => {
+    const ratio = violin.sizeRatios[i];
+    return {
+      value: [violin.index + violin.offsets[i], value],
+      symbolSize: 6 + ratio * 4,
+      itemStyle: { opacity: 0.55 + ratio * 0.3 },
+    };
+  })
 );
 
 function hexToRgba(hex, alpha) {
@@ -160,21 +174,28 @@ function hexToRgba(hex, alpha) {
 
 function renderViolin(params, api) {
   const points = violinOutlines[params.dataIndex].map((p) => api.coord(p));
+  const isBimodal = params.dataIndex === BIMODAL_INDEX;
   return {
     type: "polygon",
     shape: { points },
     style: {
       fill: hexToRgba(t.palette[0], 0.4),
-      stroke: t.palette[0],
-      lineWidth: 1.5,
+      stroke: isBimodal ? t.amber : t.palette[0],
+      lineWidth: isBimodal ? 2.5 : 1.5,
     },
   };
 }
 
 // --- Chart ----------------------------------------------------------------
 const titleText = "Reaction Time by Caffeine Dose · violin-swarm · javascript · echarts · anyplot.ai";
+// Moderately-long descriptive titles (up to 110 chars) hold a higher floor so
+// they keep visual presence; only titles beyond that shrink proportionally.
 const titleFontSize =
-  titleText.length > 67 ? Math.max(14, Math.round(22 * (67 / titleText.length))) : 22;
+  titleText.length > 110
+    ? Math.max(16, Math.round(24 * (110 / titleText.length)))
+    : titleText.length > 67
+      ? 24
+      : 22;
 
 const chart = echarts.init(document.getElementById("container"));
 chart.setOption({
@@ -242,14 +263,36 @@ chart.setOption({
       name: "Observations",
       type: "scatter",
       data: swarmPoints,
-      symbolSize: 9,
       itemStyle: {
         color: t.palette[1],
-        opacity: 0.85,
         borderColor: t.pageBg,
         borderWidth: 1,
       },
       z: 3,
+    },
+  ],
+});
+
+// --- Storytelling callout: label the deliberately bimodal Low Dose group ---
+const bimodalViolin = violins[BIMODAL_INDEX];
+const bimodalTopY = bimodalViolin.grid[bimodalViolin.grid.length - 1];
+const [labelX, labelY] = chart.convertToPixel(
+  { xAxisIndex: 0, yAxisIndex: 0 },
+  [bimodalViolin.index, bimodalTopY]
+);
+chart.setOption({
+  graphic: [
+    {
+      type: "text",
+      left: labelX - 52,
+      top: labelY - 30,
+      z: 10,
+      style: {
+        text: "Bimodal response",
+        fill: t.amber,
+        fontSize: 13,
+        fontWeight: 600,
+      },
     },
   ],
 });
