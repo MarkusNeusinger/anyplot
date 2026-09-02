@@ -36,7 +36,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   the 2026-09-02 outage rescue with both labels for the same libraries, and every
   watchdog scan since reported those pairs as "already retried — needs manual
   attention". The labels are now removed one at a time, each call tolerated, and
-  `watchdog:retried-<lib>` goes with them.
+  `watchdog:retried-<lib>` goes with them. (#11197)
 - **The API image installs `libraqm0`, which is what actually restores text shaping —
   and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
   build-time assertion on `features.check('raqm')` on the understanding that the locked
