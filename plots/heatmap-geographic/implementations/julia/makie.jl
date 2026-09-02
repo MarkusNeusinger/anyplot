@@ -44,6 +44,13 @@ latitudes = clamp.(latitudes, LAT_MIN, LAT_MAX)
 n_points = length(longitudes)
 weights = acres_burned ./ mean(acres_burned)
 
+# --- Simplified western-US geographic context (Pacific coastline + national
+# borders) — a small set of hardcoded boundary points, no GeoMakie needed ----
+boundary_lon = [-117.2, -118.5, -120.5, -122.5, -124.3, -124.1, -124.0, -124.7,
+    -123.2, -116.0, -104.05, -104.05, -104.05, -102.05, -103.0, -106.5, -111.0, -117.2]
+boundary_lat = [32.5, 33.9, 34.6, 37.8, 40.3, 43.5, 46.2, 47.9,
+    49.0, 49.0, 49.0, 45.0, 41.0, 37.0, 32.0, 31.8, 31.3, 32.5]
+
 # --- Kernel density estimation on a regular lon/lat grid ---------------------
 # Silverman's rule of thumb bandwidth, per dimension
 bw_lon = std(longitudes) * n_points^(-1 / 6)
@@ -54,20 +61,16 @@ lon_grid = range(LON_MIN, LON_MAX; length=grid_n)
 lat_grid = range(LAT_MIN, LAT_MAX; length=grid_n)
 norm_factor = 1.0 / (2 * pi * bw_lon * bw_lat)
 
+# Broadcast the (grid_n,) squared-distance vectors into a (grid_n, grid_n)
+# outer-sum matrix per point, accumulating over points — avoids a manual
+# triple-nested loop while keeping the same grid_n × grid_n × n_points cost.
 density = zeros(grid_n, grid_n)
-for i in 1:grid_n
-    gx = lon_grid[i]
-    for j in 1:grid_n
-        gy = lat_grid[j]
-        acc = 0.0
-        for k in 1:n_points
-            dx = (gx - longitudes[k]) / bw_lon
-            dy = (gy - latitudes[k]) / bw_lat
-            acc += weights[k] * exp(-0.5 * (dx^2 + dy^2))
-        end
-        density[i, j] = acc * norm_factor
-    end
+for k in 1:n_points
+    dx2 = ((lon_grid .- longitudes[k]) ./ bw_lon) .^ 2
+    dy2 = ((lat_grid .- latitudes[k]) ./ bw_lat) .^ 2
+    density .+= weights[k] .* exp.(-0.5 .* (dx2 .+ dy2'))
 end
+density .*= norm_factor
 
 # --- Title (fontsize scales down once the descriptive prefix pushes past the
 # ~67-char mandated-title baseline) -------------------------------------------
@@ -109,12 +112,16 @@ ax = Axis(
     ygridvisible      = false,
 )
 
-hm = heatmap!(ax, lon_grid, lat_grid, density; colormap=ANYPLOT_SEQ)
+# Basemap: simplified coastline/border outline, drawn first so the
+# semi-transparent density layer shows it through underneath
+lines!(ax, boundary_lon, boundary_lat; color=INK_SOFT, linewidth=1.2)
+
+hm = heatmap!(ax, lon_grid, lat_grid, density; colormap=ANYPLOT_SEQ, alpha=0.85)
 
 # Raw ignition points, faint, for spatial context under the density layer
 scatter!(ax, longitudes, latitudes;
     color       = (PAGE_BG, 0.45),
-    markersize  = 3,
+    markersize  = 5,
     strokewidth = 0,
 )
 
