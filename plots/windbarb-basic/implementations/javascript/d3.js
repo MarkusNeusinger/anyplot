@@ -1,7 +1,7 @@
 // anyplot.ai
 // windbarb-basic: Wind Barb Plot for Meteorological Data
 // Library: d3 7.9.0 | JavaScript 22.23.2
-// Quality: 87/100 | Created: 2026-09-02
+// Quality: 85/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 const { width, height } = window.ANYPLOT_SIZE;
