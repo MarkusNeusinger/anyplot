@@ -1,0 +1,251 @@
+library: ggplot2
+language: r
+specification_id: box-horizontal
+created: '2026-09-02T13:21:16Z'
+updated: '2026-09-02T13:46:00Z'
+generated_by: claude-sonnet
+workflow_run: 33634910499
+issue: 2548
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Both attempt-2 bugs are fixed: the stat_summary() mean-diamond now renders centered
+    in every box (orientation = "y" was the correct fix), and the plot.caption explaining
+    the diamond symbol is fully visible above the canvas bottom edge in both themes'
+  - Categories remain sorted descending by median salary (Data Scientist at top, Customer
+    Support Rep at bottom), creating a clear staircase that guides comparison and
+    demonstrates data storytelling
+  - All required statistical elements (median line, IQR box, whiskers, outliers) plus
+    the new mean marker are present and correctly rendered in both themes
+  - 'Theme-adaptive chrome is threaded correctly: INK/INK_SOFT/PAGE_BG flip between
+    renders while the brand-green data color (#009E73) and the mean-marker styling
+    stay pixel-identical in role'
+  - Correct canvas size (3200x1800 landscape), correct mandated title format, x-axis
+    has units, clean/reproducible/KISS-structured code
+  - The caption doubles as an informal legend, explaining both the diamond (mean)
+    and the box (median/IQR) without needing a separate legend box
+  weaknesses:
+  - 'Aesthetic sophistication is still moderate rather than exceptional: box fill
+    is a single flat brand-green alpha blend, with no further stylistic layering (e.g.
+    varying box width by group sample size, subtle emphasis on the top/bottom performer)
+    beyond the mean-marker addition'
+  - 'Library Mastery is solid but not exceptional: stat_summary(orientation = "y")
+    plus a custom diamond shape is a nice touch, but it''s a fairly common ggplot2
+    pattern rather than something that showcases a truly distinctive capability of
+    the grammar-of-graphics layer system'
+  - Y-axis category-label font (9pt) is very slightly larger than the x-axis tick-label
+    font (8pt) — a minor asymmetry, not a legibility problem
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "box-horizontal · r · ggplot2 · anyplot.ai" in dark ink at top; y-axis category labels (7 job titles, sorted ascending bottom-to-top by median salary) and x-axis tick labels (60/90/120/150) all dark-on-light and fully readable; x-axis title "Annual Salary (thousands USD)" present with units; caption "◆ marks the mean; box marks the median and interquartile range" is fully visible below the x-axis title, not clipped.
+      Data: Boxes filled brand green (#009E73) at ~75% alpha with dark ink borders and a dark median line; a white diamond with dark outline (mean marker) is now clearly visible centered inside every box; whiskers are thin dark horizontal lines; 3 outlier points (Data Scientist, Product Manager, Customer Support Rep rows) render as small green dots.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, category labels, tick labels, axis title, and caption, now light-on-dark and fully readable; no dark-on-dark failures. Gridlines are faint light vertical lines on the dark surface.
+      Data: Box fill is the same brand green #009E73 at the same alpha — confirmed pixel-identical to the light render; median line and box borders flip to light ink; the mean-marker diamond now renders as a black diamond with a light/white outline, still clearly visible against the green fill; outlier dots are the same green as the light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set, readable in both themes; minor y/x
+          tick-label size asymmetry (9pt vs 8pt)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap between text, boxes, mean markers, or outlier points
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Boxes, whiskers, outliers (size 2.6, alpha 0.85), and mean diamonds
+          all clearly visible for 7 categories
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast; diamond outline gives redundant encoding beyond hue
+          alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Caption bug from attempt 2 is fixed — plot.margin(b=40) gives the
+          caption row enough room; balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Annual Salary (thousands USD)" includes units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, identical across themes, theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Flat brand-green fill remains the core look, but the now-functional
+          mean-diamond marker and explanatory caption add intentional polish above
+          a stock geom_boxplot()
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: y-axis gridlines/ticks removed, subtle x-only major grid, generous
+          margins now correctly fit the caption
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Descending sort by median salary creates a clear staircase guiding
+          comparison
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal box plot, values on x, categories on y
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median, IQR box, whiskers, outliers, plus bonus mean marker, all
+          working
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=salary, y=job title, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format; caption serves as an informal legend
+          for the mean marker
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Outliers and varying spreads/medians across all 7 categories
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Salary-by-job-title is plausible and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Salary ranges and role ordering (Data Scientist highest, Customer
+          Support Rep lowest) are realistic
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: stat_summary(orientation = "y") now correctly implemented, no dead
+          code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ragg::agg_png at correct 8x4.5in/400dpi landscape size
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Idiomatic aes mapping, tidyverse rowwise/reframe pipe, theme_minimal
+          base
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: stat_summary() layer with custom orientation and diamond shape is
+          a real ggplot2-layer technique, though a fairly common one
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - publication-ready

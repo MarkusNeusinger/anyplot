@@ -1,0 +1,257 @@
+library: echarts
+language: javascript
+specification_id: box-horizontal
+created: '2026-09-02T13:35:00Z'
+updated: '2026-09-02T13:55:53Z'
+generated_by: claude-sonnet
+workflow_run: 33635926317
+issue: 2548
+language_version: 22.23.2
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/echarts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/echarts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/echarts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/box-horizontal/javascript/echarts/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Fixed the attempt-1 LM-01 weakness: replaced the manual percentile/IQR/outlier
+    computation with ECharts'' own built-in dataset "boxplot" transform, computing
+    boxData and outliers via the library''s recommended pipeline instead of reimplementing
+    statistics by hand'
+  - 'Fixed the attempt-1 LM-02/DE-03 weaknesses: added an overall-median markLine
+    with a formatted "$97k" label, giving the chart a distinctive ECharts-specific
+    feature and a clear comparative insight (which roles sit above/below the org-wide
+    median)'
+  - 'Correct Imprint palette: lowest-median category (Customer Support Representative)
+    renders in brand green #009E73, remaining categories follow canonical order 2-6,
+    data colors identical between light and dark renders'
+  - Theme-adaptive chrome fully correct in both renders - no dark-on-dark or light-on-light
+    failures, warm off-white/near-black backgrounds correctly applied
+  - Distinctive hollow-box styling (elevated-surface fill + colorBy:"data" per-category
+    border) instead of a default filled box, driven by the library itself rather than
+    manual itemStyle bookkeeping
+  - Deterministic LCG-seeded data, realistic salary-by-job-title scenario with genuine
+    outliers and varied spreads across 6 categories, sorted ascending by median per
+    the spec's explicit guidance
+  - 'Canvas dimension gate passed, mandated title format exact, mount-node contract
+    followed (no explicit init size, animation: false)'
+  weaknesses:
+  - 'LM-02 still short of a 5/5: the boxplot-transform + markLine combination is a
+    solid distinctive touch, but a richer showcase (e.g. a visualMap-driven emphasis,
+    or exploiting the boxplot transform''s outlier dataset for a styled tooltip) would
+    push further'
+  - 'DE-01/DE-02 are good but not yet publication-level: the hollow-box look and median
+    markLine are thoughtful, but the overall composition still reads as a well-executed
+    standard boxplot rather than a fully bespoke design'
+  - 'Minor (carried over from attempt 1, still present): the single Software Engineer
+    outlier (~$214k) stretches the x-axis out to 250, leaving a fairly empty band
+    from ~170-250 in both renders - consider a broken-axis or annotation-callout treatment
+    if this recurs in future attempts'
+  - 'VQ-03 element visibility is good but not optimal: box widths ([16,32]) and outlier
+    markers (13px) are visible but could be marginally more prominent given the sparse
+    (16-22 pt) per-group density'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 - not pure white.
+      Chrome: Title "box-horizontal · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. X-axis title "Annual Salary ($1,000s)" with tick labels 0-250 in soft dark gray. Y-axis category labels (six job titles, longest "Customer Support Representative") fully readable, not truncated or rotated. Subtle vertical gridlines aligned to the x-axis (value axis); no horizontal gridlines. A dashed vertical reference line with rotated label "Overall median: $97k" sits near x=97, clear of all boxes and outliers.
+      Data: Six horizontal hollow boxes (elevated-surface fill + 3px colored border), sorted ascending by median bottom-to-top. Border/outlier colors follow Imprint canonical order starting from the lowest-median category: #009E73 (Customer Support Representative), lavender (Marketing Specialist), blue (UX Researcher), ochre (Data Scientist), red (Product Manager), cyan (Software Engineer). Outlier dots (3 of 6 categories) match their category's border color with a light page-background stroke.
+      Legibility verdict: PASS - all text readable against the light background, no overlap between boxes, outliers, axis text, or the median annotation.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 - not pure black.
+      Chrome: Same layout, title, and axis labels now in light ink / soft-light gray - all clearly readable. Gridlines and the dashed median reference line remain subtle and visible against the dark surface. No dark-on-dark failures observed on any text element.
+      Data: Box border colors and outlier dot colors are pixel-identical to the light render (green #009E73, lavender, blue, ochre, red, cyan in the same order) - confirms only chrome flipped, data colors held constant across themes.
+      Legibility verdict: PASS - all text readable against the dark background, no dark-on-dark issues, data colors match the light render exactly.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24px, axis name 16px, ticks
+          14px, median label 13px); well-proportioned, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, boxes, outlier dots, or the median annotation
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Boxes and outliers clearly visible, could be marginally more prominent
+          given sparse (16-22 pt) per-group density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, CVD-safe, reinforced by y-axis category labels (color
+          isn't the sole identifier)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills most of the canvas, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis has units ($1,000s), y-axis categories self-descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First (lowest-median) category is #009E73, canonical Imprint order
+          thereafter, both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Hollow-box styling is a thoughtful departure from default filled
+          boxplots; still reads as a well-executed standard design rather than fully
+          bespoke
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines/tick marks removed, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Fixed from attempt 1: overall-median markLine now gives the viewer
+          a clear comparative anchor on top of the median-ascending sort'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal box plot
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Median line, quartile box, whiskers, outliers all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Categories on y-axis, values on x-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; legend correctly omitted since y-axis labels
+          already identify each category
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varied spreads across roles plus outliers in 3 of 6 groups
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral salary-by-job-title scenario matching the spec's own suggested
+          application
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic salary ranges and role-to-pay ordering
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Small necessary helpers (LCG, randNormal, median) since JS lacks
+          numpy; quartile/outlier math is now delegated to the boxplot transform
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports needed; uses browser globals only
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mount-node contract followed exactly, animation: false'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fixed from attempt 1: now uses ECharts'' own dataset "boxplot" transform
+          instead of reimplementing quartile/IQR/outlier math by hand'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Fixed from attempt 1: dataset transform + colorBy:"data" + markLine
+          reference annotation together are distinctly ECharts; a still-richer showcase
+          would reach 5/5'
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
