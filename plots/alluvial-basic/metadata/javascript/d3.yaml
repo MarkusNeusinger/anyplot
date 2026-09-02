@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: alluvial-basic
 created: '2026-09-02T11:04:52Z'
-updated: '2026-09-02T11:09:22Z'
+updated: '2026-09-02T11:20:08Z'
 generated_by: claude-sonnet
 workflow_run: 33622226997
 issue: 1878
@@ -12,42 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/d3/plot-dark.html
-quality_score: 88
+quality_score: 92
 review:
   strengths:
-  - 'Correct Imprint palette (first series #009E73) with fully theme-correct chrome
-    in both light and dark renders'
-  - Genuinely custom, mathematically laid-out alluvial diagram - sub-stacked ribbons
-    prevent flow crossings within a single node
-  - Deterministic, realistic education-domain data with exact conservation of totals
-    (240 students) across all four semesters
-  - Clean, idiomatic D3 usage with no unnecessary dependencies; correctly built for
-    a bundle that lacks d3-sankey
-  - Clear title, stage headers, and explicit font sizing throughout
+  - Correctly builds a true alluvial diagram (fixed vertical category ordering per
+    stage) rather than a reorderable Sankey, matching the spec's explicit distinction
+  - Category colors persist identically across all 4 stages and both themes, satisfying
+    both the spec's 'consistent colors' note and Imprint palette rules
+  - Total cohort count (240 students) is conserved exactly across every stage - factually
+    sound flow accounting
+  - 'Elegant handling of the two interior stages, which have no room for full labels:
+    haloed white count labels stamped directly on the node bars keep them self-explanatory
+    without a redundant legend lookup'
+  - Ribbon transparency (fill-opacity 0.62) plus a thin page-background stroke per
+    the spec's 'use transparency for overlapping flows' note keeps individual bands
+    separable in the dense middle crossings
+  - All text sizes are explicitly set (11-22px) and remain legible in both light and
+    dark renders with no dark-on-dark or light-on-light failures
   weaknesses:
-  - Middle stages (Semester 2, Semester 3) show no node labels (no category names,
-    no counts) - a viewer can only infer values there by matching ribbon colors back
-    to the first/last stage labels. Add compact labels to the middle nodes, or a shared
-    legend, so all four stages are self-explanatory.
-  - Dense ribbon-crossing zones between columns blend the semi-transparent colors
-    into muddy gray/brown patches, making individual flows hard to trace through the
-    middle of the diagram. Tune ribbon opacity/z-order or layout so flows stay more
-    distinguishable where many ribbons cross.
+  - The two interior stages have heavy ribbon crossing with no annotation or highlight
+    calling out a specific insight (e.g. Undeclared shrinking from 60 to 35 students)
+    - viewer must derive the story from the node count labels themselves
+  - A handful of the smallest transitions (~2-3 students) render as very thin ribbons
+    that are hard to trace individually through the crossing pattern
+  - Interior-stage count labels (11px) are noticeably smaller than the edge category
+    labels (15px) - legible but could be nudged up slightly for stronger mobile-width
+    readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, matches #FAF8F1 - not pure white, not dark.
-      Chrome: Bold dark title "alluvial-basic · javascript · d3 · anyplot.ai" centered at top; dark bold "Semester 1"-"Semester 4" stage headers; node labels (category name + "N students") at first/last stage in dark ink (name) and softer ink (count). All clearly readable against the light background.
-      Data: Four categories - STEM (green #009E73), Business (light purple), Humanities (blue-gray), Undeclared (tan) - as solid node bars connected by semi-transparent bezier ribbons whose width encodes flow magnitude. First series confirmed #009E73.
+      Background: Warm off-white, consistent with #FAF8F1 - not pure white.
+      Chrome: Title "alluvial-basic · javascript · d3 · anyplot.ai" in bold dark ink, centered at top. Four stage headers ("Semester 1" through "Semester 4") in bold dark text above each column. Category + count labels ("STEM / 70 students", etc.) in dark ink (primary) and softer gray (secondary "N students" line) flank the first and last columns. A horizontal legend (STEM, Business, Humanities, Undeclared swatches + labels) sits below the diagram. All chrome text is clearly readable against the light background.
+      Data: Four node columns (Semester 1-4), each with 4 stacked category bars in Imprint colors - STEM green (#009E73), Business lavender/purple, Humanities blue, Undeclared ochre. Curved ribbons connect nodes across stages, colored by source category with ~62% opacity and a thin light stroke, sized proportional to transition value. Interior stages (Semester 2, Semester 3) carry white haloed count labels directly on the bars. First categorical series is confirmed #009E73 green.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 - not pure black, not light.
-      Chrome: Title, stage headers, and node labels all render in light/white text, fully legible against the dark background. No dark-on-dark failures observed.
-      Data: Same four category colors as the light render (STEM green, Business purple, Humanities blue-gray, Undeclared tan), confirmed identical - only chrome (background, text) flipped for theme.
+      Background: Warm near-black, consistent with #1A1A17 - not pure black.
+      Chrome: Same title, stage headers, category/count labels, and legend, now rendered in light/white ink. All chrome text is clearly readable against the dark background - no dark-on-dark instances found (interior count labels keep their white text + black halo, which still reads fine against the colored ribbons, not the dark page background).
+      Data: Identical node and ribbon colors to the light render (STEM green, Business lavender, Humanities blue, Undeclared ochre) - only the background and text chrome flipped, confirming theme-adaptive tokens were used correctly for chrome while data colors stayed constant.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,50 +60,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (15/13/17/22px), title fits without
-          clipping, no overflow
+        comment: All font sizes explicit (11-22px), readable in both themes; interior
+          11px count labels are on the small side
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; node labels cleanly separated from ribbons and
-          each other
+        comment: No text/text or text/data collisions found
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Node bars and edge-stage flows read clearly, but dense middle crossing
-          zones make individual flows hard to trace
+        comment: Ribbons and nodes clearly visible; a few of the smallest (~2-3 student)
+          flows are very thin and hard to trace individually
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Palette is CVD-safe, but heavy ribbon overlap blends colors into
-          muddy patches in crossing zones
+        comment: Imprint palette is CVD-safe by construction, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, diagram fills the canvas well
+        comment: Diagram fills ~76-78% of canvas with balanced margins; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stage headers + student counts are descriptive with units
+        comment: Category node labels include units ('N students'); stage headers
+          are descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; Imprint colors used consistently; theme-correct
-          chrome in both renders'
+        comment: 'First series is #009E73; data colors identical across both theme-correct
+          renders'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -106,24 +111,23 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Custom hand-built ribbon layout with sub-stacked flows, clearly above
-          default, but crossing zones cost some polish
+        comment: Custom-built alluvial layout, haloed labels, coherent color/typography
+          system - above configured-default territory
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Generous whitespace at edges, subtle alpha blending, but central
-          crossing area is visually cluttered
+        comment: Generous margins, subtle ribbon strokes, no chartjunk
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Consistent coloring plus first/last-stage counts tell a clear growth/shrinkage
-          story; middle stages harder to read in detail
+        comment: Visual hierarchy via node ordering and count labels, but no explicit
+          annotation highlighting the key insight
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct alluvial diagram with strict vertical stage ordering and
-          flow ribbons
+        comment: True alluvial diagram with fixed vertical category ordering, not
+          a reorderable Sankey
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Node labels only shown at first/last stage, not the two middle stages
+        comment: 'All spec features present: time points, categories, values, flows,
+          persistent colors, proportional bands, transparency, dual labeling'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Stages chronological left-to-right, ribbon width encodes flow value,
-          totals conserved
+        comment: Time points map to columns left-to-right, category stacks correctly
+          sized by value
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches required pattern; category labels double
-          as inline legend
+        comment: Title format exact; legend labels match category names
     data_quality:
       score: 15
       max: 15
@@ -162,21 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows retention, inter-category transitions of varying magnitude,
-          growth and shrinkage
+        comment: Shows both persistence and switching, growth (Business) and shrinkage
+          (Undeclared)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible education scenario
+        comment: Neutral, plausible academic-tracking scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Transition matrices conserve totals exactly; realistic magnitudes
-          for a college cohort
+        comment: Total cohort (240) conserved exactly across every stage; transition
+          magnitudes are plausible
     code_quality:
       score: 10
       max: 10
@@ -186,8 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward data -> layout -> draw flow; helper functions are
-          justified DRY
+        comment: Flat top-level script, only small pure-function helpers (ribbonPath,
+          labelStage)
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,13 +209,14 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a bespoke alluvial layout; no fake functionality
+        comment: Appropriately complex manual layout for a plot type with no built-in
+          d3-sankey module; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correctly builds SVG under #container per mount-node contract'
+        comment: 'Correctly mounts into #container per the harness contract'
     library_mastery:
       score: 9
       max: 10
@@ -221,20 +226,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct d3.select/.data().join() patterns; manual layout is right
-          call since d3-sankey isn't in the pinned bundle
+        comment: Proper data-join pattern (.data().join()), scaleOrdinal for the categorical
+          color scale
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom bezier ribbon-path generation showcases D3's low-level flexibility
-  verdict: REJECTED
+        comment: Hand-built cubic-bezier ribbon paths and stacked-node layout showcase
+          D3's low-level flexibility, not easily replicated in a high-level charting
+          library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
@@ -242,3 +250,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
