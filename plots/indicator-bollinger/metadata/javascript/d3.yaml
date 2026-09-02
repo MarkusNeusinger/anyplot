@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: indicator-bollinger
 created: '2026-09-02T01:28:08Z'
-updated: '2026-09-02T01:32:57Z'
+updated: '2026-09-02T01:43:42Z'
 generated_by: claude-sonnet
 workflow_run: 33579082878
 issue: 3237
@@ -12,59 +12,61 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/javascript/d3/plot-dark.html
-quality_score: 86
+quality_score: 94
 review:
   strengths:
+  - Volatility-squeeze annotation directly addresses the spec's 'consider noting squeeze
+    patterns' — a shaded callout band with an italicized label pinpoints the exact
+    contraction window, giving the chart a clear focal point and turning DE-03 from
+    generic display into real data storytelling
+  - Band boundary lines strengthened from 1.75px to 2.25px, fixing the prior review's
+    element-visibility deduction without overpowering the 3px close-price line — VQ-03
+    sizing hierarchy now reads correctly at a glance
+  - 'KISS structure tightened: the previous bandLine() factory helper was removed
+    and each line generator (upper/lower/SMA/close) is now inlined at its single call
+    site, leaving only the RNG helper (lcg()) as a justified exception'
+  - Subtle brand-green accent rule under the title is a tasteful typographic flourish
+    that lifts Design Excellence above 'well-configured default' without adding chartjunk
   - 'First series (close price) correctly uses brand green #009E73; upper/lower bands
     share one Imprint lavender (#C475FD) with a consistent semi-transparent fill,
-    exactly as the spec asks'
+    exactly as spec requests'
   - SMA reference line uses the theme-adaptive 'neutral' semantic anchor (t.ink) rather
-    than a categorical color — a sophisticated choice that matches the style guide's
-    'baseline / reference line' role and correctly flips between black (light) and
-    white (dark) while the two categorical data colors stay identical across themes
+    than a categorical color — correctly flips between near-black (light) and near-white
+    (dark) while both categorical data colors stay pixel-identical across themes
   - 'Both renders are fully theme-correct: warm off-white/near-black backgrounds,
     legible ink/inkSoft text, subtle grid, no dark-on-dark or light-on-light failures'
-  - Realistic, plausible synthetic price series with a genuine deterministic LCG seed;
-    band shows both an upper-touch (overbought, ~May 19–Jun 2) and lower-touch (oversold,
-    ~Mar 17, Jun 16) plus a volatility contraction/expansion pattern, covering the
-    applications called out in the spec
+  - Realistic, plausible synthetic price series with fixed-seed LCG; band shows both
+    an upper-touch (overbought, ~May 19-Jun 2) and lower-touch (oversold, ~Mar 17,
+    Jun 16) plus the now-annotated volatility contraction/expansion pattern
   - 'Idiomatic, current d3 v7 API usage: scaleTime/scaleLinear, d3.area + d3.line
     generators with curveMonotoneX, d3.deviation for the rolling stdev, d3.axisBottom/Left
     with theme-token styling'
   - Title format, legend labels, and axis labels (with units) all match the spec exactly;
-    layout is well-balanced with the plot filling roughly 60-65% of canvas area and
-    the legend anchored near the plot rather than floating
+    layout is well-balanced with the legend anchored near the plot rather than floating
   weaknesses:
-  - 'Design Excellence is only at the ''well-configured default'' tier (DE-01=4/8):
-    the chart is correct and clean but visually generic — no distinctive typography
-    treatment, custom font-family, or extra polish beyond the semantic-color choice
-    for the SMA line. Consider a more refined title/legend typographic hierarchy or
-    subtle emphasis on the price line to lift it toward publication quality.'
-  - Data storytelling (DE-03=4/6) relies only on line-weight/color hierarchy. The
-    spec explicitly suggests 'noting squeeze patterns' — a light annotation or callout
-    marking the visible volatility-squeeze window (~day 55-70 in the data) would sharpen
-    the narrative and is spec-sanctioned, not decorative chartjunk.
-  - Band boundary lines (stroke-width 1.75) are comparatively thin against the medium-density
-    120-point series; a touch heavier (2-2.25px) would improve VQ-03 element visibility
-    without overpowering the primary close-price line.
-  - Two small helper functions (lcg(), bandLine()) exist purely for RNG and line-generator
-    factoring — acceptable idiomatic D3, but keeping the script as flat as possible
-    (e.g. inlining bandLine's config into the two call sites) would tighten KISS structure.
+  - Design Excellence, while improved, still stops short of 'publication-ready' —
+    the title accent rule and squeeze annotation are nice touches but the overall
+    composition (grid, spines, legend chrome) remains close to a well-executed default
+    rather than a genuinely custom visual system
+  - 'Library Mastery is solid but generic (LM-02): d3.deviation for rolling stdev
+    and the area generator for the band fill are competent but not a showcase-level
+    feature unique to d3 (e.g. no custom interaction affordance, no bespoke shape/transition
+    beyond static marks)'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), not pure white, not dark.
-      Chrome: Title "indicator-bollinger · javascript · d3 · anyplot.ai" in bold dark ink, centered top. X-axis "Trading Date" and Y-axis "Closing Price (USD)" labels in medium-gray ink, both clearly readable. Tick labels ($180-$220, Mar 10-Jun 16) in soft gray, legible. Subtle horizontal gridlines barely visible behind the data, non-competing. Legend at right (Close price / 20-day SMA / ±2σ band) with dark-ink text, no box border.
-      Data: Close price line is thick brand green (#009E73), most prominent element. 20-day SMA is a dashed dark-ink (near-black) line acting as a structural reference. ±2σ band is a lavender (#C475FD) semi-transparent fill (~16% opacity) bounded by thin lavender lines on both edges — same color used for both edges per spec.
+      Chrome: Title "indicator-bollinger · javascript · d3 · anyplot.ai" in bold dark ink, centered top, with a short brand-green accent rule beneath it. X-axis "Trading Date" and Y-axis "Closing Price (USD)" labels in medium-gray ink, both clearly readable. Tick labels ($180-$220, Mar 10-Jun 16) in soft gray, legible. Subtle horizontal gridlines barely visible behind the data, non-competing. A light gray shaded rectangle marks the "Volatility squeeze" window (italic label above it, ~May 5-19) directly over the chart area. Legend at right (Close price / 20-day SMA / ±2σ band) with dark-ink text, no box border, anchored near the top-right of the plot.
+      Data: Close price line is thick brand green (#009E73), most prominent element. 20-day SMA is a dashed near-black line acting as a structural reference. ±2σ band is a lavender (#C475FD) semi-transparent fill (~16% opacity) bounded by thin lavender lines (2.25px) on both edges — same color used for both edges per spec. Band visibly narrows across the shaded squeeze window, consistent with the annotation.
       Legibility verdict: PASS — all text reads clearly against the light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), not pure black, not light.
-      Chrome: Title, axis labels, and tick labels all rendered in light ink/soft-gray tones, clearly visible against the dark surface. Gridlines still subtle but visible. Legend text is light-colored and readable, no dark-on-dark issues anywhere.
+      Chrome: Title, axis labels, and tick labels all rendered in light ink/soft-gray tones, clearly visible against the dark surface. The green title accent rule and gridlines remain subtle but visible. The squeeze-window shading and "Volatility squeeze" label are still visible (subtle light-ink tint) and legible. Legend text is light-colored and readable, no dark-on-dark issues anywhere.
       Data: Close price line remains the identical brand green (#009E73) and the ±2σ band remains the identical lavender (#C475FD) fill/lines — confirming data colors are unchanged from the light render. The 20-day SMA dashed line flips to white/light-gray (theme-adaptive "neutral" anchor, by design, since it represents chrome/reference rather than a categorical series) — correctly distinguishable and legible on the dark surface.
       Legibility verdict: PASS — no dark-on-dark failures observed; all chrome legible, data colors consistent with light render.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -72,21 +74,21 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (14-16px chrome, dynamic title formula);
+        comment: All font sizes explicitly set (13-16px chrome, dynamic title formula);
           well-proportioned, no overflow, readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between axis labels, ticks, legend, or data
+        comment: No overlap between axis labels, ticks, legend, annotation, or data
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Close price line prominent at 3px; band edge lines (1.75px) are slightly
-          thin relative to data density
+        comment: Band edge lines strengthened to 2.25px (from prior 1.75px), now well-balanced
+          against the 3px close-price line and 2px dashed SMA for this 120-point series
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -99,8 +101,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60-65% of canvas, balanced margins, legend anchored near
-          plot
+        comment: Plot fills a large majority of canvas, balanced margins, legend anchored
+          near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,33 +114,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, band uses palette position 2, SMA uses theme-adaptive
-          neutral anchor correctly, backgrounds theme-correct in both renders'
+        comment: 'First series #009E73, band uses Imprint position 2 (#C475FD), SMA
+          uses theme-adaptive neutral anchor correctly, backgrounds theme-correct
+          in both renders'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured default look; semantic color choice for SMA is thoughtful
-          but overall polish doesn't clear the 'strong design' bar
+        passed: true
+        comment: Brand-green title accent rule, squeeze callout, and thickened band
+          strokes lift the design clearly above a configured default, though not yet
+          at full publication polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Subtle grid, L-shaped implicit spines, generous whitespace, no legend
-          box
+        comment: Subtle grid, no legend box, generous whitespace, and the new title
+          accent detail show attention to refinement
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Line-weight/color hierarchy guides the eye to the price line; no
-          explicit callout of the squeeze pattern the spec suggests noting
+        comment: Explicit shaded 'Volatility squeeze' annotation directly answers
+          the spec's suggestion to note squeeze patterns; combined with color/line-weight
+          hierarchy, the viewer immediately sees the insight
     spec_compliance:
       score: 15
       max: 15
@@ -155,7 +160,7 @@ review:
         max: 4
         passed: true
         comment: Prominent price line, same-color semi-transparent band fill, dashed
-          middle band, standard params noted in legend
+          middle band, standard params noted in legend, squeeze noted
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -170,16 +175,16 @@ review:
         comment: Title matches '{spec-id} · {language} · {library} · anyplot.ai' exactly;
           legend labels match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows overbought and oversold band touches plus a volatility contraction/expansion
-          pattern
+        comment: Shows overbought and oversold band touches plus an explicitly annotated
+          volatility contraction/expansion pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -193,16 +198,16 @@ review:
         passed: true
         comment: Price range ($180-220) and daily moves are realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Two small helper functions (lcg, bandLine) beyond straight-line imports/data/plot
-          flow — idiomatic but not maximally flat
+        comment: bandLine() factory helper removed; line generators inlined at each
+          call site; only the RNG helper (lcg()) remains, which is a justified exception
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -246,13 +251,14 @@ review:
         comment: d3-array's d3.deviation for rolling stdev and the area generator
           for the band fill are distinctive touches, though not a showcase-level unique
           feature
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   - layer-composition
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   dataprep:
