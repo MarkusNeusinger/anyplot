@@ -29,7 +29,7 @@ fig = Figure(resolution = (1600, 900), fontsize = 14, backgroundcolor = PAGE_BG)
 ax = Axis(
     fig[1, 1];
     title             = "voronoi-basic · julia · makie · anyplot.ai",
-    titlesize         = 20,
+    titlesize         = 29,
     titlecolor        = INK,
     xlabel            = "X Position (km)",
     ylabel            = "Y Position (km)",
@@ -37,6 +37,8 @@ ax = Axis(
     ylabelcolor       = INK,
     xticklabelcolor   = INK_SOFT,
     yticklabelcolor   = INK_SOFT,
+    xtickformat       = xs -> string.(round.(xs, digits = 1)),
+    ytickformat       = ys -> string.(round.(ys, digits = 1)),
     backgroundcolor   = PAGE_BG,
     topspinevisible   = false,
     rightspinevisible = false,
@@ -55,11 +57,21 @@ vp = voronoiplot!(
     strokecolor = INK,
     strokewidth = 1.5,
     markercolor = INK,
-    markersize  = 14,
+    markersize  = 17,
     clip        = bbox,
 )
 xlims!(ax, -0.5, 12.5)
 ylims!(ax, -0.5, 7.0)
+
+# Emphasize the busiest store — a focal highlight ring for data storytelling
+top_idx = argmax(daily_visits)
+scatter!(
+    ax, [store_x[top_idx]], [store_y[top_idx]];
+    markersize  = 30,
+    color       = :transparent,
+    strokewidth = 2.5,
+    strokecolor = INK,
+)
 
 # Style
 Colorbar(
@@ -68,7 +80,7 @@ Colorbar(
     labelcolor    = INK,
     ticklabelcolor = INK_SOFT,
     tickcolor     = INK_SOFT,
-    width         = 25,
+    width         = 28,
 )
 colgap!(fig.layout, 1, 15)
 
