@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: circlepacking-basic
 created: '2026-09-02T15:50:33Z'
-updated: '2026-09-02T15:56:15Z'
+updated: '2026-09-02T16:11:00Z'
 generated_by: claude-sonnet
 workflow_run: 33649026730
 issue: 2498
@@ -12,59 +12,63 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/chartjs/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
+  - 'The synthetic hover-target fix works correctly: leaf circles'' already-drawn
+    pixel centers are back-mapped through chart.scales.x/y.getValueForPixel using
+    the same computeTransform() the canvas plugin uses, so the invisible bubble dataset
+    lines up exactly with the visible circles - a real fix for the spec''s ''labels
+    on hover'' requirement, not a cosmetic patch.'
+  - Font-shrink-before-truncate labeling (steps the leaf font size down toward a 9px
+    floor before falling back to ellipsis) measurably reduces truncation versus the
+    prior attempt - 'International Index' and 'Healthcare Sector' now render in full
+    where they were previously cut short.
   - Genuine from-scratch circle-packing algorithm (front-chain tangent-circle placement
-    + Ritter bounding-circle recentring) - a real engineering solution to Chart.js
-    having no native circle-packing type, without reaching for D3 or a plugin.
+    + Ritter bounding-circle recentring) remains a real engineering solution to Chart.js
+    having no native circle-packing type.
   - 'Correct, well-reasoned palette application: skips the deferred semantic-red anchor
-    since no category carries loss/error meaning, landing on palette[5] (cyan) instead
-    of blindly taking ordinal position 5 - matches the Imprint palette''s documented
-    ''deferred semantic-red'' rule, with the reasoning left in a code comment.'
-  - Clear depth-based visual hierarchy (dashed root ring -> translucent category ring
-    -> solid leaf fill) with luminance-based contrast text color per leaf, giving
-    an intuitive read of the nesting at a glance.
-  - Both themes render correctly with identical data colors and fully theme-adaptive
-    chrome, including background-colored leaf-circle strokes for separation.
-  - Deterministic, dependency-free, and correctly sized to the declared square canvas
-    with no clipping.
+    since no category carries loss/error meaning, matching the Imprint palette''s
+    documented rule.'
+  - Both themes render pixel-identical data colors with fully theme-adaptive chrome;
+    the dashed root ring, title, and category labels all sit with comfortable margin
+    from every canvas edge - no clipping.
   weaknesses:
-  - Many leaf labels are aggressively ellipsis-truncated ("High Y...", "Commer...",
-    "Reside...", "Industr...", "Agricul...", "Ventur...", "Silver...", "Oil Fu...")
-    - readers can't recover the full holding name from the static render.
-  - The packed circles are hand-drawn in a canvas plugin with no bound Chart.js data
-    points, so there is no working hover/tooltip path (tooltip.enabled is false) to
-    recover the truncated labels in the interactive HTML either - consider binding
-    synthetic bubble points at each circle's resolved (x, y, r) so native tooltips
-    can report the full label and value.
-  - The implementation leans on 10+ helper functions; largely justified by the packing-algorithm
-    complexity, but enclosingCircle's multi-pass loop and the separate placeAbsolute
-    tree walk could potentially fold into layout for a flatter structure.
+  - Several of the smallest leaf circles still ellipsis-truncate their labels in the
+    static render ('Small Cap Va...', 'Emerging Mark...', 'High Yield B...', 'Commercial
+    Pro...', 'Industrial W...', 'Residential R...', 'Agricultur...', 'Oil Futures
+    ...', 'Venture ...') - now mitigated by working hover tooltips per the spec's
+    'smaller circles may show labels on hover' fallback, so this is a minor remaining
+    polish item rather than a compliance gap.
+  - The implementation still leans on 10+ helper functions; largely justified by the
+    packing-algorithm and hover-alignment complexity, but enclosingCircle's multi-pass
+    loop and the separate placeAbsolute tree walk could still fold into layout for
+    a flatter structure.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, matches #FAF8F1 - not pure white.
-      Chrome: Dark-ink title "Investment Portfolio Composition · circlepacking-basic · javascript · chartjs · anyplot.ai" reads clearly across the top. "Total Portfolio" label on the dashed root ring is legible gray. Five bold dark-ink category labels (Equities, Fixed Income, Real Estate, Commodities, Alternatives) sit atop their translucent tinted discs, fully readable.
-      Data: First category (Equities) uses #009E73 brand green; Fixed Income/Real Estate/Commodities/Alternatives use palette[1,2,3,5] (lavender, blue, ochre, cyan) - correctly skipping the semantic-red anchor. Leaf circles are solid-filled in their category color, sized by value (area-proportional). Short labels ("REIT Index", "TIPS", "Gold ETF") render in full; many longer labels are ellipsis-truncated ("Internati...", "Healthcar...", "High Y...", "Commer...", "Reside...", "Industr...", "Agricul...", "Ventur...").
-      Legibility verdict: PASS (all chrome text readable; truncation is a data-completeness issue, not a legibility/contrast failure).
+      Chrome: Dark-ink title "Investment Portfolio Composition · circlepacking-basic · javascript · chartjs · anyplot.ai" reads clearly across the top, comfortably inside the canvas margin (checked via pixel crop - no clipping at top/bottom/left/right edges). "Total Portfolio" label on the dashed root ring is legible gray. Five bold dark-ink category labels (Equities, Fixed Income, Real Estate, Commodities, Alternatives) sit atop their translucent tinted discs, fully readable.
+      Data: First category (Equities) uses #009E73 brand green; Fixed Income/Real Estate/Commodities/Alternatives use palette[1,2,3,5] (lavender, blue, ochre, cyan) - correctly skipping the semantic-red anchor. Leaf circles are solid-filled in their category color, sized by value (area-proportional). Medium/short labels ("REIT Index", "TIPS", "Gold ETF", "International Index", "Healthcare Sector") now render in full thanks to the font-shrink-before-truncate pass; the smallest circles still truncate their longest labels ("Small Cap Va...", "High Yield B...", "Commercial Pro...", "Industrial W...", "Residential R...", "Agricultur...", "Oil Futures ...", "Venture ...").
+      Legibility verdict: PASS (all chrome text readable; remaining truncation on the smallest leaves is now backed by a working hover tooltip).
 
     Dark render (plot-dark.png):
       Background: Warm near-black, matches #1A1A17 - not pure black.
-      Chrome: Title and category labels flip to light/white text, fully legible against the dark surface. Dashed root ring flips to a light dashed stroke. Category tint fills darken correspondingly while remaining distinguishable from the page background.
+      Chrome: Title and category labels flip to light/white text, fully legible against the dark surface. Dashed root ring flips to a light dashed stroke, again with comfortable margin from all four canvas edges. Category tint fills darken correspondingly while remaining distinguishable from the page background.
       Data: All five leaf-circle fill colors are pixel-identical to the light render (green/lavender/blue/ochre/cyan) - only chrome flipped, as required. Leaf-circle separator strokes use the theme's pageBg color, reading as thin dark gaps rather than competing lines.
       Legibility verdict: PASS (no dark-on-dark failures found; every title/label/tick-equivalent element is clearly visible against the near-black background).
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: All text is crisp and correctly themed, but many leaf labels are
-          aggressively ellipsis-truncated, losing real information content.
+        passed: true
+        comment: Font-shrink-before-truncate pass recovers several previously-truncated
+          labels (e.g. 'International Index', 'Healthcare Sector'); only the smallest
+          leaf circles still truncate their longest labels.
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -91,7 +95,7 @@ review:
         max: 4
         passed: true
         comment: Square orientation correctly declared and matches the saved 2400x2400
-          PNG; nothing clipped.
+          PNG exactly; verified no clipping at any of the four edges via pixel crop.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -131,7 +135,7 @@ review:
         comment: Three-tier nesting with escalating fill intensity guides the eye
           from whole portfolio to individual holdings.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,11 +146,13 @@ review:
         comment: Genuine non-overlapping nested circle packing.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: The spec's 'smaller circles may show labels on hover' fallback is
-          unreachable - no bound data points, tooltip explicitly disabled.
+        passed: true
+        comment: 'Fixed this attempt: leaf circles now bind an invisible bubble dataset
+          back-mapped through getValueForPixel, so the spec''s ''smaller circles may
+          show labels on hover'' fallback is now reachable via a working tooltip with
+          title/value callbacks.'
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -193,8 +199,10 @@ review:
         score: 2
         max: 3
         passed: false
-        comment: 10+ helper functions, largely justified by the packing-algorithm
-          complexity required since Chart.js has no native circle-packing type.
+        comment: 10+ helper functions; the two added this attempt (computeTransform,
+          collectLeaves) are small and eliminate duplication between the draw pass
+          and the hover-point mapping rather than adding net complexity, but the function
+          count is still high.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -221,29 +229,32 @@ review:
         passed: true
         comment: 'Correct mount contract, animation: false, current Chart.js API.'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses the afterDraw plugin hook and an empty-dataset bubble chart
-          purely as a host - idiomatic way to extend past native chart types.
+        comment: Uses the afterDraw plugin hook, an empty-dataset bubble chart as
+          a host, and chart.scales.x/y.getValueForPixel to align a real interaction
+          layer with hand-drawn pixels - idiomatic, correct use of Chart.js's scale
+          API to extend past native chart types.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Genuine circle-packing layout algorithm in vanilla JS is distinctive,
-          though stops short of real hover data-binding.
+        comment: Genuine circle-packing layout algorithm in vanilla JS is distinctive;
+          now paired with working hover data-binding.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - canvas-plugin-rendering
+  - hover-tooltips
   patterns:
   - data-generation
   - recursive-traversal
