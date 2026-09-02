@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: parliament-basic
 created: '2026-09-02T04:52:53Z'
-updated: '2026-09-02T04:58:26Z'
+updated: '2026-09-02T05:11:10Z'
 generated_by: claude-sonnet
 workflow_run: 33591950318
 issue: 2499
@@ -12,47 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - Deliberately reframes the spec's political parliament scenario as a neutral academic
-    Faculty Senate composition, avoiding the DQ-02 controversial-topic pitfall while
-    preserving the semicircular seat-chart form and left-to-right block ordering.
-  - 'Palette and theme compliance are exemplary: canonical Imprint order with brand
-    green first, identical data colors between light and dark renders, and chrome
-    (title, legend, background) correctly sourced from window.ANYPLOT_TOKENS.'
-  - Careful equal-density row-weighting algorithm keeps seat spacing visually consistent
-    from inner to outer arcs, with subtle page-background-colored borders that cleanly
-    separate adjacent seat dots.
+  - 'Directly addresses the attempt-1 weaknesses: adds a dashed radial markLine with
+    a ''Majority · N'' label for the majority-threshold seat — an explicit visual-hierarchy
+    device the spec calls out as an optional feature and DE-03 was previously docked
+    for lacking.'
+  - Adds a distinctive custom tooltip formatter that computes and displays each division's
+    seat percentage, and a legend formatter that appends seat counts — genuine ECharts-specific
+    API usage beyond a plain scatter series (markLine, formatter callbacks), improving
+    on attempt 1's 'generic scatter plot' critique.
+  - 'Palette and theme compliance remain exemplary: canonical Imprint order with brand
+    green first, data colors pixel-identical between light and dark renders, and all
+    chrome (title, legend, majority line, tooltip) correctly sourced from window.ANYPLOT_TOKENS.'
+  - Equal-density row-weighting algorithm keeps seat spacing visually consistent from
+    inner to outer arcs; subtle page-background-colored borders cleanly separate adjacent
+    seat dots.
+  - Deliberately reframes the spec's political-party scenario as a neutral Faculty
+    Senate composition by academic division — matches the spec's own 'committee or
+    board composition by faction' application, avoiding the DQ-02 controversial-topic
+    pitfall while preserving the semicircular seat-chart form.
   - Title fontsize is dynamically scaled via the mandated length formula, so the long
-    'Descriptive Title · spec-id · javascript · echarts · anyplot.ai' string never
-    overflows.
-  - Legend clearly lists each division name with its seat count, satisfying the spec's
-    legend requirement, and the 1:1 aspect ratio is preserved via explicit scale computation
-    so seats stay circular.
+    'Faculty Senate Composition · parliament-basic · javascript · echarts · anyplot.ai'
+    string never overflows or clips; verified no edge clipping on any side in either
+    render.
   weaknesses:
-  - 'Library Mastery is generic: the chart relies on manual polar-to-Cartesian math
-    plotted as a plain scatter series, with no ECharts-distinctive feature (e.g. graphic
-    elements, custom label/tooltip formatter, effectScatter) — the same approach would
-    port to any scatter-capable library with minor changes.'
-  - 'Design Excellence stops at ''good'' rather than ''excellent'': there is no visual-hierarchy
-    device beyond color and legend counts (e.g. the spec''s optional majority-threshold
-    arc/line, or a callout on the largest division) to give the viewer an immediate
-    takeaway.'
-  - Legend text (15px) lists six items with parenthetical counts; verify it stays
-    comfortably legible once the PNG is scaled to a ~400px mobile width.
+  - 'Library Mastery is improved but still short of ''excellent'': the core layout
+    is manual polar-to-Cartesian math on a plain scatter series; consider an ECharts-native
+    feature such as effectScatter for the majority-tipping seat, or a graphic element,
+    to push distinctiveness further.'
+  - Title occupies only ~40% of the plot width at the current scaled fontsize — well
+    under the 50-70% guideline. Not a violation (no overflow/clipping), but there
+    is headroom to grow the title fontsize slightly for a more balanced composition.
+  - Six-item legend at 15px is legible at desktop and full-thumbnail scale but is
+    quite dense at the 400px mobile width — comfortable, not generous, margin for
+    six swatch+label+count entries; consider verifying at even smaller viewport widths.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "Faculty Senate Composition · parliament-basic · javascript · echarts · anyplot.ai" in dark ink, centered top, clearly readable; legend row at bottom in six swatch+label+count pairs, also dark/soft-ink text, clearly readable against the light surface.
-      Data: Six concentric-arc seat blocks running left to right — Sciences (green #009E73), Engineering (lavender), Business (blue), Social Sciences (ochre), Humanities (matte red), Health Sciences (cyan) — matching the canonical Imprint categorical order with brand green first. Each seat is an individual dot with a thin light-colored border for separation.
-      Legibility verdict: PASS — all text (title, legend labels, seat counts) is clearly legible against the light background; no light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "Faculty Senate Composition · parliament-basic · javascript · echarts · anyplot.ai" in dark ink, centered top, clearly readable and not clipped at any edge. A gray "Majority · 91" label sits directly beneath the title with a dashed radial line running from the chamber's center to the outer arc, cleanly separated from the seat dots below it (no overlap). Legend row at bottom lists six swatch+label+count pairs in soft-ink text, clearly readable against the light surface.
+      Data: Six concentric-arc seat blocks running left to right — Sciences (green #009E73), Engineering (lavender), Business (blue), Social Sciences (ochre), Humanities (matte red), Health Sciences (cyan) — matching the canonical Imprint categorical order with brand green first. Each seat is an individual dot with a thin light-colored border for separation. Checked both side edges and the top: no title, legend, or seat-dot pixels are clipped by the canvas border.
+      Legibility verdict: PASS — all text (title, majority label, legend labels, seat counts) is clearly legible against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and legend content now rendered in light ink/soft-ink text, fully readable against the dark surface; no dark-on-dark failures observed.
-      Data: The six division colors are pixel-identical to the light render (green, lavender, blue, ochre, matte red, cyan) — only the chrome (background, text, seat border color) flipped to the dark-theme tokens, as required.
-      Legibility verdict: PASS — all text is legible in the dark theme; brand green and the rest of the palette remain visible and distinguishable on the dark surface.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title, majority label/dashed line, and legend content now rendered in light ink/soft-ink text, fully readable against the dark surface; no dark-on-dark failures observed anywhere (title, ticks-equivalent legend text, majority label all flip correctly).
+      Data: The six division colors are pixel-identical to the light render (green, lavender, blue, ochre, matte red, cyan) — only the chrome (background, text, seat border color, majority-line color) flipped to the dark-theme tokens, as required. Brand green #009E73 remains clearly visible against the dark surface.
+      Legibility verdict: PASS — all text is legible in the dark theme; the full palette remains visible and distinguishable, and the majority-threshold line/label reads clearly against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,43 +70,45 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title fontsize is explicitly length-scaled and legend fontsize is
-          explicit; all text readable in both themes with no overflow, but density
-          of six legend entries leaves some margin for doubt at mobile scale
+        comment: Title fontsize is explicitly length-scaled; legend and majority-label
+          text explicit and readable in both themes. Six-item legend is legible but
+          dense at 400px mobile width.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between seats, title, or legend in either render
+        comment: No overlap between seats, title, majority label/line, or legend in
+          either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Seat dot size scales with row spacing and canvas scale; clearly visible
-          and well-separated via subtle borders
+        comment: Seat dot size scales with row spacing and canvas scale; majority
+          markLine is clearly visible with dashed styling and label
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Six distinguishable hues from the Imprint palette, no red-green-only
-          reliance, borders aid separation
+        comment: Six distinguishable Imprint hues, no red-green-only reliance, borders
+          aid separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
         comment: Semicircle plus legend uses the canvas well with balanced side margins;
-          no cut-off content
+          verified no cut-off content at top, left, or right edges via pixel-level
+          crop inspection
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for a seat-chart with no cartesian axes; title and legend fully
-          convey the encoding
+        comment: N/A for a seat-chart with no cartesian axes; title, majority label,
+          and legend fully convey the encoding
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -108,7 +117,7 @@ review:
         comment: Canonical Imprint order used (brand green first), identical data
           colors across themes, correct theme-adaptive background and text
     design_excellence:
-      score: 15
+      score: 16
       max: 20
       items:
       - id: DE-01
@@ -116,9 +125,9 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Above-default: equal-density row algorithm and seat border separation
-          show intentional polish, but no additional flourish beyond correct geometry
-          and palette'
+        comment: Equal-density row algorithm, seat border separation, and majority-line
+          device show intentional polish; still relies on manual geometry rather than
+          a bespoke visual flourish
       - id: DE-02
         name: Visual Refinement
         score: 5
@@ -128,11 +137,11 @@ review:
           detail; close to perfect
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Color and block-size variation across divisions creates visible hierarchy,
-          but no explicit emphasis device (e.g. majority line, largest-group callout)
+        comment: Majority-threshold markLine with label now gives the viewer an explicit,
+          immediate takeaway beyond color/legend alone, fixing the attempt-1 gap
     spec_compliance:
       score: 15
       max: 15
@@ -148,15 +157,15 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Arcs left-to-right, individual seat dots, legend with counts all
-          present; optional majority-threshold line intentionally omitted
+        comment: Arcs left-to-right, individual seat dots, legend with counts, and
+          the spec's optional majority-threshold line are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
         comment: Seat positions computed and mapped correctly; all seats visible,
-          aspect ratio preserved
+          1:1 aspect ratio preserved
       - id: SC-04
         name: Title & Legend
         score: 3
@@ -180,7 +189,8 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Neutral, plausible academic-senate scenario, deliberately avoiding
+        comment: Neutral, plausible academic-senate scenario matching the spec's own
+          'committee or board composition by faction' application, deliberately avoiding
           the political-content pitfall
       - id: DQ-03
         name: Appropriate Scale
@@ -197,7 +207,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear top-to-bottom script, no functions/classes
+        comment: Linear top-to-bottom script, no functions/classes beyond inline callbacks
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,10 +232,10 @@ review:
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current setOption
-          API
+        comment: Correct mount-node contract, animation disabled, no explicit size/devicePixelRatio
+          passed to echarts.init
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -233,20 +243,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct scatter-series + grid/coordinate usage with itemStyle borders,
-          appropriate for a chart type ECharts has no native component for
+        comment: Correct scatter-series + grid/coordinate usage with itemStyle borders
+          and markLine, appropriate for a chart type ECharts has no native component
+          for
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: Generic usage — manual polar-to-Cartesian math on a plain scatter
-          series is easily replicated in any other scatter-capable library
-  verdict: REJECTED
+        passed: true
+        comment: Now uses markLine with a computed coordinate pair and custom label
+          formatter, plus custom tooltip (percentage calc) and legend (seat-count)
+          formatters — genuine ECharts-specific API beyond a plain scatter series,
+          though still short of e.g. effectScatter or graphic elements
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - polar-projection
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
