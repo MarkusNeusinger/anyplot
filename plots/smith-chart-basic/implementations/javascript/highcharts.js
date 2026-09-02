@@ -57,6 +57,31 @@ const resistanceAxisLabels = RESISTANCE_VALUES.map((r) => ({
   name: String(r),
 }));
 
+// Each constant-reactance arc leaves the boundary circle at the point where
+// resistance = 0 (pure reactance, z = jx) — the conventional spot to label it.
+const reactanceBoundaryPoint = (x) => {
+  const denom = 1 + x * x;
+  return { gammaReal: (x * x - 1) / denom, gammaImag: (2 * x) / denom };
+};
+const REACTANCE_LABEL_OFFSET_PX = 14;
+const reactanceLabels = REACTANCE_VALUES.flatMap((x) =>
+  [x, -x].map((signedX) => {
+    const { gammaReal, gammaImag } = reactanceBoundaryPoint(signedX);
+    const norm = Math.hypot(gammaReal, gammaImag) || 1;
+    return {
+      x: gammaReal,
+      y: gammaImag,
+      name: `${signedX > 0 ? "+" : "-"}j${Math.abs(signedX)}`,
+      dataLabels: {
+        // push the label radially outward past the boundary circle so it
+        // never sits on top of the arc/boundary line it identifies
+        x: (gammaReal / norm) * REACTANCE_LABEL_OFFSET_PX,
+        y: -(gammaImag / norm) * REACTANCE_LABEL_OFFSET_PX,
+      },
+    };
+  })
+);
+
 // --- Impedance locus: simplified series-RLC antenna feedpoint sweep -----
 const z0 = 50;
 const seriesResistanceOhm = 40;
@@ -150,11 +175,13 @@ Highcharts.chart("container", {
     series: { animation: false, enableMouseTracking: false, showInLegend: false },
   },
   series: [
-    ...resistanceGrid.map((data) => ({
+    // r=1 is the most diagnostically important resistance circle (matches Z0
+    // on the real axis at both ends), so it renders heavier than the rest.
+    ...resistanceGrid.map((data, i) => ({
       type: "line",
       data,
-      color: t.grid,
-      lineWidth: 1,
+      color: RESISTANCE_VALUES[i] === 1 ? t.inkSoft : t.grid,
+      lineWidth: RESISTANCE_VALUES[i] === 1 ? 2 : 1,
       marker: { enabled: false },
     })),
     ...reactanceGrid.map((data) => ({
@@ -168,7 +195,7 @@ Highcharts.chart("container", {
       type: "line",
       data: realAxis,
       color: t.inkSoft,
-      lineWidth: 1.5,
+      lineWidth: 2,
       marker: { enabled: false },
     },
     {
@@ -189,6 +216,37 @@ Highcharts.chart("container", {
         align: "center",
         y: 16,
         style: { color: t.inkSoft, fontSize: "12px", textOutline: "none" },
+      },
+    },
+    {
+      type: "scatter",
+      data: reactanceLabels,
+      color: t.inkSoft,
+      marker: { enabled: false },
+      enableMouseTracking: false,
+      dataLabels: {
+        enabled: true,
+        format: "{point.name}",
+        align: "center",
+        verticalAlign: "middle",
+        style: { color: t.inkSoft, fontSize: "11px", textOutline: "none" },
+      },
+    },
+    {
+      // matched condition: Z = Z0, so Gamma = 0 at the chart's center — the
+      // "1" resistance-circle label already occupies the space below this
+      // point, so the Z0 label sits above it instead to avoid colliding
+      type: "scatter",
+      data: [{ x: 0, y: 0, name: "Z₀" }],
+      color: t.inkSoft,
+      enableMouseTracking: false,
+      marker: { symbol: "circle", radius: 4, fillColor: t.pageBg, lineColor: t.inkSoft, lineWidth: 1.5 },
+      dataLabels: {
+        enabled: true,
+        format: "{point.name}",
+        align: "center",
+        y: -14,
+        style: { color: t.inkSoft, fontSize: "11px", fontStyle: "italic", textOutline: "none" },
       },
     },
     {
