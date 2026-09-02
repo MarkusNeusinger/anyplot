@@ -1,0 +1,260 @@
+library: highcharts
+language: javascript
+specification_id: map-route-path
+created: '2026-09-02T02:52:45Z'
+updated: '2026-09-02T03:12:49Z'
+generated_by: claude-sonnet
+workflow_run: 33584404882
+issue: 3768
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/highcharts/plot-dark.html
+quality_score: 88
+review:
+  strengths:
+  - 'Correctly implements a route-path map: 140 sequential waypoints connected by
+    a continuous, realistically-meandering line.'
+  - Time-progression color gradient correctly built from the Imprint imprint_seq stops
+    (t.seq[0]->t.seq[1]), matching the spec's suggestion to encode elapsed time along
+    the path.
+  - Distinct, semantically clear Start (green circle) / Finish (red square) markers
+    exactly as the spec suggests.
+  - Title fontsize is correctly auto-scaled via the mandated linear formula to avoid
+    overflow given the descriptive-title prefix.
+  - Explicit font sizes throughout; theme-correct chrome verified in both light and
+    dark renders with no legibility failures.
+  - Deterministic, seeded data generation with a realistic, well-named real-world
+    scenario (Bear Lake Trailhead, RMNP) and plausible GPS step distances.
+  - 'zoomType: xy drag-to-zoom plus a custom tooltip formatter add genuine interactivity
+    value beyond the static PNG.'
+  weaknesses:
+  - No geographic basemap is rendered (spec's Notes section suggests one for spatial
+    context); acceptable given Highcharts core has no map-tile module and the harness
+    is offline, but worth being explicit that this is a library/environment constraint
+    rather than something the repair loop can fix.
+  - The color gradient is built from 9 discrete line series rather than a true per-point
+    gradient; Highcharts' series.zones (or per-point colorAxis) would produce a smoother,
+    more idiomatic single-series gradient and better reflect library mastery.
+  - Visual design is solid but stays close to a well-configured default look - no
+    additional layout flourishes (e.g., annotating the steep climb segment, an elevation-profile
+    inset) that would push it toward publication-ready territory.
+  - No direction arrows along the path (spec's optional suggestion) - minor, since
+    the spec marks this as optional.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Title "Hiking Trail GPS Track · map-route-path · javascript · highcharts · anyplot.ai" in dark ink, centered; gray subtitle explaining the color/zoom encoding below it; dark axis titles "Longitude (°)" / "Latitude (°)"; gray tick labels; subtle light-gray gridlines; gray legend text for "Start" / "Finish". All confirmed readable.
+      Data: Line traces a meandering hiking-trail track from a green circle "Start" marker (bottom-left) through a color gradient (Imprint imprint_seq: #009E73 green -> #4467A3 blue) to a red square "Finish" marker (top-right). First series/marker color is #009E73 as required.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Title and axis titles render in light off-white ink; tick labels, subtitle, and legend text in softer light gray; gridlines in a faint light tone. All confirmed readable, no dark-on-dark failures found anywhere (title, subtitle, axis titles, tick labels, legend, Start/Finish data labels all checked individually).
+      Data: Same path geometry and gradient (#009E73 -> #4467A3) as the light render, confirmed pixel-identical; Start/Finish marker colors unchanged from light render.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicit; title fontsize correctly scaled via the
+          round(22*67/len(title)) formula to avoid overflow with the descriptive-title
+          prefix. Fully readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between any text elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line weight and marker radii well-suited to a 140-point medium-density
+          track.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Start/Finish double-encoded by both color and shape, not relying
+          on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well with balanced margins; Finish label verified
+          not clipped at canvas edge.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (deg) / Latitude (deg) include units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Start marker #009E73 (brand green, first series); gradient built
+          from imprint_seq stops; Finish uses Imprint slot 5 matte red as semantic
+          anchor. Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful time-gradient coloring and clean typography clearly above
+          defaults, but standard Imprint palette with no unique custom treatment.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and generous whitespace, but no additional spine/frame
+          customization beyond axis line colors.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Gradient plus labeled Start/Finish gives a clear narrative arc, but
+          no additional emphasis (e.g. the steep climb segment).
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct route-path map: sequential waypoints connected by a continuous
+          line.'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: false
+        comment: Sequence connection, distinct Start/Finish markers, and time-based
+          color gradient present; no basemap rendered (Highcharts core has no map-tile
+          module and the harness is offline, so this is a real but justified gap).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on X, latitude on Y, fully shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match Start/Finish markers; gradient
+          segments correctly hidden from legend.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows sequential connection, start/end distinction, and time-progression
+          color encoding; no elevation encoding or direction arrows (both optional).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Named, plausible real-world scenario (Bear Lake Trailhead, RMNP),
+          neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Step distances and total track length consistent with real GPS-logged
+          hiking data.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports -> data -> chart structure; small helper functions
+          are necessary utilities, not over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG(42) produces deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only browser globals used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately-scoped code; no fake UI or simulated interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Highcharts.chart with no explicit width/height, animation disabled,
+          credits disabled.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of plotOptions, dataLabels, custom tooltip.formatter, zoomType;
+          gradient built from 9 series rather than the more idiomatic series.zones.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Drag-to-zoom and custom tooltip add value, but overall fairly generic
+          line/scatter composition.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - hover-tooltips
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - custom-colormap
+  - gradient-fill
