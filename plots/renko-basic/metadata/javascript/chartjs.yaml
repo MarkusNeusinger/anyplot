@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: renko-basic
 created: '2026-09-02T05:25:58Z'
-updated: '2026-09-02T05:30:55Z'
+updated: '2026-09-02T05:50:01Z'
 generated_by: claude-sonnet
 workflow_run: 33594227353
 issue: 3294
@@ -12,39 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/chartjs/plot-dark.html
-quality_score: 86
+quality_score: 93
 review:
   strengths:
+  - 'The requested edge highlighting was implemented correctly and verifiably: a pixel-level
+    crop of both renders confirms exactly 9 consecutive bearish bricks carry the bold
+    ink-colored border, matching the subtitle''s "Longest run: 9 bearish bricks" exactly
+    - the streak-detection logic and its visual rendering are in perfect agreement.'
+  - Streak border color is theme-adaptive (t.ink), rendering near-black in light mode
+    and near-white in dark mode, confirmed by direct crop comparison of both renders.
+  - 'Brick size is now surfaced numerically via the subtitle ("Brick size: $2 · Longest
+    run: 9 bearish bricks"), closing the previously flagged DQ-01 gap without cluttering
+    the chart.'
   - Clever, in-scope adaptation of Chart.js's floating-bar ([min, max]) data format
-    to render Renko bricks without reaching for an unavailable OHLC/candlestick plugin.
+    to render Renko bricks, since the library has no native OHLC/Renko type - exactly
+    the kind of solution the library's "no workarounds" rule is meant to encourage.
   - 'Correct finance semantic color exception (bullish = palette[0] #009E73, bearish
-    = palette[4] #AE3030), matching the style guide precisely.'
-  - Deterministic LCG-seeded regime data (alternating 30-day drift regimes) produces
-    a naturally readable trend-reversal wave.
-  - Y-axis correctly anchored to the brick price range with padding rather than starting
-    at zero, appropriate for a financial chart.
-  - Brick spacing (barPercentage/categoryPercentage) gives clean, uniform gaps exactly
-    as the spec's 'clearly separated with a small gap' note asks for.
+    = palette[4]), matching the style guide precisely, with per-brick shaded edges
+    and a bolder highlighted border adding genuine visual depth beyond flat fills.'
+  - Deterministic LCG-seeded regime data produces a naturally readable trend-reversal
+    wave; Y-axis is correctly anchored to the brick price range with padding rather
+    than zero.
   weaknesses:
-  - Design reads as default-token level - no extra visual refinement (e.g., a thin
-    edge highlight on bricks, or an annotation on the largest single move) to lift
-    Design Excellence beyond baseline.
-  - 'The $2 brick size isn''t surfaced anywhere in the chart (title, subtitle, or
-    annotation) even though it''s the parameter that defines the whole chart - consider
-    a subtitle like ''Brick size: $2'' for extra context.'
-  - 'Data storytelling is passive: the reversal pattern is visible but nothing in
-    the chart calls attention to the most significant trend move.'
+  - 'Visual refinement is still close to the design-system default outside of the
+    streak highlight: grid, whitespace, and typography follow token defaults without
+    further customization.'
+  - Mobile-scale (~400px) legibility of the 14px subtitle/tick text was not independently
+    verified against the full-size renders.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Title "renko-basic · javascript · chartjs · anyplot.ai" in bold dark ink at top; legend with green "Bullish (up)" and matte-red "Bearish (down)" swatches; axis titles "Price ($)" and "Brick close date (est.)" in dark ink; tick labels in softer dark gray. All clearly readable against the light background.
-      Data: 45 floating-bar bricks tracing a wave path from ~$100 up to ~$112, down to ~$90, through two smaller oscillations, then down to ~$86 with a final uptick. First/bullish color is #009E73 (palette[0]); bearish uses #AE3030 (palette[4], the documented finance semantic anchor). Bricks have small visible gaps and no border.
+      Background: Warm off-white, consistent with #FAF8F1, not pure white.
+      Chrome: Title "renko-basic · javascript · chartjs · anyplot.ai" in bold dark ink, italic gray subtitle "Brick size: $2 · Longest run: 9 bearish bricks", legend with green "Bullish (up)" / red "Bearish (down)" swatches, axis titles "Brick close date (est.)" and "Price ($)" — all clearly legible dark-on-light. X tick labels (skip-thinned dates, no rotation) and Y tick labels are readable.
+      Data: 45 uniform floating-bar "bricks" tracing a wave from ~$100 up to ~$112, down to ~$90, through two smaller oscillations, then down to ~$86 before a final uptick. First series color is #009E73 green (bullish), second is a matte red (bearish) — finance semantic exception. Each brick has a thin shaded edge in its own hue; a pixel-crop of the Jan26→Mar decline confirms exactly 9 consecutive bearish (red) bricks carry a bold near-black border, precisely matching the subtitle's claimed longest run.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Same title, legend, and axis titles rendered in light ink; tick labels in a softer light gray. All clearly legible against the dark background. No dark-on-dark failures found (no black-on-near-black text anywhere).
-      Data: Confirmed identical brick sequence and colors (#009E73 bullish / #AE3030 bearish) to the light render - only chrome (background, text, grid) flipped, exactly as required.
+      Background: Warm near-black, consistent with #1A1A17, not pure black.
+      Chrome: Same layout; title, subtitle, legend text, and axis titles render in light ink and are clearly legible against the dark background. Tick labels use a slightly softer light gray, still easily readable. No dark-on-dark failures found anywhere.
+      Data: Brick colors are pixel-identical to the light render (only chrome flipped) — confirmed by direct comparison. The same 9-brick bearish streak now carries a bold near-white border (t.ink flips theme-adaptively), confirmed via the same pixel crop used on the light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -56,69 +61,79 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, fully readable in both themes; mobile-scale
-          legibility not independently verified.
+        comment: Explicit font sizes throughout (22/16/14px), fully readable in both
+          themes; no dark-on-dark/light-on-light issues. Held back one point pending
+          independent mobile-scale (~400px) verification.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between title, legend, ticks, axis titles, or bricks.
+        comment: No collisions between title, subtitle, legend, ticks, axis titles,
+          or bricks.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 45 bricks with clear gaps, high-contrast colors, no overplotting.
+        comment: 45 bricks with clear gaps (barPercentage 0.82 / categoryPercentage
+          0.92), high-contrast colors, no overplotting.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Finance semantic exception correctly applied; category meaning also
-          spelled out in legend text.
+        comment: Finance semantic exception correctly applied; direction is also encoded
+          by brick vertical position, not color alone; legend spells out category
+          meaning in text.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Nothing clipped, sensible proportions, no overflow.
+        comment: Nothing clipped, sensible proportions, no overflow, no canvas-gate
+          flag found.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units.
+        comment: Both axes descriptive with units ("Price ($)", "Brick close date
+          (est.)").
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Bullish palette[0] #009E73, bearish palette[4] #AE3030 per finance
-          semantic exception; theme-correct backgrounds.'
+        comment: Bullish uses palette[0] (#009E73), bearish uses palette[4], the documented
+          finance semantic anchor; backgrounds theme-correct in both renders.
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Relies on standard Imprint tokens with no additional custom polish.
+        passed: true
+        comment: 'Adds real custom polish since the last review: per-brick shaded
+          edge in the brick''s own hue plus a bolder ink-colored border on the algorithmically-detected
+          longest streak - verified pixel-accurate against the subtitle''s claim.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Clean gaps and borderless bars, but otherwise token-default refinement.
+        passed: true
+        comment: Bars now carry deliberate edge treatment instead of flat borderless
+          fills; grid/whitespace/typography otherwise still follow token defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Regime-based data creates a readable wave, but no explicit visual
-          emphasis on key moves.
+        passed: true
+        comment: The longest same-direction run is now explicitly called out both
+          visually (bold border) and textually (subtitle), giving the chart a clear
+          focal point that was missing in the prior attempt.
     spec_compliance:
       score: 15
       max: 15
@@ -128,50 +143,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Renko semantics via floating-bar adaptation.
+        comment: Correctly implements Renko semantics (fixed $2 brick size, ignores
+          time, alternates direction on reversal) via a floating-bar adaptation.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bullish/bearish colors, uniform gapped bricks, estimated date x-axis,
-          subtle grid all present.
+        comment: Green/red bullish/bearish, uniform bricks with a gap, x-axis estimated
+          dates, subtle price-level grid all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis anchored to brick range with padding; X-axis maps brick sequence
-          to estimated dates.
+        comment: Y-axis anchored to the brick price range (not zero) with padding;
+          X-axis maps brick sequence to estimated close dates.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact mandated format; legend labels are descriptive.
+        comment: Title exactly matches the mandated format; legend labels clearly
+          describe the two categories.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Full brick sequence shown; brick size not surfaced numerically.
+        comment: Brick size is now surfaced numerically via the subtitle, closing
+          the gap flagged in the prior review.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible, neutral price walk.
+        comment: Plausible ~$84-$114 price walk, generic/neutral (no real company
+          or ticker implied).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 260 observations (within 100-500 spec range) produce 45 bricks (within
-          20-50 spec range).
+        comment: 260 observations (within 100-500) produce 45 bricks (within the 20-50
+          spec range); $2 brick size is a sensible ~2% of price.
     code_quality:
       score: 10
       max: 10
@@ -181,51 +200,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No classes; lcg() is a minimal deterministic-RNG helper.
+        comment: No classes; lcg() and shade() are minimal, necessary helpers, not
+          over-engineering.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG, fully deterministic.
+        comment: Fixed-seed LCG (20240315), fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only provided globals.
+        comment: No imports; uses only the provided globals.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Concise, no fake interactivity.
+        comment: Concise, no fake interactivity or UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current Chart.js
-          v4 API.
+        comment: 'Correct mount-node contract, animation: false set, current Chart.js
+          v4 scriptable API.'
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Scriptable backgroundColor callback and custom generateLabels are
-          idiomatic Chart.js patterns.
+        comment: Scriptable backgroundColor/borderColor/borderWidth callbacks and
+          custom generateLabels are idiomatic Chart.js plugin-API patterns, now used
+          consistently across three per-index styling properties.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Floating-bar [min, max] trick to simulate Renko bricks is a genuinely
-          distinctive, in-scope solution.
-  verdict: REJECTED
+        comment: The floating-bar [min, max] data trick to simulate Renko bricks remains
+          a genuinely distinctive, well-judged use of a core Chart.js feature.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -234,4 +255,6 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
-  styling: []
+  - binning
+  styling:
+  - edge-highlighting
