@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' bar-stacked: Stacked Bar Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 86/100 | Created: 2026-09-02
 
 library(ggplot2)
 library(dplyr)
@@ -42,6 +41,13 @@ totals_df <- expense_df %>%
 p <- ggplot(expense_df, aes(x = month, y = expense, fill = department)) +
   geom_col(position = "stack", width = 0.65, color = PAGE_BG, linewidth = 0.3) +
   geom_text(
+    aes(label = dollar(expense, prefix = "$", suffix = "K")),
+    position = position_stack(vjust = 0.5),
+    size = 2.6,
+    fontface = "bold",
+    color = "#FFFFFF"
+  ) +
+  geom_text(
     data = totals_df,
     aes(x = month, y = total, label = dollar(total, prefix = "$", suffix = "K")),
     inherit.aes = FALSE,
@@ -70,7 +76,7 @@ p <- ggplot(expense_df, aes(x = month, y = expense, fill = department)) +
     axis.title         = element_text(color = INK, size = 10),
     axis.text          = element_text(color = INK_SOFT, size = 8),
     plot.title         = element_text(color = INK, size = 12),
-    legend.background  = element_rect(fill = ELEVATED_BG, color = NA),
+    legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT),
     legend.text        = element_text(color = INK_SOFT, size = 8),
     legend.title       = element_text(color = INK, size = 10),
     legend.position    = "right"
