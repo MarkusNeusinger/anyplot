@@ -1,0 +1,253 @@
+library: highcharts
+language: javascript
+specification_id: windbarb-basic
+created: '2026-09-02T10:39:43Z'
+updated: '2026-09-02T10:54:45Z'
+generated_by: claude-sonnet
+workflow_run: 33619914253
+issue: 3694
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Fixed both attempt-1 weaknesses: a station''s wind speed now genuinely rounds
+    to 50kt so the pennant (triangle) glyph renders in the actual data, not only in
+    the static legend key'
+  - Barbs are now angled ~55 degrees back from the staff (feather-style) instead of
+    a straight 90-degree perpendicular tick, giving an authentic meteorological wind-barb
+    look
+  - Correctly identifies that core Highcharts has no windbarb series and builds a
+    faithful custom SVG solution via chart.events.render + SVGRenderer instead of
+    faking it or reaching for an unavailable add-on module
+  - Both light and dark renders are fully theme-correct with identical data colors
+    and no legibility failures
+  - All four notation cases (calm open-circle, half-barb, full-barb, pennant) are
+    now demonstrably present in the rendered data
+  - Notation key panel is placed in the reserved right margin so it can never occlude
+    a data barb
+  weaknesses:
+  - Legend key panel styling is still fairly plain (flat rect, no visual hierarchy
+    beyond the header) — could use more refined framing to match the polish of the
+    barb glyphs themselves
+  - No annotation calls out the cyclonic low-pressure gyre pattern at the map center,
+    even though the synthetic data was deliberately shaped to tell that story
+  - Barb tick marks remain visually thin/small at a glance across the 54-station grid
+    — slightly larger stroke-width or barb length would improve scanability at smaller
+    viewport sizes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 - correct.
+      Chrome: Title "windbarb-basic · javascript · highcharts · anyplot.ai" and subtitle in dark ink, both axis titles ("Longitude (° from reference)", "Latitude (° from reference)") and tick labels dark and clearly legible. Only horizontal (y-axis) gridlines are visible, subtle gray. Notation key box ("Wind speed (kt)") in the reserved right margin with dark header text and softer gray entry labels — all readable.
+      Data: All 54 station barbs rendered in a single green (#009E73) — staffs pointing toward the wind's origin with angled feather-style barbs. Two calm stations show open circles (no staff). One station near the top-left (around x≈-3, y≈36) shows a filled triangular pennant confirming a real >=50kt station is present in the data, not just the legend.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 - correct.
+      Chrome: Title, subtitle, axis titles, and tick labels flip to light/white text, clearly legible against the dark surface — no dark-on-dark issues. Legend key box uses the elevated dark surface with light header/entry text, fully readable. Gridlines remain subtle.
+      Data: Identical green (#009E73) barbs, same station positions, same calm-circle and pennant placements as the light render — data colors match, only chrome flipped.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/subtitle/axis/tick/legend text all clear and appropriately
+          sized in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between barbs, text, or the legend key box
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Barbs legible at this station density; tick marks still fairly thin/small
+          at a glance
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single high-contrast green on both backgrounds, no red-green reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800), no overflow/clipping, balanced axis
+          label sizing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis titles with units ("° from reference")
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First/only series is #009E73, correct light/dark chrome backgrounds,
+          data color identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom SVG-rendered notation system now with authentic angled feather
+          barbs; improved over attempt 1's perpendicular tally-mark look
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only gridlines, generous whitespace; legend box styling still
+          fairly plain
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle explains the notation convention and the cyclonic gyre gives
+          a recognizable low-pressure pattern, but it is not called out with any annotation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct, spec-faithful wind-barb notation via SVGRenderer since no
+          windbarb module is available
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Staff direction, half/full barbs, calm circle, AND pennant are all
+          present and triggered by real data
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped to longitude/latitude with sensible padding;
+          axes show the full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; the custom notation key
+          stands in appropriately for a legend
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Now covers calm, half-barb, full-barb, AND pennant (50kt) cases in
+          the actual rendered data
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Physically plausible synthetic cyclonic wind field over a station
+          grid; neutral, real-world-style scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds in a realistic surface-observation range including a
+          plausible >=50kt near the gyre core; 54 stations within the spec's recommended
+          range
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions, but justified by the custom-glyph technique
+          required since core Highcharts has no windbarb series
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic fixed-seed LCG, no Math.random()
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity/UI; honest custom render-event glyph system
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: animation:false set at both chart and series level; no manual save
+          calls
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Scatter series for the coordinate system plus a chart.events.render
+          hook with SVGRenderer is the textbook idiomatic Highcharts pattern for custom
+          overlays
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of renderer.g/path/circle/text, axis.toPixels, and group
+          lifecycle management (destroy/recreate per redraw)
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - svg-renderer
+  - custom-legend
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
