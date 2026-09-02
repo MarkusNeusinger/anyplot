@@ -64,12 +64,20 @@ const roles = [
   { name: "Junior Financial Analyst", mean: 62, std: 8, n: 55 },
 ];
 const statsByRole = {};
+const allSalaries = [];
 roles.forEach((r) => {
   const salaries = Array.from({ length: r.n }, () =>
     Math.max(35, randNormal(r.mean, r.std))
   );
   statsByRole[r.name] = boxStats(salaries);
+  allSalaries.push(...salaries);
 });
+// Pooled-median reference line — the storytelling device that lets a reader
+// see at a glance which roles sit above/below the org-wide typical salary.
+const overallMedian = quartile(
+  [...allSalaries].sort((a, b) => a - b),
+  0.5
+);
 
 // Sort by median so the highest-paid role reads first — easier comparison,
 // per the spec's note on ordering categories by median value.
@@ -132,6 +140,24 @@ Highcharts.chart("container", {
     title: { text: "Annual Salary ($K)", style: { color: t.inkSoft, fontSize: "16px" } },
     labels: { style: { color: t.inkSoft, fontSize: "14px" }, format: "{value}K" },
     gridLineColor: t.grid,
+    plotLines: [
+      {
+        value: overallMedian,
+        color: t.inkSoft,
+        width: 1.5,
+        dashStyle: "Dash",
+        zIndex: 5,
+        label: {
+          text: `Org-wide median: $${overallMedian.toFixed(0)}K`,
+          rotation: 0,
+          align: "left",
+          verticalAlign: "top",
+          x: 8,
+          y: 4,
+          style: { color: t.inkSoft, fontSize: "13px" },
+        },
+      },
+    ],
   },
   legend: { enabled: false },
   tooltip: { outside: false },
@@ -205,7 +231,7 @@ Highcharts.chart("container", {
           color: t.palette[i % t.palette.length],
         }))
       ),
-      marker: { radius: 4.5, symbol: "circle", lineWidth: 1, lineColor: t.pageBg, fillOpacity: 0.85 },
+      marker: { radius: 6.5, symbol: "circle", lineWidth: 1, lineColor: t.pageBg, fillOpacity: 0.85 },
       showInLegend: false,
       tooltip: { pointFormat: "Outlier: <b>${point.y:.0f}K</b>" },
     },
