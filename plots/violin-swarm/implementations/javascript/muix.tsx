@@ -129,6 +129,68 @@ function densityFraction(categoryIndex, value) {
   );
 }
 
+// --- Median tick (per-violin embellishment) and bimodality detection (data
+// storytelling) — both derived straight from the already-computed density
+// grid, no extra passes over the raw samples.
+function medianOf(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
+}
+const medianByCategory = valuesByCategory.map(medianOf);
+
+// Local maxima of the normalized density curve. Two nearby local maxima are
+// only a real second mode if the valley between them dips well below both —
+// a shallow-valley shoulder (e.g. plain sampling noise on an otherwise
+// unimodal normal) is merged away instead of flagged. That valley-depth
+// check is what separates the genuinely bimodal Sleep-deprived condition
+// from the merely lumpy KDE of the other, unimodal conditions.
+function findPeaks(grid, density, minHeight, minSeparation, valleyRatio) {
+  const raw = [];
+  for (let k = 1; k < density.length - 1; k += 1) {
+    if (
+      density[k] >= minHeight &&
+      density[k] >= density[k - 1] &&
+      density[k] >= density[k + 1]
+    ) {
+      raw.push({ idx: k, value: grid[k], height: density[k] });
+    }
+  }
+  const merged = [];
+  raw.forEach((p) => {
+    const close = merged.find(
+      (m) => Math.abs(m.value - p.value) < minSeparation,
+    );
+    if (!close) merged.push(p);
+    else if (p.height > close.height) Object.assign(close, p);
+  });
+  merged.sort((a, b) => a.idx - b.idx);
+
+  let changed = true;
+  while (changed && merged.length > 1) {
+    changed = false;
+    for (let i = 0; i < merged.length - 1; i += 1) {
+      const a = merged[i];
+      const b = merged[i + 1];
+      let valley = Infinity;
+      for (let k = a.idx; k <= b.idx; k += 1) {
+        valley = Math.min(valley, density[k]);
+      }
+      if (valley / Math.min(a.height, b.height) > valleyRatio) {
+        merged.splice(a.height >= b.height ? i + 1 : i, 1);
+        changed = true;
+        break;
+      }
+    }
+  }
+  return merged;
+}
+const peaksByCategory = gridByCategory.map((grid, i) =>
+  findPeaks(grid, densityByCategory[i], 0.25, 2 * bandwidthByCategory[i], 0.85),
+);
+
 // --- Beeswarm packing, width-limited to the violin's own density envelope at
 // that value — points spread horizontally but never cross the violin boundary.
 // Collisions are resolved in on-screen pixels for even spacing regardless of
@@ -210,6 +272,23 @@ function ViolinSwarm() {
         const violinPath = `M${leftSide.join(" L")} L${rightSide.join(" L")} Z`;
         const swarm = layoutSwarm(i, pxPerValue, violinHalfWidthPx);
 
+        // Median tick: a short contrasting bar spanning most of the local
+        // density envelope, the standard violin-plot embellishment for
+        // reading off central tendency without the swarm's raw noise.
+        const median = medianByCategory[i];
+        const medianHalfWidth =
+          densityFraction(i, median) * violinHalfWidthPx * 0.85;
+        const medianY = yScale(median);
+
+        // Bimodal callout: when the density curve has a second surviving
+        // peak, tag the smaller mode with a short leader + label so the
+        // shape the swarm already shows gets called out explicitly.
+        const peaks = peaksByCategory[i];
+        const isBimodal = peaks.length > 1;
+        const minorPeak = isBimodal
+          ? [...peaks].sort((a, b) => a.height - b.height)[0]
+          : null;
+
         return (
           <g key={cat}>
             <path
@@ -232,6 +311,39 @@ function ViolinSwarm() {
                 strokeWidth={0.75}
               />
             ))}
+            <line
+              x1={center - medianHalfWidth}
+              x2={center + medianHalfWidth}
+              y1={medianY}
+              y2={medianY}
+              stroke={t.pageBg}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+            {minorPeak && (
+              <g>
+                <line
+                  x1={center + violinHalfWidthPx * minorPeak.height + 3}
+                  x2={center + violinHalfWidthPx + 20}
+                  y1={yScale(minorPeak.value)}
+                  y2={yScale(minorPeak.value)}
+                  stroke={t.inkSoft}
+                  strokeWidth={1}
+                  strokeDasharray="2,2"
+                  opacity={0.7}
+                />
+                <text
+                  x={center + violinHalfWidthPx + 24}
+                  y={yScale(minorPeak.value)}
+                  dy="0.32em"
+                  fontSize={11}
+                  fill={t.inkSoft}
+                  opacity={0.85}
+                >
+                  second mode
+                </text>
+              </g>
+            )}
           </g>
         );
       })}
