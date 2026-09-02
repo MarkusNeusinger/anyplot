@@ -70,7 +70,34 @@ for (let i = PERIOD - 1; i < NUM_DAYS; i += 1) {
   bandSpread[i] = upperBand[i] - lowerBand[i];
 }
 
-const bandColor = t.palette[2];
+const bandColor = t.palette[1];
+
+// Y-axis auto-scale: pad a few dollars beyond the close/band extremes so the
+// squeeze/expansion pattern fills the canvas instead of sitting in a $0-$100 strip.
+const spanValues = [];
+for (let i = 0; i < NUM_DAYS; i += 1) {
+  spanValues.push(closes[i]);
+  if (upperBand[i] !== null) spanValues.push(upperBand[i]);
+  if (lowerBand[i] !== null) spanValues.push(lowerBand[i]);
+}
+const dataMin = Math.min(...spanValues);
+const dataMax = Math.max(...spanValues);
+const yPad = (dataMax - dataMin) * 0.1;
+const yMin = Math.floor(dataMin - yPad);
+const yMax = Math.ceil(dataMax + yPad);
+
+// Locate the tightest squeeze (minimum band spread) to annotate the key
+// Bollinger pattern instead of leaving the story purely implicit in color.
+// Search starts one full period after warm-up so the low-variance edge right
+// at the SMA's first valid bar isn't mistaken for a genuine volatility squeeze.
+let squeezeIndex = -1;
+let minSpread = Infinity;
+for (let i = PERIOD * 2; i < NUM_DAYS; i += 1) {
+  if (bandSpread[i] !== null && bandSpread[i] < minSpread) {
+    minSpread = bandSpread[i];
+    squeezeIndex = i;
+  }
+}
 
 // --- Init --------------------------------------------------------------------
 const chart = echarts.init(document.getElementById("container"));
@@ -114,6 +141,8 @@ chart.setOption({
     type: "value",
     name: "Price (USD)",
     nameTextStyle: { color: t.ink, fontSize: 14 },
+    min: yMin,
+    max: yMax,
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "${value}" },
     axisLine: { lineStyle: { color: t.inkSoft } },
     splitLine: { lineStyle: { color: t.grid } },
@@ -166,6 +195,18 @@ chart.setOption({
         opacity: 0.75,
       },
       z: 2,
+      markLine: {
+        silent: true,
+        symbol: "none",
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1 },
+        label: {
+          formatter: "Tightest squeeze",
+          color: t.inkSoft,
+          fontSize: 12,
+          position: "insideEndTop",
+        },
+        data: [{ xAxis: dates[squeezeIndex] }],
+      },
     },
     {
       name: "SMA (20)",
