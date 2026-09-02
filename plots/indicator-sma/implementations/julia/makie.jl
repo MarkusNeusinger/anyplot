@@ -1,7 +1,7 @@
 # anyplot.ai
 # indicator-sma: Simple Moving Average (SMA) Indicator Chart
 # Library: makie 0.21.9 | Julia 1.11.9
-# Quality: 70/100 | Created: 2026-09-02
+# Quality: 92/100 | Created: 2026-09-02
 
 using CairoMakie
 using Colors

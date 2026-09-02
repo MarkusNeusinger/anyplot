@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: indicator-sma
 created: '2026-09-02T01:48:41Z'
-updated: '2026-09-02T02:14:40Z'
+updated: '2026-09-02T02:25:19Z'
 generated_by: claude-sonnet
 workflow_run: 33580504926
 issue: 3651
@@ -12,150 +12,135 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 70
+quality_score: 92
 review:
   strengths:
-  - Theme-adaptive chrome still implemented perfectly — both renders swap background/ink/grid
-    tokens correctly while all data series keep identical hex colors across themes
-  - Correct canonical Imprint palette order (green -> lavender -> blue -> ochre),
-    brand green on the Close series, and no red-green-only encoding
-  - 'Data faithfully demonstrates the spec''s core teaching point: SMA 200 only appears
-    after day 200 due to its window, with visible SMA20/SMA50 crossovers still legible
-    even without callouts'
-  - Source code is clean and KISS-structured (no functions/classes), reproducible
-    via Random.seed!(42), and uses current Makie size= API
-  - 'The intent behind this repair round is sound: titlesize bump, date-based xtickformat,
-    and golden/death-cross annotations all directly target attempt 1''s feedback'
+  - 'Render is now genuinely fresh and matches the current source: the x-axis correctly
+    shows calendar dates (Jan 2024 → Oct 2024) via the Dates.format xtickformat closure,
+    resolving the attempt-2 stale-render finding'
+  - 'Golden Cross / Death Cross annotations render exactly as designed in both themes:
+    color-coded triangle markers (green up / red down), dotted leader lines at reduced
+    alpha, and bold labels placed clear of every data line — directly answering the
+    attempt-1/2 request for a visual focal point on the SMA crossover signal'
+  - 'Theme-adaptive chrome is flawless: background, title, axis labels, ticks, grid,
+    spines, and legend all flip correctly between #FAF8F1 and #1A1A17, while all data
+    and annotation colors stay byte-identical across themes'
+  - Correct canonical Imprint palette order (green → lavender → blue → ochre) plus
+    a well-justified semantic exception for the crossover markers (green = golden/good,
+    matte red = death/bad)
+  - SMA 200 correctly appears only from its 200-period window onward, faithfully demonstrating
+    the spec's 'longer SMAs have more initial null values' note
+  - 'Clean, idiomatic, KISS-structured Makie code: explicit theme tokens, Random.seed!(42),
+    current size= API, no unused imports, no fake interactivity'
   weaknesses:
-  - 'CRITICAL — rendered artifacts do not match the current source: the .jl file sets
-    xlabel="Date" with a Dates.format(...,"u yyyy") xtickformat closure, but plot-light.png/plot-dark.png
-    show the x-axis labeled "Trading Day" with plain integer ticks (0/100/200/300)
-    — the exact xlabel string from BEFORE this repair. The ~45-line golden-cross/death-cross
-    scatter!/lines!/text! annotation block added in this commit is also completely
-    absent from both renders, even at the exact pixel locations independently confirmed
-    (day 64 death cross, day 123 golden cross via a standalone re-run of the SMA/crossover
-    math). All three signs point the same direction: these PNGs are a stale render
-    (very likely still attempt 1''s artifact), not a re-render of the current makie.jl.
-    Re-run the render step for both themes and confirm the PNGs actually reflect the
-    latest commit before the next review — until then, none of this attempt''s intended
-    fixes can be credited.'
-  - Because the crossover annotations cannot be verified as rendering correctly, Library
-    Mastery and Design Excellence must be scored as unchanged from attempt 1 — no
-    distinctive Makie feature or explicit data-storytelling emphasis is visible in
-    the actual artifact
-  - Axis labeling as shown ("Trading Day", integer index) still does not depict the
-    spec's literal date field despite the source code now attempting to do so — unresolved
-    from attempt 1 in the artifact under review
+  - Trading-day index is mapped to consecutive calendar days (including weekends)
+    rather than business days, so the '~300 trading days' the spec asks for actually
+    span only ~9 months of wall-clock time instead of the ~14 months real trading-day
+    spacing would imply — a common simplification but a minor factual imprecision
+    now that literal dates are shown on the axis
+  - Only 2 of several visible SMA20/SMA50 crossovers are annotated (by design, to
+    avoid clutter), which is a reasonable tradeoff but means the golden/death cross
+    callouts read as a curated highlight rather than a complete crossover history
+  - The crossover markers (triangles) aren't referenced in the axislegend, so a viewer
+    has to infer their meaning solely from the adjacent text labels rather than a
+    formal legend entry
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "indicator-sma · julia · makie · anyplot.ai" centered at top; y-axis label
-        "Closing Price ($)"; x-axis label reads "Trading Day" with plain integer tick labels (0, 100, 200,
-        300) — NOT the calendar-date format ("Jan 2024" etc.) that the current source code's xtickformat
-        closure targets. Softer gray-brown tick labels; subtle y-only gridlines; top/right spines removed;
-        frameless top-left legend (Close, SMA 20, SMA 50, SMA 200). All of this text is clearly readable
-        against the light background.
-      Data: Close line in brand green (#009E73), noisy across 300 trading days ($135-$200). SMA 20
-        (lavender #C475FD), SMA 50 (blue #4467A3), SMA 200 (ochre #BD8233, only from day ~200 onward) are
-        smooth overlays with multiple visible SMA20/SMA50 crossovers around day ~64 and ~123 — but NO
-        triangle marker, dotted leader line, or "Golden Cross"/"Death Cross" text appears at either point,
-        despite the source code containing a dedicated scatter!/lines!/text! block for exactly this. Pixel
-        crops centered on both crossover coordinates (independently confirmed via a standalone re-run of the
-        SMA math) confirm the annotations are simply not present in the render.
-      Legibility verdict: PASS (all rendered text is legible) — but the render's content does not match the
-        current source (see weaknesses); this is a pipeline/artifact-freshness concern, not a text-contrast one.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Bold dark title "indicator-sma · julia · makie · anyplot.ai" centered at top; x-axis labeled "Date" with calendar-formatted ticks (Jan 2024, Apr 2024, Jul 2024, Oct 2024); y-axis labeled "Closing Price ($)" with dollar ticks; softer gray-brown tick labels; subtle y-axis-only horizontal gridlines; top/right spines removed; frameless top-left legend listing Close, SMA 20, SMA 50, SMA 200. All chrome text is clearly readable against the light background.
+      Data: Close line in brand green (#009E73), noisy across the ~9-month span ($135-$200 range). SMA 20 (lavender #C475FD), SMA 50 (blue #4467A3), and SMA 200 (ochre #BD8233, appearing only from roughly two-thirds through the series onward per its 200-period window) are smooth overlays. A red downward triangle with a dotted leader line and "Death Cross" label marks the SMA20/SMA50 death cross around Feb/Mar 2024; a green upward triangle with a dotted leader line and "Golden Cross" label marks the golden cross around April/May 2024. Both annotations sit in clear space, not overlapping any line.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Identical layout to the light render with all chrome tokens flipped to light-colored tones —
-        title, axis labels, ticks, legend, grid, spines all clearly legible, no dark-on-dark failures. Same
-        "Trading Day" x-axis label and plain integer ticks as the light render (same mismatch vs. source).
-      Data: All four series render in the identical hex colors as the light render — only chrome flipped, as
-        required. Same absence of any golden-cross/death-cross annotation at the same two crossover points.
-      Legibility verdict: PASS (all rendered text is legible) — same artifact-freshness concern as light render.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same layout; title, axis labels, tick labels, gridlines, spines, and legend all flip to light-colored/adapted tones and remain fully legible. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend text, and annotation text are all clearly visible).
+      Data: Close, SMA 20, SMA 50, SMA 200, and the Golden Cross / Death Cross markers and labels render in identical hex colors to the light render — only the chrome (background, ink, grid) flipped, as required. Brand green #009E73 remains clearly visible against the dark surface.
+      Legibility verdict: PASS
 
-    Both renders pass the theme-readability check on their own merits, but both appear to be stale — they
-    reflect the implementation's state BEFORE this repair commit (xlabel="Trading Day", no crossover
-    annotations, no date-formatted ticks), not the current makie.jl (xlabel="Date", Dates-based xtickformat,
-    golden/death-cross callouts). This review scores what is actually visible, since that is what would ship,
-    but flags the mismatch as the primary blocker for the next attempt.
+    Both renders are confirmed fresh (the x-axis dates and crossover annotations that were missing in attempt 2's stale render are now visibly present and correctly placed in both themes), and both pass the theme-readability checklist.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; explicit sizes throughout
+        comment: All font sizes explicitly set (titlesize=23, xlabelsize/ylabelsize=14,
+          tick sizes=12, annotation fontsize=13); fully readable in both themes; short
+          mandated title naturally fills less width but is not squeezed or clipped,
+          per style-guide exception
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, text, or data
+        comment: Legend, title, axis labels, and crossover annotations never collide
+          with each other or with data lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Close line and three SMA overlays are all clearly distinguishable
+        comment: Line widths (2.0-2.5) and crossover markers (size 22 with stroke)
+          are well-adapted to 300-point daily series
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe, no red-green-only encoding
+        comment: Crossover markers distinguished by shape (up/down triangle) and text
+          label in addition to color, not hue alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, legend near plot
+        comment: Plot fills the majority of the 3200x1800 canvas with balanced margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: x-axis reads 'Trading Day' with plain integer ticks, not the calendar-date
-          format the spec's date field and the current source's xtickformat closure
-          both target
+        passed: true
+        comment: '"Date" with calendar ticks and "Closing Price ($)" with unit'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Canonical Imprint order, brand green first series, theme-correct
-          chrome in both renders
+        comment: Canonical Imprint order (green/lavender/blue/ochre); crossover markers
+          use a well-justified semantic exception (green=golden, matte red=death);
+          theme-correct chrome in both renders
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default; no visible design leap over attempt 1 since
-          the annotation feature does not render
+        passed: true
+        comment: Thoughtful semantic color use and clean typography, clearly above
+          a plain library default, though not fully publication-level polish
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, subtle y-only grid, frameless legend — unchanged
-          from attempt 1
+        passed: true
+        comment: Spines removed, subtle y-only grid, frameless legend, generous whitespace,
+          alpha-blended leader lines
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Only implicit hierarchy (jagged Close vs. smooth SMAs); the explicit
-          golden/death-cross callouts added in source are not visible in either render
+        passed: true
+        comment: Golden/death cross callouts give the chart a clear, immediately visible
+          focal point tied directly to the spec's stated analytical use case
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -169,22 +154,22 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Price line + SMA20/50/200 overlays + legend with periods all present
+        comment: Close line, distinct SMA colors, legend with periods, delayed SMA200
+          onset, y-axis gridlines all present
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: x-axis shows a raw trading-day index rather than the spec's literal
-          date field, and the code's own attempt to fix this (xtickformat) is not
-          reflected in the render
+        passed: true
+        comment: X-axis now shows literal calendar dates, Y-axis shows closing price;
+          all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels (Close, SMA 20/50/200) match
-          data
+        comment: Title format exactly matches spec-id · language · library · anyplot.ai;
+          legend labels match series
     data_quality:
       score: 14
       max: 15
@@ -194,24 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows short/medium/long SMA divergence, NaN warm-up gaps, multiple
-          crossovers
+        comment: Shows uptrend, downtrend, both golden and death cross, and delayed
+          SMA200 onset
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Plausible neutral stock scenario, but still an integer trading-day
-          index rather than literal calendar dates
+        passed: true
+        comment: Plausible, neutral stock-price scenario with real calendar dates
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sensible price range and daily-return volatility for a stock closing-price
-          series
+        comment: Values and volatility are realistic, but trading-day index maps to
+          consecutive calendar days including weekends, understating real wall-clock
+          span
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -231,42 +216,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used packages (CairoMakie, Colors, Dates, Random, Statistics)
+        comment: CairoMakie, Colors, Dates, Random, Statistics all used
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: ~45 lines (xtickformat closure + full crossover detection/annotation
-          block) added this round produce zero confirmed visual effect in the shipped
-          PNGs — unverifiable/dead complexity in the actual artifact triggers the
-          over-engineering floor
+        passed: true
+        comment: No fake functionality; crossover-detection loop is appropriately
+          scoped to the feature it renders
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current API
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2), current size= API
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Solid Axis/Figure configuration, correct theme-token mapping, current
-          API
+        comment: Expert use of Axis/Figure theme tokens, xtickformat closure, axislegend
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
-        passed: false
-        comment: The intended distinctive feature (scatter!+lines!+text! crossover
-          callouts) is not visible in either render, so only generic lines!/axislegend
-          usage can be credited
-  verdict: REJECTED
+        passed: true
+        comment: Layered scatter!/lines!/text! annotation combo with local-extremum-aware
+          label placement is a genuine library-specific technique, though replicable
+          in other libraries with more code
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -274,9 +256,9 @@ impl_tags:
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - rolling-window
+  - time-series
   styling:
-  - publication-ready
   - alpha-blending
+  - edge-highlighting
