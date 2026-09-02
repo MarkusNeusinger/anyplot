@@ -3,6 +3,7 @@
 // Library: muix 7.29.1 | JavaScript 22.23.2
 // Quality: 88/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
+import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
 
 const t = window.ANYPLOT_TOKENS;
@@ -40,9 +41,11 @@ while (dates.length < N) {
 // Daily close through three regimes — steady uptrend, a choppy pullback
 // (death cross), then a recovery uptrend (golden cross) — so the SMA
 // crossovers described in the spec's applications are visible.
+const PULLBACK_START = 110;
+const PULLBACK_END = 190;
 const close = [START_PRICE];
 for (let i = 1; i < N; i += 1) {
-  const pullback = i >= 110 && i < 190;
+  const pullback = i >= PULLBACK_START && i < PULLBACK_END;
   const driftPct = pullback ? -0.12 : 0.09;
   const dailyVolPct = pullback ? 1.3 : 0.9;
   const changePct = driftPct + dailyVolPct * gaussian();
@@ -63,6 +66,27 @@ const smaMedium = sma(close, WINDOW_MEDIUM);
 const smaLong = sma(close, WINDOW_LONG);
 const closeRounded = close.map(round2);
 
+// Detect 20/50-day SMA crossovers so the chart can call out the death-cross /
+// golden-cross moments described in the spec's Applications section. Only the
+// crossovers that actually confirm each regime change (the first death cross
+// once the pullback starts, the first golden cross once the recovery starts)
+// are annotated, keeping the markers tied to the story instead of every
+// short-term wiggle.
+const crossovers = [];
+for (let i = 1; i < N; i += 1) {
+  if (smaShort[i - 1] === null || smaMedium[i - 1] === null) continue;
+  if (smaShort[i] === null || smaMedium[i] === null) continue;
+  const prevDiff = smaShort[i - 1] - smaMedium[i - 1];
+  const diff = smaShort[i] - smaMedium[i];
+  if (prevDiff === 0 || Math.sign(prevDiff) === Math.sign(diff)) continue;
+  crossovers.push({ index: i, date: dates[i], golden: diff > 0 });
+}
+const deathCross = crossovers.find((c) => c.index >= PULLBACK_START && !c.golden);
+const goldenCross = crossovers.find((c) => c.index >= PULLBACK_END && c.golden);
+const signals = [deathCross, goldenCross]
+  .filter(Boolean)
+  .map((c) => ({ date: c.date, label: c.golden ? "Golden Cross" : "Death Cross" }));
+
 // Explicit y-axis bounds so the four overlapping lines use the full canvas.
 const allValues = [...closeRounded, ...smaShort, ...smaMedium, ...smaLong].filter(
   (v) => v !== null,
@@ -78,7 +102,7 @@ const TITLE = `${SYMBOL} · indicator-sma · javascript · muix · anyplot.ai`;
 // --- Chart (default-exported component — the harness mounts it) -------------
 export default function Chart() {
   const { width, height } = window.ANYPLOT_SIZE;
-  const titleHeight = 64;
+  const titleHeight = 70;
 
   return (
     <Box sx={{ width, height, display: "flex", flexDirection: "column" }}>
@@ -88,8 +112,8 @@ export default function Chart() {
           height: titleHeight,
           lineHeight: `${titleHeight}px`,
           pl: 1,
-          fontSize: 22,
-          fontWeight: 600,
+          fontSize: 28,
+          fontWeight: 700,
         }}
       >
         {TITLE}
@@ -184,7 +208,18 @@ export default function Chart() {
             strokeWidth: 2.25,
           },
         }}
-      />
+      >
+        {signals.map((c) => (
+          <ChartsReferenceLine
+            key={c.date.toISOString()}
+            x={c.date}
+            label={c.label}
+            labelAlign="start"
+            lineStyle={{ stroke: t.inkSoft, strokeDasharray: "4 4", strokeWidth: 1 }}
+            labelStyle={{ fontSize: 12, fill: t.inkSoft }}
+          />
+        ))}
+      </LineChart>
     </Box>
   );
 }
