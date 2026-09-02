@@ -2,7 +2,7 @@ library: d3
 language: javascript
 specification_id: cat-box-strip
 created: '2026-09-02T14:56:47Z'
-updated: '2026-09-02T15:01:48Z'
+updated: '2026-09-02T15:12:44Z'
 generated_by: claude-sonnet
 workflow_run: 33644779313
 issue: 2695
@@ -12,61 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-s
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/d3/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/d3/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/cat-box-strip/javascript/d3/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correctly overlays a jittered, semi-transparent strip plot beneath a translucent
-    box+whisker plot, so individual points, quartile box, and median all read together
-    in a single composite mark
-  - Manual box-stats computation (d3.quantile-based Q1/median/Q3 and 1.5*IQR whisker
-    fencing) is a genuinely distinctive d3 pattern since the library has no built-in
-    boxplot geometry
+  - 'Repair directly fixed every weakness from the Attempt 1 review: font-size hierarchy
+    (title 18px bold vs. axis labels reduced to 15px), a real focal point for the
+    winning group (spotlight band + heavier box stroke + ''Highest yield'' annotation
+    on Potassium), refined y-axis (tick stubs removed since gridlines already mark
+    them, x-axis keeps a short stub), and a genuinely distinctive d3-specific technique'
+  - Strip points now use a deterministic d3.forceSimulation-based beeswarm (forceX
+    + forceCollide with fixed fy, 200 ticks) instead of uniform random jitter, meaningfully
+    reducing dot-on-dot overlap in dense bands while remaining fully reproducible
+  - 'Clear data storytelling: the highest-yield group (Potassium) is visually called
+    out via a subtle background spotlight band, a heavier box stroke, and an explicit
+    ''Highest yield'' label, guiding the viewer to the chart''s main insight'
   - 'Imprint palette applied correctly and consistently: first series #009E73, canonical
-    order for series 2-4, identical data colors between light/dark renders'
-  - Theme-adaptive chrome is correctly threaded through axes, gridlines, axis labels,
-    title, and the median line (t.ink flips white-on-dark / black-on-light)
-  - 'Data shows real variation: different spreads per treatment group, two visible
-    low outliers in the Control group below the whisker fence, honest agronomic scale
-    (28-36.5 kg mean, 3.6-5.1 std)'
+    order for series 2-4, identical data colors between light/dark renders, correct
+    theme backgrounds'
+  - Manual box-stats computation (d3.quantile-based Q1/median/Q3, 1.5*IQR whisker
+    fencing) remains a genuinely distinctive d3 pattern since the library has no built-in
+    boxplot geometry
   - Deterministic LCG + Box-Muller PRNG with fixed seed=42 gives full reproducibility
     without any external dependency
-  - Title fontsize correctly scaled down via the length formula for the longer descriptive-prefixed
-    title, with the derivation left as a comment
+  - Theme-adaptive chrome correctly threaded through axes, gridlines, axis labels,
+    title, median line, and the new winner annotation (color(winner) reads well on
+    both surfaces)
   weaknesses:
-  - 'Design Excellence is only ''good-default'' level: the box fill/stroke + jittered
-    dots is a solid but fairly conventional composition — add a stronger focal point
-    (e.g. slightly heavier stroke or subtle highlight on the highest-yield group)
-    so the viewer''s eye lands on the story (Potassium producing the best yield) rather
-    than reading four equal groups left to right'
-  - Title (18px, weight 600) and both axis labels (18px, default weight) render at
-    the identical font size, which flattens the typographic hierarchy — the title
-    differs only by boldness. Consider trimming the axis-label size to ~14-16px so
-    the title reads as clearly dominant
-  - Strip points inside the box interior get partially hidden by the box fill/stroke
-    where they cluster near the median — at n=70/group with r=4 and fill-opacity=0.45
-    there is still noticeable dot-on-dot overlap in the densest bands (e.g. Control's
-    25-31 band); consider a touch more jitter width or slightly lower opacity there
-  - Spines keep the full axis 'domain' path on both x and y (L-shaped, correct default)
-    but visual refinement stops there — no additional refinement like a lighter axis-line
-    stroke-width or tick-mark removal was applied, so it reads closer to 'good' than
-    'perfect' polish
-  - Library Mastery is solid but generic-idiomatic (data joins, scales, axes) — nothing
-    d3-specific beyond the manual quartile math distinguishes this from what any low-level
-    SVG-drawing library could produce; a d3-only touch (e.g. d3.forceSimulation-based
-    beeswarm jitter instead of uniform-random jitter, or a smoothed KDE silhouette
-    behind the box) would raise LM-02
+  - Tick label font-size (16px) is very slightly larger than the axis-title font-size
+    (15px) — a minor inverted hierarchy; not a legibility problem but ticks would
+    conventionally be the same size or smaller than the axis label they annotate.
+  - Beeswarm packing reduces overlap substantially but dense bands (e.g. Nitrogen's
+    IQR, Potassium's IQR) still show some point-on-point touching at n=70/group —
+    a touch more collision radius or a slightly wider swarmWidth would fully separate
+    the densest clusters.
+  - The 'Highest yield' annotation and spotlight band are a clean, minimal storytelling
+    device but stay fairly conservative — a slightly bolder treatment (e.g. a small
+    value callout, or subtly dimming the non-winning groups) would push Design Excellence
+    further into 'exceptional' territory.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Crop Yield by Fertilizer Treatment · cat-box-strip · javascript · d3 · anyplot.ai" is bold dark text, fully visible above the plot area, not clipped. X-axis label "Fertilizer Treatment (n = 70 per group)" and Y-axis label "Crop Yield (kg per plot)" are dark, legible, and balanced in size with each other. Tick labels on both axes are a slightly softer dark gray, clearly readable. Subtle horizontal gridlines are visible but not competing with the data. Only left+bottom axis domain lines are kept (L-shaped frame); top/right spines removed.
-      Data: Four box-plots with a jittered strip of individual points overlaid, one per fertilizer treatment (Control, Nitrogen, Phosphorus, Potassium). First series (Control) renders in Imprint brand green #009E73; Nitrogen in lavender, Phosphorus in blue, Potassium in ochre — matching Imprint canonical order 1-4. Boxes are translucent so the underlying strip points show through; median line is drawn in solid black, clearly distinguishable against every box color. Two low outlier points are visible below the Control whisker.
-      Legibility verdict: PASS — all title, axis label, and tick text is dark-on-light and fully readable; no clipping at any canvas edge.
+      Chrome: Title "Crop Yield by Fertilizer Treatment · cat-box-strip · javascript · d3 · anyplot.ai" is bold dark text at 18px, fully visible above the plot area, not clipped. X-axis label "Fertilizer Treatment (n = 70 per group)" and Y-axis label "Crop Yield (kg per plot)" are dark, regular-weight, and clearly smaller than the title (15px vs 18px bold) — a visible typographic hierarchy now exists. Tick labels on both axes are a slightly softer dark gray, clearly readable. Subtle horizontal gridlines are visible but not competing with the data; y-axis tick stubs are removed (gridlines mark the ticks) while the x-axis keeps a short stub. Only left+bottom axis domain lines are kept (L-shaped frame).
+      Data: Four box-plots with a beeswarm-jittered strip of individual points overlaid, one per fertilizer treatment (Control, Nitrogen, Phosphorus, Potassium). First series (Control) renders in Imprint brand green #009E73; Nitrogen in lavender, Phosphorus in blue, Potassium in ochre — matching Imprint canonical order 1-4. Boxes are translucent so the underlying strip points show through; median line is drawn in solid black, clearly distinguishable against every box color. The Potassium column (highest median yield) sits on a subtle background spotlight band, has a visibly heavier box stroke, and carries an explicit "Highest yield" annotation in its own color above the box — a clear, intentional focal point. Two low outlier points are visible below the Control whisker.
+      Legibility verdict: PASS — all title, axis label, tick, and annotation text is dark/colored-on-light and fully readable; no clipping at any canvas edge.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Title, axis labels, and tick labels all flip to light (near-white/light-gray) text, fully legible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle. Median line flips to solid white, still clearly visible against every translucent box color.
-      Data: Same four groups in the identical Imprint hues as the light render (#009E73 green, lavender, blue, ochre) — confirmed unchanged between themes; only chrome (background, text, gridlines, median-line color) adapted to the dark surface.
-      Legibility verdict: PASS — no dark-on-dark text, brand green still reads clearly against the near-black surface, no clipped elements at the canvas border.
+      Chrome: Title, axis labels, and tick labels all flip to light (near-white/light-gray) text, fully legible against the dark background — no dark-on-dark failures observed. Gridlines remain subtle. Median line flips to solid white, still clearly visible against every translucent box color. The winner spotlight band and "Highest yield" annotation remain legible in the same ochre tone, with good contrast against the near-black surface.
+      Data: Same four groups in the identical Imprint hues as the light render (#009E73 green, lavender, blue, ochre) — confirmed unchanged between themes; only chrome (background, text, gridlines, median-line color) adapted to the dark surface. Beeswarm point layout is identical to the light render (deterministic, theme-independent).
+      Legibility verdict: PASS — no dark-on-dark text, brand green and the winner-annotation color both still read clearly against the near-black surface, no clipped elements at the canvas border.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -77,36 +71,36 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes, readable in both themes and at mobile scale;
-          title matches axis-label size (weight-only differentiation) which is a minor
-          hierarchy flaw
+        comment: Title/axis-label hierarchy fixed (18px bold vs 15px regular); readable
+          in both themes; tick labels (16px) are very slightly larger than axis labels
+          (15px), a minor inversion
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps other text or data; intentional point overlap from
-          jitter is expected for the plot type
+        comment: No text overlaps other text or data; beeswarm keeps points well organized
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: r=4 markers with fill-opacity 0.45 are visible for n=70/group, but
-          dense clusters near the median still show noticeable dot-on-dot overlap
+        comment: Force-simulation beeswarm meaningfully reduces overlap vs. uniform
+          jitter, but dense IQR bands (n=70/group) still show some point-on-point
+          touching
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Imprint palette is CVD-safe by construction; adequate alpha keeps
-          overlapping markers distinguishable
+        comment: Imprint palette is CVD-safe by construction; adequate alpha and stroke
+          keep overlapping markers and the winner box distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the canvas well with balanced margins; nothing cut off
+        comment: Canvas gate passed (3200x1800); balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -122,30 +116,31 @@ review:
         comment: 'First series #009E73, canonical order 2-4, identical data colors
           across themes, correct theme backgrounds'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Custom translucent-box + strip composition is above a bare library
-          default but stops short of strong/publication-level polish
+        passed: true
+        comment: Winner spotlight band + heavier stroke + annotation is a real, intentional
+          design move beyond bare defaults, though still a conservative treatment
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle single-axis grid and L-shaped spines show real refinement,
-          but no further polish (tick marks, axis line weight) beyond that
+        passed: true
+        comment: Y-axis tick stubs removed (gridlines carry that role), x-axis keeps
+          a short stub, subtle single-axis grid, L-shaped spines — clear refinement
+          pass over Attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Median line and box color create some hierarchy, but there is no
-          explicit emphasis pointing the viewer at the Potassium-wins insight
+        passed: true
+        comment: Explicit 'Highest yield' annotation plus spotlight band gives the
+          chart a clear focal point and narrative, directly fixing the Attempt 1 weakness
     spec_compliance:
       score: 15
       max: 15
@@ -207,13 +202,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat top-to-bottom script, only the minimal PRNG helper functions
+        comment: Flat top-to-bottom script, only minimal PRNG/stats helper functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG PRNG
+        comment: Fixed-seed LCG PRNG; forceSimulation run for a fixed 200 ticks (deterministic)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -234,7 +229,7 @@ review:
         comment: 'Correctly builds one svg into #container sized from ANYPLOT_SIZE,
           no animation/transitions'
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -246,17 +241,19 @@ review:
           pattern, d3-array quantile helpers
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Manual quartile/whisker construction is a real d3-specific technique
-          (no boxplot primitive exists), but nothing further leverages the library's
-          unique low-level strengths
-  verdict: REJECTED
+        passed: true
+        comment: d3.forceSimulation-based beeswarm (forceX + forceCollide with fixed
+          fy) directly addresses the prior review's suggestion and is a genuinely
+          d3-specific technique, alongside the manual quartile/whisker construction
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
+  - beeswarm
   patterns:
   - data-generation
   - iteration-over-groups
