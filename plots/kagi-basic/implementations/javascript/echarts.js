@@ -1,7 +1,7 @@
 // anyplot.ai
 // kagi-basic: Basic Kagi Chart
-// Library: echarts 6.1.0 | JavaScript 22
-// Quality: pending | Created: 2026-09-02
+// Library: echarts 6.1.0 | JavaScript 22.23.2
+// Quality: 89/100 | Created: 2026-09-02
 //# anyplot-orientation: landscape
 
 const t = window.ANYPLOT_TOKENS;
