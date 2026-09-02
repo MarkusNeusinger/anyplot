@@ -135,6 +135,16 @@ const yMin = -marginY;
 const yMax = H + marginY;
 
 // --- Custom plugin: ternary grid, vertex labels, title, colorbar ------------
+function traceTriangle(ctx, px, py) {
+  ctx.beginPath();
+  triangleOutline.forEach((p, i) => {
+    const [px_, py_] = [px(p.x), py(p.y)];
+    if (i === 0) ctx.moveTo(px_, py_);
+    else ctx.lineTo(px_, py_);
+  });
+  ctx.closePath();
+}
+
 const ternaryChrome = {
   id: "ternaryChrome",
   beforeDatasetsDraw(chart) {
@@ -154,12 +164,31 @@ const ternaryChrome = {
 
     ctx.strokeStyle = t.inkSoft;
     ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    triangleOutline.forEach((p, i) => {
-      const [px_, py_] = [px(p.x), py(p.y)];
-      if (i === 0) ctx.moveTo(px_, py_);
-      else ctx.lineTo(px_, py_);
-    });
+    traceTriangle(ctx, px, py);
+    ctx.stroke();
+    ctx.restore();
+
+    // Clip the upcoming density-bubble dataset to the simplex so heavily
+    // overlapping bubbles near the edges never paint outside the valid
+    // compositional triangle. Restored (and the outline re-stroked on top)
+    // in afterDatasetsDraw once the bubble layer is done.
+    ctx.save();
+    traceTriangle(ctx, px, py);
+    ctx.clip();
+  },
+  afterDatasetsDraw(chart) {
+    const { ctx, scales } = chart;
+    const px = (x) => scales.x.getPixelForValue(x);
+    const py = (y) => scales.y.getPixelForValue(y);
+
+    ctx.restore(); // drop the clip applied in beforeDatasetsDraw
+
+    // Re-stroke the outline on top of the (now clipped) density layer so the
+    // boundary stays crisp instead of being softened by adjacent bubbles.
+    ctx.save();
+    ctx.strokeStyle = t.inkSoft;
+    ctx.lineWidth = 2.5;
+    traceTriangle(ctx, px, py);
     ctx.stroke();
     ctx.restore();
   },
@@ -199,7 +228,7 @@ const ternaryChrome = {
     ctx.lineWidth = 1;
     ctx.strokeRect(barX, barY, barW, barH);
 
-    ctx.font = "13px sans-serif";
+    ctx.font = "600 16px sans-serif";
     ctx.fillStyle = t.inkSoft;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
