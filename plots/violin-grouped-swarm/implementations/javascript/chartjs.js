@@ -148,10 +148,10 @@ const violinPlugin = {
         ctx.lineTo(px, py);
       }
       ctx.closePath();
-      ctx.fillStyle = hexToRgba(cell.color, 0.42);
+      ctx.fillStyle = hexToRgba(cell.color, 0.32);
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = hexToRgba(cell.color, 0.9);
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = hexToRgba(cell.color, 0.95);
       ctx.stroke();
     });
     ctx.restore();
@@ -163,10 +163,15 @@ const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
 
 // --- Title (scale fontsize down if the descriptive prefix pushes length up) -
+// Gentle sqrt falloff (not linear) so a long mandated title still reads as
+// prominent, floored well above illegibility.
 const title = "Task Completion Time by Role · violin-grouped-swarm · javascript · chartjs · anyplot.ai";
 const baseTitleSize = 22;
 const titleFontSize =
-  title.length > 67 ? Math.max(16, Math.round(baseTitleSize * (67 / title.length))) : baseTitleSize;
+  title.length > 67 ? Math.max(20, Math.round(baseTitleSize * Math.sqrt(67 / title.length))) : baseTitleSize;
+
+// --- Insight callout: subtitle surfaces the clear cross-category pattern ---
+const insight = "Senior engineers finish every task type faster and more consistently than juniors";
 
 // --- Chart ---------------------------------------------------------------
 new Chart(canvas, {
@@ -188,6 +193,13 @@ new Chart(canvas, {
     animation: false,
     plugins: {
       title: { display: true, text: title, color: t.ink, font: { size: titleFontSize, weight: "500" } },
+      subtitle: {
+        display: true,
+        text: insight,
+        color: t.inkSoft,
+        font: { size: 14, style: "italic" },
+        padding: { bottom: 12 },
+      },
       legend: {
         position: "top",
         align: "end",
