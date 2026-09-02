@@ -1,0 +1,229 @@
+# Build the shipped API image and smoke-test the container, before merge.
+#
+# Until this workflow existed, the first build attempt of a changed Dockerfile
+# happened in Cloud Build — after the merge. The deploy-api trigger sat red from
+# 2026-08-30 until #10821 for exactly that reason: the runtime stage was missing
+# a library that only the RUNNING image can reveal, and every PR check was green
+# throughout. The sibling repo kurrentschrift added the same job for the same
+# class of miss (its pyproject.toml fell out of the runtime stage and the API
+# would have reported version 0.0.0 in production); keep the two in the same
+# shape.
+#
+# Three conventions this file keeps, all shared with the sibling ci-* workflows:
+#
+# - Every `uses:` is pinned to a commit SHA with the version as a comment. A
+#   movable tag is a write handle into these runners. Dependabot bumps SHA pins
+#   exactly as it bumps tags (the `github-actions` ecosystem in
+#   .github/dependabot.yml), so a pinned workflow costs nothing to maintain.
+# - Change detection over `paths:` filters: a job that always reports a result
+#   is easier to read on a PR than a check that silently never appears, and it
+#   is the shape ci-lint.yml and ci-tests.yml already use. `plots/**` is
+#   deliberately NOT a trigger — the automated plot pipeline opens hundreds of
+#   PRs that touch nothing the image serves.
+# - `timeout-minutes` on the job. GitHub's default is 360, so a docker build
+#   that hangs on a package index would burn six hours and report nothing.
+
+name: "CI: Image"
+run-name: "Image: ${{ github.ref_name }}"
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+      - develop
+      - 'specification/**'
+      - 'implementation/**'
+  merge_group:
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force the image build (ignore change detection)'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ci-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Build API image and smoke the container
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    # A cold build (no layer cache) installs the full runtime dependency set —
+    # pandas, scipy, scikit-learn, statsmodels, matplotlib, anthropic — so it is
+    # minutes, not seconds; a warm one is dominated by the context transfer.
+    # 30 leaves room for a cold build plus the 90 s readiness window below, and
+    # still fails loudly instead of hanging.
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # The change detection below diffs against the base commit, which a
+          # shallow checkout lacks.
+          fetch-depth: 0
+
+      - name: Check for image-relevant changes
+        id: check
+        # The event payload travels through env, not through `${{ }}` inside the
+        # script: a shell that never sees interpolated event data cannot be made
+        # to execute it.
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MG_BASE_SHA: ${{ github.event.merge_group.base_sha }}
+          MG_HEAD_SHA: ${{ github.event.merge_group.head_sha }}
+          FORCE_RUN: ${{ inputs.force_run }}
+        run: |
+          set -uo pipefail
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            CHANGED_FILES=$(git diff --name-only "$PR_BASE_SHA" "$PR_HEAD_SHA")
+          elif [[ "$EVENT_NAME" == "merge_group" ]]; then
+            CHANGED_FILES=$(git diff --name-only "$MG_BASE_SHA" "$MG_HEAD_SHA")
+          else
+            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null || echo "")
+          fi
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # What can change what the image contains or how it boots: the two
+          # Dockerfiles, the dependency lock, and the source the runtime stage
+          # copies. plots/ is copied too but nothing reads it at runtime (the
+          # implementations are served from Postgres), so the plot pipeline's
+          # PRs must not each pay for a container build.
+          IMAGE_CHANGES=$(echo "$CHANGED_FILES" | grep -E '^(api/|core/|pyproject\.toml$|uv\.lock$|app/Dockerfile$|\.github/workflows/ci-image\.yml$)' || true)
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && "$FORCE_RUN" == "true" ]]; then
+            echo "Manual trigger with force_run=true, will build the image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          elif [[ -n "$IMAGE_CHANGES" ]]; then
+            echo "Found image-relevant changes, will build the image"
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No image-relevant changes, skipping the build"
+            echo "should_build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Buildx
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e  # v4.3.0
+
+      # push: false — nothing here reaches a registry; Cloud Build still owns the
+      # published image. load: true puts the result into the local daemon so the
+      # smoke below can actually run it. The GHA cache keeps the repeat builds of
+      # an unchanged dependency set at seconds instead of minutes.
+      - name: Build the API image
+        if: steps.check.outputs.should_build == 'true'
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
+        with:
+          context: .
+          file: api/Dockerfile
+          push: false
+          load: true
+          tags: anyplot-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # No database, no secrets: the container is started bare and only asked the
+      # questions that need no Cloud SQL. That is deliberate — this is a check of
+      # the IMAGE, not of the deployment. api/main.py guards its DB init with
+      # is_db_configured(), so a bare container boots and serves /health.
+      - name: Container smoke (no database)
+        if: steps.check.outputs.should_build == 'true'
+        run: |
+          set -euo pipefail
+          docker run -d --name api -p 8000:8000 anyplot-api:ci
+
+          # 90 s: this image imports matplotlib, scikit-learn, statsmodels and
+          # the MCP server before the first request is served.
+          ready=0
+          for _ in $(seq 45); do
+            if curl -fsS localhost:8000/health >/dev/null 2>&1; then ready=1; break; fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            echo "::error::the container never answered /health within 90 s"
+            exit 1
+          fi
+          curl -fsS localhost:8000/health | grep -q '"healthy"'
+          echo "health OK"
+
+          # THE assert this job exists for. api/version.py reads the INSTALLED
+          # distribution's metadata and falls back to "0.0.0+unknown" when it is
+          # absent — silently, in a field /health, /openapi.json and the MCP
+          # server all report. The builder stage installs the project from a
+          # context that holds pyproject.toml and uv.lock but no source yet, so
+          # the dist-info that carries the version is a genuinely fragile
+          # artefact of that ordering, and nothing else in CI looks at it.
+          want=$(python3 -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          got=$(curl -fsS localhost:8000/health | python3 -c "import json,sys;print(json.load(sys.stdin)['version'])")
+          if [ "$got" != "$want" ]; then
+            echo "::error::the image reports version $got, pyproject.toml says $want"
+            exit 1
+          fi
+          echo "version OK: $got"
+
+          # Pins the runtime stage's COPY list against a future rebuild. This is
+          # the payload the image is expected to SERVE and cannot import its way
+          # to: og_images.py reads it off disk as the last resort when dynamic OG
+          # rendering fails, which is the branch that runs when a fresh container
+          # cannot reach the font bucket.
+          docker exec api test -f /app/api/static/og-image.png
+          echo "COPY list OK"
+
+          # The image must serve as the unprivileged user the Dockerfile creates.
+          # `USER appuser` is one line above the CMD and nothing else notices if
+          # a rebuild drops it — Cloud Run runs whatever the image says.
+          uid=$(docker exec api id -u)
+          if [ "$uid" != "1000" ]; then
+            echo "::error::the container runs as uid $uid (expected 1000, the appuser the Dockerfile creates)"
+            exit 1
+          fi
+          echo "non-root OK: uid $uid"
+
+      - name: Container logs on failure
+        if: failure() && steps.check.outputs.should_build == 'true'
+        run: docker logs api || true
+
+      # Threshold `warning` with three named exceptions, rather than a
+      # non-blocking run: that way a NEW warning blocks, which is the point of
+      # having the linter at all. All three are deliberate choices in
+      # api/Dockerfile, and Dockerfile edits are not this PR's to make.
+      # app/Dockerfile passes with no exceptions at all — verified against
+      # hadolint 2.15.1, the version this action pins.
+      - name: Hadolint (api/Dockerfile)
+        if: steps.check.outputs.should_build == 'true'
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
+        with:
+          dockerfile: api/Dockerfile
+          failure-threshold: warning
+          # DL3013 `pip install uv` unpinned — uv is the installer; the versions
+          #        that matter are pinned in uv.lock, which the next line honours.
+          # DL3008 unpinned apt `curl`/`libraqm0` — pinning a Debian point release
+          #        breaks the build on every security update of the base image.
+          # DL3025 shell-form HEALTHCHECK CMD — the `|| exit 1` fallback needs a
+          #        shell; JSON form cannot express it.
+          # DL3066 (non-numeric USER) also fires but only at info level, so it
+          #        stays visible in the log without blocking; `useradd -u 1000`
+          #        already gives the user a fixed uid.
+          ignore: DL3013,DL3008,DL3025
+
+      - name: Hadolint (app/Dockerfile)
+        if: steps.check.outputs.should_build == 'true'
+        uses: hadolint/hadolint-action@06be81baf89a55ffd0e24b8f04a4185738dd3387  # v3.5.0
+        with:
+          dockerfile: app/Dockerfile
+          failure-threshold: warning
+
+      - name: Skip notice
+        if: steps.check.outputs.should_build == 'false'
+        run: echo "::notice::Image build skipped - no changes to api/, core/, the dependency lock or a Dockerfile"
