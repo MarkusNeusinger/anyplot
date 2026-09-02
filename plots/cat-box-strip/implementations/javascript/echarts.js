@@ -59,12 +59,14 @@ const rawByGroup = ageGroups.map((_, i) => {
 });
 
 const boxData = rawByGroup.map(boxStats);
+const medians = boxData.map((d) => d[2]);
+const medianDelta = Math.round(medians[medians.length - 1] - medians[0]);
 
 // Strip overlay: every individual runner, jittered around its category slot
 const stripPoints = [];
 rawByGroup.forEach((values, catIndex) => {
   values.forEach((v) => {
-    const jitter = (lcg() - 0.5) * 0.56;
+    const jitter = (lcg() - 0.5) * 0.72;
     stripPoints.push([catIndex + jitter, v]);
   });
 });
@@ -122,13 +124,31 @@ chart.setOption({
         borderColor: t.palette[0],
         borderWidth: 2.5,
       },
+      markLine: {
+        silent: true,
+        symbol: ["none", "none"],
+        lineStyle: { color: t.inkSoft, type: "dashed", width: 1.5 },
+        label: {
+          show: true,
+          color: t.inkSoft,
+          fontSize: 12,
+          position: "middle",
+          formatter: `Median +${medianDelta} min (20-29 → 60+)`,
+        },
+        data: [
+          [
+            { coord: [ageGroups[0], medians[0]] },
+            { coord: [ageGroups[ageGroups.length - 1], medians[medians.length - 1]] },
+          ],
+        ],
+      },
       z: 2,
     },
     {
       name: "Runners",
       type: "scatter",
       data: stripPoints,
-      symbolSize: 9,
+      symbolSize: 7,
       itemStyle: { color: t.palette[0], opacity: 0.4 },
       z: 3,
       silent: true,
