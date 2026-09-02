@@ -68,10 +68,31 @@ steps:
        #   /insights/visitors on the public stats page). The Secret Manager
        #   entry must exist before the first deploy that includes this line —
        #   create it with: gcloud secrets create PLAUSIBLE_API_KEY --data-file=-
-      - "--set-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest"
+      #
+      # `--update-secrets`, NOT `--set-secrets`: the latter replaces the whole
+      # binding set, so it would strip any secret attached out of band from
+      # every revision this pipeline creates. ORIGIN_SECRET (api/origin_gate.py)
+      # is exactly such a binding — it is attached by hand when the gate is
+      # armed and removed by hand to roll back, and `--set-secrets` would
+      # silently disarm the gate on the next deploy. It cannot be listed here
+      # instead: Cloud Run refuses a deploy that names a secret which does not
+      # exist, which would break every build until the rollout reaches the step
+      # that creates it. The cost of `--update-secrets` is that a binding
+      # dropped from this line is no longer removed automatically — worth it
+      # against a gate that turns itself off.
+      - "--update-secrets=DATABASE_URL=DATABASE_URL:latest,CACHE_INVALIDATE_TOKEN=CACHE_INVALIDATE_TOKEN:latest,ADMIN_TOKEN=ADMIN_TOKEN:latest,PLAUSIBLE_API_KEY=PLAUSIBLE_API_KEY:latest"
       - "--execution-environment=gen2"
       # ^|^ alt delimiter: values contain @ (emails) and may contain , (multi-email lists)
-      - "--set-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
+      #
+      # `--update-env-vars` for the same reason as `--update-secrets` above, and
+      # belt and braces on top of it: a secret-backed variable lives in the same
+      # revision environment as a literal one, so a destructive `--set-env-vars`
+      # is a second way this pipeline could drop the hand-attached
+      # ORIGIN_SECRET and silently disarm the gate (Copilot review). Additive on
+      # both flags means one deploy cannot undo an out-of-band change; the cost
+      # is that a variable dropped from this line is no longer removed by the
+      # next deploy, which is the trade already accepted for the secrets.
+      - "--update-env-vars=^|^ENVIRONMENT=production|GOOGLE_CLOUD_PROJECT=$PROJECT_ID|GCS_BUCKET=anyplot-images|CF_ACCESS_TEAM_DOMAIN=${_CF_ACCESS_TEAM_DOMAIN}|CF_ACCESS_AUD=${_CF_ACCESS_AUD}|ADMIN_ALLOWED_EMAILS=${_ADMIN_ALLOWED_EMAILS}"
       - "--cpu-throttling"
       - "--concurrency=15"
       - "--timeout=600"
@@ -112,18 +133,51 @@ steps:
         # _MIN_INSTANCES says, so the first call that touches the DB may be the
         # first real DB request of that container's life and can fail once.
         RETRY="--retry 5 --retry-delay 5 --retry-all-errors"
+        # The candidate is probed on its `run.app` tag URL, which by definition
+        # never passes the Cloudflare edge — so once ORIGIN_SECRET is set on the
+        # service (api/origin_gate.py) every probe but /health needs the header
+        # the edge would have stamped. Read here rather than through
+        # `availableSecrets` on purpose: that resolves at build start and would
+        # fail every build until the secret exists, which is precisely the first
+        # step of the rollout. Missing secret or missing permission => empty =>
+        # the probes run bare, which is correct while the gate is off and fails
+        # loudly at /libraries once it is on. The value is captured, never
+        # echoed; the step runs without `set -x`.
+        ORIGIN_SECRET=$$(gcloud secrets versions access latest --secret=ORIGIN_SECRET 2>/dev/null || true)
+        HDR=()
+        if [ -n "$$ORIGIN_SECRET" ]; then HDR=(-H "X-Origin-Secret: $$ORIGIN_SECRET"); fi
+        # /health stays bare: it is exempt from the gate, and that is what makes
+        # it the probe that always reaches a cold candidate.
         curl -fsS $$RETRY "$$URL/health" | grep -q '"healthy"'
+        # …and that the secret this BUILD can read is the one the SERVICE was
+        # given. /health reports the verdict for the request it was asked with
+        # (never the value), so a rotation applied to only one of the two shows
+        # up here instead of as a mysterious 403 after the promote.
+        # `off`/`off-seen` are ACCEPTED, not failures: they are the gate before
+        # it is armed and after a rollback, and a build that refused to run then
+        # would take the deploy pipeline down exactly when it is needed most.
+        # Only `mismatch` is a real disagreement.
+        if [ -n "$$ORIGIN_SECRET" ]; then
+          gate=$$(curl -fsS $$RETRY "$${HDR[@]}" "$$URL/health" | python3 -c "import json,sys; print(json.load(sys.stdin).get('origin_gate'))")
+          case "$$gate" in
+            ok) echo "origin gate: armed, and this build's secret matches" ;;
+            off|off-seen) echo "origin gate: $$gate (not armed on this revision)" ;;
+            *) echo "origin gate says '$$gate' for this build's secret — service and build disagree"; exit 1 ;;
+          esac
+        fi
         # /libraries and /languages fall back to static metadata when the DB is
         # unreachable (optional_db), so they prove the app serves but not the
         # database. /plots/filter takes require_db — it is the probe that fails
         # when the Cloud SQL connection is broken.
-        curl -fsS $$RETRY "$$URL/libraries" | grep -q '"libraries"'
-        curl -fsS $$RETRY "$$URL/languages" | grep -q '"languages"'
-        curl -fsS $$RETRY "$$URL/plots/filter" >/dev/null
+        curl -fsS $$RETRY "$${HDR[@]}" "$$URL/libraries" | grep -q '"libraries"'
+        curl -fsS $$RETRY "$${HDR[@]}" "$$URL/languages" | grep -q '"languages"'
+        curl -fsS $$RETRY "$${HDR[@]}" "$$URL/plots/filter" >/dev/null
         # Fail-closed admin gate. 401 is the answer with ADMIN_TOKEN present and
         # no header sent; a 503 here would mean the secret never arrived, which
-        # is exactly the misconfiguration worth failing the build over.
-        code=$$(curl -s $$RETRY -o /dev/null -w '%{http_code}' "$$URL/debug/status")
+        # is exactly the misconfiguration worth failing the build over. With the
+        # gate armed the origin header has to be sent too, or this reads 403 and
+        # says "admin gate" about something that never reached it.
+        code=$$(curl -s $$RETRY "$${HDR[@]}" -o /dev/null -w '%{http_code}' "$$URL/debug/status")
         test "$$code" = "401" || { echo "admin gate expected 401, got $$code"; exit 1; }
         echo "smoke OK"
     id: "smoke"

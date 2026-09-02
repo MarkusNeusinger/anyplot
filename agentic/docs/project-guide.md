@@ -202,6 +202,8 @@ Example: `plots/scatter-basic/` contains everything for the basic scatter plot.
   - **`agentic/workflows/`**: Click CLI scripts (plan, build, test, review + orchestrators)
   - **`agentic/commands/`**: Markdown prompt templates
 - **`automation/`**: CI/CD helper scripts (workflow_cli, label_manager, sync_to_postgres)
+- **`infra/`**: Infrastructure that would otherwise live only in a dashboard
+  - **`infra/cloudflare/`**: Source of the apex `anyplot.ai/api/*` Worker, plus the origin gate's rollout and measuring procedure
 - **`tests/`**: Unit, integration, and e2e tests mirroring source structure
 - **`docs/`**: Architecture and workflow documentation
 
