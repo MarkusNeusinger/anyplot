@@ -141,9 +141,12 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   must get `<div id="root">`, Googlebot must get the prerendered page — asserted on the
   `<link rel="canonical">`, which the SPA shell carries not at all and whose value names
   the route) on the home page and a deep route, plus `robots.txt` and `llms.txt` from the
-  `location =` bypasses and the latter's UTF-8 charset. `:latest` moves only after this
-  build's promotion, so the tag can no longer name an image that was never rolled out, and
-  the build timeout goes to 20 min to leave room for a cold candidate.
+  `location =` bypasses and the latter's UTF-8 charset. The candidate tag is re-asserted
+  after the probes as well as before, so a concurrent build moving it mid-smoke fails this
+  build instead of getting it promoted on someone else's evidence. `:latest` moves only
+  after this build's promotion, so the tag can no longer name an image that was never
+  rolled out, and the build timeout goes to 20 min to leave room for a cold candidate.
+  (#11207)
 
 - **The `babysit-pipeline` skill gains the backfill scheduler and the driver's per-spec
   liveness check** — `run_queue.sh <queue-dir> [slots]` keeps N `run_spec.sh` drivers
