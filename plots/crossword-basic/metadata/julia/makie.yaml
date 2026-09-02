@@ -1,0 +1,280 @@
+library: makie
+language: julia
+specification_id: crossword-basic
+created: '2026-09-01T23:52:43Z'
+updated: '2026-09-02T00:44:15Z'
+generated_by: claude-sonnet
+workflow_run: 33572499375
+issue: 3805
+language_version: 1.11.9
+library_version: 0.21.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - Symmetric black-cell placement is guaranteed programmatically by seeding only
+    the upper half and mirroring each seed, rather than hand-verifying a hardcoded
+    180-degree-symmetric matrix.
+  - Word-start numbering correctly derives from across/down adjacency checks (left-to-right,
+    top-to-bottom scan) instead of a hardcoded numbers dict.
+  - Double-ruled outer border (heavier ink rule plus a thin inset accent drawn entirely
+    in the margin) gives the grid a refined 'matted' printed-puzzle-book feel.
+  - Data-encoding colors (black blocked cells, white entry cells) are intentionally
+    held constant across light/dark themes per style-guide convention, with clear
+    code comments explaining the rationale.
+  - Subtitle row ('15 x 15 grid - 43 across - 37 down') adds a small data-storytelling
+    touch beyond the bare grid, using an explicit fixed row height so the DataAspect-constrained
+    grid above doesn't squeeze it away.
+  - Clean, minimal imports (CairoMakie, Colors only); no randomness needed since the
+    layout is deterministically hand-crafted, satisfying reproducibility without an
+    explicit seed.
+  weaknesses:
+  - 'In the dark render, blocked (black) cells use the exact same hex color as the
+    page background (#1A1A17), so they read as ''gaps''/voids in the grid rather than
+    solid black squares -- only the thin INK_SOFT grid lines delineate their boundaries.
+    Consider a very slightly distinct shade for blocked cells in dark mode (e.g. a
+    hair lighter or darker than #1A1A17) so they remain visually distinct filled cells
+    rather than blending into the surrounding chrome.'
+  - Clue numbers (fontsize=19, bold) are legible but modestly sized relative to the
+    generous cell size on the 2400x2400 canvas; a slightly larger size would give
+    them a bit more presence, especially at mobile scaling.
+  - Data storytelling beyond the subtitle is minimal (inherent to the crossword-grid
+    genre) -- an optional touch like subtly differentiating across-only vs. down-only
+    start cells could add a bit more visual hierarchy, though this is not required
+    by the spec.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white, not dark.
+      Chrome: Title "crossword-basic · julia · makie · anyplot.ai" in bold dark text at top, clearly
+        readable. Subtitle caption "15 × 15 grid · 43 across · 37 down" below the grid in muted
+        gray, clearly readable. Grid frame drawn as a heavier dark ink rule with a thin inset
+        accent line just outside it (double-ruled "matted" border).
+      Data: 15x15 grid of square cells. White/cream entry cells and solid black blocking cells
+        arranged in a symmetric pattern (180-degree rotational symmetry confirmed by inspection).
+        Bold gray numbers sit in the top-left corner of every cell that starts an across and/or
+        down entry (1 through 73, matching the "43 across · 37 down" caption). Thin gray grid
+        lines separate every cell, including between adjacent black cells.
+      Legibility verdict: PASS -- all text (title, subtitle, clue numbers) is clearly readable
+        against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black, not light.
+      Chrome: Title now rendered in light/off-white text, clearly readable against the dark
+        background. Subtitle caption also flips to light gray and stays readable. Grid frame and
+        inset accent line render in light ink, clearly visible around the puzzle.
+      Data: Entry cells remain the same fixed off-white fill as the light render (by design, since
+        the black/white cell pattern is the plot's data and must stay theme-invariant). Clue
+        numbers remain the same soft-gray color sitting on the (still light) entry cells, so they
+        stay legible. Blocked cells are filled with the same fixed dark hex value used in the light
+        render, which happens to equal the dark theme's page background color -- so blocked cells
+        read as voids/gaps rather than distinct solid squares, though the thin light-colored grid
+        lines still trace every cell boundary (including blocked ones), so the grid structure and
+        symmetry remain fully legible on close inspection.
+      Legibility verdict: PASS -- no dark-on-dark text failures; all title/subtitle/number text
+        sits on light-toned surfaces (dark chrome background or white entry cells), never on the
+        black cells themselves. The blocked-cell/background color coincidence is a minor visual
+        design smell (noted in weaknesses) but not a text-legibility failure.
+
+    Data colors are confirmed identical between the two renders (black/white cell fill, numbers'
+    relative tone) -- only the chrome (title, subtitle, border, grid-line color) flips between
+    themes, matching the Imprint theme-adaptation convention.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, subtitle, and clue numbers all readable in both themes; numbers
+          are modestly sized (fontsize=19) but bold and clear.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between numbers, grid lines, title, or subtitle.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Entry cells and numbers clearly visible; blocked cells in dark mode
+          match the page background color, reducing their fill's visual distinctness
+          (grid lines still delineate them).
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochrome black/white encoding, no red-green reliance, high contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas, title well-proportioned, no clipping or
+          overflow, grid fills the frame cleanly with generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches the mandated format; axis decorations correctly hidden
+          for a grid diagram; subtitle adds descriptive context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds correctly #FAF8F1/#1A1A17; monochrome data encoding
+          is a justified domain exception (spec explicitly requires a monochrome print-ready
+          design) rather than a categorical series.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        comment: Double-ruled border and deliberate numbering/typography choices show
+          intentional polish beyond generic defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        comment: Spines/decorations hidden, subtle grid lines, generous whitespace,
+          refined border treatment.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        comment: Subtitle adds a small narrative touch (across/down counts), but storytelling
+          is inherently limited for a grid-diagram genre.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly implements a crossword puzzle grid.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: White entry cells, black blocking cells, numbered word starts, 180-degree
+          rotational symmetry, uniform grid lines, 1:1 cell aspect -- all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Full 15x15 grid rendered with all blocked/entry cells and numbers
+          mapped correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly matches 'crossword-basic · julia · makie · anyplot.ai';
+          no legend needed for a monochrome grid.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows blocked cells, entry cells, symmetric pattern, and full word-start
+          numbering -- all aspects of the plot type.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Standard 15x15 newspaper-style crossword layout, neutral and realistic;
+          matches the spec's own data description (no letter content required).
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 15x15 is exactly within the spec's stated typical size range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes, flat top-level script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hand-crafted grid; no randomness used, so no
+          seed needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only CairoMakie and Colors, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, clear comments explaining non-obvious design
+          decisions, no fake UI.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-$(THEME).png with px_per_unit=2 per convention.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        comment: Good use of poly!, linesegments!, lines!, text!, Label, hidedecorations!/hidespines!,
+          and DataAspect.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        comment: Uses a second Figure row (Label with fixed rowsize) for the subtitle
+          -- a Makie-specific layout technique, but not a highly distinctive one.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-borders
+  patterns:
+  - data-generation
+  - grid-layout
+  dataprep:
+  - binary-grid-encoding
+  styling:
+  - publication-ready
+  - monochrome
