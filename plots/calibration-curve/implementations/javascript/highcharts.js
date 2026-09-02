@@ -61,6 +61,19 @@ const calibrationRandForest = binCalibration(actualOutcome, probRandForest, 10);
 const brierLogReg = brierScore(actualOutcome, probLogReg);
 const brierRandForest = brierScore(actualOutcome, probRandForest);
 
+// Locate the Random Forest bin with the largest predicted-vs-observed gap so
+// the chart can call out exactly where the overconfidence is worst.
+let maxGapIndex = 0;
+let maxGap = 0;
+calibrationRandForest.forEach(([predicted, observed], i) => {
+  const gap = Math.abs(predicted - observed);
+  if (gap > maxGap) {
+    maxGap = gap;
+    maxGapIndex = i;
+  }
+});
+const [maxGapX, maxGapY] = calibrationRandForest[maxGapIndex];
+
 // --- Chart -------------------------------------------------------------------
 Highcharts.chart("container", {
   chart: {
@@ -68,6 +81,32 @@ Highcharts.chart("container", {
     backgroundColor: "transparent",
     animation: false,
     style: { fontFamily: "inherit" },
+    events: {
+      // Highcharts-specific: draw a native SVG callout (renderer.label with the
+      // built-in "callout" symbol) anchored to a data point via axis-pixel
+      // conversion — not a portable Chart.js/ECharts pattern.
+      load() {
+        const chart = this;
+        const xAxis = chart.xAxis[0];
+        const yAxis = chart.yAxis[0];
+        const anchorX = xAxis.toPixels(maxGapX);
+        const anchorY = yAxis.toPixels(maxGapY);
+        const labelX = anchorX + (maxGapX < 0.5 ? 16 : -176);
+        const labelY = anchorY + (maxGapY > 0.5 ? -56 : 24);
+        chart.renderer
+          .label(`Largest gap: ${maxGap.toFixed(2)}`, labelX, labelY, "callout", anchorX, anchorY)
+          .attr({
+            fill: t.elevatedBg,
+            stroke: t.inkSoft,
+            "stroke-width": 1,
+            r: 4,
+            padding: 6,
+            zIndex: 8,
+          })
+          .css({ color: t.ink, fontSize: "13px" })
+          .add();
+      },
+    },
   },
   credits: { enabled: false },
   colors: t.palette,
@@ -105,7 +144,13 @@ Highcharts.chart("container", {
     itemStyle: { color: t.inkSoft, fontSize: "14px" },
     itemHoverStyle: { color: t.ink },
   },
-  tooltip: { enabled: false },
+  tooltip: {
+    enabled: true,
+    backgroundColor: t.elevatedBg,
+    borderColor: t.inkSoft,
+    style: { color: t.ink, fontSize: "13px" },
+    valueDecimals: 3,
+  },
   plotOptions: {
     series: { animation: false },
     line: { lineWidth: 3, marker: { enabled: true, radius: 6, lineWidth: 1.5, lineColor: t.pageBg } },
