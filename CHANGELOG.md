@@ -40,6 +40,7 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   genuine count, and retried on a separate cap of 5 per window, after which the pair is
   paused without `impl:<lib>:failed` (an incident is not a capability verdict). "Agent
   reports success but writes no file" and a missing theme render still count as before.
+  (#11199)
 - **The API image installs `libraqm0`, which is what actually restores text shaping —
   and unblocks a deploy pipeline that has been red since 2026-08-30** — #10813 added a
   build-time assertion on `features.check('raqm')` on the understanding that the locked
