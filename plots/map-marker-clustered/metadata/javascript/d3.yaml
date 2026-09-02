@@ -1,0 +1,265 @@
+library: d3
+language: javascript
+specification_id: map-marker-clustered
+created: '2026-09-02T02:48:45Z'
+updated: '2026-09-02T03:08:54Z'
+generated_by: claude-sonnet
+workflow_run: 33583428258
+issue: 3766
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/javascript/d3/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - Correct Imprint palette in canonical order (Cafe=#009E73 brand green, Retail=lavender,
+    Grocery=blue, Pharmacy=ochre), with identical data colors and theme-correct chrome
+    (background, text, grid) across both light and dark renders.
+  - 'Genuine, non-faked d3.zoom interactivity: click-to-zoom transitions on clusters,
+    mouseenter/mouseleave convex-hull / spider-line reveal, and a flood-fill proximity
+    clustering pass that re-clusters live from the current zoom transform rather than
+    a fixed pre-baked state.'
+  - '''Busiest cluster'' focal callout (dashed ring + label) gives the scene a clear
+    visual hierarchy and focal point instead of a flat, undifferentiated set of clusters.'
+  - Legend is cleanly isolated in its own dedicated right-margin column with an elevated
+    background box, never overlapping the map content.
+  - 'Clean, idiomatic d3 usage: deterministic seeded LCG for data generation, proper
+    data/enter/merge join pattern, d3.polygonHull, d3.rollup/d3.mean for cluster aggregation
+    — hard to replicate as cleanly in another library.'
+  weaknesses:
+  - The decorative 'city block' checkerboard basemap texture reads as a simplistic
+    geometric pattern rather than an authentic street/terrain basemap — it doesn't
+    correlate with real geography, only with a fixed modulo pattern (DE-01).
+  - The default (fully zoomed-out) static render only ever shows 9 aggregate clusters,
+    so the spec's 'zoom in to reveal individual markers' behavior and the per-point
+    marker sizing range are not demonstrable from the two static PNGs alone (inherent
+    to a single static snapshot of an interactive zoom feature, not penalized under
+    the JS fairness rules, but noted for completeness).
+  - Several small helper functions (clusterPoints, update, zoomed, showHull, dominantCategory,
+    radiusFor) are used — necessary for the interactive clustering/zoom behavior,
+    but it departs from the simplest KISS 'imports → data → plot → save' shape expected
+    of static plots (CQ-01).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Dark bold title "City Store Locator · map-marker-clustered · javascript · d3 · anyplot.ai" centered at top, dark secondary-weight subtitle below it ("390 store locations across 9 neighborhoods — drag to pan, scroll to zoom, click a cluster to expand"). A subtle warm-grey checkerboard block pattern plus thin grid lines forms a stylized city-street basemap under the markers. A dashed ring highlights the busiest cluster with a "Busiest cluster" label in dark ink below it. The legend sits in its own elevated off-white box in the right margin with a "Category" heading and 4 swatches (Cafe/Retail/Grocery/Pharmacy) plus a "Circle size = clustered count" caption. All chrome text is clearly readable against the light background.
+      Data: 9 circular cluster markers of varying radius (28–68 count each), colored by dominant category — green (Cafe), purple/lavender (Retail), blue (Grocery), ochre (Pharmacy) — each with a white count label centered inside.
+      Legibility verdict: PASS — title, subtitle, legend, and cluster counts are all crisp and legible; no light-on-light text anywhere.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same layout as the light render, but title/subtitle now render in light ink (near-white/light-grey), the basemap grid and block texture shift to darker greys appropriate for the dark surface, the legend box uses the dark elevated fill, and the "Busiest cluster" ring/label switch to light-colored strokes/text.
+      Data: The four cluster colors (green, purple, blue, ochre) are pixel-identical to the light render — only the chrome (background, text, grid, legend box, focal ring) flipped theme, exactly as required.
+      Legibility verdict: PASS — all title/subtitle/legend/count text is light-colored and clearly legible against the near-black background; no dark-on-dark failures observed anywhere (title, subtitle, legend text, and the "Busiest cluster" label are all correctly light-toned).
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Explicit font sizes throughout, readable in both themes; title fontsize
+          scales with title length via the documented formula.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between title, subtitle, legend, cluster labels, or
+          focal callout.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Cluster circle radius scales with sqrt(count) and count labels are
+          legible; default zoomed-out view only shows aggregated clusters so the full
+          size range isn't demonstrated statically.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Distinct hues plus white count labels give good contrast; no red-green-only
+          encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills the majority of the canvas with balanced margins; legend
+          sits directly adjacent in its own column, not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes on a geographic map (expected); title/subtitle
+          are descriptive with concrete counts.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Canonical Imprint order (Cafe=#009E73 first), identical data colors
+          across themes, correct #FAF8F1/#1A1A17 backgrounds.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful touches (elevated legend box, focal ring, decorative basemap)
+          but the checkerboard basemap texture is a bit simplistic/arbitrary rather
+          than a true street-fabric look.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, rounded legend box, non-scaling strokes that stay crisp
+          under zoom, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: '''Busiest cluster'' dashed-ring callout creates a clear focal point
+          and visual hierarchy beyond a flat data dump.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct clustered marker map with count-labeled aggregate markers.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Cluster counts, category color-coding with dominant-category logic,
+          click-to-zoom expansion with smooth transitions, hover convex-hull/spider-lines,
+          and a stylized street basemap are all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: lon/lat correctly mapped to x/y via linear scales appropriate at
+          city scale; all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format with a descriptive prefix; legend
+          labels match the 4 data categories exactly.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Varying cluster sizes (28-68) and mixed categories per cluster via
+          dominant-category logic; individual (unclustered) markers aren't shown in
+          the default static view.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Neutral, plausible 'city store locator' scenario across cafes/retail/grocery/pharmacy.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Store counts per neighborhood and geographic coordinates are realistic
+          for a city-scale dataset.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several helper functions are used (clustering, update, hull, zoom)
+          — justified by the interactive clustering behavior but departs from the
+          simplest linear script shape.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG produces deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only the d3 global is used, no extraneous imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity — the zoom/hover/click behavior
+          is real d3.zoom and event handling.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts a single <svg> into #container per the harness contract;
+          no animation on the initial static draw.'
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic data/enter/merge join pattern, d3-scale, d3-array (rollup/mean/extent)
+          used throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: d3.zoom with zoomTransform/zoomIdentity manipulation and d3.polygonHull
+          for the hover convex hull are genuinely distinctive to d3 and hard to replicate
+          elsewhere.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - publication-ready
+  - alpha-blending
+  - edge-highlighting
