@@ -6,8 +6,9 @@
 const t = window.ANYPLOT_TOKENS;
 
 // --- Data (in-memory, deterministic) ----------------------------------------
-// Synthetic iris-like measurements: sepal length/width, petal length/width (cm)
-// per species cluster, generated with a fixed-seed PRNG for reproducibility.
+// Synthetic iris-like measurements: sepal length/width, petal length/width (cm),
+// plus derived sepal/petal area, per species cluster, generated with a
+// fixed-seed PRNG for reproducibility.
 function mulberry32(seed) {
   let a = seed;
   return function () {
@@ -35,7 +36,17 @@ const SAMPLES_PER_SPECIES = 15;
 const observations = [];
 SPECIES.forEach((species) => {
   for (let i = 0; i < SAMPLES_PER_SPECIES; i++) {
-    const features = species.means.map((mean, j) => mean + randNormal() * species.stds[j]);
+    const [sepalLength, sepalWidth, petalLength, petalWidth] = species.means.map(
+      (mean, j) => mean + randNormal() * species.stds[j]
+    );
+    const features = [
+      sepalLength,
+      sepalWidth,
+      petalLength,
+      petalWidth,
+      sepalLength * sepalWidth,
+      petalLength * petalWidth,
+    ];
     observations.push({ category: species.name, features });
   }
 });
@@ -68,15 +79,39 @@ function andrewsCurve(z, t) {
 const T_STEPS = 120;
 const tValues = Array.from({ length: T_STEPS + 1 }, (_, i) => -Math.PI + (2 * Math.PI * i) / T_STEPS);
 
-const categoryColors = { setosa: t.palette[0], versicolor: t.palette[2], virginica: t.palette[1] };
+const categoryColors = { setosa: t.palette[0], versicolor: t.palette[1], virginica: t.palette[2] };
 
-const series = observations.map((o) => ({
+// Mark, per species, the curve closest to its cluster centroid (in z-space) as
+// the representative curve — drawn bolder and more opaque to sharpen the
+// cluster storytelling amid the 45 overplotted curves.
+SPECIES.forEach((species) => {
+  const members = observations.filter((o) => o.category === species.name);
+  const centroid = members[0].z.map((_, j) => members.reduce((sum, o) => sum + o.z[j], 0) / members.length);
+  let closest = members[0];
+  let closestDist = Infinity;
+  members.forEach((o) => {
+    const dist = Math.sqrt(o.z.reduce((sum, v, j) => sum + (v - centroid[j]) ** 2, 0));
+    if (dist < closestDist) {
+      closestDist = dist;
+      closest = o;
+    }
+  });
+  closest.isRepresentative = true;
+});
+
+// Draw representative curves last so they sit on top of the dense overplot.
+const orderedObservations = [...observations].sort((a, b) => (a.isRepresentative ? 1 : 0) - (b.isRepresentative ? 1 : 0));
+
+const series = orderedObservations.map((o) => ({
   name: o.category,
   type: "line",
   data: tValues.map((tv) => [tv, andrewsCurve(o.z, tv)]),
   showSymbol: false,
-  lineStyle: { color: categoryColors[o.category], width: 1.8, opacity: 0.55 },
+  lineStyle: o.isRepresentative
+    ? { color: categoryColors[o.category], width: 3.2, opacity: 0.95 }
+    : { color: categoryColors[o.category], width: 1.6, opacity: 0.42 },
   itemStyle: { color: categoryColors[o.category] },
+  z: o.isRepresentative ? 3 : 1,
   emphasis: { disabled: true },
 }));
 
