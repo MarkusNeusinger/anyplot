@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: sn-curve-basic
 created: '2026-09-02T06:12:26Z'
-updated: '2026-09-02T06:23:02Z'
+updated: '2026-09-02T06:41:16Z'
 generated_by: claude-sonnet
 workflow_run: 33597418454
 issue: 3826
@@ -12,59 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/javascript/highcharts/plot-dark.html
-quality_score: 80
+quality_score: 91
 review:
   strengths:
+  - 'All four weaknesses from the Attempt 1 review are concretely fixed: yAxis.startOnTick/endOnTick
+    set to false (axis baseline now sits at the configured min=150 instead of auto-padding
+    to 100), scatter markers now carry a pageBg-colored stroke (lineColor + lineWidth)
+    so overlapping specimens stay visually distinguishable, two stress levels (480,
+    450 MPa) above the yield strength (415 MPa) were added so the low-cycle/plastic
+    fatigue region is now represented alongside the high-cycle/elastic and infinite-life
+    regions, and xAxis now draws matching vertical gridlines'
   - Correct log-log scatter + Basquin fit-curve S-N chart with all three material-property
     reference lines (Ultimate Strength, Yield Strength, Endurance Limit), each with
-    a distinct dash style and clear right-aligned inline label
+    a distinct dash style and clear right-aligned inline label that stays fully inside
+    the canvas margin (no clipping)
+  - 'Correct Imprint palette usage (brand green #009E73 for the data series, palette[1]
+    lavender for the fit line) with fully theme-adaptive chrome — text, grid, axis
+    lines, and legend all flip correctly between light and dark renders while data
+    colors stay identical'
   - Deterministic seeded data generation (fixed-seed LCG per the browser-runtime constraint)
-    with a physically plausible Basquin power-law fit floored at the endurance limit
-  - Correct Imprint palette usage (brand green for the data series, palette[1] lavender
-    for the fit line) with fully theme-adaptive chrome — text, grid, axis lines, and
-    legend all flip correctly between light and dark renders
-  - Descriptive axis titles with units ('Stress Amplitude (MPa)', 'Cycles to Failure
-    (N)'), correct mandated title format, and explicit font sizes set throughout
+    with a physically plausible Basquin power-law fit floored at the endurance limit;
+    realistic steel-alloy material property values
+  - Descriptive axis titles with units, correct mandated title format, explicit font
+    sizes throughout, and idiomatic Highcharts usage (logarithmic axis type, plotLines
+    with styled labels, marker formatter)
   weaknesses:
-  - 'Y-axis auto-pads below the configured min: yAxis.min is set to 150 but the rendered
-    axis baseline sits at the 100 MPa gridline (Highcharts'' default startOnTick behavior
-    snapping to the next round tick), leaving roughly 300px (~17% of the plot height)
-    of empty gridded space between the true data floor (~180-190 MPa) and the x-axis
-    line. Set yAxis.startOnTick: false (and endOnTick: false if the top shows the
-    same issue) so the configured min:150/max:700 is respected exactly and the vertical
-    whitespace tightens.'
-  - 'Overlapping scatter markers have no separating stroke: specimens that land at
-    nearly identical (cycles, stress) values (e.g., the cluster near 90-110k cycles
-    at 380 MPa, and near 400-600k cycles at 340 MPa) render as fused solid-green blobs
-    with no visible boundary between individual points, hiding the specimen-to-specimen
-    scatter the spec calls for. Add a light marker.lineColor (e.g. the theme background
-    token) with lineWidth ~1.5 to the scatter marker style so overlapping specimens
-    stay visually distinguishable, per the style guide''s ''white edge for definition,
-    especially with overlapping points'' guidance.'
-  - 'Data never reaches the low-cycle/plastic fatigue region: all 9 tested stress
-    levels (180-380 MPa) sit below the yield strength (415 MPa), so the curve only
-    shows the high-cycle/elastic and infinite-life regions, not the low-cycle/plastic
-    region the spec explicitly calls out as one of the three characteristic S-N regions.
-    Add 1-2 higher stress levels (e.g. 420-500 MPa, above yield) with correspondingly
-    short cycle counts so all three regions appear in the scatter.'
-  - 'No vertical gridlines: the style guide recommends grid lines on both axes for
-    scatter plots, but only the y-axis draws gridlines here — add a subtle xAxis.gridLineColor
-    (matching the y-axis token) for consistency.'
+  - Overlapping scatter markers now have a separating stroke, but several specimens
+    still touch/fuse almost completely (e.g., the pair near 8k-10k cycles at 480 MPa)
+    — the boundary is a thin crescent rather than a fully clear gap; a small alpha
+    reduction or slightly thinner marker radius at dense clusters would improve individual-point
+    legibility further
+  - 'Design excellence is solid but not yet publication-grade: the chart is functionally
+    complete and clean, but the composition still reads as a fairly literal reference
+    implementation (standard scatter + line + plotLines) without an extra layer of
+    visual polish (e.g., a subtle color/size cue distinguishing which specimens are
+    true runouts vs. failures at 20M cycles)'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Bold dark title "sn-curve-basic · javascript · highcharts · anyplot.ai" centered at top; dark-ink axis titles "Cycles to Failure (N)" (x, log scale, 2k-20M) and "Stress Amplitude (MPa)" (y, log scale, 100-700); soft-gray tick labels on both axes; subtle horizontal-only gridlines; legend ("Fatigue Test Data", "Basquin Fit") in soft-ink text at the bottom, close to the axis. Three horizontal reference lines in near-black ink (solid = Ultimate Strength 620 MPa, dashed = Yield Strength 415 MPa, dotted = Endurance Limit 180 MPa), each with a right-aligned label in soft-ink text — none overlap the data or each other.
-      Data: Green (#009E73) scatter markers (fatigue test specimens) trending from ~380 MPa at ~90k cycles down to ~190 MPa near 20M cycles; several specimens overlap into fused blobs with no separating edge. A lavender/purple line (Basquin fit) runs through the scatter and flattens toward the endurance limit at high cycle counts.
+      Chrome: Bold dark title "sn-curve-basic · javascript · highcharts · anyplot.ai" centered at top; dark-ink axis titles "Cycles to Failure (N)" (x, log scale, ~1k-20M with formatted k/M tick labels) and "Stress Amplitude (MPa)" (y, log scale, 150-700); soft-gray tick labels on both axes; subtle gridlines now present on BOTH axes (previously x-axis only). Legend ("Fatigue Test Data", "Basquin Fit (S = Sf'·(2N)^b)") in soft-ink text at the bottom. Three horizontal reference lines in near-black ink (solid = Ultimate Strength 620 MPa, dashed = Yield Strength 415 MPa, dotted = Endurance Limit 180 MPa), each with a right-aligned inline label that sits fully inside the plot margin — no clipping at the right edge (verified via pixel crop). The y-axis baseline now sits at the configured min (150) instead of auto-padding to 100, removing the empty band seen in the prior attempt.
+      Data: Green (#009E73) scatter markers spanning ~480 MPa at ~8k cycles down to ~190-225 MPa near 20M cycles, now including two stress levels above the yield strength (480, 450 MPa) so the low-cycle/plastic region is represented alongside the high-cycle/elastic and infinite-life regions. Overlapping specimens (e.g., near 8k-10k cycles) now show a light pageBg-colored stroke separating them, a visible improvement over the fused blobs of Attempt 1, though a few clusters still touch closely. A lavender/purple line (Basquin fit) runs through the scatter and flattens toward the endurance limit at high cycle counts.
       Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light issues found.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same layout as the light render with all chrome tokens flipped — title and axis titles in near-white ink, tick labels and legend in light soft-gray, gridlines and axis lines in a light muted tone, reference lines in near-white with the same solid/dashed/dotted styling and labels.
+      Chrome: Same layout as the light render with all chrome tokens flipped — title and axis titles in near-white ink, tick labels and legend in light soft-gray, gridlines (both axes) and axis lines in a light muted tone, reference lines in near-white with the same solid/dashed/dotted styling and labels, all fully inside the canvas margin.
       Data: Data colors are identical to the light render — green scatter markers and the lavender/purple fit line are unchanged; only the chrome (background, text, grid, lines) flipped.
       Legibility verdict: PASS — all text is clearly readable against the dark background; no dark-on-dark failures found (title, axis titles, tick labels, and reference-line labels all render in light tones with good contrast).
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -72,8 +69,8 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable at full size and proportioned
-          well in both themes; title fits comfortably given the shorter spec-id
+        comment: All font sizes explicitly set; readable at full size in both themes;
+          no legibility regressions from the repair
       - id: VQ-02
         name: No Overlap
         score: 6
@@ -83,27 +80,27 @@ review:
           labels sit clear of both the axis and the nearest data points
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Markers are visible but multiple overlapping specimens fuse into
-          undifferentiated blobs with no separating stroke, obscuring individual data
-          points
+        comment: 'Fixed: marker.lineColor/lineWidth now separates overlapping specimens
+          with a visible stroke (was fused solid blobs in Attempt 1); a couple of
+          dense clusters still touch closely, so not a full point'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
         comment: Green data vs. lavender fit line is high-contrast and CVD-safe; reference
-          lines use ink, not color, as the distinguishing channel
+          lines use ink + dash-style, not color, as the distinguishing channel
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Y-axis auto-pads below the configured min (baseline lands on the
-          100 gridline instead of 150), leaving a ~300px band of empty gridded space
-          above the x-axis
+        comment: 'Fixed: startOnTick/endOnTick: false makes the y-axis baseline land
+          exactly on the configured min=150, removing the ~17% empty band seen in
+          Attempt 1'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -118,76 +115,86 @@ review:
         comment: 'First series is #009E73, fit line uses palette[1]; backgrounds and
           all chrome are theme-correct in both renders'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        comment: Distinct dash styles per reference line and clean log-log composition
-          show above-default thought, but overlapping markers and axis padding hold
-          it back from publication-ready
+        passed: true
+        comment: Distinct dash styles per reference line, physically-derived fit curve,
+          and now a complete grid + marker separation give it above-default polish;
+          still a fairly literal reference composition
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        comment: Subtle horizontal grid and clean axis lines, but no vertical grid
-          despite scatter data, no marker separation stroke, and unused vertical whitespace
+        passed: true
+        comment: 'Fixed: vertical gridlines added, marker separation stroke added,
+          axis padding tightened — clean spines, subtle grid, generous whitespace'
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        comment: The three labeled reference lines and the fit curve's asymptotic
-          flattening toward the endurance limit create clear visual hierarchy and
-          guide the reader toward the key engineering thresholds
+        passed: true
+        comment: The three labeled reference lines, the fit curve's asymptotic flattening,
+          and now all three fatigue regions create clear visual hierarchy and guide
+          the reader toward the key engineering thresholds
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
         max: 5
+        passed: true
         comment: Correct log-log scatter + fit-line S-N curve
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        comment: Log-log axes, all three reference lines, and the Basquin fit line
-          are present; the data never reaches the low-cycle/plastic region so that
-          characteristic S-N feature is effectively absent
+        passed: true
+        comment: 'Fixed: log-log axes, all three reference lines, the Basquin fit
+          line, and now stress levels above yield give all three characteristic S-N
+          regions (low-cycle/plastic, high-cycle/elastic, infinite-life)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
+        passed: true
         comment: Cycles on x, stress on y, both log-scaled, correctly matching the
           spec
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
+        passed: true
         comment: Title format matches exactly; legend labels are descriptive and correct
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        comment: Shows specimen scatter and the high-cycle/infinite-life regions well,
-          but all 9 stress levels sit below yield strength, so the low-cycle/plastic
-          fatigue region is missing entirely
+        passed: true
+        comment: 'Fixed: now shows specimen scatter across all three fatigue regions
+          (two stress levels above yield add the low-cycle/plastic region) plus the
+          fit curve and all three reference lines'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
+        passed: true
         comment: Neutral, real-world steel fatigue-testing scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
+        passed: true
         comment: Ultimate/yield/endurance values, Basquin exponent, and cycle range
           are all realistic for a high-strength steel alloy
     code_quality:
@@ -198,30 +205,35 @@ review:
         name: KISS Structure
         score: 2
         max: 3
+        passed: true
         comment: A few helper functions (lcg, cyclesForStress, stressForCycles, formatCycles)
-          are used, but they are justified by the browser's lack of seeded RNG and
-          the need for a physically-derived fit curve
+          are used, justified by the browser's lack of seeded RNG and the need for
+          a physically-derived fit curve
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
+        passed: true
         comment: Fixed-seed LCG (seed=42) makes the data fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
+        passed: true
         comment: No unused imports; only the global Highcharts and ANYPLOT_TOKENS
           are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
+        passed: true
         comment: Appropriate complexity for the physics-based data generation, no
           fake UI or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
+        passed: true
         comment: Correct Highcharts.chart('container', ...) call with animation disabled
           on both chart and series levels
     library_mastery:
@@ -232,15 +244,17 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        comment: Idiomatic use of logarithmic axis type, plotLines, and axis label
-          formatter
+        passed: true
+        comment: Idiomatic use of logarithmic axis type, plotLines with styled labels,
+          and axis label formatter
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
+        passed: true
         comment: plotLines with styled dash variants and inline labels are a genuinely
           Highcharts-specific feature, going beyond generic usage
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
