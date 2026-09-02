@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: map-route-path
 created: '2026-09-02T02:53:32Z'
-updated: '2026-09-02T03:02:12Z'
+updated: '2026-09-02T03:18:59Z'
 generated_by: claude-sonnet
 workflow_run: 33584236387
 issue: 3768
@@ -12,103 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/javascript/echarts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - 'Factually accurate real-world data: TransAmerica Bicycle Trail waypoints with
-    elevations matching actual USGS figures (e.g. Hoosier Pass ~11,542 ft, Togwotee
-    Pass ~9,658 ft)'
-  - 'Perfect Imprint palette use: brand green (#009E73) for Start, matte red (#AE3030)
-    for Finish as the semantic exception, imprint_seq gradient (green to blue) for
-    the single-polarity elevation encoding'
-  - 'Rich, spec-aligned feature set: sequence-ordered path built from noisy simulated
-    GPS fixes then smoothed with a moving average, bearing-rotated direction arrows,
-    distinct start/end markers, and a simplified basemap silhouette for geographic
-    context'
-  - Theme-adaptive chrome is correct and identical data colors across both light and
-    dark renders
-  - Clean, deterministic (fixed-seed LCG), KISS-structured code with no fake interactivity
+  - 'Faithfully matches the spec''s exact suggestion: brand-green circle for Start,
+    matte-red square for Finish, continuous smoothed route line, elevation color gradient,
+    direction arrows, and a geographic basemap silhouette for spatial context — plus
+    zoom/pan enabled via dataZoom.'
+  - 'Excellent data storytelling: the route line uses the Imprint imprint_seq sequential
+    colormap (correct choice for single-polarity elevation data) so the Rocky Mountain
+    climb visibly pops as blue against the green lowland legs — the viewer immediately
+    sees the terrain profile of the journey.'
+  - 'Realistic, well-researched data: real TransAmerica Bicycle Trail waypoints with
+    factually plausible elevations (e.g. Hoosier Pass CO ~11,542 ft), GPS noise simulated
+    with a seeded LCG and cleaned via a 3-point moving average — deterministic and
+    reproducible.'
+  - 'Clean palette discipline: Start marker uses palette[0] (#009E73), Finish uses
+    palette[4] (matte red) as an intentional semantic exception matching the spec''s
+    own color suggestion, and both renders keep identical data colors with fully theme-correct
+    chrome.'
   weaknesses:
-  - Spec notes 'For interactive libraries, enable zoom and pan to explore route details'
-    — no dataZoom/toolbox was added despite echarts and the HTML output supporting
-    it
-  - xAxis interval=10 does not evenly divide the -128..-66 range, so echarts adds
-    a boundary tick and renders '68°W' and '66°W' crowded close together near the
-    right edge
-  - Title occupies only ~48% of the plot width, under the 50-70% guideline (not an
-    overflow violation, just a bit small for the available space)
-  - All four axis lines form a closed box frame around the map area rather than the
-    default L-shaped (bottom+left) frame, reading closer to a library default than
-    a deliberately refined chrome choice
+  - Direction-arrow triangles use a muted gray-blue tone at modest size/opacity (symbolSize
+    15, opacity 0.8) — they read faint against the route line, especially once the
+    PNG is scaled down to mobile width; consider a slightly larger size or stronger
+    contrast so travel direction stays legible at small sizes.
+  - The hand-simplified US coastline polygon (explicitly disclaimed in a code comment
+    as a low-vertex approximation) reads visibly distorted around Florida and the
+    Great Lakes region — since it's the plot's only spatial-context cue, a few more
+    vertices in those areas would make the silhouette read more convincingly as the
+    US.
+  - The whitespace margin between the route's rightmost point and the plot's right
+    edge (further padded by the floating visualMap legend) is noticeably larger than
+    the margin on the left side of the route — tightening the x-axis max or repositioning
+    the legend would balance the composition.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "TransAmerica Bicycle Trail · map-route-path · javascript · echarts · anyplot.ai" and subtitle are dark ink, clearly readable. Longitude/Latitude axis titles and °W/°N tick labels are soft dark gray, all legible. Grid lines are subtle warm-gray, visible but not competing with data. A light-gray simplified US landmass silhouette sits behind the route for geographic context.
-      Data: Route line runs from a green circle "Start" marker (Astoria, OR) to a red square "Finish" marker (Yorktown, VA), colored along its length by a green-to-blue gradient (imprint_seq) keyed to elevation via the vertical color-scale legend on the right ("High elevation (ft)" / "Low elevation (ft)"). Muted purple-gray triangle markers along the path are rotated to show travel direction. First data color is the brand green #009E73 as required.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues. Minor: the x-axis tick labels "68°W" and "66°W" render close together near the right edge (crowded, not overlapping).
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "TransAmerica Bicycle Trail · map-route-path · javascript · echarts · anyplot.ai" centered at top in dark ink, descriptive subtitle below in secondary gray. Longitude/Latitude axis titles and °W/°N tick labels all in soft dark gray, clearly legible. Gridlines are faint and subtle. Right-side vertical colorbar labeled "High elevation (ft)" / "Low elevation (ft)" is fully visible, not clipped.
+      Data: A continuous route line runs from a green circle marker ("Start", Astoria OR) across the country to a red square marker ("Finish", Yorktown VA). The line is colored via the imprint_seq colormap (#009E73 → #4467A3) tracking elevation — it turns blue through the Rocky Mountain / Continental Divide section and returns to green across the lowland plains and East Coast. Small gray-blue triangle markers along the line indicate travel direction. A light-gray polygon silhouette of the continental US sits behind the route for geographic context.
+      Legibility verdict: PASS — all text (title, subtitle, axis titles, tick labels, colorbar labels, Start/Finish labels) is clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, subtitle, axis titles, and tick labels all flip to light off-white/gray tones and remain fully legible against the dark background. No dark-on-dark text anywhere. The landmass silhouette becomes a subtle dark-gray fill, still distinguishable from the page background. Grid lines remain subtle.
-      Data: Route gradient, Start (green) and Finish (red) markers, and direction arrows are pixel-identical in hue to the light render — confirming only chrome (not data colors) flips between themes. Brand green reads clearly on the dark surface.
-      Legibility verdict: PASS — all text and data elements are readable in the dark theme; no dark-on-dark failures observed.
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title/subtitle now rendered in light off-white / light gray, fully readable. Axis titles and tick labels in light gray. Gridlines faint but visible against the dark surface. Colorbar and its labels render in light text, not clipped.
+      Data: Route line, Start (green circle) and Finish (red square) markers, and direction-arrow triangles are pixel-identical in color to the light render — only the chrome (background, text, grid, landmass fill) flipped to the dark palette. The landmass silhouette is now a dark charcoal gray, still distinguishable from the near-black background.
+      Legibility verdict: PASS — no dark-on-dark or light-on-light failures; all chrome text and data elements remain clearly visible.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; title runs ~48%
-          of plot width (a bit under the 50-70% guideline); subtitle/tick text shrinks
-          to near-illegibility at 400px mobile scale
+        comment: All font sizes explicitly set; title fontsize scales with title length
+          via the linear formula; readable in both themes with no overflow
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or marker overlap in either render; Start/Finish labels sit
-          cleanly above their markers
+        comment: No overlap between title, subtitle, axis text, colorbar, or data
+          labels in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Route line width, marker sizes, and arrow sizes are well adapted
-          to the ~100-point track density
+        comment: Route line, start/finish markers well sized; direction-arrow triangles
+          are a bit faint (muted color, modest opacity) at this density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast, CVD-safe Imprint gradient and categorical anchors,
-          no red-green-only signal
+        comment: Start/Finish distinguished by shape + text label in addition to color,
+          not red-green alone; good contrast
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Plot fills most of the canvas with balanced margins and a nearby
-          legend; x-axis interval leaves '68°W'/'66°W' crowded near the right edge
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude axis titles with degree-suffixed tick labels convey
-          units
+        comment: Longitude/Latitude axis titles plus °W/°N unit-bearing tick labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Brand green for Start, matte red for Finish (semantic exception),
-          imprint_seq gradient for elevation, theme-correct chrome in both renders
+        comment: Start=#009E73 (palette[0]), Finish=matte red semantic exception,
+          elevation gradient uses imprint_seq correctly (single-polarity), theme-correct
+          backgrounds/chrome in both renders
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -116,25 +120,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Thoughtful elevation gradient, semantic start/finish colors, and
-          a custom basemap silhouette go clearly beyond defaults
+        comment: Thoughtful elevation-based color coding, intentional hierarchy of
+          title/subtitle/colorbar, clearly above library defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid and generous whitespace, but the full four-sided axis
-          box frame reads closer to a default than a deliberately refined L-shaped
-          chrome
+        comment: Subtle gridlines, no legend box clutter, generous whitespace, but
+          not maximally polished
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Elevation-colored path plus direction arrows and labeled endpoints
-          create clear visual hierarchy of the coast-to-coast journey
+        comment: Elevation gradient along the route makes the Rocky Mountain climb
+          immediately visible — strong visual hierarchy and clear focal point
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,30 +145,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct route/path map connecting sequential waypoints with continuous
-          lines
+        comment: Correct route-path map connecting sequential waypoints
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
         passed: true
-        comment: Sequence connection, start/end markers, elevation gradient, direction
-          arrows, smoothing, and basemap are all present; zoom/pan for interactive
-          exploration (explicitly requested in spec notes for interactive libraries)
-          is missing
+        comment: Sequenced connected path, distinct start/end markers matching spec's
+          own suggestion, elevation color gradient, direction arrows, GPS-noise smoothing,
+          basemap context, zoom/pan
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, latitude on Y, axes cover the full route extent
+        comment: Longitude=x, Latitude=y correctly assigned, axes cover the full route
+          extent
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches the mandated format with a descriptive prefix; Start/Finish
-          and elevation legend labels are correct
+        comment: Title matches '{Descriptive Title} · {spec-id} · javascript · echarts
+          · anyplot.ai' format exactly; inline Start/Finish labels and colorbar legend
+          are correct and unambiguous
     data_quality:
       score: 15
       max: 15
@@ -175,22 +178,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows sequence, direction, elevation variation, endpoints, and geographic
-          context all at once
+        comment: Shows path connectivity, elevation variation (climbs and descents),
+          directionality, and distinct start/end — all plot-type aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real, neutral scenario: a well-known coast-to-coast cycling route
-          with named cities'
+        comment: Real TransAmerica Bicycle Trail route, neutral and comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevations and coordinates align with real-world figures for these
-          locations
+        comment: Elevation values are factually plausible for the named real-world
+          locations along the route
     code_quality:
       score: 10
       max: 10
@@ -200,7 +203,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear data-generation-to-option flow with no unnecessary classes
+        comment: Top-to-bottom flow, no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -212,21 +215,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only the global echarts/window tokens are used
+        comment: Only uses window.ANYPLOT_TOKENS and the echarts global
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complexity is proportionate to the noise-simulation and smoothing
-          it performs; no fake UI
+        comment: Appropriate complexity for the route-generation task, no fake UI
+          or interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct setOption usage with animation disabled per the mount-node
-          contract
+        comment: Correct mount-node contract, chart.setOption with series, animation:false
     library_mastery:
       score: 8
       max: 10
@@ -236,27 +238,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic use of the lines/scatter/visualMap combination; the custom
-          renderItem for the basemap is a reasonable but lower-level workaround given
-          no GeoJSON is available
+        comment: Correct use of lines/scatter/custom series types, visualMap continuous,
+          dataZoom
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Per-segment continuous coloring via visualMap on a lines series plus
-          bearing-rotated symbols are distinctly echarts capabilities
-  verdict: REJECTED
+        comment: Uses ECharts' 'lines' series for per-segment gradient-colored paths
+          plus a custom renderItem series for the basemap silhouette — features not
+          trivially replicated in another library
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - manual-ticks
   - annotations
   - patches
   patterns:
   - data-generation
   dataprep:
+  - interpolation
   - rolling-window
   styling:
   - custom-colormap
