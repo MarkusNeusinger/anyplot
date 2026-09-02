@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-sma: Simple Moving Average (SMA) Indicator Chart
 // Library: muix 7.29.1 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 92/100 | Created: 2026-09-02
 import { LineChart } from "@mui/x-charts/LineChart";
 import { ChartsReferenceLine } from "@mui/x-charts/ChartsReferenceLine";
 import { Box, Typography } from "@mui/material";
