@@ -1,0 +1,270 @@
+library: highcharts
+language: javascript
+specification_id: chernoff-basic
+created: '2026-09-02T15:07:55Z'
+updated: '2026-09-02T15:22:03Z'
+generated_by: claude-sonnet
+workflow_run: 33645868920
+issue: 3003
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chernoff-basic/javascript/highcharts/plot-dark.html
+quality_score: 89
+review:
+  strengths:
+  - 'Faithful chernoff-faces implementation: all 8 spec-suggested feature mappings
+    are present (face width/height, eye size/spacing, eyebrow slant, nose length,
+    mouth curvature/width), built with the library''s core SVGRenderer exactly as
+    prompts/library/highcharts.md recommends for chart types with no native series
+    type.'
+  - Attempt-1 review feedback fully addressed — the title/subtitle crowding is gone
+    (clear vertical gap now visible in both renders) and the empty gap above the face
+    grid is tightened via areaTop 170→130.
+  - 'Correct Imprint palette usage: sectors map to palette[0]/[1]/[2] in canonical
+    order (Tech=brand green, Retail=lavender, Finance=blue), data colors identical
+    between themes, and both renders use the correct #FAF8F1 / #1A1A17 backgrounds
+    with fully theme-adaptive ink/inkSoft chrome — no dark-on-dark or light-on-light
+    failures.'
+  - 3x3 grid + sector-color coding matches the spec's 'Grid layout recommended' and
+    'Consider colorizing faces by group membership' notes, and data stays within the
+    spec's suggested 0-1 normalized scale and 5-50 observation count (9 companies,
+    8 metrics).
+  - 'Clean, deterministic, KISS code: hardcoded in-memory data, no unused imports,
+    animation disabled on both chart.animation and plotOptions.series.animation, credits
+    disabled, no explicit chart.width/height (correct mount-node contract).'
+  weaknesses:
+  - 'Mouth-curvature mapping reads backwards for a ''financial health'' story: mouthCurve
+    = (profit_margin - 0.5) * size * 0.36 combined with the Q control-point formula
+    (mouthY - mouthCurve) makes HIGH profit_margin draw a frown and LOW profit_margin
+    draw a smile (visible comparing Nova Systems, profit_margin=0.78, frowning vs.
+    Quantum Byte, profit_margin=0.22, smiling). Flip the sign (use mouthY + mouthCurve,
+    or negate mouthCurve) so higher profit margin reads as a smile — the current mapping
+    could mislead a reader scanning for ''healthy'' companies.'
+  - The nose (innovation_index -> noseLen) renders as a single faint two-segment stroke
+    that's hard to perceptually compare across the 9 faces at this stroke width/inkSoft
+    color — consider a slightly bolder stroke-width or a small nostril flare so the
+    encoded variable is easier to read at a glance.
+  - 'LM-02: the illustration only uses raw path/circle/text primitives from the renderer;
+    it doesn''t showcase any other distinctive Highcharts capability (e.g. renderer.symbol
+    customization, dataLabels-driven annotations) that would elevate library mastery
+    beyond ''solid but not maximal''.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark title "chernoff-basic · javascript · highcharts · anyplot.ai" at top with clear vertical separation from the gray subtitle beneath it (the attempt-1 crowding issue is resolved). A custom-drawn legend (three colored circles + "Tech" / "Retail" / "Finance" labels) sits at the bottom, clearly legible.
+      Data: A 3x3 grid of nine Chernoff faces — colored-outline ellipses (green=Tech, purple=Retail, blue=Finance) on an off-white fill, each containing two black eyes, two eyebrows (slant varies by debt_ratio), a thin angular nose stroke (length varies by innovation_index), and a curved mouth (curvature varies by profit_margin, width by operating_efficiency). Each face is labeled with its company name below it (e.g. "Nova Systems", "Quantum Byte", "Harbor Capital"). First categorical color (Tech) is brand green #009E73 as required.
+      Legibility verdict: PASS — all text (title, subtitle, company labels, legend) is clearly readable against the light background; no overlaps observed.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black, not light.
+      Chrome: Identical title/subtitle/legend layout to the light render, now rendered in light ink (#F0EFE8 / #B8B7B0) against the dark background; the title/subtitle gap remains clear, no crowding.
+      Data: Identical face grid and identical sector outline colors (green/purple/blue) to the light render — only the face fill (elevated dark surface #242420), eyes (now light dots), and nose/mouth ink tones flip for the dark theme, confirming data colors are unchanged between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; eyes, brows, nose, mouth, and all text remain clearly visible against the dark face fill and canvas background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title/subtitle crowding from attempt 1 is fully resolved (clear vertical
+          gap in both renders); all chrome and company labels readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions observed; faces, labels, and legend are well
+          separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Eyes, brows, and mouths are clearly visible; the inkSoft nose stroke
+          is faint and hard to compare across faces.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Imprint categorical hues used, CVD-safe, no red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas dimension gate passed (no gate file); good proportions, title
+          well within width bounds, nothing clipped.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axes needed for this plot type; title/subtitle are descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sector colors use palette[0..2] in canonical order (brand green first);
+          backgrounds correct in both themes; data colors identical across themes.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Genuine custom SVGRenderer illustration beyond defaults, but the
+          nose primitive reads as a crude single stroke rather than a polished facial
+          feature.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Generous whitespace, no clutter, no unnecessary chrome (axes/legend
+          box hidden in favor of a custom minimal legend).
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Sector color-coding groups related companies well, but the inverted
+          profit_margin-to-mouth-curvature polarity works against a clear 'financial
+          health' narrative.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine Chernoff faces, not a workaround or unrelated chart type.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized 0-1 variables, grid layout, and group-membership colorization
+          are all present per spec notes.
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: true
+        comment: 8 variables correctly drive 8 distinct facial features, but the profit_margin
+          -> mouth curvature sign is inverted relative to intuitive expectation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels (Tech/Retail/Finance)
+          match the data grouping.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All 8 spec-suggested feature mappings implemented (width, height,
+          eye size/spacing, brow slant, nose length, mouth curvature/width).
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible fictional companies/sectors and metrics; neutral, non-controversial
+          subject matter.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values normalized to 0-1 as the spec instructs; 9 observations
+          within the recommended 5-50 range.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Two small helper functions appropriate to the custom-drawing complexity;
+          no over-engineering.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic, hardcoded in-memory data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports; only the global Highcharts/tokens are used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; real SVGRenderer-based construction appropriate
+          for a chart type Highcharts has no native series for.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct mount-node contract, animation disabled on both chart and
+          series level, credits disabled.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly reaches for core SVGRenderer per the library's guidance
+          for chart types with no native series/module support, instead of faking
+          it or importing an add-on module.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of renderer.g()/path()/circle()/text() grouping and
+          a hand-built legend, but relies solely on raw drawing primitives without
+          other distinctive Highcharts capabilities.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  - custom-legend
+  - annotations
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
