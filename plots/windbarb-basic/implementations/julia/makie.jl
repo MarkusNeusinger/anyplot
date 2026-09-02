@@ -16,7 +16,8 @@ const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
 const BRAND    = colorant"#009E73"  # Imprint palette position 1 — always first series
 
-# --- Data: surface wind observations on a grid around a low-pressure center -
+# --- Data: surface wind observations on a grid around a local vortex ---------
+# Domain and radius are mesocyclone-scale (~km), not a synoptic low.
 station_x = Float64[]
 station_y = Float64[]
 for grid_x in range(0.0, 10.0; length = 8), grid_y in range(0.0, 6.0; length = 6)
@@ -58,10 +59,19 @@ tick_spacing = staff_len * 0.18
 barb_offset  = 3π / 4  # feather angle relative to the staff — back and to the left
 
 staff_points  = Point2f[]
+staff_colors  = RGBAf[]
 barb_points   = Point2f[]
+barb_colors   = RGBAf[]
 pennant_polys = Vector{Point2f}[]
+pennant_colors = RGBAf[]
 calm_x        = Float64[]
 calm_y        = Float64[]
+
+# Speed-keyed alpha: stronger stations render more opaque, weaker ones more
+# translucent, giving the swirl a visible intensity gradient without adding
+# a second data hue.
+barb_alpha(speed) = clamp(0.5 + 0.5 * (speed / speed_max), 0.5, 1.0)
+brand_alpha(alpha) = RGBAf(BRAND.r, BRAND.g, BRAND.b, alpha)
 
 for i in eachindex(station_x)
     speed = hypot(wind_u[i], wind_v[i])
@@ -73,10 +83,13 @@ for i in eachindex(station_x)
         continue
     end
 
+    station_color = brand_alpha(barb_alpha(speed))
+
     heading = atan(-wind_v[i], -wind_u[i])  # staff points FROM which the wind blows
     tip_x = x0 + staff_len * cos(heading)
     tip_y = y0 + staff_len * sin(heading)
     push!(staff_points, Point2f(x0, y0), Point2f(tip_x, tip_y))
+    push!(staff_colors, station_color, station_color)
 
     rounded_int = round(Int, speed / 5) * 5
     n_pennants  = rounded_int ÷ 50
@@ -94,6 +107,7 @@ for i in eachindex(station_x)
         apex_x = base_x + full_len * cos(heading + barb_offset)
         apex_y = base_y + full_len * sin(heading + barb_offset)
         push!(pennant_polys, [Point2f(base_x, base_y), Point2f(far_x, far_y), Point2f(apex_x, apex_y)])
+        push!(pennant_colors, station_color)
         step += 1
     end
     for _ in 1:n_full
@@ -102,6 +116,7 @@ for i in eachindex(station_x)
         end_x  = base_x + full_len * cos(heading + barb_offset)
         end_y  = base_y + full_len * sin(heading + barb_offset)
         push!(barb_points, Point2f(base_x, base_y), Point2f(end_x, end_y))
+        push!(barb_colors, station_color, station_color)
         step += 1
     end
     for _ in 1:n_half
@@ -110,6 +125,7 @@ for i in eachindex(station_x)
         end_x  = base_x + half_len * cos(heading + barb_offset)
         end_y  = base_y + half_len * sin(heading + barb_offset)
         push!(barb_points, Point2f(base_x, base_y), Point2f(end_x, end_y))
+        push!(barb_colors, station_color, station_color)
         step += 1
     end
 end
@@ -122,8 +138,8 @@ ax = Axis(
     title              = "windbarb-basic · julia · makie · anyplot.ai",
     titlesize          = 20,
     titlecolor         = INK,
-    xlabel             = "Distance east of low-pressure center (km)",
-    ylabel             = "Distance north of low-pressure center (km)",
+    xlabel             = "Distance east of vortex center (km)",
+    ylabel             = "Distance north of vortex center (km)",
     xlabelsize         = 14,
     ylabelsize         = 14,
     xlabelcolor        = INK,
@@ -143,10 +159,21 @@ ax = Axis(
     ygridvisible       = false,
 )
 
-linesegments!(ax, staff_points; color = BRAND, linewidth = 2.2)
-linesegments!(ax, barb_points; color = BRAND, linewidth = 2.2)
+# Faint, non-data reference ring + crosshair anchoring the vortex center so
+# the cyclonic swirl reads immediately instead of requiring inference from
+# barb orientation alone (chrome ink, not a second data hue).
+ring_theta = range(0, 2π; length = 100)
+lines!(ax, center_x .+ radius_max .* cos.(ring_theta), center_y .+ radius_max .* sin.(ring_theta);
+       color = INK_SOFT, linestyle = :dash, linewidth = 1.5, alpha = 0.35)
+cross_len = 0.3
+linesegments!(ax, [Point2f(center_x - cross_len, center_y), Point2f(center_x + cross_len, center_y),
+                    Point2f(center_x, center_y - cross_len), Point2f(center_x, center_y + cross_len)];
+              color = INK_SOFT, linewidth = 1.5, alpha = 0.55)
+
+linesegments!(ax, staff_points; color = staff_colors, linewidth = 2.2)
+linesegments!(ax, barb_points; color = barb_colors, linewidth = 2.2)
 if !isempty(pennant_polys)
-    poly!(ax, pennant_polys; color = BRAND, strokewidth = 0)
+    poly!(ax, pennant_polys; color = pennant_colors, strokewidth = 0)
 end
 if !isempty(calm_x)
     scatter!(ax, calm_x, calm_y; marker = :circle, markersize = 18,
