@@ -1,0 +1,244 @@
+library: muix
+language: javascript
+specification_id: density-rug
+created: '2026-09-02T00:34:53Z'
+updated: '2026-09-02T00:39:24Z'
+generated_by: claude-sonnet
+workflow_run: 33575476354
+issue: 3505
+language_version: 22.23.2
+library_version: 7.29.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/muix/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/muix/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/muix/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/muix/plot-dark.html
+quality_score: 91
+review:
+  strengths:
+  - 'Rug marks and the bimodal KDE curve tell one coherent story: the marks visibly
+    thin out in the 4.8-5.2 and 5.6-5.8 valley exactly where the density dips, making
+    the two-population narrative concrete rather than just a smoothed abstraction'
+  - Correct, idiomatic use of MUI X's children/hooks pattern (useXScale + useDrawingArea)
+    to composite a custom rug-mark layer onto the LineChart's own coordinate system
+    - a genuinely library-specific technique
+  - 'Both renders are theme-correct with no legibility failures: warm off-white/near-black
+    backgrounds, fully readable ink-toned text, identical brand-green data color in
+    both themes'
+  - Title format, axis labels with units, single-series legend correctly omitted,
+    and generous margins all match spec and style guide exactly
+  - Deterministic, seeded, dependency-free data generation (LCG + Box-Muller) and
+    a from-scratch Gaussian KDE with a documented bandwidth choice narrower than Silverman's
+    rule to keep the two populations visually distinct
+  weaknesses:
+  - 'Rug marks are not vertically jittered (spec: ''consider jittering ... if using
+    thick ticks'') - a minor optional enhancement, not required since the current
+    1.5px ticks are thin enough that overplotting reads as intentional density signal
+    rather than clutter'
+  - 'Design Excellence is solid but not exceptional: styling relies mostly on opacity/curve-smoothing
+    tweaks over an otherwise fairly standard MUI X LineChart look rather than deeper
+    custom typography or layout flourishes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1-consistent), not pure white.
+      Chrome: Bold dark title "density-rug · javascript · muix · anyplot.ai" top-left; axis labels "Petal Length (cm)" (x) and "Density" (y, rotated) in dark ink; tick labels along both axes in a slightly softer dark tone; subtle horizontal grid lines only. All clearly visible against the light background.
+      Data: A bimodal KDE curve (brand green #009E73 stroke) with a semi-transparent green fill under it, showing two peaks (~4.2 and ~6.7 on the x-axis) separated by a shallow valley near 5.4. A dense band of short green rug tick marks sits along the x-axis baseline, clustering under each peak and thinning out in the valley - directly echoing the density shape.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17-consistent), not pure black.
+      Chrome: Title, axis labels and tick labels rendered in light/off-white ink, clearly legible; grid lines subtle and still visible against the dark surface. No dark-on-dark text anywhere.
+      Data: Same brand-green stroke color as the light render; the fill reads as a slightly darker desaturated green against the black background (expected, since a semi-transparent fill over a dark backdrop naturally looks darker than over a light one - the underlying fill color and opacity are identical). Rug marks are the same green, same density pattern as light render, fully visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title/axis/tick labels clearly readable in both themes at sensible
+          CSS-px sizes (title 22px, axis 16px, ticks 14px)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions between text, curve, or rug marks
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rug ticks subtle-but-visible (opacity 0.55) as spec requests; fill
+          at 0.3 opacity doesn't obscure them
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-series brand green, strong contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins, nothing clipped or overflowing, title well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels with units (cm), correct mandated title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73, backgrounds match Imprint light/dark tokens,
+          identical data color across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: custom fill opacity, natural curve smoothing,
+          custom title block, hidden legend, custom tick formatting'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal-only grid, generous whitespace, minimal default
+          MUI X axis chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal shape plus rug density creates a clear, guided narrative
+          about two subpopulations and the gap between them
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: KDE plot with rug marks, both present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Filled KDE curve, semi-transparent fill, subtle-but-visible rug marks
+          along x-axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x = petal length grid, y = density, full data range covered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; single-series legend correctly
+          hidden
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows curve shape, modality, and raw observation placement together
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral botanical measurement context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Petal-length values and sample sizes (75/65) in a sensible real-world
+          range
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions are the minimum needed for the KDE/rug technique
+          and the required React component shape
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seeded LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only LineChart, useXScale, useDrawingArea imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity or unnecessary complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly delegates output to the harness; current MUI X API and
+          skipAnimation set
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses LineChart's children-composition pattern as documented for custom
+          marks
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: useXScale/useDrawingArea for a custom SVG overlay layer is a genuinely
+          MUI X-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending

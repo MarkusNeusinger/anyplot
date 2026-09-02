@@ -1,0 +1,256 @@
+library: d3
+language: javascript
+specification_id: density-rug
+created: '2026-09-02T00:26:31Z'
+updated: '2026-09-02T00:40:43Z'
+generated_by: claude-sonnet
+workflow_run: 33574962332
+issue: 3505
+language_version: 22.23.2
+library_version: 7.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/d3/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/d3/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/d3/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/javascript/d3/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - Bimodal KDE (Silverman bandwidth, Gaussian kernel via d3.mean) is correctly implemented
+    from scratch and the two regimes are explicitly named ('Fast trials' / 'Slow trials')
+    with peak markers — genuine data storytelling, not just a curve
+  - Vertical gradient fill (denser green at baseline, airier near the peak) built
+    via an SVG linearGradient adds real depth within the Imprint hue without introducing
+    a second color
+  - Rug marks use a deterministic per-point vertical jitter within the rug band, exactly
+    the spec's own suggestion for reducing overplotting of overlapping ticks
+  - Identical brand green (#009E73) and warm off-white/near-black backgrounds across
+    both themes; all chrome (title, axis text, ticks, grid) correctly threaded through
+    ANYPLOT_TOKENS with no dark-on-dark or light-on-light failures
+  - Title matches the exact mandated format, deterministic LCG-seeded data generation
+    (seed 42), clean idiomatic d3 data-join for the rug marks
+  weaknesses:
+  - Rug marks cluster tightly under both peaks (especially 280-350ms and 450-520ms)
+    and read as near-solid dark bands rather than individually distinguishable ticks
+    despite the jitter — a touch more transparency or slightly shorter ticks in the
+    densest zones would preserve the 'exact observation location' transparency the
+    spec calls for
+  - Only a single hue is used throughout (fill, line, peaks, rug) — appropriate for
+    a single-series KDE, but the chart relies entirely on shape/position rather than
+    any secondary visual encoding for hierarchy, capping Design Excellence just short
+    of top marks
+  - Several small free-standing helper functions (lcg, randomNormal, kernelGaussian,
+    kernelDensityEstimator, findTwoPeaks) push the file structure past pure top-to-bottom
+    KISS script style — justified here since D3 has no built-in KDE, but worth being
+    aware of for CQ-01
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matches #FAF8F1 — not pure white.
+      Chrome: Title "density-rug · javascript · d3 · anyplot.ai" in bold dark ink centered at top; x-axis label "Reaction Time (ms)" and y-axis label "Density" in dark ink; tick labels dark and legible; thin subtle horizontal gridlines at each y-tick; italic "Fast trials" / "Slow trials" annotation labels in dark ink above each peak marker.
+      Data: Single brand-green (#009E73) KDE curve (stroke-width ~3.5) over a bimodal distribution, filled underneath with a vertical green gradient (lighter/more transparent near the peak, denser toward the baseline); two small green peak-marker dots; a dense band of short green rug tick marks along the x-axis baseline showing individual reaction-time observations.
+      Legibility verdict: PASS — all text (title, axis labels, tick labels, peak annotations) is clearly readable against the light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matches #1A1A17 — not pure black.
+      Chrome: Same title, axis labels, and peak annotations now rendered in light/off-white ink, fully legible; tick labels light-colored; gridlines subtle and still visible against the dark surface.
+      Data: Identical brand-green (#009E73) curve, gradient fill, peak markers, and rug marks as the light render — confirmed pixel-for-pixel consistent data coloring; the green reads clearly and with good contrast against the near-black background.
+      Legibility verdict: PASS — no dark-on-dark failures; all title/label/tick/annotation text is clearly visible against the dark background.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (16/20/28/15px); readable in both themes,
+          well-proportioned, title well within width bounds
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text/data collisions; peak labels sit cleanly above their markers
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: KDE line/fill clearly visible; rug ticks appropriate size but cluster
+          into near-solid bands under the two peaks despite jitter
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue chart, good contrast against both backgrounds, no red-green
+          reliance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills the canvas well with balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Reaction Time (ms)'' has units; ''Density'' is the standard unitless
+          KDE axis label'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 in both themes; backgrounds are theme-correct
+          #FAF8F1/#1A1A17; chrome flips correctly'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Vertical gradient fill and named peak annotations show clear intentional
+          polish above a configured default
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped axis, subtle single-axis gridlines, generous whitespace,
+          gradient fill detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Bimodal shape is explicitly called out with labeled peak markers
+          ('Fast trials' / 'Slow trials'), giving the viewer an immediate insight
+          rather than a raw curve
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: KDE curve combined with rug marks, exactly as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Semi-transparent fill under the curve, subtle jittered rug ticks
+          with transparency — all spec notes addressed
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = reaction time, Y = density, full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; no legend needed for single
+          series, direct peak labels serve that role
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Genuinely bimodal distribution from two pooled conditions, demonstrating
+          KDE's ability to reveal shape a histogram would obscure
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Reaction-time cognitive-psychology scenario is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150-700ms range and 320/495ms means are plausible reaction-time values
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Mostly top-to-bottom, but several small helper functions (LCG RNG,
+          Gaussian kernel, KDE estimator, peak finder) are needed since D3 has no
+          built-in KDE
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG (seed 42) for data, separate seeded LCG (seed 7) for
+          jitter
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No imports beyond the global d3 bundle
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or simulated interactivity; complexity matches what a
+          from-scratch KDE requires
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container via the harness contract; no animation/transitions
+          on the static draw'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper d3 scales, axes, and selection.data().join() data-binding
+          pattern throughout
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hand-built SVG linearGradient fill and from-scratch KDE math are
+          d3-idiomatic touches beyond generic charting
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - gradient-fill
+  - alpha-blending
