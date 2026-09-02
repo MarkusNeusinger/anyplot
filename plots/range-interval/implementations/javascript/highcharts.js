@@ -1,7 +1,7 @@
 // anyplot.ai
 // range-interval: Range Interval Chart
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 40/100 | Created: 2026-09-02
+// Quality: 86/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 

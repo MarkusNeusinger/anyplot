@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: range-interval
 created: '2026-09-02T05:24:54Z'
-updated: '2026-09-02T05:32:38Z'
+updated: '2026-09-02T05:44:15Z'
 generated_by: claude-sonnet
 workflow_run: 33594029992
 issue: 3577
@@ -12,65 +12,55 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-int
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/javascript/highcharts/plot-dark.html
-quality_score: 40
+quality_score: 86
 review:
   strengths:
-  - 'Correct Imprint palette: the bar fill is exactly #009E73 in both renders, and
-    all chrome (background #FAF8F1/#1A1A17, title, axis labels, gridlines) is theme-correct
-    in both light and dark.'
-  - Horizontal bar orientation is the right call for the long category labels ("Director
-    of Engineering", "VP of Engineering"), and categories are sorted by seniority/midpoint
-    as the spec's Notes suggest.
-  - In-bar data labels ("$38K – $52K", etc.) are a nice redundant encoding of the
-    intended range, with label color swapped between white (light theme) and near-black
-    (dark theme) to stay readable against the green fill in both themes.
-  - Clean, deterministic, single-file KISS code; correct mandated title format; y-axis
-    has descriptive units and a $/K tick formatter.
+  - Solves the missing-columnrange constraint (highcharts-more not loaded) with an
+    invisible 'floor' series stacked under a visible 'span' series, landing each bar
+    exactly on [min, max] — documented clearly in code comments including the reverse-stacking-order
+    gotcha.
+  - Data labels combine engineering precision (formatter looks up original min/max
+    by point index rather than the derived span value) with theme-adaptive contrast
+    (label color = t.pageBg, which is off-white on light and near-black on dark, flipping
+    automatically for legibility on the green fill).
+  - Categories sorted low-to-high by seniority create a clear monotonic salary-progression
+    narrative, and adjacent bands genuinely overlap (e.g. Customer Support $38-52K
+    vs Sales Associate $45-65K), which is realistic for salary bands.
+  - Realistic, neutral, well-scaled business dataset (career-ladder salary ranges)
+    with internally consistent proportions across all 10 roles.
+  - 'Clean theme-adaptive chrome: correct light/dark backgrounds, ink tokens on axis/title,
+    subtle vertical gridlines only, legend and tooltip both intentionally disabled
+    for a single-series chart.'
+  - 'animation: false set at both chart and plotOptions.series level; no network/CDN
+    calls; fully deterministic hard-coded data.'
   weaknesses:
-  - 'CRITICAL: the range bars do not float from min to max — every bar visually starts
-    at $0 instead of at its ''low'' value. Pixel-measurement of plot-light.png (3200x1800)
-    confirms it: all 10 bars'' green fill starts at the exact same x=338px (the $0
-    gridline), and each bar''s rendered WIDTH exactly equals (max-min) rather than
-    spanning from min to max. Example: ''VP of Engineering'' has true range $170K-$240K
-    (a $70K span starting near the right side of the axis) but the rendered bar spans
-    pixel x=338 to x=1122, i.e. visually $0-$70K on the 0-250K axis. Identical bug
-    confirmed in plot-dark.png. The data-label text overlaid on the bar ("$170K –
-    $240K") is numerically correct, but the bar''s actual screen position is not —
-    a reader scanning the x-axis sees each role''s salary floor as $0, which is factually
-    wrong and defeats the entire purpose of a range-interval chart. Root cause: the
-    invisible ''Floor'' series (plotOptions.series.stacking: ''normal'') is not producing
-    the intended cumulative offset for the visible ''Base salary range'' series —
-    it renders as if stacked on 0 regardless of the Floor''s value. Suspect the ''low''/''high''
-    keys on the visible series'' data points (which are reserved property names for
-    range-type series) are interfering with Highcharts'' stack-value resolution even
-    in a plain column/bar series. Fix: drop the custom low/high keys from the range
-    series'' data (keep only ''y'': high-low), derive the data-label text separately
-    from the original minSalary/maxSalary arrays via a dataLabels.formatter closure
-    over the index, and verify the rendered bar''s left edge now lands at the pixel
-    position corresponding to each row''s ''low'' value before merging.'
-  - 'Direct consequence of the bug above: because bars only ever draw their (max-min)
-    delta anchored at $0 while the axis is scaled to the full 0-250K absolute range,
-    roughly 65-70% of the plot''s horizontal extent is dead whitespace — the longest
-    bar (VP of Engineering) reaches only ~35% of the axis width. This should self-resolve
-    once the floating-bar positioning is fixed.'
-  - 'Optional per the spec''s Notes: consider adding a marker or tick at each bar''s
-    min/max endpoint for extra emphasis — not required, but would strengthen the ''range''
-    reading once positioning is fixed.'
+  - Single flat green hue with no additional visual variation (gradient, alternating
+    shade, or accent) across all 10 bars — clean but plain; a subtle emphasis on the
+    widest or narrowest range would strengthen the data-storytelling score.
+  - Title occupies only ~32% of canvas width at 22px — comfortably legible but underuses
+    the guideline's 50-70% range; a slightly larger title fontsize (~24-26px) would
+    balance better against the generously sized bars and labels.
+  - Distinctive-feature usage is solid (theme-flipped inline data labels, invisible-floor
+    stacking hack) but nothing exploits a feature that's uniquely Highcharts (the
+    stacking workaround is itself a constraint workaround, not a showcase feature).
+  - The spec's optional suggestion to mark min/max endpoints (e.g. small end markers)
+    isn't used — the inline dataLabels substitute effectively, but an endpoint marker
+    would reinforce the exact bound visually.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct, not pure white.
-      Chrome: Title "range-interval · javascript · highcharts · anyplot.ai" in bold dark ink, clearly visible. Y-axis category labels (10 job roles, longest "Director of Engineering") in dark gray, fully legible. X-axis "Annual base salary (US$ thousands)" title and $0K-$250K tick labels in dark gray, legible. Subtle vertical gridlines every $25K.
-      Data: 10 horizontal green (#009E73) bars, one per role, each with a centered white data label reading "$MinK – $MaxK". BUG: pixel-measurement shows every bar starts at the same left edge (the $0 gridline) instead of starting at its "low" value — the bar's rendered width equals (max-min) but its position does not reflect the min value at all, so e.g. the "VP of Engineering" bar visually reads as spanning $0-$70K on the axis instead of the labeled $170K-$240K. The text labels are numerically correct; the bar geometry is not.
-      Legibility verdict: PASS (all text is readable), but the chart's core visual encoding (bar position = range) is broken — see weaknesses.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "range-interval · javascript · highcharts · anyplot.ai" in bold dark ink at top center; y-axis shows 10 role categories (Customer Support through VP of Engineering) in dark ink, sorted low-to-high seniority; x-axis shows "Annual base salary (US$ thousands)" with $-formatted tick labels ($0K-$250K) in soft dark gray; thin vertical gridlines are subtle and visible.
+      Data: All 10 horizontal bars are solid brand green (#009E73), each spanning its role's min-max salary range, with white inline labels ("$38K - $52K" etc.) centered inside each bar.
+      Legibility verdict: PASS — all title, axis, tick, and data-label text is clearly readable against the light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct, not pure black.
-      Chrome: Same title in bold light/cream ink, clearly visible against the dark background. Y-axis role labels and X-axis title/ticks in light gray, all legible — no dark-on-dark failures observed.
-      Data: Same 10 green (#009E73) bars, identical hue and identical (buggy) positioning/width to the light render — confirms data colors are unchanged between themes. Data labels use near-black text on the green fill (color flipped from white in light mode), which remains readable against the mid-luminance green.
-      Legibility verdict: PASS (all text readable in dark mode), same underlying bar-positioning bug present as in the light render.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Same title now in light/white ink; y-axis category labels and x-axis tick labels rendered in light gray; gridlines remain subtle and visible on the dark surface.
+      Data: Bars are the identical brand green (#009E73) as the light render — confirmed no hue shift. Inline data-label text switches to near-black (the page-background token inverted for theme), which reads clearly against the mid-tone green fill.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome text is light-colored against the dark background, and the in-bar labels remain high-contrast against the green.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -78,48 +68,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Explicit font sizes (title 22px, axis titles 16px, ticks 14px, data
-          labels 13px); readable in both themes.
+        comment: All font sizes explicit (title 22px, axis titles 16px, ticks/labels
+          14px, data labels 13px); fully readable in both themes; title width slightly
+          under the 50-70% guideline (~32%) at this fontsize
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; in-bar labels fit cleanly.
+        comment: No text collides with other text or data in either render, including
+          the narrowest bar (Customer Support)
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bars visible and well-spaced, but their length is compressed by the
-          positioning bug relative to the 0-250K axis.
+        comment: Bars are clearly visible and well-sized for 10 categories; smallest
+          range bar is slightly tight around its inline label
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-series green, good contrast in both themes.
+        comment: Single-hue green with theme-flipped label ink gives strong contrast
+          in both themes; no red-green dependency
       - id: VQ-05
         name: Layout & Canvas
-        score: 1
+        score: 4
         max: 4
-        passed: false
-        comment: Longest bar reaches only ~35% of the axis width; ~65-70% of the plot
-          area is dead whitespace, a direct symptom of the range-positioning bug.
+        passed: true
+        comment: Balanced margins, nothing cut off, plot area uses a healthy share
+          of the canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Annual base salary (US$ thousands)" with $/K tick formatting.'
+        comment: X-axis has descriptive label with units (US$ thousands); y-axis categories
+          are self-descriptive role names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; theme-correct chrome in both renders.'
+        comment: 'First (only) series is #009E73 (Imprint brand green), identical
+          across both renders; backgrounds and chrome are theme-correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -127,55 +122,57 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Clean in-bar labeling above default styling, but undermined by the
-          positioning bug.
+        comment: Clean, intentional single-hue treatment with rounded bar ends and
+          theme-flipped labels — above a bare default but short of a fully custom,
+          multi-element design system
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Subtle grid, no legend clutter, but excess whitespace from the layout
-          bug.
+        comment: Subtle single-axis gridlines, no chrome clutter, generous vertical
+          whitespace between categories; borderWidth 0 and rounded corners show attention
+          to detail
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Seniority sort plus in-bar labels give a visual hierarchy, though
-          the mis-positioned bars tell the wrong story.
+        comment: Sorting by seniority creates a monotonic salary-growth narrative,
+          but there is no additional emphasis (color contrast, size variation, annotation)
+          beyond the ordering itself
     spec_compliance:
-      score: 3
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 0
+        score: 5
         max: 5
-        passed: false
-        comment: Renders as a delta-magnitude bar chart anchored at 0, not a floating
-          min-to-max range/interval chart — the defining feature of the spec fails
-          to render.
+        passed: true
+        comment: Correctly renders each category's min-max span as a filled horizontal
+          bar, matching the range-interval definition
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 4
         max: 4
-        passed: false
-        comment: Core required feature ('show the full span between two values') is
-          not visually present — only the delta is drawn, anchored at $0.
+        passed: true
+        comment: Horizontal orientation for long role labels, logical (seniority)
+          sort order, and full min-max span all present per the spec notes
       - id: SC-03
         name: Data Mapping
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: The min ('low') value is not visible in the bar's position at all
-          — pixel-measured, every bar starts at the $0 gridline regardless of its
-          low value.
+        passed: true
+        comment: Value axis (0-250K) and category axis correctly mapped, all 10 categories
+          and full ranges visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; single-series so legend is appropriately omitted.
+        comment: Title matches the mandated format exactly; legend correctly omitted
+          for a single-series chart
     data_quality:
       score: 14
       max: 15
@@ -185,21 +182,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Range widths vary meaningfully across 10 roles, from $14K to $70K
-          spans.
+        comment: Shows varying range widths and genuine overlap between adjacent bands
+          across 10 categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral salary-band scenario across a job ladder.
+        comment: Real, neutral business scenario (career-ladder salary bands)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Underlying min/max salary values and their progression by seniority
-          are realistic.
+        comment: Values and progression are factually plausible for US base-salary
+          bands by seniority
     code_quality:
       score: 10
       max: 10
@@ -209,57 +206,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes, linear structure.
+        comment: Linear imports/data/chart structure, no classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic data.
+        comment: Fully deterministic hard-coded arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No extraneous imports; uses only the provided globals.
+        comment: Uses only the global Highcharts/ANYPLOT_TOKENS contract, nothing
+          extraneous
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Reasonable complexity for the workaround attempted; no fake UI/functionality.
+        comment: The stacking workaround is well-reasoned and documented, no fake
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct mount-node contract, animation disabled, current API.
+        comment: Correct mount-node contract, no width/height overrides, animation
+          disabled at both levels
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct high-level Highcharts.chart/plotOptions usage, but the stacking
-          workaround is misconfigured.
+        passed: true
+        comment: Sound understanding of Highcharts' stacking model and series-array
+          render order to work around the missing highcharts-more columnrange type
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Attempts a Highcharts-specific stacked-floor technique to emulate
-          columnrange (not available in core), but the technique doesn't work as implemented.
-  verdict: REJECTED
+        passed: true
+        comment: Custom dataLabels formatter with per-point lookup and theme-flipped
+          label ink; the invisible-floor technique is clever but is a workaround rather
+          than a native distinctive feature
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - stacked-floor-range
-  - data-labels
+  - layer-composition
+  - stacked-bars
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
