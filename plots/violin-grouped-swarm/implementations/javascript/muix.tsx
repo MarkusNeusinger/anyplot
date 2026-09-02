@@ -126,6 +126,23 @@ function layoutSwarmForCell(values, yScale, markerRadius, maxHalfWidth) {
   return placed;
 }
 
+// A small labeled bracket that calls out the Code Review group's narrowing
+// Junior/Senior gap — the standout finding in the data — rendered in the
+// padding zone above Y_MAX (below `top`, above where any KDE curve or swarm
+// point can reach) so it never collides with the marks it's annotating.
+function GapAnnotation({ x1, x2, y, label }) {
+  return (
+    <g>
+      <line x1={x1} x2={x2} y1={y} y2={y} stroke={t.inkSoft} strokeWidth={1} />
+      <line x1={x1} x2={x1} y1={y} y2={y + 5} stroke={t.inkSoft} strokeWidth={1} />
+      <line x1={x2} x2={x2} y1={y} y2={y + 5} stroke={t.inkSoft} strokeWidth={1} />
+      <text x={(x1 + x2) / 2} y={y - 6} textAnchor="middle" fontSize={11} fontStyle="italic" fill={t.inkSoft}>
+        {label}
+      </text>
+    </g>
+  );
+}
+
 // --- Grouped violins (mirrored KDE, dodged by group within each category's
 // band) with swarm points overlaid, matching each violin's hue. A custom SVG
 // layer positioned via the chart's own band/linear scale hooks — the
@@ -134,12 +151,13 @@ function layoutSwarmForCell(values, yScale, markerRadius, maxHalfWidth) {
 function GroupedViolinSwarm() {
   const xScale = useXScale();
   const yScale = useYScale();
+  const { top } = useDrawingArea();
   const bandwidth = xScale.bandwidth();
   const groupWidth = bandwidth * 0.82;
   const slotWidth = groupWidth / GROUPS.length;
   const violinHalfWidth = slotWidth * 0.42;
-  const swarmMaxHalfWidth = slotWidth * 0.36;
-  const markerRadius = 4.5;
+  const swarmMaxHalfWidth = slotWidth * 0.4;
+  const markerRadius = 4;
 
   return (
     <g>
@@ -147,44 +165,60 @@ function GroupedViolinSwarm() {
         const bandStart = xScale(category) ?? 0;
         const groupStart = bandStart + (bandwidth - groupWidth) / 2;
 
-        return GROUPS.map((group, groupIndex) => {
-          const cell = getCell(category, group);
-          const color = t.palette[groupIndex % t.palette.length];
-          const cx = groupStart + slotWidth * (groupIndex + 0.5);
+        const groupData = GROUPS.map((group, groupIndex) => ({
+          group,
+          groupIndex,
+          cell: getCell(category, group),
+          color: t.palette[groupIndex % t.palette.length],
+          cx: groupStart + slotWidth * (groupIndex + 0.5),
+        }));
 
-          const leftSide = cell.grid.map((gy, k) => `${cx - cell.density[k] * violinHalfWidth},${yScale(gy)}`);
-          const rightSide = cell.grid.map((gy, k) => `${cx + cell.density[k] * violinHalfWidth},${yScale(gy)}`).reverse();
-          const violinPath = `M${leftSide.join(" L")} L${rightSide.join(" L")} Z`;
+        return (
+          <g key={category}>
+            {groupData.map(({ group, cell, color, cx }) => {
+              const leftSide = cell.grid.map((gy, k) => `${cx - cell.density[k] * violinHalfWidth},${yScale(gy)}`);
+              const rightSide = cell.grid.map((gy, k) => `${cx + cell.density[k] * violinHalfWidth},${yScale(gy)}`).reverse();
+              const violinPath = `M${leftSide.join(" L")} L${rightSide.join(" L")} Z`;
 
-          const swarmPoints = layoutSwarmForCell(cell.values, yScale, markerRadius, swarmMaxHalfWidth);
+              const swarmPoints = layoutSwarmForCell(cell.values, yScale, markerRadius, swarmMaxHalfWidth);
 
-          return (
-            <g key={`${category}-${group}`}>
-              <path d={violinPath} fill={color} fillOpacity={0.45} stroke={color} strokeWidth={1.75} strokeLinejoin="round" />
-              <line
-                x1={cx - violinHalfWidth * 0.8}
-                x2={cx + violinHalfWidth * 0.8}
-                y1={yScale(cell.median)}
-                y2={yScale(cell.median)}
-                stroke={t.ink}
-                strokeWidth={1.75}
-                strokeOpacity={0.6}
+              return (
+                <g key={`${category}-${group}`}>
+                  <path d={violinPath} fill={color} fillOpacity={0.45} stroke={color} strokeWidth={1.75} strokeLinejoin="round" />
+                  <line
+                    x1={cx - violinHalfWidth * 0.8}
+                    x2={cx + violinHalfWidth * 0.8}
+                    y1={yScale(cell.median)}
+                    y2={yScale(cell.median)}
+                    stroke={t.ink}
+                    strokeWidth={2.1}
+                    strokeOpacity={0.85}
+                  />
+                  {swarmPoints.map((p, i) => (
+                    <circle
+                      key={i}
+                      cx={cx + p.offsetPx}
+                      cy={p.y}
+                      r={markerRadius}
+                      fill={color}
+                      fillOpacity={0.85}
+                      stroke={t.pageBg}
+                      strokeWidth={0.75}
+                    />
+                  ))}
+                </g>
+              );
+            })}
+            {category === "Code Review" && (
+              <GapAnnotation
+                x1={groupData[0].cx}
+                x2={groupData[1].cx}
+                y={top + 20}
+                label="Junior/Senior gap narrows"
               />
-              {swarmPoints.map((p, i) => (
-                <circle
-                  key={i}
-                  cx={cx + p.offsetPx}
-                  cy={p.y}
-                  r={markerRadius}
-                  fill={color}
-                  fillOpacity={0.85}
-                  stroke={t.pageBg}
-                  strokeWidth={0.75}
-                />
-              ))}
-            </g>
-          );
-        });
+            )}
+          </g>
+        );
       })}
     </g>
   );
@@ -217,7 +251,7 @@ export default function Chart() {
   return (
     <div style={{ width: W, height: H, display: "flex", flexDirection: "column" }}>
       <div style={{ height: TITLE_HEIGHT, display: "flex", alignItems: "center", paddingLeft: 8 }}>
-        <span style={{ fontSize: 22, fontWeight: 500, color: t.ink }}>{TITLE}</span>
+        <span style={{ fontSize: 36, fontWeight: 500, color: t.ink }}>{TITLE}</span>
       </div>
       <div style={{ height: LEGEND_HEIGHT, display: "flex", alignItems: "center", gap: 24, paddingLeft: 8 }}>
         {GROUPS.map((group, i) => (
@@ -233,7 +267,7 @@ export default function Chart() {
         height={chartHeight}
         series={[]}
         skipAnimation
-        margin={{ top: 20, right: 50, bottom: 84, left: 110 }}
+        margin={{ top: 34, right: 50, bottom: 84, left: 110 }}
         xAxis={[
           {
             id: "category",
