@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: indicator-ema
 created: '2026-09-02T01:44:20Z'
-updated: '2026-09-02T02:08:16Z'
+updated: '2026-09-02T02:19:43Z'
 generated_by: claude-sonnet
 workflow_run: 33580011320
 issue: 3652
@@ -12,140 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 88
 review:
   strengths:
-  - 'Source code (post-fix commit afa14657f) implements a semantically sound golden-cross
-    / death-cross visualization: bullish crossovers get a green up-triangle from IMPRINT_PALETTE[1],
-    bearish get a red down-triangle from IMPRINT_PALETTE[5] — a well-justified semantic-exception
-    use of the palette per the finance convention (profit/up=green, loss/down=red).'
-  - Trend-regime shading via band!() between the two EMA lines, tinted by prevailing
-    bullish/bearish direction at 10% alpha, adds real data storytelling beyond the
-    spec's minimum ask.
-  - EMA math is correct (alpha = 2/(period+1), recursive formula) and price line is
-    deliberately drawn thicker (3.0) than the EMA overlays (2.0), matching the spec's
-    explicit guidance.
-  - Full theme-adaptive chrome (INK/INK_SOFT/PAGE_BG), L-shaped spines, subtle y-only
-    gridlines, transparent frameless legend — clean, idiomatic Makie styling.
-  - Clean KISS script structure, Random.seed!(42), only used imports, correct save
-    pattern (plot-$(THEME).png, px_per_unit=2 on a 1600x900 Figure => exact 3200x1800
-    canvas).
+  - Render now correctly reflects the current source — band shading and the golden-cross/death-cross
+    triangle markers, absent from the stale Attempt 2 render, are both fully visible
+    in both themes
+  - Trend-regime band!() shading between the two EMA lines (green tint when EMA(12)
+    > EMA(50), red tint otherwise) gives the chart a genuine bullish/bearish narrative
+    at a glance, directly serving the spec's golden/death cross storytelling goal
+  - 'Crossover markers are semantically color- and shape-coded: green up-triangle
+    for golden cross, red down-triangle for death cross, each with a theme-matched
+    stroke so they stay crisp on both backgrounds'
+  - Correct EMA math (alpha = 2/(n+1) recursion) for both 12- and 50-period lines,
+    with the close price line deliberately drawn thicker (3.0) than the EMA overlays
+    (2.0) per the spec's guidance
+  - 'Full theme-adaptive chrome: L-shaped spines, subtle Y-only gridline via RGBAf
+    alpha, frameless transparent legend, all ink tokens correctly flipped between
+    light and dark with pixel-identical data colors'
+  - Clean KISS structure, Random.seed!(42), only used imports, and the canonical save
+    pattern (px_per_unit=2 on a 1600×900 Figure) lands exactly on the 3200×1800 canonical
+    canvas
   weaknesses:
-  - 'CRITICAL — PIPELINE FAILURE, not a code defect: plot-light.png and plot-dark.png
-    are byte-for-byte consistent with the PRIOR commit caf95cf9a (titlesize=20, a
-    single black `:circle` scatter labeled "Crossover"), not the current committed
-    source afa14657f (titlesize=24, band!() trend-regime shading, split green `:utriangle`
-    "Golden cross" / red `:dtriangle` "Death cross" markers). No band shading appears
-    anywhere in either render, and the legend still shows one generic "Crossover"
-    entry. The render step must be re-run against the current makie.jl before this
-    can be scored on its actual visual output — do not edit the .jl source in response
-    to this finding, it already contains the fix.'
-  - 'SC-04 / VQ-07 cannot be fully certified this round: legend-label correctness
-    ("Golden cross" / "Death cross") and palette compliance for the crossover markers
-    depend on the stale artifact and must be re-verified once a correct render is
-    available.'
-  - 'Minor, independent of the stale-render issue: consider whether 140 evenly-index-spaced
-    ''trading days'' mapped to irregular calendar dates (1.4 days apart) versus true
-    weekday-only trading dates would read as slightly more realistic on the x-axis,
-    though this is not a spec requirement.'
+  - Title still reads far smaller than the style guide's 50-70% width target — measured
+    pixel bounding box is only ~883px of the 3200px canvas (~28%) in both renders.
+    The Attempt 1 review flagged this same issue at ~23% and the repair only nudged
+    titlesize 20->24, which wasn't enough of a jump; titlesize likely needs to go
+    to ~36-40 to reach the target proportion.
+  - The three earliest crossover markers (two golden, one death cross within the first
+    ~10 trading days) sit tightly clustered and their triangle bases touch/overlap
+    slightly, reading as visual noise before the trend story develops — spacing them
+    apart or using slightly smaller markers in dense clusters would help.
+  - Data context is fully anonymous ('Closing Price (USD)' with no named instrument
+    or ticker) — still plausible and neutral, but a touch more concrete framing (e.g.
+    a fictitious ticker) would strengthen realism slightly.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1.
-      Chrome: Title "indicator-ema · julia · makie · anyplot.ai" centered top, dark ink, readable. Axis labels "Trading Date" / "Closing Price (USD)" readable. Tick labels (dates, prices) legible in soft ink. Legend top-left with 4 entries: "Close price" (green line), "EMA (12)" (lavender line), "EMA (50)" (blue line), "Crossover" (single black circle marker).
-      Data: Green close-price line, lavender EMA(12), blue EMA(50), plain black circular "Crossover" markers at sign-change points. No shaded band between the EMA lines.
-      Legibility verdict: PASS (all text readable against the light background).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Bold dark-ink title "indicator-ema · julia · makie · anyplot.ai" centered at top (fully visible, not clipped, but measured at only ~28% of canvas width — smaller than the 50-70% style-guide target). X-axis "Trading Date" and Y-axis "Closing Price (USD)" labels in dark ink; date/price tick labels in a softer grey. Subtle Y-only gridlines. Frameless, transparent-background legend (top-left) lists Close price / EMA (12) / EMA (50) / Golden cross / Death cross, not overlapping any data. All text is clearly readable against the light background.
+      Data: Close price in brand green (#009E73, thickest line), EMA (12) in lavender, EMA (50) in blue (both thinner). A soft green-tinted band fills the area between the two EMAs during bullish stretches (EMA12 > EMA50) and a soft red-tinted band during bearish stretches. Green up-triangles mark golden crosses, red down-triangles mark death crosses, each with a light stroke outline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17.
-      Chrome: Same title/axis/tick structure, now in light ink (#F0EFE8 / #B8B7B0), all readable. Legend "Crossover" marker rendered as a white/off-white circle (INK token flipped correctly for dark theme).
-      Data: Same green/lavender/blue data colors as the light render (identical, as required) — only chrome and the neutral crossover-marker color flipped.
-      Legibility verdict: PASS (no dark-on-dark or light-on-light failures observed).
-
-    CRITICAL CAVEAT — these renders do NOT correspond to the current implementation source:
-      The current plots/indicator-ema/implementations/julia/makie.jl (post-fix commit afa14657f, "address review feedback for indicator-ema") sets titlesize=24, adds a `band!()` trend-regime shading layer between the two EMA lines, and replaces the single black ":circle" "Crossover" scatter with two separate series — a green ":utriangle" "Golden cross" (IMPRINT_PALETTE[1]) and a red ":dtriangle" "Death cross" (IMPRINT_PALETTE[5]).
-      None of that appears in plot-light.png / plot-dark.png: no band shading is visible anywhere between the EMA lines, the legend still shows a single generic "Crossover" entry with a plain black/white circle, and the title reads as the smaller pre-fix size.
-      A byte-for-byte comparison confirms the rendered images match the PRIOR commit caf95cf9a (the original, pre-review-feedback implementation) exactly — same titlesize=20, same `color = INK, markersize = 14, marker = :circle, label = "Crossover"` scatter call — not the current committed source.
-      This means the render step that produced these PNGs ran against a stale/incorrect checkout of the script. This is a pipeline artifact-generation bug, not a defect in the current implementation code. Scoring Visual Quality / Design Excellence against these images would evaluate the wrong version of the chart and risks approving/merging a preview image that doesn't match the code in the repository.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same layout and content as the light render, with all chrome (title, axis labels, tick labels, legend text, gridlines) flipped to light/off-white and soft-grey tokens. Title again measured at the same ~28% canvas-width fraction as the light render (833px vs 883px — effectively identical proportion). No dark-on-dark failures — every label is clearly legible against the near-black surface.
+      Data: Close price (green), EMA (12) (lavender), EMA (50) (blue), band tints, and golden/death-cross triangle markers are pixel-identical in hue to the light render — only chrome flipped, as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Readable in the (stale) render shown; current source raised titlesize
-          20->24 which is unverified against an actual render
+        comment: All sizes explicit and readable in both themes, but the mandated
+          title measures only ~28% of canvas width against the 50-70% style-guide
+          target — same issue flagged in Attempt 1, only partially addressed by the
+          titlesize 20->24 bump
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No overlap in stale render; unverified with the new band!() layer
-          added in current source
+        comment: No text/data collisions, but the three earliest crossover triangles
+          cluster tightly with bases touching
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Stale render's generic circle marker is visible; current source's
-          triangle golden/death-cross markers are unverified
+        comment: Line weights and marker sizes well matched to ~140-point density;
+          band shading is subtle and doesn't obscure lines
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast in both themes
+        comment: Golden/death cross use both color AND shape (up/down triangle) redundancy,
+          not color alone
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Balanced layout in stale render, unverified against current source's
-          added band layer
+        comment: Canvas exactly 3200x1800, generous whitespace, but undersized title
+          weakens the layout hierarchy
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Units present: ''Closing Price (USD)'''
+        comment: Units present ("Closing Price (USD)"), descriptive x-axis label
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Stale render's crossover marker used INK not the palette; current
-          source's semantic green/red golden/death-cross markers are unverified pending
-          re-render
+        passed: true
+        comment: Correct Imprint order, theme-correct chrome, identical data colors
+          across themes, band tints derived from Imprint palette entries
     design_excellence:
-      score: 10
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured default in stale render; current source's trend-regime
-          band shading is a stronger design choice but unverified
+        comment: Band shading and semantic crossover markers show real polish above
+          default, but not yet publication-tier
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Spines/grid refined; band!() alpha-shading addition unverified
+        passed: true
+        comment: L-shaped spines, subtle single-axis grid, frameless legend, generous
+          whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Stale render's single generic crossover dot tells little story; current
-          source's bullish/bearish band tint + colored golden/death-cross markers
-          would score higher once verified
+        passed: true
+        comment: Trend-regime band tinting plus directional crossover markers now
+          clearly tell the golden/death cross story the spec calls for
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,49 +147,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EMA overlay line chart
+        comment: Correct EMA indicator overlay chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price line prominent, distinct EMA colors, EMA thinner than price,
-          crossovers highlighted, periods labeled
+        comment: Price + 2 EMAs, correct relative line weights, crossover highlighting,
+          per-period legend labels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x, price on y, all data visible
+        comment: X=date, Y=price, full range shown
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct; legend label correctness for Golden/Death cross
-          unverified due to stale render
+        passed: true
+        comment: Title format matches exactly; legend distinguishes Golden cross /
+          Death cross
     data_quality:
       score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Multiple uptrends, downtrends, and crossovers in both directions
+        comment: Uptrend, downtrend, multiple crossovers, and regime shading all present
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Neutral, realistic stock-price scenario
+        comment: Plausible neutral stock scenario; fully anonymous instrument keeps
+          it slightly generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible price range and correct EMA formula
+        comment: Correct EMA math, realistic price/date ranges
     code_quality:
       score: 10
       max: 10
@@ -205,7 +200,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes
+        comment: No functions/classes, flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,21 +212,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Dates all used
+        comment: CairoMakie, Colors, Random, Dates — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity
+        comment: Appropriate complexity, no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-$(THEME).png with px_per_unit=2 on a 1600x900 Figure
+        comment: save("plot-$(THEME).png", fig; px_per_unit=2)
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -239,15 +234,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Idiomatic Axis kwargs, band!, axislegend, marker enums
+        comment: Proper Figure/Axis/lines!/scatter!/band!/axislegend usage, theme-adaptive
+          RGBAf gridcolor
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: band!() trend-regime shading combined with dual-marker crossover
-          semantics is a distinctive Makie-grammar composition
-  verdict: REJECTED
+        comment: band!() trend-regime shading is a genuinely Makie-distinctive touch
+          beyond basic scatter/lines
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -256,9 +252,8 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - cumulative-sum
-  - rolling-window
+  - time-series
   styling:
   - alpha-blending
   - edge-highlighting
