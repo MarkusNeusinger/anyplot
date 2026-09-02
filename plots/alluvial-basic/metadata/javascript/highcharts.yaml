@@ -1,0 +1,293 @@
+library: highcharts
+language: javascript
+specification_id: alluvial-basic
+created: '2026-09-02T11:13:26Z'
+updated: '2026-09-02T11:33:06Z'
+generated_by: claude-sonnet
+workflow_run: 33622661945
+issue: 1878
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/alluvial-basic/javascript/highcharts/plot-dark.html
+quality_score: 92
+review:
+  strengths:
+  - 'The two attempt-1 defects are both fully resolved: the Q2/Q3 column-header labels
+    now sit with a clear gap above the subtitle in both renders, and the legend now
+    iterates STACK_ORDER (Customer, Trial, Lead, Churned) so swatch order matches
+    the visual top-to-bottom stacking'
+  - The previously near-invisible Q3→Q4 Lead flow (value=10) now renders as a clearly
+    distinguishable lavender ribbon in both themes
+  - 'Correct alluvial semantics: strict per-column vertical stacking (not a free-form
+    Sankey layout) with band widths and node heights exactly proportional to flow/value
+    magnitude, and column totals derived from the flows so the diagram can never drift
+    out of balance with its own data'
+  - 'Sound engineering workaround for the missing sankey module: hand-draws the diagram
+    with chart.renderer primitives (path/rect/text) rather than reaching for another
+    library or faking the feature, with the rationale documented in code comments'
+  - 'Well-reasoned semantic color mapping consistent with the style guide''s status/sentiment
+    semantic exception: Customer (desired outcome) → brand green #009E73, Churned
+    (loss) → semantic-anchor red, identical across light/dark renders'
+  - Comprehensive, realistic SaaS-funnel data covering conversion, retention, decline,
+    and an absorbing Churned→Churned state across four quarters
+  - Theme-adaptive chrome correctly implemented in both renders — no dark-on-dark
+    or light-on-light failures, data colors pixel-identical between themes
+  weaknesses:
+  - 'Where many semi-transparent flow ribbons cross mid-diagram (e.g. the Q2-Q3 and
+    Q3-Q4 transitions), overlapping fill-opacity: 0.45 bands blend into somewhat muddy
+    blue-gray/purple blobs, slightly reducing the crispness of individual flow tracing
+    in the busiest crossing areas — a very minor polish item, not a functional defect'
+  - No explicit annotation or callout highlights the single most important story beat
+    (e.g. the 43% Q1-cohort-to-Customer conversion by Q4); the color hierarchy alone
+    carries the narrative, which is adequate but not maximal data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 (not pure white, not dark).
+      Chrome: Bold dark title "alluvial-basic · javascript · highcharts · anyplot.ai" and the gray
+        subtitle "SaaS trial funnel · 1,000-lead cohort tracked across four quarters" are clearly
+        readable and now sit with a comfortable vertical gap above the Q1/Q2/Q3/Q4 column-header
+        labels (the attempt-1 defect where "Q2"/"Q3" collided with the subtitle text is fixed —
+        verified via a cropped close-up of the title/subtitle/header region). Endpoint labels
+        ("Lead · 1,000" at the left; "Customer · 430", "Trial · 100", "Lead · 10", "Churned · 460"
+        at the right) and the bottom legend (Customer, Trial, Lead, Churned — now ordered to match
+        the visual top-to-bottom stack) are all fully legible with generous margins; nothing is
+        clipped at any canvas edge.
+      Data: Four vertically-stacked node columns (Q1-Q4) connected by curved, semi-transparent flow
+        ribbons. First/primary categorical color is the brand green #009E73 assigned to "Customer"
+        (the desired outcome), with Trial in blue (#4467A3), Lead in lavender (#C475FD), and Churned
+        in matte red (#AE3030) — a documented semantic-exception mapping (outcome=green, loss=red)
+        consistent with the style guide, not a violation of "first series = brand green" since
+        Customer functions as this diagram's primary/terminal category. The previously
+        near-invisible Q3→Q4 "Lead" flow (value=10) is now a clearly visible thin lavender ribbon
+        in a close-up crop, no longer a hairline.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, consistent with #1A1A17 (not pure black, not light).
+      Chrome: Title and column headers render in light/white ink, subtitle in muted light-gray —
+        fully legible against the dark surface. The same title/subtitle/header vertical-gap fix
+        confirmed in the light render reproduces identically here (checked via the same crop
+        region). No dark-on-dark failures anywhere — all tick-free chrome (there are no
+        axes/ticks in this hand-drawn diagram) and all text elements are clearly visible.
+      Data: Data colors are pixel-identical to the light render (Customer green, Trial blue, Lead
+        lavender, Churned red) — only chrome (background, text) flips between themes, as required.
+        The Q3→Q4 Lead·10 flow is equally visible here as a distinct lavender ribbon against the
+        surrounding blue/green/red bands.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All title/subtitle/header/endpoint/legend text explicitly sized (14-22px)
+          and clearly readable in both themes; no light-on-light or dark-on-dark failures
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Attempt-1 Q2/Q3-header-vs-subtitle collision is fixed — clear vertical
+          gap confirmed in both renders via cropped close-up; no other collisions
+          found
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All flow bands are visible; the previously near-invisible Q3→Q4 Lead
+          (value=10) hairline now renders as a clearly distinguishable ribbon
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Red/green used for Churned/Customer but never as sole signal — position,
+          endpoint labels, and legend text all reinforce category identity
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800 exact); generous margins, nothing clipped
+          or overflowing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (hand-drawn diagram), but column headers and
+          endpoint/legend labels fully substitute and are descriptive with units (counts)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Imprint palette used throughout; Customer=palette[0] #009E73 brand
+          green under the documented semantic-exception rule (outcome/status color
+          association); backgrounds are exactly #FAF8F1 / #1A1A17; data colors identical
+          across themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Fully custom hand-built diagram with intentional semantic color hierarchy;
+          minor muddiness where many semi-transparent bands cross in the busiest transition
+          areas
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: No grid/spines/axes clutter, rounded node corners, generous whitespace
+          and margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend now matches the visual stack order (fixed from attempt 1),
+          color hierarchy (green=outcome, red=loss) guides the eye toward the funnel's
+          success/failure split; no explicit annotation calling out the headline conversion
+          number
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Genuine alluvial diagram: strict per-column vertical ordering with
+          proportional flow bands between fixed time-point stages, not a free-form
+          Sankey'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Time points as columns, category nodes, flow-proportional band widths,
+          transparency on overlapping flows, consistent per-category colors, column
+          and endpoint labels all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 4 time points (Q1-Q4), 4 categories, node heights and flow widths
+          exactly proportional to value/flow magnitude, totals conserved
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'alluvial-basic · javascript · highcharts · anyplot.ai';
+          legend labels match category names and now visually match stack order
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers conversion (Lead→Trial→Customer), retention (Customer→Customer),
+          decline (any→Churned), and an absorbing Churned→Churned state across all
+          3 transitions
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: SaaS trial funnel with plausible, neutral business context and non-controversial
+          data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 1,000-lead cohort with sensible quarter-over-quarter magnitudes (200-500
+          range transitions, no degenerate near-zero-everywhere data)
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function (drawAlluvial), justified by the Highcharts load-event
+          pattern and the layout complexity of a hand-drawn diagram
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic in-memory data, no RNG
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No import/require; only the Highcharts global, per library rules
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for a native chart.renderer-based diagram;
+          no fake UI or simulated interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Renders into the #container mount per the harness contract; animation
+          disabled; no bare plot.png'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Falls back to Highcharts' own SVGRenderer/box-model primitives, the
+          correct idiomatic path given the sankey add-on module isn't vendored in
+          the core bundle
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Directly leverages chart.renderer (path/rect/text) and the chart
+          load event for a fully custom diagram, a genuine Highcharts-specific technique
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - bezier-curves
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
