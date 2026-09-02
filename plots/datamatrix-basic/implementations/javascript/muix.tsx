@@ -1,3 +1,7 @@
+// anyplot.ai
+// datamatrix-basic: Basic Data Matrix 2D Barcode
+// Library: muix 7.29.1 | JavaScript 22.23.2
+// Quality: 84/100 | Created: 2026-09-02
 //# anyplot-orientation: square
 // anyplot.ai
 // datamatrix-basic: Basic Data Matrix 2D Barcode
