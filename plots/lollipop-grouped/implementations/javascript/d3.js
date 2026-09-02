@@ -13,11 +13,14 @@ const ih = height - margin.top - margin.bottom;
 // Model benchmark: three metrics per algorithm, sorted ascending by mean score
 // so scaleBand's range([ih,0]) puts the strongest model at the top.
 const metrics = ["Accuracy", "Precision", "Recall"];
+// Gradient Boosting trades precision for recall (a realistic classifier
+// trade-off), breaking the otherwise strict Accuracy > Precision > Recall
+// ordering shared by the other four models.
 const models = [
   { name: "SVM (RBF)", Accuracy: 85.1, Precision: 84.0, Recall: 82.3 },
   { name: "Logistic Regression", Accuracy: 87.9, Precision: 86.4, Recall: 85.1 },
   { name: "Random Forest", Accuracy: 92.3, Precision: 91.5, Recall: 90.2 },
-  { name: "Gradient Boosting", Accuracy: 94.7, Precision: 93.9, Recall: 93.1 },
+  { name: "Gradient Boosting", Accuracy: 94.7, Precision: 92.6, Recall: 93.8 },
   { name: "Neural Network", Accuracy: 96.2, Precision: 95.4, Recall: 94.8 },
 ];
 const cells = models.flatMap((m) =>
@@ -38,6 +41,28 @@ const y0 = d3
 const y1 = d3.scaleBand().domain(metrics).range([0, y0.bandwidth()]).padding(0.25);
 const x = d3.scaleLinear().domain([0, 100]).range([0, iw]);
 const color = d3.scaleOrdinal().domain(metrics).range(t.palette);
+
+// --- Top-performer highlight (data-storytelling focal point) ------------------
+// Neural Network sorts last (highest accuracy) and lands at the top row.
+const topModel = models[models.length - 1];
+const topBandTop = y0(topModel.name);
+const topBandHeight = y0.bandwidth();
+const bandPad = 14;
+g.append("rect")
+  .attr("class", "top-highlight")
+  .attr("x", -margin.left + 24)
+  .attr("y", topBandTop - bandPad)
+  .attr("width", iw + margin.left + margin.right - 48)
+  .attr("height", topBandHeight + bandPad * 2)
+  .attr("fill", t.palette[0])
+  .attr("fill-opacity", 0.08);
+g.append("rect")
+  .attr("class", "top-highlight-accent")
+  .attr("x", -margin.left + 24)
+  .attr("y", topBandTop - bandPad)
+  .attr("width", 4)
+  .attr("height", topBandHeight + bandPad * 2)
+  .attr("fill", t.palette[0]);
 
 // --- Gridlines ------------------------------------------------------------------
 g.selectAll(".grid")
@@ -62,6 +87,12 @@ for (const ax of [xAxis, yAxis]) {
   ax.selectAll("line").attr("stroke", t.inkSoft);
   ax.select(".domain").attr("stroke", t.inkSoft);
 }
+yAxis
+  .selectAll(".tick")
+  .filter((d) => d === topModel.name)
+  .select("text")
+  .attr("fill", t.ink)
+  .style("font-weight", "700");
 
 // --- X-axis label -----------------------------------------------------------
 g.append("text")
@@ -105,9 +136,20 @@ g.selectAll(".val")
   .attr("x", (d) => x(d.value) + 14)
   .attr("y", cellY)
   .attr("dy", "0.35em")
-  .attr("fill", t.inkSoft)
-  .style("font-size", "13px")
+  .attr("fill", t.ink)
+  .style("font-size", "17px")
+  .style("font-weight", "500")
   .text((d) => d.value.toFixed(1));
+
+// --- Top-performer callout ---------------------------------------------------
+g.append("text")
+  .attr("class", "top-callout")
+  .attr("x", 0)
+  .attr("y", Math.max(topBandTop - bandPad - 8, 14))
+  .attr("fill", t.palette[0])
+  .style("font-size", "14px")
+  .style("font-weight", "700")
+  .text(`★ Top performer — highest accuracy (${topModel.Accuracy.toFixed(1)}%)`);
 
 // --- Legend ---------------------------------------------------------------------
 const legend = svg.append("g").attr("transform", "translate(0, 96)");
