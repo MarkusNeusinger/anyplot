@@ -145,7 +145,7 @@ Highcharts.chart("container", {
         allowOverlap: true,
         style: {
           color: t.ink,
-          fontSize: "11px",
+          fontSize: "13px",
           fontWeight: "600",
           textOutline: "none",
         },
