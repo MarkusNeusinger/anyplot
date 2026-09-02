@@ -91,6 +91,50 @@ const allBoxes = columns.flatMap((column) => column.boxes);
 const minBox = Math.min(...allBoxes);
 const maxBox = Math.max(...allBoxes);
 
+// --- 45-degree support/resistance trend lines (classic P&F construction) ---
+// Support: anchored on the low of a bullish reversal column (an X column that
+// immediately follows an O column), extended up-right at +1 box per column
+// until a later O column's low breaks below the line.
+// Resistance: anchored on the high of a bearish reversal column (an O column
+// that immediately follows an X column), extended down-right at -1 box per
+// column until a later X column's high breaks above the line.
+const MIN_TREND_SPAN = 2; // columns — drop trivially short lines to limit clutter
+function buildTrendLines(cols) {
+  const supports = [];
+  const resistances = [];
+  for (let i = 1; i < cols.length; i += 1) {
+    const column = cols[i];
+    const prevColumn = cols[i - 1];
+    if (column.direction === "X" && prevColumn.direction === "O") {
+      const startBox = Math.min(...column.boxes);
+      let endIndex = i;
+      for (let j = i + 1; j < cols.length; j += 1) {
+        const projected = startBox + (j - i);
+        if (cols[j].direction === "O" && Math.min(...cols[j].boxes) < projected) break;
+        endIndex = j;
+      }
+      if (endIndex - i >= MIN_TREND_SPAN) {
+        supports.push({ startIndex: i, startBox, endIndex, endBox: startBox + (endIndex - i) });
+      }
+    }
+    if (column.direction === "O" && prevColumn.direction === "X") {
+      const startBox = Math.max(...column.boxes);
+      let endIndex = i;
+      for (let j = i + 1; j < cols.length; j += 1) {
+        const projected = startBox - (j - i);
+        if (cols[j].direction === "X" && Math.max(...cols[j].boxes) > projected) break;
+        endIndex = j;
+      }
+      if (endIndex - i >= MIN_TREND_SPAN) {
+        resistances.push({ startIndex: i, startBox, endIndex, endBox: startBox - (endIndex - i) });
+      }
+    }
+  }
+  return { supports, resistances };
+}
+
+const { supports: supportLines, resistances: resistanceLines } = buildTrendLines(columns);
+
 // Finance semantic exception: rising (X) columns read as green/bullish,
 // falling (O) columns as red/bearish — not the plain ordinal 1st/2nd slots.
 const RISING = t.palette[0]; // brand green — bullish X columns
@@ -128,12 +172,25 @@ export default function Chart() {
             <Typography sx={{ fontSize: 16, fontWeight: 700, color: FALLING, lineHeight: 1 }}>O</Typography>
             <Typography sx={{ fontSize: 14, color: "text.secondary", lineHeight: 1 }}>Falling column</Typography>
           </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <svg width="20" height="14" aria-hidden="true">
+              <line x1="2" y1="12" x2="18" y2="2" stroke={RISING} strokeWidth={2} strokeDasharray="4 3" strokeOpacity={0.7} />
+            </svg>
+            <Typography sx={{ fontSize: 14, color: "text.secondary", lineHeight: 1 }}>Support</Typography>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <svg width="20" height="14" aria-hidden="true">
+              <line x1="2" y1="2" x2="18" y2="12" stroke={FALLING} strokeWidth={2} strokeDasharray="4 3" strokeOpacity={0.7} />
+            </svg>
+            <Typography sx={{ fontSize: 14, color: "text.secondary", lineHeight: 1 }}>Resistance</Typography>
+          </Box>
         </Box>
       </Box>
       <ChartContainer
         width={chartWidth}
         height={chartHeight}
         series={[]}
+        skipAnimation
         margin={{ top: 8, right: 12, bottom: 40, left: 60 }}
         xAxis={[
           {
@@ -143,7 +200,7 @@ export default function Chart() {
             categoryGapRatio: 0.12,
             label: "Column (price reversal, not time)",
             labelStyle: { fontSize: 15 },
-            tickLabelStyle: { fontSize: 12 },
+            tickLabelStyle: { fontSize: 13 },
             tickLabelInterval: (_value, index) => index % 5 === 0,
           },
         ]}
@@ -156,12 +213,13 @@ export default function Chart() {
             label: "Price ($)",
             labelStyle: { fontSize: 15 },
             valueFormatter: (boxValue) => `$${(boxValue * BOX_SIZE).toFixed(1)}`,
-            tickLabelStyle: { fontSize: 12 },
+            tickLabelStyle: { fontSize: 13 },
             tickNumber: 10,
           },
         ]}
       >
         <PriceGrid minBox={minBox} maxBox={maxBox} />
+        <TrendLines supports={supportLines} resistances={resistanceLines} />
         <PfMarks columns={columns} />
         <ChartsXAxis axisId="columns" />
         <ChartsYAxis axisId="price" />
@@ -185,6 +243,54 @@ function PriceGrid({ minBox, maxBox }) {
       {rows.map((box) => (
         <line key={box} x1={left} x2={right} y1={yScale(box)} y2={yScale(box)} stroke={t.grid} strokeWidth={1} />
       ))}
+    </g>
+  );
+}
+
+// Diagonal 45-degree support/resistance reference lines (spec-required), drawn
+// as a subtle dashed overlay so they read as trend guides rather than data.
+function TrendLines({ supports, resistances }) {
+  const xScale = useXScale();
+  const yScale = useYScale();
+  const half = xScale.bandwidth() / 2;
+  const toPoint = (index, box) => ({ x: xScale(index + 1) + half, y: yScale(box) });
+
+  return (
+    <g>
+      {supports.map((line, index) => {
+        const start = toPoint(line.startIndex, line.startBox);
+        const end = toPoint(line.endIndex, line.endBox);
+        return (
+          <line
+            key={`support-${index}`}
+            x1={start.x}
+            y1={start.y}
+            x2={end.x}
+            y2={end.y}
+            stroke={RISING}
+            strokeWidth={1.5}
+            strokeDasharray="7 4"
+            strokeOpacity={0.55}
+          />
+        );
+      })}
+      {resistances.map((line, index) => {
+        const start = toPoint(line.startIndex, line.startBox);
+        const end = toPoint(line.endIndex, line.endBox);
+        return (
+          <line
+            key={`resistance-${index}`}
+            x1={start.x}
+            y1={start.y}
+            x2={end.x}
+            y2={end.y}
+            stroke={FALLING}
+            strokeWidth={1.5}
+            strokeDasharray="7 4"
+            strokeOpacity={0.55}
+          />
+        );
+      })}
     </g>
   );
 }
