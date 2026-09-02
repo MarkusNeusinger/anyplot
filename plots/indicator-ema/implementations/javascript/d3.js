@@ -124,8 +124,21 @@ g.append("path")
   .attr("d", lineEmaShort);
 
 // --- Crossover markers (short EMA crossing long EMA) -------------------------
+// The first golden cross (bullish) and first death cross (bearish) get a
+// distinctive triangle glyph + leader-line callout naming the signal; the
+// rest stay plain rings so the chart doesn't get cluttered.
+const labeledCrossovers = [];
+for (const c of crossovers) {
+  const type = c.emaShort > c.emaLong ? "Golden cross" : "Death cross";
+  if (!labeledCrossovers.some((l) => l.type === type)) {
+    labeledCrossovers.push({ ...c, type });
+  }
+  if (labeledCrossovers.length === 2) break;
+}
+const labeledDates = new Set(labeledCrossovers.map((d) => +d.date));
+
 g.selectAll(".crossover")
-  .data(crossovers)
+  .data(crossovers.filter((d) => !labeledDates.has(+d.date)))
   .join("circle")
   .attr("class", "crossover")
   .attr("cx", (d) => x(d.date))
@@ -134,6 +147,54 @@ g.selectAll(".crossover")
   .attr("fill", t.pageBg)
   .attr("stroke", t.amber)
   .attr("stroke-width", 2.5);
+
+const triangle = d3.symbol().type(d3.symbolTriangle).size(190)();
+const callouts = g.append("g").attr("class", "crossover-callouts");
+for (const c of labeledCrossovers) {
+  const cx = x(c.date);
+  const cy = y(c.emaShort);
+  const isGolden = c.type === "Golden cross";
+  const labelBelow = cy < ih * 0.4;
+  const labelY = cy + (labelBelow ? 44 : -44);
+
+  callouts
+    .append("path")
+    .attr("d", triangle)
+    .attr("transform", `translate(${cx},${cy}) rotate(${isGolden ? 0 : 180})`)
+    .attr("fill", t.amber);
+
+  callouts
+    .append("line")
+    .attr("x1", cx)
+    .attr("y1", cy + (labelBelow ? 13 : -13))
+    .attr("x2", cx)
+    .attr("y2", labelY + (labelBelow ? -9 : 9))
+    .attr("stroke", t.amber)
+    .attr("stroke-width", 1.5);
+
+  // Halo behind the label so it stays legible where the close-price line
+  // crosses underneath it.
+  const calloutLabel = callouts
+    .append("text")
+    .attr("x", cx)
+    .attr("y", labelY + (labelBelow ? 4 : -4))
+    .attr("text-anchor", "middle")
+    .attr("fill", t.ink)
+    .style("font-size", "13px")
+    .style("font-weight", "600")
+    .text(c.type);
+  const labelBox = calloutLabel.node().getBBox();
+  callouts
+    .append("rect")
+    .attr("x", labelBox.x - 6)
+    .attr("y", labelBox.y - 3)
+    .attr("width", labelBox.width + 12)
+    .attr("height", labelBox.height + 6)
+    .attr("rx", 4)
+    .attr("fill", t.pageBg)
+    .attr("fill-opacity", 0.92)
+    .lower();
+}
 
 // --- Axis labels -------------------------------------------------------------
 g.append("text")
@@ -188,7 +249,7 @@ for (const item of legendItems) {
 // --- Title (fontsize scales linearly off the 67-char baseline) ---------------
 const title = "NovaTech Inc. (NVTC) · indicator-ema · javascript · d3 · anyplot.ai";
 const baselineChars = 67;
-const defaultTitleSize = 22;
+const defaultTitleSize = 28;
 const titleFloor = 15;
 const ratio = title.length > baselineChars ? baselineChars / title.length : 1;
 const titleSize = Math.max(titleFloor, Math.round(defaultTitleSize * ratio));
