@@ -15,6 +15,14 @@ const revenueByProduct = [
   [21.6, 19.2, 16.8, 9.1], // Services
 ];
 
+// Emphasize the single top-performing lollipop with a larger dot + callout.
+const top = { value: -Infinity, datasetIndex: -1, dataIndex: -1 };
+revenueByProduct.forEach((series, datasetIndex) => {
+  series.forEach((value, dataIndex) => {
+    if (value > top.value) Object.assign(top, { value, datasetIndex, dataIndex });
+  });
+});
+
 // --- Mount -------------------------------------------------------------------
 const canvas = document.createElement("canvas");
 document.getElementById("container").appendChild(canvas);
@@ -29,17 +37,28 @@ const lollipopDots = {
     const { ctx } = chart;
     chart.data.datasets.forEach((dataset, datasetIndex) => {
       const meta = chart.getDatasetMeta(datasetIndex);
-      meta.data.forEach((bar) => {
+      meta.data.forEach((bar, dataIndex) => {
+        const isTop = datasetIndex === top.datasetIndex && dataIndex === top.dataIndex;
+        const radius = isTop ? 17 : 13;
         const { x, y } = bar.getProps(["x", "y"], true);
         ctx.save();
         ctx.beginPath();
-        ctx.arc(x, y, 10, 0, Math.PI * 2);
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.fillStyle = dataset.backgroundColor;
         ctx.fill();
         ctx.lineWidth = 2;
         ctx.strokeStyle = t.pageBg;
         ctx.stroke();
         ctx.restore();
+        if (isTop) {
+          ctx.save();
+          ctx.font = "bold 16px sans-serif";
+          ctx.fillStyle = t.ink;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(`Top: $${top.value}M`, x, y - radius - 8);
+          ctx.restore();
+        }
       });
     });
   },
@@ -54,8 +73,8 @@ new Chart(canvas, {
       label,
       data: revenueByProduct[i],
       backgroundColor: t.palette[i],
-      barThickness: 10,
-      borderRadius: 5,
+      barThickness: 4,
+      borderRadius: 2,
       borderSkipped: false,
       categoryPercentage: 0.7,
       barPercentage: 0.9,
@@ -65,13 +84,13 @@ new Chart(canvas, {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
-    layout: { padding: { top: 20, right: 20 } },
+    layout: { padding: { top: 40, right: 20 } },
     plugins: {
       title: {
         display: true,
         text: "lollipop-grouped · javascript · chartjs · anyplot.ai",
         color: t.ink,
-        font: { size: 22, weight: "500" },
+        font: { size: 24, weight: "500" },
         padding: { bottom: 24 },
       },
       legend: {
@@ -79,7 +98,7 @@ new Chart(canvas, {
         align: "end",
         labels: {
           color: t.ink,
-          font: { size: 16 },
+          font: { size: 17 },
           boxWidth: 16,
           boxHeight: 16,
         },
