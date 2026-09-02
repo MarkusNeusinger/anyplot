@@ -222,7 +222,7 @@ end
 
 # --- Plot ------------------------------------------------------------------------
 fig = Figure(
-    resolution = (1200, 1200),
+    size = (1200, 1200),
     backgroundcolor = PAGE_BG,
 )
 
@@ -256,18 +256,28 @@ end
 # with a child that happens to sit near the category's edge); subcategories
 # at their own center, only when large relative to their own category (not
 # the global root) so every category gets comparable coverage.
+#
+# Each tier is drawn with a single vectorized text!() call (positions/text as
+# arrays) rather than one text!() per node: a per-node loop of individual
+# text!() calls was silently dropping a subset of glyphs in CairoMakie even
+# though their positions and the labeling threshold were correct.
 category_r = Dict(node.category_idx => node.r for node in all_nodes if node.depth == 1)
 label_margin = 0.05 * root.r
-for node in all_nodes
-    if node.depth == 1
-        child_bottom = minimum(c.abs_y - c.r for c in node.children)
-        text!(ax, node.abs_x, child_bottom - label_margin; text = node.label,
-            align = (:center, :center), fontsize = 20, color = INK, font = :bold)
-    elseif node.depth == 2 && node.r >= 0.18 * category_r[node.category_idx]
-        text!(ax, node.abs_x, node.abs_y; text = node.label, align = (:center, :center),
-            fontsize = 13, color = INK)
-    end
-end
+
+cat_nodes = filter(n -> n.depth == 1, all_nodes)
+cat_positions = [
+    Point2f(n.abs_x, minimum(c.abs_y - c.r for c in n.children) - label_margin) for
+    n in cat_nodes
+]
+text!(ax, cat_positions; text = [n.label for n in cat_nodes],
+    align = (:center, :center), fontsize = 20, color = INK, font = :bold)
+
+sub_nodes = filter(
+    n -> n.depth == 2 && n.r >= 0.18 * category_r[n.category_idx], all_nodes,
+)
+sub_positions = [Point2f(n.abs_x, n.abs_y) for n in sub_nodes]
+text!(ax, sub_positions; text = [n.label for n in sub_nodes],
+    align = (:center, :center), fontsize = 13, color = INK)
 
 # --- Save --------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
