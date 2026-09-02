@@ -9,10 +9,10 @@ const { width, height } = window.ANYPLOT_SIZE;
 
 // --- Layout bands (title / graph / legend) ----------------------------------
 const titleY = 50;
-const chartTop = 110;
-const chartBottom = height - 160;
-const chartLeft = 90;
-const chartRight = width - 90;
+const chartTop = 100;
+const chartBottom = height - 150;
+const chartLeft = 75;
+const chartRight = width - 75;
 const iw = chartRight - chartLeft;
 const ih = chartBottom - chartTop;
 const legendRegionY = chartBottom + 45;
@@ -85,11 +85,20 @@ const radius = d3
   .range([16, 42]);
 const edgeWidth = d3.scaleLinear().domain([minWeight, maxWeight]).range([1.5, 9]);
 const edgeOpacity = d3.scaleLinear().domain([minWeight, maxWeight]).range([0.3, 0.85]);
-const linkDistance = d3.scaleLinear().domain([minWeight, maxWeight]).range([340, 140]);
+// Wider floor (170 vs. the prior 140) keeps the heaviest-weight pairs — which
+// cluster in the dense Europe sub-network — from being pulled in tight enough
+// for their edges to cross neighboring nodes and labels.
+const linkDistance = d3.scaleLinear().domain([minWeight, maxWeight]).range([380, 170]);
 const groupColor = d3
   .scaleOrdinal()
   .domain(["na", "eu", "asia"])
   .range([t.palette[0], t.palette[1], t.palette[2]]);
+
+// Two hub nodes (by weighted degree) get a bolder stroke and render above the
+// rest of the nodes/edges to sharpen the visual focal point.
+const hubIds = new Set(
+  [...nodes].sort((a, b) => b.weightedDegree - a.weightedDegree).slice(0, 2).map((d) => d.id),
+);
 
 // --- Force layout, advanced synchronously (no animation in the static PNG) --
 const simulation = d3
@@ -100,13 +109,13 @@ const simulation = d3
       .forceLink(links)
       .id((d) => d.id)
       .distance((d) => linkDistance(d.weight))
-      .strength(0.65),
+      .strength(0.55),
   )
-  .force("charge", d3.forceManyBody().strength(-1150))
+  .force("charge", d3.forceManyBody().strength(-1500))
   .force("center", d3.forceCenter(chartLeft + iw / 2, chartTop + ih / 2))
   .force(
     "collide",
-    d3.forceCollide().radius((d) => radius(d.weightedDegree) + 14),
+    d3.forceCollide().radius((d) => radius(d.weightedDegree) + 22),
   )
   .stop();
 
@@ -138,10 +147,13 @@ svg
   .attr("stroke-linecap", "round");
 
 // --- Nodes + labels ---------------------------------------------------------
+// Draw ascending by weighted degree so the two hub nodes render last (on top
+// of every crossing edge and neighboring node) for a sharper focal point.
+const drawOrder = [...nodes].sort((a, b) => a.weightedDegree - b.weightedDegree);
 const nodeGroups = svg
   .append("g")
   .selectAll("g")
-  .data(nodes)
+  .data(drawOrder)
   .join("g")
   .attr("transform", (d) => `translate(${d.x},${d.y})`);
 
@@ -150,7 +162,7 @@ nodeGroups
   .attr("r", (d) => radius(d.weightedDegree))
   .attr("fill", (d) => groupColor(d.group))
   .attr("stroke", t.pageBg)
-  .attr("stroke-width", 2.5);
+  .attr("stroke-width", (d) => (hubIds.has(d.id) ? 4 : 2.5));
 
 nodeGroups
   .append("text")
