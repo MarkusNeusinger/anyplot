@@ -1,0 +1,258 @@
+library: highcharts
+language: javascript
+specification_id: violin-grouped-swarm
+created: '2026-09-02T09:55:52Z'
+updated: '2026-09-02T10:13:22Z'
+generated_by: claude-sonnet
+workflow_run: 33615913956
+issue: 3529
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - 'Critical off-canvas clipping bug from attempt 1 is fixed: yAxis now sets startOnTick:
+    false / endOnTick: false plus a wider min/max buffer (-2.1 to last-center+2.2),
+    so all 6 category x group violins and their swarm points render fully on-canvas
+    in both themes'
+  - 'Genuine violin silhouette built from the core-only bundle: mirrored `area` series
+    filled from a `threshold` center line out to a Gaussian-KDE curve on each side,
+    with the chart inverted so the value axis renders vertically — a correct, creative
+    workaround for the missing highcharts-more/boxplot module'
+  - Correct Imprint palette usage — Novice = palette[0] (#009E73), Expert = palette[1]
+    (purple) — with data colors confirmed identical between light and dark renders,
+    only chrome flips
+  - Well-built beeswarm dodge algorithm (binned offset spreading) keeps swarm points
+    from overlapping within each violin, appropriately sized (radius 3) for 40 points
+    per cell
+  - Deterministic seeded LCG random generator; realistic reaction-time cognitive-task
+    scenario (Visual Search / Pattern Matching / Sequence Recall x Novice / Expert)
+    with plausible ms-scale values that respect a per-task difficulty factor
+  - Exact title format, descriptive axis labels with units (Reaction Time (ms), Task
+    Type), clean legend with title, and adequate spacing between grouped violins to
+    prevent overlap
+  weaknesses:
+  - Swarm points are moderately dense within some violins (e.g. Pattern Matching,
+    Sequence Recall) and slightly overlap each other despite the beeswarm dodge —
+    a touch more jitter or a smaller radius in the densest bins would keep every individual
+    point crisply separable
+  - 'Data storytelling is solid but generic: color + shape carry the comparison but
+    there''s no explicit visual emphasis (e.g. a subtle callout or ordering) drawing
+    the eye to the largest Novice/Expert gap (Pattern Matching / Sequence Recall)'
+  - 'KISS Structure: several helper functions (lcg, randNormal, kde, beeswarmOffsets)
+    are necessary for the custom violin/swarm construction, but keep an eye on function
+    count creeping further in future revisions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "violin-grouped-swarm · javascript · highcharts · anyplot.ai" in dark bold text at top, clearly readable. Vertical value axis "Reaction Time (ms)" ticked from ~200 to 1400ms. Horizontal category axis "Task Type" shows three labels: "Visual Search", "Pattern Matching", "Sequence Recall". Legend "Expertise Level" at the bottom with green "Novice" and purple "Expert" swatches. Grid lines are subtle horizontal lines, visible but not dominant. All chrome text is dark and clearly legible against the light background — no light-on-light issues.
+      Data: All 6 expected category x group violin+swarm distributions are now present and fully on-canvas — a clear fix versus the prior attempt, where 2 of 6 (Visual Search x Novice and Sequence Recall x Expert) were clipped off-canvas. Each category shows a green (Novice) violin and a purple (Expert) violin, correctly non-overlapping with adequate spacing between them. Swarm points (small filled circles) are overlaid inside each violin, colored to match their group's hue, and dodged sideways to reduce point-on-point overlap. Novice violins sit higher (slower reaction times, ~600-1450ms) than Expert violins (~250-830ms), consistent with the spec's intended contrast. Nothing is clipped at the canvas edges — the tallest violin peak (Sequence Recall, Novice) tapers to a point well inside the top margin.
+      Legibility verdict: PASS — text is fully readable and all 6 data groups are visible and correctly positioned.
+
+    Dark render (plot-dark.png):
+      Background: warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Same title/axis/legend text, now rendered in light color against the dark background — title, axis titles, tick labels, and legend text are all clearly readable. No dark-on-dark failures observed anywhere (title, axis labels, tick labels, legend text all have strong contrast against the near-black surface).
+      Data: Identical composition to the light render — all 6 violin+swarm groups present, correctly positioned, with the same non-overlapping spacing. Data colors (green #009E73 for Novice, purple for Expert) are confirmed identical to the light render; only the chrome (background, text, grid, legend) flips between themes, as required.
+      Legibility verdict: PASS — text is fully readable and all 6 data groups are visible and correctly positioned, matching the light render's data exactly.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title, axis labels, ticks, legend all clearly readable in both themes
+          with explicit font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions with other text or data in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All 6 violin+swarm groups now fully visible (prior clipping bug fixed);
+          swarm points are slightly dense in some bins but remain distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/purple pairing has good contrast and is not a red-green pairing
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: yAxis startOnTick/endOnTick false plus widened min/max buffer keeps
+          all violins on-canvas with breathing room; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '''Reaction Time (ms)'' and ''Task Type'' are descriptive with units'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73 (Novice); backgrounds are theme-correct;
+          data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Genuine custom KDE-driven violin construction via mirrored area fills,
+          now fully realized on-canvas; professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal chrome, subtle gridlines only on value axis, no legend frame,
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via color + violin + swarm now that all groups
+          render; no additional emphasis on the largest expertise gap
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correctly a grouped violin plot with swarm overlay
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All 6 category x group distributions render with transparency, dodging,
+          and matching swarm hue
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Axes now show all data; category on x, reaction time on y, correctly
+          mapped via the inverted-axis technique
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches required format; legend labels match group names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows all aspects of the plot type across all 6 group/category combinations
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral reaction-time cognitive-task scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Reaction times in a sensible 150-1460ms range with a believable difficulty
+          gradient
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Several small helper functions (lcg, kde, beeswarmOffsets) are justified
+          by the custom violin construction; still flat, no classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fixed-seed LCG, fully deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; uses only the global Highcharts
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for working around the missing violin/boxplot
+          module; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Mounts into #container correctly, no explicit width/height, animation
+          disabled'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Reasonable, now-correctly-executed use of area/scatter/threshold
+          given the core-bundle constraint
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative mirrored-area KDE violin technique plus binned beeswarm
+          dodge, confirmed working correctly across all 6 groups
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - manual-ticks
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - kde
+  - binning
+  styling:
+  - alpha-blending
