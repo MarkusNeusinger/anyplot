@@ -83,6 +83,7 @@ const fallingPoints = []; // O — falling columns
 let globalMinBox = Infinity;
 let globalMaxBox = -Infinity;
 let bottomColumn = 0;
+let topColumn = 0;
 // Category-axis x-values must match the category strings exactly — a plain
 // number is treated as a 0-based category *index*, which silently drops the
 // last column and shifts every other column by one.
@@ -95,7 +96,10 @@ columns.forEach((col, colIndex) => {
       globalMinBox = b;
       bottomColumn = colNumber;
     }
-    if (b > globalMaxBox) globalMaxBox = b;
+    if (b > globalMaxBox) {
+      globalMaxBox = b;
+      topColumn = colNumber;
+    }
   });
 });
 
@@ -105,6 +109,14 @@ const supportStart = [String(bottomColumn), globalMinBox * BOX_SIZE];
 const supportEnd = [
   String(columns.length),
   (globalMinBox + (columns.length - bottomColumn)) * BOX_SIZE,
+];
+
+// Bearish resistance line: mirrors the support line's construction, anchored
+// on the highest reversal high and descending at the same 45-degree rate.
+const resistanceStart = [String(topColumn), globalMaxBox * BOX_SIZE];
+const resistanceEnd = [
+  String(columns.length),
+  (globalMaxBox - (columns.length - topColumn)) * BOX_SIZE,
 ];
 
 // --- Option -------------------------------------------------------------
@@ -124,7 +136,8 @@ chart.setOption({
     data: [
       { name: "Rising (X)", icon: "rect", itemStyle: { color: t.palette[0] } },
       { name: "Falling (O)", icon: "rect", itemStyle: { color: t.palette[4] } },
-      { name: "Bullish support (45°)", icon: "rect", itemStyle: { color: t.muted } },
+      { name: "Bullish support (45°)", icon: "rect", itemStyle: { color: t.inkSoft } },
+      { name: "Bearish resistance (45°)", icon: "rect", itemStyle: { color: t.inkSoft } },
     ],
     textStyle: { color: t.inkSoft, fontSize: 15 },
   },
@@ -143,10 +156,10 @@ chart.setOption({
   },
   yAxis: {
     type: "value",
-    name: "Price",
+    name: "Price ($)",
     nameTextStyle: { color: t.inkSoft, fontSize: 15 },
     min: (globalMinBox - 2) * BOX_SIZE,
-    max: (globalMaxBox + 2) * BOX_SIZE,
+    max: (globalMaxBox + 1) * BOX_SIZE,
     interval: BOX_SIZE,
     axisLabel: { color: t.inkSoft, fontSize: 14, formatter: "${value}" },
     axisLine: { show: false },
@@ -195,7 +208,16 @@ chart.setOption({
       type: "line",
       data: [supportStart, supportEnd],
       showSymbol: false,
-      lineStyle: { color: t.muted, width: 2, type: "dashed" },
+      lineStyle: { color: t.inkSoft, width: 2, type: "dashed" },
+      z: 2,
+      tooltip: { show: false },
+    },
+    {
+      name: "Bearish resistance (45°)",
+      type: "line",
+      data: [resistanceStart, resistanceEnd],
+      showSymbol: false,
+      lineStyle: { color: t.inkSoft, width: 2, type: "dotted" },
       z: 2,
       tooltip: { show: false },
     },
