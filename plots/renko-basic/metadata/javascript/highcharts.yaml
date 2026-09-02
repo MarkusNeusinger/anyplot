@@ -1,0 +1,255 @@
+library: highcharts
+language: javascript
+specification_id: renko-basic
+created: '2026-09-02T05:40:25Z'
+updated: '2026-09-02T05:45:59Z'
+generated_by: claude-sonnet
+workflow_run: 33594723278
+issue: 3294
+language_version: 22.23.2
+library_version: 12.6.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/javascript/highcharts/plot-dark.html
+quality_score: 90
+review:
+  strengths:
+  - Genuine, algorithmically correct Renko brick construction (fixed-price-step reversal
+    logic) rather than a re-skinned candlestick or column chart
+  - 'Clean, idiomatic workaround for core Highcharts'' missing columnrange/candlestick
+    series: chart.events.render + renderer.rect + axis.toPixels, with a code comment
+    explaining why the direct-draw approach was chosen over a stacked-column hack'
+  - 'Correct semantic color mapping: bullish = Imprint brand green (#009E73, palette
+    position 1), bearish = Imprint matte red (#AE3030, palette position 5) — matches
+    the style guide''s finance semantic exception exactly'
+  - Both themes render correctly with identical data colors and fully theme-adaptive
+    chrome (ink/inkSoft/grid tokens threaded through title, subtitle, axes, and legend)
+  - Subtle horizontal-only gridline, generous margins, and uniform brick sizing with
+    a visible gap between bricks as the spec requests
+  - Helpful subtitle context (brick size and brick count) and a data series with multiple
+    clear uptrend/downtrend reversal cycles, giving good feature coverage of what
+    a Renko chart is meant to reveal
+  weaknesses:
+  - Bullish/bearish direction is communicated primarily through green/red hue; while
+    brick position also encodes direction, a subtle secondary cue (e.g. a slightly
+    different corner treatment or outline) would strengthen CVD accessibility
+  - The price series is generic ('Price ($)') with no labeled instrument/ticker context
+    — naming the asset in the subtitle would add a touch more real-world flavor for
+    Data Quality/Storytelling
+  - Visual treatment is competent house-style but introduces no distinguishing aesthetic
+    flourish beyond the mandated defaults — solid but not yet publication-level design
+    polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, matching #FAF8F1 — not pure white.
+      Chrome: Title "renko-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top; subtitle "Brick size: $4.00 · 42 bricks" in soft gray beneath it; "Price ($)" y-axis title and "Brick Sequence" x-axis title in soft ink; tick labels on both axes in soft gray; subtle horizontal-only gridlines; legend ("Bullish" / "Bearish") centered at the bottom. All text is clearly legible against the light background.
+      Data: 42 discrete rectangular bricks tracing two full uptrend/downtrend cycles between ~$146 and ~$190. Up bricks render in Imprint brand green (#009E73), down bricks in Imprint matte red (#AE3030). Bricks are uniform height, evenly spaced with a small visible gap, and have subtly rounded corners.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black, matching #1A1A17 — not pure black.
+      Chrome: Same title/subtitle/axis-title/tick-label/legend layout, all rendered in light ink (white/light-gray) against the dark background. Gridlines are a faint light overlay, still subtle but visible. No dark-on-dark or light-on-light text was found.
+      Data: Identical brick sequence and colors to the light render — green (#009E73) and matte red (#AE3030) unchanged, confirming only chrome (not data colors) flips between themes.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 22px, subtitle/labels 14px,
+          axis titles 16px); readable in both themes, well-proportioned title for
+          its length
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or brick collisions in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 42 bricks at a medium-gap column width — clearly visible and well
+          separated
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green/red direction encoding is redundantly readable via brick vertical
+          position (up-step vs down-step); Imprint palette hues are CVD-distance validated
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot area fills the large majority of the canvas with balanced margins;
+          legend sits close to the plot
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: '"Price ($)" carries units; "Brick Sequence" is descriptive'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, bearish uses semantic anchor #AE3030 (finance
+          loss convention); backgrounds and chrome theme-correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured house style; clean but no distinguishing flourish
+          beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only subtle grid, rounded brick corners, generous whitespace,
+          minimal chrome
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color contrast on the double-hump trend/reversal pattern creates
+          clear visual emphasis without requiring annotations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Genuine fixed-brick-size Renko construction, not a mislabeled column/candlestick
+          chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bullish/bearish colors, uniform bricks with gap, brick-index x-axis,
+          subtle grid — all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = brick sequence, Y = price; axis range covers all bricks with
+          padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches the mandated format exactly; legend labels "Bullish"/"Bearish"
+          match the data semantics
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Both bullish and bearish bricks across multiple full trend/reversal
+          cycles
+      - id: DQ-02
+        name: Realistic Context
+        score: 4
+        max: 5
+        passed: true
+        comment: Plausible, neutral stock-price scenario, though the instrument is
+          unnamed/generic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $4 brick size against a $146-190 price range is a realistic Renko
+          configuration
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear data-generation → brick-building → chart flow; the one helper
+          (lcg) is a minimal RNG utility
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic seeded LCG (seed=42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: No unused imports; relies only on the provided globals
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Necessary complexity for a real API limitation, clearly commented,
+          no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Follows the mount-node contract; animation disabled on chart and
+          series
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses the documented Highcharts pattern (events.render + renderer
+          + axis.toPixels) for custom chart types not covered by the core bundle
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Low-level SVG renderer draw synced to axis pixels is a Highcharts-specific
+          technique, not a generic config change
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - patches
+  patterns:
+  - data-generation
+  dataprep:
+  - binning
+  styling:
+  - grid-styling
