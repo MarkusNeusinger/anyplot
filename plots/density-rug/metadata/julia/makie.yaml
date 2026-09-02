@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: density-rug
 created: '2026-09-02T00:20:57Z'
-updated: '2026-09-02T00:27:57Z'
+updated: '2026-09-02T00:46:33Z'
 generated_by: claude-sonnet
 workflow_run: 33574601920
 issue: 3505
@@ -15,53 +15,58 @@ preview_html_dark: null
 quality_score: 82
 review:
   strengths:
-  - Correct combination of a semi-transparent KDE fill (density!) with axis-relative
-    rug ticks (vlines! with ymin/ymax as axis fractions), matching the spec's core
-    request precisely.
-  - 'Theme-adaptive chrome is correctly implemented in both renders: Imprint brand
-    green (#009E73) is pixel-identical between light and dark, backgrounds read as
-    warm off-white / warm near-black, and all text/tick/spine colors flip correctly
-    with no dark-on-dark or light-on-light failures.'
-  - 'Clean visual refinement: top/right spines removed, subtle single-axis (y-only)
+  - Deliberately bimodal data (190 typical trials + 30 slow-response 'lapse' outliers)
+    now gives the KDE curve a genuine, visible secondary mode near 550-600ms, directly
+    demonstrating the rug's value for revealing multimodality per the spec's intent
+    -- a real fix for the prior 'unimodal, faint bump' weakness.
+  - Title size bumped from 20 to 23, giving the mandated title slightly more visual
+    weight than attempt 1.
+  - 'Theme-adaptive chrome remains correct in both renders: brand green (#009E73)
+    is pixel-identical between light and dark, backgrounds read as warm off-white
+    / warm near-black, and all text/tick/spine colors flip correctly with no dark-on-dark
+    or light-on-light failures.'
+  - 'Clean visual refinement carried over: top/right spines removed, subtle y-only
     grid at low opacity, generous whitespace, no overlap, no edge clipping.'
-  - 'Realistic, domain-appropriate data: right-skewed reaction-time distribution (~150-650ms)
-    generated via a log-normal transform, reproducible via Random.seed!(42).'
-  - 'Clean, idiomatic Makie code: KISS top-to-bottom structure, only used imports,
-    explicit font sizes throughout, correct save API (plot-$(THEME).png with px_per_unit=2).'
+  - 'Realistic, domain-appropriate data: right-skewed reaction-time distribution with
+    a plausible slow-response lapse cluster, reproducible via Random.seed!(42).'
   weaknesses:
-  - 'Design storytelling is minimal (DE-03): the plot shows the raw KDE shape with
-    no explicit visual hierarchy or emphasis technique — the small secondary bump
-    around 550-600ms (the ''slow-response outliers'' mentioned in the code comment)
-    isn''t highlighted in any way (no accent color, annotation, or contrast) so the
-    viewer has to find that insight unaided.'
-  - Aesthetic treatment is a single flat green fill with no additional refinement
-    beyond the mandated defaults (DE-01) — consider a subtle accent (e.g. a slightly
-    different tone or opacity for the rug ticks vs. the fill, or a light annotation
-    marking the secondary mode) to lift it above a 'well-configured default' look.
-  - Rug ticks overplot into a near-solid band in the busiest region (~250-450ms) where
-    most of the 220 observations concentrate, losing individual-tick legibility (VQ-03)
-    — the spec explicitly suggests jittering vertically or reducing tick weight/alpha
-    to combat this; consider linewidth ~1.0-1.2 and/or a touch more transparency (alpha
-    ~0.3) in that dense zone.
-  - Data is essentially unimodal with only a faint secondary bump (DQ-01) — it doesn't
-    strongly demonstrate the combo's storytelling value for revealing gaps or multimodality;
-    a slightly more pronounced second cluster or a deliberate low-density gap in the
-    raw data would better showcase what rug marks add on top of the KDE.
-  - The mandated title renders quite small relative to the canvas (~20% of plot width)
-    given how short 'density-rug · julia · makie · anyplot.ai' is — bumping titlesize
-    up slightly (e.g. 22-24) would give it more visual weight without risking overflow.
+  - 'Verified by pixel sampling: the intended graduated emphasis (band! alpha 0.22
+    typical vs 0.55 lapse, lines! width 2.5 vs 3.5, vlines! alpha 0.28/width 1.1 typical
+    vs alpha 0.7/width 1.8 lapse) does NOT render distinctly -- isolated rug ticks
+    in the typical zone (e.g. x=913-916) and the lapse zone (e.g. x=2546-2549) are
+    pixel-identical (same 4px width, same RGB 89,190,159), and the fill color under
+    the main mode vs. the tail bump is identical (163,216,197) as well as identical
+    stroke thickness (~4-5px) at both peaks. The code''s core repair claim -- richer
+    color/weight emphasis over the slow-response tail -- is invisible in the actual
+    PNG; only the underlying data shape (the bimodal KDE curve itself) conveys the
+    secondary mode, not the intended styling contrast. Repair should debug why per-call
+    color/linewidth attributes on repeated band!/lines!/vlines! calls are not taking
+    effect (check CairoMakie version behavior for tuple-based `color=(BRAND, alpha)`
+    across multiple calls on the same axis, or set colors via explicit RGBAf(...)
+    instead) or drop the non-functional layering and simplify.'
+  - Rug ticks still overplot into a near-solid band in the busiest region (~250-450ms);
+    since the intended lower alpha/linewidth for the dense typical zone isn't actually
+    being applied, the overplotting is unchanged from attempt 1.
+  - The manual Gaussian KDE + Silverman bandwidth reimplementation (two custom functions)
+    bypasses Makie's built-in `density!()` recipe and adds real code complexity in
+    service of a visual split that doesn't render -- not idiomatic, and over-engineered
+    relative to the payoff actually delivered.
+  - Title still occupies only ~20% of the plot width despite the size bump from 20
+    to 23 -- for a short, non-prefixed mandated title this is on the low end of comfortable
+    proportion; a larger jump (e.g. titlesize ~26-28) would give it more presence
+    without risking overflow.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white.
-      Chrome: Title "density-rug · julia · makie · anyplot.ai" is bold dark ink, centered, fully visible with no clipping. X-axis label "Reaction Time (ms)" and y-axis label "Density" are dark ink, clearly readable. Tick labels (0.000/0.002/0.004 on y; 200/400/600 on x) are a softer dark gray, legible. A subtle horizontal-only grid is visible at low opacity. Top and right spines are removed; left and bottom spines are a soft gray.
-      Data: A single KDE curve filled in translucent brand green (#009E73 at ~35% opacity) with a solid green stroke outline, right-skewed with a peak near 300-350ms and a small secondary bump near 550-600ms. Rug ticks (thin green vertical lines, more opaque) run along the axis baseline, dense in the 250-450ms range and sparser in the tail — first/only series correctly uses #009E73.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no dark-on-dark or light-on-light issues.
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "density-rug · julia · makie · anyplot.ai" is bold dark ink, centered at top, fully visible with margin above and below. Axis labels "Reaction Time (ms)" (x) and "Density" (y) are dark ink; tick labels are softer gray. Top/right spines removed, subtle horizontal-only grid at low opacity. All text is clearly readable against the light background.
+      Data: A single brand-green (#009E73) KDE fill with a matching stroke now shows a clearly bimodal shape -- a large primary mode around 300-350ms and a distinct, visible secondary bump around 550-600ms (the "slow-response lapse" cluster). Thin green rug ticks run along the axis baseline, dense (near-solid band) in the 250-450ms range and sparse in the tail. Pixel sampling confirms the fill, stroke, and rug ticks are a single uniform tone/opacity throughout -- no visible difference between the "typical" and "lapse" regions despite the source code specifying different alpha/linewidth values for each; only the curve's bimodal shape (not color/weight emphasis) conveys the secondary mode.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17), not pure black.
-      Chrome: Same title, axis labels, and tick labels now rendered in light ink/soft-light gray, all clearly legible against the dark background — no dark-on-dark failures observed. Grid line remains subtle. Spines flip to a light-gray tone, top/right still removed.
-      Data: Same KDE shape and rug pattern, with the fill still brand green (#009E73) at the same opacity and the stroke/rug ticks in the same green — confirmed identical to the light render; only the chrome (background, text, grid, spine colors) has flipped.
-      Legibility verdict: PASS — all text is clearly readable against the dark background, brand green remains vivid and distinguishable from the near-black surface.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title, axis labels, and tick labels now render in light ink / soft-light gray -- all clearly legible, no dark-on-dark issues.
+      Data: The KDE fill, stroke, and rug ticks remain the identical brand green (#009E73) as the light render -- only the chrome (background, text, spines, grid) has flipped. Same bimodal shape and same uniform-opacity rendering behavior as the light version.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -72,51 +77,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicit and readable in both themes; mandated title
-          renders on the small side (~20% width) but not clipped or hard to read.
+        comment: All text explicitly sized and readable in both themes; title still
+          modest at ~20% of plot width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text/data collisions in either render.
+        comment: No collisions between text, title, or data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: KDE fill and stroke are clearly visible; rug ticks merge into a near-solid
-          band in the densest 250-450ms region, losing per-tick legibility there.
+        comment: Rug ticks visible overall but still overplot into a near-solid band
+          in the 250-450ms zone; intended density-adaptive alpha/width reduction does
+          not actually render differently
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-hue series, good contrast in both themes, no reliance on hue-only
-          encoding.
+        comment: Single-hue brand green, good contrast on both surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot area fills the large majority of the canvas, balanced margins,
-          nothing cut off.
+        comment: Canvas exactly 3200x1800, good margins, no cutoff
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '"Reaction Time (ms)" includes units; "Density" is an appropriate
-          axis label.'
+        comment: Descriptive axis labels with units (ms)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (only) series is #009E73, identical between themes; both backgrounds
-          theme-correct.'
+        comment: 'Brand green #009E73 identical across themes; backgrounds theme-correct'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -124,22 +126,23 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured default look (translucent green fill) per the style
-          guide, but no distinctive extra design touch.
+        comment: Intended layered/graduated color treatment is invisible in the render
+          (verified by pixel sampling); visually still a well-configured default
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Spines removed, subtle single-axis grid, generous whitespace — some
-          real refinement beyond raw library defaults.
+        passed: false
+        comment: Spines removed, subtle grid, generous whitespace -- unchanged from
+          attempt 1
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data is displayed but not interpreted — the secondary bump isn't
-          emphasized with color, annotation, or contrast.
+        comment: The new bimodal data gives the curve shape itself a clear secondary-mode
+          story, but the intended color/weight emphasis technique does not render,
+          so the story relies on shape alone rather than deliberate visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -149,109 +152,111 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE + rug combination.
+        comment: Correct KDE + rug combination
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Filled KDE, semi-transparent fill, subtle-but-visible rug ticks all
-          present.
+        comment: Semi-transparent fill, rug ticks with transparency, both present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = reaction time, Y = density, full data range shown.
+        comment: Reaction time on x, density on y, full data range shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exactly matches spec; single-series legend correctly
-          omitted.
+        comment: Title format correct; single series needs no legend
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows right-skew and a faint secondary mode, but doesn't strongly
-          demonstrate multimodality or data gaps.
+        comment: Deliberate bimodal distribution now clearly demonstrates the rug's
+          value for revealing multimodality/gaps
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Cognitive-test reaction times — real, neutral, comprehensible scenario.
+        comment: Cognitive-test reaction times with plausible lapse trials; neutral,
+          real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 150-650ms range is realistic for human reaction times.
+        comment: Reaction times in the 150-700ms range with a slower lapse cluster
+          near 500-600ms are factually plausible
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear imports -> data -> plot -> save, no functions/classes.
+        comment: Two custom functions (silverman_bandwidth, gaussian_kde) added to
+          reimplement KDE manually instead of Imports->Data->Plot->Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42).
+        comment: Random.seed!(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random all used.
+        comment: All imports (CairoMakie, Colors, Random, Statistics) are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Clean and appropriately simple, no fake functionality.
+        comment: Manual KDE math and layered draws add real complexity for a visual
+          split that doesn't actually render
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png with px_per_unit=2, current API.
+        comment: Correct plot-$(THEME).png save with px_per_unit=2
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Idiomatic density!/vlines! usage with proper Axis-level theming.
+        comment: Correct use of band!/lines!/vlines! primitives, but bypasses Makie's
+          built-in density!() recipe in favor of a manual reimplementation
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Axis-relative vlines is a common convention shared with other libraries
-          (e.g. matplotlib axvline), not distinctive to Makie.
-  verdict: REJECTED
+        comment: Intended Makie-distinctive layered band! technique does not render
+          distinctly, so the visible result is generic and easily replicated in matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - kde
   styling:
