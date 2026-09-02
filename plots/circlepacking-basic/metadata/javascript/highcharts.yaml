@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: circlepacking-basic
 created: '2026-09-02T15:52:32Z'
-updated: '2026-09-02T15:58:50Z'
+updated: '2026-09-02T16:08:57Z'
 generated_by: claude-sonnet
 workflow_run: 33649853396
 issue: 2498
@@ -12,53 +12,52 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/circlepac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/circlepacking-basic/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Deterministic custom force-relaxation packing algorithm (index-seeded, no RNG)
-    avoids the missing highcharts-more dependency entirely and is reused cleanly for
-    both the leaf level and the directory level
+  - 'Fixed the attempt-1 hierarchy-depth weakness: components/ is now split into 4
+    named files (Table.jsx, Modal.jsx, Form.jsx, Button.jsx), giving the chart a genuine
+    3-level hierarchy (root -> category -> subdirectory -> file) instead of 2, which
+    better demonstrates the packing algorithm and improves feature coverage'
+  - 'Addressed the attempt-1 uniformity critique: ring stroke width (2.5 for category
+    rings vs 1.8 for nested sub-rings), fill alpha (0.1 vs 0.17), and padding now
+    vary by depth, giving the deeper components/ ring a visually distinct treatment
+    from the top-level category rings'
   - 'Per-leaf label ink is computed from each fill''s own luminance rather than the
     page theme, so text stays readable on every one of the 8 Imprint colors in both
-    light and dark renders — first series correctly uses brand green #009E73'
-  - SVG <title> hover tooltips on every circle (root, ring, leaf) preserve full names
-    and totals even where the static label is truncated for space — a good, non-fake
-    use of the interactive-library allowance
-  - 'Theme-adaptive chrome is threaded correctly end-to-end: page background, title/subtitle
-    ink, and ring stroke colors all flip appropriately while the 8 categorical data
-    colors stay pixel-identical across themes'
+    light and dark renders -- first series correctly uses brand green #009E73'
+  - Data colors are pixel-identical between the light and dark renders; only chrome
+    (title/subtitle ink, ring outline colors) flips, and SVG <title> hover tooltips
+    preserve full names/totals on every circle including truncated small labels
   weaknesses:
-  - Leaf labels on the smallest labeled circles (~24-30px radius, e.g. 'types.d...',
-    'fixture...', 'changel...') use 9-10px font — legible at full 2400px resolution
-    but likely to disappear when the PNG is downscaled to the ~400px mobile thumbnail;
-    consider raising the minimum labeled-circle radius or the font floor slightly.
-  - Hierarchy is only 2 levels deep (root -> directory -> file) even though the spec
-    allows up to 4; one more nesting level (e.g. splitting 'components/' into named
-    sub-files) would better demonstrate the packing algorithm on deeper hierarchies
-    and improve DQ-01 feature coverage.
-  - Visual treatment is uniform across all 5 rings (same stroke width, same 10% fill
-    alpha everywhere) — a touch more depth (subtle shadow, stroke-weight variation
-    by depth, or stronger ring-outline vs leaf-fill contrast) would push this from
-    'strong' toward 'publication-ready'.
-  - 'chart.renderer is used for 100% of the drawing (series: []) — a deliberate and
-    well-justified workaround given highcharts-more isn''t vendored, but it means
-    the implementation doesn''t exercise Highcharts'' higher-level series/plotOptions
-    API at all.'
+  - 'New nested-ring label overlap introduced by the added 3rd hierarchy level: the
+    ''components/ · 480 KB'' ring-title text is crossed by the components ring''s
+    own stroke line (the descender of ''p'' in ''components'' is cut by the outline)
+    -- the label formula `y - r + fontSize + 6` doesn''t clear the stroke for depth>=2
+    rings, which use a smaller RING_PADDING * 0.7. Increase the offset (or the padding)
+    for nested rings so their label sits fully above the stroke.'
+  - Smallest leaf labels (font floor is 10px, e.g. 'e2e/', 'icons/', 'guide.md', truncated
+    names like 'types.d...') are legible at full 2400px resolution but wash out at
+    the ~400px mobile thumbnail scale -- consider raising the font floor slightly
+    or hiding labels on circles below ~30px radius instead of the current 28px threshold.
+  - 'Implementation is still 100% chart.renderer with series: [] -- a well-justified
+    workaround given highcharts-more isn''t vendored, but it means Highcharts'' higher-level
+    series/plotOptions API is never exercised, which continues to cap Library Mastery.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "circlepacking-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top; subtitle "Repository directory sizes — circle area = file/folder size (KB), colour = directory" in softer gray ink below. Each of the 5 directory rings has a dark-ink label above it (e.g. "build/ · 1.3 MB"). All chrome text is clearly readable against the light background.
-      Data: Root circle outlined in light gray encompasses 5 tinted category rings (src=green #009E73, tests=lavender, docs=blue, assets=ochre, build=matte red — canonical Imprint order). Each ring has a 10%-alpha fill in its category color and contains solid leaf circles in the same color, area-scaled to file/folder size. Leaf labels use ink chosen per-leaf from the fill's own luminance (white text on green/red/blue/lavender leaves, dark text on ochre leaves) — first series is confirmed #009E73.
-      Legibility verdict: PASS
+      Background: Warm off-white, consistent with #FAF8F1 -- not pure white.
+      Chrome: Title "circlepacking-basic · javascript · highcharts · anyplot.ai" in bold dark ink at top; subtitle "Repository directory sizes — circle area = file/folder size (KB), colour = directory" in softer gray ink below. Each of the 5 top-level directory rings has a dark-ink label above it (e.g. "build/ · 1.3 MB", "src/ · 1.4 MB"), and the new nested "components/ · 480 KB" sub-ring inside src/ has its own label too. All chrome text is clearly readable against the light background, EXCEPT the "components/ · 480 KB" label whose descender is visibly crossed by the components ring's own stroke line (a minor overlap defect, not a legibility failure -- every character is still fully readable).
+      Data: Root circle outlined in light gray encompasses 5 tinted category rings (src=green #009E73, tests=lavender, docs=blue, assets=ochre, build=matte red -- canonical Imprint order for these abstract directory categories). Inside src/, a nested components/ ring shows 4 named files (Table.jsx, Modal.jsx, Form.jsx, Button...) three levels deep. Each ring has a low-alpha fill in its category color and contains solid leaf circles in the same color, area-scaled to file/folder size. Leaf labels use ink chosen per-leaf from the fill's own luminance (white text on green/red/blue/lavender leaves, dark text on ochre leaves) -- first series is confirmed #009E73.
+      Legibility verdict: PASS (one minor label/stroke overlap noted above, not a blocking failure)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Same title and subtitle now rendered in light ink, clearly readable against the dark background. Ring category labels (e.g. "src/ · 1.4 MB") flip to light ink for contrast against the page.
-      Data: All 5 category ring colors and all leaf fill colors are pixel-identical to the light render (green/lavender/blue/ochre/red) — only the chrome flipped. Leaf label ink is unchanged from the light render (e.g. "components/" still white-on-green, "images/" still dark-on-ochre) since it's computed from each leaf's fixed fill color rather than the page theme — this is the intended design and reads correctly in both themes. No dark-on-dark or light-on-light failures observed.
+      Background: Warm near-black, consistent with #1A1A17 -- not pure black.
+      Chrome: Same title and subtitle now rendered in light ink, clearly readable against the dark background. Ring category labels (e.g. "src/ · 1.4 MB", "components/ · 480 KB") flip to light ink for contrast against the page; the same stroke-overlap on "components/" is present here too (chrome-independent, geometry-driven).
+      Data: All 5 category ring colors and all leaf fill colors are pixel-identical to the light render (green/lavender/blue/ochre/red) -- only the chrome flipped. Leaf label ink is unchanged from the light render (e.g. "api.js" still white-on-green, "images/" still dark-on-ochre) since it's computed from each leaf's fixed fill color rather than the page theme -- intended design, reads correctly in both themes. No dark-on-dark or light-on-light failures observed.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -67,22 +66,22 @@ review:
         max: 8
         passed: true
         comment: Explicit font sizes throughout, readable at full resolution in both
-          themes; smallest leaf labels (9-10px) may fade at ~400px mobile scale
+          themes; smallest leaf labels (font floor 10px) still likely to fade at ~400px
+          mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text/text or text/data collisions; category labels sit clear of
-          ring contents
+        comment: The new 'components/ · 480 KB' nested-ring label is crossed by that
+          ring's own stroke line -- a real but minor overlap, text remains fully readable
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
         comment: Circles well-sized and packed with visible gaps; a couple of the
-          smallest leaf circles (e.g. build-manifest) are tiny dots by nature of the
-          data
+          smallest leaf circles are tiny dots by nature of the data
       - id: VQ-04
         name: Color Accessibility
         score: 2
@@ -95,8 +94,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 canvas confirmed; root circle fills a good majority
-          of the canvas with balanced margins
+        comment: Square 2400x2400 canvas confirmed (measured); root circle fills a
+          good majority of the canvas with balanced margins, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -112,31 +111,32 @@ review:
         comment: 'First series is #009E73; remaining 4 categories use canonical Imprint
           order; identical data colors across themes; backgrounds theme-correct'
     design_excellence:
-      score: 16
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Thoughtful custom packing + contrast-aware labeling clearly above
-          a configured default, but styling is uniform across all rings rather than
-          fully polished
+        comment: Depth-based stroke width and fill alpha differentiation (new this
+          attempt) plus the deeper hierarchy push this clearly past 'configured default'
+          toward polished
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: No axes/spines, generous whitespace, subtle tinted ring fills; minor
-          uniformity across depth levels keeps it just short of perfect
+        comment: No axes/spines, generous whitespace, subtle tinted ring fills; the
+          components/ label crowding keeps it just short of perfect
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Size-by-area plus category color makes the largest directories/files
-          immediately obvious (build/bundle.js, src/components)
+        comment: Size-by-area plus category color plus the new 3rd nesting level makes
+          the largest directories/files immediately obvious while showing genuine
+          hierarchical depth
     spec_compliance:
       score: 15
       max: 15
@@ -153,7 +153,7 @@ review:
         max: 4
         passed: true
         comment: Efficient non-overlapping packing, color-by-category, labels on larger
-          circles with hover for smaller, area-scaled sizing, padded root circle —
+          circles with hover for smaller, area-scaled sizing, padded root circle --
           all present
       - id: SC-03
         name: Data Mapping
@@ -170,16 +170,17 @@ review:
         comment: Title matches the mandated format exactly; categories self-label
           on the chart in lieu of a separate legend, which is appropriate here
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good size variation (40 KB to 600 KB) across 5 categories and ~26
-          leaves, but only 2 hierarchy levels used out of the spec's allowed 2-4
+        comment: Now uses 3 hierarchy levels (root -> category -> components subdirectory
+          -> file), up from 2 in the previous attempt, with good size variation (40
+          KB to 600 KB) across 5 categories and ~30 leaves
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -202,9 +203,9 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Several helper functions (packCircles, contrastInk, hexToRgba, formatSize)
-          are used, justified by the custom geometry algorithm, but it departs from
-          a flat imports->data->plot script
+        comment: Several helper functions (packCircles, layoutNode, contrastInk, hexToRgba,
+          formatSize) are used, justified by the custom recursive geometry algorithm,
+          but it departs from a flat imports->data->plot script
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,8 +224,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a from-scratch packing algorithm; no fake
-          UI/interactivity
+        comment: Appropriate complexity for a from-scratch recursive packing algorithm;
+          no fake UI/interactivity
       - id: CQ-05
         name: Output & API
         score: 1
@@ -242,7 +243,7 @@ review:
         max: 5
         passed: true
         comment: Correct, well-integrated use of chart.renderer given highcharts-more
-          isn't vendored, but bypasses Highcharts' higher-level series/plotOptions
+          isn't vendored, but still bypasses Highcharts' higher-level series/plotOptions
           API entirely
       - id: LM-02
         name: Distinctive Features
@@ -250,9 +251,9 @@ review:
         max: 5
         passed: true
         comment: Leverages chart.renderer.g/circle/text tied into the chart's own
-          plotLeft/plotWidth/margins lifecycle — a genuinely Highcharts-specific technique,
-          not a generic SVG draw
-  verdict: REJECTED
+          plotLeft/plotWidth/margins lifecycle -- a genuinely Highcharts-specific
+          technique, not a generic SVG draw
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
