@@ -133,6 +133,9 @@ anyplot/
 ├── alembic/                           # Database migrations
 │   └── versions/
 │
+├── infra/                             # Infrastructure that lives outside the code
+│   └── cloudflare/                    # Source for the apex Worker + its rollout notes
+│
 ├── scripts/                           # One-time and manual scripts
 │   ├── evaluate-plot.py               # Manual plot evaluation
 │   ├── regenerate-thumbnails.py       # Image processing

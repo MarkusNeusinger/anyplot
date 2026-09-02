@@ -147,6 +147,7 @@ Copy `.env.example` and configure:
 | `GCS_BUCKET` | No | GCS bucket for images (default: anyplot-images) |
 | `GOOGLE_APPLICATION_CREDENTIALS` | No | Path to service account JSON |
 | `ENVIRONMENT` | No | `development` or `production` |
+| `ORIGIN_SECRET` | No | Production only — leave unset locally and in tests. Arms the [origin gate](reference/api.md#origin-gate), which refuses every request that did not come through Cloudflare |
 
 ---
 

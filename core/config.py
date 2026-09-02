@@ -167,6 +167,49 @@ class Settings(BaseSettings):
     """Cloudflare Access Application AUD tag (UUID from the Zero Trust
     dashboard). Validated as the JWT `aud` claim."""
 
+    origin_secret: str | None = None
+    """Shared secret a Cloudflare Transform Rule stamps as `X-Origin-Secret` on
+    every request it proxies for `api.anyplot.ai`. `api/origin_gate.py` refuses
+    anything without it, which closes the direct `*.run.app` door that bypasses
+    the bot challenge, the WAF and the edge cache.
+
+    UNSET MEANS OFF, and that is the rollback: remove the variable from the
+    Cloud Run service, promote the resulting revision, and the gate is gone.
+    Local dev and the test suite never set it. `/health`, `/seo-proxy/…` and
+    `/debug/cache/invalidate` stay exempt even when it is set — see
+    `api/origin_gate.py` for why each one has to be."""
+
+    @field_validator(
+        "database_url",
+        "cache_invalidate_token",
+        "admin_token",
+        "cf_access_team_domain",
+        "cf_access_aud",
+        "origin_secret",
+        mode="after",
+    )
+    @classmethod
+    def _strip_secret(cls, value: str | None) -> str | None:
+        """Strip whitespace from the Secret-Manager-backed values.
+
+        Secret Manager stores whatever bytes the version was created with, and
+        a value piped in via `echo` carries a trailing newline. Cloud Run
+        injects those bytes verbatim (`--set-secrets`), so the setting would
+        keep the newline while an HTTP header physically cannot transport one —
+        the `X-Admin-Token` and `X-Cache-Token` paths would then reject every
+        request and no value of the header could ever fix it. `origin_secret`
+        is compared against a header for exactly the same reason, and it fails
+        closed for the whole API rather than for one endpoint.
+
+        Strip at the source rather than at each use site; whitespace is
+        meaningless in all of these values. An all-whitespace value becomes
+        None, which is the same as unset — for `origin_secret` that means the
+        gate stays off rather than locking everyone out with a secret nobody
+        can present."""
+        if value is None:
+            return None
+        return value.strip() or None
+
     admin_allowed_emails: Annotated[list[str], NoDecode] = []
     """Email addresses allowed to authenticate via Cloudflare Access for
     /debug/* endpoints. Defaults to an empty list — must be set explicitly

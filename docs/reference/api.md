@@ -260,16 +260,22 @@ The anyplot API is a **FastAPI-based REST API** serving plot data to the fronten
 
 #### GET `/health`
 
-**Purpose**: Health check for Cloud Run
+**Purpose**: Health check for Cloud Run, and the one place the
+[origin gate](#origin-gate) can be observed
 
 **Response**:
 ```json
 {
   "status": "healthy",
   "service": "anyplot-api",
-  "version": "0.2.0"
+  "version": "0.2.0",
+  "origin_gate": "off"
 }
 ```
+
+`origin_gate` reports what the gate makes of *this* request — never the secret
+itself. `/health` is exempt from the gate, so every route into the service can
+be asked. See [Origin gate](#origin-gate) for the five values.
 
 ---
 
@@ -449,6 +455,60 @@ Applied to:
 
 ---
 
+## Origin gate
+
+The API runs on Cloud Run with `ingress=all`, so it answers on two addresses:
+`https://api.anyplot.ai`, which Cloudflare proxies, and the raw `*.run.app`
+URL, which it does not. Everything the edge enforces — the bot challenge, the
+WAF, the cache that makes the `max-age=300` reads free — is one URL away from
+being bypassed.
+
+A Cloudflare Transform Rule stamps `X-Origin-Secret` onto every request it
+proxies for `api.anyplot.ai`, and `api/origin_gate.py` refuses anything without
+it with `403`. It is not authentication: it says "you came through the front
+door", nothing about who you are — `require_admin` still decides what a caller
+may do on `/debug/*`.
+
+**Unset means off.** The gate is dormant unless `ORIGIN_SECRET` is set on the
+service, which is what makes local development, the test suite and the rollback
+work: remove the variable from the service, promote the resulting revision, and
+the gate is gone.
+
+**Exempt paths**, and only these:
+
+| Path | Why |
+|---|---|
+| `/health` | the deploy smoke probes the candidate revision on its `run.app` tag URL, which never passes the edge |
+| `/seo-proxy/…` | belt and braces — the prerendered pages do come through the edge, but the cost of being wrong is every crawler seeing a 403 |
+| `/debug/cache/invalidate` | `sync-postgres.yml` posts here from a GitHub runner over the direct URL, because Cloudflare's bot challenge answers an unauthenticated curl POST with a 403 HTML page. The endpoint has its own token (`CACHE_INVALIDATE_TOKEN`, constant-time compared, 503 when unconfigured) |
+
+`OPTIONS` is exempt too — a browser cannot attach a custom header to a CORS
+preflight, so a gate that refused one would break every cross-origin call
+instead of protecting anything.
+
+**Observing it.** `GET /health` reports `origin_gate` for the request it was
+asked with, never the value:
+
+| Value | Meaning |
+|---|---|
+| `off` | not armed, no header arrived |
+| `off-seen` | not armed, the header arrived — the state to be in before arming |
+| `ok` | armed, header matches |
+| `missing` | armed, no header — this path would now be dead |
+| `mismatch` | armed, wrong value (a half-applied rotation) |
+
+That is what makes the rollout measurable: put the Transform Rule live while
+the gate is still off, ask every route into the service (`api.anyplot.ai`, the
+apex `anyplot.ai/api/*` Worker, the site's nginx, the raw `run.app`), and only
+arm it once every path that must keep working answers `off-seen`.
+
+The apex Worker stamps the header itself rather than getting it from the rule,
+because a Worker subrequest to a host in the same zone bypasses that zone's
+Transform Rules. Its source and the measuring procedure live in
+[`infra/cloudflare/`](../../infra/cloudflare/README.md).
+
+---
+
 ## CORS configuration
 
 **Allowed Origins**:
@@ -456,6 +516,10 @@ Applied to:
 - `http://localhost:*` (development)
 
 **Allowed Methods**: All
+
+The origin gate sits directly inside `CORSMiddleware`, so a `403` from it still
+carries the CORS headers a browser needs to read it as a 403 rather than as an
+opaque network error.
 
 ---
 

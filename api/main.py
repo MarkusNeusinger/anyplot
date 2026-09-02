@@ -25,6 +25,7 @@ from api.exceptions import (  # noqa: E402
     http_exception_handler,
 )
 from api.mcp.server import mcp_server  # noqa: E402
+from api.origin_gate import OriginSecretMiddleware  # noqa: E402
 from api.routers import (  # noqa: E402
     debug_router,
     download_router,
@@ -161,25 +162,34 @@ app.add_exception_handler(AnyplotException, anyplot_exception_handler)
 app.add_exception_handler(HTTPException, http_exception_handler)
 app.add_exception_handler(Exception, generic_exception_handler)
 
+# The middleware stack, written innermost-first because `add_middleware` and
+# `@app.middleware` both wrap what is already there — so reading this file from
+# here down gives the order a request actually travels, in reverse:
+#
+#   cache headers → CORS → origin gate → bot counter → gzip → router
+#
+# (`HeadAsGetMiddleware` and `MCPTrailingSlashMiddleware` wrap the whole app
+# further out still; both only rewrite the scope.)
+#
+# Two of those positions are load-bearing:
+#
+# * The origin gate directly inside CORS, so a 403 from it still carries the
+#   headers a browser needs to read it as a 403 rather than as an opaque
+#   network error — and OUTSIDE the bot counter, so a refused request can never
+#   fire an outbound Plausible event. That second one is why the counter moved
+#   in here from outside CORS: `track_asset_fetch` fires per request for
+#   anything with a crawler user agent, so a caller on the direct `run.app` URL
+#   could otherwise turn each of its own refusals into one.
+# * The cache-header middleware stays OUTSIDE CORS, because its `setdefault`
+#   for the /og/ cards is what keeps CORSMiddleware's own header when the
+#   request came from an allowlisted origin — it has to run after CORS on the
+#   way out.
+
 # Enable GZip compression for responses > 500 bytes
 # This significantly reduces payload size for JSON API responses
 # (e.g., /plots/filter: 301KB -> ~40KB with gzip)
 # Note: GZip must be added before CORS so compression happens before CORS headers are added
 app.add_middleware(GZipMiddleware, minimum_size=500)
-
-# Configure CORS. Origins come from settings.cors_origins (single source of
-# truth — a hardcoded list here previously left https://www.anyplot.ai out
-# even though config promised it); the regex additionally allows any
-# localhost port for local dev servers.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.cors_origins,
-    allow_origin_regex=r"http://localhost:\d+",
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["Mcp-Session-Id"],  # MCP session tracking
-)
 
 
 # Record which AI or search agent requested which catalogue page.
@@ -212,6 +222,26 @@ async def record_bot_fetch(request: Request, call_next):
         asset_type, spec_id, library_id = asset
         track_asset_fetch(request, asset=asset_type, spec=spec_id, library=library_id, status=response.status_code)
     return response
+
+
+# Close the direct `*.run.app` door: require the header the Cloudflare edge
+# stamps. Dormant until ORIGIN_SECRET is set on the service, which is both the
+# rollout order and the rollback (api/origin_gate.py).
+app.add_middleware(OriginSecretMiddleware)
+
+# Configure CORS. Origins come from settings.cors_origins (single source of
+# truth — a hardcoded list here previously left https://www.anyplot.ai out
+# even though config promised it); the regex additionally allows any
+# localhost port for local dev servers.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_origin_regex=r"http://localhost:\d+",
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+    expose_headers=["Mcp-Session-Id"],  # MCP session tracking
+)
 
 
 # Add cache headers middleware

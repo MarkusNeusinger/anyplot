@@ -28,6 +28,31 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
 
 ### Added
 
+- **A shared-secret origin gate closes the direct `*.run.app` door, and the apex Worker's
+  source moves into the repository** — the API runs on Cloud Run with `ingress=all`, so it
+  answers on two addresses: `api.anyplot.ai`, which Cloudflare proxies, and the raw
+  `*.run.app` URL, which it does not. Everything the edge enforces — the bot challenge, the
+  WAF, the cache that makes the `max-age=300` reads free — was one URL away from being
+  bypassed, and `api/request_context.py` already documented callers doing it. A Cloudflare
+  Transform Rule stamps `X-Origin-Secret` on everything it proxies for the API host, and
+  `api/origin_gate.py` refuses anything without it with 403 before the request costs
+  anything. **Unset means off**, which is what makes the rollback a single variable and
+  keeps local development and the test suite untouched: the code can ship long before the
+  rule and the secret exist. `/health` reports `origin_gate` (`off` · `off-seen` · `ok` ·
+  `missing` · `mismatch`) for the request it was asked with — never the value — so every
+  route into the service can be measured *before* the switch is thrown; `off-seen` is the
+  state every path that must keep working has to reach first. Exempt: `/health` (the deploy
+  smoke reaches the candidate on its `run.app` tag URL, which never passes the edge),
+  `/seo-proxy/…` (belt and braces — the cost of being wrong there is every crawler seeing a
+  403), `/debug/cache/invalidate` (`sync-postgres.yml` posts to the direct URL by design,
+  because Cloudflare's bot challenge answers an unauthenticated curl POST with a 403 HTML
+  page; that endpoint carries its own constant-time token) and `OPTIONS`, which a browser
+  cannot attach a custom header to. The Cloudflare Worker behind `anyplot.ai/api/*` now has
+  its source in `infra/cloudflare/`, because a Worker subrequest to a host in the same zone
+  bypasses that zone's Transform Rules — so the Worker stamps the header itself, deleting
+  any inbound one first so a caller cannot supply it. The pre-traffic smoke reads the secret
+  at run time and sends it, accepting `off`/`off-seen` so the pipeline keeps working before
+  the gate is armed and after a rollback. (#11207)
 - **IndexNow: changed pages are pushed to Bing, Yandex, Seznam, Naver and Yep instead of
   waiting for a crawl** — Bing Webmaster Tools' first recommendation for the site. A public
   key file (`app/public/<key>.txt`, served by an explicit nginx `location` so crawler UAs
@@ -174,6 +199,22 @@ aggregate instead: an italic *Catalog* line at the end of the version section an
   idle window — so the instance is in practice never reclaimed and visitors keep the
   same time to first byte. `anyplot-api` keeps `min-instances=1`: its cold start is
   ~11.6 s and its traffic does leave gaps over 15 minutes. (#10812)
+- **The API deploy attaches secrets with `--update-secrets` instead of `--set-secrets`** —
+  the latter replaces the whole binding set, so any secret attached to the service out of
+  band would be stripped from every revision the pipeline creates. `ORIGIN_SECRET` is
+  exactly such a binding — attached by hand to arm the origin gate, removed by hand to roll
+  back — and the old flag would have silently disarmed the gate on the next deploy. It
+  cannot be listed in the flag instead: Cloud Run refuses a deploy naming a secret that does
+  not exist, which would break every build until the rollout creates it. (#11207)
+- **The analytics middleware moves inside `CORSMiddleware`** — a consequence of where the
+  origin gate has to sit. The gate belongs inside CORS, so its 403 still carries the headers
+  a browser needs to read it as a 403 rather than as an opaque network error, and outside
+  the bot counter, so a refused request can never fire an outbound Plausible event —
+  `track_asset_fetch` fires per request for anything with a crawler user agent, so a caller
+  on the direct URL could otherwise turn each of its own refusals into one. Those two are
+  only simultaneously possible with the counter inside CORS. The cache-header middleware
+  stays outside CORS, where its `setdefault` for the /og/ cards depends on being. `api/main.py`
+  now carries the stack order and the reason for each position. (#11207)
 
 ## [3.2.0] — 2026-08-29 — Findable by assistants
 
