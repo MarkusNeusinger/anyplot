@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: range-interval
 created: '2026-09-02T05:16:12Z'
-updated: '2026-09-02T05:20:17Z'
+updated: '2026-09-02T05:34:16Z'
 generated_by: claude-sonnet
 workflow_run: 33593352627
 issue: 3577
@@ -12,35 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-int
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 94
 review:
   strengths:
-  - Correct, idiomatic use of Makie's rangebars! for exactly this chart type, plus
-    scatter! endpoint markers per the spec's marker-emphasis note
-  - Deliberate midpoint-based sort creates a readable low-to-high career-ladder narrative
-  - Clean theme-adaptive chrome - both renders pass the light/dark legibility checklist
-    with zero flagged issues
-  - Title format, axis units, and data mapping are all fully spec-compliant
+  - 'Idiomatic Makie geometry: rangebars!(direction=:x) for the core range span, paired
+    with scatter! markers at each endpoint per the spec''s ''markers for emphasis''
+    note — a genuine library-recipe choice, not a workaround.'
+  - hspan! alternating row bands give scan-ability across 12 categories, a distinctive
+    Makie-specific touch.
+  - 'Data is sorted by midpoint into an intentional low-to-high ''career ladder''
+    narrative, with a callout annotation (''Widest range: $85K spread'') giving readers
+    an immediate takeaway beyond the sort order.'
+  - 'Theme-adaptive chrome is fully correct in both renders: correct backgrounds,
+    ink tokens threaded through title/axis/tick colors and grid opacity, brand-green
+    data color identical across themes.'
+  - Correct title format, correct canvas (3200x1800), and single-series legend appropriately
+    omitted.
   weaknesses:
-  - Design Excellence reads as a well-configured library default (single hue, standard
-    rangebar geometry) rather than an exceptional, publication-ready design - add
-    one polish touch such as alternating row shading for the 12-category list or emphasis
-    on the widest-range category, without adding a second hue to the single-series
-    data
-  - Storytelling relies solely on the ascending midpoint sort; no additional annotation
-    or emphasis highlights a specific insight (e.g. the widest salary spread) beyond
-    the sort order itself
+  - Random.seed!(42) is called but never used — min_salary/max_salary are fully hardcoded
+    arrays, so the Random import and seed are dead code. Either remove them or use
+    Random for the data generation.
+  - Title occupies only ~40-45% of the plot width rather than the typical ~50-70%
+    target — still fully legible and not a violation, but the header could carry slightly
+    more visual weight given how much horizontal space is otherwise unused above the
+    plot.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 - not pure white, not dark.
-      Chrome: Bold dark title "Salary Ranges by Job Title · range-interval · julia · makie · anyplot.ai" centered at top; dark axis labels "Annual Base Salary (USD thousands)" and "Job Title"; lighter secondary-ink tick labels for the 12 job-title categories and numeric x-axis ticks. All fully readable against the light background.
-      Data: Single brand-green (#009E73) semi-transparent rangebars spanning min-max salary per job title, capped with open circular markers stroked in the page-background color. Only one series (green), consistent with palette rule (first series = #009E73).
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
+      Chrome: Title "Salary Ranges by Job Title · range-interval · julia · makie · anyplot.ai" is bold dark text, clearly readable. Y-axis job-title labels (Support Specialist ... VP of Engineering) and x-axis tick labels (100, 200, 300) render in dark/soft-dark ink, all legible. Alternating warm-gray row bands aid scanability. Vertical gridlines are subtle.
+      Data: 12 horizontal range bars in brand green (#009E73) with semi-transparent fill and circular endpoint markers (green fill, cream stroke) at min and max salary for each job title. A callout "Widest range: $85K spread" labels the VP of Engineering row in dark ink, fully legible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 - not pure black, not light.
-      Chrome: Title, axis labels, and tick labels all flipped to light ink tones (white/light gray); faint light gridlines at low opacity. No dark-on-dark issues - every text element is clearly legible against the dark surface.
-      Data: Identical brand-green (#009E73) bars and markers as the light render - confirmed unchanged between themes.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black.
+      Chrome: Title, axis labels, and tick labels all render in light ink (near-white / soft light gray), clearly readable against the dark surface — no dark-on-dark failures. Alternating row bands are a subtle lighter charcoal, gridlines are faint.
+      Data: Same brand-green (#009E73) bars and markers as the light render, with near-black marker strokes — data colors are identical between themes, only chrome flipped. Callout annotation text is bright and legible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -52,72 +58,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; title spans ~61% of plot width, within
-          target; readable in both themes
+        comment: All text readable in both themes; title fontsize correctly scaled
+          down via the documented length formula for the longer descriptive title.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between labels, ticks, or data
+        comment: No collisions between bars, markers, callout text, or tick labels
+          across 12 rows.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=16 bars + markersize=14 endpoint markers are prominent
-          and well-suited to 12 sparse categories
+        comment: Sparse data (12 categories) rendered with prominent 16px bars and
+          14px stroked endpoint markers.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; page-bg-colored marker strokes create clean separation
-          from the bar fill
+        comment: Single brand-green series with cream/near-black marker strokes for
+          definition; no red-green reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced margins, healthy canvas usage, nothing clipped
+        comment: Correct 3200x1800 canvas, nothing clipped, generous right margin
+          reserved for the callout via xautolimitmargin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis carries units (USD thousands); y-axis descriptive
+        comment: Both axes descriptive with units (USD thousands).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series exact #009E73; backgrounds theme-correct #FAF8F1/#1A1A17;
-          chrome flips correctly'
+        comment: 'First series is #009E73, backgrounds match #FAF8F1/#1A1A17, chrome-only
+          theme flip confirmed.'
     design_excellence:
-      score: 12
+      score: 17
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 7
         max: 8
-        passed: false
-        comment: Single-hue, alpha-blended bars with halo-stroked markers is a nice
-          touch but reads as a well-configured default
+        passed: true
+        comment: Semi-transparent range fill, stroked endpoint markers, alternating
+          row bands — clear polish beyond defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Spines reduced, subtle grid, generous whitespace - solid but not
-          exceptional
+        passed: true
+        comment: Top/right spines removed, subtle single-axis grid, generous whitespace
+          and row spacing.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Midpoint sort creates a readable career-ladder narrative; no further
-          emphasis beyond sort order
+        passed: true
+        comment: Midpoint sort builds a career-ladder narrative; callout annotation
+          gives an explicit focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -127,52 +135,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct range-interval chart using Makie's rangebars! recipe
+        comment: rangebars! horizontal range chart, correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Horizontal orientation, sorted by midpoint, min/max markers, semi-transparent
-          fill - all spec notes implemented
+        comment: Category/min/max shown, endpoint markers, logical sort, semi-transparent
+          fill — all spec notes covered.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=salary, Y=job title; all 12 categories and full ranges visible
+        comment: X=salary, Y=job title, all 12 categories shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format exact match; no legend needed, correctly omitted for
-          single series
+        comment: Title matches mandated format with descriptive prefix; legend correctly
+          omitted for single series.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good variation in interval width across seniority; ranges don't overlap
-          between categories
+        comment: Full range span, endpoints, and spread emphasis all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic, neutral tech-company salary-band scenario
+        comment: Plausible, neutral tech-company salary bands by seniority.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible, internally consistent salary progression
+        comment: 42K-260K USD progression is sensible for the domain.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -180,31 +187,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward imports -> data -> plot -> save
+        comment: No functions/classes, flat script.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Fully deterministic hardcoded data.
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: CairoMakie, Colors, Random all used
+        passed: false
+        comment: Random.seed!(42) and `using Random` are unused dead code since data
+          is hardcoded, not generated.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriately concise, no fake functionality
+        comment: Appropriate complexity, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-$(THEME).png via current save(...; px_per_unit=2) API
+        comment: Saves plot-$(THEME).png with px_per_unit=2.
     library_mastery:
       score: 9
       max: 10
@@ -214,21 +222,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Uses Makie's dedicated rangebars! recipe plus scatter! for endpoint
-          emphasis
+        comment: rangebars!, hspan!, scatter!, text! all used via their recommended
+          high-level API.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: rangebars! is a Makie-specific primitive not easily replicated as
-          a one-liner in most other libraries
-  verdict: REJECTED
+        comment: rangebars! + hspan! banding is a genuinely Makie-distinctive combination
+          for this chart type.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
-  patterns: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
+  - grid-styling
