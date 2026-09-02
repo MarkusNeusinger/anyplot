@@ -2,7 +2,7 @@ library: echarts
 language: javascript
 specification_id: ohlc-bar
 created: '2026-09-02T04:46:03Z'
-updated: '2026-09-02T04:50:39Z'
+updated: '2026-09-02T05:00:45Z'
 generated_by: claude-sonnet
 workflow_run: 33591648064
 issue: 3293
@@ -12,66 +12,68 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/javascript/echarts/plot-dark.html
-quality_score: 89
+quality_score: 93
 review:
   strengths:
   - Idiomatic use of ECharts custom series (renderItem with api.coord/api.size) to
     build true I-beam OHLC bars — a chart type ECharts has no native series for, correctly
     avoiding the wrong shortcut of a relabeled candlestick series.
-  - 'Correct semantic color mapping: brand green (#009E73, palette[0]) for bullish
-    bars, semantic matte red (#AE3030, palette[4] — the deferred loss/error anchor)
-    for bearish bars, matching the Imprint semantic-exception order.'
-  - 'Clever proxy-series technique: two invisible line series with symbol: ''none''
-    exist purely to drive correct legend swatches while the actual bars render through
-    the custom series — avoids a mismatched or missing legend.'
+  - 'Repair correctly addressed the prior VQ-04 finding: bearish bars now use a dashed
+    stroke (lineDash [6,3]) in addition to matte red, so the up/down signal survives
+    for red-green color-vision-deficient viewers — confirmed visibly dashed in both
+    renders, and the legend swatches mirror the same solid-vs-dashed distinction.'
+  - 'Repair added a genuine storytelling layer: the steepest single-day move (rally
+    or drawdown) is computed from the data and annotated with a connector line and
+    label, cleanly placed with no overlap against surrounding bars in either theme.'
+  - Explicit Y-axis title 'Price (USD)' now present in addition to the '$' tick formatter,
+    strengthening axis clarity.
+  - 'Correct semantic color mapping: brand green (#009E73, palette[0]) for bullish,
+    semantic matte red (#AE3030, palette[4]) for bearish, matching the Imprint semantic-exception
+    order.'
   - Deterministic seeded LCG produces realistic day-to-day OHLC drift with a plausible
-    mild uptrend across 45 trading days (weekends correctly skipped).
-  - 'Clean theme-adaptive chrome: transparent background, ink/inkSoft/grid tokens
-    correctly threaded through title, legend, axis labels and gridlines; both renders
-    are legible and the data colors are identical between light and dark.'
+    mild uptrend across 45 trading days; weekends correctly skipped.
+  - Clean theme-adaptive chrome throughout — transparent background, ink/inkSoft/grid
+    tokens correctly threaded through title, legend, axis labels and gridlines; both
+    renders legible with identical data colors.
   weaknesses:
-  - 'VQ-04: Bullish vs. bearish bars are distinguished only by hue (green vs. red)
-    with no secondary cue (shape, label, pattern) — a red-green color-vision-deficient
-    viewer cannot tell the two apart from color alone. This is conventional in OHLC/candlestick
-    charting, but the review criteria mark red-green-as-sole-signal as a deduction;
-    consider whether a secondary cue is feasible without cluttering the bars.'
-  - 'DE-01/DE-03: The chart is clean and technically correct but reads as a competent
-    standard rendering rather than a distinctive one — there is no annotated focal
-    point (e.g. a callout on the largest single-day rally or the steepest drawdown)
-    to guide the viewer''s eye or add a storytelling layer.'
-  - 'VQ-06: Y-axis carries a ''$'' price prefix but there is no explicit axis title
-    (e.g. ''Price (USD)'') — acceptable given the $ formatter, but an explicit axis
-    title would strengthen VQ-06 and DE-03 slightly.'
+  - 'DE-01: The chart is polished and now has a storytelling callout, but the overall
+    visual identity still reads as a competent standard rendering rather than a highly
+    distinctive one — e.g. no subtle background banding or additional annotation layer
+    beyond the single callout.'
+  - The steepest-move callout only marks one event; a light dotted guide connecting
+    it more explicitly to its bar (rather than a plain vertical line) could read slightly
+    cleaner, though the current version is not a defect.
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "Aurora Robotics · ohlc-bar · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend below the title shows two line swatches labeled "Bullish (close > open)" (green) and "Bearish (close < open)" (red), both readable. Y-axis shows $175-$210 in soft gray with a "$" prefix; x-axis shows date labels (Jan 2 through Mar 4) in soft gray, evenly spaced with no overlap. Horizontal gridlines are subtle but visible; y-axis line and x-axis ticks are hidden for a clean look.
-      Data: 45 I-beam OHLC bars — a thin vertical high-low line with a left tick (open) and right tick (close) per bar — colored green (#009E73) for up days and matte red (#AE3030) for down days. The overall trend drifts upward from ~$182 to ~$199 with visible day-to-day volatility. Bars are clearly distinguishable from each other and from the background.
-      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues.
+      Chrome: Title "Aurora Robotics · ohlc-bar · javascript · echarts · anyplot.ai" centered at top in dark ink, clearly legible. Legend below shows two swatches: a solid green line labeled "Bullish (close > open)" and a dashed red line labeled "Bearish (close < open)" — the dash pattern is visible directly in the legend swatch itself. Y-axis shows $175-$210 with a "$" prefix and an explicit rotated axis title "Price (USD)"; x-axis shows date labels (Jan 2 through Mar 4) in soft gray, evenly spaced with no overlap. Horizontal gridlines are subtle but visible. A storytelling callout "Steepest rally: +$3.15" with a thin connector line points to the tallest single-day gain near Jan 27, cleanly placed with no overlap against neighboring bars.
+      Data: 45 I-beam OHLC bars — thin vertical high-low line with a left tick (open) and right tick (close) per bar — colored green (#009E73, solid stroke) for up days and matte red (#AE3030, dashed stroke) for down days. The dashed pattern on bearish bars is clearly visible up close, giving CVD viewers a non-color cue. Overall trend drifts upward from ~$182 to ~$199 with visible day-to-day volatility.
+      Legibility verdict: PASS — all text is clearly readable against the light background, no light-on-light issues, no clipping.
 
     Dark render (plot-dark.png):
       Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title and legend text now rendered in light/white ink, clearly legible against the dark background. Axis tick labels (both $ price and dates) are in light gray and easily readable. Gridlines remain subtle but visible on the dark surface. No axis lines/ticks clutter the chart, matching the light render's minimal-chrome treatment.
-      Data: Same 45 OHLC bars with identical green (#009E73) and red (#AE3030) hues as the light render — confirmed data colors are unchanged between themes, only chrome (background, text, grid) flipped.
-      Legibility verdict: PASS — no dark-on-dark failures observed; all title, legend, and axis text remain clearly visible against the near-black background.
+      Chrome: Same title, legend, and axis title now rendered in light ink, clearly legible against the dark background. Axis tick labels (both $ price and dates) are light gray and easily readable. Gridlines remain subtle but visible. The "Steepest rally: +$3.15" callout and its connector line are legible in light ink with no overlap.
+      Data: Same 45 OHLC bars with identical green (#009E73, solid) and red (#AE3030, dashed) hues/strokes as the light render — confirmed data colors and dash pattern are unchanged between themes, only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS — no dark-on-dark failures observed; all title, legend, axis, and callout text remain clearly visible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, legend, and axis labels are all explicitly sized and read
-          clearly in both themes.
+        comment: Title, legend, axis labels, and the new callout text are all explicitly
+          sized and read clearly in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or bar collisions in either render.
+        comment: No text or bar collisions in either render; the new callout is cleanly
+          placed with no overlap against neighboring bars.
       - id: VQ-03
         name: Element Visibility
         score: 6
@@ -81,24 +83,26 @@ review:
           for 45 bars — clearly visible without crowding.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Bullish/bearish distinction relies solely on green vs. red hue with
-          no secondary cue — a red-green CVD failure mode, though conventional for
-          OHLC charts.
+        passed: true
+        comment: 'Fixed from attempt 1: bearish bars now use a dashed stroke in addition
+          to red, giving CVD viewers a non-color cue confirmed visible in both renders
+          and in the legend swatches.'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, title ~45% width, nothing clipped or overflowing.
+        comment: Good proportions, title well within bounds, nothing clipped or overflowing;
+          canvas gate passed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis uses '$' price formatting; x-axis shows formatted dates.
+        comment: Explicit 'Price (USD)' y-axis title now added on top of the '$' tick
+          formatter; x-axis shows formatted dates.
       - id: VQ-07
         name: Palette Compliance
         score: 2
@@ -107,30 +111,32 @@ review:
         comment: 'First series is #009E73 brand green; bearish uses palette[4] #AE3030,
           the correct semantic loss/error anchor. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Intentional touches (proportional tick length, refined line weight)
-          beyond generic defaults, but no strong custom visual identity.
+        passed: true
+        comment: Intentional touches (proportional tick length, refined line weight,
+          dashed bearish stroke, storytelling callout) beyond generic defaults; still
+          short of a highly distinctive visual identity.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis line/ticks hidden, x-axis splitLine hidden, subtle horizontal
-          gridlines only, generous whitespace via grid margins.
+        comment: Y-axis line/ticks hidden, x-axis splitLine hidden, subtle horizontal-only
+          gridlines, generous whitespace via grid margins.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Color-coding creates some hierarchy, but no annotation or focal point
-          highlights a specific story beat (e.g. biggest rally/drawdown).
+        passed: true
+        comment: 'Fixed from attempt 1: computed steepest single-day rally/drawdown
+          is now annotated with a connector line and label, giving the chart a clear
+          focal point.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,8 +153,8 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Thin high-low line, left/right open/close ticks, up/down color coding,
-          formatted date axis, gridlines all present.
+        comment: Thin high-low line, left/right open/close ticks, up/down color+dash
+          coding, formatted date axis, gridlines all present.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -162,7 +168,8 @@ review:
         max: 3
         passed: true
         comment: Title follows '{Descriptive Title} · {spec-id} · {language} · {library}
-          · anyplot.ai'; legend labels match the up/down semantics.
+          · anyplot.ai'; legend labels match the up/down semantics with matching stroke
+          style.
     data_quality:
       score: 15
       max: 15
@@ -214,7 +221,8 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex for a custom-series chart; no fake UI.
+        comment: Appropriately complex for a custom-series chart with an added callout;
+          no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -238,13 +246,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: api.coord/api.size-driven custom rendering plus the proxy-series
-          legend trick are genuinely ECharts-specific techniques.
-  verdict: REJECTED
+        comment: api.coord/api.size-driven custom rendering, the proxy-series legend
+          trick, and chart.convertToPixel-driven graphic callout are genuinely ECharts-specific
+          techniques.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - annotations
   patterns:
   - data-generation
   dataprep:
