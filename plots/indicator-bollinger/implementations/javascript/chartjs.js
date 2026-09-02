@@ -1,7 +1,7 @@
 // anyplot.ai
 // indicator-bollinger: Bollinger Bands Indicator Chart
 // Library: chartjs 4.4.7 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 95/100 | Created: 2026-09-02
 
 const t = window.ANYPLOT_TOKENS;
 
