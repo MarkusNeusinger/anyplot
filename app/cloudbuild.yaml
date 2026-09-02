@@ -121,6 +121,18 @@ steps:
         # build's revision (deterministic --revision-suffix) — a concurrent
         # build re-tagging `candidate` must fail this build, not get smoked
         # on its behalf.
+        #
+        # What this checks is the CONTROL PLANE: `status.traffic` is the tag
+        # assignment, not proof of which revision answered a given request.
+        # `candidate` is reused across builds, so in the moment after a
+        # re-assignment the tag URL can still reach the previous revision, and
+        # a probe would then pass against the wrong image. Closing that needs
+        # either a build-unique tag (which accumulates tag URLs on the service
+        # without bound) or a build id the app serves in its own response —
+        # neither is taken here. The residual is narrow and its worst case is
+        # mild: it needs the PREVIOUS candidate to pass every probe too, so the
+        # failure is "promoted a revision we only believed we smoked", not
+        # "shipped a page we know is broken".
         read -r URL REV <<< "$$(gcloud run services describe ${_SERVICE_NAME} --region=${_REGION} --platform=managed --format=json \
           | python3 -c "import json,sys; t=json.load(sys.stdin)['status']['traffic']; c=next(x for x in t if x.get('tag')=='candidate'); print(c['url'], c['revisionName'])")"
         test "$$REV" = "${_SERVICE_NAME}-b$BUILD_ID" || { echo "candidate tag moved to $$REV (expected ${_SERVICE_NAME}-b$BUILD_ID)"; exit 1; }

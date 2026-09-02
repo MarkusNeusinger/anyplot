@@ -1049,9 +1049,18 @@ The two chains differ in two places, both on the app's side:
   same service can move it mid-smoke. `app/cloudbuild.yaml` re-asserts after its probes
   that the tag still names this build's revision and refuses to promote otherwise; a
   competing build only ever tags its own revision and never ours back, so matching at both
-  ends means every probe in between hit the right revision. `api/cloudbuild.yaml` checks
+  ends means the tag was never re-assigned during the smoke. `api/cloudbuild.yaml` checks
   only before its probes, so two overlapping API builds can still promote a revision that
   was not the one smoked — the same four lines would close it there.
+
+Both checks read `status.traffic`, which is the **control-plane tag assignment** and not
+proof of which revision answered a given request: because `candidate` is reused across
+builds, a probe issued while a re-assignment is still propagating can reach the previous
+revision. Closing that gap needs either a build-unique tag (tag URLs then accumulate on
+the service without bound) or a build id the served response itself carries. Neither is in
+place, and the residual is narrow: it needs the previous candidate to pass every probe as
+well, so the worst case is promoting a revision that was believed smoked, not shipping a
+page known to be broken.
 
 ## Debugging Tips
 
