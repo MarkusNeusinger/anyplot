@@ -45,6 +45,10 @@ end
 
 is_up = close_prices .>= open_prices
 bar_colors = [up ? UP_COLOR : DOWN_COLOR for up in is_up]
+# Hollow-vs-filled body convention: up candles are hollow (outline only), down
+# candles are solid-filled. This gives CVD readers a shape cue independent of
+# the green/red hue, on top of the semantic finance color convention.
+body_fill_colors = [up ? PAGE_BG : DOWN_COLOR for up in is_up]
 x = collect(1:n_days)
 
 wick_points = Vector{Point2f}(undef, 2 * n_days)
@@ -92,7 +96,7 @@ ax_volume = Axis(
     xlabel              = "Date",
     xlabelsize          = 14,
     xlabelcolor         = INK,
-    ylabel              = "Volume",
+    ylabel              = "Volume (millions)",
     ylabelsize          = 14,
     ylabelcolor         = INK,
     xticklabelsize      = 12,
@@ -119,15 +123,27 @@ linkxaxes!(ax_price, ax_volume)
 xlims!(ax_price, 0.3, n_days + 0.7)
 xlims!(ax_volume, 0.3, n_days + 0.7)
 
+# Extra headroom above the highest wick keeps the top-left legend clear of
+# the earliest candles regardless of where the price series peaks.
+price_span = maximum(high_prices) - minimum(low_prices)
+ylims!(ax_price, minimum(low_prices) - 0.05 * price_span, maximum(high_prices) + 0.18 * price_span)
+
 linesegments!(ax_price, wick_points; color = wick_colors, linewidth = 2.2)
-barplot!(ax_price, x, close_prices; fillto = open_prices, color = bar_colors, width = 0.6)
+barplot!(
+    ax_price, x, close_prices;
+    fillto = open_prices, color = body_fill_colors,
+    strokecolor = bar_colors, strokewidth = 2.2, width = 0.6,
+)
 barplot!(ax_volume, x, volumes; color = bar_colors, width = 0.6)
 
 rowsize!(fig.layout, 1, Relative(0.72))
 rowsize!(fig.layout, 2, Relative(0.28))
 rowgap!(fig.layout, 12)
 
-legend_elements = [PolyElement(color = UP_COLOR), PolyElement(color = DOWN_COLOR)]
+legend_elements = [
+    PolyElement(color = PAGE_BG, strokecolor = UP_COLOR, strokewidth = 2.2),
+    PolyElement(color = DOWN_COLOR, strokecolor = DOWN_COLOR, strokewidth = 2.2),
+]
 Legend(
     fig[1, 1], legend_elements, ["Up", "Down"];
     tellwidth = false, tellheight = false,
