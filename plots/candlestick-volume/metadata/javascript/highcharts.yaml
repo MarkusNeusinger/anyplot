@@ -2,7 +2,7 @@ library: highcharts
 language: javascript
 specification_id: candlestick-volume
 created: '2026-09-02T14:27:40Z'
-updated: '2026-09-02T14:34:01Z'
+updated: '2026-09-02T14:42:35Z'
 generated_by: claude-sonnet
 workflow_run: 33641151734
 issue: 3068
@@ -12,45 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/candlesti
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/candlestick-volume/javascript/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Builds a real candlestick from Floor + Body stacked columns and null-separated
-    up/down wick lines — a correct, spec-compliant workaround for the missing core-bundle
-    candlestick series, with no forbidden add-on modules.
-  - Native dual-pane layout via a secondary yAxis top/height split sharing one xAxis,
-    giving synchronized crosshair and gridlines across price and volume panes for
-    free, with no manual sync code.
+  - Builds a correct candlestick from Floor + Body stacked columns and null-separated
+    up/down wick lines — a spec-compliant workaround for the missing core-bundle candlestick
+    series, with no forbidden add-on modules.
+  - Native dual-pane layout via a secondary yAxis top/height split sharing one xAxis
+    gives synchronized crosshair and gridlines across price and volume panes automatically,
+    with no manual sync code.
   - 'Correct Imprint finance semantic exception: green (#009E73) for bullish/profit,
     matte red (#AE3030) for bearish/loss, applied consistently to candle bodies, wicks,
-    volume bars, and legend swatches.'
-  - Theme-adaptive chrome is fully threaded through (title, axis titles, tick labels,
-    grid, legend, plot border) — both renders are clean and legible with correct backgrounds.
-  - Deterministic seeded PRNG (mulberry32) produces a realistic ETH-style price random
-    walk with volume correlated to price movement, showing both bullish and bearish
-    candles of varying body size.
+    volume bars, and legend swatches, identical across both themes.'
+  - 'All three attempt-1 weaknesses were fixed precisely: volume pane widened from
+    23% to 27% (spec''s 25-30% band), volume axis formatter now rolls over to an ''M''
+    unit above 1,000,000, and the four-sided plotBorderWidth/plotBorderColor was removed
+    in favor of the style guide''s minimal L-shaped axis frame.'
+  - 'Theme-adaptive chrome is fully threaded through (title, axis titles, tick labels,
+    grid, legend) — both renders are clean, legible, and use the correct #FAF8F1/#1A1A17
+    backgrounds.'
   weaknesses:
-  - Volume pane occupies ~23% of vertical space vs the spec's 25-30% target (price
-    pane is correctly ~72%); widen the volume pane slightly.
-  - Volume axis tick labels render as '1,000k' for values ≥ 1,000,000 instead of rolling
-    over to an 'M' unit (e.g. '1M') — the formatter only divides by 1000 with a fixed
-    'k' suffix.
-  - Bullish/bearish direction relies on red/green hue alone with no redundant encoding
-    — an accepted candlestick convention and the spec's own request, but a deuteranopia/protanopia
-    viewer cannot distinguish direction from color alone.
-  - 'Full four-sided plot border (plotBorderWidth: 1) frames both panes rather than
-    the style guide''s default minimal L-shaped (left+bottom) frame, slightly reducing
-    visual refinement.'
+  - Price pane is now 68% of vertical space, just under the spec's 70-75% target (volume
+    correctly landed at 27% within its 25-30% band) — nudge price pane height back
+    up slightly, e.g. 70%/25% with a smaller gap, to satisfy both bounds simultaneously.
+  - Bullish/bearish direction still relies on red/green hue alone with no redundant
+    shape/texture cue — an accepted candlestick convention and the spec's own request,
+    but not ideal for a deuteranopia/protanopia viewer.
+  - The header block omits the '// License:' line that prompts/library/highcharts.md
+    asks every Highcharts snippet to keep visible (commercial license disclosure)
+    — a minor compliance gap, not a scoring blocker this round.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white.
-      Chrome: Title "candlestick-volume · javascript · highcharts · anyplot.ai" in bold dark text at top; "Price (USD)" and "Volume" axis titles and "Trading Date" x-axis title in dark/soft-dark text; tick labels dark; grid lines thin, subtle warm-gray, aligned across both panes; legend at bottom with two circular swatches ("Bullish (Close ≥ Open)", "Bearish (Close < Open)") in soft-dark text. All chrome elements clearly readable against the light background.
-      Data: Candles and volume bars use two colors only — brand green (#009E73) for bullish/close≥open, matte red (#AE3030) for bearish/close<open. Both bullish and bearish candles present with varying body sizes (including near-doji thin bodies), wicks visible above/below bodies. Volume bars beneath track the same color per period and visually correlate with price swings.
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
+      Chrome: Title "candlestick-volume · javascript · highcharts · anyplot.ai" in bold dark text at top, comfortably sized and not overflowing; "Price (USD)" and "Volume" y-axis titles and "Trading Date" x-axis title in dark/soft-dark text; tick labels dark and legible; grid lines thin and subtle, aligned across both panes; legend at bottom with two circular swatches ("Bullish (Close ≥ Open)", "Bearish (Close < Open)") in soft-dark text. Only left+bottom axis lines are drawn (minimal L-shaped frame, no boxed border). All chrome elements clearly readable against the light background.
+      Data: Candles and volume bars use two colors only — brand green (#009E73) for bullish/close≥open, matte red (#AE3030) for bearish/close<open. Both bullish and bearish candles present with varying body sizes (including near-doji thin bodies) and visible wicks above/below bodies. Volume bars beneath track the same per-period color and visually correlate with price swings (e.g. the late-June rally and mid-July pullback both show volume-confirmed moves). Volume axis correctly rolls over to "1M" at the top tick.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black.
-      Chrome: Title, axis titles, and tick labels rendered in light/off-white text, fully readable against the dark background; grid lines thin, subtle light-gray, aligned across both panes; legend swatches and text same layout as light render, text light-colored and legible. No dark-on-dark text found anywhere.
+      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
+      Chrome: Title, axis titles, and tick labels rendered in light/off-white text, fully readable against the dark background; grid lines thin, subtle light-gray, aligned across both panes; legend swatches and text in the same layout as the light render, text light-colored and legible. No dark-on-dark text found anywhere. Same minimal L-shaped axis frame as the light render.
       Data: Candle and volume bar colors are pixel-identical to the light render — same brand green (#009E73) and matte red (#AE3030) — confirming only chrome (not data colors) flips between themes.
       Legibility verdict: PASS
   criteria_checklist:
@@ -91,8 +91,9 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: Plot fills the large majority of the canvas, balanced margins, legend
-          sits directly under the chart, nothing cut off.
+        comment: Canvas is exactly 3200x1800; plot fills the large majority of the
+          canvas, balanced margins, legend sits directly under the chart, nothing
+          cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -109,7 +110,7 @@ review:
           exception; identical data colors across themes; theme-correct chrome and
           backgrounds in both renders.
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -121,12 +122,12 @@ review:
           though not yet at publication-ready polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Grid subtle and theme-adaptive, generous whitespace between panes,
-          but the full 4-sided plot border keeps all sides framed instead of a minimal
-          L-shaped frame.
+        comment: 'Fixed since attempt 1: the four-sided plotBorderWidth/plotBorderColor
+          was removed, now showing the style guide''s minimal L-shaped (left+bottom)
+          axis frame; grid subtle, whitespace generous.'
       - id: DE-03
         name: Data Storytelling
         score: 4
@@ -151,8 +152,9 @@ review:
         max: 4
         passed: true
         comment: Shared x-axis, date formatting, matching up/down color scheme, and
-          aligned subtle gridlines all present; volume pane is ~23% of vertical space
-          vs the spec's 25-30% target.
+          aligned subtle gridlines all present; volume pane widened to 27% (within
+          the spec's 25-30% band) but price pane is now 68%, just under the 70-75%
+          target.
       - id: SC-03
         name: Data Mapping
         score: 3
@@ -190,7 +192,7 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: OHLC constraints respected (high ≥ max(open,close), low ≤ min(open,close));
+        comment: OHLC constraints respected (high >= max(open,close), low <= min(open,close));
           volume magnitudes and price drift are plausible.
     code_quality:
       score: 10
@@ -246,13 +248,14 @@ review:
         comment: Uses Highcharts' native multi-pane yAxis split with a shared xAxis
           for automatic cross-pane crosshair/gridline sync — a feature distinctive
           to Highcharts.
-  verdict: REJECTED
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - multi-pane-axes
   - custom-legend
   - hover-tooltips
+  - shared-crosshair
   patterns:
   - data-generation
   dataprep:

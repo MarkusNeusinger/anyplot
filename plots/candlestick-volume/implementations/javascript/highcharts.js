@@ -1,7 +1,7 @@
 // anyplot.ai
 // candlestick-volume: Stock Candlestick Chart with Volume
 // Library: highcharts 12.6.0 | JavaScript 22.23.2
-// Quality: 88/100 | Created: 2026-09-02
+// Quality: 89/100 | Created: 2026-09-02
 
 // The core bundle (no highcharts-more / modules/stock) has no "candlestick"
 // series — that type ships in modules/stock.js, which isn't loaded. Each
