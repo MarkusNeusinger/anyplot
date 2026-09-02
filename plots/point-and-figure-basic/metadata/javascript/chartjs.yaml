@@ -2,7 +2,7 @@ library: chartjs
 language: javascript
 specification_id: point-and-figure-basic
 created: '2026-09-02T05:11:20Z'
-updated: '2026-09-02T05:15:57Z'
+updated: '2026-09-02T05:27:31Z'
 generated_by: claude-sonnet
 workflow_run: 33592935640
 issue: 3755
@@ -12,43 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/chartjs/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/chartjs/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/javascript/chartjs/plot-dark.html
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - Correctly implements P&F box/column construction (close-based boxing, classic
-    3-box reversal) entirely from scratch in Chart.js, which has no native P&F chart
-    type
-  - 'Clever use of pointStyle: "crossRot"/"circle" scatter markers to faithfully recreate
-    the classic X/O visual language, including hollow O markers'
-  - Both light and dark renders are clean, correctly themed, and fully legible with
-    no clipping or overlap
-  - First-series green and semantic-red palette usage is correct, and colors hold
-    identical across themes
+  - 'Repair correctly added the spec-required 45-degree support/resistance trend lines:
+    two segmented line datasets connecting ascending column lows (support, dashed)
+    and descending column highs (resistance, dotted), with NaN-gap breaks between
+    segments so each trend line only spans the columns it actually applies to'
+  - 'P&F box/column construction remains correct: close-based boxing, classic 3-box
+    reversal, one column per reversal, X-axis is reversal sequence not time'
+  - 'Both renders are clean, correctly themed (#FAF8F1 light / #1A1A17 dark), fully
+    legible, no clipping or text/marker overlap'
+  - 'First series is brand green #009E73 (X/rising) and matte red #AE3030 (O/falling)
+    — correct semantic-exception use of the Imprint palette for finance up/down coloring,
+    identical across themes'
+  - Deterministic data generation via a fixed-seed LCG (seed=42)
   weaknesses:
-  - 'Missing the spec''s explicit trend-line requirement: "Draw support trend lines
-    connecting ascending lows (45-degree up) and resistance trend lines connecting
-    descending highs (45-degree down)" — add two line datasets connecting the sequence
-    of rising-column lows and falling-column highs to surface the support/resistance
-    signal the spec calls out'
-  - Y-axis gridlines are at $10 steps rather than the box-size ($1) intervals the
-    spec suggests considering; at minimum, consider a lighter secondary gridline or
-    tick marks at $1/$5 steps near the price axis so box-size context is visible without
-    cluttering the $10 labels
-  - Beyond the core X/O recreation, the design stays close to library defaults — no
-    visual differentiation for the most recent (still-forming) column vs. completed
-    columns, which is a common P&F convention that would add data-storytelling value
+  - Y-axis gridlines remain at $10 steps rather than the $1 box-size intervals the
+    spec suggests considering — still an open optional refinement from attempt 1,
+    not blocking
+  - 'Legend swatches for ''Support (45°)'' and ''Resistance (45°)'' render as plain
+    grey circles (from usePointStyle: true) rather than a dashed/dotted line sample,
+    so the legend doesn''t visually preview the dash pattern that distinguishes the
+    two trend lines on the plot'
+  - No visual differentiation between the most recent (still-forming) column and completed
+    columns — a common P&F convention that would add extra data-storytelling polish
+  - The trend-line construction (buildTrendSegments, startSegment, withGaps) adds
+    several helper functions beyond the flat Imports→Data→Plot script shape; justified
+    by the domain algorithm but pushes CQ-01 below a perfect score
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, not dark.
-      Chrome: Title "point-and-figure-basic · javascript · chartjs · anyplot.ai" centered at top in dark ink; legend "X — rising" / "O — falling" below title; axis titles "Column (price reversal sequence)" and "Price ($)" in dark ink; tick labels in soft dark ink. All clearly legible against the light background.
-      Data: 25 columns of stacked box markers — green crossRot ("X") markers for rising columns (first series, #009E73 brand green) and hollow matte-red circle ("O") markers for falling columns (#AE3030). Column heights vary with box counts; price range spans roughly $110-$180 with $10 gridline steps.
+      Background: Warm off-white, matches #FAF8F1, not pure white.
+      Chrome: Title "point-and-figure-basic · javascript · chartjs · anyplot.ai" centered at top in dark ink; legend below it with four entries ("X — rising", "O — falling", "Support (45°)", "Resistance (45°)"); axis titles "Column (price reversal sequence)" (x) and "Price ($)" (y) in dark ink; tick labels in a softer dark ink; $10-step horizontal gridlines, subtle. All fully readable.
+      Data: 25 P&F columns of stacked green crossRot markers (#009E73, rising) and hollow red circle markers (#AE3030, falling), identical box heights per column as attempt 1. New in this attempt: a grey dashed line ("Support") connecting ascending column lows across two segments (columns ~2-12 and ~12-25), and a grey dotted line ("Resistance") connecting descending column highs across two segments (columns ~4-13 and ~22-25). Trend lines are visually distinct from the X/O markers (thin, muted ink color vs. the vivid green/red box markers) and don't obscure any data.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, not light.
-      Chrome: Same title, legend, and axis titles/ticks now rendered in light ink; grid lines subtle but visible against the dark background. All text is clearly legible — no dark-on-dark failures observed (title, axis labels, tick labels, legend all readable).
-      Data: Column layout, box counts, and marker placement are pixel-identical to the light render. Data colors (brand green X, matte red O) are unchanged between themes — only chrome flipped.
-      Legibility verdict: PASS
+      Background: Warm near-black, matches #1A1A17, not pure black.
+      Chrome: Same title/legend/axis-title/tick-label content, switched to light ink; gridlines subtle but visible against the dark surface.
+      Data: Column heights, box counts, X/O placement, and trend-line segments are pixel-identical to the light render. Green X and red O marker colors are unchanged (#009E73 / #AE3030); trend lines switch from dark grey to light grey/white ink to stay visible on the dark background — correct chrome-only flip, data colors held constant.
+      Legibility verdict: PASS — no dark-on-dark issues; all text (title, legend, axis titles, ticks) is clearly legible in light ink against the dark background.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,50 +62,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes at sensible sizes; minor room to
-          differentiate axis-title weight from tick labels
+        comment: All text readable in both themes at sensible sizes; axis-title weight
+          vs tick-label weight still not strongly differentiated
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, no collisions between legend, title, axes, or markers
+        comment: No collisions between text, markers, or the new trend lines
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Point radius (11px) and border width (3px) keep dense stacked columns
-          (up to ~30 boxes) legible without overplotting
+        comment: 11px point radius / 3px border keep dense stacked columns legible;
+          trend lines thin enough not to compete with markers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/red pair is also shape-coded (X vs. O), so color is never the
-          sole signal
+        comment: Green/red pair is also shape-coded (X vs O) and now dash-coded (dashed
+          vs dotted) for the trend lines, so color is never the sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); title, legend, axes all within bounds
+        comment: Canvas gate passed (3200x1800); no clipping or overflow, four-item
+          legend still fits on one line
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis titles with units (Column (price reversal sequence),
-          Price ($))
+        comment: Descriptive axis titles with units (Price ($), Column (price reversal
+          sequence))
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (X), matte red #AE3030 (O), correct theme backgrounds,
-          identical data colors across themes'
+        comment: 'First series #009E73 (X), semantic-anchor #AE3030 (O) per finance
+          up/down convention; both theme backgrounds correct; data colors identical
+          across themes'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -110,24 +115,25 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Creative scatter-based recreation of a P&F chart type Chart.js doesn't
-          natively support, though visual treatment beyond that stays close to defaults
+        comment: Scatter-as-P&F-columns remains the core clever solve; trend-line
+          addition is a spec/storytelling win more than an aesthetic one
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Generous whitespace, x-grid correctly suppressed, but no gridlines
-          at box-size intervals and no distinction for the active/last column
+        passed: true
+        comment: Trend lines add refinement; still no box-size ($1) gridline context
+          and legend swatches don't preview the dash patterns
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Missing the spec-requested support/resistance trend lines that would
-          surface the chart's core pattern-recognition insight
+        passed: true
+        comment: Support/resistance trend lines now surface the pattern-recognition
+          signal the spec calls out; no differentiation of the still-forming last
+          column keeps this short of full marks
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,85 +142,90 @@ review:
         max: 5
         passed: true
         comment: 'Correct P&F construction: close-based boxing, 3-box reversal, column-per-reversal,
-          x-axis is reversal sequence not time'
+          x-axis is reversal sequence'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Missing spec's explicit support/resistance trend-line requirement
+        passed: true
+        comment: Box size, 3-box reversal, X/O columns, green/red coloring, and now
+          the support/resistance trend lines are all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = column index, Y = price in $, correctly reflects P&F's time-independent
-          x-axis
+        comment: X = column index, Y = price in $
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandated format; legend labels match data semantics
+        comment: Title matches the mandated format; legend labels match data semantics
+          including the two new trend-line entries
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Box construction, reversal logic, column coloring covered; trend-line
-          feature missing
+        comment: Box construction, reversal logic, column coloring, and trend lines
+          now cover the full P&F feature set from the spec
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Plausible fictitious-stock price path, neutral, no real ticker implied
+        comment: Plausible fictitious-stock daily closes with macro cycle plus noise;
+          neutral, no real ticker implied
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 daily observations (~14 months), standard box size/reversal defaults,
-          sensible mid-cap price range
+        comment: 300 daily observations (~14 months), $1 box / 3-box reversal are
+          standard defaults, $110-180 is a sensible mid-cap range
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script; only closure is the library-doc's recommended LCG pattern
+        comment: The trend-line pass adds several helper functions (buildTrendSegments,
+          startSegment, withGaps) beyond the flat script shape; justified by the segment-break
+          algorithm but no longer minimal
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fixed-seed LCG (seed=42), fully deterministic
+        comment: Fixed-seed LCG, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: No imports; uses only provided globals
+        comment: No imports; only the provided Chart global and ANYPLOT_TOKENS
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriately complex domain logic, no fake UI
+        comment: Complexity is appropriate for the P&F + trend-line domain logic;
+          no fake UI or simulated interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Canvas appended to #container, animation: false set, current scatter
-          API'
+        comment: 'Canvas appended to #container, animation: false, current Chart.js
+          scatter/line API'
     library_mastery:
       score: 8
       max: 10
@@ -224,23 +235,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct scatter + linear x-scale usage, standard token wiring
+        comment: 'Correct scatter type with linear x-scale, showLine: false for markers,
+          showLine: true + spanGaps: false for the trend datasets'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Creative pointStyle repurposing (crossRot/circle) to recreate a chart
-          type Chart.js has no native support for
+        comment: Creative repurposing of pointStyle (crossRot/circle) for P&F markers
+          plus a NaN-gap technique to draw discontinuous 45-degree trend segments
+          in a single dataset
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
-  - time-series
-  styling:
-  - publication-ready
+  - binning
+  styling: []
